@@ -6,6 +6,12 @@ final class TranscriptionService: @unchecked Sendable {
     private var loadedModelPath: String?
     /// Serial queue to ensure only one whisper_full() runs at a time (ctx is not thread-safe).
     private let whisperQueue = DispatchQueue(label: "com.whisperasr.whisper", qos: .userInitiated)
+    private let realtimeLock = NSLock()
+    private var realtimeSessionActive = false
+
+    var isRealtimeSessionActive: Bool {
+        realtimeLock.withLock { realtimeSessionActive }
+    }
 
     deinit {
         if let ctx { whisper_free(ctx) }
@@ -23,13 +29,31 @@ final class TranscriptionService: @unchecked Sendable {
         }
     }
 
+    /// Release the resident Whisper context when another exclusive local
+    /// English prototype is selected. Serialized with inference so a model is
+    /// never freed while whisper_full is using it.
+    func unloadModel() async {
+        await withCheckedContinuation { continuation in
+            whisperQueue.async {
+                if let ctx = self.ctx {
+                    whisper_free(ctx)
+                    self.ctx = nil
+                    self.loadedModelPath = nil
+                }
+                continuation.resume()
+            }
+        }
+    }
+
     /// Transcribe (or translate-to-English, when `translate` is true) an audio file.
     /// `language` is an optional ISO-639-1 code; nil/empty means auto-detect.
     func transcribe(fileURL: URL,
                     language: String? = nil,
                     translate: Bool = false,
                     onProgress: @escaping @Sendable (Double) -> Void) async throws -> TranscriptionResult {
+        guard !isRealtimeSessionActive else { throw TranscriptionError.modelBusy }
         let samples = try await AudioLoader.loadSamples(url: fileURL)
+        guard !isRealtimeSessionActive else { throw TranscriptionError.modelBusy }
 
         return try await withCheckedThrowingContinuation { continuation in
             self.whisperQueue.async {
@@ -112,7 +136,9 @@ final class TranscriptionService: @unchecked Sendable {
 
     /// Transcribe raw 16kHz mono PCM Float32 samples directly (used for live transcription during recording).
     /// This reuses the already-loaded whisper model and runs on a background queue.
-    func transcribeChunk(samples: [Float]) async throws -> TranscriptionResult {
+    func transcribeChunk(samples: [Float],
+                         language: String? = nil,
+                         translate: Bool = false) async throws -> TranscriptionResult {
         guard !samples.isEmpty else {
             return TranscriptionResult(text: "", segments: [])
         }
@@ -127,8 +153,12 @@ final class TranscriptionService: @unchecked Sendable {
                     return
                 }
 
-                let liveThreads = min(4, max(1, Int32(ProcessInfo.processInfo.activeProcessorCount / 4)))
-                let (params, langCStr) = self.makeBaseParams(threadCount: liveThreads)
+                let liveThreads = min(4, max(1, Int32(ProcessInfo.processInfo.activeProcessorCount)))
+                let (params, langCStr) = self.makeBaseParams(
+                    threadCount: liveThreads,
+                    language: language,
+                    translate: translate
+                )
                 defer { free(langCStr) }
 
                 let result = samples.withUnsafeBufferPointer { buf in
@@ -162,20 +192,56 @@ final class TranscriptionService: @unchecked Sendable {
                     fullText += text
                 }
 
+                var detected: String? = nil
+                let langId = whisper_full_lang_id(ctx)
+                if langId >= 0, let langPtr = whisper_lang_str(langId) {
+                    detected = String(cString: langPtr)
+                }
+
                 continuation.resume(returning: TranscriptionResult(
                     text: fullText,
-                    segments: segments
+                    segments: segments,
+                    detectedLanguage: detected
                 ))
             }
         }
     }
 
-    /// Ensure the whisper model is loaded (public access for pre-loading during recording start).
-    /// Blocks until any queued transcription finishes, then loads on the whisper queue.
-    func preloadModel() throws {
-        try whisperQueue.sync {
-            _ = try ensureModelLoaded()
+    /// Load the selected model without blocking the caller's executor.
+    func preloadModel(requireEnglishTranslation: Bool = false) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            whisperQueue.async {
+                do {
+                    let ctx = try self.ensureModelLoaded()
+                    if requireEnglishTranslation {
+                        try self.validateEnglishTranslationModel(ctx)
+                    }
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
         }
+    }
+
+    /// Reserve the single Whisper context for live work after all earlier work has drained.
+    func beginRealtimeSession(requireEnglishTranslation: Bool) async throws {
+        let acquired = realtimeLock.withLock { () -> Bool in
+            guard !realtimeSessionActive else { return false }
+            realtimeSessionActive = true
+            return true
+        }
+        guard acquired else { throw TranscriptionError.modelBusy }
+        do {
+            try await preloadModel(requireEnglishTranslation: requireEnglishTranslation)
+        } catch {
+            endRealtimeSession()
+            throw error
+        }
+    }
+
+    func endRealtimeSession() {
+        realtimeLock.withLock { realtimeSessionActive = false }
     }
 
     // MARK: - Params Configuration
@@ -192,6 +258,8 @@ final class TranscriptionService: @unchecked Sendable {
         params.print_timestamps = false
         params.n_threads = threadCount ?? max(1, Int32(ProcessInfo.processInfo.activeProcessorCount / 2))
         params.translate = translate
+        params.no_context = true
+        params.audio_ctx = 0
 
         let lang = (language?.isEmpty == false) ? language! : "auto"
         let langCStr = strdup(lang)
@@ -273,6 +341,22 @@ final class TranscriptionService: @unchecked Sendable {
             throw TranscriptionError.processFailed("Model not loaded")
         }
         return ctx
+    }
+
+    private func validateEnglishTranslationModel(_ ctx: OpaquePointer) throws {
+        let path = loadedModelPath ?? resolveModelPath()
+        if let model = ModelCatalog.model(fileName: URL(fileURLWithPath: path).lastPathComponent),
+           !model.supportsEnglishTranslation {
+            throw TranscriptionError.modelIncompatible(
+                "\(model.displayName) cannot translate speech to English. Select Whisper Medium, Small, Base, or Tiny."
+            )
+        }
+        let readable = whisper_model_type_readable(ctx).map { String(cString: $0).lowercased() } ?? ""
+        guard whisper_is_multilingual(ctx) != 0, !readable.contains("turbo") else {
+            throw TranscriptionError.modelIncompatible(
+                "The selected Whisper model cannot translate speech to English. Select Whisper Medium, Small, Base, or Tiny."
+            )
+        }
     }
 
     private func resolveModelPath() -> String {

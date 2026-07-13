@@ -108,7 +108,7 @@ struct SettingsView: View {
                 ForEach(ModelCatalog.all) { model in
                     ModelRowView(model: model)
                 }
-                Text("Select a downloaded model to use it for transcription. Smaller models are faster but less accurate.")
+                Text("Local English captions use these models only for source transcription; Apple Translation produces the English. Turbo is recommended for the Whisper source option.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

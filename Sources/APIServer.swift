@@ -22,17 +22,17 @@ final class APIServer {
     static let shared = APIServer()
 
     // UserDefaults keys (kept in sync with @AppStorage in SettingsView).
-    static let enabledKey = "apiServerEnabled"
-    static let portKey = "apiServerPort"
-    static let tokenKey = "apiServerToken"
-    static let allowLANKey = "apiServerAllowLAN"
+    nonisolated static let enabledKey = "apiServerEnabled"
+    nonisolated static let portKey = "apiServerPort"
+    nonisolated static let tokenKey = "apiServerToken"
+    nonisolated static let allowLANKey = "apiServerAllowLAN"
     /// When true, each request and its outcome are logged to stderr (run log).
     /// Off by default; flip on to diagnose client issues.
-    static let verboseLogKey = "apiServerVerboseLogging"
-    static let defaultPort: UInt16 = 8080
+    nonisolated static let verboseLogKey = "apiServerVerboseLogging"
+    nonisolated static let defaultPort: UInt16 = 8080
     /// Per-connection timeout for the HTTP server. Generous so long transcriptions
     /// aren't severed mid-flight (FlyingFox defaults to a 15s timeout).
-    static let connectionTimeout: TimeInterval = 3600
+    nonisolated static let connectionTimeout: TimeInterval = 3600
 
     private(set) var isRunning = false
     private(set) var lastError: String?
@@ -231,6 +231,12 @@ private struct OpenAITranscriptionAPI: Sendable {
             Self.log("\(kind): rejected (auth)")
             return denied
         }
+        if service.isRealtimeSessionActive {
+            Self.log("\(kind): 503 model reserved for live captions")
+            return Self.errorResponse(.serviceUnavailable,
+                "The Whisper model is reserved for live captions. Try again when recording ends.",
+                type: "server_error")
+        }
 
         let contentTypeHeader = request.headers[.contentType] ?? "(none)"
         Self.log("\(kind): request content-type=\(contentTypeHeader)")
@@ -300,6 +306,12 @@ private struct OpenAITranscriptionAPI: Sendable {
             Self.log(String(format: "%@: 200 ok (%d chars, %d segments) in %.1fs",
                             kind, result.text.count, result.segments.count, secs))
             return Self.formatResult(result, format: responseFormat, translate: translate)
+        } catch TranscriptionError.modelBusy {
+            let secs = Date().timeIntervalSince(start)
+            Self.log(String(format: "%@: 503 model busy after %.1fs", kind, secs))
+            return Self.errorResponse(.serviceUnavailable,
+                "The Whisper model is reserved for live captions. Try again when recording ends.",
+                type: "server_error")
         } catch {
             let secs = Date().timeIntervalSince(start)
             Self.log(String(format: "%@: 500 transcribe failed after %.1fs: %@",

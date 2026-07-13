@@ -110,6 +110,9 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     /// Trim committed samples from the front of the PCM buffer to cap memory usage.
     /// `upTo` is an absolute sample index — samples before this index are freed.
     func trimSamples(upTo absoluteIndex: Int) {
+        if ProcessInfo.processInfo.environment["WHISPERASR_CAPTURE_CANONICAL"] == "1" {
+            return
+        }
         pcmState.withLock { state in
             let bufIndex = absoluteIndex - state.trimOffset
             guard bufIndex > 0 else { return }
@@ -195,6 +198,11 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             state.buffer.removeAll()
             state.trimOffset = 0
         }
+    }
+
+    /// Release live-caption audio only after the final transcription pass has consumed it.
+    func discardAccumulatedSamples() {
+        clearPCMBuffer()
     }
 
     // MARK: - App List
@@ -373,7 +381,6 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         }
 
         stopMicrophoneCapture()
-        clearPCMBuffer()
         recordingApp = nil
 
         let received = _hasReceivedSamples.withLock { $0 }

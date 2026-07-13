@@ -15,6 +15,10 @@ enum TranscriptionStore {
         let errorMessage: String?
         let translatedSegments: [String]?
         let translationLanguage: String?
+        let translateToEnglish: Bool?
+        let localSourceLocale: String?
+        let localTranslationMode: AppleTranslationMode?
+        let discardOriginalAfterRetry: Bool?
     }
 
     // MARK: - Directory
@@ -89,7 +93,11 @@ enum TranscriptionStore {
             statusTag: statusTag,
             errorMessage: errorMessage,
             translatedSegments: item.translatedSegments.isEmpty ? nil : item.translatedSegments,
-            translationLanguage: item.translationLanguage
+            translationLanguage: item.translationLanguage,
+            translateToEnglish: item.translateToEnglish ? true : nil,
+            localSourceLocale: item.localSourceLocale,
+            localTranslationMode: item.localTranslationMode,
+            discardOriginalAfterRetry: item.discardOriginalAfterRetry ? true : nil
         )
 
         let encoder = JSONEncoder()
@@ -130,7 +138,11 @@ enum TranscriptionStore {
                     segments: stored.segments,
                     fullText: stored.fullText,
                     translatedSegments: stored.translatedSegments ?? [],
-                    translationLanguage: stored.translationLanguage
+                    translationLanguage: stored.translationLanguage,
+                    translateToEnglish: stored.translateToEnglish ?? false,
+                    localSourceLocale: stored.localSourceLocale,
+                    localTranslationMode: stored.localTranslationMode,
+                    discardOriginalAfterRetry: stored.discardOriginalAfterRetry ?? false
                 )
             }
             .sorted { $0.dateAdded > $1.dateAdded }

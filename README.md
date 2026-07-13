@@ -22,7 +22,9 @@ A native macOS app for audio transcription using [Breeze-ASR-25](https://github.
 
 - **App audio recording** — capture audio from any running app via ScreenCaptureKit (M4A/AAC at 48 kHz)
 - **Live transcription** — see transcribed text in real-time while recording
-- **Live translation** — per-segment translation displayed inline below each transcribed line, via OpenAI-compatible API
+- **Local live translation to English** — FIFO audio processing with fast previews or stable-only subtitles; no API key or second model is required
+- **API live translation** — translate to any configured target language through an OpenAI-compatible API
+- **Display and storage choices** — show translated captions only, reveal the original when available, and optionally keep both versions
 - **Smart auto-scroll** — live transcription view automatically follows new segments
 - **Live results reuse** — when recording stops, live transcription results are kept (no re-transcription)
 - **Zoom meeting detection** — automatically prompts to stop recording when a Zoom meeting ends
@@ -47,7 +49,7 @@ A native macOS app for audio transcription using [Breeze-ASR-25](https://github.
 
 ### Models
 
-- **Downloadable model catalog** — download models in-app: Breeze-ASR-25 (best for Mandarin/Taiwanese-accented speech) plus official whisper.cpp models from Tiny (78 MB) to Large v3 Turbo (1.6 GB)
+- **Downloadable model catalog** — Medium is recommended for local translation; Small/Base/Tiny also translate, while Breeze and Large v3 Turbo are transcription-only
 - **Switch anytime** — pick the active model from the toolbar or Settings; takes effect on the next transcription
 - **Custom model path** — point to any `ggml-*.bin` outside the catalog via Settings
 
@@ -137,7 +139,7 @@ xattr -cr /path/to/WhisperASR.app
 
 1. **Add files** — drag audio/video files onto the sidebar, or click the **+** button
 2. **Record app audio** — click the record button, select a running app, and start recording; recently used apps are listed first
-3. **Live transcription & translation** — enable live transcription in the recording dialog to see text as you record; set a target language in Settings to see inline translations below each segment
+3. **Live transcription & translation** — choose original local captions, local Whisper translation to English, or API translation to the selected target language before recording
 4. **Wait for transcription** — files are queued and transcribed one at a time with progress and ETA
 5. **Review** — click a completed item to see the transcript with timestamps
 6. **Translate** — click the translate button to translate a completed transcription into any configured language

@@ -1,0 +1,361 @@
+import Foundation
+import XCTest
+@testable import WhisperASRApp
+
+final class LiveCaptionTests: XCTestCase {
+    func testLegacyLiveTranslationPreferenceMigratesToAPI() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(true, forKey: "liveTranslationPref")
+
+        XCTAssertEqual(LiveCaptionMode.stored(in: defaults), .api)
+    }
+
+    func testExplicitCaptionModeWinsOverLegacyPreference() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(true, forKey: "liveTranslationPref")
+        defaults.set(LiveCaptionMode.localEnglish.rawValue, forKey: LiveCaptionMode.storageKey)
+
+        XCTAssertEqual(LiveCaptionMode.stored(in: defaults), .localEnglish)
+    }
+
+    func testLocalEnglishKeepsTheExistingStoredRawValue() {
+        XCTAssertEqual(LiveCaptionMode.localEnglish.rawValue, "whisperEnglish")
+    }
+
+    func testOldFastPreviewPreferenceMigratesToAdaptiveAppleTranslation() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(LiveSubtitlePolicy.fastPreview.rawValue, forKey: LiveSubtitlePolicy.storageKey)
+
+        XCTAssertEqual(AppleTranslationMode.stored(in: defaults), .adaptive)
+    }
+
+    func testAdaptiveIsTheDefaultAppleTranslationMode() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        XCTAssertEqual(AppleTranslationMode.stored(in: defaults), .adaptive)
+    }
+
+    func testOldStableOnlyPreferenceMigratesToHighFidelityAppleTranslation() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(LiveSubtitlePolicy.stableOnly.rawValue, forKey: LiveSubtitlePolicy.storageKey)
+
+        XCTAssertEqual(AppleTranslationMode.stored(in: defaults), .highFidelityOnly)
+    }
+
+    func testExplicitAppleTranslationModeWinsOverMigratedPreference() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(LiveSubtitlePolicy.stableOnly.rawValue, forKey: LiveSubtitlePolicy.storageKey)
+        defaults.set(AppleTranslationMode.lowLatencyOnly.rawValue, forKey: AppleTranslationMode.storageKey)
+
+        XCTAssertEqual(AppleTranslationMode.stored(in: defaults), .lowLatencyOnly)
+        XCTAssertTrue(AppleTranslationMode.lowLatencyOnly.showsPreview)
+        XCTAssertFalse(AppleTranslationMode.lowLatencyOnly.finalUsesHighFidelity)
+    }
+
+    func testAppleTranslationModeReadinessRequirements() {
+        XCTAssertTrue(AppleTranslationMode.adaptive.showsPreview)
+        XCTAssertTrue(AppleTranslationMode.adaptive.requiresLowLatency)
+        XCTAssertTrue(AppleTranslationMode.adaptive.requiresHighFidelity)
+        XCTAssertFalse(AppleTranslationMode.highFidelityOnly.showsPreview)
+        XCTAssertFalse(AppleTranslationMode.highFidelityOnly.requiresLowLatency)
+        XCTAssertTrue(AppleTranslationMode.lowLatencyOnly.showsPreview)
+        XCTAssertFalse(AppleTranslationMode.lowLatencyOnly.requiresHighFidelity)
+    }
+
+    func testTranslationOnlyPrimarySegmentsDropMissingTranslations() {
+        let source = [
+            TranscriptionSegment(start: 0, end: 1, text: "one"),
+            TranscriptionSegment(start: 1, end: 2, text: "two"),
+        ]
+
+        XCTAssertEqual(
+            AppState.primarySegments(from: source, translations: ["First", ""]),
+            [TranscriptionSegment(start: 0, end: 1, text: "First")]
+        )
+    }
+
+    func testLocalEnglishEnginePersistsAndDefaultsToReference() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperTurboApple)
+        defaults.set(LocalEnglishEngine.qwenApple.rawValue, forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
+    }
+
+    func testOldNemotronPipelinePreferenceMigratesToQwenOnly() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set("nemotronQwenApple", forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
+    }
+
+    func testEliminatedGranitePreferenceFallsBackToReference() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set("graniteDirect", forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperTurboApple)
+    }
+
+    func testEachPrototypeLoadsOnlyItsRequiredModels() {
+        XCTAssertEqual(
+            LocalEnglishEngine.whisperTurboApple.requiredComponents,
+            [.fireRedVAD, .whisperTurbo, .appleTranslation]
+        )
+        XCTAssertEqual(
+            LocalEnglishEngine.qwenApple.requiredComponents,
+            [.fireRedVAD, .qwen, .appleTranslation]
+        )
+    }
+
+    func testPreviewCursorCannotAdvanceStableOrPCMCursor() {
+        var planner = LocalEndpointPlanner()
+        planner.notePreview(readThrough: 32_000)
+        XCTAssertEqual(planner.previewReadEnd, 32_000)
+        XCTAssertEqual(planner.stableAttemptEnd, 0)
+        XCTAssertEqual(planner.finalizedThrough, 0)
+    }
+
+    func testLocalPreviewSlotKeepsOnlyTheLatestUpdate() {
+        var planner = LocalPreviewPlanner()
+        planner.submit(previewUpdate(start: 0, end: 1, text: "first"), receivedUptimeNanoseconds: 1)
+        planner.submit(previewUpdate(start: 0, end: 2, text: "second"), receivedUptimeNanoseconds: 2)
+
+        let work = planner.takeLatest()
+        XCTAssertEqual(work?.update.segment.text, "second")
+        XCTAssertEqual(work?.receivedUptimeNanoseconds, 2)
+        XCTAssertNil(planner.takeLatest())
+    }
+
+    func testPreviewAccumulatesOnlyTheCurrentBoundedPhrase() {
+        var planner = LocalPreviewPlanner()
+        planner.submit(previewUpdate(start: 0, end: 1, text: "first"))
+        _ = planner.takeLatest()
+        planner.submit(previewUpdate(start: 1, end: 2, text: "second"))
+        XCTAssertEqual(planner.takeLatest()?.update.segment.text, "first second")
+
+        planner.suspend(through: 32_000)
+        planner.resume(through: 32_000)
+        planner.submit(previewUpdate(start: 2, end: 3, text: "third"))
+        XCTAssertEqual(planner.takeLatest()?.update.segment.text, "third")
+    }
+
+    func testFinalBoundaryInvalidatesLatePreviewWithoutAdvancingPCM() {
+        var preview = LocalPreviewPlanner()
+        preview.submit(previewUpdate(start: 0, end: 2, text: "old"), receivedUptimeNanoseconds: 1)
+        let oldWork = preview.takeLatest()!
+        preview.suspend(through: 16_000)
+
+        XCTAssertFalse(preview.accepts(oldWork))
+        XCTAssertEqual(preview.suppressedThrough, 16_000)
+
+        preview.resume(through: 16_000)
+        preview.submit(previewUpdate(start: 0.5, end: 2, text: "overlap"), receivedUptimeNanoseconds: 2)
+        XCTAssertNil(preview.takeLatest())
+        preview.submit(previewUpdate(start: 1, end: 2, text: "new"), receivedUptimeNanoseconds: 3)
+        let newWork = preview.takeLatest()
+        XCTAssertEqual(newWork?.update.segment.text, "new")
+        XCTAssertTrue(newWork.map { preview.accepts($0) } == true)
+
+        let stable = LocalEndpointPlanner()
+        XCTAssertEqual(stable.finalizedThrough, 0)
+    }
+
+    func testShortPhraseIsCoalescedToAvoidInferenceBacklog() {
+        var planner = LocalEndpointPlanner()
+        let speechEnd = 8_000
+        XCTAssertNil(planner.observe(
+            totalSample: speechEnd + LocalEndpointPlanner.silence,
+            speech: [SpeechSampleRange(start: 0, end: speechEnd)]
+        ))
+        XCTAssertNil(planner.observe(
+            totalSample: speechEnd + LocalEndpointPlanner.postRoll,
+            speech: [SpeechSampleRange(start: 0, end: speechEnd)]
+        ))
+        let decision = planner.observe(
+            totalSample: LocalEndpointPlanner.minimumBatch,
+            speech: [SpeechSampleRange(start: 0, end: speechEnd)]
+        )
+        XCTAssertEqual(decision?.kind, .pause)
+        XCTAssertEqual(decision?.endpointDetectedAt, speechEnd + LocalEndpointPlanner.silence)
+        XCTAssertEqual(decision?.audioEnd, speechEnd + LocalEndpointPlanner.postRoll)
+        XCTAssertTrue(decision?.cleanBreak == true)
+    }
+
+    func testForcedCutRetainsExactly800Milliseconds() {
+        var planner = LocalEndpointPlanner()
+        let end = LocalEndpointPlanner.maxPhrase
+        let decision = planner.observe(
+            totalSample: end,
+            speech: [SpeechSampleRange(start: 0, end: end)]
+        )
+        XCTAssertEqual(decision?.kind, .forced)
+        XCTAssertEqual(decision?.stableThrough, end - LocalEndpointPlanner.forcedOverlap)
+    }
+
+    func testStagedAttemptDoesNotReleasePCMOrBlockLaterSegmentation() {
+        var planner = LocalEndpointPlanner()
+        let end = LocalEndpointPlanner.maxPhrase
+        let speech = [SpeechSampleRange(start: 0, end: end)]
+        let decision = planner.observe(totalSample: end, speech: speech)!
+        planner.stage(decision)
+        XCTAssertEqual(planner.finalizedThrough, 0)
+        XCTAssertNil(planner.observe(totalSample: end, speech: speech))
+        XCTAssertNotNil(planner.observe(
+            totalSample: end + 40_000,
+            speech: [SpeechSampleRange(start: decision.stableThrough, end: end + 40_000)],
+            finishing: true
+        ))
+    }
+
+    func testAcceptedForcedRangeAndFinishCoverTimelineWithoutHole() {
+        var planner = LocalEndpointPlanner()
+        let forcedEnd = LocalEndpointPlanner.maxPhrase
+        let first = planner.observe(
+            totalSample: forcedEnd,
+            speech: [SpeechSampleRange(start: 0, end: forcedEnd)]
+        )!
+        planner.stage(first)
+        planner.accept(first)
+        let finalEnd = forcedEnd + 40_000
+        let tail = planner.observe(
+            totalSample: finalEnd,
+            speech: [SpeechSampleRange(start: first.stableThrough, end: finalEnd)],
+            finishing: true
+        )!
+        XCTAssertEqual(tail.audioStart, first.stableThrough)
+        planner.accept(tail)
+        XCTAssertEqual(planner.finalizedThrough, finalEnd)
+    }
+
+    func testEndpointFIFOStagesAheadWithoutValidatingPCM() async {
+        let fifo = LocalEndpointFIFO()
+        let forcedEnd = LocalEndpointPlanner.maxPhrase
+        let first = await fifo.observe(
+            totalSample: forcedEnd,
+            speech: [SpeechSampleRange(start: 0, end: forcedEnd)]
+        )!
+        let finalEnd = forcedEnd + 40_000
+        let tail = await fifo.observe(
+            totalSample: finalEnd,
+            speech: [SpeechSampleRange(start: first.stableThrough, end: finalEnd)],
+            finishing: true
+        )!
+
+        var cursors = await fifo.cursors()
+        XCTAssertEqual(cursors.segmented, finalEnd)
+        XCTAssertEqual(cursors.finalized, 0)
+        let queuedFirst = await fifo.next()
+        let firstPendingCount = await fifo.pendingCount()
+        XCTAssertEqual(queuedFirst?.decision, first)
+        XCTAssertEqual(firstPendingCount, 2)
+
+        await fifo.accept(queuedFirst!)
+        cursors = await fifo.cursors()
+        XCTAssertEqual(cursors.finalized, first.stableThrough)
+        let queuedTail = await fifo.next()
+        let tailPendingCount = await fifo.pendingCount()
+        XCTAssertEqual(queuedTail?.decision, tail)
+        XCTAssertEqual(tailPendingCount, 1)
+        await fifo.accept(queuedTail!)
+        await fifo.finishProducing()
+        let drained = await fifo.isDrained()
+        XCTAssertTrue(drained)
+    }
+
+    func testCanonicalCorpusUsesTwelveEqualMultiSentencePassages() {
+        let passages = CanonicalBenchmarkCorpus.passages(totalSamples: 16_000 * 282)
+        XCTAssertEqual(passages.count, 12)
+        XCTAssertEqual(passages.first?.startSample, 0)
+        XCTAssertEqual(passages.last?.endSample, 16_000 * 282)
+        XCTAssertTrue(passages.allSatisfy {
+            let seconds = Double($0.endSample - $0.startSample) / 16_000
+            return (12...25).contains(seconds)
+        })
+        for pair in zip(passages, passages.dropFirst()) {
+            XCTAssertEqual(pair.0.endSample, pair.1.startSample)
+        }
+
+        let shortCorpus = CanonicalBenchmarkCorpus.passages(totalSamples: 16_000 * 40)
+        XCTAssertEqual(shortCorpus.count, 2)
+        XCTAssertTrue(shortCorpus.allSatisfy { $0.endSample - $0.startSample == 16_000 * 20 })
+    }
+
+    func testPCMEncoderProducesCanonical16KMonoWAV() {
+        let wav = PCM16WAV.data(samples: [0, 0.5, -0.5])
+        XCTAssertEqual(String(data: wav.prefix(4), encoding: .ascii), "RIFF")
+        XCTAssertEqual(String(data: wav[8..<12], encoding: .ascii), "WAVE")
+        XCTAssertEqual(String(data: wav[36..<40], encoding: .ascii), "data")
+        XCTAssertEqual(wav.count, 44 + 3 * 2)
+    }
+
+    func testClearlyNonEnglishTranslationIsRejected() {
+        XCTAssertTrue(AppState.isClearlyNonEnglishTranslation("これは日本語の字幕です。翻訳されていません。"))
+        XCTAssertTrue(AppState.isClearlyNonEnglishTranslation("え?"))
+        XCTAssertTrue(AppState.isClearlyNonEnglishTranslation("한국어"))
+        XCTAssertFalse(AppState.isClearlyNonEnglishTranslation("This subtitle is already translated to English."))
+        XCTAssertFalse(AppState.isClearlyNonEnglishTranslation("Tokyo"))
+    }
+
+    func testEnglishSubtitleScriptValidation() {
+        XCTAssertTrue(EnglishSubtitleValidator.containsSourceScript("これは字幕です。"))
+        XCTAssertTrue(EnglishSubtitleValidator.containsSourceScript("한국어"))
+        XCTAssertFalse(EnglishSubtitleValidator.containsSourceScript("A faithful English subtitle."))
+    }
+
+    @MainActor
+    func testLocalModelManagerUnloadIsIdempotent() async {
+        let manager = LocalEnglishModelManager()
+        await manager.unload()
+        await manager.unload()
+        XCTAssertNil(manager.loadedEngine)
+        XCTAssertEqual(manager.phase(for: .whisperTurboApple), .absent)
+        XCTAssertEqual(manager.phase(for: .qwenApple), .absent)
+    }
+
+    func testCatalogRejectsKnownNonTranslationModels() {
+        XCTAssertFalse(ModelCatalog.model(id: "large-v3-turbo")!.supportsEnglishTranslation)
+        XCTAssertFalse(ModelCatalog.model(id: "breeze-asr-25")!.supportsEnglishTranslation)
+        XCTAssertTrue(ModelCatalog.model(id: "medium")!.supportsEnglishTranslation)
+    }
+
+    func testOlderBackupWithoutSubtitlePolicyStillDecodes() throws {
+        let json = Data(#"""
+        {
+          "version": 1,
+          "createdAt": "2026-07-13T00:00:00Z",
+          "configuration": {}
+        }
+        """#.utf8)
+
+        let backup = try BackupService.decode(json)
+        XCTAssertNil(backup.configuration.liveSubtitlePolicy)
+        XCTAssertNil(backup.configuration.localEnglishEngine)
+        XCTAssertNil(backup.configuration.localSpeechEngine)
+        XCTAssertNil(backup.configuration.localSourceLocale)
+        XCTAssertNil(backup.configuration.appleTranslationMode)
+    }
+
+    private func makeDefaults() -> (UserDefaults, String) {
+        let name = "LiveCaptionTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defaults.removePersistentDomain(forName: name)
+        return (defaults, name)
+    }
+
+    private func previewUpdate(
+        start: Double,
+        end: Double,
+        text: String
+    ) -> LiveSourceUpdate {
+        LiveSourceUpdate(
+            segment: TranscriptionSegment(start: start, end: end, text: text),
+            isFinal: false,
+            finalizedThroughSample: 0
+        )
+    }
+}

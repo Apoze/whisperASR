@@ -36,6 +36,14 @@ enum BackupService {
         var translationModel: String?
         var translationAPIKey: String?
         var liveTranslationPref: Bool?
+        var liveCaptionMode: String?
+        var keepOriginalTranscript: Bool?
+        var translationOnlyPref: Bool?
+        var liveSubtitlePolicy: String?
+        var localEnglishEngine: String?
+        var localSpeechEngine: String?
+        var localSourceLocale: String?
+        var appleTranslationMode: String?
         var recentRecordingApps: [String]?
     }
 
@@ -53,6 +61,16 @@ enum BackupService {
             translationAPIKey: d.string(forKey: "translationAPIKey"),
             liveTranslationPref: d.object(forKey: "liveTranslationPref") == nil
                 ? nil : d.bool(forKey: "liveTranslationPref"),
+            liveCaptionMode: d.string(forKey: LiveCaptionMode.storageKey),
+            keepOriginalTranscript: d.object(forKey: LiveCaptionMode.keepOriginalKey) == nil
+                ? nil : d.bool(forKey: LiveCaptionMode.keepOriginalKey),
+            translationOnlyPref: d.object(forKey: LiveCaptionMode.translationOnlyKey) == nil
+                ? nil : d.bool(forKey: LiveCaptionMode.translationOnlyKey),
+            liveSubtitlePolicy: d.string(forKey: LiveSubtitlePolicy.storageKey),
+            localEnglishEngine: d.string(forKey: LocalEnglishEngine.storageKey),
+            localSpeechEngine: d.string(forKey: LocalSpeechEngine.storageKey),
+            localSourceLocale: d.string(forKey: LocalSpeechEngine.sourceLocaleKey),
+            appleTranslationMode: d.string(forKey: AppleTranslationMode.storageKey),
             recentRecordingApps: d.stringArray(forKey: "recentRecordingApps")
         )
 
@@ -98,6 +116,36 @@ enum BackupService {
         set(c.translationModel, "translationModel")
         set(c.translationAPIKey, "translationAPIKey")
         if let pref = c.liveTranslationPref { d.set(pref, forKey: "liveTranslationPref") }
+        if let mode = c.liveCaptionMode {
+            d.set(mode, forKey: LiveCaptionMode.storageKey)
+        } else if let pref = c.liveTranslationPref {
+            d.set(
+                (pref ? LiveCaptionMode.api : LiveCaptionMode.original).rawValue,
+                forKey: LiveCaptionMode.storageKey
+            )
+        }
+        if let keepOriginal = c.keepOriginalTranscript {
+            d.set(keepOriginal, forKey: LiveCaptionMode.keepOriginalKey)
+        }
+        if let translationOnly = c.translationOnlyPref {
+            d.set(translationOnly, forKey: LiveCaptionMode.translationOnlyKey)
+        }
+        if let policy = c.liveSubtitlePolicy {
+            d.set(policy, forKey: LiveSubtitlePolicy.storageKey)
+        }
+        set(c.localEnglishEngine, LocalEnglishEngine.storageKey)
+        set(c.localSpeechEngine, LocalSpeechEngine.storageKey)
+        set(c.localSourceLocale, LocalSpeechEngine.sourceLocaleKey)
+        if let mode = c.appleTranslationMode {
+            d.set(mode, forKey: AppleTranslationMode.storageKey)
+        } else if let policy = c.liveSubtitlePolicy {
+            d.set(
+                policy == LiveSubtitlePolicy.stableOnly.rawValue
+                    ? AppleTranslationMode.highFidelityOnly.rawValue
+                    : AppleTranslationMode.adaptive.rawValue,
+                forKey: AppleTranslationMode.storageKey
+            )
+        }
         if let apps = c.recentRecordingApps { d.set(apps, forKey: "recentRecordingApps") }
 
         // ModelManager caches the selection in a stored property; nudge it so the

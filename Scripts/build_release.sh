@@ -11,6 +11,7 @@ APP_BUNDLE="$PROJECT_DIR/$APP_NAME.app"
 echo "==> Building release binary..."
 cd "$PROJECT_DIR"
 swift build -c release
+"$SCRIPT_DIR/build_mlx_metallib.sh" release
 
 echo "==> Generating app icon..."
 # Create a small Swift script to generate the .icns from AppIconGenerator
@@ -118,6 +119,7 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 # Copy binary
 cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
+cp "$BUILD_DIR/mlx.metallib" "$APP_BUNDLE/Contents/MacOS/"
 
 # Copy icon
 cp "$ICNS_PATH" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
@@ -145,9 +147,11 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
-    <string>14.0</string>
+    <string>15.0</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>WhisperASR needs microphone access to record audio for transcription.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>WhisperASR uses on-device Apple Speech to create live captions from audio you choose to record.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>WhisperASR needs to control other applications for screen recording.</string>
     <key>CFBundleURLTypes</key>
@@ -167,6 +171,13 @@ PLIST
 
 # Create PkgInfo
 echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
+
+# A stable development signature keeps macOS privacy permissions attached to local
+# rebuilds. Official releases still pass their Developer ID explicitly.
+if [ -z "${CODESIGN_IDENTITY:-}" ]; then
+    CODESIGN_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null \
+        | awk -F'"' '/Apple Development:/ { print $2; exit }')
+fi
 
 if [ -n "${CODESIGN_IDENTITY:-}" ]; then
     # Create entitlements for hardened runtime

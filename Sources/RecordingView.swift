@@ -7,7 +7,7 @@ struct RecordingView: View {
     @Environment(\.dismiss) var dismiss
     @State private var shouldAutoScroll = true
     @State private var isAlwaysOnTop = false
-    @State private var translationOnly = false
+    @AppStorage(LiveCaptionMode.translationOnlyKey) private var translationOnly = true
     @AppStorage("transcriptFontSize") private var transcriptFontSizeRaw = TranscriptFontSize.normal.rawValue
     private var fontSize: TranscriptFontSize { TranscriptFontSize(rawValue: transcriptFontSizeRaw) ?? .normal }
 
@@ -71,7 +71,7 @@ struct RecordingView: View {
                 Divider()
                     .frame(height: 16)
 
-                if appState.enableLiveTranslation {
+                if appState.activeLiveCaptionMode == .api {
                     Button {
                         appState.setLiveTranslationPaused(!appState.liveTranslationPaused)
                     } label: {
@@ -135,16 +135,24 @@ struct RecordingView: View {
             if let message = appState.liveTranslationError {
                 errorBanner(message: message, tint: .orange)
             }
-            if appState.isLiveTranscribing && appState.liveSegments.isEmpty {
+            if let message = appState.livePreviewError {
+                errorBanner(message: message, tint: .orange)
+            }
+            if appState.isLiveTranscribing {
                 HStack(spacing: 6) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text("Waiting for audio...")
+                    if appState.liveStatusText.contains("Preparing")
+                        || appState.liveStatusText.contains("Translating")
+                        || appState.liveStatusText.contains("stabilizing")
+                        || appState.liveStatusText.contains("Catching up") {
+                        ProgressView().controlSize(.small)
+                    }
+                    Text(appState.liveStatusText)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
+                    Spacer(minLength: 0)
                 }
-                .padding(.horizontal)
-                .frame(maxHeight: .infinity)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
             }
 
             if !appState.liveSegments.isEmpty {
@@ -156,7 +164,9 @@ struct RecordingView: View {
                                 translation: index < appState.liveTranslatedSegments.count
                                     ? appState.liveTranslatedSegments[index] : "",
                                 fontSize: fontSize,
-                                translationOnly: translationOnly
+                                translationOnly: appState.activeLiveCaptionMode == .api && translationOnly,
+                                isProvisional: appState.activeLiveCaptionMode == .localEnglish
+                                    && index >= appState.liveStableSegmentCount
                             )
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 12))
@@ -197,7 +207,7 @@ struct RecordingView: View {
         VStack(spacing: 12) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text("Saving recording...")
+            Text(appState.liveStatusText)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -262,6 +272,7 @@ private struct LiveSegmentRow: View, Equatable {
     let translation: String
     let fontSize: TranscriptFontSize
     let translationOnly: Bool
+    let isProvisional: Bool
 
     private static let translationColor = Color(nsColor: NSColor(name: nil, dynamicProvider: { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
@@ -285,6 +296,7 @@ private struct LiveSegmentRow: View, Equatable {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .opacity(isProvisional ? 0.58 : 1)
     }
 }
 

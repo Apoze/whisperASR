@@ -5,7 +5,7 @@ struct DetailView: View {
     @Environment(AppState.self) var appState
     @Environment(AudioPlayerManager.self) var audioPlayer
     @State private var showTimestamps = true
-    @State private var translationOnly = false
+    @AppStorage(LiveCaptionMode.translationOnlyKey) private var translationOnly = true
     @State private var showSearch = false
 
     var body: some View {
@@ -18,6 +18,9 @@ struct DetailView: View {
         }
         .onChange(of: appState.selectedItem?.id) { _, _ in
             showSearch = false
+            if let item = appState.selectedItem, item.status == .completed {
+                audioPlayer.load(url: item.fileURL)
+            }
         }
         // Lives in the detail toolbar (not the sidebar) so the narrow sidebar
         // never pushes the Record button into the overflow menu.
@@ -58,7 +61,12 @@ struct DetailView: View {
             TranscribingView(item: item)
 
         case .completed:
-            TranscriptContentView(item: item, showSearch: $showSearch, showTimestamps: showTimestamps, translationOnly: translationOnly)
+            TranscriptContentView(
+                item: item,
+                showSearch: $showSearch,
+                showTimestamps: showTimestamps,
+                translationOnly: translationOnly && !item.translatedSegments.isEmpty
+            )
                 .toolbar {
                     ToolbarItem {
                         HStack(spacing: 4) {
@@ -166,7 +174,9 @@ struct DetailView: View {
                     Button {
                         appState.retranscribe(item)
                     } label: {
-                        Label("Retry", systemImage: "arrow.clockwise")
+                        Label(
+                            item.translateToEnglish ? "Retry English translation" : "Retry",
+                            systemImage: "arrow.clockwise")
                     }
                     .keyboardShortcut("r", modifiers: .command)
                 }
@@ -366,7 +376,9 @@ struct TranscriptContentView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 6) {
                     ForEach(Array(item.segments.enumerated()), id: \.offset) { index, segment in
-                        segmentView(index: index, segment: segment)
+                        if !translationOnly || (index < item.translatedSegments.count && !item.translatedSegments[index].isEmpty) {
+                            segmentView(index: index, segment: segment)
+                        }
                     }
                 }
                 .padding()

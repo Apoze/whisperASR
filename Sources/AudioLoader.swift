@@ -26,7 +26,7 @@ enum AudioLoader {
     // MARK: - AVFoundation path
 
     private static func loadViaAVAsset(url: URL) async throws -> [Float] {
-        let asset = AVAsset(url: url)
+        let asset = AVURLAsset(url: url)
         let tracks = try await asset.loadTracks(withMediaType: .audio)
         guard let track = tracks.first else {
             throw TranscriptionError.processFailed("No audio track found in file")

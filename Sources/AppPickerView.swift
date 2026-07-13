@@ -7,7 +7,35 @@ struct AppPickerView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.openWindow) var openWindow
     @State private var searchText = ""
-    @AppStorage("liveTranslationPref") private var liveTranslationPref = false
+    @State private var modelManager = ModelManager.shared
+    @AppStorage(LiveCaptionMode.storageKey) private var captionModeRaw = LiveCaptionMode.original.rawValue
+    @AppStorage(LiveCaptionMode.keepOriginalKey) private var keepOriginalTranscript = false
+    @AppStorage(LocalEnglishEngine.storageKey) private var localEnglishEngineRaw = LocalEnglishEngine.whisperTurboApple.rawValue
+    @AppStorage(LocalSpeechEngine.sourceLocaleKey) private var localSourceLocale = ""
+    @AppStorage(AppleTranslationMode.storageKey) private var appleTranslationModeRaw = AppleTranslationMode.adaptive.rawValue
+    @AppStorage("targetLanguage") private var targetLanguage = ""
+
+    private var captionMode: LiveCaptionMode {
+        LiveCaptionMode(rawValue: captionModeRaw) ?? .original
+    }
+
+    private var captionModeBinding: Binding<LiveCaptionMode> {
+        Binding(
+            get: { captionMode },
+            set: { mode in
+                captionModeRaw = mode.rawValue
+                if mode == .api, targetLanguage.isEmpty { targetLanguage = "en" }
+            }
+        )
+    }
+
+    private var localEnglishEngine: LocalEnglishEngine {
+        LocalEnglishEngine(rawValue: localEnglishEngineRaw) ?? .whisperTurboApple
+    }
+
+    private var appleTranslationMode: AppleTranslationMode {
+        AppleTranslationMode(rawValue: appleTranslationModeRaw) ?? .adaptive
+    }
 
     var body: some View {
         @Bindable var appState = appState
@@ -26,17 +54,49 @@ struct AppPickerView: View {
         }
         .frame(
             minWidth: 360, idealWidth: 420, maxWidth: .infinity,
-            minHeight: 400, idealHeight: 400, maxHeight: .infinity
+            minHeight: 460, idealHeight: 460, maxHeight: .infinity
         )
         .background(WindowPositioner())
-        .onChange(of: appState.enableLiveTranscription) { _, newValue in
-            if !newValue { appState.enableLiveTranslation = false }
-        }
+        .background { translationPreparation }
         .onAppear {
             if recorder.state == .idle {
                 recorder.loadAvailableApps()
             }
-            appState.enableLiveTranslation = liveTranslationPref
+            captionModeRaw = LiveCaptionMode.stored().rawValue
+            localEnglishEngineRaw = LocalEnglishEngine.stored().rawValue
+            appleTranslationModeRaw = AppleTranslationMode.stored().rawValue
+            if captionMode == .api, targetLanguage.isEmpty { targetLanguage = "en" }
+            if captionMode == .localEnglish { appState.loadLocalEnglishCapabilities() }
+        }
+        .onChange(of: captionModeRaw) { _, _ in
+            if captionMode == .localEnglish {
+                appState.loadLocalEnglishCapabilities()
+            } else {
+                appState.deactivateLocalEnglishResources()
+            }
+        }
+        .onChange(of: appState.enableLiveTranscription) { _, enabled in
+            if enabled, captionMode == .localEnglish {
+                appState.loadLocalEnglishCapabilities()
+            } else if !enabled {
+                appState.deactivateLocalEnglishResources()
+            }
+        }
+        .onChange(of: modelManager.selectedFileName) { _, _ in
+            if captionMode == .localEnglish, localEnglishEngine == .whisperTurboApple {
+                appState.prepareLiveTranslationModel()
+            }
+        }
+        .onChange(of: localEnglishEngineRaw) { _, _ in
+            appState.prepareLocalEnglishResources()
+        }
+        .onChange(of: localSourceLocale) { _, _ in
+            appState.resetAppleTranslationPreparation()
+            appState.prepareLocalEnglishResources()
+        }
+        .onChange(of: appleTranslationModeRaw) { _, _ in
+            appState.resetAppleTranslationPreparation()
+            appState.reloadLocalEnglishCapabilities()
         }
     }
 
@@ -104,27 +164,76 @@ struct AppPickerView: View {
 
             Divider()
 
-            HStack(spacing: 12) {
-                Toggle(isOn: $recorder.includeMicrophone) {
-                    Image(systemName: "mic")
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 16) {
+                    Toggle("Microphone", isOn: $recorder.includeMicrophone)
+                    Toggle("Live captions", isOn: $appState.enableLiveTranscription)
                 }
-                Toggle(isOn: $appState.enableLiveTranscription) {
-                    Label("Live", systemImage: "text.word.spacing")
+                .toggleStyle(.checkbox)
+
+                if appState.enableLiveTranscription {
+                    Picker("Captions", selection: captionModeBinding) {
+                        ForEach(availableCaptionModes) { mode in
+                            Text(mode.label).tag(mode)
+                        }
+                    }
+
+                    if captionMode == .api {
+                        Picker("API target", selection: $targetLanguage) {
+                            ForEach(TargetLanguage.available) { language in
+                                Text(language.nativeName).tag(language.id)
+                            }
+                        }
+                    }
+
+                    if captionMode == .localEnglish {
+                        Picker("Local English engine", selection: $localEnglishEngineRaw) {
+                            ForEach(LocalEnglishEngine.allCases) { engine in
+                                Text(engine.label).tag(engine.rawValue)
+                            }
+                        }
+
+                        Picker("Spoken language", selection: $localSourceLocale) {
+                            Text("Choose a language…").tag("")
+                            ForEach(appState.localSourceLocales) { locale in
+                                Text(locale.label).tag(locale.id)
+                            }
+                        }
+
+                        Picker("Subtitle timing", selection: $appleTranslationModeRaw) {
+                            ForEach(AppleTranslationMode.allCases) { mode in
+                                Text(mode.label).tag(mode.rawValue)
+                            }
+                        }
+
+                        if localEnglishEngine == .whisperTurboApple {
+                            LabeledContent("Whisper model", value: "Large v3 Turbo")
+                        }
+
+                        LabeledContent("Translation", value: appleTranslationMode.label)
+
+                        localEnglishStatus
+                    }
+
+                    if captionMode != .original {
+                        Toggle("Keep original transcript", isOn: $keepOriginalTranscript)
+                            .toggleStyle(.checkbox)
+                    }
+
+                    Text(captionModeDescription)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Toggle(isOn: Binding(
-                    get: { appState.enableLiveTranslation },
-                    set: { appState.enableLiveTranslation = $0; liveTranslationPref = $0 }
-                )) {
-                    Image(systemName: "character.bubble")
-                }
-                .disabled(!appState.enableLiveTranscription)
             }
-            .toggleStyle(.checkbox)
             .padding(.horizontal, 12)
             .padding(.top, 8)
 
             HStack {
                 Button("Cancel") {
+                    if captionMode == .localEnglish {
+                        appState.deactivateLocalEnglishResources()
+                    }
                     recorder.state = .idle
                     dismiss()
                 }
@@ -140,7 +249,10 @@ struct AppPickerView: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(recorder.selectedApp == nil)
+                .disabled(
+                    recorder.selectedApp == nil
+                        || (captionMode == .localEnglish && !appState.isLocalEnglishReady)
+                )
             }
             .padding(12)
         }
@@ -187,6 +299,98 @@ struct AppPickerView: View {
     }
 
     // MARK: - Helpers
+
+    private var captionModeDescription: String {
+        switch captionMode {
+        case .original:
+            return "Transcribes locally in the detected spoken language."
+        case .localEnglish:
+            if appleTranslationMode.showsPreview {
+                return localEnglishEngine.detail + " Apple Speech supplies one revisable English preview; only the selected engine's final is saved. Everything stays on this Mac."
+            }
+            return localEnglishEngine.detail + " Only stable English is shown; everything stays on this Mac."
+        case .api:
+            return "Whisper transcribes locally, then the configured OpenAI-compatible API translates to the selected language."
+        }
+    }
+
+    @ViewBuilder
+    private var localEnglishStatus: some View {
+        if localSourceLocale.isEmpty {
+            Label("Choose the spoken language.", systemImage: "exclamationmark.triangle.fill")
+                .font(.caption2)
+                .foregroundStyle(.orange)
+        } else if appState.isPreparingLocalResources
+                    || (localEnglishEngine == .whisperTurboApple && appState.isPreparingLiveModel) {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text(modelPreparationMessage)
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        } else if let error = appState.localResourceError ?? appState.liveModelPreparationError {
+            Label(error, systemImage: "exclamationmark.triangle.fill")
+                .font(.caption2)
+                .foregroundStyle(.red)
+        } else if appState.isLocalEnglishReady {
+            VStack(alignment: .leading, spacing: 3) {
+                Label(readyMessage, systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                if let warning = appState.localModelManager.memoryWarning {
+                    Label(warning, systemImage: "memorychip")
+                        .foregroundStyle(.orange)
+                }
+            }
+            .font(.caption2)
+        } else if case .failed(let error) = appState.localModelManager.phase(for: localEnglishEngine) {
+            Label(error, systemImage: "exclamationmark.triangle.fill")
+                .font(.caption2)
+                .foregroundStyle(.red)
+        }
+    }
+
+    private var modelPreparationMessage: String {
+        switch appState.localModelManager.phase(for: localEnglishEngine) {
+        case .downloading(let progress, let message):
+            return "\(message) \(Int(progress * 100))%"
+        case .loading(let message):
+            return message
+        default:
+            return "Preparing the selected local pipeline…"
+        }
+    }
+
+    private var readyMessage: String {
+        if case .ready(let bytes) = appState.localModelManager.phase(for: localEnglishEngine) {
+            return "Ready — process using \(ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory))"
+        }
+        return "Ready for local English subtitles"
+    }
+
+    private var availableCaptionModes: [LiveCaptionMode] {
+        if #available(macOS 26.4, *) { return LiveCaptionMode.allCases }
+        return LiveCaptionMode.allCases.filter { $0 != .localEnglish }
+    }
+
+    @ViewBuilder
+    private var translationPreparation: some View {
+        if captionMode == .localEnglish,
+           !localSourceLocale.isEmpty {
+            if #available(macOS 26.4, *) {
+                AppleTranslationPreparationView(
+                    sourceLocale: localSourceLocale,
+                    mode: appleTranslationMode
+                ) { highFidelity, ready, error in
+                    appState.reportAppleTranslationPreparation(
+                        highFidelity: highFidelity,
+                        ready: ready,
+                        error: error
+                    )
+                }
+                .id("\(localSourceLocale)|\(appleTranslationMode.rawValue)")
+            }
+        }
+    }
 
     private var filteredApps: [SCRunningApplication] {
         guard !searchText.isEmpty else { return sortedApps }

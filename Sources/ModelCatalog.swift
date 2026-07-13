@@ -11,6 +11,7 @@ struct WhisperModelInfo: Identifiable, Equatable {
     let fileName: String
     let url: URL
     let approxBytes: Int64
+    let supportsEnglishTranslation: Bool
 
     var approxSizeText: String {
         ByteCountFormatter.string(fromByteCount: approxBytes, countStyle: .file)
@@ -24,26 +25,29 @@ enum ModelCatalog {
         WhisperModelInfo(
             id: "breeze-asr-25",
             displayName: "Breeze-ASR-25",
-            detail: "Best for Mandarin and Taiwanese-accented speech",
+            detail: "Best for Mandarin transcription; does not translate",
             fileName: "ggml-model.bin",
             url: URL(string: "https://huggingface.co/danielkao0421/Breeze-ASR-25-ggml/resolve/main/ggml-model.bin")!,
-            approxBytes: 3_100_000_000
+            approxBytes: 3_100_000_000,
+            supportsEnglishTranslation: false
         ),
         WhisperModelInfo(
             id: "large-v3-turbo",
             displayName: "Whisper Large v3 Turbo",
-            detail: "Near large-v3 quality, much faster",
+            detail: "Fast, accurate transcription; does not translate",
             fileName: "ggml-large-v3-turbo.bin",
             url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!,
-            approxBytes: 1_620_000_000
+            approxBytes: 1_620_000_000,
+            supportsEnglishTranslation: false
         ),
         WhisperModelInfo(
             id: "medium",
             displayName: "Whisper Medium",
-            detail: "Good multilingual quality",
+            detail: "Recommended for local translation to English",
             fileName: "ggml-medium.bin",
             url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin")!,
-            approxBytes: 1_530_000_000
+            approxBytes: 1_530_000_000,
+            supportsEnglishTranslation: true
         ),
         WhisperModelInfo(
             id: "small",
@@ -51,7 +55,8 @@ enum ModelCatalog {
             detail: "Fast, decent quality",
             fileName: "ggml-small.bin",
             url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin")!,
-            approxBytes: 488_000_000
+            approxBytes: 488_000_000,
+            supportsEnglishTranslation: true
         ),
         WhisperModelInfo(
             id: "base",
@@ -59,7 +64,8 @@ enum ModelCatalog {
             detail: "Very fast, basic quality",
             fileName: "ggml-base.bin",
             url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin")!,
-            approxBytes: 148_000_000
+            approxBytes: 148_000_000,
+            supportsEnglishTranslation: true
         ),
         WhisperModelInfo(
             id: "tiny",
@@ -67,7 +73,8 @@ enum ModelCatalog {
             detail: "Fastest, lowest quality",
             fileName: "ggml-tiny.bin",
             url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin")!,
-            approxBytes: 78_000_000
+            approxBytes: 78_000_000,
+            supportsEnglishTranslation: true
         ),
     ]
 
@@ -86,6 +93,18 @@ enum ModelCatalog {
 
     static func path(for model: WhisperModelInfo) -> URL {
         modelDirectory.appendingPathComponent(model.fileName)
+    }
+
+    static var selectedModelSupportsEnglishTranslation: Bool {
+        let defaults = UserDefaults.standard
+        if let selected = defaults.string(forKey: "selectedModelFile"),
+           let model = model(fileName: selected) {
+            return model.supportsEnglishTranslation
+        }
+        let path = defaults.string(forKey: "modelPath")
+            ?? modelDirectory.appendingPathComponent("ggml-model.bin").path
+        let name = URL(fileURLWithPath: path).lastPathComponent.lowercased()
+        return !name.contains("turbo") && !name.contains("breeze") && name != "ggml-model.bin"
     }
 }
 

@@ -2,6 +2,180 @@ import Foundation
 import Observation
 import SwiftUI
 
+// MARK: - Live Captions
+
+enum LiveCaptionMode: String, CaseIterable, Identifiable {
+    case original
+    case localEnglish = "whisperEnglish"
+    case api
+
+    static let storageKey = "liveCaptionMode"
+    static let keepOriginalKey = "keepOriginalTranscript"
+    static let translationOnlyKey = "translationOnlyPref"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .original: return "Original — Whisper local"
+        case .localEnglish: return "English — local"
+        case .api: return "API — selected language"
+        }
+    }
+
+    static func stored(in defaults: UserDefaults = .standard) -> LiveCaptionMode {
+        if let raw = defaults.string(forKey: storageKey), let mode = LiveCaptionMode(rawValue: raw) {
+            return mode
+        }
+        // Migrate the previous live-translation checkbox without changing its meaning.
+        if defaults.object(forKey: "liveTranslationPref") != nil {
+            return defaults.bool(forKey: "liveTranslationPref") ? .api : .original
+        }
+        return .original
+    }
+}
+
+enum LocalSpeechEngine: String, CaseIterable, Identifiable {
+    case appleSpeech
+    case whisper
+
+    static let storageKey = "localSpeechEngine"
+    static let sourceLocaleKey = "localSourceLocale"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .appleSpeech: return "Apple Speech — streaming"
+        case .whisper: return "Whisper — selected model"
+        }
+    }
+}
+
+/// The deliberately narrow local-English pipelines. This stays separate
+/// from the Whisper model catalog: each case describes a complete pipeline, not
+/// a generally interchangeable model.
+enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
+    case whisperTurboApple
+    case qwenApple
+
+    static let storageKey = "localEnglishEngine"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .whisperTurboApple:
+            return "Whisper Turbo → Apple"
+        case .qwenApple:
+            return "Qwen → Apple"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .whisperTurboApple:
+            return "Reference: Whisper Large v3 Turbo transcribes, then Apple high-fidelity translates."
+        case .qwenApple:
+            return "Experimental: Qwen transcribes each FireRedVAD phrase, then Apple translates."
+        }
+    }
+
+    var requiredComponents: Set<LocalRuntimeComponent> {
+        switch self {
+        case .whisperTurboApple:
+            return [.fireRedVAD, .whisperTurbo, .appleTranslation]
+        case .qwenApple:
+            return [.fireRedVAD, .qwen, .appleTranslation]
+        }
+    }
+
+    /// Preserve existing installations: the old Whisper choice maps to the
+    /// corrected reference pipeline; Apple Speech is no longer a benchmark
+    /// candidate and maps to the same safe default.
+    static func stored(in defaults: UserDefaults = .standard) -> Self {
+        if defaults.string(forKey: storageKey) == "nemotronQwenApple" {
+            return .qwenApple
+        }
+        if let raw = defaults.string(forKey: storageKey), let engine = Self(rawValue: raw) {
+            return engine
+        }
+        return .whisperTurboApple
+    }
+}
+
+enum LocalRuntimeComponent: String, Hashable, Sendable {
+    case fireRedVAD
+    case whisperTurbo
+    case qwen
+    case appleTranslation
+}
+
+enum LocalModelPhase: Equatable {
+    case absent
+    case downloading(progress: Double, message: String)
+    case loading(message: String)
+    case ready(residentBytes: UInt64)
+    case failed(String)
+
+    var isReady: Bool {
+        if case .ready = self { return true }
+        return false
+    }
+}
+
+enum AppleTranslationMode: String, CaseIterable, Identifiable, Codable {
+    case adaptive
+    case highFidelityOnly
+    case lowLatencyOnly
+
+    static let storageKey = "appleTranslationMode"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .adaptive: return "Live preview → best final"
+        case .highFidelityOnly: return "Stable final only"
+        case .lowLatencyOnly: return "Live preview → fastest final"
+        }
+    }
+
+    static func stored(in defaults: UserDefaults = .standard) -> AppleTranslationMode {
+        if let raw = defaults.string(forKey: storageKey), let mode = Self(rawValue: raw) {
+            return mode
+        }
+        let old = defaults.string(forKey: LiveSubtitlePolicy.storageKey)
+        return old == LiveSubtitlePolicy.stableOnly.rawValue ? .highFidelityOnly : .adaptive
+    }
+
+    var showsPreview: Bool { self != .highFidelityOnly }
+    var finalUsesHighFidelity: Bool { self != .lowLatencyOnly }
+    var requiresLowLatency: Bool { showsPreview || !finalUsesHighFidelity }
+    var requiresHighFidelity: Bool { finalUsesHighFidelity }
+}
+
+struct SpeechLocaleChoice: Identifiable, Hashable {
+    let id: String
+    let label: String
+}
+
+enum LiveSubtitlePolicy: String, CaseIterable, Identifiable {
+    case fastPreview
+    case stableOnly
+
+    static let storageKey = "liveSubtitlePolicy"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .fastPreview: return "Fast preview"
+        case .stableOnly: return "Stable only"
+        }
+    }
+}
+
 // MARK: - Transcript Font Size
 
 enum TranscriptFontSize: String, CaseIterable {
@@ -72,11 +246,15 @@ enum TranscriptionStatus: Equatable {
 enum TranscriptionError: LocalizedError {
     case processFailed(String)
     case modelNotFound(String)
+    case modelIncompatible(String)
+    case modelBusy
 
     var errorDescription: String? {
         switch self {
         case .processFailed(let msg): return "Transcription failed: \(msg)"
         case .modelNotFound(let msg): return msg
+        case .modelIncompatible(let msg): return msg
+        case .modelBusy: return "The Whisper model is busy with live captions. Try again when recording ends."
         }
     }
 }
@@ -96,6 +274,10 @@ class TranscriptionItem: Identifiable {
     var translatedSegments: [String] = []
     var translationLanguage: String?
     var isTranslating: Bool = false
+    var translateToEnglish = false
+    var localSourceLocale: String?
+    var localTranslationMode: AppleTranslationMode?
+    var discardOriginalAfterRetry = false
     let dateAdded: Date
 
     init(fileURL: URL) {
@@ -108,7 +290,10 @@ class TranscriptionItem: Identifiable {
     /// Restore from persisted data
     init(id: UUID, fileName: String, fileURL: URL, dateAdded: Date,
          status: TranscriptionStatus, segments: [TranscriptionSegment], fullText: String,
-         translatedSegments: [String] = [], translationLanguage: String? = nil) {
+         translatedSegments: [String] = [], translationLanguage: String? = nil,
+         translateToEnglish: Bool = false, localSourceLocale: String? = nil,
+         localTranslationMode: AppleTranslationMode? = nil,
+         discardOriginalAfterRetry: Bool = false) {
         self.id = id
         self.fileName = fileName
         self.fileURL = fileURL
@@ -118,5 +303,9 @@ class TranscriptionItem: Identifiable {
         self.fullText = fullText
         self.translatedSegments = translatedSegments
         self.translationLanguage = translationLanguage
+        self.translateToEnglish = translateToEnglish
+        self.localSourceLocale = localSourceLocale
+        self.localTranslationMode = localTranslationMode
+        self.discardOriginalAfterRetry = discardOriginalAfterRetry
     }
 }
