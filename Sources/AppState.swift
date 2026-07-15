@@ -962,8 +962,13 @@ class AppState {
         let engine = LocalEnglishEngine.stored()
         guard LiveCaptionMode.stored() == .localEnglish,
               engine.usesWhisperFinal else {
-            liveModelPreparationTask?.cancel()
-            liveModelPreparationTask = nil
+            let previousPreparation = liveModelPreparationTask
+            previousPreparation?.cancel()
+            liveModelPreparationTask = Task { [weak self] in
+                await previousPreparation?.value
+                guard let self else { return }
+                await self.service.unloadModel()
+            }
             isPreparingLiveModel = false
             preparedLiveModelFileName = nil
             preparingLiveModelFileName = nil
@@ -977,7 +982,7 @@ class AppState {
             previousPreparation?.cancel()
             liveModelPreparationTask = Task { [weak self] in
                 await previousPreparation?.value
-                guard !Task.isCancelled, let self else { return }
+                guard let self else { return }
                 await self.service.unloadModel()
             }
             liveModelPreparationError = "Download the required Whisper model in Settings before using \(engine.label)."
@@ -991,11 +996,14 @@ class AppState {
         let modelPath = ModelCatalog.path(for: model).path
         guard preparedLiveModelFileName != selected,
               preparingLiveModelFileName != selected else { return }
-        liveModelPreparationTask?.cancel()
+        let previousPreparation = liveModelPreparationTask
+        previousPreparation?.cancel()
         isPreparingLiveModel = true
         preparingLiveModelFileName = selected
         liveModelPreparationError = nil
         liveModelPreparationTask = Task { [weak self] in
+            await previousPreparation?.value
+            guard !Task.isCancelled else { return }
             guard let self else { return }
             do {
                 if let expectedSHA256 = model.sha256,
@@ -1004,6 +1012,7 @@ class AppState {
                     let actualSHA256 = try await Task.detached(priority: .utility) {
                         try ModelDownloader.sha256(of: modelURL)
                     }.value
+                    guard !Task.isCancelled else { return }
                     guard actualSHA256 == expectedSHA256 else {
                         throw LocalPrototypeError.invalidModelChecksum(
                             model: model.displayName,
@@ -1013,6 +1022,7 @@ class AppState {
                     }
                     self.verifiedWhisperModelChecksums.insert(model.fileName)
                 }
+                guard !Task.isCancelled else { return }
                 try await self.service.preloadModel(
                     modelPath: modelPath,
                     requireEnglishTranslation: engine.producesDirectEnglish
@@ -1216,6 +1226,10 @@ class AppState {
                     await MainActor.run { self.appleSpeechReady = true }
                 }
                 if !engine.usesWhisperFinal {
+                    let previousWhisperPreparation = self.liveModelPreparationTask
+                    previousWhisperPreparation?.cancel()
+                    await previousWhisperPreparation?.value
+                    guard !Task.isCancelled else { return }
                     await self.service.unloadModel()
                     await MainActor.run {
                         self.preparedLiveModelFileName = nil
