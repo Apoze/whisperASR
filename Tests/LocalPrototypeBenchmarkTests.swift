@@ -827,7 +827,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         validateContinuousVoxtralReport(report)
     }
 
-    /// Ten wall-clock replays in one uncommitted helper session. With the
+    /// Multiple wall-clock replays in one uncommitted helper session. With the
     /// canonical 40-second fixture this crosses Voxtral's 4,096-position
     /// boundary and remains the production gate for cumulative backlog and
     /// stream-tail loss.
@@ -836,7 +836,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         guard let path = ProcessInfo.processInfo.environment[
             "WHISPERASR_VOXTRAL_HELPER_ENDURANCE_WAV"
         ] else {
-            throw XCTSkip("Set WHISPERASR_VOXTRAL_HELPER_ENDURANCE_WAV to run the 10x helper endurance test.")
+            throw XCTSkip("Set WHISPERASR_VOXTRAL_HELPER_ENDURANCE_WAV to run the configured helper endurance test.")
         }
         let url = URL(fileURLWithPath: path)
         let samples = try await AudioLoader.loadSamples(url: url)
@@ -844,9 +844,13 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         try await manager.prepare(.voxtralApple)
         defer { Task { await manager.shutdown() } }
 
+        let replayCount = max(2, Int(ProcessInfo.processInfo.environment[
+            "WHISPERASR_VOXTRAL_ENDURANCE_REPLAY_COUNT"
+        ] ?? "10") ?? 10)
+
         let report = try await continuousVoxtralRun(
             samples: samples,
-            replayCount: 10,
+            replayCount: replayCount,
             manager: manager
         )
         XCTAssertNotNil(
@@ -872,7 +876,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(report).write(
             to: url.deletingLastPathComponent().appendingPathComponent(
-                "voxtral-helper-endurance-10x-crosses-4096-positions-960ms-\(report.blockMilliseconds)ms.json"
+                "voxtral-helper-endurance-\(replayCount)x-crosses-4096-positions-960ms-\(report.blockMilliseconds)ms.json"
             ),
             options: .atomic
         )
@@ -974,8 +978,16 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
                         audio: audio,
                         language: "ja"
                     )
+                case .cohereApple:
+                    source = try await modelManager.transcribeCohere(
+                        audio: audio,
+                        language: "ja"
+                    )
                 case .qwenApple:
                     XCTFail("Qwen is intentionally outside this three-candidate bakeoff.")
+                    return
+                case .whisperLargeV3Direct:
+                    XCTFail("Direct-English engines are intentionally outside this Japanese-source bakeoff.")
                     return
                 }
                 let asrFinished = DispatchTime.now().uptimeNanoseconds
@@ -1106,9 +1118,9 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         let requestedEngine = ProcessInfo.processInfo.environment[
             "WHISPERASR_REALTIME_ENGINE"
         ].flatMap(LocalEnglishEngine.init(rawValue:))
-        if requestedEngine == .voxtralApple {
+        if let requestedEngine, requestedEngine != .voxtralCohereApple {
             throw XCTSkip(
-                "Use testVoxtralContinuousHelperEnduranceWhenOptedIn for the continuous Voxtral helper."
+                "This replay measures only Voxtral live + Cohere final. Use the dedicated ASR bakeoff for \(requestedEngine.label)."
             )
         }
         let engines: [LocalEnglishEngine] = requestedEngine.map { [$0] }

@@ -3,6 +3,40 @@ import XCTest
 @testable import WhisperASRApp
 
 final class LocalFinalTranslationRetryTests: XCTestCase {
+    func testDirectAndSourceFinalsUseTheSameTypedQueuePayload() {
+        let japanese = TranscriptionSegment(start: 0, end: 1, text: "はい。")
+        let english = TranscriptionSegment(start: 1, end: 2, text: "Yes.")
+
+        let sourceInput = LocalFinalInput.japaneseSource(japanese)
+        let directInput = LocalFinalInput.directEnglish(english)
+
+        XCTAssertEqual(sourceInput.segment, japanese)
+        XCTAssertTrue(sourceInput.requiresAppleTranslation)
+        XCTAssertEqual(directInput.segment, english)
+        XCTAssertFalse(directInput.requiresAppleTranslation)
+    }
+
+    func testDirectEnglishForcedOverlapCanBeRemovedWithoutRewritingTheRemainder() {
+        XCTAssertEqual(
+            AppState.trimEnglishOverlap(
+                previous: "This is the end of the first phrase.",
+                current: "the first phrase. And this is the next one."
+            ),
+            "And this is the next one."
+        )
+    }
+
+    func testDirectEnglishOverlapNeverTrimsAnUnrelatedPartialWord() {
+        XCTAssertEqual(
+            AppState.trimEnglishOverlap(previous: "That", current: "this continues"),
+            "this continues"
+        )
+        XCTAssertEqual(
+            AppState.trimEnglishOverlap(previous: "We eat rice", current: "rice is good"),
+            "rice is good"
+        )
+    }
+
     func testSharedEnglishValidationRejectsSourceScriptForLiveAndRetry() throws {
         XCTAssertEqual(
             EnglishSubtitleValidator.normalizedEnglish("  A faithful subtitle.  "),

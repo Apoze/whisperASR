@@ -123,6 +123,12 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralApple)
         defaults.set(LocalEnglishEngine.voxtralCohereApple.rawValue, forKey: LocalEnglishEngine.storageKey)
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralCohereApple)
+        defaults.set(LocalEnglishEngine.whisperLargeV3Direct.rawValue, forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperLargeV3Direct)
+        defaults.set(LocalEnglishEngine.cohereApple.rawValue, forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .cohereApple)
+        defaults.set("qwenJaEnDirect", forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperTurboApple)
     }
 
     func testOldNemotronPipelinePreferenceMigratesToQwenOnly() {
@@ -156,6 +162,18 @@ final class LiveCaptionTests: XCTestCase {
             LocalEnglishEngine.voxtralCohereApple.requiredComponents,
             [.fireRedVAD, .voxtral, .cohere, .appleTranslation]
         )
+        XCTAssertEqual(
+            LocalEnglishEngine.whisperLargeV3Direct.requiredComponents,
+            [.fireRedVAD, .whisperLargeV3]
+        )
+        XCTAssertEqual(
+            LocalEnglishEngine.cohereApple.requiredComponents,
+            [.fireRedVAD, .cohere, .appleTranslation]
+        )
+        XCTAssertTrue(LocalEnglishEngine.whisperLargeV3Direct.producesDirectEnglish)
+        XCTAssertFalse(LocalEnglishEngine.whisperLargeV3Direct.usesAppleFinalTranslation)
+        XCTAssertFalse(LocalEnglishEngine.whisperLargeV3Direct.requiresAppleHighFidelity(for: .adaptive))
+        XCTAssertTrue(LocalEnglishEngine.whisperLargeV3Direct.requiresAppleLowLatency(for: .adaptive))
         XCTAssertTrue(LocalEnglishEngine.voxtralApple.usesVoxtralStreaming)
         XCTAssertTrue(LocalEnglishEngine.voxtralCohereApple.usesCohereFinal)
         XCTAssertFalse(LocalEnglishEngine.voxtralApple.usesAppleSpeechPreview)
@@ -492,12 +510,31 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertEqual(manager.phase(for: .qwenApple), .absent)
         XCTAssertEqual(manager.phase(for: .voxtralApple), .absent)
         XCTAssertEqual(manager.phase(for: .voxtralCohereApple), .absent)
+        XCTAssertEqual(manager.phase(for: .whisperLargeV3Direct), .absent)
+        XCTAssertEqual(manager.phase(for: .cohereApple), .absent)
     }
 
     func testCatalogRejectsKnownNonTranslationModels() {
         XCTAssertFalse(ModelCatalog.model(id: "large-v3-turbo")!.supportsEnglishTranslation)
         XCTAssertFalse(ModelCatalog.model(id: "breeze-asr-25")!.supportsEnglishTranslation)
+        XCTAssertTrue(ModelCatalog.model(id: "large-v3")!.supportsEnglishTranslation)
+        XCTAssertEqual(
+            ModelCatalog.model(id: "large-v3")!.sha256,
+            "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2"
+        )
         XCTAssertTrue(ModelCatalog.model(id: "medium")!.supportsEnglishTranslation)
+    }
+
+    func testModelDownloaderComputesStreamingSHA256() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try Data("abc".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        XCTAssertEqual(
+            try ModelDownloader.sha256(of: url),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        )
     }
 
     func testOlderBackupWithoutSubtitlePolicyStillDecodes() throws {

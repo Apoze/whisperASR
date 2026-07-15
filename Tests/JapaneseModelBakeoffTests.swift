@@ -268,6 +268,7 @@ private enum JapaneseBakeoffEngine: String, Codable, CaseIterable {
     case whisperTurbo = "whisper-large-v3-turbo"
     case voxtralContinuous = "voxtral-q4-continuous-960ms"
     case qwenASR = "qwen3-asr-1.7b-mlx-8bit"
+    case cohereQ8 = "cohere-transcribe-03-2026-mlx-8bit"
 }
 
 private struct JapaneseBakeoffTurnReport: Codable {
@@ -461,8 +462,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             }
         )
         XCTAssertEqual(artifacts.report.items.count, 2)
-        XCTAssertEqual(Set(artifacts.report.items[0].candidates.map(\.alias)), Set(["A", "B", "C"]))
-        XCTAssertEqual(artifacts.key.count, 6)
+        XCTAssertEqual(Set(artifacts.report.items[0].candidates.map(\.alias)), Set(["A", "B", "C", "D"]))
+        XCTAssertEqual(artifacts.key.count, 8)
     }
 
     /// Run with `Scripts/run_japanese_bakeoff.sh [smoke|full]`.
@@ -750,6 +751,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 try await modelManager.prepare(.voxtralApple)
             case .qwenASR:
                 try await modelManager.prepare(.qwenApple)
+            case .cohereQ8:
+                try await modelManager.prepare(.cohereApple)
             }
         } catch {
             setupError = error.localizedDescription
@@ -863,6 +866,11 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             return try await modelManager.transcribeQwen(
                 audio: audio,
                 language: "Japanese"
+            )
+        case .cohereQ8:
+            return try await modelManager.transcribeCohere(
+                audio: audio,
+                language: "ja"
             )
         case .voxtralContinuous:
             let events = try await modelManager.startContinuousVoxtral()
