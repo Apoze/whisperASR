@@ -37,6 +37,12 @@ struct AppPickerView: View {
         AppleTranslationMode(rawValue: appleTranslationModeRaw) ?? .adaptive
     }
 
+    private var availableTranslationModes: [AppleTranslationMode] {
+        localEnglishEngine.producesDirectEnglish
+            ? [.adaptive, .highFidelityOnly]
+            : AppleTranslationMode.allCases
+    }
+
     var body: some View {
         @Bindable var appState = appState
         @Bindable var recorder = recorder
@@ -65,6 +71,10 @@ struct AppPickerView: View {
             captionModeRaw = LiveCaptionMode.stored().rawValue
             localEnglishEngineRaw = LocalEnglishEngine.stored().rawValue
             appleTranslationModeRaw = AppleTranslationMode.stored().rawValue
+            if localEnglishEngine.producesDirectEnglish,
+               appleTranslationMode == .lowLatencyOnly {
+                appleTranslationModeRaw = AppleTranslationMode.adaptive.rawValue
+            }
             if captionMode == .api, targetLanguage.isEmpty { targetLanguage = "en" }
             if captionMode == .localEnglish { appState.loadLocalEnglishCapabilities() }
         }
@@ -83,11 +93,15 @@ struct AppPickerView: View {
             }
         }
         .onChange(of: modelManager.selectedFileName) { _, _ in
-            if captionMode == .localEnglish, localEnglishEngine == .whisperTurboApple {
+            if captionMode == .localEnglish, localEnglishEngine.usesWhisperFinal {
                 appState.prepareLiveTranslationModel()
             }
         }
         .onChange(of: localEnglishEngineRaw) { _, _ in
+            if localEnglishEngine.producesDirectEnglish,
+               appleTranslationMode == .lowLatencyOnly {
+                appleTranslationModeRaw = AppleTranslationMode.adaptive.rawValue
+            }
             appState.resetAppleTranslationPreparation()
             appState.reloadLocalEnglishCapabilities()
         }
@@ -202,21 +216,30 @@ struct AppPickerView: View {
                         }
 
                         Picker("Subtitle timing", selection: $appleTranslationModeRaw) {
-                            ForEach(AppleTranslationMode.allCases) { mode in
-                                Text(mode.label).tag(mode.rawValue)
+                            ForEach(availableTranslationModes) { mode in
+                                Text(translationModeLabel(mode)).tag(mode.rawValue)
                             }
                         }
 
-                        if localEnglishEngine == .whisperTurboApple {
-                            LabeledContent("Whisper model", value: "Large v3 Turbo")
+                        if let modelID = localEnglishEngine.whisperModelID,
+                           let model = ModelCatalog.model(id: modelID) {
+                            LabeledContent("Whisper model", value: model.displayName)
                         }
 
-                        LabeledContent("Translation", value: appleTranslationMode.label)
+                        LabeledContent(
+                            "Translation",
+                            value: localEnglishEngine.producesDirectEnglish
+                                ? (appleTranslationMode.showsPreview
+                                    ? "Apple live preview → direct final"
+                                    : "Direct model final")
+                                : appleTranslationMode.label
+                        )
 
                         localEnglishStatus
                     }
 
-                    if captionMode != .original {
+                    if captionMode != .original,
+                       captionMode != .localEnglish || !localEnglishEngine.producesDirectEnglish {
                         Toggle("Keep original transcript", isOn: $keepOriginalTranscript)
                             .toggleStyle(.checkbox)
                     }
@@ -335,7 +358,7 @@ struct AppPickerView: View {
                 .font(.caption2)
                 .foregroundStyle(.orange)
         } else if appState.isPreparingLocalResources
-                    || (localEnglishEngine == .whisperTurboApple && appState.isPreparingLiveModel) {
+                    || (localEnglishEngine.usesWhisperFinal && appState.isPreparingLiveModel) {
             HStack(spacing: 6) {
                 ProgressView().controlSize(.small)
                 Text(modelPreparationMessage)
@@ -389,11 +412,12 @@ struct AppPickerView: View {
     @ViewBuilder
     private var translationPreparation: some View {
         if captionMode == .localEnglish,
-           !localSourceLocale.isEmpty {
+           !localSourceLocale.isEmpty,
+           let preparationMode = applePreparationMode {
             if #available(macOS 26.4, *) {
                 AppleTranslationPreparationView(
                     sourceLocale: localSourceLocale,
-                    mode: appleTranslationMode
+                    mode: preparationMode
                 ) { highFidelity, ready, error in
                     appState.reportAppleTranslationPreparation(
                         highFidelity: highFidelity,
@@ -404,6 +428,20 @@ struct AppPickerView: View {
                 .id("\(localSourceLocale)|\(appleTranslationMode.rawValue)|\(localEnglishEngine.rawValue)")
             }
         }
+    }
+
+    private var applePreparationMode: AppleTranslationMode? {
+        guard localEnglishEngine.producesDirectEnglish else {
+            return appleTranslationMode
+        }
+        return appleTranslationMode.showsPreview ? .lowLatencyOnly : nil
+    }
+
+    private func translationModeLabel(_ mode: AppleTranslationMode) -> String {
+        guard localEnglishEngine.producesDirectEnglish else { return mode.label }
+        return mode.showsPreview
+            ? "Live preview → direct final"
+            : "Stable direct final only"
     }
 
     private var filteredApps: [SCRunningApplication] {

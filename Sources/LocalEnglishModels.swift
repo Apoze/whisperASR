@@ -59,6 +59,7 @@ enum LocalPrototypeError: LocalizedError {
     case modelNotLoaded(String)
     case memoryLimit(UInt64)
     case invalidDownload(String)
+    case invalidModelChecksum(model: String, expected: String, actual: String)
     case invalidResponse
     case cursorMismatch(String)
 
@@ -68,6 +69,8 @@ enum LocalPrototypeError: LocalizedError {
         case .memoryLimit(let bytes):
             return "The selected pipeline used \(ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)), above the 10 GB safety limit."
         case .invalidDownload(let name): return "The configured \(name) revision no longer matches the audited revision."
+        case .invalidModelChecksum(let model, let expected, let actual):
+            return "\(model) failed SHA-256 verification (expected \(expected), got \(actual))."
         case .invalidResponse: return "The local speech pipeline returned an invalid response."
         case .cursorMismatch(let message): return message
         }
@@ -353,7 +356,7 @@ final class LocalEnglishModelManager {
         do {
             try await vad.prepare(progress: update)
             switch engine {
-            case .whisperTurboApple:
+            case .whisperTurboApple, .whisperLargeV3Direct:
                 break
             case .qwenApple:
                 phases[engine] = .loading(message: "Loading Qwen3-ASR…")
@@ -366,6 +369,9 @@ final class LocalEnglishModelManager {
             case .voxtralCohereApple:
                 phases[engine] = .loading(message: "Loading and warming Voxtral Q4…")
                 try await voxtral.prepare()
+                phases[engine] = .loading(message: "Loading and warming Cohere Q8…")
+                try await cohere.prepare()
+            case .cohereApple:
                 phases[engine] = .loading(message: "Loading and warming Cohere Q8…")
                 try await cohere.prepare()
             }

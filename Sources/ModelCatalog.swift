@@ -12,6 +12,27 @@ struct WhisperModelInfo: Identifiable, Equatable {
     let url: URL
     let approxBytes: Int64
     let supportsEnglishTranslation: Bool
+    let sha256: String?
+
+    init(
+        id: String,
+        displayName: String,
+        detail: String,
+        fileName: String,
+        url: URL,
+        approxBytes: Int64,
+        supportsEnglishTranslation: Bool,
+        sha256: String? = nil
+    ) {
+        self.id = id
+        self.displayName = displayName
+        self.detail = detail
+        self.fileName = fileName
+        self.url = url
+        self.approxBytes = approxBytes
+        self.supportsEnglishTranslation = supportsEnglishTranslation
+        self.sha256 = sha256
+    }
 
     var approxSizeText: String {
         ByteCountFormatter.string(fromByteCount: approxBytes, countStyle: .file)
@@ -39,6 +60,16 @@ enum ModelCatalog {
             url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!,
             approxBytes: 1_620_000_000,
             supportsEnglishTranslation: false
+        ),
+        WhisperModelInfo(
+            id: "large-v3",
+            displayName: "Whisper Large v3",
+            detail: "Highest-quality direct speech translation to English",
+            fileName: "ggml-large-v3.bin",
+            url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/c521a4b02f422512d734391fdf08bb08c0862f68/ggml-large-v3.bin")!,
+            approxBytes: 3_100_000_000,
+            supportsEnglishTranslation: true,
+            sha256: "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2"
         ),
         WhisperModelInfo(
             id: "medium",

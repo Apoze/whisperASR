@@ -20,6 +20,10 @@ let package = Package(
             exact: "0.31.6"
         ),
         .package(
+            url: "https://github.com/huggingface/swift-huggingface.git",
+            exact: "0.9.0"
+        ),
+        .package(
             url: "https://github.com/FluidInference/FluidAudio.git",
             exact: "0.15.5"
         ),
@@ -59,7 +63,12 @@ let package = Package(
         ),
         .testTarget(
             name: "WhisperASRTests",
-            dependencies: ["WhisperASRApp"],
+            dependencies: [
+                "WhisperASRApp",
+                .product(name: "HuggingFace", package: "swift-huggingface"),
+                .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXAudioSTT", package: "mlx-audio-swift"),
+            ],
             path: "Tests"
         ),
     ]

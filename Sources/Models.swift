@@ -60,6 +60,8 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
     case qwenApple
     case voxtralApple
     case voxtralCohereApple
+    case whisperLargeV3Direct
+    case cohereApple
 
     static let storageKey = "localEnglishEngine"
 
@@ -75,6 +77,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Voxtral live → Apple"
         case .voxtralCohereApple:
             return "Voxtral live + Cohere final → Apple"
+        case .whisperLargeV3Direct:
+            return "Whisper Large v3 → English direct"
+        case .cohereApple:
+            return "Cohere Q8 → Apple"
         }
     }
 
@@ -88,6 +94,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Experimental: one continuous Voxtral session supplies live source text and each stable clause for Apple Translation."
         case .voxtralCohereApple:
             return "Experimental: Voxtral supplies live previews while Cohere Q8 re-decodes each stable final."
+        case .whisperLargeV3Direct:
+            return "Experimental: Whisper Large v3 translates each FireRedVAD phrase directly to English."
+        case .cohereApple:
+            return "Experimental: Cohere Q8 transcribes each FireRedVAD phrase, then Apple translates."
         }
     }
 
@@ -101,6 +111,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return [.fireRedVAD, .voxtral, .appleTranslation]
         case .voxtralCohereApple:
             return [.fireRedVAD, .voxtral, .cohere, .appleTranslation]
+        case .whisperLargeV3Direct:
+            return [.fireRedVAD, .whisperLargeV3]
+        case .cohereApple:
+            return [.fireRedVAD, .cohere, .appleTranslation]
         }
     }
 
@@ -112,7 +126,35 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
 
     var usesVoxtralSourcePreview: Bool { usesVoxtralStreaming }
 
-    var usesCohereFinal: Bool { self == .voxtralCohereApple }
+    var usesCohereFinal: Bool {
+        self == .voxtralCohereApple || self == .cohereApple
+    }
+
+    var producesDirectEnglish: Bool {
+        self == .whisperLargeV3Direct
+    }
+
+    var usesAppleFinalTranslation: Bool { !producesDirectEnglish }
+
+    var usesWhisperFinal: Bool {
+        self == .whisperTurboApple || self == .whisperLargeV3Direct
+    }
+
+    var whisperModelID: String? {
+        switch self {
+        case .whisperTurboApple: return "large-v3-turbo"
+        case .whisperLargeV3Direct: return "large-v3"
+        default: return nil
+        }
+    }
+
+    func requiresAppleLowLatency(for mode: AppleTranslationMode) -> Bool {
+        mode.showsPreview || (usesAppleFinalTranslation && mode.requiresLowLatency)
+    }
+
+    func requiresAppleHighFidelity(for mode: AppleTranslationMode) -> Bool {
+        usesAppleFinalTranslation && mode.requiresHighFidelity
+    }
 
     /// Preserve existing installations: the old Whisper choice maps to the
     /// corrected reference pipeline; Apple Speech is no longer a benchmark
@@ -131,6 +173,7 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
 enum LocalRuntimeComponent: String, Hashable, Sendable {
     case fireRedVAD
     case whisperTurbo
+    case whisperLargeV3
     case qwen
     case voxtral
     case cohere

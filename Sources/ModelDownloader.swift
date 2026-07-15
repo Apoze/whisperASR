@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Observation
 
@@ -82,6 +83,12 @@ final class ModelDownloader {
 
     fileprivate func handleDownloadFinished(location: URL) {
         do {
+            if let expected = model.sha256 {
+                let actual = try Self.sha256(of: location)
+                guard actual == expected else {
+                    throw DownloadIntegrityError.mismatch(expected: expected, actual: actual)
+                }
+            }
             try FileManager.default.createDirectory(at: ModelCatalog.modelDirectory, withIntermediateDirectories: true)
             let dest = ModelCatalog.path(for: model)
             if FileManager.default.fileExists(atPath: dest.path) {
@@ -98,6 +105,16 @@ final class ModelDownloader {
                 self.state = .failed("Failed to save model: \(error.localizedDescription)")
             }
         }
+    }
+
+    static func sha256(of url: URL) throws -> String {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while let data = try handle.read(upToCount: 1_048_576), !data.isEmpty {
+            hasher.update(data: data)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     fileprivate func handleProgress(totalBytesWritten: Int64, totalBytesExpected: Int64) {
@@ -157,6 +174,17 @@ final class ModelDownloader {
             DispatchQueue.main.async {
                 self.state = .failed(error.localizedDescription)
             }
+        }
+    }
+}
+
+private enum DownloadIntegrityError: LocalizedError {
+    case mismatch(expected: String, actual: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .mismatch(let expected, let actual):
+            return "Downloaded model failed SHA-256 verification (expected \(expected), got \(actual))."
         }
     }
 }

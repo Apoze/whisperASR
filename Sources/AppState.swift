@@ -103,7 +103,8 @@ enum LocalFinalTranslationRetryPolicy {
             case .cursorMismatch: return .cursorMismatch
             case .modelNotLoaded,
                  .memoryLimit,
-                 .invalidDownload:
+                 .invalidDownload,
+                 .invalidModelChecksum:
                 return .configuration
             }
         }
@@ -183,14 +184,32 @@ enum LocalFinalTranslationState: Equatable, Sendable {
     }
 }
 
+enum LocalFinalInput: Equatable, Sendable {
+    case japaneseSource(TranscriptionSegment)
+    case directEnglish(TranscriptionSegment)
+
+    var segment: TranscriptionSegment {
+        switch self {
+        case .japaneseSource(let segment), .directEnglish(let segment): return segment
+        }
+    }
+
+    var requiresAppleTranslation: Bool {
+        if case .japaneseSource = self { return true }
+        return false
+    }
+}
+
 private struct LocalTranslationJob: Sendable {
     let index: Int
-    let source: TranscriptionSegment
+    let input: LocalFinalInput
     let decision: LocalEndpointDecision?
     let queueMilliseconds: Double
     let asrMilliseconds: Double
     let enqueuedUptimeNanoseconds: UInt64
     var attempts = LocalFinalTranslationAttemptState()
+
+    var source: TranscriptionSegment { input.segment }
 }
 
 @Observable
@@ -283,7 +302,6 @@ class AppState {
     private var localPreviewWaitingForThrottle = false
     private var localPreviewLastStartedUptimeNanoseconds: UInt64 = 0
     private var localPreviewRevision = 0
-    private var localFinalWorkCount = 0
     private var localAppleSpeechFeed = LocalAppleSpeechFeedState()
     private var localPreviewSentSampleCount = 0
     private var localPreviewSpeechStartSample: Int?
@@ -313,6 +331,7 @@ class AppState {
     private var localSourcePipelineFailure: String?
     private var preparedLiveModelFileName: String?
     private var preparingLiveModelFileName: String?
+    private var verifiedWhisperModelChecksums: Set<String> = []
     private var localModelPreparationTask: Task<Void, Never>?
     private var preparingLocalEnglishEngine: LocalEnglishEngine?
     private var preparingLocalTranslationMode: AppleTranslationMode?
@@ -338,15 +357,15 @@ class AppState {
         let source = defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
         let engine = LocalEnglishEngine.stored(in: defaults)
         let mode = AppleTranslationMode.stored(in: defaults)
-        let translationReady = (!mode.requiresLowLatency || appleTranslationLowReady)
-            && (!mode.requiresHighFidelity || appleTranslationHighReady)
+        let translationReady = (!engine.requiresAppleLowLatency(for: mode) || appleTranslationLowReady)
+            && (!engine.requiresAppleHighFidelity(for: mode) || appleTranslationHighReady)
         let previewReady = !mode.showsPreview
             || !engine.usesAppleSpeechPreview
             || appleSpeechReady
         let diarizationReady = engine != .voxtralApple
             || !LocalDiarizationShadowConfiguration.isEnabled
             || localDiarizationPreparationFinished
-        let whisperReady = engine != .whisperTurboApple || isLiveTranslationModelReady
+        let whisperReady = !engine.usesWhisperFinal || isLiveTranslationModelReady
         let sourceCode = Locale(identifier: source).language.languageCode?.identifier
         let sourceSupported = localSourceLocales.contains {
             Locale(identifier: $0.id).language.languageCode?.identifier == sourceCode
@@ -362,9 +381,10 @@ class AppState {
     }
 
     private var liveModelSelectionKey: String {
-        let defaults = UserDefaults.standard
-        return (defaults.string(forKey: "selectedModelFile") ?? "")
-            + "|" + (defaults.string(forKey: "modelPath") ?? "")
+        let engine = LocalEnglishEngine.stored()
+        guard let modelID = engine.whisperModelID,
+              let model = ModelCatalog.model(id: modelID) else { return "" }
+        return "\(engine.rawValue)|\(ModelCatalog.path(for: model).path)"
     }
 
     /// Maximum chunk duration sent to whisper (30 seconds at 16kHz).
@@ -609,7 +629,9 @@ class AppState {
             service.endRealtimeSession()
             await finishLocalTranslationQueue()
             segments = localCommittedSegments
-            let sourceMismatch = localCommittedSegments.count != localSourceSegments.count
+            let isDirectEnglish = activeLocalEnglishEngine.producesDirectEnglish
+            let sourceMismatch = !isDirectEnglish
+                && localCommittedSegments.count != localSourceSegments.count
             let uncommittedSourceAudio = localCommittedSampleCount < localSourceFinalizedSampleCount
             let pendingVoxtralSource = activeLocalEnglishEngine == .voxtralApple
                 && !localVoxtralClausePlanner.pendingSourceText
@@ -623,9 +645,11 @@ class AppState {
                 englishFailure = "An English final is still being translated."
             } else if let failedJob = localTranslationQueue.first,
                       failedJob.attempts.exhausted {
-                englishFailure = "Apple final translation failed after \(failedJob.attempts.count) attempts: \(failedJob.attempts.lastError ?? "Unknown Apple Translation error.")"
+                let operation = failedJob.input.requiresAppleTranslation
+                    ? "Apple final translation" : "Direct English final"
+                englishFailure = "\(operation) failed after \(failedJob.attempts.count) attempt\(failedJob.attempts.count == 1 ? "" : "s"): \(failedJob.attempts.lastError ?? "Unknown finalization error.")"
             } else if !localTranslationQueue.isEmpty {
-                englishFailure = "An Apple final translation is waiting for retry."
+                englishFailure = "An English final is waiting for retry."
             } else if activeLocalEnglishEngine == .voxtralApple,
                       localVoxtralClausePlanner.pendingValidationCount != 0 {
                 englishFailure = "One or more staged Voxtral clauses were not validated in English."
@@ -679,7 +703,8 @@ class AppState {
         var storedTranslationLanguage: String?
 
         if captionMode == .localEnglish {
-            if keepOriginal || localFailure != nil {
+            if !activeLocalEnglishEngine.producesDirectEnglish,
+               keepOriginal || localFailure != nil {
                 storedSegments = localSourceSegments
                 storedText = localSourceSegments.map(\.text).joined()
                 storedTranslations = localCommittedSegments.map(\.text)
@@ -732,18 +757,31 @@ class AppState {
             translatedSegments: storedTranslations,
             translationLanguage: storedTranslationLanguage
         )
-        item.translateToEnglish = captionMode == .localEnglish && localFailure != nil
+        let directEnglish = captionMode == .localEnglish
+            && activeLocalEnglishEngine.producesDirectEnglish
+        item.translateToEnglish = captionMode == .localEnglish
+            && localFailure != nil
+            && !directEnglish
         if captionMode == .localEnglish {
-            item.localSourceLocale = activeLocalSourceLocale
-            item.localTranslationMode = activeLocalTranslationMode
-            item.discardOriginalAfterRetry = !keepOriginal
-            item.localSourceTranscriptComplete = localSourceTranscriptComplete
+            if !directEnglish {
+                item.localSourceLocale = activeLocalSourceLocale
+                item.localTranslationMode = activeLocalTranslationMode
+                item.discardOriginalAfterRetry = !keepOriginal
+                item.localSourceTranscriptComplete = localSourceTranscriptComplete
+            }
         }
 
         if let localFailure {
-            let retryDetail = url == nil
-                ? " The audio was not saved; Retry can recover only the saved Japanese clauses."
-                : " The audio was kept; use Retry English translation."
+            let retryDetail: String
+            if directEnglish {
+                retryDetail = url == nil
+                    ? " The audio was not saved; only valid English finals were kept."
+                    : " The audio was kept for another model run."
+            } else {
+                retryDetail = url == nil
+                    ? " The audio was not saved; Retry can recover only the saved Japanese clauses."
+                    : " The audio was kept; use Retry English translation."
+            }
             item.status = .failed(localFailure + retryDetail)
         }
 
@@ -923,7 +961,7 @@ class AppState {
     func prepareLiveTranslationModel() {
         let engine = LocalEnglishEngine.stored()
         guard LiveCaptionMode.stored() == .localEnglish,
-              engine == .whisperTurboApple else {
+              engine.usesWhisperFinal else {
             liveModelPreparationTask?.cancel()
             liveModelPreparationTask = nil
             isPreparingLiveModel = false
@@ -932,17 +970,25 @@ class AppState {
             return
         }
 
-        guard let turbo = ModelCatalog.model(id: "large-v3-turbo"),
-              ModelManager.shared.isDownloaded(turbo) else {
-            liveModelPreparationError = "Download Whisper Large v3 Turbo in Settings before using the reference pipeline."
+        guard let modelID = engine.whisperModelID,
+              let model = ModelCatalog.model(id: modelID),
+              ModelManager.shared.isDownloaded(model) else {
+            let previousPreparation = liveModelPreparationTask
+            previousPreparation?.cancel()
+            liveModelPreparationTask = Task { [weak self] in
+                await previousPreparation?.value
+                guard !Task.isCancelled, let self else { return }
+                await self.service.unloadModel()
+            }
+            liveModelPreparationError = "Download the required Whisper model in Settings before using \(engine.label)."
             preparedLiveModelFileName = nil
+            preparingLiveModelFileName = nil
+            isPreparingLiveModel = false
             return
-        }
-        if ModelManager.shared.selectedFileName != turbo.fileName {
-            ModelManager.shared.selectedFileName = turbo.fileName
         }
 
         let selected = liveModelSelectionKey
+        let modelPath = ModelCatalog.path(for: model).path
         guard preparedLiveModelFileName != selected,
               preparingLiveModelFileName != selected else { return }
         liveModelPreparationTask?.cancel()
@@ -952,7 +998,25 @@ class AppState {
         liveModelPreparationTask = Task { [weak self] in
             guard let self else { return }
             do {
-                try await self.service.preloadModel(requireEnglishTranslation: false)
+                if let expectedSHA256 = model.sha256,
+                   !self.verifiedWhisperModelChecksums.contains(model.fileName) {
+                    let modelURL = URL(fileURLWithPath: modelPath)
+                    let actualSHA256 = try await Task.detached(priority: .utility) {
+                        try ModelDownloader.sha256(of: modelURL)
+                    }.value
+                    guard actualSHA256 == expectedSHA256 else {
+                        throw LocalPrototypeError.invalidModelChecksum(
+                            model: model.displayName,
+                            expected: expectedSHA256,
+                            actual: actualSHA256
+                        )
+                    }
+                    self.verifiedWhisperModelChecksums.insert(model.fileName)
+                }
+                try await self.service.preloadModel(
+                    modelPath: modelPath,
+                    requireEnglishTranslation: engine.producesDirectEnglish
+                )
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
                     self.preparedLiveModelFileName = selected
@@ -985,17 +1049,41 @@ class AppState {
         let mode = AppleTranslationMode.stored()
         let engine = LocalEnglishEngine.stored()
         Task { [weak self] in
-            let locales = mode.showsPreview && engine.usesAppleSpeechPreview
-                ? await AppleSpeechService.supportedSourceLocales(
-                    requireHighFidelity: mode.requiresHighFidelity
+            let discoveredLocales: [SpeechLocaleChoice]
+            if engine.producesDirectEnglish, !mode.showsPreview {
+                discoveredLocales = TranscriptionService.availableLanguages()
+                    .filter { $0.code != "en" }
+                    .map {
+                        SpeechLocaleChoice(
+                            id: $0.code,
+                            label: $0.name.capitalized
+                        )
+                    }
+                    .sorted {
+                        $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending
+                    }
+            } else if mode.showsPreview, engine.usesAppleSpeechPreview {
+                discoveredLocales = await AppleSpeechService.supportedSourceLocales(
+                    requireHighFidelity: engine.requiresAppleHighFidelity(for: mode)
                 )
-                : await AppleTranslationService.supportedSourceLocales()
+            } else {
+                discoveredLocales = await AppleTranslationService.supportedSourceLocales()
+            }
+            let locales = engine == .cohereApple
+                ? discoveredLocales.filter {
+                    Locale(identifier: $0.id).language.languageCode?.identifier == "ja"
+                }
+                : discoveredLocales
             await MainActor.run {
                 guard let self else { return }
+                guard LocalEnglishEngine.stored() == engine,
+                      AppleTranslationMode.stored() == mode else { return }
                 self.localSourceLocales = locales
                 self.isPreparingLocalResources = false
                 if locales.isEmpty {
-                    self.localResourceError = "No local Apple speech and translation language is available for this subtitle mode."
+                    self.localResourceError = engine.producesDirectEnglish
+                        ? "No spoken language is available for this direct model."
+                        : "No local Apple speech and translation language is available for this subtitle mode."
                 } else {
                     let defaults = UserDefaults.standard
                     let selected = defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
@@ -1101,11 +1189,12 @@ class AppState {
             isPreparingLocalResources = false
             localResourceProgress = 1
             localResourceError = nil
-            if engine == .whisperTurboApple { prepareLiveTranslationModel() }
+            if engine.usesWhisperFinal { prepareLiveTranslationModel() }
             return
         }
 
-        localModelPreparationTask?.cancel()
+        let previousPreparation = localModelPreparationTask
+        previousPreparation?.cancel()
         preparingLocalEnglishEngine = engine
         preparingLocalTranslationMode = mode
         isPreparingLocalResources = true
@@ -1113,6 +1202,8 @@ class AppState {
         localResourceError = nil
         localModelPreparationTask = Task { [weak self] in
             guard let self else { return }
+            await previousPreparation?.value
+            guard !Task.isCancelled else { return }
             do {
                 if mode.showsPreview, engine.usesAppleSpeechPreview {
                     try await self.appleSpeechService().prepare(
@@ -1124,7 +1215,7 @@ class AppState {
                     }
                     await MainActor.run { self.appleSpeechReady = true }
                 }
-                if engine != .whisperTurboApple {
+                if !engine.usesWhisperFinal {
                     await self.service.unloadModel()
                     await MainActor.run {
                         self.preparedLiveModelFileName = nil
@@ -1154,7 +1245,7 @@ class AppState {
                         }
                     }
                 }
-                if engine == .whisperTurboApple {
+                if engine.usesWhisperFinal {
                     await MainActor.run { self.prepareLiveTranslationModel() }
                 }
                 guard !Task.isCancelled else { return }
@@ -1298,7 +1389,6 @@ class AppState {
         localPreviewWaitingForThrottle = false
         localPreviewLastStartedUptimeNanoseconds = 0
         localPreviewRevision = 0
-        localFinalWorkCount = 0
         localAppleSpeechFeed = LocalAppleSpeechFeedState()
         localPreviewSentSampleCount = 0
         localPreviewSpeechStartSample = nil
@@ -1377,15 +1467,17 @@ class AppState {
                   localModelManager.phase(for: engine).isReady else {
                 throw LocalPrototypeError.modelNotLoaded(engine.label)
             }
-            let finalMode: AppleTranslationMode = activeLocalTranslationMode.finalUsesHighFidelity
-                ? .highFidelityOnly : .lowLatencyOnly
-            try await appleTranslationService().configure(
-                sourceLocale: sourceLocale,
-                mode: finalMode
-            )
-            try await appleTranslationService().warmup(
-                highFidelity: activeLocalTranslationMode.finalUsesHighFidelity
-            )
+            if engine.usesAppleFinalTranslation {
+                let finalMode: AppleTranslationMode = activeLocalTranslationMode.finalUsesHighFidelity
+                    ? .highFidelityOnly : .lowLatencyOnly
+                try await appleTranslationService().configure(
+                    sourceLocale: sourceLocale,
+                    mode: finalMode
+                )
+                try await appleTranslationService().warmup(
+                    highFidelity: activeLocalTranslationMode.finalUsesHighFidelity
+                )
+            }
             if activeLocalTranslationMode.showsPreview {
                 do {
                     try await applePreviewTranslationService().configure(
@@ -1414,8 +1506,11 @@ class AppState {
                 }
             }
             await MainActor.run { self.liveStatusText = "Listening…" }
-            if engine == .whisperTurboApple {
-                try await service.beginRealtimeSession(requireEnglishTranslation: false)
+            if engine.usesWhisperFinal {
+                try await service.beginRealtimeSession(
+                    modelPath: try Self.whisperModelPath(for: engine),
+                    requireEnglishTranslation: engine.producesDirectEnglish
+                )
             }
             await runEndpointedPrototypeCaptions(
                 recorder: recorder,
@@ -1438,7 +1533,6 @@ class AppState {
     private func receiveLocalPreviewSource(_ update: LiveSourceUpdate) {
         guard localPreviewRuntimeEnabled,
               activeLocalTranslationMode.showsPreview,
-              (activeLocalEnglishEngine.usesVoxtralStreaming || localFinalWorkCount == 0),
               !update.segment.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         else { return }
         localPreviewPlanner.submit(update)
@@ -1501,7 +1595,6 @@ class AppState {
                 )
                 let translationCompleted = DispatchTime.now().uptimeNanoseconds
                 guard !Task.isCancelled,
-                      (activeLocalEnglishEngine.usesVoxtralStreaming || localFinalWorkCount == 0),
                       localPreviewPlanner.accepts(work),
                       let translated = EnglishSubtitleValidator.normalizedEnglish(response),
                       translated != localPreviewSegment?.text
@@ -1564,14 +1657,8 @@ class AppState {
     @MainActor
     private func suspendLocalPreview(for decision: LocalEndpointDecision) {
         guard activeLocalTranslationMode.showsPreview else { return }
-        localFinalWorkCount += 1
-        if activeLocalEnglishEngine.usesVoxtralStreaming {
-            localPreviewPlanner.advanceBoundary(through: decision.stableThrough)
-            if localPreviewWaitingForThrottle {
-                localPreviewTranslationTask?.cancel()
-            }
-        } else {
-            localPreviewPlanner.suspend(through: decision.stableThrough)
+        localPreviewPlanner.advanceBoundary(through: decision.stableThrough)
+        if localPreviewWaitingForThrottle {
             localPreviewTranslationTask?.cancel()
         }
     }
@@ -1580,18 +1667,11 @@ class AppState {
     @MainActor
     private func completeLocalFinalWork(through sample: Int) {
         guard activeLocalTranslationMode.showsPreview else { return }
-        localFinalWorkCount = max(0, localFinalWorkCount - 1)
-        if activeLocalEnglishEngine.usesVoxtralStreaming {
-            if LocalPreviewRangePolicy.shouldClear(
-                preview: localPreviewSegment,
-                finalizedThrough: sample
-            ) {
-                localPreviewSegment = nil
-            }
-        } else {
+        if LocalPreviewRangePolicy.shouldClear(
+            preview: localPreviewSegment,
+            finalizedThrough: sample
+        ) {
             localPreviewSegment = nil
-            guard localFinalWorkCount == 0 else { return }
-            localPreviewPlanner.resume(through: sample)
         }
         guard localPreviewRuntimeEnabled else { return }
         startLocalPreviewWorkerIfNeeded()
@@ -1599,10 +1679,7 @@ class AppState {
 
     @MainActor
     private var localPreviewIsBlockedByFinal: Bool {
-        if activeLocalEnglishEngine.usesVoxtralStreaming {
-            return localFinalTranslationInFlight
-        }
-        return localFinalWorkCount > 0
+        localFinalTranslationInFlight
     }
 
     @MainActor
@@ -2455,7 +2532,6 @@ class AppState {
                    localPreviewRuntimeEnabled,
                    localPreviewFeedStarted,
                    localPreviewSpeechStartSample != nil,
-                   localFinalWorkCount == 0,
                    localPreviewSpeechFinalizeTask == nil {
                     let target = total
                     if localAppleSpeechFeed.requestFinalization(
@@ -2703,22 +2779,23 @@ class AppState {
         setLocalStatus("Finalizing source…")
         let asrStart = DispatchTime.now().uptimeNanoseconds
 
-        let sourceText: String
+        let finalText: String
         switch engine {
         case .whisperTurboApple:
             let result = try await service.transcribeChunk(
                 samples: audio,
                 language: Self.languageCode(for: sourceLocale),
-                translate: false
+                translate: false,
+                modelPath: try Self.whisperModelPath(for: engine)
             )
-            sourceText = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            finalText = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
         case .qwenApple:
-            sourceText = try await localModelManager.transcribeQwen(
+            finalText = try await localModelManager.transcribeQwen(
                 audio: audio,
                 language: Self.languageName(for: sourceLocale)
             )
         case .voxtralApple:
-            sourceText = entry.voxtralText?
+            finalText = entry.voxtralText?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         case .voxtralCohereApple:
             let cohere = try? await localModelManager.transcribeCohere(
@@ -2729,23 +2806,44 @@ class AppState {
                 cohere: cohere,
                 voxtral: entry.voxtralText
             )
-            sourceText = selection.text
+            finalText = selection.text
             if selection.degraded {
                 livePreviewError = "Cohere final unavailable for one phrase; Voxtral was used instead."
             }
+        case .whisperLargeV3Direct:
+            let result = try await service.transcribeChunk(
+                samples: audio,
+                language: Self.languageCode(for: sourceLocale),
+                translate: true,
+                modelPath: try Self.whisperModelPath(for: engine)
+            )
+            finalText = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .cohereApple:
+            finalText = try await localModelManager.transcribeCohere(
+                audio: audio,
+                language: Self.languageCode(for: sourceLocale)
+            )
         }
-        guard !sourceText.isEmpty else { throw LocalPrototypeError.invalidResponse }
-        let source = TranscriptionSegment(
+        guard !finalText.isEmpty else { throw LocalPrototypeError.invalidResponse }
+        let segment = TranscriptionSegment(
             start: Double(max(localSourceFinalizedSampleCount, decision.audioStart)) / 16_000,
             end: Double(decision.speechEnd) / 16_000,
-            text: sourceText
+            text: finalText
         )
-        let queued = enqueueLocalSource(
-            source,
-            decision: decision,
-            queueMilliseconds: queueMilliseconds,
-            asrMilliseconds: Self.elapsedMilliseconds(since: asrStart)
-        )
+        let asrMilliseconds = Self.elapsedMilliseconds(since: asrStart)
+        let queued = engine.producesDirectEnglish
+            ? enqueueDirectEnglish(
+                segment,
+                decision: decision,
+                queueMilliseconds: queueMilliseconds,
+                asrMilliseconds: asrMilliseconds
+            )
+            : enqueueLocalSource(
+                segment,
+                decision: decision,
+                queueMilliseconds: queueMilliseconds,
+                asrMilliseconds: asrMilliseconds
+            )
         if !queued {
             if engine == .voxtralApple {
                 throw LocalPrototypeError.cursorMismatch(
@@ -2764,6 +2862,18 @@ class AppState {
     private static func languageName(for localeIdentifier: String) -> String {
         let code = languageCode(for: localeIdentifier)
         return Locale(identifier: "en").localizedString(forLanguageCode: code) ?? code
+    }
+
+    private static func whisperModelPath(for engine: LocalEnglishEngine) throws -> String {
+        guard let modelID = engine.whisperModelID,
+              let model = ModelCatalog.model(id: modelID) else {
+            throw LocalPrototypeError.modelNotLoaded(engine.label)
+        }
+        let path = ModelCatalog.path(for: model).path
+        guard FileManager.default.fileExists(atPath: path) else {
+            throw LocalPrototypeError.modelNotLoaded(model.displayName)
+        }
+        return path
     }
 
     private static func elapsedMilliseconds(since start: UInt64) -> Double {
@@ -2948,7 +3058,6 @@ class AppState {
         localPreviewWaitingForThrottle = false
         localPreviewLastStartedUptimeNanoseconds = 0
         localPreviewRevision = 0
-        localFinalWorkCount = 0
         localAppleSpeechFeed = LocalAppleSpeechFeedState()
         localPreviewSentSampleCount = 0
         localPreviewSpeechStartSample = nil
@@ -3006,9 +3115,63 @@ class AppState {
         )
         let index = localSourceSegments.count
         localSourceSegments.append(normalized)
+        enqueueLocalFinal(
+            .japaneseSource(normalized),
+            index: index,
+            decision: decision,
+            queueMilliseconds: queueMilliseconds,
+            asrMilliseconds: asrMilliseconds
+        )
+        return true
+    }
+
+    @MainActor
+    private func enqueueDirectEnglish(
+        _ segment: TranscriptionSegment,
+        decision: LocalEndpointDecision? = nil,
+        queueMilliseconds: Double = 0,
+        asrMilliseconds: Double = 0
+    ) -> Bool {
+        var text = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return false }
+        let previous = localTranslationQueue.last?.source ?? localCommittedSegments.last
+        if let previous {
+            if abs(previous.start - segment.start) < 0.01,
+               abs((previous.end ?? previous.start) - (segment.end ?? segment.start)) < 0.01,
+               previous.text == text {
+                return false
+            }
+            if segment.start < (previous.end ?? previous.start) {
+                text = Self.trimEnglishOverlap(previous: previous.text, current: text)
+            }
+        }
+        guard !text.isEmpty else { return false }
+        let normalized = TranscriptionSegment(
+            start: segment.start,
+            end: segment.end,
+            text: text
+        )
+        enqueueLocalFinal(
+            .directEnglish(normalized),
+            index: localCommittedSegments.count + localTranslationQueue.count,
+            decision: decision,
+            queueMilliseconds: queueMilliseconds,
+            asrMilliseconds: asrMilliseconds
+        )
+        return true
+    }
+
+    @MainActor
+    private func enqueueLocalFinal(
+        _ input: LocalFinalInput,
+        index: Int,
+        decision: LocalEndpointDecision?,
+        queueMilliseconds: Double,
+        asrMilliseconds: Double
+    ) {
         localTranslationQueue.append(LocalTranslationJob(
             index: index,
-            source: normalized,
+            input: input,
             decision: decision,
             queueMilliseconds: queueMilliseconds,
             asrMilliseconds: asrMilliseconds,
@@ -3019,7 +3182,6 @@ class AppState {
         )
         setLocalStatus(liveStatusText)
         startLocalTranslationWorkerIfNeeded()
-        return true
     }
 
     @MainActor
@@ -3054,10 +3216,16 @@ class AppState {
                 ? Double(translationStart - job.enqueuedUptimeNanoseconds) / 1_000_000
                 : 0
             do {
-                let text = try await translateStableSource(
-                    job.source.text,
-                    mode: activeLocalTranslationMode
-                )
+                let text: String
+                switch job.input {
+                case .japaneseSource(let source):
+                    text = try await translateStableSource(
+                        source.text,
+                        mode: activeLocalTranslationMode
+                    )
+                case .directEnglish(let english):
+                    text = try EnglishSubtitleValidator.requireEnglish(english.text)
+                }
                 let translationCompleted = DispatchTime.now().uptimeNanoseconds
                 localFinalTranslationInFlight = false
                 startLocalPreviewWorkerIfNeeded()
@@ -3305,6 +3473,27 @@ class AppState {
     /// boundary punctuation/whitespace is stripped so a comma/period whisper added at the cut can't
     /// block the match.
     static func trimOverlap(previous: String, current: String) -> String {
+        trimOverlap(previous: previous, current: current, minimumMatchLength: 1)
+    }
+
+    /// English direct output must never lose a word because two unrelated
+    /// clauses share one trailing character. Only a substantial overlap that
+    /// starts and ends at word boundaries is safe to remove.
+    static func trimEnglishOverlap(previous: String, current: String) -> String {
+        trimOverlap(
+            previous: previous,
+            current: current,
+            minimumMatchLength: 8,
+            requireWordBoundaries: true
+        )
+    }
+
+    private static func trimOverlap(
+        previous: String,
+        current: String,
+        minimumMatchLength: Int,
+        requireWordBoundaries: Bool = false
+    ) -> String {
         var source = previous.trimmingCharacters(in: .whitespaces)
         while let last = source.unicodeScalars.last, overlapTrimChars.contains(last) {
             source.unicodeScalars.removeLast()
@@ -3314,9 +3503,15 @@ class AppState {
             target = target.dropFirst()
         }
         let maxCheck = min(source.count, target.count)
-        guard maxCheck >= 1 else { return current }
-        for len in stride(from: maxCheck, through: 1, by: -1) {
-            if target.hasPrefix(String(source.suffix(len))) {
+        guard maxCheck >= minimumMatchLength else { return current }
+        for len in stride(from: maxCheck, through: minimumMatchLength, by: -1) {
+            let candidate = String(source.suffix(len))
+            let sourcePrefix = source.dropLast(len)
+            let targetSuffix = target.dropFirst(len)
+            let hasWordBoundaries = !requireWordBoundaries
+                || (!(sourcePrefix.last.map(isWordCharacter) ?? false)
+                    && !(targetSuffix.first.map(isWordCharacter) ?? false))
+            if hasWordBoundaries, target.hasPrefix(candidate) {
                 var remainder = target.dropFirst(len)
                 while let first = remainder.unicodeScalars.first,
                       overlapTrimChars.contains(first) {
@@ -3326,6 +3521,12 @@ class AppState {
             }
         }
         return current
+    }
+
+    private static func isWordCharacter(_ character: Character) -> Bool {
+        character.unicodeScalars.contains {
+            CharacterSet.alphanumerics.contains($0)
+        }
     }
 
     // MARK: - Live Transcription Auto-Save (crash recovery)
@@ -3345,6 +3546,7 @@ class AppState {
         let audioPath: String?
         let localSourceLocale: String?
         let localTranslationMode: AppleTranslationMode?
+        let localEnglishEngine: LocalEnglishEngine?
         let discardOriginalAfterRetry: Bool?
         let savedAt: Date
     }
@@ -3362,17 +3564,23 @@ class AppState {
     @MainActor
     private func autoSaveLiveTranscription() {
         let isLocalEnglish = activeLiveCaptionMode == .localEnglish
-        let segments = isLocalEnglish ? localSourceSegments : liveSegments
+        let isDirectEnglish = isLocalEnglish && activeLocalEnglishEngine.producesDirectEnglish
+        let segments = isDirectEnglish
+            ? localCommittedSegments
+            : (isLocalEnglish ? localSourceSegments : liveSegments)
         let text = segments.map { $0.text }.joined()
         let translations = isLocalEnglish
-            ? localCommittedSegments.map(\.text) : liveTranslatedSegments
-        let lang: String? = isLocalEnglish
+            ? (isDirectEnglish ? [] : localCommittedSegments.map(\.text))
+            : liveTranslatedSegments
+        let lang: String? = isLocalEnglish && !isDirectEnglish
             ? "en"
             : (!translations.isEmpty
                 ? UserDefaults.standard.string(forKey: "targetLanguage") : nil)
         let sourceLocale = isLocalEnglish ? activeLocalSourceLocale : nil
         let translationMode = isLocalEnglish ? activeLocalTranslationMode : nil
-        let discardOriginal = isLocalEnglish ? !activeKeepOriginalTranscript : nil
+        let localEngine = isLocalEnglish ? activeLocalEnglishEngine : nil
+        let discardOriginal = isLocalEnglish && !isDirectEnglish
+            ? !activeKeepOriginalTranscript : nil
         let audioPath = activeLocalRecorder?.recordingFileURL?.path
 
         // Write on a background queue to avoid blocking the main thread
@@ -3383,6 +3591,7 @@ class AppState {
                 audioPath: audioPath,
                 localSourceLocale: sourceLocale,
                 localTranslationMode: translationMode,
+                localEnglishEngine: localEngine,
                 discardOriginalAfterRetry: discardOriginal,
                 savedAt: Date()
             )
@@ -3418,6 +3627,8 @@ class AppState {
         else { return }
         let audioURL = Self.existingRecoveryAudioURL(path: recovery.audioPath)
         let isLocalEnglish = recovery.localSourceLocale != nil
+            || recovery.localEnglishEngine != nil
+        let isDirectEnglish = recovery.localEnglishEngine?.producesDirectEnglish == true
         guard !isLocalEnglish || audioURL != nil || !recovery.segments.isEmpty else {
             removeLiveRecoveryFile()
             return
@@ -3433,13 +3644,19 @@ class AppState {
         }
         item.translationLanguage = item.translatedSegments.contains(where: { !$0.isEmpty })
             ? recovery.translationLanguage : nil
-        item.localSourceLocale = recovery.localSourceLocale
-        item.localTranslationMode = recovery.localTranslationMode
-        item.discardOriginalAfterRetry = recovery.discardOriginalAfterRetry ?? false
-        item.translateToEnglish = isLocalEnglish
+        if !isDirectEnglish {
+            item.localSourceLocale = recovery.localSourceLocale
+            item.localTranslationMode = recovery.localTranslationMode
+            item.discardOriginalAfterRetry = recovery.discardOriginalAfterRetry ?? false
+        }
+        item.translateToEnglish = isLocalEnglish && !isDirectEnglish
         item.localSourceTranscriptComplete = !isLocalEnglish
         if !isLocalEnglish {
             item.status = .completed
+        } else if isDirectEnglish {
+            item.status = .failed(audioURL != nil
+                ? "Recovered direct English captions may be incomplete. The retained audio can be run with another model."
+                : "Recovered direct English captions are partial; the missing audio tail cannot be recovered.")
         } else if audioURL != nil {
             item.status = .failed(
                 "Recovered local subtitles may be incomplete. Retry English translation will re-transcribe the retained audio."
