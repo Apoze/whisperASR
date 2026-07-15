@@ -50,6 +50,7 @@ final class TranscriptionService: @unchecked Sendable {
     func transcribe(fileURL: URL,
                     language: String? = nil,
                     translate: Bool = false,
+                    modelPath: String? = nil,
                     onProgress: @escaping @Sendable (Double) -> Void) async throws -> TranscriptionResult {
         guard !isRealtimeSessionActive else { throw TranscriptionError.modelBusy }
         let samples = try await AudioLoader.loadSamples(url: fileURL)
@@ -59,7 +60,7 @@ final class TranscriptionService: @unchecked Sendable {
             self.whisperQueue.async {
                 let ctx: OpaquePointer
                 do {
-                    ctx = try self.ensureModelLoaded()
+                    ctx = try self.ensureModelLoaded(modelPath: modelPath)
                 } catch {
                     continuation.resume(throwing: error)
                     return
@@ -138,7 +139,8 @@ final class TranscriptionService: @unchecked Sendable {
     /// This reuses the already-loaded whisper model and runs on a background queue.
     func transcribeChunk(samples: [Float],
                          language: String? = nil,
-                         translate: Bool = false) async throws -> TranscriptionResult {
+                         translate: Bool = false,
+                         modelPath: String? = nil) async throws -> TranscriptionResult {
         guard !samples.isEmpty else {
             return TranscriptionResult(text: "", segments: [])
         }
@@ -147,7 +149,7 @@ final class TranscriptionService: @unchecked Sendable {
             self.whisperQueue.async {
                 let ctx: OpaquePointer
                 do {
-                    ctx = try self.ensureModelLoaded()
+                    ctx = try self.ensureModelLoaded(modelPath: modelPath)
                 } catch {
                     continuation.resume(throwing: error)
                     return
@@ -208,11 +210,14 @@ final class TranscriptionService: @unchecked Sendable {
     }
 
     /// Load the selected model without blocking the caller's executor.
-    func preloadModel(requireEnglishTranslation: Bool = false) async throws {
+    func preloadModel(
+        modelPath: String? = nil,
+        requireEnglishTranslation: Bool = false
+    ) async throws {
         try await withCheckedThrowingContinuation { continuation in
             whisperQueue.async {
                 do {
-                    let ctx = try self.ensureModelLoaded()
+                    let ctx = try self.ensureModelLoaded(modelPath: modelPath)
                     if requireEnglishTranslation {
                         try self.validateEnglishTranslationModel(ctx)
                     }
@@ -225,7 +230,10 @@ final class TranscriptionService: @unchecked Sendable {
     }
 
     /// Reserve the single Whisper context for live work after all earlier work has drained.
-    func beginRealtimeSession(requireEnglishTranslation: Bool) async throws {
+    func beginRealtimeSession(
+        modelPath: String? = nil,
+        requireEnglishTranslation: Bool
+    ) async throws {
         let acquired = realtimeLock.withLock { () -> Bool in
             guard !realtimeSessionActive else { return false }
             realtimeSessionActive = true
@@ -233,7 +241,10 @@ final class TranscriptionService: @unchecked Sendable {
         }
         guard acquired else { throw TranscriptionError.modelBusy }
         do {
-            try await preloadModel(requireEnglishTranslation: requireEnglishTranslation)
+            try await preloadModel(
+                modelPath: modelPath,
+                requireEnglishTranslation: requireEnglishTranslation
+            )
         } catch {
             endRealtimeSession()
             throw error
@@ -313,9 +324,9 @@ final class TranscriptionService: @unchecked Sendable {
     /// MUST run on `whisperQueue`: reloading frees the previous context, which would
     /// crash a whisper_full running concurrently on the queue if done anywhere else.
     @discardableResult
-    private func ensureModelLoaded() throws -> OpaquePointer {
+    private func ensureModelLoaded(modelPath: String? = nil) throws -> OpaquePointer {
         dispatchPrecondition(condition: .onQueue(whisperQueue))
-        let path = resolveModelPath()
+        let path = modelPath ?? resolveModelPath()
         guard FileManager.default.fileExists(atPath: path) else {
             throw TranscriptionError.modelNotFound(
                 "Model not found at: \(path)\n\n" +
