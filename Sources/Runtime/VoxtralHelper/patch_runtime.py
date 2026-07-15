@@ -3,6 +3,7 @@
 import codecs
 from importlib.util import find_spec
 from pathlib import Path
+import warnings
 
 
 def replace_exact(
@@ -135,6 +136,11 @@ replace_exact(
 )
 replace_exact(
     streaming,
+    "import codecs\nimport math\nimport queue\n",
+    "import codecs\nimport math\nimport queue\nimport warnings\n",
+)
+replace_exact(
+    streaming,
     """        self._next_k = max_k_inclusive + 1
         frames_mx = mx.array(frames_np, dtype=mx.float32) * self._window[None, :]
         spectrum = mx.fft.rfft(frames_mx, n=self.window_size, axis=-1)
@@ -262,6 +268,19 @@ replace_exact(
         self._emission_markers: list[dict[str, int | bool]] = []
         self._trailing_after_close = 0
 """,
+    compatible_marker="        self._text_utf8_count = 0\n",
+)
+replace_exact(
+    streaming,
+    """        self._text_utf8_count = 0
+        self._text_finalized = False
+        self._streaming_word_token_id = 33
+""",
+    """        self._text_utf8_count = 0
+        self._text_finalized = False
+        self._incomplete_utf8_tail = b""
+        self._streaming_word_token_id = 33
+""",
 )
 replace_exact(
     streaming,
@@ -301,6 +320,46 @@ replace_exact(
     def feed(self, samples: np.ndarray) -> None:
 """,
     compatible_marker="    def drain_emission_markers(self) -> list[dict[str, int | bool]]:\n",
+)
+replace_exact(
+    streaming,
+    """    @property
+    def final_text(self) -> str:
+        if not self._done:
+            raise RuntimeError("Voxtral final text requested before the stream ended")
+        if not self._text_finalized:
+            tail = self._text_decoder.decode(b"", final=True)
+            if tail:
+                self._text_parts.append(tail)
+            self._text_finalized = True
+        return "".join(self._text_parts)
+""",
+    """    @property
+    def final_text(self) -> str:
+        if not self._done:
+            raise RuntimeError("Voxtral final text requested before the stream ended")
+        if not self._text_finalized:
+            pending, _ = self._text_decoder.getstate()
+            if pending:
+                # The fixed audio horizon can end between Tekken byte tokens.
+                # Those bytes were never emitted as text: retain the exact valid
+                # delta prefix and report the rejected fragment instead of
+                # corrupting it with U+FFFD or failing the complete utterance.
+                self._incomplete_utf8_tail = bytes(pending)
+                warnings.warn(
+                    "Voxtral rejected an incomplete terminal UTF-8 fragment "
+                    f"({self._incomplete_utf8_tail.hex()})",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                self._text_decoder.reset()
+            else:
+                tail = self._text_decoder.decode(b"", final=True)
+                if tail:
+                    self._text_parts.append(tail)
+            self._text_finalized = True
+        return "".join(self._text_parts)
+""",
 )
 replace_exact(
     streaming,
@@ -666,3 +725,30 @@ assert session_probe._record_token(1000) == ""
 session_probe._pos = session_probe._prompt_len + len(session_probe.generated)
 assert session_probe._record_token(33) == ""
 assert session_probe.drain_emission_markers()[0]["is_usable"] is False
+
+# A fixed decode horizon can end between byte-fallback tokens. Those bytes
+# never became a text delta: preserve the exact valid prefix, expose the
+# rejected terminal fragment, and keep rejecting genuinely invalid UTF-8.
+terminal_probe = VoxtralStreamingSession.__new__(VoxtralStreamingSession)
+terminal_probe.model = _ProbeModel()
+terminal_probe.generated = []
+terminal_probe._text_decoder = codecs.getincrementaldecoder("utf-8")(errors="strict")
+terminal_probe._text_parts = ["日"]
+terminal_probe._text_finalized = False
+terminal_probe._incomplete_utf8_tail = b""
+terminal_probe._done = True
+assert terminal_probe._text_decoder.decode(b"\xe9\xad", final=False) == ""
+with warnings.catch_warnings(record=True) as recorded:
+    warnings.simplefilter("always")
+    assert terminal_probe.final_text == "日"
+assert terminal_probe._incomplete_utf8_tail == b"\xe9\xad"
+assert len(recorded) == 1
+assert "e9ad" in str(recorded[0].message)
+try:
+    codecs.getincrementaldecoder("utf-8")(errors="strict").decode(
+        b"\xe9\xff", final=False
+    )
+except UnicodeDecodeError:
+    pass
+else:
+    raise AssertionError("an invalid UTF-8 sequence was accepted")

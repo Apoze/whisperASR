@@ -193,7 +193,7 @@ final class VoxtralHelperRuntimeTests: XCTestCase {
         XCTAssertEqual(VoxtralHelperManifest.transcriptionDelayMilliseconds, 960)
         XCTAssertEqual(VoxtralHelperManifest.modelFrameSamples, 1_280)
         XCTAssertEqual(VoxtralHelperManifest.transportBlockMilliseconds, 160)
-        XCTAssertEqual(VoxtralHelperManifest.runtimePatchVersion, "continuous-stream-v3")
+        XCTAssertEqual(VoxtralHelperManifest.runtimePatchVersion, "continuous-stream-v4")
     }
 
     func testBundledPythonLockMatchesTheAuditedHash() throws {

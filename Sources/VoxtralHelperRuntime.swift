@@ -11,8 +11,8 @@ enum VoxtralHelperManifest {
     static let uvVersion = "0.11.28"
     static let uvArchiveSHA256 = "33540eb7c883ab857eff79bd5ac2aa31fe27b595abecb4a9c003a2c998447232"
     static let uvLockSHA256 = "d8047fd0a07300a8bfac4472c4d3ec5f0af46fa74f87217ed8eaf2292203d0db"
-    static let runtimePatchVersion = "continuous-stream-v3"
-    static let runtimePatchSHA256 = "82fbfafda5ee3daafca481b84bab7279ba6f3fbd27208642b44f63fc3f4d798d"
+    static let runtimePatchVersion = "continuous-stream-v4"
+    static let runtimePatchSHA256 = "67768e28e14087b79b7eae9960bf3e8719a64864b689949a312cb76177656efe"
     static let transcriptionDelayMilliseconds = 960
     static let sampleRate = 16_000
     static let modelFrameSamples = 1_280
