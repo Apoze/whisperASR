@@ -88,7 +88,8 @@ struct AppPickerView: View {
             }
         }
         .onChange(of: localEnglishEngineRaw) { _, _ in
-            appState.prepareLocalEnglishResources()
+            appState.resetAppleTranslationPreparation()
+            appState.reloadLocalEnglishCapabilities()
         }
         .onChange(of: localSourceLocale) { _, _ in
             appState.resetAppleTranslationPreparation()
@@ -305,8 +306,21 @@ struct AppPickerView: View {
         case .original:
             return "Transcribes locally in the detected spoken language."
         case .localEnglish:
+            if localEnglishEngine == .voxtralApple {
+                switch appleTranslationMode {
+                case .adaptive:
+                    return "Voxtral continuously transcribes the source. Apple low-latency revises the live English line; Apple high-fidelity replaces it with the saved final. Everything stays on this Mac."
+                case .highFidelityOnly:
+                    return "Voxtral continuously transcribes the source. Apple high-fidelity displays and saves only stable English clauses. Everything stays on this Mac."
+                case .lowLatencyOnly:
+                    return "Voxtral continuously transcribes the source. Apple low-latency revises the live English line and produces the saved final. Everything stays on this Mac."
+                }
+            }
             if appleTranslationMode.showsPreview {
-                return localEnglishEngine.detail + " Apple Speech supplies one revisable English preview; only the selected engine's final is saved. Everything stays on this Mac."
+                let previewSource = localEnglishEngine.usesAppleSpeechPreview
+                    ? "Apple Speech supplies source text for one revisable Apple-translated preview"
+                    : "Voxtral supplies source text for one revisable Apple-translated preview"
+                return localEnglishEngine.detail + " \(previewSource); only the selected engine's final is saved. Everything stays on this Mac."
             }
             return localEnglishEngine.detail + " Only stable English is shown; everything stays on this Mac."
         case .api:
@@ -387,7 +401,7 @@ struct AppPickerView: View {
                         error: error
                     )
                 }
-                .id("\(localSourceLocale)|\(appleTranslationMode.rawValue)")
+                .id("\(localSourceLocale)|\(appleTranslationMode.rawValue)|\(localEnglishEngine.rawValue)")
             }
         }
     }

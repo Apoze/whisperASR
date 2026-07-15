@@ -3,6 +3,40 @@ import XCTest
 @testable import WhisperASRApp
 
 final class LiveCaptionTests: XCTestCase {
+    func testAsyncDeadlineReturnsCompletedWork() async throws {
+        let value = try await withAsyncDeadline(
+            .seconds(1),
+            operationName: "test"
+        ) {
+            42
+        }
+        XCTAssertEqual(value, 42)
+    }
+
+    func testAsyncDeadlineDoesNotWaitForNonCooperativeWork() async {
+        let started = DispatchTime.now().uptimeNanoseconds
+        do {
+            _ = try await withAsyncDeadline(
+                .milliseconds(20),
+                operationName: "non-cooperative test"
+            ) {
+                try await withCheckedThrowingContinuation { continuation in
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
+                        continuation.resume(returning: 1)
+                    }
+                }
+            }
+            XCTFail("Expected the deadline to expire")
+        } catch is AsyncDeadlineError {
+            let elapsed = Double(
+                DispatchTime.now().uptimeNanoseconds - started
+            ) / 1_000_000
+            XCTAssertLessThan(elapsed, 200)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testLegacyLiveTranslationPreferenceMigratesToAPI() {
         let (defaults, name) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: name) }
@@ -85,6 +119,10 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperTurboApple)
         defaults.set(LocalEnglishEngine.qwenApple.rawValue, forKey: LocalEnglishEngine.storageKey)
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
+        defaults.set(LocalEnglishEngine.voxtralApple.rawValue, forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralApple)
+        defaults.set(LocalEnglishEngine.voxtralCohereApple.rawValue, forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralCohereApple)
     }
 
     func testOldNemotronPipelinePreferenceMigratesToQwenOnly() {
@@ -110,6 +148,46 @@ final class LiveCaptionTests: XCTestCase {
             LocalEnglishEngine.qwenApple.requiredComponents,
             [.fireRedVAD, .qwen, .appleTranslation]
         )
+        XCTAssertEqual(
+            LocalEnglishEngine.voxtralApple.requiredComponents,
+            [.fireRedVAD, .voxtral, .appleTranslation]
+        )
+        XCTAssertEqual(
+            LocalEnglishEngine.voxtralCohereApple.requiredComponents,
+            [.fireRedVAD, .voxtral, .cohere, .appleTranslation]
+        )
+        XCTAssertTrue(LocalEnglishEngine.voxtralApple.usesVoxtralStreaming)
+        XCTAssertTrue(LocalEnglishEngine.voxtralCohereApple.usesCohereFinal)
+        XCTAssertFalse(LocalEnglishEngine.voxtralApple.usesAppleSpeechPreview)
+        XCTAssertTrue(LocalEnglishEngine.voxtralApple.usesVoxtralSourcePreview)
+        XCTAssertFalse(LocalEnglishEngine.voxtralCohereApple.usesAppleSpeechPreview)
+        XCTAssertTrue(LocalEnglishEngine.voxtralCohereApple.usesVoxtralSourcePreview)
+    }
+
+    func testAppleSpeechFeedCursorsAreContiguousAndIndependent() {
+        var feed = LocalAppleSpeechFeedState()
+
+        XCTAssertEqual(feed.takeNewSamples(through: 1_600), 0..<1_600)
+        XCTAssertNil(feed.takeNewSamples(through: 1_600))
+        XCTAssertEqual(feed.takeNewSamples(through: 5_120), 1_600..<5_120)
+        XCTAssertEqual(feed.sentThrough, 5_120)
+
+        XCTAssertFalse(feed.requestFinalization(through: 23_999, every: 24_000))
+        XCTAssertEqual(feed.sentThrough, 5_120)
+        XCTAssertTrue(feed.requestFinalization(through: 24_000, every: 24_000))
+        XCTAssertEqual(feed.finalizeRequestedThrough, 24_000)
+        XCTAssertEqual(feed.sentThrough, 5_120)
+        XCTAssertFalse(feed.requestFinalization(through: 30_000, every: 24_000))
+    }
+
+    @MainActor
+    func testCoherePrototypeQuantizationCanBeSelectedWithoutLoadingModels() async {
+        let manager = LocalEnglishModelManager()
+        XCTAssertEqual(manager.cohereQuantization, .q8)
+        await manager.selectCohereQuantization(.q6)
+        XCTAssertEqual(manager.cohereQuantization, .q6)
+        await manager.selectCohereQuantization(.q8)
+        XCTAssertEqual(manager.cohereQuantization, .q8)
     }
 
     func testPreviewCursorCannotAdvanceStableOrPCMCursor() {
@@ -129,6 +207,51 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertEqual(work?.update.segment.text, "second")
         XCTAssertEqual(work?.receivedUptimeNanoseconds, 2)
         XCTAssertNil(planner.takeLatest())
+    }
+
+    func testPreviewWaitsForTwoGraphemesAndMarksFirstEligiblePerGeneration() {
+        var planner = LocalPreviewPlanner()
+
+        XCTAssertFalse(LocalPreviewPlanner.isEligibleSource("あ"))
+        XCTAssertTrue(LocalPreviewPlanner.isEligibleSource("あの"))
+        XCTAssertTrue(LocalPreviewPlanner.isEligibleSource("？"))
+
+        planner.submit(
+            previewUpdate(start: 0, end: 1, text: "あ"),
+            receivedUptimeNanoseconds: 10
+        )
+        XCTAssertNil(planner.pending)
+
+        planner.submit(
+            previewUpdate(start: 0, end: 2, text: "あの"),
+            receivedUptimeNanoseconds: 20
+        )
+        let first = planner.takeLatest()
+        XCTAssertEqual(first?.update.segment.text, "あの")
+        XCTAssertEqual(first?.firstLexicalUptimeNanoseconds, 10)
+        XCTAssertEqual(first?.receivedUptimeNanoseconds, 20)
+        XCTAssertTrue(first?.isFirstEligibleInGeneration == true)
+        XCTAssertTrue(first?.bypassesThrottle == true)
+
+        planner.submit(previewUpdate(start: 0, end: 3, text: "あのね"))
+        let revision = planner.takeLatest()
+        XCTAssertFalse(revision?.isFirstEligibleInGeneration ?? true)
+        XCTAssertFalse(revision?.bypassesThrottle ?? true)
+
+        planner.submit(previewUpdate(start: 0, end: 4, text: "あのね。"))
+        XCTAssertTrue(planner.takeLatest()?.bypassesThrottle == true)
+
+        planner.advanceBoundary(through: 48_000)
+        planner.submit(previewUpdate(start: 3, end: 4, text: "？"))
+        XCTAssertTrue(planner.takeLatest()?.isFirstEligibleInGeneration == true)
+    }
+
+    func testIneligiblePreviewRevisionDoesNotErasePendingEligiblePrefix() {
+        var planner = LocalPreviewPlanner()
+        planner.submit(previewUpdate(start: 0, end: 2, text: "あの"))
+        planner.submit(previewUpdate(start: 0, end: 2.1, text: "あ"))
+
+        XCTAssertEqual(planner.takeLatest()?.update.segment.text, "あの")
     }
 
     func testPreviewAccumulatesOnlyTheCurrentBoundedPhrase() {
@@ -163,6 +286,32 @@ final class LiveCaptionTests: XCTestCase {
 
         let stable = LocalEndpointPlanner()
         XCTAssertEqual(stable.finalizedThrough, 0)
+    }
+
+    func testVoxtralBoundaryAcceptsTheNextPhraseWhileRejectingLateOldWork() {
+        var preview = LocalPreviewPlanner()
+        preview.submit(previewUpdate(start: 0, end: 2, text: "old"))
+        let old = preview.takeLatest()!
+
+        preview.advanceBoundary(through: 32_000)
+        XCTAssertFalse(preview.isSuspended)
+        XCTAssertFalse(preview.accepts(old))
+
+        preview.submit(previewUpdate(start: 2, end: 3, text: "next"))
+        let next = preview.takeLatest()
+        XCTAssertEqual(next?.update.segment.text, "next")
+        XCTAssertTrue(next.map { preview.accepts($0) } == true)
+    }
+
+    func testOldFinalClearsOnlyAnOverlappingPreview() {
+        XCTAssertTrue(LocalPreviewRangePolicy.shouldClear(
+            preview: TranscriptionSegment(start: 1, end: 2, text: "old"),
+            finalizedThrough: 32_000
+        ))
+        XCTAssertFalse(LocalPreviewRangePolicy.shouldClear(
+            preview: TranscriptionSegment(start: 2, end: 3, text: "next"),
+            finalizedThrough: 32_000
+        ))
     }
 
     func testShortPhraseIsCoalescedToAvoidInferenceBacklog() {
@@ -267,6 +416,32 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertTrue(drained)
     }
 
+    func testEndpointFIFOCarriesTheVoxtralFinalWithoutValidatingPCM() async {
+        let fifo = LocalEndpointFIFO()
+        let decision = await fifo.propose(
+            totalSample: LocalEndpointPlanner.maxPhrase,
+            speech: [SpeechSampleRange(start: 0, end: LocalEndpointPlanner.maxPhrase)]
+        )!
+        await fifo.stage(decision, voxtralText: "完了。")
+
+        let entry = await fifo.next()
+        XCTAssertEqual(entry?.voxtralText, "完了。")
+        let cursors = await fifo.cursors()
+        XCTAssertEqual(cursors.finalized, 0)
+    }
+
+    func testCohereFailureFallsBackToVoxtralOnlyWhenVoxtralIsValid() throws {
+        XCTAssertEqual(
+            try LocalFinalSourceSelector.hybrid(cohere: "", voxtral: " 次で最後です。 "),
+            LocalFinalSourceSelection(text: "次で最後です。", degraded: true)
+        )
+        XCTAssertEqual(
+            try LocalFinalSourceSelector.hybrid(cohere: " Cohere final ", voxtral: "Voxtral"),
+            LocalFinalSourceSelection(text: "Cohere final", degraded: false)
+        )
+        XCTAssertThrowsError(try LocalFinalSourceSelector.hybrid(cohere: nil, voxtral: ""))
+    }
+
     func testCanonicalCorpusUsesTwelveEqualMultiSentencePassages() {
         let passages = CanonicalBenchmarkCorpus.passages(totalSamples: 16_000 * 282)
         XCTAssertEqual(passages.count, 12)
@@ -315,6 +490,8 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertNil(manager.loadedEngine)
         XCTAssertEqual(manager.phase(for: .whisperTurboApple), .absent)
         XCTAssertEqual(manager.phase(for: .qwenApple), .absent)
+        XCTAssertEqual(manager.phase(for: .voxtralApple), .absent)
+        XCTAssertEqual(manager.phase(for: .voxtralCohereApple), .absent)
     }
 
     func testCatalogRejectsKnownNonTranslationModels() {
@@ -338,6 +515,32 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertNil(backup.configuration.localSpeechEngine)
         XCTAssertNil(backup.configuration.localSourceLocale)
         XCTAssertNil(backup.configuration.appleTranslationMode)
+    }
+
+    func testRetrySourceCompletenessRoundTripsWithoutTouchingUserStorage() throws {
+        let item = TranscriptionItem(
+            fileURL: URL(fileURLWithPath: "/tmp/\(UUID().uuidString).m4a")
+        )
+        item.status = .failed("Apple translation failed")
+        item.translateToEnglish = true
+        item.localSourceTranscriptComplete = true
+        item.segments = [TranscriptionSegment(start: 0, end: 1, text: "はい。")]
+        item.fullText = "はい。"
+
+        let encoded = try TranscriptionStore.encodedData(for: item)
+        let restored = try TranscriptionStore.decodedItem(from: encoded)
+        XCTAssertTrue(restored.translateToEnglish)
+        XCTAssertTrue(restored.localSourceTranscriptComplete)
+        XCTAssertEqual(restored.segments, item.segments)
+
+        var legacy = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        legacy.removeValue(forKey: "localSourceTranscriptComplete")
+        let legacyRestored = try TranscriptionStore.decodedItem(
+            from: JSONSerialization.data(withJSONObject: legacy)
+        )
+        XCTAssertFalse(legacyRestored.localSourceTranscriptComplete)
     }
 
     private func makeDefaults() -> (UserDefaults, String) {

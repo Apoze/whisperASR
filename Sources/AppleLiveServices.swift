@@ -11,6 +11,7 @@ enum AppleLiveError: LocalizedError {
     case speechFormatUnavailable
     case translationAssetsUnavailable
     case emptyTranslation
+    case translationTimedOut
 
     var errorDescription: String? {
         switch self {
@@ -24,6 +25,8 @@ enum AppleLiveError: LocalizedError {
             return "Apple Translation resources are not installed."
         case .emptyTranslation:
             return "Apple Translation returned an empty result."
+        case .translationTimedOut:
+            return "Apple Translation did not finish before its deadline."
         }
     }
 }
@@ -164,6 +167,7 @@ actor AppleSpeechService {
 
     func start(
         localeIdentifier: String,
+        priority: TaskPriority = .userInitiated,
         onUpdate: @escaping @MainActor @Sendable (LiveSourceUpdate) -> Void,
         onFailure: @escaping @MainActor @Sendable (Error) -> Void
     ) async throws {
@@ -178,7 +182,7 @@ actor AppleSpeechService {
             preset: .timeIndexedProgressiveTranscription
         )
         let options = SpeechAnalyzer.Options(
-            priority: .userInitiated,
+            priority: priority,
             modelRetention: .lingering
         )
         let analyzer = SpeechAnalyzer(modules: [transcriber], options: options)
@@ -337,6 +341,8 @@ actor AppleSpeechService {
 actor AppleTranslationService {
     private var lowLatency: TranslationSession?
     private var highFidelity: TranslationSession?
+    private var configuredSource: Locale.Language?
+    private var configuredMode: AppleTranslationMode?
 
     static func supportedSourceLocales() async -> [SpeechLocaleChoice] {
         let target = Locale.Language(identifier: "en")
@@ -359,6 +365,8 @@ actor AppleTranslationService {
     func configure(sourceLocale: String, mode: AppleTranslationMode) async throws {
         let source = Locale.Language(identifier: sourceLocale)
         let target = Locale.Language(identifier: "en")
+        configuredSource = source
+        configuredMode = mode
         if mode != .highFidelityOnly {
             let low = TranslationSession(
                 installedSource: source,
@@ -390,13 +398,83 @@ actor AppleTranslationService {
     func translate(_ text: String, highFidelity useHighFidelity: Bool) async throws -> String {
         let source = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !source.isEmpty else { throw AppleLiveError.emptyTranslation }
+        let translated: String
+        do {
+            translated = try await withAsyncDeadline(
+                useHighFidelity ? .seconds(5) : .seconds(2),
+                operationName: useHighFidelity
+                    ? "Apple high-fidelity translation"
+                    : "Apple low-latency translation",
+                operation: { [weak self] in
+                    guard let self else { throw CancellationError() }
+                    return try await self.performTranslation(
+                        source,
+                        highFidelity: useHighFidelity
+                    )
+                }
+            )
+        } catch {
+            let surfacedError: Error = error is AsyncDeadlineError
+                ? AppleLiveError.translationTimedOut : error
+            if Self.requiresSessionReplacement(after: surfacedError) {
+                // Reset before returning to the retry loop. Reusing a session
+                // after a failed native invocation can repeat the same failure.
+                replaceSession(highFidelity: useHighFidelity)
+            }
+            throw surfacedError
+        }
+        let normalized = translated.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            replaceSession(highFidelity: useHighFidelity)
+            throw AppleLiveError.emptyTranslation
+        }
+        return normalized
+    }
+
+    static func requiresSessionReplacement(after error: Error) -> Bool {
+        guard !(error is CancellationError) else { return false }
+        guard let appleError = error as? AppleLiveError else { return true }
+        if case .translationAssetsUnavailable = appleError { return false }
+        return true
+    }
+
+    private func performTranslation(
+        _ source: String,
+        highFidelity useHighFidelity: Bool
+    ) async throws -> String {
         guard let session = useHighFidelity ? highFidelity : lowLatency else {
             throw AppleLiveError.translationAssetsUnavailable
         }
-        let translated = try await session.translate(source).targetText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !translated.isEmpty else { throw AppleLiveError.emptyTranslation }
-        return translated
+        return try await session.translate(source).targetText
+    }
+
+    private func replaceSession(highFidelity useHighFidelity: Bool) {
+        guard let configuredSource, let configuredMode else { return }
+        let target = Locale.Language(identifier: "en")
+        if useHighFidelity {
+            highFidelity?.cancel()
+            highFidelity = configuredMode.finalUsesHighFidelity
+                ? TranslationSession(
+                    installedSource: configuredSource,
+                    target: target,
+                    preferredStrategy: .highFidelity
+                ) : nil
+        } else {
+            lowLatency?.cancel()
+            lowLatency = configuredMode != .highFidelityOnly
+                ? TranslationSession(
+                    installedSource: configuredSource,
+                    target: target,
+                    preferredStrategy: .lowLatency
+                ) : nil
+        }
+    }
+
+    /// Moves the first neural invocation outside the live subtitle latency
+    /// measurement. TranslationSession requests are independent, so this does
+    /// not add conversational context to subsequent subtitles.
+    func warmup(highFidelity useHighFidelity: Bool) async throws {
+        _ = try await translate("1", highFidelity: useHighFidelity)
     }
 
     func cancel() {
@@ -404,6 +482,8 @@ actor AppleTranslationService {
         highFidelity?.cancel()
         lowLatency = nil
         highFidelity = nil
+        configuredSource = nil
+        configuredMode = nil
     }
 }
 

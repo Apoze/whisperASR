@@ -5,21 +5,52 @@ struct SpeechSampleRange: Equatable, Sendable {
     let end: Int
 }
 
+/// Independent cursors for the continuous Apple Speech preview stream.
+/// Neither position has any authority over final-ASR or reclaimable PCM.
+struct LocalAppleSpeechFeedState: Equatable, Sendable {
+    static let progressiveFinalizationInterval = 24_000
+
+    private(set) var sentThrough = 0
+    private(set) var finalizeRequestedThrough = 0
+
+    mutating func takeNewSamples(through target: Int) -> Range<Int>? {
+        guard target > sentThrough else { return nil }
+        let range = sentThrough..<target
+        sentThrough = target
+        return range
+    }
+
+    mutating func requestFinalization(
+        through target: Int,
+        every interval: Int
+    ) -> Bool {
+        guard target - finalizeRequestedThrough >= interval else { return false }
+        finalizeRequestedThrough = target
+        return true
+    }
+}
+
 struct LocalPreviewWork: Equatable, Sendable {
     let generation: Int
     let update: LiveSourceUpdate
+    let firstLexicalUptimeNanoseconds: UInt64
     let receivedUptimeNanoseconds: UInt64
+    let isFirstEligibleInGeneration: Bool
+    let bypassesThrottle: Bool
 }
 
 /// Latest-only preview state. Its sample boundary is deliberately separate
 /// from the stable/FIFO cursors: suppressing a preview never validates PCM.
 struct LocalPreviewPlanner: Sendable {
     private static let maximumContextSeconds = 6.0
+    private static let terminalPunctuation: Set<Character> = ["。", "！", "？", "!", "?"]
     private(set) var generation = 0
     private(set) var suppressedThrough = 0
     private(set) var isSuspended = false
     private(set) var pending: LocalPreviewWork?
     private var sourceSegments: [TranscriptionSegment] = []
+    private var hasIssuedEligibleWork = false
+    private var firstLexicalUptimeNanoseconds: UInt64?
 
     mutating func submit(
         _ update: LiveSourceUpdate,
@@ -28,6 +59,10 @@ struct LocalPreviewPlanner: Sendable {
         guard !isSuspended,
               let update = update.clipped(afterSample: suppressedThrough)
         else { return }
+        if firstLexicalUptimeNanoseconds == nil,
+           !update.segment.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            firstLexicalUptimeNanoseconds = receivedUptimeNanoseconds
+        }
         if let last = sourceSegments.last,
            update.segment.start < (last.end ?? last.start) - 0.02 {
             sourceSegments[sourceSegments.count - 1] = update.segment
@@ -48,10 +83,16 @@ struct LocalPreviewPlanner: Sendable {
             isFinal: false,
             finalizedThroughSample: update.finalizedThroughSample
         )
+        guard Self.isEligibleSource(combined.segment.text) else { return }
+        let isFirst = !hasIssuedEligibleWork
         pending = LocalPreviewWork(
             generation: generation,
             update: combined,
-            receivedUptimeNanoseconds: receivedUptimeNanoseconds
+            firstLexicalUptimeNanoseconds: firstLexicalUptimeNanoseconds
+                ?? receivedUptimeNanoseconds,
+            receivedUptimeNanoseconds: receivedUptimeNanoseconds,
+            isFirstEligibleInGeneration: isFirst,
+            bypassesThrottle: isFirst || Self.hasTerminalPunctuation(combined.segment.text)
         )
     }
 
@@ -61,6 +102,20 @@ struct LocalPreviewPlanner: Sendable {
         isSuspended = true
         pending = nil
         sourceSegments.removeAll(keepingCapacity: true)
+        hasIssuedEligibleWork = false
+        firstLexicalUptimeNanoseconds = nil
+    }
+
+    /// Invalidates only the phrase that just ended. Unlike `suspend`, the
+    /// next phrase can immediately enqueue previews while its final is busy.
+    mutating func advanceBoundary(through sample: Int) {
+        generation += 1
+        suppressedThrough = max(suppressedThrough, sample)
+        isSuspended = false
+        pending = nil
+        sourceSegments.removeAll(keepingCapacity: true)
+        hasIssuedEligibleWork = false
+        firstLexicalUptimeNanoseconds = nil
     }
 
     mutating func resume(through sample: Int) {
@@ -71,6 +126,7 @@ struct LocalPreviewPlanner: Sendable {
     mutating func takeLatest() -> LocalPreviewWork? {
         guard !isSuspended, let pending else { return nil }
         self.pending = nil
+        hasIssuedEligibleWork = true
         return pending
     }
 
@@ -80,10 +136,22 @@ struct LocalPreviewPlanner: Sendable {
             && work.generation == generation
             && start >= suppressedThrough
     }
+
+    static func isEligibleSource(_ text: String) -> Bool {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return hasTerminalPunctuation(text)
+            || text.lazy.filter { !$0.isWhitespace }.prefix(2).count == 2
+    }
+
+    private static func hasTerminalPunctuation(_ text: String) -> Bool {
+        text.last.map(terminalPunctuation.contains) == true
+    }
 }
 
 struct LocalEndpointDecision: Equatable, Sendable {
-    enum Kind: String, Codable, Sendable { case pause, forced, finish }
+    enum Kind: String, Codable, Sendable {
+        case semantic, speaker, pause, forced, finish
+    }
 
     let kind: Kind
     let audioStart: Int
@@ -232,6 +300,7 @@ actor LocalEndpointFIFO {
     struct Entry: Equatable, Sendable {
         let decision: LocalEndpointDecision
         let stagedUptimeNanoseconds: UInt64
+        let voxtralText: String?
     }
 
     private var planner = LocalEndpointPlanner()
@@ -244,17 +313,34 @@ actor LocalEndpointFIFO {
         speech: [SpeechSampleRange],
         finishing: Bool = false
     ) -> LocalEndpointDecision? {
-        guard let decision = planner.observe(
+        guard let decision = propose(
             totalSample: totalSample,
             speech: speech,
             finishing: finishing
         ) else { return nil }
+        stage(decision)
+        return decision
+    }
+
+    func propose(
+        totalSample: Int,
+        speech: [SpeechSampleRange],
+        finishing: Bool = false
+    ) -> LocalEndpointDecision? {
+        planner.observe(
+            totalSample: totalSample,
+            speech: speech,
+            finishing: finishing
+        )
+    }
+
+    func stage(_ decision: LocalEndpointDecision, voxtralText: String? = nil) {
         planner.stage(decision)
         pending.append(Entry(
             decision: decision,
-            stagedUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds
+            stagedUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
+            voxtralText: voxtralText
         ))
-        return decision
     }
 
     func next() -> Entry? { pending.first }
@@ -276,13 +362,61 @@ actor LocalEndpointFIFO {
     }
 }
 
+enum LocalPreviewRangePolicy {
+    static func shouldClear(
+        preview: TranscriptionSegment?,
+        finalizedThrough sample: Int
+    ) -> Bool {
+        guard let preview else { return false }
+        return Int((preview.start * 16_000).rounded()) < sample
+    }
+}
+
+struct LocalFinalSourceSelection: Equatable, Sendable {
+    let text: String
+    let degraded: Bool
+}
+
+enum LocalFinalSourceSelector {
+    static func hybrid(cohere: String?, voxtral: String?) throws -> LocalFinalSourceSelection {
+        let cohere = cohere?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !cohere.isEmpty {
+            return LocalFinalSourceSelection(text: cohere, degraded: false)
+        }
+        let voxtral = voxtral?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !voxtral.isEmpty else { throw LocalPrototypeError.invalidResponse }
+        return LocalFinalSourceSelection(text: voxtral, degraded: true)
+    }
+}
+
 enum EnglishSubtitleValidator {
+    static func normalizedEnglish(_ text: String) -> String? {
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty, !containsSourceScript(normalized) else { return nil }
+        return normalized
+    }
+
+    static func requireEnglish(_ text: String) throws -> String {
+        guard let normalized = normalizedEnglish(text) else {
+            throw LocalPrototypeError.invalidResponse
+        }
+        return normalized
+    }
+
     static func containsSourceScript(_ text: String) -> Bool {
         text.unicodeScalars.contains { scalar in
             switch scalar.value {
-            case 0x3040...0x30FF, // Hiragana + Katakana
-                 0x3400...0x4DBF, 0x4E00...0x9FFF, // CJK
-                 0xAC00...0xD7AF: // Hangul
+            case 0x1100...0x11FF, // Hangul Jamo
+                 0x2E80...0x2FFF, // CJK radicals and ideographic punctuation
+                 0x3040...0x30FF, // Hiragana + Katakana
+                 0x3100...0x312F, 0x31A0...0x31BF, // Bopomofo
+                 0x3130...0x318F, // Hangul compatibility Jamo
+                 0x31F0...0x31FF, // Katakana phonetic extensions
+                 0x3400...0x4DBF, 0x4E00...0x9FFF, // CJK unified ideographs
+                 0xA960...0xA97F, 0xAC00...0xD7FF, // Hangul syllables/extensions
+                 0xF900...0xFAFF, // CJK compatibility ideographs
+                 0xFF65...0xFF9F, // Half-width Japanese punctuation/Katakana
+                 0x20000...0x323AF: // CJK extensions B through H
                 return true
             default:
                 return false
@@ -294,11 +428,13 @@ enum EnglishSubtitleValidator {
 enum LocalCaptionMetricKind: String, Codable, Sendable {
     case preview
     case final
+    case finalAttempt
 }
 
 struct LocalCaptionMetric: Codable, Sendable {
     let kind: LocalCaptionMetricKind
     let engine: String
+    let boundaryKind: String?
     let rangeStart: Int
     let rangeEnd: Int
     let speechEnd: Int
@@ -312,6 +448,15 @@ struct LocalCaptionMetric: Codable, Sendable {
     let englishText: String
     let revision: Int?
     let previewLatencyMilliseconds: Double?
+    let firstLexicalUptimeNanoseconds: UInt64?
+    let sourceEligibleUptimeNanoseconds: UInt64?
+    let translationStartedUptimeNanoseconds: UInt64?
+    let translationCompletedUptimeNanoseconds: UInt64?
+    var finalAttempt: Int? = nil
+    var finalAttemptOutcome: String? = nil
+    var finalErrorClassification: String? = nil
+    var retryBackoffMilliseconds: Double? = nil
+    var finalEnqueuedUptimeNanoseconds: UInt64? = nil
 }
 
 actor LocalCaptionMetricRecorder {
@@ -341,26 +486,55 @@ actor LocalCaptionMetricRecorder {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(records).write(to: file, options: .atomic)
-        var csv = "kind,engine,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,source,english\n"
+        try Self.csvData(for: records).write(
+            to: root.appendingPathComponent("\(stem).csv"),
+            options: .atomic
+        )
+        return file
+    }
+
+    static func csvData(for records: [LocalCaptionMetric]) -> Data {
+        var csv = "kind,engine,boundary_kind,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,source,english\n"
         for record in records {
-            csv += [
+            let revision = record.revision.map(String.init) ?? ""
+            let previewLatency = record.previewLatencyMilliseconds.map {
+                String(format: "%.3f", $0)
+            } ?? ""
+            let firstLexical = record.firstLexicalUptimeNanoseconds.map { String($0) } ?? ""
+            let sourceEligible = record.sourceEligibleUptimeNanoseconds.map { String($0) } ?? ""
+            let translationStarted = record.translationStartedUptimeNanoseconds.map { String($0) } ?? ""
+            let translationCompleted = record.translationCompletedUptimeNanoseconds.map { String($0) } ?? ""
+            let finalAttempt = record.finalAttempt.map(String.init) ?? ""
+            let retryBackoff = record.retryBackoffMilliseconds.map {
+                String(format: "%.3f", $0)
+            } ?? ""
+            let finalEnqueued = record.finalEnqueuedUptimeNanoseconds.map { String($0) } ?? ""
+            let fields: [String] = [
                 record.kind.rawValue, record.engine,
+                record.boundaryKind ?? "",
                 String(record.rangeStart), String(record.rangeEnd),
                 String(record.speechEnd), String(record.endpointDetectedAt),
                 String(record.vadOnlyEndpointAt),
                 String(format: "%.3f", record.queueMilliseconds),
                 String(format: "%.3f", record.asrMilliseconds),
                 String(format: "%.3f", record.translationMilliseconds),
-                record.revision.map(String.init) ?? "",
-                record.previewLatencyMilliseconds.map { String(format: "%.3f", $0) } ?? "",
+                revision,
+                previewLatency,
+                firstLexical,
+                sourceEligible,
+                translationStarted,
+                translationCompleted,
+                String(record.renderedUptimeNanoseconds),
+                finalAttempt,
+                record.finalAttemptOutcome ?? "",
+                record.finalErrorClassification ?? "",
+                retryBackoff,
+                finalEnqueued,
                 Self.csv(record.sourceText ?? ""), Self.csv(record.englishText),
-            ].joined(separator: ",") + "\n"
+            ]
+            csv += fields.joined(separator: ",") + "\n"
         }
-        try Data(csv.utf8).write(
-            to: root.appendingPathComponent("\(stem).csv"),
-            options: .atomic
-        )
-        return file
+        return Data(csv.utf8)
     }
 
     private static func csv(_ value: String) -> String {

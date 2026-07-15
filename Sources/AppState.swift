@@ -2,12 +2,195 @@ import Foundation
 import NaturalLanguage
 import Observation
 
+enum LocalFinalTranslationFailureDisposition: Equatable, Sendable {
+    case retry(after: Duration)
+    case retain
+}
+
+enum LocalEnglishRetrySourceStrategy: Equatable, Sendable {
+    case savedComplete
+    case retranscribeAudio
+    case savedPartial
+
+    static func resolve(
+        sourceComplete: Bool,
+        hasSavedSource: Bool,
+        hasAudio: Bool
+    ) -> Self? {
+        if !sourceComplete {
+            if hasAudio { return .retranscribeAudio }
+            return hasSavedSource ? .savedPartial : nil
+        }
+        if hasSavedSource { return .savedComplete }
+        return hasAudio ? .retranscribeAudio : nil
+    }
+
+    static func afterAudioFailure(
+        hasSavedSource: Bool,
+        hasAudio: Bool
+    ) -> (strategy: Self, retainsAudioRetry: Bool)? {
+        guard hasSavedSource else { return nil }
+        return (.savedPartial, hasAudio)
+    }
+
+    static func acceptsAudioRetranscription(
+        _ candidate: [TranscriptionSegment],
+        over saved: [TranscriptionSegment]
+    ) -> Bool {
+        guard let candidateRange = coverage(of: candidate) else { return false }
+        guard let savedRange = coverage(of: saved) else { return true }
+        let tolerance = 0.02
+        return candidateRange.lowerBound <= savedRange.lowerBound + tolerance
+            && candidateRange.upperBound + tolerance >= savedRange.upperBound
+    }
+
+    private static func coverage(
+        of segments: [TranscriptionSegment]
+    ) -> ClosedRange<Double>? {
+        guard let start = segments.map(\.start).min(),
+              let end = segments.map({ $0.end ?? $0.start }).max()
+        else { return nil }
+        return start...max(start, end)
+    }
+}
+
+enum LocalFinalTranslationErrorClassification: String, Codable, Sendable {
+    case timedOut
+    case empty
+    case invalidResponse
+    case assetsUnavailable
+    case cancelled
+    case cursorMismatch
+    case configuration
+    case framework
+
+    var isRetryable: Bool {
+        switch self {
+        case .timedOut, .empty, .framework: return true
+        case .invalidResponse, .assetsUnavailable, .cancelled, .cursorMismatch, .configuration:
+            return false
+        }
+    }
+}
+
+enum LocalFinalTranslationRetryPolicy {
+    static let maximumAttempts = 3
+
+    static func backoffMilliseconds(afterAttempt attempt: Int) -> Int64? {
+        switch attempt {
+        case 1: return 250
+        case 2: return 1_000
+        default: return nil
+        }
+    }
+
+    static func classification(for error: Error) -> LocalFinalTranslationErrorClassification {
+        if error is CancellationError { return .cancelled }
+        if let appleError = error as? AppleLiveError {
+            switch appleError {
+            case .translationTimedOut: return .timedOut
+            case .emptyTranslation: return .empty
+            case .translationAssetsUnavailable: return .assetsUnavailable
+            case .unsupportedLanguage,
+                 .speechAssetsUnavailable,
+                 .speechFormatUnavailable:
+                return .configuration
+            }
+        }
+        if let prototypeError = error as? LocalPrototypeError {
+            switch prototypeError {
+            case .invalidResponse: return .invalidResponse
+            case .cursorMismatch: return .cursorMismatch
+            case .modelNotLoaded,
+                 .memoryLimit,
+                 .invalidDownload:
+                return .configuration
+            }
+        }
+        return .framework
+    }
+
+    static func disposition(
+        for error: Error,
+        afterAttempt attempt: Int
+    ) -> LocalFinalTranslationFailureDisposition {
+        guard classification(for: error).isRetryable,
+              let backoff = backoffMilliseconds(afterAttempt: attempt)
+        else { return .retain }
+        return .retry(after: .milliseconds(backoff))
+    }
+}
+
+struct LocalFinalTranslationAttemptFailure: Equatable, Sendable {
+    let classification: LocalFinalTranslationErrorClassification
+    let disposition: LocalFinalTranslationFailureDisposition
+}
+
+struct LocalFinalTranslationAttemptState: Equatable, Sendable {
+    private(set) var count = 0
+    private(set) var exhausted = false
+    private(set) var lastError: String?
+
+    mutating func begin() -> Int {
+        count += 1
+        return count
+    }
+
+    mutating func record(_ error: Error) -> LocalFinalTranslationAttemptFailure {
+        lastError = error.localizedDescription
+        let failure = LocalFinalTranslationAttemptFailure(
+            classification: LocalFinalTranslationRetryPolicy.classification(for: error),
+            disposition: LocalFinalTranslationRetryPolicy.disposition(
+                for: error,
+                afterAttempt: count
+            )
+        )
+        if failure.disposition == .retain { exhausted = true }
+        return failure
+    }
+}
+
+struct LocalCaptionCompletionAssessment: Equatable, Sendable {
+    let sourceFailure: String?
+    let englishFailure: String?
+
+    var sourceTranscriptComplete: Bool { sourceFailure == nil }
+    var failure: String? { sourceFailure ?? englishFailure }
+}
+
+enum LocalFinalTranslationState: Equatable, Sendable {
+    case idle
+    case queued
+    case translating(attempt: Int)
+    case retrying(nextAttempt: Int)
+    case failedRetained
+
+    var statusText: String? {
+        switch self {
+        case .idle: return nil
+        case .queued: return "Final queued"
+        case .translating(let attempt):
+            return "Translating final — \(attempt)/\(LocalFinalTranslationRetryPolicy.maximumAttempts)"
+        case .retrying(let nextAttempt):
+            return "Retrying final — \(nextAttempt)/\(LocalFinalTranslationRetryPolicy.maximumAttempts)"
+        case .failedRetained: return "Final failed — audio retained"
+        }
+    }
+
+    mutating func noteEnqueued(isOnlyJob: Bool) {
+        guard isOnlyJob, self != .failedRetained else { return }
+        self = .queued
+    }
+}
+
 private struct LocalTranslationJob: Sendable {
     let index: Int
     let source: TranscriptionSegment
     let decision: LocalEndpointDecision?
     let queueMilliseconds: Double
     let asrMilliseconds: Double
+    let enqueuedUptimeNanoseconds: UInt64
+    var attempts = LocalFinalTranslationAttemptState()
 }
 
 @Observable
@@ -87,6 +270,8 @@ class AppState {
     private var localSourceSegments: [TranscriptionSegment] = []
     private var localTranslationQueue: [LocalTranslationJob] = []
     private var localTranslationWorkerRunning = false
+    private var localFinalTranslationInFlight = false
+    private var localFinalTranslationState: LocalFinalTranslationState = .idle
     private var activeLocalTranslationMode: AppleTranslationMode = .adaptive
     private var activeLocalEnglishEngine: LocalEnglishEngine = .whisperTurboApple
     private var activeLocalSourceLocale = ""
@@ -95,12 +280,29 @@ class AppState {
     private var localPreviewTranslationTask: Task<Void, Never>?
     private var localPreviewSpeechFinalizeTask: Task<Void, Never>?
     private var localPreviewWorkerRunning = false
+    private var localPreviewWaitingForThrottle = false
     private var localPreviewLastStartedUptimeNanoseconds: UInt64 = 0
     private var localPreviewRevision = 0
     private var localFinalWorkCount = 0
+    private var localAppleSpeechFeed = LocalAppleSpeechFeedState()
     private var localPreviewSentSampleCount = 0
     private var localPreviewSpeechStartSample: Int?
     private var localPreviewFeedStarted = false
+    private var localVoxtralPreviewSourceText = ""
+    private var localVoxtralClausePlanner = VoxtralClausePlanner()
+    private var localContinuousVoxtralAcknowledgedSampleCount = 0
+    private var localContinuousVoxtralTranscript = ""
+    private var localContinuousVoxtralFailure: String?
+    private var localContinuousVoxtralCatchUpThrough: Int?
+    private var localContinuousVoxtralBoundaryQueue: [VoxtralClauseBoundary] = []
+    private var localContinuousVoxtralBoundaryDrainActive = false
+    private var localContinuousVoxtralLastStagedGeneration = -1
+    private var localDiarizationGeneration: UInt64 = 0
+    private var localDiarizationPreparationFinished = false
+    private var localDiarizationAssistActive = false
+    private var localVoxtralSpeakerMarkersAreAuthoritative = false
+    private var localVoxtralMarkerCalibration: VoxtralMarkerCalibration?
+    private var localVoxtralReplayDeduplicator: VoxtralReplayDeduplicator?
     private var localPreviewLastForcedSample = 0
     private var localRecordingStartedUptimeNanoseconds: UInt64 = 0
     private var localPreviewRuntimeEnabled = false
@@ -108,7 +310,7 @@ class AppState {
     private var localCommittedSampleCount = 0
     /// Source ASR has finalized through this sample; it may be ahead of English.
     private var localSourceFinalizedSampleCount = 0
-    private var localPipelineFailure: String?
+    private var localSourcePipelineFailure: String?
     private var preparedLiveModelFileName: String?
     private var preparingLiveModelFileName: String?
     private var localModelPreparationTask: Task<Void, Never>?
@@ -116,6 +318,8 @@ class AppState {
     private var preparingLocalTranslationMode: AppleTranslationMode?
     let localModelManager = LocalEnglishModelManager()
     @ObservationIgnored private let localMetricRecorder = LocalCaptionMetricRecorder()
+    @ObservationIgnored private let localDiarizationShadow = LocalDiarizationShadow()
+    @ObservationIgnored private let localDiarizationJournal = LocalDiarizationShadowJournal()
     @ObservationIgnored private weak var activeLocalRecorder: AudioRecorder?
     @ObservationIgnored private var appleTranslationRuntime: Any?
     @ObservationIgnored private var applePreviewTranslationRuntime: Any?
@@ -136,7 +340,12 @@ class AppState {
         let mode = AppleTranslationMode.stored(in: defaults)
         let translationReady = (!mode.requiresLowLatency || appleTranslationLowReady)
             && (!mode.requiresHighFidelity || appleTranslationHighReady)
-        let previewReady = !mode.showsPreview || appleSpeechReady
+        let previewReady = !mode.showsPreview
+            || !engine.usesAppleSpeechPreview
+            || appleSpeechReady
+        let diarizationReady = engine != .voxtralApple
+            || !LocalDiarizationShadowConfiguration.isEnabled
+            || localDiarizationPreparationFinished
         let whisperReady = engine != .whisperTurboApple || isLiveTranslationModelReady
         let sourceCode = Locale(identifier: source).language.languageCode?.identifier
         let sourceSupported = localSourceLocales.contains {
@@ -146,6 +355,7 @@ class AppState {
             && sourceSupported
             && translationReady
             && previewReady
+            && diarizationReady
             && whisperReady
             && localModelManager.phase(for: engine).isReady
             && localResourceError == nil
@@ -229,19 +439,45 @@ class AppState {
             guard let self, let item else { return }
             do {
                 var sources = item.segments
-                if sources.isEmpty {
-                    guard FileManager.default.fileExists(atPath: item.fileURL.path) else {
-                        throw TranscriptionError.processFailed("The source transcript and audio are missing")
-                    }
+                var retainedAudioRetryFailure: Error?
+                let hasAudio = FileManager.default.fileExists(atPath: item.fileURL.path)
+                guard var sourceStrategy = LocalEnglishRetrySourceStrategy.resolve(
+                    sourceComplete: item.localSourceTranscriptComplete,
+                    hasSavedSource: !sources.isEmpty,
+                    hasAudio: hasAudio
+                ) else {
+                    throw TranscriptionError.processFailed(
+                        "No saved Japanese clauses or retained audio are available"
+                    )
+                }
+                if sourceStrategy == .retranscribeAudio {
+                    let savedSources = sources
                     let language = Locale(identifier: locale).language.languageCode?.identifier
-                    let result = try await self.service.transcribe(
-                        fileURL: item.fileURL,
-                        language: language,
-                        translate: false
-                    ) { progress in
-                        Task { @MainActor [weak item] in item?.progress = progress * 0.5 }
+                    do {
+                        let result = try await self.service.transcribe(
+                            fileURL: item.fileURL,
+                            language: language,
+                            translate: false
+                        ) { progress in
+                            Task { @MainActor [weak item] in item?.progress = progress * 0.5 }
+                        }
+                        guard LocalEnglishRetrySourceStrategy.acceptsAudioRetranscription(
+                            result.segments,
+                            over: savedSources
+                        ) else {
+                            throw TranscriptionError.processFailed(
+                                "The retained audio did not cover all saved source clauses"
+                            )
+                        }
+                        sources = result.segments
+                    } catch {
+                        guard let fallback = LocalEnglishRetrySourceStrategy.afterAudioFailure(
+                            hasSavedSource: !sources.isEmpty,
+                            hasAudio: hasAudio
+                        ) else { throw error }
+                        sourceStrategy = fallback.strategy
+                        if fallback.retainsAudioRetry { retainedAudioRetryFailure = error }
                     }
-                    sources = result.segments
                 }
                 try await self.appleTranslationService().configure(
                     sourceLocale: locale,
@@ -257,7 +493,14 @@ class AppState {
                     ))
                     item.progress = 0.5 + 0.5 * Double(index + 1) / Double(max(1, sources.count))
                 }
-                if item.discardOriginalAfterRetry {
+                if sourceStrategy == .savedPartial {
+                    // A crash can preserve source clauses even when its audio tail is unavailable.
+                    // Keep those clauses beside their English so the partial scope stays explicit.
+                    item.segments = sources
+                    item.fullText = sources.map(\.text).joined()
+                    item.translatedSegments = english.map(\.text)
+                    item.translationLanguage = "en"
+                } else if item.discardOriginalAfterRetry {
                     item.segments = english
                     item.fullText = english.map(\.text).joined()
                     item.translatedSegments = []
@@ -268,9 +511,26 @@ class AppState {
                     item.translatedSegments = english.map(\.text)
                     item.translationLanguage = "en"
                 }
-                item.translateToEnglish = false
+                item.localSourceTranscriptComplete = sourceStrategy != .savedPartial
                 item.progress = 1
-                item.status = .completed
+                if let retainedAudioRetryFailure {
+                    item.translateToEnglish = true
+                    item.status = .failed(
+                        "Saved Japanese clauses were translated, but the retained audio still needs retry: \(retainedAudioRetryFailure.localizedDescription)"
+                    )
+                    self.showToast(
+                        "Recovered the saved clauses. The retained audio remains available for another retry."
+                    )
+                } else {
+                    item.translateToEnglish = false
+                    item.status = .completed
+                }
+                if sourceStrategy == .savedPartial, retainedAudioRetryFailure == nil {
+                    item.fileName = "Recovered partial subtitles — audio tail unavailable"
+                    self.showToast(
+                        "Recovered only the saved Japanese clauses; the unavailable audio tail could not be recovered."
+                    )
+                }
                 TranscriptionStore.save(item)
             } catch {
                 item.status = .failed("English translation is incomplete: \(error.localizedDescription)")
@@ -343,6 +603,7 @@ class AppState {
         await awaitLiveTasks()
 
         var localFailure: String?
+        var localSourceTranscriptComplete = true
         var segments: [TranscriptionSegment]
         if captionMode == .localEnglish {
             service.endRealtimeSession()
@@ -350,13 +611,41 @@ class AppState {
             segments = localCommittedSegments
             let sourceMismatch = localCommittedSegments.count != localSourceSegments.count
             let uncommittedSourceAudio = localCommittedSampleCount < localSourceFinalizedSampleCount
-            if !localTranslationQueue.isEmpty
-                || sourceMismatch
-                || uncommittedSourceAudio
-                || localPipelineFailure != nil {
-                localFailure = localFailure
-                    ?? "English translation is incomplete. The PCM/audio and valid English subtitles were kept for retry."
+            let pendingVoxtralSource = activeLocalEnglishEngine == .voxtralApple
+                && !localVoxtralClausePlanner.pendingSourceText
+                    .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let sourceFailure = localContinuousVoxtralFailure
+                ?? localSourcePipelineFailure
+                ?? (pendingVoxtralSource ? "The final Voxtral source suffix was not drained." : nil)
+
+            let englishFailure: String?
+            if localFinalTranslationInFlight {
+                englishFailure = "An English final is still being translated."
+            } else if let failedJob = localTranslationQueue.first,
+                      failedJob.attempts.exhausted {
+                englishFailure = "Apple final translation failed after \(failedJob.attempts.count) attempts: \(failedJob.attempts.lastError ?? "Unknown Apple Translation error.")"
+            } else if !localTranslationQueue.isEmpty {
+                englishFailure = "An Apple final translation is waiting for retry."
+            } else if activeLocalEnglishEngine == .voxtralApple,
+                      localVoxtralClausePlanner.pendingValidationCount != 0 {
+                englishFailure = "One or more staged Voxtral clauses were not validated in English."
+            } else if activeLocalEnglishEngine == .voxtralApple,
+                      localVoxtralClausePlanner.englishValidatedThrough
+                        != localVoxtralClausePlanner.sourceStagedThrough {
+                englishFailure = "The Voxtral source and English validation cursors do not match."
+            } else if sourceMismatch {
+                englishFailure = "Some finalized source clauses do not have valid English subtitles."
+            } else if uncommittedSourceAudio {
+                englishFailure = "Source audio was staged but its English translation was not validated."
+            } else {
+                englishFailure = nil
             }
+            let completion = LocalCaptionCompletionAssessment(
+                sourceFailure: sourceFailure,
+                englishFailure: englishFailure
+            )
+            localFailure = completion.failure
+            localSourceTranscriptComplete = completion.sourceTranscriptComplete
             _ = try? await localMetricRecorder.writeOptInReport()
         } else {
             segments = liveSegments
@@ -448,10 +737,14 @@ class AppState {
             item.localSourceLocale = activeLocalSourceLocale
             item.localTranslationMode = activeLocalTranslationMode
             item.discardOriginalAfterRetry = !keepOriginal
+            item.localSourceTranscriptComplete = localSourceTranscriptComplete
         }
 
         if let localFailure {
-            item.status = .failed(localFailure + " The audio was kept; use Retry English translation.")
+            let retryDetail = url == nil
+                ? " The audio was not saved; Retry can recover only the saved Japanese clauses."
+                : " The audio was kept; use Retry English translation."
+            item.status = .failed(localFailure + retryDetail)
         }
 
         if url == nil {
@@ -486,15 +779,9 @@ class AppState {
 
     @MainActor
     private func finishLocalTranslationQueue() async {
-        await liveTranslationTask?.value
         guard #available(macOS 26.4, *) else { return }
-        var retries = 0
-        while !localTranslationQueue.isEmpty, retries < 2 {
-            liveTranslationError = nil
-            startLocalTranslationWorkerIfNeeded()
-            await liveTranslationTask?.value
-            retries += 1
-        }
+        startLocalTranslationWorkerIfNeeded()
+        await liveTranslationTask?.value
     }
 
     private func finalizeAPITranslations(
@@ -626,7 +913,10 @@ class AppState {
 
     func shutdown() {
         service.shutdown()
-        Task { await localModelManager.shutdown() }
+        Task {
+            await localModelManager.shutdown()
+            await localDiarizationShadow.shutdown()
+        }
     }
 
     @MainActor
@@ -693,8 +983,9 @@ class AppState {
         isPreparingLocalResources = true
         localResourceError = nil
         let mode = AppleTranslationMode.stored()
+        let engine = LocalEnglishEngine.stored()
         Task { [weak self] in
-            let locales = mode.showsPreview
+            let locales = mode.showsPreview && engine.usesAppleSpeechPreview
                 ? await AppleSpeechService.supportedSourceLocales(
                     requireHighFidelity: mode.requiresHighFidelity
                 )
@@ -748,6 +1039,7 @@ class AppState {
         preparedLiveModelFileName = nil
         isPreparingLiveModel = false
         isPreparingLocalResources = false
+        localDiarizationPreparationFinished = false
         localPreviewTranslationTask?.cancel()
         localPreviewTranslationTask = nil
         localPreviewSpeechFinalizeTask?.cancel()
@@ -760,6 +1052,7 @@ class AppState {
                 await preview.cancel()
             }
             await localModelManager.unload()
+            await localDiarizationShadow.shutdown()
             await service.unloadModel()
         }
     }
@@ -796,8 +1089,15 @@ class AppState {
         let mode = AppleTranslationMode.stored(in: defaults)
         if preparingLocalEnglishEngine == engine,
            preparingLocalTranslationMode == mode { return }
-        let speechReady = !mode.showsPreview || appleSpeechReady
-        if localModelManager.phase(for: engine).isReady, speechReady {
+        let speechReady = !mode.showsPreview
+            || !engine.usesAppleSpeechPreview
+            || appleSpeechReady
+        let diarizationReady = engine != .voxtralApple
+            || !LocalDiarizationShadowConfiguration.isEnabled
+            || localDiarizationPreparationFinished
+        if localModelManager.phase(for: engine).isReady,
+           speechReady,
+           diarizationReady {
             isPreparingLocalResources = false
             localResourceProgress = 1
             localResourceError = nil
@@ -814,7 +1114,7 @@ class AppState {
         localModelPreparationTask = Task { [weak self] in
             guard let self else { return }
             do {
-                if mode.showsPreview {
+                if mode.showsPreview, engine.usesAppleSpeechPreview {
                     try await self.appleSpeechService().prepare(
                         localeIdentifier: locale
                     ) { progress in
@@ -831,8 +1131,28 @@ class AppState {
                         self.preparingLiveModelFileName = nil
                     }
                 }
+                if engine != .voxtralApple {
+                    await self.localDiarizationShadow.shutdown()
+                    await MainActor.run {
+                        self.localDiarizationPreparationFinished = false
+                    }
+                }
                 if !self.localModelManager.phase(for: engine).isReady {
                     try await self.localModelManager.prepare(engine)
+                }
+                if LocalDiarizationShadowConfiguration.isEnabled,
+                   engine == .voxtralApple {
+                    await self.localDiarizationShadow.prepare()
+                    let status = await self.localDiarizationShadow.status()
+                    await MainActor.run {
+                        self.localDiarizationPreparationFinished = true
+                        if LocalDiarizationShadowConfiguration
+                            .isAssistRequestedButUnpromoted {
+                            self.livePreviewError = "Speaker changes are in shadow mode only: no tested diarizer met the promotion thresholds. Punctuation and pauses remain authoritative."
+                        } else if let reason = status.failureReason {
+                            self.livePreviewError = "Speaker-change assistance unavailable: \(reason) Punctuation and pauses remain active."
+                        }
+                    }
                 }
                 if engine == .whisperTurboApple {
                     await MainActor.run { self.prepareLiveTranslationModel() }
@@ -966,6 +1286,8 @@ class AppState {
         localSourceSegments = []
         localTranslationQueue = []
         localTranslationWorkerRunning = false
+        localFinalTranslationInFlight = false
+        localFinalTranslationState = .idle
         localPreviewPlanner = LocalPreviewPlanner()
         localPreviewSegment = nil
         localPreviewTranslationTask?.cancel()
@@ -973,18 +1295,30 @@ class AppState {
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
         localPreviewWorkerRunning = false
+        localPreviewWaitingForThrottle = false
         localPreviewLastStartedUptimeNanoseconds = 0
         localPreviewRevision = 0
         localFinalWorkCount = 0
+        localAppleSpeechFeed = LocalAppleSpeechFeedState()
         localPreviewSentSampleCount = 0
         localPreviewSpeechStartSample = nil
         localPreviewFeedStarted = false
+        localVoxtralPreviewSourceText = ""
+        localVoxtralClausePlanner = VoxtralClausePlanner()
+        localContinuousVoxtralAcknowledgedSampleCount = 0
+        localContinuousVoxtralTranscript = ""
+        localContinuousVoxtralFailure = nil
+        localContinuousVoxtralCatchUpThrough = nil
+        localContinuousVoxtralBoundaryQueue = []
+        localContinuousVoxtralBoundaryDrainActive = false
+        localContinuousVoxtralLastStagedGeneration = -1
+        localVoxtralReplayDeduplicator = nil
         localPreviewLastForcedSample = 0
         localRecordingStartedUptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
         localPreviewRuntimeEnabled = false
         localCommittedSampleCount = 0
         localSourceFinalizedSampleCount = 0
-        localPipelineFailure = nil
+        localSourcePipelineFailure = nil
         liveError = nil
         liveTranslationError = nil
         livePreviewError = nil
@@ -1049,21 +1383,30 @@ class AppState {
                 sourceLocale: sourceLocale,
                 mode: finalMode
             )
+            try await appleTranslationService().warmup(
+                highFidelity: activeLocalTranslationMode.finalUsesHighFidelity
+            )
             if activeLocalTranslationMode.showsPreview {
                 do {
                     try await applePreviewTranslationService().configure(
                         sourceLocale: sourceLocale,
                         mode: .lowLatencyOnly
                     )
-                    try await appleSpeechService().start(
-                        localeIdentifier: sourceLocale,
-                        onUpdate: { [weak self] update in
-                            self?.receiveLocalPreviewSource(update)
-                        },
-                        onFailure: { [weak self] error in
-                            self?.disableLocalPreview(error)
-                        }
+                    try await applePreviewTranslationService().warmup(
+                        highFidelity: false
                     )
+                    if engine.usesAppleSpeechPreview {
+                        try await appleSpeechService().start(
+                            localeIdentifier: sourceLocale,
+                            priority: engine.usesVoxtralStreaming ? .utility : .userInitiated,
+                            onUpdate: { [weak self] update in
+                                self?.receiveLocalPreviewSource(update)
+                            },
+                            onFailure: { [weak self] error in
+                                self?.disableLocalPreview(error)
+                            }
+                        )
+                    }
                     localPreviewRuntimeEnabled = true
                 } catch {
                     livePreviewError = "Live preview unavailable: \(error.localizedDescription) Stable subtitles will continue."
@@ -1083,7 +1426,7 @@ class AppState {
         } catch {
             await stopLocalPreviewRuntime()
             await MainActor.run {
-                self.localPipelineFailure = error.localizedDescription
+                self.localSourcePipelineFailure = error.localizedDescription
                 self.liveError = error.localizedDescription
                 self.liveStatusText = "Local translation unavailable"
             }
@@ -1095,10 +1438,14 @@ class AppState {
     private func receiveLocalPreviewSource(_ update: LiveSourceUpdate) {
         guard localPreviewRuntimeEnabled,
               activeLocalTranslationMode.showsPreview,
-              localFinalWorkCount == 0,
+              (activeLocalEnglishEngine.usesVoxtralStreaming || localFinalWorkCount == 0),
               !update.segment.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         else { return }
         localPreviewPlanner.submit(update)
+        if localPreviewWaitingForThrottle,
+           localPreviewPlanner.pending?.bypassesThrottle == true {
+            localPreviewTranslationTask?.cancel()
+        }
         startLocalPreviewWorkerIfNeeded()
     }
 
@@ -1106,7 +1453,7 @@ class AppState {
     @MainActor
     private func startLocalPreviewWorkerIfNeeded() {
         guard localPreviewRuntimeEnabled,
-              localFinalWorkCount == 0,
+              !localPreviewIsBlockedByFinal,
               !localPreviewWorkerRunning,
               localPreviewPlanner.pending != nil else { return }
         localPreviewWorkerRunning = true
@@ -1118,17 +1465,29 @@ class AppState {
     @available(macOS 26.4, *)
     @MainActor
     private func drainLocalPreviewQueue() async {
-        defer { localPreviewWorkerRunning = false }
+        defer {
+            localPreviewWaitingForThrottle = false
+            localPreviewWorkerRunning = false
+            startLocalPreviewWorkerIfNeeded()
+        }
         let refreshNanoseconds: UInt64 = 500_000_000
 
-        while !Task.isCancelled, localPreviewRuntimeEnabled, localFinalWorkCount == 0 {
+        while !Task.isCancelled, localPreviewRuntimeEnabled, !localPreviewIsBlockedByFinal {
             let now = DispatchTime.now().uptimeNanoseconds
-            if localPreviewLastStartedUptimeNanoseconds > 0,
+            if localPreviewPlanner.pending?.bypassesThrottle != true,
+               localPreviewLastStartedUptimeNanoseconds > 0,
                now - localPreviewLastStartedUptimeNanoseconds < refreshNanoseconds {
                 let remaining = refreshNanoseconds - (now - localPreviewLastStartedUptimeNanoseconds)
-                try? await Task.sleep(nanoseconds: remaining)
-                guard !Task.isCancelled else { return }
+                localPreviewWaitingForThrottle = true
+                do {
+                    try await Task.sleep(nanoseconds: remaining)
+                } catch {
+                    localPreviewWaitingForThrottle = false
+                    return
+                }
+                localPreviewWaitingForThrottle = false
             }
+            guard !localPreviewIsBlockedByFinal else { return }
             guard let work = localPreviewPlanner.takeLatest() else { return }
             let source = work.update.segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !source.isEmpty else { continue }
@@ -1136,15 +1495,16 @@ class AppState {
             localPreviewLastStartedUptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
             let translationStarted = localPreviewLastStartedUptimeNanoseconds
             do {
-                let translated = try await applePreviewTranslationService().translate(
+                let response = try await applePreviewTranslationService().translate(
                     source,
                     highFidelity: false
-                ).trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+                let translationCompleted = DispatchTime.now().uptimeNanoseconds
                 guard !Task.isCancelled,
-                      localFinalWorkCount == 0,
+                      (activeLocalEnglishEngine.usesVoxtralStreaming || localFinalWorkCount == 0),
                       localPreviewPlanner.accepts(work),
-                      !translated.isEmpty,
-                      !EnglishSubtitleValidator.containsSourceScript(translated)
+                      let translated = EnglishSubtitleValidator.normalizedEnglish(response),
+                      translated != localPreviewSegment?.text
                 else { continue }
 
                 localPreviewRevision += 1
@@ -1167,26 +1527,36 @@ class AppState {
                 await localMetricRecorder.append(LocalCaptionMetric(
                     kind: .preview,
                     engine: activeLocalEnglishEngine.rawValue,
+                    boundaryKind: nil,
                     rangeStart: rangeStart,
                     rangeEnd: rangeEnd,
                     speechEnd: rangeEnd,
                     endpointDetectedAt: -1,
                     vadOnlyEndpointAt: -1,
-                    queueMilliseconds: 0,
+                    queueMilliseconds: translationStarted > work.receivedUptimeNanoseconds
+                        ? Double(translationStarted - work.receivedUptimeNanoseconds) / 1_000_000 : 0,
                     asrMilliseconds: work.receivedUptimeNanoseconds > sourceEndUptime
                         ? Double(work.receivedUptimeNanoseconds - sourceEndUptime) / 1_000_000 : 0,
-                    translationMilliseconds: Self.elapsedMilliseconds(since: translationStarted),
+                    translationMilliseconds: translationCompleted > translationStarted
+                        ? Double(translationCompleted - translationStarted) / 1_000_000 : 0,
                     renderedUptimeNanoseconds: rendered,
                     sourceText: source,
                     englishText: translated,
                     revision: localPreviewRevision,
                     previewLatencyMilliseconds: rendered > sourceStartUptime
-                        ? Double(rendered - sourceStartUptime) / 1_000_000 : 0
+                        ? Double(rendered - sourceStartUptime) / 1_000_000 : 0,
+                    firstLexicalUptimeNanoseconds: work.firstLexicalUptimeNanoseconds,
+                    sourceEligibleUptimeNanoseconds: work.receivedUptimeNanoseconds,
+                    translationStartedUptimeNanoseconds: translationStarted,
+                    translationCompletedUptimeNanoseconds: translationCompleted
                 ))
             } catch {
                 guard !Task.isCancelled else { return }
-                disableLocalPreview(error)
-                return
+                if case AppleLiveError.translationAssetsUnavailable = error {
+                    disableLocalPreview(error)
+                    return
+                }
+                livePreviewError = "Live preview delayed: \(error.localizedDescription) Retrying with the next update."
             }
         }
     }
@@ -1195,8 +1565,15 @@ class AppState {
     private func suspendLocalPreview(for decision: LocalEndpointDecision) {
         guard activeLocalTranslationMode.showsPreview else { return }
         localFinalWorkCount += 1
-        localPreviewPlanner.suspend(through: decision.stableThrough)
-        localPreviewTranslationTask?.cancel()
+        if activeLocalEnglishEngine.usesVoxtralStreaming {
+            localPreviewPlanner.advanceBoundary(through: decision.stableThrough)
+            if localPreviewWaitingForThrottle {
+                localPreviewTranslationTask?.cancel()
+            }
+        } else {
+            localPreviewPlanner.suspend(through: decision.stableThrough)
+            localPreviewTranslationTask?.cancel()
+        }
     }
 
     @available(macOS 26.4, *)
@@ -1204,10 +1581,28 @@ class AppState {
     private func completeLocalFinalWork(through sample: Int) {
         guard activeLocalTranslationMode.showsPreview else { return }
         localFinalWorkCount = max(0, localFinalWorkCount - 1)
-        localPreviewSegment = nil
-        guard localFinalWorkCount == 0, localPreviewRuntimeEnabled else { return }
-        localPreviewPlanner.resume(through: sample)
+        if activeLocalEnglishEngine.usesVoxtralStreaming {
+            if LocalPreviewRangePolicy.shouldClear(
+                preview: localPreviewSegment,
+                finalizedThrough: sample
+            ) {
+                localPreviewSegment = nil
+            }
+        } else {
+            localPreviewSegment = nil
+            guard localFinalWorkCount == 0 else { return }
+            localPreviewPlanner.resume(through: sample)
+        }
+        guard localPreviewRuntimeEnabled else { return }
         startLocalPreviewWorkerIfNeeded()
+    }
+
+    @MainActor
+    private var localPreviewIsBlockedByFinal: Bool {
+        if activeLocalEnglishEngine.usesVoxtralStreaming {
+            return localFinalTranslationInFlight
+        }
+        return localFinalWorkCount > 0
     }
 
     @MainActor
@@ -1236,11 +1631,11 @@ class AppState {
         localPreviewTranslationTask?.cancel()
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
+        await appleSpeechService().cancel()
+        await applePreviewTranslationService().cancel()
         await localPreviewTranslationTask?.value
         localPreviewTranslationTask = nil
         localPreviewWorkerRunning = false
-        await appleSpeechService().cancel()
-        await applePreviewTranslationService().cancel()
         publishLocalCaptions()
     }
 
@@ -1248,9 +1643,8 @@ class AppState {
     /// Keep that wait outside the PCM producer so capture can continue feeding it.
     @available(macOS 26.4, *)
     @MainActor
-    private func startLocalPreviewSpeechFinalization(through sample: Int) {
+    private func startLocalPreviewSpeechFinalization() {
         guard localPreviewSpeechFinalizeTask == nil else { return }
-        localPreviewLastForcedSample = sample
         localPreviewSpeechFinalizeTask = Task { @MainActor [weak self] in
             guard let self else { return }
             do {
@@ -1274,10 +1668,18 @@ class AppState {
         engine: LocalEnglishEngine,
         sourceLocale: String
     ) async {
+        if engine == .voxtralApple {
+            await runContinuousVoxtralAppleCaptions(
+                recorder: recorder,
+                sourceLocale: sourceLocale
+            )
+            return
+        }
         let fifo = LocalEndpointFIFO()
 
         async let producerError: Error? = producePrototypeEndpoints(
             recorder: recorder,
+            engine: engine,
             fifo: fifo
         )
         async let consumer: Void = consumePrototypeEndpoints(
@@ -1290,9 +1692,689 @@ class AppState {
         let error = await producerError
         await consumer
         if let error {
-            localPipelineFailure = error.localizedDescription
+            localSourcePipelineFailure = error.localizedDescription
             liveError = error.localizedDescription
         }
+    }
+
+    /// The production Voxtral path owns one helper session for the complete
+    /// recording. Logical subtitle boundaries only stage text for Apple; they
+    /// never finish, reset, or replay the ASR stream.
+    @available(macOS 26.4, *)
+    @MainActor
+    private func runContinuousVoxtralAppleCaptions(
+        recorder: AudioRecorder,
+        sourceLocale: String
+    ) async {
+        let fifo = LocalEndpointFIFO()
+        let markerCalibration = VoxtralMarkerCalibration.fromEnvironment(
+            ProcessInfo.processInfo.environment
+        )
+        localVoxtralMarkerCalibration = markerCalibration
+        let diarizationReady: Bool
+        if LocalDiarizationShadowConfiguration.isEnabled {
+            diarizationReady = await localDiarizationShadow.status().isReady
+        } else {
+            diarizationReady = false
+        }
+        localDiarizationAssistActive = LocalDiarizationShadowConfiguration.canInfluenceBoundaries
+            && diarizationReady
+            && markerCalibration?.permitsSpeakerBoundaries == true
+        localVoxtralSpeakerMarkersAreAuthoritative = localDiarizationAssistActive
+        localVoxtralClausePlanner = VoxtralClausePlanner(
+            // Shadow mode must remain byte-for-byte and timing-equivalent to
+            // the baseline. Calibration affects boundaries only in assist.
+            markerCalibration: localDiarizationAssistActive ? markerCalibration : nil
+        )
+        localContinuousVoxtralAcknowledgedSampleCount = 0
+        localContinuousVoxtralTranscript = ""
+        localContinuousVoxtralFailure = nil
+        localContinuousVoxtralCatchUpThrough = nil
+        localContinuousVoxtralBoundaryQueue = []
+        localContinuousVoxtralBoundaryDrainActive = false
+        localContinuousVoxtralLastStagedGeneration = -1
+        localVoxtralReplayDeduplicator = nil
+        localPreviewSentSampleCount = 0
+        localVoxtralPreviewSourceText = ""
+        if LocalDiarizationShadowConfiguration.isAssistRequestedButUnpromoted {
+            livePreviewError = "Speaker changes are in shadow mode only: no tested diarizer met the promotion thresholds. Punctuation and pauses remain authoritative."
+        } else if LocalDiarizationShadowConfiguration.canInfluenceBoundaries,
+           !localDiarizationAssistActive {
+            livePreviewError = diarizationReady
+                ? "Speaker changes are being measured only: a validated Voxtral marker calibration is required before they may split subtitles."
+                : "Speaker changes are unavailable; punctuation and pauses remain active."
+        }
+
+        var diarizationTask: Task<Void, Never>?
+        if LocalDiarizationShadowConfiguration.isEnabled {
+            localDiarizationGeneration &+= 1
+            let generation = localDiarizationGeneration
+            await localDiarizationShadow.reset()
+            await localDiarizationJournal.reset()
+            if await localDiarizationShadow.status().isReady {
+                diarizationTask = Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    await self.produceDiarizationShadow(
+                        recorder: recorder,
+                        generation: generation,
+                        fifo: fifo
+                    )
+                }
+            }
+        }
+
+        async let consumer: Void = consumePrototypeEndpoints(
+            recorder: recorder,
+            engine: .voxtralApple,
+            sourceLocale: sourceLocale,
+            fifo: fifo
+        )
+        var restartCount = 0
+
+        while !Task.isCancelled {
+            let voxtralEvents: AsyncStream<VoxtralHelperEvent>
+            do {
+                if restartCount == 0 {
+                    voxtralEvents = try await localModelManager.startContinuousVoxtral()
+                } else {
+                    voxtralEvents = try await localModelManager.recoverContinuousVoxtral()
+                }
+            } catch {
+                localContinuousVoxtralFailure = "Voxtral helper could not start: \(error.localizedDescription)"
+                localSourcePipelineFailure = localContinuousVoxtralFailure
+                liveError = localContinuousVoxtralFailure
+                break
+            }
+
+            let eventTask = Task { @MainActor [weak self] in
+                guard let self else { return }
+                for await event in voxtralEvents {
+                    guard !Task.isCancelled else { return }
+                    if await self.handleContinuousVoxtralEvent(event, fifo: fifo) {
+                        return
+                    }
+                }
+            }
+            let producerError = await produceContinuousVoxtralAudio(
+                recorder: recorder,
+                fifo: fifo
+            )
+
+            if producerError == nil {
+                await eventTask.value
+                break
+            }
+
+            eventTask.cancel()
+            await eventTask.value
+            await localModelManager.cancelContinuousVoxtral()
+            guard restartCount == 0,
+                  recorder.state == .recording || recorder.state == .saving,
+                  !Task.isCancelled else {
+                localContinuousVoxtralFailure = producerError?.localizedDescription
+                localSourcePipelineFailure = localContinuousVoxtralFailure
+                liveError = localContinuousVoxtralFailure
+                break
+            }
+
+            restartCount += 1
+            let previousTranscript = localContinuousVoxtralTranscript
+            let previousLiveCursor = localPreviewSentSampleCount
+            let replayStart = max(
+                0,
+                localVoxtralClausePlanner.sourceStagedThrough
+                    - VoxtralClausePlanner.stabilityGuard
+            )
+            localVoxtralReplayDeduplicator = VoxtralReplayDeduplicator(
+                previousTranscript: previousTranscript
+            )
+            // Replay marker offsets are relative to the restarted helper's
+            // raw transcript, not to the deduplicated application transcript.
+            // Keep diarization observational for the rest of this recording.
+            await disableDiarizationAssist(
+                reason: "voxtralHelperRestart",
+                observedThrough: localContinuousVoxtralAcknowledgedSampleCount
+            )
+            localPreviewSentSampleCount = replayStart
+            localContinuousVoxtralAcknowledgedSampleCount = replayStart
+            localContinuousVoxtralTranscript = ""
+            localContinuousVoxtralFailure = nil
+            localContinuousVoxtralCatchUpThrough = previousLiveCursor
+            localSourcePipelineFailure = nil
+            liveError = nil
+            setLocalStatus("Restarting the local Voxtral stream…")
+        }
+        await fifo.finishProducing()
+        await consumer
+        if let diarizationTask {
+            do {
+                try await withAsyncDeadline(
+                    .seconds(2),
+                    operationName: "LS-EEND shadow shutdown"
+                ) {
+                    await diarizationTask.value
+                }
+            } catch {
+                localDiarizationGeneration &+= 1
+                diarizationTask.cancel()
+                await disableDiarizationAssist(
+                    reason: "diarizationShutdownTimeout",
+                    observedThrough: recorder.accumulatedSampleCount
+                )
+            }
+        }
+    }
+
+    /// Optional LS-EEND observer. It owns no subtitle or PCM cursor and is
+    /// deliberately scheduled independently from the critical Voxtral feed.
+    @available(macOS 26.4, *)
+    @MainActor
+    private func produceDiarizationShadow(
+        recorder: AudioRecorder,
+        generation: UInt64,
+        fifo: LocalEndpointFIFO
+    ) async {
+        let block = 1_600 // 100 ms at 16 kHz
+        var sent = 0
+        while !Task.isCancelled, generation == localDiarizationGeneration {
+            let total = recorder.accumulatedSampleCount
+            if total - sent > VoxtralClausePlanner.maximumDiarizationLag {
+                await disableDiarizationAssist(
+                    reason: "diarizationBacklog",
+                    observedThrough: total
+                )
+            }
+            let captureEnded = recorder.state != .recording
+            if sent >= total {
+                if captureEnded { break }
+                try? await Task.sleep(for: .milliseconds(40))
+                continue
+            }
+            let end = captureEnded ? min(total, sent + block) : sent + block
+            guard end <= total else {
+                try? await Task.sleep(for: .milliseconds(40))
+                continue
+            }
+            let samples = recorder.getSamples(from: sent, upTo: end)
+            guard samples.count == end - sent else {
+                await disableDiarizationAssist(
+                    reason: "diarizationPCMUnavailable",
+                    observedThrough: total
+                )
+                break
+            }
+            let updates = await localDiarizationShadow.append(
+                samples: samples,
+                range: sent..<end
+            )
+            guard !Task.isCancelled,
+                  generation == localDiarizationGeneration else { return }
+            let capturedThrough = recorder.accumulatedSampleCount
+            await localDiarizationJournal.append(
+                updates,
+                observedThrough: capturedThrough
+            )
+            sent = end
+            await applyDiarizationUpdates(
+                updates,
+                capturedThrough: capturedThrough,
+                fifo: fifo
+            )
+            let status = await localDiarizationShadow.status()
+            if !status.isReady {
+                await disableDiarizationAssist(
+                    reason: status.failureReason.map {
+                        "diarizationUnavailable:\($0)"
+                    } ?? "diarizationUnavailable",
+                    observedThrough: sent
+                )
+                break
+            }
+        }
+        guard !Task.isCancelled,
+              generation == localDiarizationGeneration else { return }
+        let updates = await localDiarizationShadow.finish()
+        guard !Task.isCancelled,
+              generation == localDiarizationGeneration else { return }
+        let capturedThrough = recorder.accumulatedSampleCount
+        await localDiarizationJournal.append(
+            updates,
+            observedThrough: capturedThrough
+        )
+        await applyDiarizationUpdates(
+            updates,
+            capturedThrough: capturedThrough,
+            fifo: fifo
+        )
+        _ = try? await localDiarizationJournal.writeOptInReport()
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func applyDiarizationUpdates(
+        _ updates: [LocalDiarizationUpdate],
+        capturedThrough: Int,
+        fifo: LocalEndpointFIFO
+    ) async {
+        guard localDiarizationAssistActive,
+              localVoxtralSpeakerMarkersAreAuthoritative else { return }
+        for update in updates {
+            guard let transition = update.transition else { continue }
+            let lag = max(0, capturedThrough - transition.confirmedAtSample)
+            guard lag <= VoxtralClausePlanner.maximumDiarizationLag else {
+                await disableDiarizationAssist(
+                    reason: "diarizationLagFallback",
+                    observedThrough: capturedThrough
+                )
+                return
+            }
+            if let boundary = localVoxtralClausePlanner.observe(
+                fedThrough: localContinuousVoxtralAcknowledgedSampleCount,
+                speakerTransitions: [transition]
+            ) {
+                await stageContinuousVoxtralBoundary(boundary, fifo: fifo)
+            }
+        }
+        publishContinuousVoxtralPreview()
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func disableDiarizationAssist(
+        reason: String,
+        observedThrough: Int
+    ) async {
+        let wasActive = localDiarizationAssistActive
+            || localVoxtralSpeakerMarkersAreAuthoritative
+        localDiarizationAssistActive = false
+        localVoxtralSpeakerMarkersAreAuthoritative = false
+        localVoxtralClausePlanner.discardSpeakerEvidence()
+        guard wasActive else { return }
+        await localDiarizationJournal.appendAssistDisabled(
+            reason: reason,
+            observedThrough: observedThrough
+        )
+        livePreviewError = "Speaker-change assistance is unavailable (\(reason)); punctuation and pauses remain active."
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func produceContinuousVoxtralAudio(
+        recorder: AudioRecorder,
+        fifo: LocalEndpointFIFO
+    ) async -> Error? {
+        var vadAnalyzedEnd = 0
+        var sustainedBacklogChecks = 0
+        let catchUpDeadline = DispatchTime.now().uptimeNanoseconds
+            + 30_000_000_000
+
+        do {
+            while recorder.state == .recording, !Task.isCancelled {
+                if let failure = localContinuousVoxtralFailure {
+                    throw VoxtralHelperError.protocolFailure(failure)
+                }
+                let total = recorder.accumulatedSampleCount
+                guard total - vadAnalyzedEnd >= 1_600 else {
+                    try await Task.sleep(for: .milliseconds(40))
+                    continue
+                }
+
+                try await feedContinuousVoxtralSamples(
+                    recorder: recorder,
+                    through: total,
+                    completeBlocksOnly: true
+                )
+
+                let earliestRetained = max(
+                    0,
+                    localCommittedSampleCount - VoxtralClausePlanner.stabilityGuard
+                )
+                let windowStart = max(earliestRetained, total - 16_000 * 3)
+                let window = recorder.getSamples(from: windowStart, upTo: total)
+                if !window.isEmpty {
+                    let speech = try await localModelManager.detectSpeech(
+                        audio: window,
+                        windowStart: windowStart
+                    )
+                    noteContinuousVoxtralSpeech(speech)
+                    if let boundary = localVoxtralClausePlanner.observe(
+                        fedThrough: localContinuousVoxtralAcknowledgedSampleCount,
+                        speech: speech
+                    ) {
+                        await stageContinuousVoxtralBoundary(boundary, fifo: fifo)
+                    }
+                    publishContinuousVoxtralPreview()
+                }
+                vadAnalyzedEnd = total
+
+                let progress = await localModelManager.continuousVoxtralProgress()
+                if let catchUpThrough = localContinuousVoxtralCatchUpThrough {
+                    if (progress.acknowledgedThrough ?? 0) >= catchUpThrough {
+                        localContinuousVoxtralCatchUpThrough = nil
+                        sustainedBacklogChecks = 0
+                    } else if DispatchTime.now().uptimeNanoseconds >= catchUpDeadline {
+                        throw VoxtralHelperError.serverUnavailable(
+                            "Voxtral could not catch up after its one automatic restart. Audio was retained."
+                        )
+                    }
+                }
+                let combinedResident = localModelManager.currentMemoryBytes()
+                    + (progress.helperRSSBytes ?? 0)
+                if combinedResident >= 10 * 1_024 * 1_024 * 1_024 {
+                    throw LocalPrototypeError.memoryLimit(combinedResident)
+                }
+                if combinedResident > 8 * 1_024 * 1_024 * 1_024,
+                   livePreviewError == nil {
+                    livePreviewError = "Voxtral is above the 8 GB memory target; the 10 GB safety limit remains enforced."
+                }
+                if localContinuousVoxtralCatchUpThrough != nil {
+                    sustainedBacklogChecks = 0
+                } else if progress.backlogSamples > VoxtralClausePlanner.sampleRate {
+                    sustainedBacklogChecks += 1
+                } else {
+                    sustainedBacklogChecks = 0
+                }
+                if sustainedBacklogChecks >= 5 {
+                    throw VoxtralHelperError.serverUnavailable(
+                        "Voxtral helper backlog stayed above one second. Audio was retained."
+                    )
+                }
+            }
+
+            let finalTotal = recorder.accumulatedSampleCount
+            try await feedContinuousVoxtralSamples(
+                recorder: recorder,
+                through: finalTotal,
+                completeBlocksOnly: false
+            )
+            _ = try await localModelManager.finishContinuousVoxtral()
+            return nil
+        } catch {
+            localContinuousVoxtralFailure = error.localizedDescription
+            localSourcePipelineFailure = localContinuousVoxtralFailure
+            liveError = localContinuousVoxtralFailure
+            await localModelManager.cancelContinuousVoxtral()
+            return error
+        }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func feedContinuousVoxtralSamples(
+        recorder: AudioRecorder,
+        through target: Int,
+        completeBlocksOnly: Bool
+    ) async throws {
+        let block = VoxtralClausePlanner.sampleRate
+            * VoxtralHelperManifest.transportBlockMilliseconds / 1_000
+        while localPreviewSentSampleCount < target {
+            let remaining = target - localPreviewSentSampleCount
+            if completeBlocksOnly, remaining < block { return }
+            let start = localPreviewSentSampleCount
+            let end = min(target, start + block)
+            let samples = recorder.getSamples(from: start, upTo: end)
+            guard samples.count == end - start else {
+                throw VoxtralHelperError.invalidAudioRange(
+                    expected: start,
+                    actual: start..<end,
+                    sampleCount: samples.count
+                )
+            }
+            try await localModelManager.feedContinuousVoxtral(
+                samples: samples,
+                range: start..<end
+            )
+            localPreviewSentSampleCount = end
+        }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func handleContinuousVoxtralEvent(
+        _ event: VoxtralHelperEvent,
+        fifo: LocalEndpointFIFO
+    ) async -> Bool {
+        switch event {
+        case .ready:
+            return false
+        case .emissionMarker(let marker):
+            if LocalDiarizationShadowConfiguration.isEnabled {
+                let calibratedEnd = localVoxtralMarkerCalibration.map {
+                    $0.calibratedEndSample(for: marker)
+                }
+                await localDiarizationJournal.appendMarker(
+                    marker,
+                    calibratedEndSample: calibratedEnd
+                )
+            }
+            guard localDiarizationAssistActive,
+                  localVoxtralSpeakerMarkersAreAuthoritative else { return false }
+            if let boundary = localVoxtralClausePlanner.observe(
+                fedThrough: localContinuousVoxtralAcknowledgedSampleCount,
+                emissionMarkers: [marker]
+            ) {
+                await stageContinuousVoxtralBoundary(boundary, fifo: fifo)
+            }
+            publishContinuousVoxtralPreview()
+            return false
+        case .acknowledged(let through):
+            localContinuousVoxtralAcknowledgedSampleCount = max(
+                localContinuousVoxtralAcknowledgedSampleCount,
+                through
+            )
+            if let boundary = localVoxtralClausePlanner.observe(
+                fedThrough: localContinuousVoxtralAcknowledgedSampleCount
+            ) {
+                await stageContinuousVoxtralBoundary(boundary, fifo: fifo)
+            }
+            publishContinuousVoxtralPreview()
+            return false
+        case .delta(let rawDelta, let sentThrough):
+            let delta: String
+            if var replay = localVoxtralReplayDeduplicator {
+                localContinuousVoxtralTranscript += rawDelta
+                guard let replayDelta = replay.ingest(localContinuousVoxtralTranscript) else {
+                    localContinuousVoxtralFailure = "Voxtral replay could not be deduplicated safely; its audio remains available for retry."
+                    localSourcePipelineFailure = localContinuousVoxtralFailure
+                    liveError = localContinuousVoxtralFailure
+                    return true
+                }
+                localVoxtralReplayDeduplicator = replay
+                delta = replayDelta
+            } else {
+                localContinuousVoxtralTranscript += rawDelta
+                delta = rawDelta
+            }
+            if let boundary = localVoxtralClausePlanner.observe(
+                delta: delta,
+                fedThrough: localContinuousVoxtralAcknowledgedSampleCount,
+                sourceUpdateThrough: sentThrough
+            ) {
+                await stageContinuousVoxtralBoundary(boundary, fifo: fifo)
+            }
+            publishContinuousVoxtralPreview()
+            return false
+        case .completed(let transcript, let sentThrough):
+            let finalDelta: String
+            if var replay = localVoxtralReplayDeduplicator {
+                guard let replayDelta = replay.ingest(transcript, finishing: true) else {
+                    localContinuousVoxtralFailure = "Voxtral final replay could not be deduplicated safely. The audio was retained."
+                    localSourcePipelineFailure = localContinuousVoxtralFailure
+                    liveError = localContinuousVoxtralFailure
+                    return true
+                }
+                localVoxtralReplayDeduplicator = replay
+                finalDelta = replayDelta
+            } else if transcript.hasPrefix(localContinuousVoxtralTranscript) {
+                finalDelta = String(
+                    transcript.dropFirst(localContinuousVoxtralTranscript.count)
+                )
+            } else if localContinuousVoxtralTranscript.isEmpty {
+                finalDelta = transcript
+            } else {
+                localContinuousVoxtralFailure = "Voxtral final source differed from its append-only stream. The audio was retained."
+                localSourcePipelineFailure = localContinuousVoxtralFailure
+                liveError = localContinuousVoxtralFailure
+                return true
+            }
+            localContinuousVoxtralTranscript = transcript
+            let finalThrough = max(
+                localContinuousVoxtralAcknowledgedSampleCount,
+                sentThrough ?? localPreviewSentSampleCount
+            )
+            if let tail = localVoxtralClausePlanner.finish(
+                delta: finalDelta,
+                fedThrough: finalThrough
+            ) {
+                await stageContinuousVoxtralBoundary(tail, fifo: fifo)
+            }
+            return true
+        case .failed(let message):
+            localContinuousVoxtralFailure = "Voxtral helper failed: \(message)"
+            localSourcePipelineFailure = localContinuousVoxtralFailure
+            liveError = localSourcePipelineFailure
+            return true
+        }
+    }
+
+    @MainActor
+    private func noteContinuousVoxtralSpeech(_ speech: [SpeechSampleRange]) {
+        guard let first = speech.first(where: {
+            $0.end > localVoxtralClausePlanner.sourceStagedThrough
+        }) else { return }
+        localPreviewFeedStarted = true
+        if localPreviewSpeechStartSample == nil {
+            localPreviewSpeechStartSample = max(
+                localVoxtralClausePlanner.sourceStagedThrough,
+                first.start
+            )
+        }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func stageContinuousVoxtralBoundary(
+        _ boundary: VoxtralClauseBoundary,
+        fifo: LocalEndpointFIFO
+    ) async {
+        localContinuousVoxtralBoundaryQueue.append(boundary)
+        if !localContinuousVoxtralBoundaryDrainActive {
+            localContinuousVoxtralBoundaryDrainActive = true
+            defer { localContinuousVoxtralBoundaryDrainActive = false }
+
+            while !localContinuousVoxtralBoundaryQueue.isEmpty {
+                let next = localContinuousVoxtralBoundaryQueue.removeFirst()
+                await stageContinuousVoxtralBoundaryNow(next, fifo: fifo)
+                localContinuousVoxtralLastStagedGeneration = max(
+                    localContinuousVoxtralLastStagedGeneration,
+                    next.generation
+                )
+            }
+        }
+
+        // A second producer can enqueue while the first caller is suspended in
+        // fifo.stage. Do not let that caller finish (especially at shutdown)
+        // until its own generation has actually reached the FIFO.
+        while localContinuousVoxtralLastStagedGeneration < boundary.generation {
+            await Task.yield()
+        }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func stageContinuousVoxtralBoundaryNow(
+        _ boundary: VoxtralClauseBoundary,
+        fifo: LocalEndpointFIFO
+    ) async {
+        let kind: LocalEndpointDecision.Kind
+        switch boundary.kind {
+        case .semantic: kind = .semantic
+        case .speaker: kind = .speaker
+        case .pause: kind = .pause
+        case .forced: kind = .forced
+        case .finish: kind = .finish
+        }
+        let speechEnd = boundary.kind == .pause
+            ? max(
+                boundary.sampleRange.lowerBound,
+                boundary.endpointDetectedAt - VoxtralClausePlanner.vadSilence
+            )
+            : boundary.sampleRange.upperBound
+        let decision = LocalEndpointDecision(
+            kind: kind,
+            audioStart: boundary.sampleRange.lowerBound,
+            audioEnd: boundary.sampleRange.upperBound,
+            speechEnd: speechEnd,
+            endpointDetectedAt: boundary.endpointDetectedAt,
+            vadOnlyEndpointAt: boundary.kind == .pause
+                ? boundary.endpointDetectedAt : -1,
+            stableThrough: boundary.sampleRange.upperBound,
+            cleanBreak: boundary.kind != .forced
+        )
+        suspendLocalPreview(for: decision)
+        localVoxtralPreviewSourceText = ""
+        localPreviewSpeechStartSample = nil
+        await fifo.stage(
+            decision,
+            voxtralText: boundary.sourceText.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+        )
+        if LocalDiarizationShadowConfiguration.isEnabled {
+            await localDiarizationJournal.appendBoundary(
+                kind: boundary.kind.rawValue,
+                detectedAt: boundary.endpointDetectedAt,
+                stagedAt: boundary.stagedAt
+            )
+            switch boundary.speakerDecision {
+            case .applied(let transition):
+                await localDiarizationJournal.appendSpeakerDecision(
+                    accepted: true,
+                    transition: transition,
+                    reason: "matchedEmissionGroup",
+                    boundaryKind: boundary.kind.rawValue
+                )
+            case .markerTimedOut(let transition):
+                await localDiarizationJournal.appendSpeakerDecision(
+                    accepted: false,
+                    transition: transition,
+                    reason: "markerTimedOut",
+                    boundaryKind: boundary.kind.rawValue
+                )
+            case .diarizationLagFallback(let transition):
+                await localDiarizationJournal.appendSpeakerDecision(
+                    accepted: false,
+                    transition: transition,
+                    reason: "diarizationLagFallback",
+                    boundaryKind: boundary.kind.rawValue
+                )
+            case nil:
+                break
+            }
+        }
+        publishContinuousVoxtralPreview()
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func publishContinuousVoxtralPreview() {
+        guard localPreviewRuntimeEnabled,
+              activeLocalTranslationMode.showsPreview,
+              let preview = localVoxtralClausePlanner.preview else { return }
+        let source = preview.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !source.isEmpty,
+              source != localVoxtralPreviewSourceText,
+              preview.sampleRange.upperBound > preview.sampleRange.lowerBound else { return }
+        localVoxtralPreviewSourceText = source
+        receiveLocalPreviewSource(LiveSourceUpdate(
+            segment: TranscriptionSegment(
+                start: Double(preview.sampleRange.lowerBound) / 16_000,
+                end: Double(preview.sampleRange.upperBound) / 16_000,
+                text: source
+            ),
+            isFinal: false,
+            finalizedThroughSample: localSourceFinalizedSampleCount
+        ))
     }
 
     /// Capture/VAD producer. It never waits for final ASR or Apple
@@ -1301,16 +2383,26 @@ class AppState {
     @MainActor
     private func producePrototypeEndpoints(
         recorder: AudioRecorder,
+        engine: LocalEnglishEngine,
         fifo: LocalEndpointFIFO
     ) async -> Error? {
         var vadAnalyzedEnd = 0
 
         do {
+            if engine.usesVoxtralStreaming {
+                _ = try await localModelManager.startVoxtral()
+            }
             while recorder.state == .recording, !Task.isCancelled {
                 let total = recorder.accumulatedSampleCount
                 guard total - vadAnalyzedEnd >= 1_600 else {
                     try await Task.sleep(for: .milliseconds(40))
                     continue
+                }
+                if engine.usesAppleSpeechPreview, localPreviewRuntimeEnabled {
+                    await feedAppleSpeechPreviewSamples(
+                        recorder: recorder,
+                        through: total
+                    )
                 }
                 let earliestRetained = max(
                     0,
@@ -1347,48 +2439,60 @@ class AppState {
                         )
                     }
                 }
-                if localPreviewRuntimeEnabled,
-                   localPreviewFeedStarted,
-                   total > localPreviewSentSampleCount {
-                    let start = localPreviewSentSampleCount
-                    let samples = recorder.getSamples(from: start, upTo: total)
-                    if !samples.isEmpty {
-                        do {
-                            try await appleSpeechService().send(
-                                samples: samples,
-                                startSample: start
-                            )
-                            localPreviewSentSampleCount = total
-                        } catch {
-                            disableLocalPreview(error)
-                        }
-                    }
+                let decision = await fifo.propose(
+                    totalSample: total,
+                    speech: speech
+                )
+                let feedThrough = decision?.audioEnd ?? total
+                if engine.usesVoxtralStreaming {
+                    try await feedVoxtralSamples(
+                        recorder: recorder,
+                        through: feedThrough,
+                        completeBlocksOnly: decision == nil
+                    )
                 }
-                if localPreviewRuntimeEnabled,
+                if engine.usesAppleSpeechPreview,
+                   localPreviewRuntimeEnabled,
                    localPreviewFeedStarted,
                    localPreviewSpeechStartSample != nil,
                    localFinalWorkCount == 0,
                    localPreviewSpeechFinalizeTask == nil {
                     let target = total
-                    if target - localPreviewLastForcedSample >= 24_000 {
-                        startLocalPreviewSpeechFinalization(through: target)
+                    if localAppleSpeechFeed.requestFinalization(
+                        through: target,
+                        every: LocalAppleSpeechFeedState.progressiveFinalizationInterval
+                    ) {
+                        startLocalPreviewSpeechFinalization()
                     }
                 }
                 vadAnalyzedEnd = total
-                if let decision = await fifo.observe(
-                    totalSample: total,
-                    speech: speech
-                ) {
+                if let decision {
+                    let voxtralText: String?
+                    if engine.usesVoxtralStreaming {
+                        voxtralText = try await localModelManager.finishVoxtral()
+                    } else {
+                        voxtralText = nil
+                    }
                     suspendLocalPreview(for: decision)
-                    localPreviewSpeechStartSample = nil
-                    localPreviewLastForcedSample = max(
-                        localPreviewLastForcedSample,
-                        decision.stableThrough
-                    )
+                    if engine.usesVoxtralStreaming {
+                        try await startNextVoxtralPhrase(
+                            after: decision,
+                            recorder: recorder
+                        )
+                    } else {
+                        localPreviewSpeechStartSample = nil
+                        localPreviewLastForcedSample = max(
+                            localPreviewLastForcedSample,
+                            decision.stableThrough
+                        )
+                    }
+                    await fifo.stage(decision, voxtralText: voxtralText)
                 }
                 let queuedPhrases = await fifo.pendingCount()
                 if queuedPhrases > 1 {
-                    liveStatusText = "Catching up — \(queuedPhrases - 1) phrase\(queuedPhrases == 2 ? "" : "s") queued"
+                    setLocalStatus(
+                        "Catching up — \(queuedPhrases - 1) phrase\(queuedPhrases == 2 ? "" : "s") queued"
+                    )
                 }
             }
 
@@ -1403,12 +2507,26 @@ class AppState {
                 audio: window,
                 windowStart: windowStart
             )
-            if let decision = await fifo.observe(
+            if let decision = await fifo.propose(
                 totalSample: finalTotal,
                 speech: speech,
                 finishing: true
             ) {
+                let voxtralText: String?
+                if engine.usesVoxtralStreaming {
+                    try await feedVoxtralSamples(
+                        recorder: recorder,
+                        through: decision.audioEnd,
+                        completeBlocksOnly: false
+                    )
+                    voxtralText = try await localModelManager.finishVoxtral()
+                } else {
+                    voxtralText = nil
+                }
                 suspendLocalPreview(for: decision)
+                await fifo.stage(decision, voxtralText: voxtralText)
+            } else if engine.usesVoxtralStreaming {
+                _ = try? await localModelManager.finishVoxtral()
             }
             await fifo.finishProducing()
             return nil
@@ -1416,6 +2534,107 @@ class AppState {
             await fifo.finishProducing()
             return error
         }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func feedAppleSpeechPreviewSamples(
+        recorder: AudioRecorder,
+        through target: Int
+    ) async {
+        guard let range = localAppleSpeechFeed.takeNewSamples(through: target) else { return }
+        let samples = recorder.getSamples(from: range.lowerBound, upTo: range.upperBound)
+        guard samples.count == range.count else {
+            disableLocalPreview(LocalPrototypeError.invalidResponse)
+            return
+        }
+        do {
+            try await appleSpeechService().send(
+                samples: samples,
+                startSample: range.lowerBound
+            )
+        } catch {
+            disableLocalPreview(error)
+        }
+    }
+
+    /// Feeds one stateful Voxtral session in 320 ms blocks. At an endpoint the
+    /// final partial block is also sent so `finish()` covers the full range.
+    @available(macOS 26.4, *)
+    @MainActor
+    private func feedVoxtralSamples(
+        recorder: AudioRecorder,
+        through target: Int,
+        completeBlocksOnly: Bool
+    ) async throws {
+        let block = 16_000 * 320 / 1_000
+        while localPreviewSentSampleCount < target {
+            let remaining = target - localPreviewSentSampleCount
+            if completeBlocksOnly, remaining < block { return }
+            let start = localPreviewSentSampleCount
+            let end = min(target, start + block)
+            let samples = recorder.getSamples(from: start, upTo: end)
+            guard samples.count == end - start else {
+                throw LocalPrototypeError.invalidResponse
+            }
+            let source = try await localModelManager.feedVoxtral(samples: samples).transcript
+            localPreviewSentSampleCount = end
+            publishVoxtralSourceIfChanged(source, through: end)
+        }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func startNextVoxtralPhrase(
+        after decision: LocalEndpointDecision,
+        recorder: AudioRecorder
+    ) async throws {
+        localVoxtralPreviewSourceText = ""
+        localPreviewLastForcedSample = max(
+            localPreviewLastForcedSample,
+            decision.stableThrough
+        )
+        if decision.kind == .forced {
+            let replay = recorder.getSamples(
+                from: decision.stableThrough,
+                upTo: decision.audioEnd
+            )
+            guard replay.count == decision.audioEnd - decision.stableThrough else {
+                throw LocalPrototypeError.invalidResponse
+            }
+            localPreviewFeedStarted = true
+            localPreviewSentSampleCount = decision.audioEnd
+            localPreviewSpeechStartSample = decision.stableThrough
+            let source = try await localModelManager.startVoxtral(replay: replay)
+            publishVoxtralSourceIfChanged(source, through: decision.audioEnd)
+        } else {
+            _ = try await localModelManager.startVoxtral()
+            localPreviewFeedStarted = false
+            localPreviewSentSampleCount = decision.audioEnd
+            localPreviewSpeechStartSample = nil
+        }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func publishVoxtralSourceIfChanged(_ source: String, through end: Int) {
+        let normalized = source.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard localPreviewRuntimeEnabled,
+              activeLocalEnglishEngine.usesVoxtralSourcePreview,
+              !normalized.isEmpty,
+              normalized != localVoxtralPreviewSourceText,
+              let start = localPreviewSpeechStartSample,
+              end > start else { return }
+        localVoxtralPreviewSourceText = normalized
+        receiveLocalPreviewSource(LiveSourceUpdate(
+            segment: TranscriptionSegment(
+                start: Double(start) / 16_000,
+                end: Double(end) / 16_000,
+                text: normalized
+            ),
+            isFinal: false,
+            finalizedThroughSample: localSourceFinalizedSampleCount
+        ))
     }
 
     /// Oldest-first final worker. A failed range remains at the head of the
@@ -1439,7 +2658,7 @@ class AppState {
 
             do {
                 try await processPrototypeDecision(
-                    decision,
+                    entry,
                     recorder: recorder,
                     engine: engine,
                     sourceLocale: sourceLocale,
@@ -1452,13 +2671,15 @@ class AppState {
                     localSourceFinalizedSampleCount,
                     decision.stableThrough
                 )
-                localPipelineFailure = nil
+                if localContinuousVoxtralFailure == nil {
+                    localSourcePipelineFailure = nil
+                }
                 attempts = 0
             } catch {
                 attempts += 1
-                localPipelineFailure = error.localizedDescription
+                localSourcePipelineFailure = error.localizedDescription
                 liveTranslationError = error.localizedDescription
-                liveStatusText = "Audio retained — retrying oldest phrase…"
+                setLocalStatus("Audio retained — retrying oldest phrase…")
                 guard attempts < 2 else { return }
                 try? await Task.sleep(for: .milliseconds(250))
             }
@@ -1468,15 +2689,18 @@ class AppState {
     @available(macOS 26.4, *)
     @MainActor
     private func processPrototypeDecision(
-        _ decision: LocalEndpointDecision,
+        _ entry: LocalEndpointFIFO.Entry,
         recorder: AudioRecorder,
         engine: LocalEnglishEngine,
         sourceLocale: String,
         queueMilliseconds: Double
     ) async throws {
+        let decision = entry.decision
         let audio = recorder.getSamples(from: decision.audioStart, upTo: decision.audioEnd)
-        guard !audio.isEmpty else { throw LocalPrototypeError.invalidResponse }
-        liveStatusText = "Finalizing source…"
+        guard audio.count == decision.audioEnd - decision.audioStart else {
+            throw LocalPrototypeError.invalidResponse
+        }
+        setLocalStatus("Finalizing source…")
         let asrStart = DispatchTime.now().uptimeNanoseconds
 
         let sourceText: String
@@ -1493,6 +2717,22 @@ class AppState {
                 audio: audio,
                 language: Self.languageName(for: sourceLocale)
             )
+        case .voxtralApple:
+            sourceText = entry.voxtralText?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        case .voxtralCohereApple:
+            let cohere = try? await localModelManager.transcribeCohere(
+                    audio: audio,
+                    language: Self.languageCode(for: sourceLocale)
+                )
+            let selection = try LocalFinalSourceSelector.hybrid(
+                cohere: cohere,
+                voxtral: entry.voxtralText
+            )
+            sourceText = selection.text
+            if selection.degraded {
+                livePreviewError = "Cohere final unavailable for one phrase; Voxtral was used instead."
+            }
         }
         guard !sourceText.isEmpty else { throw LocalPrototypeError.invalidResponse }
         let source = TranscriptionSegment(
@@ -1507,6 +2747,11 @@ class AppState {
             asrMilliseconds: Self.elapsedMilliseconds(since: asrStart)
         )
         if !queued {
+            if engine == .voxtralApple {
+                throw LocalPrototypeError.cursorMismatch(
+                    "A staged Voxtral clause could not be queued for English translation. Its PCM was retained."
+                )
+            }
             completeLocalFinalWork(through: decision.stableThrough)
             publishLocalCaptions()
         }
@@ -1632,28 +2877,41 @@ class AppState {
     }
 
     /// Stop the live transcription timer. Called when recording ends.
+    @MainActor
     func stopLiveTranscription() {
         localPreviewRuntimeEnabled = false
-        localPreviewTranslationTask?.cancel()
+        let previewTask = localPreviewTranslationTask
+        previewTask?.cancel()
         localPreviewTranslationTask = nil
-        localPreviewSpeechFinalizeTask?.cancel()
+        let speechFinalizeTask = localPreviewSpeechFinalizeTask
+        speechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
-        if #available(macOS 26.4, *) {
-            Task { [weak self] in
-                guard let self else { return }
+        let transcriptionTask = liveTranscriptionTask
+        transcriptionTask?.cancel()
+        liveTranscriptionTask = nil
+        let translationTask = liveTranslationTask
+        translationTask?.cancel()
+        liveTranslationTask = nil
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            if #available(macOS 26.4, *) {
+                // Cancel the volatile lane first, then close the ASR helper so
+                // no task can publish into state after reset.
                 await self.appleSpeechService().cancel()
                 await self.applePreviewTranslationService().cancel()
+                await self.localModelManager.cancelContinuousVoxtral()
             }
+            await previewTask?.value
+            await speechFinalizeTask?.value
+            await transcriptionTask?.value
+            await translationTask?.value
+            if #available(macOS 26.4, *),
+               let translation = self.appleTranslationRuntime as? AppleTranslationService {
+                await translation.cancel()
+            }
+            self.service.endRealtimeSession()
+            self.resetLiveState()
         }
-        liveTranscriptionTask?.cancel()
-        liveTranscriptionTask = nil
-        liveTranslationTask?.cancel()
-        liveTranslationTask = nil
-        if #available(macOS 26.4, *), let translation = appleTranslationRuntime as? AppleTranslationService {
-            Task { await translation.cancel() }
-        }
-        service.endRealtimeSession()
-        resetLiveState()
     }
 
     private func resetLiveState() {
@@ -1678,6 +2936,8 @@ class AppState {
         localSourceSegments = []
         localTranslationQueue = []
         localTranslationWorkerRunning = false
+        localFinalTranslationInFlight = false
+        localFinalTranslationState = .idle
         localPreviewPlanner = LocalPreviewPlanner()
         localPreviewSegment = nil
         localPreviewTranslationTask?.cancel()
@@ -1685,18 +2945,30 @@ class AppState {
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
         localPreviewWorkerRunning = false
+        localPreviewWaitingForThrottle = false
         localPreviewLastStartedUptimeNanoseconds = 0
         localPreviewRevision = 0
         localFinalWorkCount = 0
+        localAppleSpeechFeed = LocalAppleSpeechFeedState()
         localPreviewSentSampleCount = 0
         localPreviewSpeechStartSample = nil
         localPreviewFeedStarted = false
+        localVoxtralPreviewSourceText = ""
+        localVoxtralClausePlanner = VoxtralClausePlanner()
+        localContinuousVoxtralAcknowledgedSampleCount = 0
+        localContinuousVoxtralTranscript = ""
+        localContinuousVoxtralFailure = nil
+        localContinuousVoxtralCatchUpThrough = nil
+        localDiarizationAssistActive = false
+        localVoxtralSpeakerMarkersAreAuthoritative = false
+        localVoxtralMarkerCalibration = nil
+        localVoxtralReplayDeduplicator = nil
         localPreviewLastForcedSample = 0
         localRecordingStartedUptimeNanoseconds = 0
         localPreviewRuntimeEnabled = false
         localCommittedSampleCount = 0
         localSourceFinalizedSampleCount = 0
-        localPipelineFailure = nil
+        localSourcePipelineFailure = nil
         activeLocalRecorder = nil
         removeLiveRecoveryFile()
         if !isTranscribing, items.contains(where: { $0.status == .pending }) {
@@ -1739,15 +3011,22 @@ class AppState {
             source: normalized,
             decision: decision,
             queueMilliseconds: queueMilliseconds,
-            asrMilliseconds: asrMilliseconds
+            asrMilliseconds: asrMilliseconds,
+            enqueuedUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds
         ))
+        localFinalTranslationState.noteEnqueued(
+            isOnlyJob: localTranslationQueue.count == 1
+        )
+        setLocalStatus(liveStatusText)
         startLocalTranslationWorkerIfNeeded()
         return true
     }
 
     @MainActor
     private func startLocalTranslationWorkerIfNeeded() {
-        guard !localTranslationWorkerRunning, !localTranslationQueue.isEmpty else { return }
+        guard !localTranslationWorkerRunning,
+              let first = localTranslationQueue.first,
+              !first.attempts.exhausted else { return }
         guard #available(macOS 26.4, *) else { return }
         localTranslationWorkerRunning = true
         liveTranslationTask = Task { @MainActor [weak self] in
@@ -1758,21 +3037,39 @@ class AppState {
     @MainActor
     @available(macOS 26.4, *)
     private func drainLocalTranslationQueue() async {
-        defer { localTranslationWorkerRunning = false }
-        while !Task.isCancelled, let job = localTranslationQueue.first {
-            liveStatusText = "Translating to English…"
+        defer {
+            localFinalTranslationInFlight = false
+            localTranslationWorkerRunning = false
+            startLocalPreviewWorkerIfNeeded()
+        }
+        while !Task.isCancelled, var job = localTranslationQueue.first {
+            guard !job.attempts.exhausted else { return }
+            let attempt = job.attempts.begin()
+            localTranslationQueue[0] = job
+            localFinalTranslationState = .translating(attempt: attempt)
+            liveStatusText = localFinalTranslationState.statusText ?? liveStatusText
+            localFinalTranslationInFlight = true
+            let translationStart = DispatchTime.now().uptimeNanoseconds
+            let finalQueueMilliseconds = translationStart > job.enqueuedUptimeNanoseconds
+                ? Double(translationStart - job.enqueuedUptimeNanoseconds) / 1_000_000
+                : 0
             do {
-                let translationStart = DispatchTime.now().uptimeNanoseconds
                 let text = try await translateStableSource(
                     job.source.text,
                     mode: activeLocalTranslationMode
                 )
-                let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !normalized.isEmpty,
-                      !EnglishSubtitleValidator.containsSourceScript(normalized) else {
-                    throw LocalPrototypeError.invalidResponse
-                }
+                let translationCompleted = DispatchTime.now().uptimeNanoseconds
+                localFinalTranslationInFlight = false
+                startLocalPreviewWorkerIfNeeded()
+                let normalized = text
                 guard localTranslationQueue.first?.index == job.index else { continue }
+                if let decision = job.decision,
+                   activeLocalEnglishEngine == .voxtralApple,
+                   !localVoxtralClausePlanner.validate(through: decision.stableThrough) {
+                    throw LocalPrototypeError.cursorMismatch(
+                        "Voxtral English validation did not match the oldest staged PCM range. No audio was released."
+                    )
+                }
                 localTranslationQueue.removeFirst()
                 let translated = TranscriptionSegment(
                     start: job.source.start,
@@ -1789,39 +3086,152 @@ class AppState {
                         localCommittedSampleCount,
                         decision.stableThrough
                     )
-                    activeLocalRecorder?.trimSamples(upTo: max(
-                        0, localCommittedSampleCount - LocalEndpointPlanner.forcedOverlap
-                    ))
+                    let retainedOverlap = activeLocalEnglishEngine == .voxtralApple
+                        ? VoxtralClausePlanner.stabilityGuard
+                        : LocalEndpointPlanner.forcedOverlap
+                    let requestedTrim = max(
+                        0, localCommittedSampleCount - retainedOverlap
+                    )
+                    activeLocalRecorder?.trimSamples(upTo: requestedTrim)
                     completeLocalFinalWork(through: decision.stableThrough)
                 }
+                localFinalTranslationState = localTranslationQueue.isEmpty ? .idle : .queued
                 liveTranslationError = nil
                 publishLocalCaptions()
+                await recordLocalFinalTranslationAttempt(
+                    job: job,
+                    attempt: attempt,
+                    outcome: "success",
+                    classification: nil,
+                    started: translationStart,
+                    completed: translationCompleted,
+                    backoffMilliseconds: nil,
+                    englishText: normalized
+                )
                 if let decision = job.decision {
                     await localMetricRecorder.append(LocalCaptionMetric(
                         kind: .final,
                         engine: activeLocalEnglishEngine.rawValue,
+                        boundaryKind: decision.kind.rawValue,
                         rangeStart: decision.audioStart,
                         rangeEnd: decision.audioEnd,
                         speechEnd: decision.speechEnd,
                         endpointDetectedAt: decision.endpointDetectedAt,
                         vadOnlyEndpointAt: decision.vadOnlyEndpointAt,
-                        queueMilliseconds: job.queueMilliseconds,
+                        queueMilliseconds: job.queueMilliseconds + finalQueueMilliseconds,
                         asrMilliseconds: job.asrMilliseconds,
-                        translationMilliseconds: Self.elapsedMilliseconds(since: translationStart),
+                        translationMilliseconds: translationCompleted > translationStart
+                            ? Double(translationCompleted - translationStart) / 1_000_000 : 0,
                         renderedUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
                         sourceText: job.source.text,
                         englishText: normalized,
                         revision: nil,
-                        previewLatencyMilliseconds: nil
+                        previewLatencyMilliseconds: nil,
+                        firstLexicalUptimeNanoseconds: nil,
+                        sourceEligibleUptimeNanoseconds: nil,
+                        translationStartedUptimeNanoseconds: translationStart,
+                        translationCompletedUptimeNanoseconds: translationCompleted
                     ))
                 }
             } catch {
-                liveTranslationError = error.localizedDescription
-                liveStatusText = "English translation waiting to retry…"
-                return
+                let translationCompleted = DispatchTime.now().uptimeNanoseconds
+                localFinalTranslationInFlight = false
+                startLocalPreviewWorkerIfNeeded()
+                guard localTranslationQueue.first?.index == job.index else { continue }
+                var failedJob = localTranslationQueue[0]
+                let failure = failedJob.attempts.record(error)
+                localTranslationQueue[0] = failedJob
+                switch failure.disposition {
+                case .retry(let delay):
+                    let backoffMilliseconds = LocalFinalTranslationRetryPolicy
+                        .backoffMilliseconds(afterAttempt: attempt)
+                    localFinalTranslationState = .retrying(
+                        nextAttempt: attempt + 1
+                    )
+                    liveTranslationError = nil
+                    liveStatusText = localFinalTranslationState.statusText ?? liveStatusText
+                    await recordLocalFinalTranslationAttempt(
+                        job: job,
+                        attempt: attempt,
+                        outcome: "retry",
+                        classification: failure.classification,
+                        started: translationStart,
+                        completed: translationCompleted,
+                        backoffMilliseconds: backoffMilliseconds.map { Double($0) },
+                        englishText: ""
+                    )
+                    do {
+                        try await Task.sleep(for: delay)
+                    } catch {
+                        return
+                    }
+                case .retain:
+                    localFinalTranslationState = .failedRetained
+                    liveTranslationError = "Final failed — audio retained: \(error.localizedDescription)"
+                    liveStatusText = localFinalTranslationState.statusText ?? liveStatusText
+                    await recordLocalFinalTranslationAttempt(
+                        job: job,
+                        attempt: attempt,
+                        outcome: "retained",
+                        classification: failure.classification,
+                        started: translationStart,
+                        completed: translationCompleted,
+                        backoffMilliseconds: nil,
+                        englishText: ""
+                    )
+                    return
+                }
             }
         }
         publishLocalCaptions()
+    }
+
+    @MainActor
+    private func recordLocalFinalTranslationAttempt(
+        job: LocalTranslationJob,
+        attempt: Int,
+        outcome: String,
+        classification: LocalFinalTranslationErrorClassification?,
+        started: UInt64,
+        completed: UInt64,
+        backoffMilliseconds: Double?,
+        englishText: String
+    ) async {
+        let decision = job.decision
+        let rangeStart = decision?.audioStart
+            ?? max(0, Int((job.source.start * 16_000).rounded()))
+        let rangeEnd = decision?.audioEnd
+            ?? max(rangeStart, Int(((job.source.end ?? job.source.start) * 16_000).rounded()))
+        var metric = LocalCaptionMetric(
+            kind: .finalAttempt,
+            engine: activeLocalEnglishEngine.rawValue,
+            boundaryKind: decision?.kind.rawValue,
+            rangeStart: rangeStart,
+            rangeEnd: rangeEnd,
+            speechEnd: decision?.speechEnd ?? rangeEnd,
+            endpointDetectedAt: decision?.endpointDetectedAt ?? -1,
+            vadOnlyEndpointAt: decision?.vadOnlyEndpointAt ?? -1,
+            queueMilliseconds: job.queueMilliseconds + (started > job.enqueuedUptimeNanoseconds
+                ? Double(started - job.enqueuedUptimeNanoseconds) / 1_000_000 : 0),
+            asrMilliseconds: job.asrMilliseconds,
+            translationMilliseconds: completed > started
+                ? Double(completed - started) / 1_000_000 : 0,
+            renderedUptimeNanoseconds: completed,
+            sourceText: job.source.text,
+            englishText: englishText,
+            revision: nil,
+            previewLatencyMilliseconds: nil,
+            firstLexicalUptimeNanoseconds: nil,
+            sourceEligibleUptimeNanoseconds: nil,
+            translationStartedUptimeNanoseconds: started,
+            translationCompletedUptimeNanoseconds: completed
+        )
+        metric.finalAttempt = attempt
+        metric.finalAttemptOutcome = outcome
+        metric.finalErrorClassification = classification?.rawValue
+        metric.retryBackoffMilliseconds = backoffMilliseconds
+        metric.finalEnqueuedUptimeNanoseconds = job.enqueuedUptimeNanoseconds
+        await localMetricRecorder.append(metric)
     }
 
     @available(macOS 26.4, *)
@@ -1829,10 +3239,11 @@ class AppState {
         _ text: String,
         mode: AppleTranslationMode = .highFidelityOnly
     ) async throws -> String {
-        try await appleTranslationService().translate(
+        let response = try await appleTranslationService().translate(
             text,
             highFidelity: mode.finalUsesHighFidelity
         )
+        return try EnglishSubtitleValidator.requireEnglish(response)
     }
 
     @MainActor
@@ -1840,8 +3251,13 @@ class AppState {
         liveStableSegmentCount = localCommittedSegments.count
         liveSegments = localCommittedSegments
         if let localPreviewSegment { liveSegments.append(localPreviewSegment) }
-        liveStatusText = "Listening..."
+        setLocalStatus("Listening...")
         throttledAutoSave()
+    }
+
+    @MainActor
+    private func setLocalStatus(_ fallback: String) {
+        liveStatusText = localFinalTranslationState.statusText ?? fallback
     }
 
     static func offsetSegments(
@@ -1926,6 +3342,7 @@ class AppState {
         let fullText: String
         let translatedSegments: [String]
         let translationLanguage: String?
+        let audioPath: String?
         let localSourceLocale: String?
         let localTranslationMode: AppleTranslationMode?
         let discardOriginalAfterRetry: Bool?
@@ -1956,12 +3373,14 @@ class AppState {
         let sourceLocale = isLocalEnglish ? activeLocalSourceLocale : nil
         let translationMode = isLocalEnglish ? activeLocalTranslationMode : nil
         let discardOriginal = isLocalEnglish ? !activeKeepOriginalTranscript : nil
+        let audioPath = activeLocalRecorder?.recordingFileURL?.path
 
         // Write on a background queue to avoid blocking the main thread
         Task.detached(priority: .utility) {
             let data = LiveRecoveryData(
                 segments: segments, fullText: text,
                 translatedSegments: translations, translationLanguage: lang,
+                audioPath: audioPath,
                 localSourceLocale: sourceLocale,
                 localTranslationMode: translationMode,
                 discardOriginalAfterRetry: discardOriginal,
@@ -1986,26 +3405,54 @@ class AppState {
         FileManager.default.fileExists(atPath: Self.liveRecoveryURL.path)
     }
 
+    static func existingRecoveryAudioURL(path: String?) -> URL? {
+        guard let path, FileManager.default.fileExists(atPath: path) else { return nil }
+        return URL(fileURLWithPath: path)
+    }
+
     /// Import recovered live transcription as a completed transcription item.
     func importRecoveredTranscription() {
         let url = Self.liveRecoveryURL
         guard let data = try? Data(contentsOf: url),
               let recovery = try? JSONDecoder().decode(LiveRecoveryData.self, from: data)
         else { return }
+        let audioURL = Self.existingRecoveryAudioURL(path: recovery.audioPath)
+        let isLocalEnglish = recovery.localSourceLocale != nil
+        guard !isLocalEnglish || audioURL != nil || !recovery.segments.isEmpty else {
+            removeLiveRecoveryFile()
+            return
+        }
         let item = TranscriptionItem(
-            fileURL: URL(fileURLWithPath: "/recovered-\(ISO8601DateFormatter().string(from: recovery.savedAt))"))
+            fileURL: audioURL ?? URL(
+                fileURLWithPath: "/recovered-source-only-\(UUID().uuidString)"
+            ))
         item.segments = recovery.segments
         item.fullText = recovery.fullText
-        item.translatedSegments = recovery.translatedSegments
-        item.translationLanguage = recovery.translationLanguage
+        item.translatedSegments = recovery.translatedSegments.map {
+            EnglishSubtitleValidator.normalizedEnglish($0) ?? ""
+        }
+        item.translationLanguage = item.translatedSegments.contains(where: { !$0.isEmpty })
+            ? recovery.translationLanguage : nil
         item.localSourceLocale = recovery.localSourceLocale
         item.localTranslationMode = recovery.localTranslationMode
         item.discardOriginalAfterRetry = recovery.discardOriginalAfterRetry ?? false
-        item.translateToEnglish = recovery.localSourceLocale != nil
-        item.status = recovery.localSourceLocale == nil
-            ? .completed
-            : .failed("Recovered local subtitles may be incomplete. Use Retry English translation to finish the saved source segments.")
-        item.fileName = "Recovered \(DateFormatter.localizedString(from: recovery.savedAt, dateStyle: .short, timeStyle: .short))"
+        item.translateToEnglish = isLocalEnglish
+        item.localSourceTranscriptComplete = !isLocalEnglish
+        if !isLocalEnglish {
+            item.status = .completed
+        } else if audioURL != nil {
+            item.status = .failed(
+                "Recovered local subtitles may be incomplete. Retry English translation will re-transcribe the retained audio."
+            )
+        } else {
+            item.status = .failed(
+                "Recovered source is partial. Retry English translation will translate only the saved Japanese clauses; the missing audio tail cannot be recovered."
+            )
+        }
+        let recoveryLabel = audioURL == nil && isLocalEnglish
+            ? "Recovered partial subtitles"
+            : "Recovered"
+        item.fileName = "\(recoveryLabel) \(DateFormatter.localizedString(from: recovery.savedAt, dateStyle: .short, timeStyle: .short))"
         items.insert(item, at: 0)
         selectedItemID = item.id
         TranscriptionStore.save(item)

@@ -58,6 +58,8 @@ enum LocalSpeechEngine: String, CaseIterable, Identifiable {
 enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
     case whisperTurboApple
     case qwenApple
+    case voxtralApple
+    case voxtralCohereApple
 
     static let storageKey = "localEnglishEngine"
 
@@ -69,6 +71,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Whisper Turbo → Apple"
         case .qwenApple:
             return "Qwen → Apple"
+        case .voxtralApple:
+            return "Voxtral live → Apple"
+        case .voxtralCohereApple:
+            return "Voxtral live + Cohere final → Apple"
         }
     }
 
@@ -78,6 +84,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Reference: Whisper Large v3 Turbo transcribes, then Apple high-fidelity translates."
         case .qwenApple:
             return "Experimental: Qwen transcribes each FireRedVAD phrase, then Apple translates."
+        case .voxtralApple:
+            return "Experimental: one continuous Voxtral session supplies live source text and each stable clause for Apple Translation."
+        case .voxtralCohereApple:
+            return "Experimental: Voxtral supplies live previews while Cohere Q8 re-decodes each stable final."
         }
     }
 
@@ -87,8 +97,22 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return [.fireRedVAD, .whisperTurbo, .appleTranslation]
         case .qwenApple:
             return [.fireRedVAD, .qwen, .appleTranslation]
+        case .voxtralApple:
+            return [.fireRedVAD, .voxtral, .appleTranslation]
+        case .voxtralCohereApple:
+            return [.fireRedVAD, .voxtral, .cohere, .appleTranslation]
         }
     }
+
+    var usesVoxtralStreaming: Bool {
+        self == .voxtralApple || self == .voxtralCohereApple
+    }
+
+    var usesAppleSpeechPreview: Bool { !usesVoxtralStreaming }
+
+    var usesVoxtralSourcePreview: Bool { usesVoxtralStreaming }
+
+    var usesCohereFinal: Bool { self == .voxtralCohereApple }
 
     /// Preserve existing installations: the old Whisper choice maps to the
     /// corrected reference pipeline; Apple Speech is no longer a benchmark
@@ -108,6 +132,8 @@ enum LocalRuntimeComponent: String, Hashable, Sendable {
     case fireRedVAD
     case whisperTurbo
     case qwen
+    case voxtral
+    case cohere
     case appleTranslation
 }
 
@@ -278,6 +304,9 @@ class TranscriptionItem: Identifiable {
     var localSourceLocale: String?
     var localTranslationMode: AppleTranslationMode?
     var discardOriginalAfterRetry = false
+    /// False means the persisted source is only a recoverable prefix. Retry
+    /// must re-transcribe the retained audio before it may mark the item done.
+    var localSourceTranscriptComplete = true
     let dateAdded: Date
 
     init(fileURL: URL) {
@@ -293,7 +322,8 @@ class TranscriptionItem: Identifiable {
          translatedSegments: [String] = [], translationLanguage: String? = nil,
          translateToEnglish: Bool = false, localSourceLocale: String? = nil,
          localTranslationMode: AppleTranslationMode? = nil,
-         discardOriginalAfterRetry: Bool = false) {
+         discardOriginalAfterRetry: Bool = false,
+         localSourceTranscriptComplete: Bool = true) {
         self.id = id
         self.fileName = fileName
         self.fileURL = fileURL
@@ -307,5 +337,6 @@ class TranscriptionItem: Identifiable {
         self.localSourceLocale = localSourceLocale
         self.localTranslationMode = localTranslationMode
         self.discardOriginalAfterRetry = discardOriginalAfterRetry
+        self.localSourceTranscriptComplete = localSourceTranscriptComplete
     }
 }

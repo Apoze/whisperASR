@@ -120,6 +120,9 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 # Copy binary
 cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
 cp "$BUILD_DIR/mlx.metallib" "$APP_BUNDLE/Contents/MacOS/"
+if [ -d "$BUILD_DIR/WhisperASR_WhisperASRApp.bundle" ]; then
+    cp -R "$BUILD_DIR/WhisperASR_WhisperASRApp.bundle" "$APP_BUNDLE/Contents/Resources/"
+fi
 
 # Copy icon
 cp "$ICNS_PATH" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
@@ -181,7 +184,7 @@ fi
 
 if [ -n "${CODESIGN_IDENTITY:-}" ]; then
     # Create entitlements for hardened runtime
-    ENTITLEMENTS=$(mktemp /tmp/entitlements.XXXXXX.plist)
+    ENTITLEMENTS=$(mktemp /tmp/whisperasr-entitlements.XXXXXX)
     cat > "$ENTITLEMENTS" << 'ENTPLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

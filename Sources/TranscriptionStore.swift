@@ -19,6 +19,7 @@ enum TranscriptionStore {
         let localSourceLocale: String?
         let localTranslationMode: AppleTranslationMode?
         let discardOriginalAfterRetry: Bool?
+        let localSourceTranscriptComplete: Bool?
     }
 
     // MARK: - Directory
@@ -69,6 +70,13 @@ enum TranscriptionStore {
     static func save(_ item: TranscriptionItem) {
         ensureDirectory()
 
+        guard let data = try? encodedData(for: item) else { return }
+        try? data.write(to: fileURL(for: item.id), options: .atomic)
+    }
+
+    /// Shared by production persistence and tests so migrations exercise the
+    /// exact Codable path without writing into Application Support.
+    static func encodedData(for item: TranscriptionItem) throws -> Data {
         let statusTag: String
         let errorMessage: String?
         switch item.status {
@@ -97,13 +105,16 @@ enum TranscriptionStore {
             translateToEnglish: item.translateToEnglish ? true : nil,
             localSourceLocale: item.localSourceLocale,
             localTranslationMode: item.localTranslationMode,
-            discardOriginalAfterRetry: item.discardOriginalAfterRetry ? true : nil
+            discardOriginalAfterRetry: item.discardOriginalAfterRetry ? true : nil,
+            // Local-English items retain this bit even after a partial recovery
+            // has translated every saved clause and no retry remains possible.
+            localSourceTranscriptComplete: item.translateToEnglish || item.localSourceLocale != nil
+                ? item.localSourceTranscriptComplete : nil
         )
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        guard let data = try? encoder.encode(stored) else { return }
-        try? data.write(to: fileURL(for: item.id), options: .atomic)
+        return try encoder.encode(stored)
     }
 
     // MARK: - Load
@@ -114,38 +125,42 @@ enum TranscriptionStore {
             at: storeDirectory, includingPropertiesForKeys: nil
         ) else { return [] }
 
-        let decoder = JSONDecoder()
         return files
             .filter { $0.pathExtension == "json" }
             .compactMap { url -> TranscriptionItem? in
                 guard let data = try? Data(contentsOf: url),
-                      let stored = try? decoder.decode(StoredItem.self, from: data)
-                else { return nil }
-
-                let status: TranscriptionStatus
-                switch stored.statusTag {
-                case "completed": status = .completed
-                case "failed":    status = .failed(stored.errorMessage ?? "Unknown error")
-                default:          status = .pending
-                }
-
-                return TranscriptionItem(
-                    id: stored.id,
-                    fileName: stored.fileName,
-                    fileURL: resolveRecordingURL(storedPath: stored.filePath),
-                    dateAdded: stored.dateAdded,
-                    status: status,
-                    segments: stored.segments,
-                    fullText: stored.fullText,
-                    translatedSegments: stored.translatedSegments ?? [],
-                    translationLanguage: stored.translationLanguage,
-                    translateToEnglish: stored.translateToEnglish ?? false,
-                    localSourceLocale: stored.localSourceLocale,
-                    localTranslationMode: stored.localTranslationMode,
-                    discardOriginalAfterRetry: stored.discardOriginalAfterRetry ?? false
-                )
+                      let item = try? decodedItem(from: data) else { return nil }
+                return item
             }
             .sorted { $0.dateAdded > $1.dateAdded }
+    }
+
+    static func decodedItem(from data: Data) throws -> TranscriptionItem {
+        let stored = try JSONDecoder().decode(StoredItem.self, from: data)
+        let status: TranscriptionStatus
+        switch stored.statusTag {
+        case "completed": status = .completed
+        case "failed": status = .failed(stored.errorMessage ?? "Unknown error")
+        default: status = .pending
+        }
+
+        return TranscriptionItem(
+            id: stored.id,
+            fileName: stored.fileName,
+            fileURL: resolveRecordingURL(storedPath: stored.filePath),
+            dateAdded: stored.dateAdded,
+            status: status,
+            segments: stored.segments,
+            fullText: stored.fullText,
+            translatedSegments: stored.translatedSegments ?? [],
+            translationLanguage: stored.translationLanguage,
+            translateToEnglish: stored.translateToEnglish ?? false,
+            localSourceLocale: stored.localSourceLocale,
+            localTranslationMode: stored.localTranslationMode,
+            discardOriginalAfterRetry: stored.discardOriginalAfterRetry ?? false,
+            localSourceTranscriptComplete: stored.localSourceTranscriptComplete
+                ?? !(stored.translateToEnglish ?? false)
+        )
     }
 
     // MARK: - Delete

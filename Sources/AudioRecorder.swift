@@ -35,6 +35,7 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     private var recordingStartTime: Date?
     private var recordingAppName: String?
     private var outputURL: URL?
+    var recordingFileURL: URL? { outputURL }
     private var _hasReceivedSamples = OSAllocatedUnfairLock(initialState: false)
     private var meetingMonitorTimer: Timer?
     private var recordingPID: pid_t?
