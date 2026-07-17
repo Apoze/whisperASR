@@ -15,6 +15,164 @@ enum RecordingState: Equatable {
     case permissionDenied
 }
 
+struct RecordingStopResult: Equatable, Sendable {
+    let archiveURL: URL?
+    let finalSampleCount: Int
+    let m4aDroppedSampleCount: Int
+    let pcmComplete: Bool
+}
+
+enum CanonicalPCMResamplerError: LocalizedError {
+    case unavailable
+    case bufferAllocation
+    case conversion(String)
+    case didNotReachEndOfStream
+
+    var errorDescription: String? {
+        switch self {
+        case .unavailable:
+            return "The canonical PCM converter could not be created."
+        case .bufferAllocation:
+            return "The canonical PCM converter could not allocate an audio buffer."
+        case .conversion(let message):
+            return "Canonical PCM conversion failed: \(message)"
+        case .didNotReachEndOfStream:
+            return "The canonical PCM converter did not finish its end-of-stream drain."
+        }
+    }
+}
+
+/// Stateful 48 kHz Float32 mono to 16 kHz Float32 mono conversion. All calls
+/// are serialized by AudioRecorder's capture queue so the converter can drain
+/// every output buffer, including its delayed tail at the real end of stream.
+final class CanonicalPCMResampler {
+    static let sourceFormat = AVAudioFormat(
+        commonFormat: .pcmFormatFloat32,
+        sampleRate: 48_000,
+        channels: 1,
+        interleaved: false
+    )!
+    static let targetFormat = AVAudioFormat(
+        commonFormat: .pcmFormatFloat32,
+        sampleRate: 16_000,
+        channels: 1,
+        interleaved: false
+    )!
+
+    private let converter: AVAudioConverter
+    private let outputFrameCapacity: AVAudioFrameCount
+    private var finished = false
+
+    init(outputFrameCapacity: AVAudioFrameCount = 4_096) throws {
+        guard let converter = AVAudioConverter(
+            from: Self.sourceFormat,
+            to: Self.targetFormat
+        ) else {
+            throw CanonicalPCMResamplerError.unavailable
+        }
+        self.converter = converter
+        self.outputFrameCapacity = max(1, outputFrameCapacity)
+    }
+
+    func reset() {
+        converter.reset()
+        finished = false
+    }
+
+    func append(_ samples: [Float]) throws -> [Float] {
+        guard !samples.isEmpty else { return [] }
+        guard !finished else {
+            throw CanonicalPCMResamplerError.conversion(
+                "audio arrived after end of stream"
+            )
+        }
+        guard let input = AVAudioPCMBuffer(
+            pcmFormat: Self.sourceFormat,
+            frameCapacity: AVAudioFrameCount(samples.count)
+        ), let channel = input.floatChannelData?[0] else {
+            throw CanonicalPCMResamplerError.bufferAllocation
+        }
+        samples.withUnsafeBufferPointer { source in
+            guard let baseAddress = source.baseAddress else { return }
+            channel.update(from: baseAddress, count: source.count)
+        }
+        input.frameLength = AVAudioFrameCount(samples.count)
+
+        var supplied = false
+        return try drain(requireEndOfStream: false) { _, status in
+            if supplied {
+                status.pointee = .noDataNow
+                return nil
+            }
+            supplied = true
+            status.pointee = .haveData
+            return input
+        }
+    }
+
+    func finish() throws -> [Float] {
+        guard !finished else { return [] }
+        finished = true
+        return try drain(requireEndOfStream: true) { _, status in
+            status.pointee = .endOfStream
+            return nil
+        }
+    }
+
+    private func drain(
+        requireEndOfStream: Bool,
+        input: @escaping AVAudioConverterInputBlock
+    ) throws -> [Float] {
+        var result: [Float] = []
+        // A healthy converter completes in a handful of iterations. The bound
+        // prevents a framework regression from hanging Finish forever.
+        let maximumIterations = requireEndOfStream ? 32 : 4_096
+        for _ in 0..<maximumIterations {
+            guard let output = AVAudioPCMBuffer(
+                pcmFormat: Self.targetFormat,
+                frameCapacity: outputFrameCapacity
+            ) else {
+                throw CanonicalPCMResamplerError.bufferAllocation
+            }
+            var conversionError: NSError?
+            let status = converter.convert(
+                to: output,
+                error: &conversionError,
+                withInputFrom: input
+            )
+            if let conversionError {
+                throw CanonicalPCMResamplerError.conversion(
+                    conversionError.localizedDescription
+                )
+            }
+            if output.frameLength > 0, let channel = output.floatChannelData?[0] {
+                result.append(contentsOf: UnsafeBufferPointer(
+                    start: channel,
+                    count: Int(output.frameLength)
+                ))
+            }
+            switch status {
+            case .haveData:
+                continue
+            case .inputRanDry:
+                if requireEndOfStream { continue }
+                return result
+            case .endOfStream:
+                return result
+            case .error:
+                throw CanonicalPCMResamplerError.conversion(
+                    "AVAudioConverter returned an error without details"
+                )
+            @unknown default:
+                throw CanonicalPCMResamplerError.conversion(
+                    "AVAudioConverter returned an unknown status"
+                )
+            }
+        }
+        throw CanonicalPCMResamplerError.didNotReachEndOfStream
+    }
+}
+
 @Observable
 class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     var state: RecordingState = .idle
@@ -41,11 +199,85 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     private var recordingPID: pid_t?
     private var meetingStarted = false
 
+    struct CaptureLifecycle {
+        var generation: UInt64 = 0
+        var acceptingCallbacks = false
+        var activeStreamID: ObjectIdentifier?
+        var restartInProgress = false
+        var restartToken: UUID?
+        var closing = false
+        var sealedFinalSampleCount: Int?
+        var m4aDroppedSampleCount = 0
+        var pcmComplete = true
+
+        mutating func beginSession() -> UInt64 {
+            generation &+= 1
+            acceptingCallbacks = false
+            activeStreamID = nil
+            restartInProgress = false
+            restartToken = nil
+            closing = false
+            sealedFinalSampleCount = nil
+            m4aDroppedSampleCount = 0
+            pcmComplete = true
+            return generation
+        }
+
+        mutating func activate(streamID: ObjectIdentifier, generation expected: UInt64) -> Bool {
+            guard generation == expected, !closing, sealedFinalSampleCount == nil else {
+                return false
+            }
+            acceptingCallbacks = true
+            activeStreamID = streamID
+            return true
+        }
+
+        func accepts(streamID: ObjectIdentifier) -> Bool {
+            acceptingCallbacks && activeStreamID == streamID
+        }
+
+        mutating func beginRestart() -> (generation: UInt64, token: UUID)? {
+            guard acceptingCallbacks, !closing, !restartInProgress else { return nil }
+            let token = UUID()
+            restartInProgress = true
+            restartToken = token
+            return (generation, token)
+        }
+
+        mutating func endRestart(generation expected: UInt64, token: UUID) {
+            guard generation == expected, restartToken == token else { return }
+            restartInProgress = false
+            restartToken = nil
+        }
+
+        mutating func beginSeal() {
+            closing = true
+        }
+
+        mutating func seal(finalSampleCount: Int) {
+            acceptingCallbacks = false
+            activeStreamID = nil
+            restartInProgress = false
+            restartToken = nil
+            closing = true
+            sealedFinalSampleCount = finalSampleCount
+        }
+    }
+
+    @ObservationIgnored
+    private let captureQueue = DispatchQueue(label: "com.whisperasr.audio-capture")
+    @ObservationIgnored
+    private var captureLifecycle = OSAllocatedUnfairLock(initialState: CaptureLifecycle())
+    @ObservationIgnored
+    private var restartTask = OSAllocatedUnfairLock<(
+        token: UUID,
+        task: Task<Void, Never>
+    )?>(initialState: nil)
+
     // Stream watchdog: detect stalled audio delivery and restart
     private var lastAudioBufferTime = OSAllocatedUnfairLock(initialState: Date())
     private var audioWatchdogTimer: Timer?
     private var recordingApp: SCRunningApplication?
-    private var isRestartingStream = false
     /// How long without audio before we consider the stream stalled (seconds).
     private static let audioStallThreshold: TimeInterval = 15
 
@@ -63,19 +295,15 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     }
     private var pcmState = OSAllocatedUnfairLock(initialState: PCMState())
 
-    // 48kHz → 16kHz resampler for live transcription (AVAudioConverter applies
-    // a proper anti-alias low-pass filter; naive decimation aliased above 8kHz).
-    private static let pcmSourceFormat: AVAudioFormat = AVAudioFormat(
-        commonFormat: .pcmFormatFloat32, sampleRate: 48000, channels: 1, interleaved: false)!
-    private static let pcmTargetFormat: AVAudioFormat = AVAudioFormat(
-        commonFormat: .pcmFormatFloat32, sampleRate: 16000, channels: 1, interleaved: false)!
     @ObservationIgnored
-    private lazy var pcmResampler: AVAudioConverter? = {
-        AVAudioConverter(from: AudioRecorder.pcmSourceFormat, to: AudioRecorder.pcmTargetFormat)
-    }()
+    private var pcmResampler = try! CanonicalPCMResampler()
     /// Total number of 16kHz samples accumulated since recording started (absolute count).
     var accumulatedSampleCount: Int {
         pcmState.withLock { $0.trimOffset + $0.buffer.count }
+    }
+
+    var sealedFinalSampleCount: Int? {
+        captureLifecycle.withLock { $0.sealedFinalSampleCount }
     }
 
     private static let zoomBundleIDs: Set<String> = ["us.zoom.xos", "us.zoom.videomeeting"]
@@ -263,15 +491,21 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     func startRecording(app: SCRunningApplication) {
         guard state == .ready else { return }
         saveRecentApp(bundleID: app.bundleIdentifier)
+        state = .loading
+        error = nil
+        let generation = captureLifecycle.withLock { $0.beginSession() }
+        captureQueue.sync { pcmResampler.reset() }
+        clearPCMBuffer()
 
         Task {
             do {
                 let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
                 guard let display = content.displays.first else {
-                    await MainActor.run {
-                        self.error = "No display found"
-                    }
-                    return
+                    throw NSError(
+                        domain: "AudioRecorder",
+                        code: 3,
+                        userInfo: [NSLocalizedDescriptionKey: "No display found."]
+                    )
                 }
 
                 let filter = SCContentFilter(display: display, including: [app], exceptingWindows: [])
@@ -298,23 +532,49 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 ]
                 let input = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
                 input.expectsMediaDataInRealTime = true
+                guard writer.canAdd(input) else {
+                    throw NSError(
+                        domain: "AudioRecorder",
+                        code: 1,
+                        userInfo: [NSLocalizedDescriptionKey: "The M4A writer rejected its audio input."]
+                    )
+                }
                 writer.add(input)
-                writer.startWriting()
+                guard writer.startWriting(), writer.status == .writing else {
+                    throw writer.error ?? NSError(
+                        domain: "AudioRecorder",
+                        code: 2,
+                        userInfo: [NSLocalizedDescriptionKey: "The M4A writer could not start."]
+                    )
+                }
                 writer.startSession(atSourceTime: .zero)
 
                 self.assetWriter = writer
                 self.assetWriterInput = input
                 self.outputURL = fileURL
                 self._hasReceivedSamples.withLock { $0 = false }
-                self.clearPCMBuffer()
 
                 self.recordingApp = app
 
                 let stream = SCStream(filter: filter, configuration: config, delegate: self)
-                try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: DispatchQueue(label: "com.whisperasr.audio-capture"))
-                try await stream.startCapture()
-
+                try stream.addStreamOutput(
+                    self,
+                    type: .audio,
+                    sampleHandlerQueue: self.captureQueue
+                )
+                guard self.captureLifecycle.withLock({
+                    $0.activate(streamID: ObjectIdentifier(stream), generation: generation)
+                }) else {
+                    throw CancellationError()
+                }
                 self.stream = stream
+                try await stream.startCapture()
+                guard self.captureLifecycle.withLock({
+                    $0.generation == generation && $0.accepts(streamID: ObjectIdentifier(stream))
+                }) else {
+                    try? await stream.stopCapture()
+                    throw CancellationError()
+                }
                 self.recordingAppName = app.applicationName
 
                 if self.includeMicrophone {
@@ -347,6 +607,11 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                     try? await stream.stopCapture()
                     self.stream = nil
                 }
+                self.captureLifecycle.withLock { lifecycle in
+                    guard lifecycle.generation == generation else { return }
+                    lifecycle.acceptingCallbacks = false
+                    lifecycle.activeStreamID = nil
+                }
                 if let writer = self.assetWriter {
                     writer.cancelWriting()
                 }
@@ -360,6 +625,7 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 self.recordingAppName = nil
                 await MainActor.run {
                     self.error = "Failed to start recording: \(error.localizedDescription)"
+                    self.state = .ready
                 }
             }
         }
@@ -367,7 +633,30 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     // MARK: - Stop Recording
 
+    // Compatibility entry points keep this recorder-sealing commit usable by
+    // the existing UI. The awaited AppState closure switches to the result
+    // variants in the dependent commit.
     func stopRecording() async -> URL? {
+        await stopRecordingWithResult().archiveURL
+    }
+
+    func stopRecordingWithResult() async -> RecordingStopResult {
+        await sealRecording(keepArchive: true)
+    }
+
+    func cancelRecording() {
+        Task { [weak self] in
+            guard let self else { return }
+            _ = await self.cancelRecordingWithResult()
+            await MainActor.run { self.state = .ready }
+        }
+    }
+
+    func cancelRecordingWithResult() async -> RecordingStopResult {
+        await sealRecording(keepArchive: false)
+    }
+
+    private func sealRecording(keepArchive: Bool) async -> RecordingStopResult {
         await MainActor.run {
             state = .saving
             timer?.invalidate()
@@ -376,79 +665,110 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             stopAudioWatchdog()
         }
 
+        captureLifecycle.withLock { $0.beginSeal() }
+        // A restart first reserves a lifecycle token, then publishes its Task.
+        // Finish may land in that tiny interval, so wait until the token is
+        // either paired with a task or cleared by the restart itself.
+        while captureLifecycle.withLock({ $0.restartInProgress }) {
+            let pendingRestart = restartTask.withLock { $0?.task }
+            if let pendingRestart {
+                pendingRestart.cancel()
+                await pendingRestart.value
+            } else {
+                await Task.yield()
+            }
+        }
+
         if let stream {
             try? await stream.stopCapture()
             self.stream = nil
         }
 
+        // This block runs after every callback already accepted by
+        // ScreenCaptureKit. It closes the gate on this same serial queue, so a
+        // callback delivered late can no longer slip in behind the barrier.
+        await withCheckedContinuation { continuation in
+            captureQueue.async { [weak self] in
+                self?.captureLifecycle.withLock { lifecycle in
+                    lifecycle.acceptingCallbacks = false
+                    lifecycle.activeStreamID = nil
+                }
+                continuation.resume()
+            }
+        }
+
         stopMicrophoneCapture()
         recordingApp = nil
+
+        let pcmSnapshot = await withCheckedContinuation { continuation in
+            captureQueue.async { [weak self] in
+                guard let self else {
+                    continuation.resume(returning: (0, false, 0))
+                    return
+                }
+                do {
+                    let tail = try self.pcmResampler.finish()
+                    if !tail.isEmpty {
+                        self.pcmState.withLock { $0.buffer.append(contentsOf: tail) }
+                    }
+                } catch {
+                    print("[AudioRecorder] canonical PCM EOS drain failed: \(error)")
+                    self.captureLifecycle.withLock { $0.pcmComplete = false }
+                }
+                let finalSampleCount = self.accumulatedSampleCount
+                let snapshot = self.captureLifecycle.withLock { lifecycle in
+                    lifecycle.seal(finalSampleCount: finalSampleCount)
+                    return (
+                        finalSampleCount,
+                        lifecycle.pcmComplete,
+                        lifecycle.m4aDroppedSampleCount
+                    )
+                }
+                self.pcmResampler.reset()
+                continuation.resume(returning: snapshot)
+            }
+        }
 
         let received = _hasReceivedSamples.withLock { $0 }
         print("[AudioRecorder] stopRecording: hasReceivedSamples=\(received), writer=\(assetWriter != nil), input=\(assetWriterInput != nil)")
 
-        guard let writer = assetWriter, let input = assetWriterInput else {
-            assetWriter = nil
-            assetWriterInput = nil
-            if let url = outputURL {
-                try? FileManager.default.removeItem(at: url)
+        var archiveURL: URL?
+        if let writer = assetWriter, let input = assetWriterInput {
+            if keepArchive {
+                input.markAsFinished()
+                await writer.finishWriting()
+
+                print("[AudioRecorder] stopRecording: writer.status=\(writer.status.rawValue), error=\(String(describing: writer.error))")
+
+                if writer.status == .completed, received,
+                   pcmSnapshot.2 == 0 {
+                    archiveURL = outputURL
+                } else if let outputURL {
+                    try? FileManager.default.removeItem(at: outputURL)
+                }
+            } else {
+                writer.cancelWriting()
+                if let outputURL {
+                    try? FileManager.default.removeItem(at: outputURL)
+                }
             }
-            print("[AudioRecorder] stopRecording: no writer/input, returning nil")
-            return nil
-        }
-
-        input.markAsFinished()
-        await writer.finishWriting()
-
-        print("[AudioRecorder] stopRecording: writer.status=\(writer.status.rawValue), error=\(String(describing: writer.error))")
-
-        let url: URL?
-        if writer.status == .completed, received {
-            url = outputURL
         } else {
-            url = nil
             if let outputURL {
                 try? FileManager.default.removeItem(at: outputURL)
             }
+            print("[AudioRecorder] stopRecording: no writer/input")
         }
         assetWriter = nil
         assetWriterInput = nil
+        outputURL = nil
 
-        print("[AudioRecorder] stopRecording: returning url=\(String(describing: url))")
-        return url
-    }
-
-    // MARK: - Cancel Recording
-
-    func cancelRecording() {
-        Task {
-            if let stream {
-                try? await stream.stopCapture()
-                self.stream = nil
-            }
-
-            self.stopMicrophoneCapture()
-            self.clearPCMBuffer()
-            self.recordingApp = nil
-
-            if let writer = assetWriter {
-                writer.cancelWriting()
-                if let url = outputURL {
-                    try? FileManager.default.removeItem(at: url)
-                }
-                assetWriter = nil
-                assetWriterInput = nil
-            }
-
-            await MainActor.run {
-                state = .ready
-                timer?.invalidate()
-                timer = nil
-                stopMeetingMonitor()
-                stopAudioWatchdog()
-                recordingDuration = 0
-            }
-        }
+        print("[AudioRecorder] stopRecording: returning url=\(String(describing: archiveURL)), finalSampleCount=\(pcmSnapshot.0)")
+        return RecordingStopResult(
+            archiveURL: archiveURL,
+            finalSampleCount: pcmSnapshot.0,
+            m4aDroppedSampleCount: pcmSnapshot.2,
+            pcmComplete: pcmSnapshot.1
+        )
     }
 
     // MARK: - Microphone Capture
@@ -596,6 +916,7 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     func stream(_ stream: SCStream, didStopWithError error: Error) {
         print("[AudioRecorder] SCStream stopped with error: \(error)")
+        guard captureLifecycle.withLock({ $0.accepts(streamID: ObjectIdentifier(stream)) }) else { return }
         // Attempt to restart the stream automatically
         restartStream()
     }
@@ -625,7 +946,8 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 
     private func checkAudioStall() {
-        guard state == .recording, !isRestartingStream else { return }
+        guard state == .recording,
+              !captureLifecycle.withLock({ $0.restartInProgress }) else { return }
         let lastTime = lastAudioBufferTime.withLock { $0 }
         let elapsed = Date().timeIntervalSince(lastTime)
         if elapsed > Self.audioStallThreshold {
@@ -635,26 +957,48 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 
     private func restartStream() {
-        guard state == .recording, !isRestartingStream else { return }
-        isRestartingStream = true
+        guard state == .recording,
+              let restart = captureLifecycle.withLock({
+                  $0.beginRestart()
+              }) else { return }
+        let generation = restart.generation
+        let token = restart.token
 
-        Task {
+        let task = Task { [weak self] in
+            guard let self else { return }
+            defer {
+                self.captureLifecycle.withLock {
+                    $0.endRestart(generation: generation, token: token)
+                }
+                self.restartTask.withLock { handle in
+                    if handle?.token == token {
+                        handle = nil
+                    }
+                }
+            }
             // Stop the old stream
             if let oldStream = self.stream {
                 try? await oldStream.stopCapture()
                 self.stream = nil
             }
 
+            guard !Task.isCancelled,
+                  self.captureLifecycle.withLock({
+                      $0.generation == generation && !$0.closing
+                  }) else { return }
+
             // Rebuild a fresh SCStream with the same app
             guard let app = self.recordingApp else {
-                isRestartingStream = false
                 return
             }
 
             do {
                 let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+                guard !Task.isCancelled,
+                      self.captureLifecycle.withLock({
+                          $0.generation == generation && !$0.closing
+                      }) else { return }
                 guard let display = content.displays.first else {
-                    isRestartingStream = false
                     return
                 }
 
@@ -670,17 +1014,43 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 config.minimumFrameInterval = CMTime(value: 1, timescale: 1)
 
                 let newStream = SCStream(filter: filter, configuration: config, delegate: self)
-                try newStream.addStreamOutput(self, type: .audio, sampleHandlerQueue: DispatchQueue(label: "com.whisperasr.audio-capture"))
-                try await newStream.startCapture()
+                try newStream.addStreamOutput(
+                    self,
+                    type: .audio,
+                    sampleHandlerQueue: self.captureQueue
+                )
+                let newStreamID = ObjectIdentifier(newStream)
+                let activated = await withCheckedContinuation { continuation in
+                    self.captureQueue.async {
+                        continuation.resume(returning: self.captureLifecycle.withLock {
+                            $0.activate(streamID: newStreamID, generation: generation)
+                        })
+                    }
+                }
+                guard activated, !Task.isCancelled else { return }
                 self.stream = newStream
+                try await newStream.startCapture()
+                guard !Task.isCancelled,
+                      self.captureLifecycle.withLock({
+                          $0.generation == generation && $0.accepts(streamID: newStreamID)
+                      }) else {
+                    try? await newStream.stopCapture()
+                    return
+                }
                 self.lastAudioBufferTime.withLock { $0 = Date() }
 
                 print("[AudioRecorder] stream restarted successfully")
             } catch {
                 print("[AudioRecorder] stream restart failed: \(error)")
             }
-
-            isRestartingStream = false
+        }
+        let isStillCurrent = captureLifecycle.withLock {
+            $0.generation == generation && $0.restartToken == token && !$0.closing
+        }
+        if isStillCurrent {
+            restartTask.withLock { $0 = (token, task) }
+        } else {
+            task.cancel()
         }
     }
 
@@ -748,6 +1118,7 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard type == .audio else { return }
         guard sampleBuffer.isValid, sampleBuffer.numSamples > 0 else { return }
+        guard captureLifecycle.withLock({ $0.accepts(streamID: ObjectIdentifier(stream)) }) else { return }
 
         // Track that we're still receiving audio (for stall detection)
         lastAudioBufferTime.withLock { $0 = Date() }
@@ -756,13 +1127,20 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let bufferToWrite = mixedSampleBuffer(from: sampleBuffer) ?? sampleBuffer
 
         // Accumulate 16kHz PCM samples for live transcription
-        accumulatePCMSamples(from: bufferToWrite)
+        do {
+            try accumulatePCMSamples(from: bufferToWrite)
+        } catch {
+            captureLifecycle.withLock { $0.pcmComplete = false }
+            print("[AudioRecorder] canonical PCM conversion failed: \(error)")
+        }
 
         guard let input = assetWriterInput else {
+            noteM4ADroppedSamples(bufferToWrite.numSamples)
             print("[AudioRecorder] stream callback: no assetWriterInput")
             return
         }
         guard input.isReadyForMoreMediaData else {
+            noteM4ADroppedSamples(bufferToWrite.numSamples)
             print("[AudioRecorder] stream callback: input not ready")
             return
         }
@@ -778,52 +1156,40 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 print("[AudioRecorder] first audio sample appended, numSamples=\(bufferToWrite.numSamples)")
             }
         } else {
+            noteM4ADroppedSamples(bufferToWrite.numSamples)
             print("[AudioRecorder] stream callback: append failed, writer.status=\(assetWriter?.status.rawValue ?? -1), error=\(String(describing: assetWriter?.error))")
+        }
+    }
+
+    private func noteM4ADroppedSamples(_ count: Int) {
+        captureLifecycle.withLock {
+            $0.m4aDroppedSampleCount += max(0, count)
         }
     }
 
     /// Extracts Float32 samples from a CMSampleBuffer (48kHz) and resamples to 16kHz
     /// via AVAudioConverter (applies anti-alias filter) for whisper.cpp.
-    private func accumulatePCMSamples(from sampleBuffer: CMSampleBuffer) {
-        guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return }
+    private func accumulatePCMSamples(from sampleBuffer: CMSampleBuffer) throws {
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else {
+            throw CanonicalPCMResamplerError.conversion("missing audio data buffer")
+        }
         var totalLength = 0
         var dataPointer: UnsafeMutablePointer<CChar>?
         let status = CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffsetOut: nil, totalLengthOut: &totalLength, dataPointerOut: &dataPointer)
-        guard status == kCMBlockBufferNoErr, let dataPointer, totalLength > 0 else { return }
+        guard status == kCMBlockBufferNoErr, let dataPointer, totalLength > 0 else {
+            throw CanonicalPCMResamplerError.conversion("invalid audio data buffer")
+        }
 
         let sampleCount = totalLength / MemoryLayout<Float>.size
-        guard sampleCount > 0, let converter = pcmResampler else { return }
+        guard sampleCount > 0 else { return }
 
         let floatPtr = UnsafeRawPointer(dataPointer).bindMemory(to: Float.self, capacity: sampleCount)
-
-        guard let inputBuffer = AVAudioPCMBuffer(
-                pcmFormat: Self.pcmSourceFormat, frameCapacity: AVAudioFrameCount(sampleCount)),
-              let inputChannel = inputBuffer.floatChannelData?[0] else { return }
-        memcpy(inputChannel, floatPtr, sampleCount * MemoryLayout<Float>.size)
-        inputBuffer.frameLength = AVAudioFrameCount(sampleCount)
-
-        // 48000 / 16000 = 3; +1 guards against rounding on non-multiples of 3.
-        let outputCapacity = AVAudioFrameCount(sampleCount / 3 + 1)
-        guard let outputBuffer = AVAudioPCMBuffer(
-                pcmFormat: Self.pcmTargetFormat, frameCapacity: outputCapacity) else { return }
-
-        var convertError: NSError?
-        var consumed = false
-        converter.convert(to: outputBuffer, error: &convertError) { _, outStatus in
-            if consumed {
-                outStatus.pointee = .noDataNow
-                return nil
+        let source = Array(UnsafeBufferPointer(start: floatPtr, count: sampleCount))
+        let resampled = try pcmResampler.append(source)
+        if !resampled.isEmpty {
+            pcmState.withLock { state in
+                state.buffer.append(contentsOf: resampled)
             }
-            consumed = true
-            outStatus.pointee = .haveData
-            return inputBuffer
-        }
-        guard convertError == nil, outputBuffer.frameLength > 0,
-              let outputChannel = outputBuffer.floatChannelData?[0] else { return }
-
-        let resampled = Array(UnsafeBufferPointer(start: outputChannel, count: Int(outputBuffer.frameLength)))
-        pcmState.withLock { state in
-            state.buffer.append(contentsOf: resampled)
         }
     }
 
