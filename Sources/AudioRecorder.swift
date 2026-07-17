@@ -20,6 +20,9 @@ struct RecordingStopResult: Equatable, Sendable {
     let finalSampleCount: Int
     let m4aDroppedSampleCount: Int
     let pcmComplete: Bool
+    let recoverySessionID: UUID?
+    let recoveryLocation: RecoverablePCMSpool.Location?
+    let recoverablePCM: RecoverablePCMSpool.Artifact?
 }
 
 enum CanonicalPCMResamplerError: LocalizedError {
@@ -297,6 +300,14 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     @ObservationIgnored
     private var pcmResampler = try! CanonicalPCMResampler()
+    private struct RecoveryPCMContext {
+        var sessionID: UUID?
+        var spool: RecoverablePCMSpool?
+    }
+    @ObservationIgnored
+    private var recoveryPCMContext = OSAllocatedUnfairLock(
+        initialState: RecoveryPCMContext()
+    )
     /// Total number of 16kHz samples accumulated since recording started (absolute count).
     var accumulatedSampleCount: Int {
         pcmState.withLock { $0.trimOffset + $0.buffer.count }
@@ -304,6 +315,32 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     var sealedFinalSampleCount: Int? {
         captureLifecycle.withLock { $0.sealedFinalSampleCount }
+    }
+
+    var recoverySessionID: UUID? {
+        recoveryPCMContext.withLock { $0.sessionID }
+    }
+
+    var recoverablePCMProgress: RecoverablePCMSpool.Progress? {
+        recoveryPCMContext.withLock { $0.spool?.progress }
+    }
+
+    var recoverablePCMLocation: RecoverablePCMSpool.Location? {
+        recoveryPCMContext.withLock { context in
+            context.spool.map {
+                RecoverablePCMSpool.Location(
+                    audioURL: $0.audioURL,
+                    manifestURL: $0.manifestURL
+                )
+            }
+        }
+    }
+
+    /// Release the writer only after capture and every consumer have stopped.
+    /// Finish keeps it alive across persistence failures; Cancel releases it
+    /// immediately before deleting the recovery files.
+    func releaseRecoverablePCM() {
+        recoveryPCMContext.withLock { $0 = RecoveryPCMContext() }
     }
 
     private static let zoomBundleIDs: Set<String> = ["us.zoom.xos", "us.zoom.videomeeting"]
@@ -342,8 +379,12 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         if ProcessInfo.processInfo.environment["WHISPERASR_CAPTURE_CANONICAL"] == "1" {
             return
         }
+        let durableIndex = recoveryPCMContext.withLock {
+            $0.spool?.progress.durableThrough ?? 0
+        }
+        let safeIndex = min(absoluteIndex, durableIndex)
         pcmState.withLock { state in
-            let bufIndex = absoluteIndex - state.trimOffset
+            let bufIndex = safeIndex - state.trimOffset
             guard bufIndex > 0 else { return }
             let trimCount = min(bufIndex, state.buffer.count)
             state.buffer.removeFirst(trimCount)
@@ -494,6 +535,7 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         state = .loading
         error = nil
         let generation = captureLifecycle.withLock { $0.beginSession() }
+        recoveryPCMContext.withLock { $0 = RecoveryPCMContext() }
         captureQueue.sync { pcmResampler.reset() }
         clearPCMBuffer()
 
@@ -522,6 +564,20 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
                 let fileURL = self.makeOutputURL(appName: app.applicationName)
                 self.customRecordingName = nil
+                self.outputURL = fileURL
+
+                // Establish durable canonical recovery before ScreenCaptureKit
+                // is allowed to deliver the first audio callback.
+                let recoverySessionID = UUID()
+                let recoveryDirectory = Self.recoveryDirectory
+                let spool = try RecoverablePCMSpool(
+                    directoryURL: recoveryDirectory,
+                    sessionID: recoverySessionID.uuidString
+                )
+                self.recoveryPCMContext.withLock {
+                    $0.sessionID = recoverySessionID
+                    $0.spool = spool
+                }
 
                 let writer = try AVAssetWriter(outputURL: fileURL, fileType: .m4a)
                 let audioSettings: [String: Any] = [
@@ -551,7 +607,6 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
                 self.assetWriter = writer
                 self.assetWriterInput = input
-                self.outputURL = fileURL
                 self._hasReceivedSamples.withLock { $0 = false }
 
                 self.recordingApp = app
@@ -623,6 +678,19 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 }
                 self.recordingApp = nil
                 self.recordingAppName = nil
+                if let spool = self.recoveryPCMContext.withLock({ $0.spool }) {
+                    let hadAudio = spool.progress.enqueuedThrough > 0
+                    _ = try? await spool.finish(complete: false)
+                    if !hadAudio {
+                        try? RecoverablePCMSpool.removeLocation(
+                            RecoverablePCMSpool.Location(
+                                audioURL: spool.audioURL,
+                                manifestURL: spool.manifestURL
+                            )
+                        )
+                    }
+                }
+                self.recoveryPCMContext.withLock { $0 = RecoveryPCMContext() }
                 await MainActor.run {
                     self.error = "Failed to start recording: \(error.localizedDescription)"
                     self.state = .ready
@@ -694,7 +762,19 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 do {
                     let tail = try self.pcmResampler.finish()
                     if !tail.isEmpty {
-                        self.pcmState.withLock { $0.buffer.append(contentsOf: tail) }
+                        let range = self.pcmState.withLock { state -> Range<Int> in
+                            let start = state.trimOffset + state.buffer.count
+                            state.buffer.append(contentsOf: tail)
+                            return start..<(start + tail.count)
+                        }
+                        do {
+                            if let spool = self.recoveryPCMContext.withLock({ $0.spool }) {
+                                try spool.enqueue(samples: tail, range: range)
+                            }
+                        } catch {
+                            self.captureLifecycle.withLock { $0.pcmComplete = false }
+                            print("[AudioRecorder] recovery PCM tail enqueue failed: \(error)")
+                        }
                     }
                 } catch {
                     print("[AudioRecorder] canonical PCM EOS drain failed: \(error)")
@@ -717,6 +797,27 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let received = _hasReceivedSamples.withLock { $0 }
         print("[AudioRecorder] stopRecording: hasReceivedSamples=\(received), writer=\(assetWriter != nil), input=\(assetWriterInput != nil)")
 
+        let recoveryContext = recoveryPCMContext.withLock { $0 }
+        var recoverablePCM: RecoverablePCMSpool.Artifact?
+        var pcmComplete = pcmSnapshot.1
+        if let spool = recoveryContext.spool {
+            do {
+                let expectedComplete = pcmComplete
+                    && pcmSnapshot.0 > 0
+                    && spool.progress.enqueuedThrough == pcmSnapshot.0
+                recoverablePCM = try await spool.finish(complete: expectedComplete)
+                pcmComplete = expectedComplete
+                    && recoverablePCM?.sampleCount == pcmSnapshot.0
+                    && recoverablePCM?.durableThrough == pcmSnapshot.0
+                    && recoverablePCM?.isComplete == true
+            } catch {
+                pcmComplete = false
+                print("[AudioRecorder] recovery PCM finish failed: \(error)")
+            }
+        } else {
+            pcmComplete = false
+        }
+
         var archiveURL: URL?
         if let writer = assetWriter, let input = assetWriterInput {
             if keepArchive {
@@ -726,10 +827,21 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 print("[AudioRecorder] stopRecording: writer.status=\(writer.status.rawValue), error=\(String(describing: writer.error))")
 
                 if writer.status == .completed, received,
-                   pcmSnapshot.2 == 0 {
+                   pcmSnapshot.2 == 0,
+                   outputURL.map(Self.isReadableAudioFile) == true {
                     archiveURL = outputURL
-                } else if let outputURL {
-                    try? FileManager.default.removeItem(at: outputURL)
+                } else {
+                    if let outputURL { try? FileManager.default.removeItem(at: outputURL) }
+                    if pcmComplete, let recoverablePCM, let outputURL {
+                        do {
+                            archiveURL = try Self.exportRecoveryWave(
+                                recoverablePCM,
+                                beside: outputURL
+                            )
+                        } catch {
+                            print("[AudioRecorder] recovery WAVE export failed: \(error)")
+                        }
+                    }
                 }
             } else {
                 writer.cancelWriting()
@@ -738,8 +850,16 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 }
             }
         } else {
-            if let outputURL {
-                try? FileManager.default.removeItem(at: outputURL)
+            if let outputURL { try? FileManager.default.removeItem(at: outputURL) }
+            if keepArchive, pcmComplete, let recoverablePCM, let outputURL {
+                do {
+                    archiveURL = try Self.exportRecoveryWave(
+                        recoverablePCM,
+                        beside: outputURL
+                    )
+                } catch {
+                    print("[AudioRecorder] recovery WAVE export failed: \(error)")
+                }
             }
             print("[AudioRecorder] stopRecording: no writer/input")
         }
@@ -752,7 +872,15 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             archiveURL: archiveURL,
             finalSampleCount: pcmSnapshot.0,
             m4aDroppedSampleCount: pcmSnapshot.2,
-            pcmComplete: pcmSnapshot.1
+            pcmComplete: pcmComplete,
+            recoverySessionID: recoveryContext.sessionID,
+            recoveryLocation: recoveryContext.spool.map {
+                RecoverablePCMSpool.Location(
+                    audioURL: $0.audioURL,
+                    manifestURL: $0.manifestURL
+                )
+            },
+            recoverablePCM: recoverablePCM
         )
     }
 
@@ -1172,8 +1300,18 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let source = Array(UnsafeBufferPointer(start: floatPtr, count: sampleCount))
         let resampled = try pcmResampler.append(source)
         if !resampled.isEmpty {
-            pcmState.withLock { state in
+            let range = pcmState.withLock { state -> Range<Int> in
+                let start = state.trimOffset + state.buffer.count
                 state.buffer.append(contentsOf: resampled)
+                return start..<(start + resampled.count)
+            }
+            do {
+                if let spool = recoveryPCMContext.withLock({ $0.spool }) {
+                    try spool.enqueue(samples: resampled, range: range)
+                }
+            } catch {
+                captureLifecycle.withLock { $0.pcmComplete = false }
+                throw error
             }
         }
     }
@@ -1203,6 +1341,47 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             counter += 1
         }
         return url
+    }
+
+    private static var recoveryDirectory: URL {
+        AppStoragePaths.recovery
+    }
+
+    private static func isReadableAudioFile(_ url: URL) -> Bool {
+        guard FileManager.default.fileExists(atPath: url.path),
+              let file = try? AVAudioFile(forReading: url) else { return false }
+        return file.length > 0
+    }
+
+    /// Materialize a user-facing archive without moving the recovery source.
+    static func exportRecoveryWave(
+        _ artifact: RecoverablePCMSpool.Artifact,
+        beside m4aURL: URL
+    ) throws -> URL {
+        guard artifact.isComplete,
+              artifact.sampleCount > 0,
+              artifact.sampleCount == artifact.durableThrough else {
+            throw RecoverablePCMSpool.SpoolError.invalidManifest
+        }
+        let base = m4aURL.deletingPathExtension()
+        var destination = base.appendingPathExtension("wav")
+        var suffix = 2
+        while FileManager.default.fileExists(atPath: destination.path) {
+            destination = base.deletingLastPathComponent()
+                .appendingPathComponent("\(base.lastPathComponent) \(suffix)")
+                .appendingPathExtension("wav")
+            suffix += 1
+        }
+        do {
+            try FileManager.default.copyItem(at: artifact.audioURL, to: destination)
+            guard isReadableAudioFile(destination) else {
+                throw RecoverablePCMSpool.SpoolError.invalidManifest
+            }
+            return destination
+        } catch {
+            try? FileManager.default.removeItem(at: destination)
+            throw error
+        }
     }
 
     // MARK: - System Preferences
