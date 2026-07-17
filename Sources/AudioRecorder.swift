@@ -633,26 +633,11 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     // MARK: - Stop Recording
 
-    // Compatibility entry points keep this recorder-sealing commit usable by
-    // the existing UI. The awaited AppState closure switches to the result
-    // variants in the dependent commit.
-    func stopRecording() async -> URL? {
-        await stopRecordingWithResult().archiveURL
-    }
-
-    func stopRecordingWithResult() async -> RecordingStopResult {
+    func stopRecording() async -> RecordingStopResult {
         await sealRecording(keepArchive: true)
     }
 
-    func cancelRecording() {
-        Task { [weak self] in
-            guard let self else { return }
-            _ = await self.cancelRecordingWithResult()
-            await MainActor.run { self.state = .ready }
-        }
-    }
-
-    func cancelRecordingWithResult() async -> RecordingStopResult {
+    func cancelRecording() async -> RecordingStopResult {
         await sealRecording(keepArchive: false)
     }
 

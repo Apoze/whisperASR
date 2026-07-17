@@ -212,6 +212,11 @@ private struct LocalTranslationJob: Sendable {
     var source: TranscriptionSegment { input.segment }
 }
 
+private enum LiveSessionClosureOperation {
+    case finish
+    case cancel
+}
+
 @Observable
 class AppState {
     var items: [TranscriptionItem] = []
@@ -277,6 +282,9 @@ class AppState {
     private var liveTranscriptionTask: Task<Void, Never>?
     private var liveModelPreparationTask: Task<Void, Never>?
     private var liveTranslationTask: Task<Void, Never>?
+    @ObservationIgnored private var liveSessionClosureTask: Task<Void, Never>?
+    @ObservationIgnored private var liveSessionGeneration: UInt64 = 0
+    @ObservationIgnored private var liveSessionClosingGeneration: UInt64?
     /// Single-slot queue: each snapshot supersedes the previous one (they are cumulative),
     /// so keeping a queue of old snapshots was pure wasted work.
     private var pendingTranslationSnapshot: [TranscriptionSegment]?
@@ -610,13 +618,48 @@ class AppState {
     /// being silently dropped with the recording.
     @MainActor
     func finishRecording(recorder: AudioRecorder) async {
+        await closeLiveSession(recorder: recorder, operation: .finish)
+    }
+
+    @MainActor
+    private func closeLiveSession(
+        recorder: AudioRecorder,
+        operation: LiveSessionClosureOperation
+    ) async {
+        if let liveSessionClosureTask {
+            await liveSessionClosureTask.value
+            return
+        }
+        guard recorder.state == .recording || recorder.state == .saving else { return }
+        let generation = liveSessionGeneration
+        liveSessionClosingGeneration = generation
+        let task = Task { @MainActor [weak self] in
+            guard let self, self.liveSessionGeneration == generation else { return }
+            switch operation {
+            case .finish:
+                await self.performFinishRecording(recorder: recorder)
+            case .cancel:
+                await self.performCancelRecording(recorder: recorder)
+            }
+        }
+        liveSessionClosureTask = task
+        await task.value
+        if liveSessionClosingGeneration == generation {
+            liveSessionClosureTask = nil
+            liveSessionClosingGeneration = nil
+            recorder.state = .idle
+        }
+    }
+
+    @MainActor
+    private func performFinishRecording(recorder: AudioRecorder) async {
         let captionMode = activeLiveCaptionMode ?? LiveCaptionMode.stored()
         let keepOriginal = activeKeepOriginalTranscript
         let apiTranslationWasPaused = liveTranslationPaused
         liveStatusText = captionMode == .localEnglish
             ? "Finalizing the last English subtitles..." : "Saving recording..."
-        let url = await recorder.stopRecording()
-        defer { recorder.state = .idle }
+        let stopResult = await recorder.stopRecording()
+        let url = stopResult.archiveURL
         if captionMode == .localEnglish, #available(macOS 26.4, *) {
             await stopLocalPreviewRuntime()
         }
@@ -796,7 +839,6 @@ class AppState {
 
     private func awaitLiveTasks() async {
         let transcriptionTask = liveTranscriptionTask
-        liveTranscriptionTask = nil
         // Local-English capture observes recorder.state and performs its tail
         // drain without cancellation. Cancelling here would propagate into
         // Qwen/Whisper/TranslationSession and could lose the final utterance.
@@ -804,14 +846,16 @@ class AppState {
             transcriptionTask?.cancel()
         }
         await transcriptionTask?.value
+        liveTranscriptionTask = nil
 
         let translationTask = liveTranslationTask
         if activeLiveCaptionMode == .localEnglish {
             await translationTask?.value
-        } else {
             liveTranslationTask = nil
+        } else {
             translationTask?.cancel()
             await translationTask?.value
+            liveTranslationTask = nil
         }
     }
 
@@ -1374,6 +1418,9 @@ class AppState {
     /// their existing rolling transcription behavior.
     @MainActor
     func startLiveTranscription(recorder: AudioRecorder) {
+        guard liveSessionClosureTask == nil,
+              recorder.state == .recording else { return }
+        liveSessionGeneration &+= 1
         let captionMode = LiveCaptionMode.stored()
         let defaults = UserDefaults.standard
         let localMode = AppleTranslationMode.stored(in: defaults)
@@ -2101,12 +2148,21 @@ class AppState {
             + 30_000_000_000
 
         do {
-            while recorder.state == .recording, !Task.isCancelled {
+            while !Task.isCancelled {
                 if let failure = localContinuousVoxtralFailure {
                     throw VoxtralHelperError.protocolFailure(failure)
                 }
-                let total = recorder.accumulatedSampleCount
+                let sealedThrough = recorder.sealedFinalSampleCount
+                let total = sealedThrough ?? recorder.accumulatedSampleCount
                 guard total - vadAnalyzedEnd >= 1_600 else {
+                    if sealedThrough != nil {
+                        try await feedContinuousVoxtralSamples(
+                            recorder: recorder,
+                            through: total,
+                            completeBlocksOnly: false
+                        )
+                        break
+                    }
                     try await Task.sleep(for: .milliseconds(40))
                     continue
                 }
@@ -2158,9 +2214,14 @@ class AppState {
                    livePreviewError == nil {
                     livePreviewError = "Voxtral is above the 8 GB memory target; the 10 GB safety limit remains enforced."
                 }
+                if sealedThrough != nil, vadAnalyzedEnd >= total {
+                    break
+                }
             }
 
-            let finalTotal = recorder.accumulatedSampleCount
+            guard let finalTotal = recorder.sealedFinalSampleCount else {
+                throw CancellationError()
+            }
             try await feedContinuousVoxtralSamples(
                 recorder: recorder,
                 through: finalTotal,
@@ -2988,42 +3049,50 @@ class AppState {
         }
     }
 
-    /// Stop the live transcription timer. Called when recording ends.
     @MainActor
-    func stopLiveTranscription() {
+    func cancelRecording(recorder: AudioRecorder) async {
+        await closeLiveSession(recorder: recorder, operation: .cancel)
+    }
+
+    @MainActor
+    private func performCancelRecording(recorder: AudioRecorder) async {
+        liveStatusText = "Cancelling recording..."
+        _ = await recorder.cancelRecording()
+        await cancelLiveTasksAndServices()
+        recorder.discardAccumulatedSamples()
+        resetLiveState()
+    }
+
+    @MainActor
+    private func cancelLiveTasksAndServices() async {
         localPreviewRuntimeEnabled = false
         let previewTask = localPreviewTranslationTask
         previewTask?.cancel()
-        localPreviewTranslationTask = nil
         let speechFinalizeTask = localPreviewSpeechFinalizeTask
         speechFinalizeTask?.cancel()
-        localPreviewSpeechFinalizeTask = nil
         let transcriptionTask = liveTranscriptionTask
         transcriptionTask?.cancel()
-        liveTranscriptionTask = nil
         let translationTask = liveTranslationTask
         translationTask?.cancel()
-        liveTranslationTask = nil
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            if #available(macOS 26.4, *) {
-                // Cancel the volatile lane first, then close the ASR helper so
-                // no task can publish into state after reset.
-                await self.appleSpeechService().cancel()
-                await self.applePreviewTranslationService().cancel()
-                await self.localModelManager.cancelContinuousVoxtral()
-            }
-            await previewTask?.value
-            await speechFinalizeTask?.value
-            await transcriptionTask?.value
-            await translationTask?.value
-            if #available(macOS 26.4, *),
-               let translation = self.appleTranslationRuntime as? AppleTranslationService {
+        if #available(macOS 26.4, *) {
+            // Close providers before awaiting their callers so an in-flight
+            // framework request cannot keep Cancel alive indefinitely.
+            await appleSpeechService().cancel()
+            await applePreviewTranslationService().cancel()
+            if let translation = appleTranslationRuntime as? AppleTranslationService {
                 await translation.cancel()
             }
-            self.service.endRealtimeSession()
-            self.resetLiveState()
+            await localModelManager.cancelContinuousVoxtral()
         }
+        await previewTask?.value
+        await speechFinalizeTask?.value
+        await transcriptionTask?.value
+        await translationTask?.value
+        localPreviewTranslationTask = nil
+        localPreviewSpeechFinalizeTask = nil
+        liveTranscriptionTask = nil
+        liveTranslationTask = nil
+        service.endRealtimeSession()
     }
 
     private func resetLiveState() {

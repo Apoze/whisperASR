@@ -57,9 +57,10 @@ struct RecordingView: View {
                 Spacer()
 
                 Button("Cancel") {
-                    appState.stopLiveTranscription()
-                    recorder.cancelRecording()
-                    dismiss()
+                    Task {
+                        await appState.cancelRecording(recorder: recorder)
+                        dismiss()
+                    }
                 }
 
                 Button("Finish Recording") {
