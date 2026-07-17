@@ -2095,7 +2095,6 @@ class AppState {
         fifo: LocalEndpointFIFO
     ) async -> Error? {
         var vadAnalyzedEnd = 0
-        var sustainedBacklogChecks = 0
         let catchUpDeadline = DispatchTime.now().uptimeNanoseconds
             + 30_000_000_000
 
@@ -2142,7 +2141,6 @@ class AppState {
                 if let catchUpThrough = localContinuousVoxtralCatchUpThrough {
                     if (progress.acknowledgedThrough ?? 0) >= catchUpThrough {
                         localContinuousVoxtralCatchUpThrough = nil
-                        sustainedBacklogChecks = 0
                     } else if DispatchTime.now().uptimeNanoseconds >= catchUpDeadline {
                         throw VoxtralHelperError.serverUnavailable(
                             "Voxtral could not catch up after its one automatic restart. Audio was retained."
@@ -2157,18 +2155,6 @@ class AppState {
                 if combinedResident > 8 * 1_024 * 1_024 * 1_024,
                    livePreviewError == nil {
                     livePreviewError = "Voxtral is above the 8 GB memory target; the 10 GB safety limit remains enforced."
-                }
-                if localContinuousVoxtralCatchUpThrough != nil {
-                    sustainedBacklogChecks = 0
-                } else if progress.backlogSamples > VoxtralClausePlanner.sampleRate {
-                    sustainedBacklogChecks += 1
-                } else {
-                    sustainedBacklogChecks = 0
-                }
-                if sustainedBacklogChecks >= 5 {
-                    throw VoxtralHelperError.serverUnavailable(
-                        "Voxtral helper backlog stayed above one second. Audio was retained."
-                    )
                 }
             }
 

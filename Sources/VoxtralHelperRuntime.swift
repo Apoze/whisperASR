@@ -179,8 +179,8 @@ struct VoxtralHelperFeedCursor: Equatable, Sendable {
 
     mutating func acknowledgeNext() -> Int? {
         guard !pendingAcknowledgements.isEmpty else { return nil }
-        // ponytail: this queue is bounded by the one-second backlog guard; use
-        // an indexed deque only if profiling ever shows removeFirst as relevant.
+        // Appends wait for their FIFO barrier, so this queue normally contains
+        // a single entry. Use a deque only if concurrent producers are added.
         let end = pendingAcknowledgements.removeFirst()
         acknowledgedThrough = end
         return end
@@ -436,9 +436,31 @@ actor VoxtralHelperRuntime {
             // session.update is a FIFO barrier: session.updated is emitted only
             // after the preceding audio has been fed and decoded.
             try await send.value
+            try await waitUntilAcknowledged(through: range.upperBound)
         } catch {
             failSession(error)
             throw error
+        }
+    }
+
+    /// Keep at most one audio block in flight. Capture remains independent in
+    /// AudioRecorder, while transient MLX scheduling delays can recover without
+    /// filling the WebSocket queue or triggering a destructive stream restart.
+    private func waitUntilAcknowledged(through target: Int) async throws {
+        let deadline = DispatchTime.now().uptimeNanoseconds + 15_000_000_000
+        while (feedCursor.acknowledgedThrough ?? Int.min) < target {
+            try Task.checkCancellation()
+            guard status == .streaming else {
+                throw VoxtralHelperError.invalidState(
+                    "Voxtral stopped before acknowledging audio through sample \(target)."
+                )
+            }
+            guard DispatchTime.now().uptimeNanoseconds < deadline else {
+                throw VoxtralHelperError.serverUnavailable(
+                    "Voxtral stopped processing audio for 15 seconds. Audio was retained."
+                )
+            }
+            try await Task.sleep(for: .milliseconds(10))
         }
     }
 
