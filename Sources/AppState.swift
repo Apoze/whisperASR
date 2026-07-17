@@ -1847,10 +1847,10 @@ class AppState {
         sourceLocale: String
     ) async {
         let fifo = LocalEndpointFIFO()
-        let markerCalibration = VoxtralMarkerCalibration.fromEnvironment(
-            ProcessInfo.processInfo.environment
-        )
-        localVoxtralMarkerCalibration = markerCalibration
+        // Markers stay shadow-only until an audited dataset proves this exact
+        // runtime/model/delay tuple. Environment values cannot grant authority.
+        let authoritativeMarkerCalibration: VoxtralMarkerCalibration? = nil
+        localVoxtralMarkerCalibration = authoritativeMarkerCalibration
         let diarizationReady: Bool
         if LocalDiarizationShadowConfiguration.isEnabled {
             diarizationReady = await localDiarizationShadow.status().isReady
@@ -1859,12 +1859,10 @@ class AppState {
         }
         localDiarizationAssistActive = LocalDiarizationShadowConfiguration.canInfluenceBoundaries
             && diarizationReady
-            && markerCalibration?.permitsSpeakerBoundaries == true
+            && authoritativeMarkerCalibration != nil
         localVoxtralSpeakerMarkersAreAuthoritative = localDiarizationAssistActive
         localVoxtralClausePlanner = VoxtralClausePlanner(
-            // Shadow mode must remain byte-for-byte and timing-equivalent to
-            // the baseline. Calibration affects boundaries only in assist.
-            markerCalibration: localDiarizationAssistActive ? markerCalibration : nil
+            markerCalibration: authoritativeMarkerCalibration
         )
         localContinuousVoxtralAcknowledgedSampleCount = 0
         localContinuousVoxtralTranscript = ""
@@ -1975,6 +1973,7 @@ class AppState {
                 reason: "voxtralHelperRestart",
                 observedThrough: localContinuousVoxtralAcknowledgedSampleCount
             )
+            localVoxtralClausePlanner.discardSpeakerEvidence()
             localPreviewSentSampleCount = replayStart
             localContinuousVoxtralAcknowledgedSampleCount = replayStart
             localContinuousVoxtralTranscript = ""
@@ -2128,7 +2127,7 @@ class AppState {
             || localVoxtralSpeakerMarkersAreAuthoritative
         localDiarizationAssistActive = false
         localVoxtralSpeakerMarkersAreAuthoritative = false
-        localVoxtralClausePlanner.discardSpeakerEvidence()
+        localVoxtralClausePlanner.discardSpeakerTransitions()
         guard wasActive else { return }
         await localDiarizationJournal.appendAssistDisabled(
             reason: reason,
@@ -2287,8 +2286,6 @@ class AppState {
                     calibratedEndSample: calibratedEnd
                 )
             }
-            guard localDiarizationAssistActive,
-                  localVoxtralSpeakerMarkersAreAuthoritative else { return false }
             if let boundary = localVoxtralClausePlanner.observe(
                 fedThrough: localContinuousVoxtralAcknowledgedSampleCount,
                 emissionMarkers: [marker]
@@ -2461,8 +2458,11 @@ class AppState {
             )
         )
         if LocalDiarizationShadowConfiguration.isEnabled {
+            let journalKind = boundary.degradation.map {
+                "\(boundary.kind.rawValue):\($0.rawValue)"
+            } ?? boundary.kind.rawValue
             await localDiarizationJournal.appendBoundary(
-                kind: boundary.kind.rawValue,
+                kind: journalKind,
                 detectedAt: boundary.endpointDetectedAt,
                 stagedAt: boundary.stagedAt
             )

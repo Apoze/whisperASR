@@ -72,6 +72,10 @@ struct VoxtralClauseBoundary: Equatable, Sendable {
         case markerTimedOut(LocalSpeakerTransition)
     }
 
+    enum Degradation: String, Equatable, Sendable {
+        case degradedForcedBoundary
+    }
+
     let generation: Int
     let kind: Kind
     let sourceText: String
@@ -80,6 +84,7 @@ struct VoxtralClauseBoundary: Equatable, Sendable {
     let endpointDetectedAt: Int
     let stagedAt: Int
     let speakerDecision: SpeakerDecision?
+    let degradation: Degradation?
 }
 
 /// Corpus-measured correction for Voxtral's 80 ms emission-group proxy.
@@ -95,41 +100,6 @@ struct VoxtralMarkerCalibration: Equatable, Sendable {
         self.biasSamples = Int((Double(biasSamples) / Double(Self.frameSamples)).rounded())
             * Self.frameSamples
         self.p95AbsoluteErrorSamples = p95AbsoluteErrorSamples
-    }
-
-    static func fromEnvironment(_ environment: [String: String]) -> Self? {
-        guard let rawBias = environment["WHISPERASR_VOXTRAL_MARKER_BIAS_SAMPLES"],
-              let rawP95 = environment["WHISPERASR_VOXTRAL_MARKER_P95_SAMPLES"],
-              let bias = Int(rawBias),
-              let p95 = Int(rawP95) else { return nil }
-        return Self(biasSamples: bias, p95AbsoluteErrorSamples: p95)
-    }
-
-    /// Calibrates the proxy against at least twenty manually annotated word
-    /// endings. Nearest-rank p95 keeps the activation gate reproducible.
-    static func measured(
-        proxyAndTrueEndSamples: [(proxy: Int, truth: Int)]
-    ) -> Self? {
-        guard proxyAndTrueEndSamples.count >= 20 else { return nil }
-        let offsets = proxyAndTrueEndSamples
-            .map { $0.truth - $0.proxy }
-            .sorted()
-        let middle = offsets.count / 2
-        let median = offsets.count.isMultiple(of: 2)
-            ? Int((Double(offsets[middle - 1]) + Double(offsets[middle])) / 2)
-            : offsets[middle]
-        let roundedBias = Self(
-            biasSamples: median,
-            p95AbsoluteErrorSamples: 0
-        ).biasSamples
-        let errors = proxyAndTrueEndSamples
-            .map { abs(($0.proxy + roundedBias) - $0.truth) }
-            .sorted()
-        let rank = max(0, Int(ceil(Double(errors.count) * 0.95)) - 1)
-        return Self(
-            biasSamples: roundedBias,
-            p95AbsoluteErrorSamples: errors[rank]
-        )
     }
 
     var permitsSpeakerBoundaries: Bool {
@@ -149,7 +119,9 @@ struct VoxtralClausePlanner: Sendable {
     static let vadSilence = sampleRate * 350 / 1_000
     static let stabilityGuard = sampleRate * 1_120 / 1_000
     static let softClauseTarget = sampleRate * 5
+    /// Ten stable seconds is a checkpoint, not an arbitrary text cut.
     static let hardClauseTarget = sampleRate * 10
+    static let hardClauseLimit = hardClauseTarget + stabilityGuard
     static let speakerMarkerEarlyTolerance = sampleRate * 160 / 1_000
     /// A marker candidate remains useful for 1.5 s. Speaker evidence may
     /// advance a boundary, but it never delays punctuation, pause, or timeout.
@@ -197,6 +169,13 @@ struct VoxtralClausePlanner: Sendable {
         emissionMarkers.removeAll(keepingCapacity: false)
         speakerTransitions.removeAll(keepingCapacity: false)
         speakerEvidenceDiscarded = true
+        pendingSpeakerDecision = nil
+    }
+
+    /// A diarizer failure invalidates only queued speaker changes. Validated
+    /// Voxtral group markers may still protect forced text/PCM boundaries.
+    mutating func discardSpeakerTransitions() {
+        speakerTransitions.removeAll(keepingCapacity: false)
         pendingSpeakerDecision = nil
     }
 
@@ -273,7 +252,7 @@ struct VoxtralClausePlanner: Sendable {
             && lastSourceUpdateThrough.map {
                 fedThrough - $0 >= Self.stabilityGuard
             } == true
-        let forcedReady = stableDuration >= Self.hardClauseTarget
+        let forcedCheckpointReached = stableDuration >= Self.hardClauseTarget
 
         let fallbackDecision: VoxtralClauseBoundary.SpeakerDecision?
         if let unresolvedTransition {
@@ -311,14 +290,33 @@ struct VoxtralClausePlanner: Sendable {
             )
         }
 
-        guard forcedReady else { return nil }
+        guard forcedCheckpointReached else { return nil }
+        if let markerCut = forcedMarkerCut(
+            checkpoint: start + Self.hardClauseTarget,
+            limit: start + Self.hardClauseLimit,
+            stableThrough: stableThrough
+        ) {
+            return stage(
+                kind: .forced,
+                text: markerCut.text,
+                consumedCharacters: markerCut.consumedCharacters,
+                through: markerCut.sample,
+                detectedAt: fedThrough,
+                speakerDecision: fallbackDecision
+            )
+        }
+
+        guard stableDuration >= Self.hardClauseLimit else { return nil }
         return stageAll(
             kind: .forced,
-            // Voxtral has no token timestamps. Keep all stable PCM associated
-            // with the append-only text instead of truncating one side only.
+            // Without a trustworthy marker there is no safe text offset.
+            // Preserve the old lossless fallback by associating all staged
+            // text with all currently stable PCM (at most one transport block
+            // beyond the checkpoint in the production loop).
             through: stableThrough,
-            detectedAt: start + Self.hardClauseTarget,
-            speakerDecision: fallbackDecision
+            detectedAt: fedThrough,
+            speakerDecision: fallbackDecision,
+            degradation: .degradedForcedBoundary
         )
     }
 
@@ -453,7 +451,8 @@ struct VoxtralClausePlanner: Sendable {
         kind: VoxtralClauseBoundary.Kind,
         through sample: Int,
         detectedAt: Int,
-        speakerDecision: VoxtralClauseBoundary.SpeakerDecision? = nil
+        speakerDecision: VoxtralClauseBoundary.SpeakerDecision? = nil,
+        degradation: VoxtralClauseBoundary.Degradation? = nil
     ) -> VoxtralClauseBoundary? {
         stage(
             kind: kind,
@@ -461,7 +460,8 @@ struct VoxtralClausePlanner: Sendable {
             consumedCharacters: pendingSourceText.count,
             through: sample,
             detectedAt: detectedAt,
-            speakerDecision: speakerDecision
+            speakerDecision: speakerDecision,
+            degradation: degradation
         )
     }
 
@@ -471,7 +471,8 @@ struct VoxtralClausePlanner: Sendable {
         consumedCharacters: Int,
         through sample: Int,
         detectedAt: Int,
-        speakerDecision: VoxtralClauseBoundary.SpeakerDecision? = nil
+        speakerDecision: VoxtralClauseBoundary.SpeakerDecision? = nil,
+        degradation: VoxtralClauseBoundary.Degradation? = nil
     ) -> VoxtralClauseBoundary? {
         guard Self.isMeaningful(text),
               consumedCharacters > 0,
@@ -485,7 +486,8 @@ struct VoxtralClausePlanner: Sendable {
             sampleRange: sourceStagedThrough..<sample,
             endpointDetectedAt: detectedAt,
             stagedAt: fedThrough,
-            speakerDecision: speakerDecision
+            speakerDecision: speakerDecision,
+            degradation: degradation
         )
 
         let consumedRawText = String(pendingSourceText.prefix(consumedCharacters))
@@ -521,11 +523,51 @@ struct VoxtralClausePlanner: Sendable {
 
     private mutating func pruneSpeakerEvidence() {
         emissionMarkers.removeAll {
-            $0.groupTextStartUTF8 <= sourceStagedUTF8Count
+            // Keep the marker at the new text origin: its acoustic end anchors
+            // the first un-staged group for the next marker pair.
+            $0.groupTextStartUTF8 < sourceStagedUTF8Count
                 || (markerCalibration?.calibratedEndSample(for: $0)
                     ?? $0.proxyEndSample) <= sourceStagedThrough
         }
         speakerTransitions.removeAll { $0.changeSample <= sourceStagedThrough }
+    }
+
+    /// Marker i is the acoustic end of group i; marker i+1 is the UTF-8 start
+    /// of the following group. Both are required for a lossless text/PCM cut.
+    private func forcedMarkerCut(
+        checkpoint: Int,
+        limit: Int,
+        stableThrough: Int
+    ) -> (text: String, consumedCharacters: Int, sample: Int)? {
+        guard let markerCalibration,
+              markerCalibration.permitsSpeakerBoundaries,
+              emissionMarkers.count >= 2 else { return nil }
+
+        for index in 0..<(emissionMarkers.count - 1) {
+            let current = emissionMarkers[index]
+            let next = emissionMarkers[index + 1]
+            let sample = markerCalibration.calibratedEndSample(for: current)
+            guard sample >= checkpoint,
+                  sample <= limit,
+                  sample <= stableThrough,
+                  next.groupTextStartUTF8 > current.groupTextStartUTF8,
+                  next.groupTextStartUTF8 > sourceStagedUTF8Count else { continue }
+
+            let localUTF8Offset = next.groupTextStartUTF8 - sourceStagedUTF8Count
+            guard localUTF8Offset <= pendingSourceText.utf8.count else { continue }
+            let utf8Index = pendingSourceText.utf8.index(
+                pendingSourceText.utf8.startIndex,
+                offsetBy: localUTF8Offset
+            )
+            guard let textIndex = String.Index(utf8Index, within: pendingSourceText) else {
+                continue
+            }
+            let rawPrefix = String(pendingSourceText[..<textIndex])
+            let text = normalized(rawPrefix)
+            guard Self.isMeaningful(text) else { continue }
+            return (text, rawPrefix.count, sample)
+        }
+        return nil
     }
 
     private mutating func expireSpeakerTransitionIfNeeded() -> LocalSpeakerTransition? {

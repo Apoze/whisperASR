@@ -136,18 +136,6 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         XCTAssertEqual(sampleCount, 40 * LocalEndpointPlanner.sampleRate)
     }
 
-    private struct MarkerCalibrationAnnotation: Codable {
-        let proxyEndSample: Int
-        let trueEndSample: Int
-    }
-
-    private struct MarkerCalibrationReport: Codable {
-        let annotationCount: Int
-        let biasSamples: Int
-        let p95AbsoluteErrorSamples: Int
-        let permitsSpeakerBoundaries: Bool
-    }
-
     private struct DiarizationReplayReport: Codable {
         let sampleCount: Int
         let blockSamples: Int
@@ -184,6 +172,18 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         let residentBytes: UInt64
     }
 
+    private struct VoxtralEmissionMarkerReport: Codable {
+        let generatedIndex: Int
+        let decoderPosition: Int
+        let delayFrames: Int
+        let groupTextStartUTF8: Int
+        let proxyEndSample: Int
+        let isUsable: Bool
+        let arrivalOrder: Int
+        let arrivalMilliseconds: Double
+        let transcriptUTF8CountAtArrival: Int
+    }
+
     private struct VoxtralContinuousRun: Codable {
         let replayCount: Int
         let blockMilliseconds: Int
@@ -205,6 +205,9 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         let appendCount: Int
         let deltaCount: Int
         let acknowledgementCount: Int
+        let emissionMarkerCount: Int
+        let usableEmissionMarkerCount: Int
+        let emissionMarkers: [VoxtralEmissionMarkerReport]
         let maxBacklogMilliseconds: Double
         let endingBacklogMilliseconds: Double
         let backlogAtReplayEndMilliseconds: [Double]
@@ -217,6 +220,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         let helperRSSBytes: UInt64
         let combinedRSSBytes: UInt64
         let completedEventReceived: Bool
+        let deltaTranscriptMatchesFinal: Bool
         let transcript: String
     }
 
@@ -226,6 +230,8 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         let lastDeltaMilliseconds: Double?
         let deltaCount: Int
         let acknowledgementCount: Int
+        let emissionMarkers: [VoxtralEmissionMarkerReport]
+        let accumulatedTranscript: String
         let completedTranscript: String?
     }
 
@@ -2141,13 +2147,26 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
             var accumulatedText = ""
             var deltaCount = 0
             var acknowledgementCount = 0
+            var emissionMarkers: [VoxtralEmissionMarkerReport] = []
             var completedTranscript: String?
             for await event in events {
                 switch event {
                 case .acknowledged:
                     acknowledgementCount += 1
-                case .emissionMarker:
-                    break
+                case .emissionMarker(let marker):
+                    emissionMarkers.append(VoxtralEmissionMarkerReport(
+                        generatedIndex: marker.generatedIndex,
+                        decoderPosition: marker.decoderPosition,
+                        delayFrames: marker.delayFrames,
+                        groupTextStartUTF8: marker.groupTextStartUTF8,
+                        proxyEndSample: marker.proxyEndSample,
+                        isUsable: marker.isUsable,
+                        arrivalOrder: emissionMarkers.count,
+                        arrivalMilliseconds: Double(
+                            DispatchTime.now().uptimeNanoseconds - started
+                        ) / 1_000_000,
+                        transcriptUTF8CountAtArrival: accumulatedText.utf8.count
+                    ))
                 case .delta(let text, _):
                     deltaCount += 1
                     accumulatedText.append(text)
@@ -2176,6 +2195,8 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
                 lastDeltaMilliseconds: lastDeltaMilliseconds,
                 deltaCount: deltaCount,
                 acknowledgementCount: acknowledgementCount,
+                emissionMarkers: emissionMarkers,
+                accumulatedTranscript: accumulatedText,
                 completedTranscript: completedTranscript
             )
         }
@@ -2275,6 +2296,9 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
             appendCount: appendMilliseconds.count,
             deltaCount: summary.deltaCount,
             acknowledgementCount: summary.acknowledgementCount,
+            emissionMarkerCount: summary.emissionMarkers.count,
+            usableEmissionMarkerCount: summary.emissionMarkers.filter(\.isUsable).count,
+            emissionMarkers: summary.emissionMarkers,
             maxBacklogMilliseconds: Double(maxBacklogNanoseconds) / 1_000_000,
             endingBacklogMilliseconds: Double(endingBacklogNanoseconds) / 1_000_000,
             backlogAtReplayEndMilliseconds: backlogAtReplayEndMilliseconds,
@@ -2287,6 +2311,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
             helperRSSBytes: maxHelperRSSBytes,
             combinedRSSBytes: maxCombinedRSSBytes,
             completedEventReceived: summary.completedTranscript == transcript,
+            deltaTranscriptMatchesFinal: summary.accumulatedTranscript == transcript,
             transcript: transcript
         )
     }
@@ -2306,6 +2331,34 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         XCTAssertLessThanOrEqual(report.maxHelperBacklogSamples, 16_000)
         XCTAssertGreaterThan(report.acknowledgementCount, 0)
         XCTAssertGreaterThan(report.deltaCount, 0)
+        XCTAssertEqual(report.emissionMarkerCount, report.emissionMarkers.count)
+        let usableMarkers = report.emissionMarkers.filter(\.isUsable)
+        XCTAssertEqual(report.usableEmissionMarkerCount, usableMarkers.count)
+        XCTAssertGreaterThan(usableMarkers.count, 0)
+        XCTAssertEqual(
+            report.emissionMarkers.map(\.arrivalOrder),
+            Array(report.emissionMarkers.indices)
+        )
+        for marker in usableMarkers {
+            XCTAssertEqual(
+                marker.decoderPosition,
+                marker.generatedIndex + marker.delayFrames + 33
+            )
+            XCTAssertGreaterThanOrEqual(marker.groupTextStartUTF8, 0)
+            XCTAssertLessThanOrEqual(marker.groupTextStartUTF8, report.transcript.utf8.count)
+            XCTAssertGreaterThanOrEqual(marker.proxyEndSample, 0)
+            XCTAssertLessThanOrEqual(marker.proxyEndSample, report.totalSamples)
+        }
+        for (previous, current) in zip(usableMarkers, usableMarkers.dropFirst()) {
+            XCTAssertGreaterThan(current.generatedIndex, previous.generatedIndex)
+            XCTAssertGreaterThan(current.decoderPosition, previous.decoderPosition)
+            XCTAssertGreaterThan(current.proxyEndSample, previous.proxyEndSample)
+            XCTAssertGreaterThanOrEqual(
+                current.groupTextStartUTF8,
+                previous.groupTextStartUTF8
+            )
+            XCTAssertGreaterThanOrEqual(current.arrivalMilliseconds, previous.arrivalMilliseconds)
+        }
         XCTAssertNotNil(report.firstDeltaMilliseconds)
         XCTAssertNotNil(report.firstEligiblePrefixMilliseconds)
         if let firstAfterAnnotatedSpeech = report.firstDeltaAfterAnnotatedSpeechStartMilliseconds {
@@ -2313,6 +2366,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
             XCTAssertLessThanOrEqual(firstAfterAnnotatedSpeech, 2_500)
         }
         XCTAssertTrue(report.completedEventReceived)
+        XCTAssertTrue(report.deltaTranscriptMatchesFinal)
         XCTAssertFalse(report.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         XCTAssertLessThan(report.combinedRSSBytes, 10 * 1_024 * 1_024 * 1_024)
         if let first = report.backlogAtReplayEndMilliseconds.first,
@@ -2323,29 +2377,14 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
 
     func testVoxtralMarkerCalibrationWhenOptedIn() throws {
         guard let path = ProcessInfo.processInfo.environment[
-            "WHISPERASR_VOXTRAL_MARKER_CALIBRATION_ANNOTATIONS"
+            "WHISPERASR_VOXTRAL_MARKER_CALIBRATION_PROOF"
         ], !path.isEmpty else {
             throw XCTSkip(
-                "Set WHISPERASR_VOXTRAL_MARKER_CALIBRATION_ANNOTATIONS to a JSON file with at least twenty manually annotated lexical ends."
+                "Set WHISPERASR_VOXTRAL_MARKER_CALIBRATION_PROOF to a human-reviewed JSON dataset with independent 20-point calibration and validation splits."
             )
         }
-        let annotations = try JSONDecoder().decode(
-            [MarkerCalibrationAnnotation].self,
-            from: Data(contentsOf: URL(fileURLWithPath: path))
-        )
-        guard let calibration = VoxtralMarkerCalibration.measured(
-            proxyAndTrueEndSamples: annotations.map {
-                (proxy: $0.proxyEndSample, truth: $0.trueEndSample)
-            }
-        ) else {
-            XCTFail("At least twenty marker annotations are required.")
-            return
-        }
-        let report = MarkerCalibrationReport(
-            annotationCount: annotations.count,
-            biasSamples: calibration.biasSamples,
-            p95AbsoluteErrorSamples: calibration.p95AbsoluteErrorSamples,
-            permitsSpeakerBoundaries: calibration.permitsSpeakerBoundaries
+        let report = try VoxtralMarkerCalibrationProof.evaluate(
+            data: Data(contentsOf: URL(fileURLWithPath: path))
         )
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent(".build/benchmarks", isDirectory: true)
@@ -2355,13 +2394,10 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(report).write(to: output, options: .atomic)
 
-        print("Marker calibration: bias=\(calibration.biasSamples), p95=\(calibration.p95AbsoluteErrorSamples)")
-        print("WHISPERASR_VOXTRAL_MARKER_BIAS_SAMPLES=\(calibration.biasSamples)")
-        print("WHISPERASR_VOXTRAL_MARKER_P95_SAMPLES=\(calibration.p95AbsoluteErrorSamples)")
-        XCTAssertLessThanOrEqual(
-            calibration.p95AbsoluteErrorSamples,
-            VoxtralMarkerCalibration.maximumP95ErrorSamples,
-            "Speaker boundaries must remain shadow-only when marker p95 exceeds 240 ms."
+        print("Marker proof: bias=\(report.biasSamples), validation p95=\(report.validationP95AbsoluteErrorSamples), drift=\(report.medianOffsetDriftSamples), dataset=\(report.datasetSHA256)")
+        XCTAssertTrue(
+            report.permitsBoundaries,
+            "Speaker boundaries must remain shadow-only: \(report.violations.joined(separator: ", "))."
         )
     }
 

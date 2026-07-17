@@ -190,7 +190,7 @@ final class VoxtralClausePlannerTests: XCTestCase {
         }
     }
 
-    func testHardTargetStagesASettledContinuationAfterTenStableSeconds() {
+    func testHardTargetWaitsForTheAbsoluteLimitWithoutAValidatedMarkerPair() {
         var planner = VoxtralClausePlanner()
         let softTarget = VoxtralClausePlanner.softClauseTarget
         let softFeed = softTarget + VoxtralClausePlanner.stabilityGuard
@@ -205,23 +205,34 @@ final class VoxtralClausePlannerTests: XCTestCase {
             speech: [SpeechSampleRange(start: softTarget, end: softFeed)]
         ))
 
-        let hardFeed = VoxtralClausePlanner.hardClauseTarget
+        let checkpointFeed = VoxtralClausePlanner.hardClauseTarget
+            + VoxtralClausePlanner.stabilityGuard
+        XCTAssertNil(planner.observe(
+            fedThrough: checkpointFeed,
+            speech: [SpeechSampleRange(start: softFeed, end: checkpointFeed)]
+        ))
+
+        let limitFeed = VoxtralClausePlanner.hardClauseLimit
             + VoxtralClausePlanner.stabilityGuard
         let boundary = planner.observe(
-            fedThrough: hardFeed,
-            speech: [SpeechSampleRange(start: softFeed, end: hardFeed)]
+            fedThrough: limitFeed,
+            speech: [SpeechSampleRange(start: checkpointFeed, end: limitFeed)]
         )
 
         XCTAssertEqual(boundary?.kind, .forced)
+        XCTAssertEqual(boundary?.degradation, .degradedForcedBoundary)
         XCTAssertEqual(boundary?.sourceText, "まだ続いて")
-        XCTAssertEqual(boundary?.endpointDetectedAt, VoxtralClausePlanner.hardClauseTarget)
-        XCTAssertEqual(boundary?.sampleRange, 0..<VoxtralClausePlanner.hardClauseTarget)
+        XCTAssertEqual(boundary?.endpointDetectedAt, limitFeed)
+        XCTAssertEqual(
+            boundary?.sampleRange,
+            0..<(limitFeed - VoxtralClausePlanner.stabilityGuard)
+        )
     }
 
-    func testHardTargetKeepsStableOvershootWithTheTextItConsumes() {
+    func testDegradedHardLimitKeepsStableOvershootWithTheTextItConsumes() {
         var planner = VoxtralClausePlanner()
         let block = VoxtralClausePlanner.sampleRate / 10
-        let beforeHardFeed = VoxtralClausePlanner.hardClauseTarget
+        let beforeHardFeed = VoxtralClausePlanner.hardClauseLimit
             + VoxtralClausePlanner.stabilityGuard - 1
 
         XCTAssertNil(planner.observe(
@@ -231,7 +242,7 @@ final class VoxtralClausePlannerTests: XCTestCase {
             speech: [SpeechSampleRange(start: 0, end: beforeHardFeed)]
         ))
 
-        let overshootFeed = VoxtralClausePlanner.hardClauseTarget
+        let overshootFeed = VoxtralClausePlanner.hardClauseLimit
             + VoxtralClausePlanner.stabilityGuard + block
         let boundary = planner.observe(
             delta: "後半",
@@ -242,6 +253,7 @@ final class VoxtralClausePlannerTests: XCTestCase {
         let stableThrough = overshootFeed - VoxtralClausePlanner.stabilityGuard
 
         XCTAssertEqual(boundary?.kind, .forced)
+        XCTAssertEqual(boundary?.degradation, .degradedForcedBoundary)
         XCTAssertEqual(boundary?.sourceText, "前半後半")
         XCTAssertEqual(boundary?.sampleRange, 0..<stableThrough)
 
@@ -255,9 +267,9 @@ final class VoxtralClausePlannerTests: XCTestCase {
         )
     }
 
-    func testHardTargetStagesEvenWhenTheSourceJustChanged() {
+    func testDegradedHardLimitStagesEvenWhenTheSourceJustChanged() {
         var planner = VoxtralClausePlanner()
-        let hardFeed = VoxtralClausePlanner.hardClauseTarget
+        let hardFeed = VoxtralClausePlanner.hardClauseLimit
             + VoxtralClausePlanner.stabilityGuard
 
         let boundary = planner.observe(
@@ -268,12 +280,120 @@ final class VoxtralClausePlannerTests: XCTestCase {
         )
 
         XCTAssertEqual(boundary?.kind, .forced)
+        XCTAssertEqual(boundary?.degradation, .degradedForcedBoundary)
         XCTAssertEqual(boundary?.sourceText, "句読点なしで話し続けて")
-        XCTAssertEqual(boundary?.sampleRange, 0..<VoxtralClausePlanner.hardClauseTarget)
+        XCTAssertEqual(
+            boundary?.sampleRange,
+            0..<(hardFeed - VoxtralClausePlanner.stabilityGuard)
+        )
         XCTAssertEqual(
             boundary?.endpointDetectedAt,
-            VoxtralClausePlanner.hardClauseTarget
+            hardFeed
         )
+    }
+
+    func testValidatedMarkerPairCutsTextAndPCMAfterTheSameVoxtralGroup() {
+        var planner = speakerPlanner()
+        let firstGroup = "新鮮な魚"
+        let nextGroup = "について話します"
+        let groupEnd = VoxtralClausePlanner.hardClauseTarget
+            + VoxtralClausePlanner.sampleRate / 5
+        let fedThrough = groupEnd + VoxtralClausePlanner.stabilityGuard
+
+        let boundary = planner.observe(
+            delta: firstGroup + nextGroup,
+            fedThrough: fedThrough,
+            emissionMarkers: [
+                emissionMarker(groupStartUTF8: 0, proxyEndSample: groupEnd),
+                emissionMarker(
+                    groupStartUTF8: firstGroup.utf8.count,
+                    proxyEndSample: groupEnd + VoxtralClausePlanner.sampleRate
+                ),
+            ]
+        )
+
+        XCTAssertEqual(boundary?.kind, .forced)
+        XCTAssertNil(boundary?.degradation)
+        XCTAssertEqual(boundary?.sourceText, firstGroup)
+        XCTAssertEqual(boundary?.sampleRange, 0..<groupEnd)
+        XCTAssertEqual(planner.pendingSourceText, nextGroup)
+        XCTAssertEqual(boundary?.sourceCharacterRange, 0..<firstGroup.count)
+    }
+
+    func testCheckpointWaitsForFollowingMarkerThenUsesTheCompletePair() {
+        var planner = speakerPlanner()
+        let firstGroup = "一番好きな食べ物"
+        let nextGroup = "はお米です"
+        let groupEnd = VoxtralClausePlanner.hardClauseTarget
+            + VoxtralClausePlanner.sampleRate / 4
+        let checkpointFeed = VoxtralClausePlanner.hardClauseTarget
+            + VoxtralClausePlanner.stabilityGuard
+
+        XCTAssertNil(planner.observe(
+            delta: firstGroup + nextGroup,
+            fedThrough: checkpointFeed,
+            emissionMarkers: [
+                emissionMarker(groupStartUTF8: 0, proxyEndSample: groupEnd),
+            ]
+        ))
+
+        let boundary = planner.observe(
+            fedThrough: groupEnd + VoxtralClausePlanner.stabilityGuard,
+            emissionMarkers: [
+                emissionMarker(
+                    groupStartUTF8: firstGroup.utf8.count,
+                    proxyEndSample: groupEnd + VoxtralClausePlanner.sampleRate
+                ),
+            ]
+        )
+
+        XCTAssertEqual(boundary?.sourceText, firstGroup)
+        XCTAssertEqual(boundary?.sampleRange.upperBound, groupEnd)
+        XCTAssertEqual(planner.pendingSourceText, nextGroup)
+    }
+
+    func testFollowingMarkerIsRetainedAsTheNextClauseAnchor() {
+        var planner = speakerPlanner()
+        let first = "新鮮な魚"
+        let second = "もんね"
+        let tail = "次の話"
+        let firstEnd = VoxtralClausePlanner.hardClauseTarget
+        let secondEnd = firstEnd + VoxtralClausePlanner.hardClauseTarget
+
+        let firstBoundary = planner.observe(
+            delta: first + second + tail,
+            fedThrough: firstEnd + VoxtralClausePlanner.stabilityGuard,
+            emissionMarkers: [
+                emissionMarker(groupStartUTF8: 0, proxyEndSample: firstEnd),
+                emissionMarker(
+                    groupStartUTF8: first.utf8.count,
+                    proxyEndSample: secondEnd
+                ),
+            ]
+        )!
+
+        let secondBoundary = planner.observe(
+            fedThrough: secondEnd + VoxtralClausePlanner.stabilityGuard,
+            emissionMarkers: [
+                emissionMarker(
+                    groupStartUTF8: (first + second).utf8.count,
+                    proxyEndSample: secondEnd + VoxtralClausePlanner.sampleRate
+                ),
+            ]
+        )!
+        let final = planner.finish(
+            fedThrough: secondEnd + VoxtralClausePlanner.sampleRate * 2
+        )!
+
+        XCTAssertEqual(firstBoundary.sourceText, first)
+        XCTAssertEqual(secondBoundary.sourceText, second)
+        XCTAssertEqual(final.sourceText, tail)
+        XCTAssertEqual(
+            [firstBoundary.sourceText, secondBoundary.sourceText, final.sourceText].joined(),
+            first + second + tail
+        )
+        XCTAssertEqual(firstBoundary.sampleRange.upperBound, secondBoundary.sampleRange.lowerBound)
+        XCTAssertEqual(secondBoundary.sampleRange.upperBound, final.sampleRange.lowerBound)
     }
 
     func testStagingAndEnglishValidationHaveIndependentFIFOCursors() {
@@ -792,41 +912,6 @@ final class VoxtralClausePlannerTests: XCTestCase {
         XCTAssertEqual(rejected.biasSamples, -1_280)
         XCTAssertTrue(accepted.permitsSpeakerBoundaries)
         XCTAssertFalse(rejected.permitsSpeakerBoundaries)
-    }
-
-    func testMarkerCalibrationRequiresBothEnvironmentValues() {
-        XCTAssertNil(VoxtralMarkerCalibration.fromEnvironment([:]))
-        XCTAssertNil(VoxtralMarkerCalibration.fromEnvironment([
-            "WHISPERASR_VOXTRAL_MARKER_BIAS_SAMPLES": "1280",
-        ]))
-        XCTAssertNil(VoxtralMarkerCalibration.fromEnvironment([
-            "WHISPERASR_VOXTRAL_MARKER_BIAS_SAMPLES": "invalid",
-            "WHISPERASR_VOXTRAL_MARKER_P95_SAMPLES": "3200",
-        ]))
-
-        let calibration = VoxtralMarkerCalibration.fromEnvironment([
-            "WHISPERASR_VOXTRAL_MARKER_BIAS_SAMPLES": "1900",
-            "WHISPERASR_VOXTRAL_MARKER_P95_SAMPLES": "3200",
-        ])
-        XCTAssertEqual(calibration?.biasSamples, 1_280)
-        XCTAssertEqual(calibration?.p95AbsoluteErrorSamples, 3_200)
-        XCTAssertEqual(calibration?.permitsSpeakerBoundaries, true)
-    }
-
-    func testMeasuredMarkerCalibrationRequiresTwentyAnnotationsAndUsesP95() {
-        XCTAssertNil(VoxtralMarkerCalibration.measured(
-            proxyAndTrueEndSamples: Array(repeating: (10_000, 11_280), count: 19)
-        ))
-
-        var annotations = Array(repeating: (proxy: 10_000, truth: 11_280), count: 19)
-        annotations.append((proxy: 10_000, truth: 14_000))
-        let calibration = VoxtralMarkerCalibration.measured(
-            proxyAndTrueEndSamples: annotations
-        )
-
-        XCTAssertEqual(calibration?.biasSamples, 1_280)
-        XCTAssertEqual(calibration?.p95AbsoluteErrorSamples, 0)
-        XCTAssertEqual(calibration?.permitsSpeakerBoundaries, true)
     }
 
     func testFinishStagesTheLastShortClauseWithoutARegularBoundary() {

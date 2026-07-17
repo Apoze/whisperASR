@@ -43,9 +43,9 @@ WHISPERASR_TRUE_SPEECH_START_SAMPLE="${WHISPERASR_TRUE_SPEECH_START_SAMPLE:-}" \
   xcrun swift test -c release --skip-build \
   --filter LocalPrototypeBenchmarkTests/testVoxtralContinuousHelperEnduranceWhenOptedIn
 
-# Speaker splitting remains shadow-only until at least twenty lexical ends
-# have been annotated and the calibrated marker p95 is at most 240 ms.
-if [[ -n "${WHISPERASR_VOXTRAL_MARKER_CALIBRATION_ANNOTATIONS:-}" ]]; then
+# Speaker splitting remains shadow-only until independent 20-point calibration
+# and validation splits pass the pinned runtime/model/transcript proof.
+if [[ -n "${WHISPERASR_VOXTRAL_MARKER_CALIBRATION_PROOF:-}" ]]; then
   xcrun swift test -c release --skip-build \
     --filter LocalPrototypeBenchmarkTests/testVoxtralMarkerCalibrationWhenOptedIn
 fi
