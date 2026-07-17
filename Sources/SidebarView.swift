@@ -157,9 +157,12 @@ struct SidebarView: View {
             presenting: itemPendingRemoval
         ) { item in
             Button("Remove", role: .destructive) {
-                appState.removeItem(item)
+                if canRemove(item) {
+                    appState.removeItem(item)
+                }
                 itemPendingRemoval = nil
             }
+            .disabled(!canRemove(item))
             Button("Cancel", role: .cancel) { itemPendingRemoval = nil }
         } message: { item in
             Text(TranscriptionStore.isAppRecording(item.fileURL)
@@ -272,6 +275,7 @@ struct SidebarView: View {
                         Button("Remove", role: .destructive) {
                             itemPendingRemoval = item
                         }
+                        .disabled(!canRemove(item))
                     }
                 }
             }
@@ -279,6 +283,15 @@ struct SidebarView: View {
     }
 
     // MARK: - Helpers
+
+    private func canRemove(_ item: TranscriptionItem) -> Bool {
+        switch item.status {
+        case .pending, .transcribing:
+            false
+        case .completed, .failed:
+            true
+        }
+    }
 
     @ViewBuilder
     private func statusIcon(_ item: TranscriptionItem) -> some View {

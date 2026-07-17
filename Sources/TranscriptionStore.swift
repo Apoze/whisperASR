@@ -25,16 +25,11 @@ enum TranscriptionStore {
     // MARK: - Directory
 
     private static var storeDirectory: URL {
-        let appSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory, in: .userDomainMask
-        ).first!
-        return appSupport
-            .appendingPathComponent("WhisperASR", isDirectory: true)
-            .appendingPathComponent("Transcriptions", isDirectory: true)
+        AppStoragePaths.transcriptions
     }
 
-    private static func ensureDirectory() {
-        try? FileManager.default.createDirectory(
+    private static func ensureDirectory() throws {
+        try FileManager.default.createDirectory(
             at: storeDirectory, withIntermediateDirectories: true
         )
     }
@@ -44,12 +39,7 @@ enum TranscriptionStore {
     }
 
     private static var recordingsDirectory: URL {
-        let appSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory, in: .userDomainMask
-        ).first!
-        return appSupport
-            .appendingPathComponent("WhisperASR", isDirectory: true)
-            .appendingPathComponent("Recordings", isDirectory: true)
+        AppStoragePaths.recordings
     }
 
     /// Resolve a stored recording path, healing it if it no longer exists. After
@@ -67,11 +57,19 @@ enum TranscriptionStore {
 
     // MARK: - Save
 
-    static func save(_ item: TranscriptionItem) {
-        ensureDirectory()
+    static func save(_ item: TranscriptionItem) throws {
+        try save(item, at: fileURL(for: item.id))
+    }
 
-        guard let data = try? encodedData(for: item) else { return }
-        try? data.write(to: fileURL(for: item.id), options: .atomic)
+    /// Testable persistence entry point. Production uses the item-specific URL
+    /// above; callers that need another destination do not have to redirect the
+    /// process-wide Application Support directory.
+    static func save(_ item: TranscriptionItem, at url: URL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try encodedData(for: item).write(to: url, options: .atomic)
     }
 
     /// Shared by production persistence and tests so migrations exercise the
@@ -120,7 +118,7 @@ enum TranscriptionStore {
     // MARK: - Load
 
     static func loadAll() -> [TranscriptionItem] {
-        ensureDirectory()
+        try? ensureDirectory()
         guard let files = try? FileManager.default.contentsOfDirectory(
             at: storeDirectory, includingPropertiesForKeys: nil
         ) else { return [] }
@@ -172,12 +170,24 @@ enum TranscriptionStore {
             .hasPrefix(recordingsDirectory.standardizedFileURL.path + "/")
     }
 
-    static func delete(_ item: TranscriptionItem) {
-        try? FileManager.default.removeItem(at: fileURL(for: item.id))
+    /// Once metadata is gone, the transcription is deleted. Failure to move an
+    /// app-owned recording to Trash is reported separately so memory and disk
+    /// cannot disagree about whether the sidebar item still exists.
+    static func delete(_ item: TranscriptionItem) throws -> String? {
+        let metadataURL = fileURL(for: item.id)
+        if FileManager.default.fileExists(atPath: metadataURL.path) {
+            try FileManager.default.removeItem(at: metadataURL)
+        }
         // Only audio the app recorded is ours to dispose of — and it goes to the
         // Trash, not straight to deletion. Imported files are left untouched.
-        if isAppRecording(item.fileURL) {
-            try? FileManager.default.trashItem(at: item.fileURL, resultingItemURL: nil)
+        if isAppRecording(item.fileURL),
+           FileManager.default.fileExists(atPath: item.fileURL.path) {
+            do {
+                try FileManager.default.trashItem(at: item.fileURL, resultingItemURL: nil)
+            } catch {
+                return "The transcription was removed, but its audio remains at \(item.fileURL.path): \(error.localizedDescription)"
+            }
         }
+        return nil
     }
 }

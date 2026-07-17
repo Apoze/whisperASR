@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import NaturalLanguage
 import Observation
 
@@ -225,6 +226,7 @@ class AppState {
     // Live transcription state
     var liveSegments: [TranscriptionSegment] = []
     var isLiveTranscribing = false
+    private(set) var hasUnresolvedLiveRecovery = false
     var enableLiveTranscription = true
     var liveStatusText = "Waiting for audio..."
     private(set) var liveStableSegmentCount = 0
@@ -285,6 +287,10 @@ class AppState {
     @ObservationIgnored private var liveSessionClosureTask: Task<Void, Never>?
     @ObservationIgnored private var liveSessionGeneration: UInt64 = 0
     @ObservationIgnored private var liveSessionClosingGeneration: UInt64?
+    @ObservationIgnored private let liveRecoveryStore = LiveRecoveryStore()
+    @ObservationIgnored private var liveRecoverySessionID: UUID?
+    @ObservationIgnored private var liveRecoveryGeneration: UInt64 = 0
+    @ObservationIgnored private var liveRecoverySaveTask: Task<Void, Never>?
     /// Single-slot queue: each snapshot supersedes the previous one (they are cumulative),
     /// so keeping a queue of old snapshots was pure wasted work.
     private var pendingTranslationSnapshot: [TranscriptionSegment]?
@@ -427,6 +433,21 @@ class AppState {
         items.first { $0.id == selectedItemID }
     }
 
+    /// Persistence is a prerequisite for publishing an item in the sidebar.
+    /// Keep the failure path in one place so callers cannot silently lose data.
+    @discardableResult
+    private func persist(_ item: TranscriptionItem, context: String) -> Bool {
+        do {
+            try TranscriptionStore.save(item)
+            return true
+        } catch {
+            Task { @MainActor [weak self] in
+                self?.showToast("Couldn't \(context): \(error.localizedDescription)")
+            }
+            return false
+        }
+    }
+
     func addFile(url: URL) {
         guard !items.contains(where: { $0.fileURL == url }) else {
             selectedItemID = items.first { $0.fileURL == url }?.id
@@ -434,9 +455,9 @@ class AppState {
         }
 
         let item = TranscriptionItem(fileURL: url)
+        guard persist(item, context: "save \"\(item.fileName)\"") else { return }
         items.insert(item, at: 0)
         selectedItemID = item.id
-        TranscriptionStore.save(item)
         enqueueTranscription(for: item)
     }
 
@@ -559,10 +580,10 @@ class AppState {
                         "Recovered only the saved Japanese clauses; the unavailable audio tail could not be recovered."
                     )
                 }
-                TranscriptionStore.save(item)
+                self.persist(item, context: "save the recovered English translation")
             } catch {
                 item.status = .failed("English translation is incomplete: \(error.localizedDescription)")
-                TranscriptionStore.save(item)
+                self.persist(item, context: "save the translation failure")
             }
         }
     }
@@ -570,6 +591,8 @@ class AppState {
     func renameItem(_ item: TranscriptionItem, to newName: String) {
         let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        let oldURL = item.fileURL
+        let oldName = item.fileName
 
         // Preserve the file extension
         let ext = item.fileURL.pathExtension
@@ -592,23 +615,19 @@ class AppState {
             item.fileURL = newURL
         }
         item.fileName = nameWithExt
-        TranscriptionStore.save(item)
-    }
-
-    /// Add a file with pre-existing live transcription results (skip re-transcription).
-    @discardableResult
-    func addFileWithLiveResults(url: URL, segments: [TranscriptionSegment], fullText: String,
-                                translatedSegments: [String] = [], translationLanguage: String? = nil) -> TranscriptionItem {
-        let item = TranscriptionItem(fileURL: url)
-        item.segments = segments
-        item.fullText = fullText
-        item.translatedSegments = translatedSegments
-        item.translationLanguage = translationLanguage
-        item.status = .completed
-        items.insert(item, at: 0)
-        selectedItemID = item.id
-        TranscriptionStore.save(item)
-        return item
+        guard !persist(item, context: "save the renamed transcription") else { return }
+        item.fileName = oldName
+        if item.fileURL != oldURL,
+           FileManager.default.fileExists(atPath: item.fileURL.path) {
+            do {
+                try FileManager.default.moveItem(at: item.fileURL, to: oldURL)
+                item.fileURL = oldURL
+            } catch {
+                Task { @MainActor [weak self] in
+                    self?.showToast("Couldn't restore the old filename after a save error: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     /// Stop live transcription and the recorder, then file the finished recording.
@@ -659,7 +678,6 @@ class AppState {
         liveStatusText = captionMode == .localEnglish
             ? "Finalizing the last English subtitles..." : "Saving recording..."
         let stopResult = await recorder.stopRecording()
-        let url = stopResult.archiveURL
         if captionMode == .localEnglish, #available(macOS 26.4, *) {
             await stopLocalPreviewRuntime()
         }
@@ -728,17 +746,10 @@ class AppState {
         } catch {
             showToast("Couldn't save the canonical benchmark PCM: \(error.localizedDescription)")
         }
-        recorder.discardAccumulatedSamples()
         let fullText = segments.map(\.text).joined()
         var translations = liveTranslatedSegments
         let translatedSourceTexts = liveTranslatedSourceTexts
         let hadLiveResults = !segments.isEmpty || !localSourceSegments.isEmpty
-
-        guard hadLiveResults || captionMode == .localEnglish else {
-            if let url { addFile(url: url) }
-            resetLiveState()
-            return
-        }
 
         var storedSegments = segments
         var storedText = fullText
@@ -792,14 +803,44 @@ class AppState {
             }
         }
 
-        let itemURL = url ?? URL(fileURLWithPath: "/unsaved-recording-\(UUID().uuidString)")
-        let item = addFileWithLiveResults(
-            url: itemURL,
-            segments: storedSegments,
-            fullText: storedText,
-            translatedSegments: storedTranslations,
-            translationLanguage: storedTranslationLanguage
-        )
+        queueLiveRecoverySnapshot(stopResult: stopResult)
+        await liveRecoverySaveTask?.value
+
+        var retainedAudioURL = stopResult.archiveURL
+        var copiedRecoveryURL: URL?
+        if let artifact = stopResult.recoverablePCM,
+           retainedAudioURL == nil
+            || retainedAudioURL?.standardizedFileURL == artifact.audioURL.standardizedFileURL {
+            do {
+                let copy = try Self.copyRecoveryAudioForImport(artifact.audioURL)
+                retainedAudioURL = copy
+                copiedRecoveryURL = copy
+            } catch {
+                leaveStoppedSessionForRecovery(
+                    message: "Couldn't preserve the recovery audio. Recovery data was retained: \(error.localizedDescription)"
+                )
+                return
+            }
+        }
+
+        guard retainedAudioURL != nil || hadLiveResults || captionMode == .localEnglish else {
+            recorder.releaseRecoverablePCM()
+            let cleanupError = await discardStoppedRecovery(stopResult)
+            recorder.discardAccumulatedSamples()
+            resetLiveState()
+            liveError = cleanupError.map {
+                "The recording was empty, and recovery cleanup failed: \($0)"
+            } ?? "The recording produced no recoverable audio or transcript."
+            return
+        }
+        let itemURL = retainedAudioURL
+            ?? URL(fileURLWithPath: "/unsaved-recording-\(UUID().uuidString)")
+        let item = TranscriptionItem(fileURL: itemURL)
+        item.segments = storedSegments
+        item.fullText = storedText
+        item.translatedSegments = storedTranslations
+        item.translationLanguage = storedTranslationLanguage
+        item.status = hadLiveResults || captionMode == .localEnglish ? .completed : .pending
         let directEnglish = captionMode == .localEnglish
             && activeLocalEnglishEngine.producesDirectEnglish
         item.translateToEnglish = captionMode == .localEnglish
@@ -817,24 +858,56 @@ class AppState {
         if let localFailure {
             let retryDetail: String
             if directEnglish {
-                retryDetail = url == nil
+                retryDetail = retainedAudioURL == nil
                     ? " The audio was not saved; only valid English finals were kept."
                     : " The audio was kept for another model run."
             } else {
-                retryDetail = url == nil
+                retryDetail = retainedAudioURL == nil
                     ? " The audio was not saved; Retry can recover only the saved Japanese clauses."
                     : " The audio was kept; use Retry English translation."
             }
             item.status = .failed(localFailure + retryDetail)
         }
 
-        if url == nil {
+        if retainedAudioURL == nil {
             item.fileName = "Recording \(DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .short)) (audio not saved)"
-            TranscriptionStore.save(item)
-        } else if localFailure != nil || captionMode == .localEnglish {
-            TranscriptionStore.save(item)
         }
+        guard persist(item, context: "save the finished recording") else {
+            if let copiedRecoveryURL {
+                do {
+                    try FileManager.default.removeItem(at: copiedRecoveryURL)
+                } catch {
+                    liveError = "Persistence failed and the temporary audio copy couldn't be removed: \(error.localizedDescription)"
+                }
+            }
+            leaveStoppedSessionForRecovery(
+                message: "The recording could not be saved. Recovery data was retained; restart WhisperASR to import it before starting another recording."
+            )
+            return
+        }
+        items.insert(item, at: 0)
+        selectedItemID = item.id
+        if item.status == .pending { enqueueTranscription(for: item) }
+        recorder.releaseRecoverablePCM()
+        if let sessionID = stopResult.recoverySessionID {
+            await removeLiveRecoveryAfterPersistence(
+                sessionID: sessionID,
+                artifact: stopResult.recoverablePCM,
+                location: stopResult.recoveryLocation,
+                retainedAudioURL: retainedAudioURL
+            )
+        }
+        recorder.discardAccumulatedSamples()
         resetLiveState()
+    }
+
+    @MainActor
+    private func leaveStoppedSessionForRecovery(message: String) {
+        isLiveTranscribing = false
+        activeLocalRecorder = nil
+        liveStatusText = "Recovery required"
+        liveError = message
+        hasUnresolvedLiveRecovery = true
     }
 
     private func awaitLiveTasks() async {
@@ -983,14 +1056,14 @@ class AppState {
             }
 
             item.isTranslating = false
-            TranscriptionStore.save(item)
+            self.persist(item, context: "save the translation")
         }
     }
 
     func clearTranslation(_ item: TranscriptionItem) {
         item.translatedSegments = []
         item.translationLanguage = nil
-        TranscriptionStore.save(item)
+        persist(item, context: "clear the translation")
     }
 
     func shutdown() {
@@ -1350,10 +1423,32 @@ class AppState {
     }
 
     func removeItem(_ item: TranscriptionItem) {
+        switch item.status {
+        case .pending, .transcribing:
+            Task { @MainActor [weak self] in
+                self?.showToast("Wait for transcription to finish before removing this item.")
+            }
+            return
+        case .completed, .failed:
+            break
+        }
+        let removalWarning: String?
+        do {
+            removalWarning = try TranscriptionStore.delete(item)
+        } catch {
+            Task { @MainActor [weak self] in
+                self?.showToast("Couldn't remove \"\(item.fileName)\": \(error.localizedDescription)")
+            }
+            return
+        }
         items.removeAll { $0.id == item.id }
-        TranscriptionStore.delete(item)
         if selectedItemID == item.id {
             selectedItemID = items.first?.id
+        }
+        if let removalWarning {
+            Task { @MainActor [weak self] in
+                self?.showToast(removalWarning)
+            }
         }
     }
 
@@ -1378,7 +1473,8 @@ class AppState {
         item.progress = 0
         item.transcriptionStartTime = Date()
 
-        Task.detached { [service] in
+        Task.detached { [service, weak self] in
+            guard let self else { return }
             do {
                 let result = try await service.transcribe(
                     fileURL: item.fileURL,
@@ -1392,18 +1488,18 @@ class AppState {
                     if item.translateToEnglish,
                        Self.isClearlyNonEnglishTranslation(result.text) {
                         item.status = .failed("Whisper returned the source language instead of English.")
-                        TranscriptionStore.save(item)
+                        self.persist(item, context: "save the transcription failure")
                         return
                     }
                     item.segments = result.segments
                     item.fullText = result.text
                     item.status = .completed
-                    TranscriptionStore.save(item)
+                    self.persist(item, context: "save the transcription")
                 }
             } catch {
                 await MainActor.run {
                     item.status = .failed(error.localizedDescription)
-                    TranscriptionStore.save(item)
+                    self.persist(item, context: "save the transcription failure")
                 }
             }
             await MainActor.run { [weak self] in
@@ -1419,6 +1515,8 @@ class AppState {
     @MainActor
     func startLiveTranscription(recorder: AudioRecorder) {
         guard liveSessionClosureTask == nil,
+              !isLiveTranscribing,
+              !hasUnresolvedLiveRecovery,
               recorder.state == .recording else { return }
         liveSessionGeneration &+= 1
         let captionMode = LiveCaptionMode.stored()
@@ -1432,6 +1530,7 @@ class AppState {
         activeLocalEnglishEngine = localEngine
         activeLocalSourceLocale = sourceLocale
         activeLocalRecorder = recorder
+        hasUnresolvedLiveRecovery = false
         liveSegments = []
         liveStableSegmentCount = 0
         localCommittedSegments = []
@@ -1480,6 +1579,7 @@ class AppState {
         liveStatusText = captionMode == .localEnglish
             ? "Preparing local speech and translation…" : "Preparing Whisper model..."
         isLiveTranscribing = true
+        beginLiveRecovery(recorder: recorder)
         Task { await localMetricRecorder.reset() }
 
         liveTranscriptionTask = Task { [weak self] in
@@ -3057,10 +3157,40 @@ class AppState {
     @MainActor
     private func performCancelRecording(recorder: AudioRecorder) async {
         liveStatusText = "Cancelling recording..."
-        _ = await recorder.cancelRecording()
+        let stopResult = await recorder.cancelRecording()
         await cancelLiveTasksAndServices()
+        recorder.releaseRecoverablePCM()
+        if let cleanupFailure = await discardStoppedRecovery(stopResult) {
+            showToast(
+                "Recording was cancelled, but recovery cleanup failed: "
+                    + cleanupFailure
+            )
+        }
         recorder.discardAccumulatedSamples()
         resetLiveState()
+    }
+
+    @MainActor
+    private func discardStoppedRecovery(_ stopResult: RecordingStopResult) async -> String? {
+        await liveRecoverySaveTask?.value
+        var failures: [String] = []
+        if let sessionID = stopResult.recoverySessionID {
+            do {
+                _ = try await liveRecoveryStore.remove(sessionID: sessionID)
+            } catch {
+                failures.append(error.localizedDescription)
+            }
+        }
+        if let location = stopResult.recoveryLocation {
+            do {
+                try RecoverablePCMSpool.removeLocation(location)
+            } catch {
+                failures.append(error.localizedDescription)
+            }
+        }
+        liveRecoverySessionID = nil
+        liveRecoverySaveTask = nil
+        return failures.isEmpty ? nil : failures.joined(separator: " ")
     }
 
     @MainActor
@@ -3101,6 +3231,7 @@ class AppState {
         translationFailureCount = 0
         translationAuthPaused = false
         isLiveTranscribing = false
+        hasUnresolvedLiveRecovery = false
         liveStatusText = "Waiting for audio..."
         liveError = nil
         liveTranslationError = nil
@@ -3150,7 +3281,6 @@ class AppState {
         localSourceFinalizedSampleCount = 0
         localSourcePipelineFailure = nil
         activeLocalRecorder = nil
-        removeLiveRecoveryFile()
         if !isTranscribing, items.contains(where: { $0.status == .pending }) {
             startNextTranscription()
         }
@@ -3602,19 +3732,27 @@ class AppState {
 
     // MARK: - Live Transcription Auto-Save (crash recovery)
 
-    private static var liveRecoveryURL: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return appSupport
-            .appendingPathComponent("WhisperASR", isDirectory: true)
-            .appendingPathComponent("live_recovery.json")
+    private static var recoveryDirectory: URL {
+        AppStoragePaths.recovery
+    }
+
+    private static var recordingsDirectory: URL {
+        AppStoragePaths.recordings
     }
 
     private struct LiveRecoveryData: Codable {
+        let sessionID: UUID?
+        let generation: UInt64?
         let segments: [TranscriptionSegment]
         let fullText: String
         let translatedSegments: [String]
         let translationLanguage: String?
         let audioPath: String?
+        let spoolAudioPath: String?
+        let spoolManifestPath: String?
+        let durableSampleCount: Int?
+        let m4aDroppedSampleCount: Int?
+        let pcmComplete: Bool?
         let localSourceLocale: String?
         let localTranslationMode: AppleTranslationMode?
         let localEnglishEngine: LocalEnglishEngine?
@@ -3628,12 +3766,29 @@ class AppState {
         let now = Date()
         guard now.timeIntervalSince(lastAutoSaveTime) >= 15 else { return }
         lastAutoSaveTime = now
-        autoSaveLiveTranscription()
+        queueLiveRecoverySnapshot()
     }
 
-    /// Persist current live transcription to a recovery file so data survives a hang or crash.
     @MainActor
-    private func autoSaveLiveTranscription() {
+    private func beginLiveRecovery(recorder: AudioRecorder) {
+        guard let sessionID = recorder.recoverySessionID else {
+            liveError = "Canonical recovery audio was not prepared."
+            return
+        }
+        liveRecoverySessionID = sessionID
+        liveRecoveryGeneration = 0
+        lastAutoSaveTime = .distantPast
+        queueLiveRecoverySnapshot(beginning: true)
+    }
+
+    /// Snapshots are cumulative and serialized. A late save from an old session
+    /// cannot recreate recovery after Finish, Cancel, or a newer recording.
+    @MainActor
+    private func queueLiveRecoverySnapshot(
+        beginning: Bool = false,
+        stopResult: RecordingStopResult? = nil
+    ) {
+        guard let sessionID = liveRecoverySessionID else { return }
         let isLocalEnglish = activeLiveCaptionMode == .localEnglish
         let isDirectEnglish = isLocalEnglish && activeLocalEnglishEngine.producesDirectEnglish
         let segments = isDirectEnglish
@@ -3653,36 +3808,97 @@ class AppState {
         let discardOriginal = isLocalEnglish && !isDirectEnglish
             ? !activeKeepOriginalTranscript : nil
         let audioPath = activeLocalRecorder?.recordingFileURL?.path
-
-        // Write on a background queue to avoid blocking the main thread
-        Task.detached(priority: .utility) {
-            let data = LiveRecoveryData(
-                segments: segments, fullText: text,
-                translatedSegments: translations, translationLanguage: lang,
-                audioPath: audioPath,
-                localSourceLocale: sourceLocale,
-                localTranslationMode: translationMode,
-                localEnglishEngine: localEngine,
-                discardOriginalAfterRetry: discardOriginal,
-                savedAt: Date()
-            )
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .sortedKeys
-            guard let json = try? encoder.encode(data) else { return }
-            let url = AppState.liveRecoveryURL
-            try? FileManager.default.createDirectory(
-                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try? json.write(to: url, options: .atomic)
+        let spoolLocation = stopResult?.recoveryLocation
+            ?? activeLocalRecorder?.recoverablePCMLocation
+        let durableSamples = stopResult?.recoverablePCM?.durableThrough
+            ?? activeLocalRecorder?.recoverablePCMProgress?.durableThrough
+        liveRecoveryGeneration &+= 1
+        let generation = liveRecoveryGeneration
+        let snapshot = LiveRecoveryData(
+            sessionID: sessionID,
+            generation: generation,
+            segments: segments,
+            fullText: text,
+            translatedSegments: translations,
+            translationLanguage: lang,
+            audioPath: stopResult?.archiveURL?.path ?? audioPath,
+            spoolAudioPath: spoolLocation?.audioURL.path,
+            spoolManifestPath: spoolLocation?.manifestURL.path,
+            durableSampleCount: durableSamples,
+            m4aDroppedSampleCount: stopResult?.m4aDroppedSampleCount,
+            pcmComplete: stopResult?.pcmComplete,
+            localSourceLocale: sourceLocale,
+            localTranslationMode: translationMode,
+            localEnglishEngine: localEngine,
+            discardOriginalAfterRetry: discardOriginal,
+            savedAt: Date()
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let previous = liveRecoverySaveTask
+        liveRecoverySaveTask = Task { [weak self] in
+            await previous?.value
+            guard let self else { return }
+            do {
+                let json = try encoder.encode(snapshot)
+                if beginning { await self.liveRecoveryStore.beginSession(sessionID) }
+                _ = try await self.liveRecoveryStore.save(
+                    json,
+                    sessionID: sessionID,
+                    generation: generation
+                )
+            } catch {
+                await MainActor.run {
+                    guard self.liveRecoverySessionID == sessionID else { return }
+                    self.liveError = "Recovery save failed: \(error.localizedDescription)"
+                }
+            }
         }
     }
 
-    private func removeLiveRecoveryFile() {
-        try? FileManager.default.removeItem(at: Self.liveRecoveryURL)
+    @MainActor
+    private func removeLiveRecoveryAfterPersistence(
+        sessionID: UUID,
+        artifact: RecoverablePCMSpool.Artifact?,
+        location: RecoverablePCMSpool.Location?,
+        retainedAudioURL: URL?
+    ) async {
+        await liveRecoverySaveTask?.value
+        var cleanupFailures: [String] = []
+        do {
+            _ = try await liveRecoveryStore.remove(sessionID: sessionID)
+        } catch {
+            cleanupFailures.append(error.localizedDescription)
+        }
+        if let location, artifact != nil || retainedAudioURL != nil {
+            do {
+                try RecoverablePCMSpool.removeLocation(
+                    location,
+                    retaining: retainedAudioURL
+                )
+            } catch {
+                cleanupFailures.append(error.localizedDescription)
+            }
+        }
+        if liveRecoverySessionID == sessionID {
+            liveRecoverySessionID = nil
+            liveRecoverySaveTask = nil
+        }
+        if !cleanupFailures.isEmpty {
+            showToast(
+                "Saved the transcription, but couldn't clean recovery data: "
+                    + cleanupFailures.joined(separator: " ")
+            )
+        }
     }
 
     /// Check if there is a recoverable live transcription from a previous crash/hang.
     var hasLiveRecoveryData: Bool {
-        FileManager.default.fileExists(atPath: Self.liveRecoveryURL.path)
+        if FileManager.default.fileExists(atPath: LiveRecoveryStore.defaultURL.path) { return true }
+        guard let names = try? FileManager.default.contentsOfDirectory(
+            atPath: Self.recoveryDirectory.path
+        ) else { return false }
+        return names.contains { $0.hasSuffix(".pcm-spool.json") }
     }
 
     static func existingRecoveryAudioURL(path: String?) -> URL? {
@@ -3690,39 +3906,163 @@ class AppState {
         return URL(fileURLWithPath: path)
     }
 
-    /// Import recovered live transcription as a completed transcription item.
+    private static func readableRecoveryAudioURL(path: String?) -> URL? {
+        guard let url = existingRecoveryAudioURL(path: path) else { return nil }
+        guard let audio = try? AVAudioFile(forReading: url), audio.length > 0 else { return nil }
+        return url
+    }
+
+    private static func copyRecoveryAudioForImport(_ source: URL) throws -> URL {
+        try FileManager.default.createDirectory(
+            at: recordingsDirectory,
+            withIntermediateDirectories: true
+        )
+        let destination = recordingsDirectory.appendingPathComponent(
+            "Recovered \(UUID().uuidString).\(source.pathExtension.isEmpty ? "wav" : source.pathExtension)"
+        )
+        try FileManager.default.copyItem(at: source, to: destination)
+        return destination
+    }
+
+    private static func quarantineInvalidRecoverySnapshot() throws {
+        let source = LiveRecoveryStore.defaultURL
+        guard FileManager.default.fileExists(atPath: source.path) else { return }
+        let directory = recoveryDirectory.appendingPathComponent(
+            "Quarantine",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.moveItem(
+            at: source,
+            to: directory.appendingPathComponent(
+                "live-recovery-\(UUID().uuidString).json.invalid"
+            )
+        )
+    }
+
+    /// Import either the latest JSON snapshot or an orphan canonical PCM spool.
     func importRecoveredTranscription() {
-        let url = Self.liveRecoveryURL
-        guard let data = try? Data(contentsOf: url),
-              let recovery = try? JSONDecoder().decode(LiveRecoveryData.self, from: data)
-        else { return }
-        let audioURL = Self.existingRecoveryAudioURL(path: recovery.audioPath)
-        let isLocalEnglish = recovery.localSourceLocale != nil
-            || recovery.localEnglishEngine != nil
-        let isDirectEnglish = recovery.localEnglishEngine?.producesDirectEnglish == true
-        guard !isLocalEnglish || audioURL != nil || !recovery.segments.isEmpty else {
-            removeLiveRecoveryFile()
+        if let recorder = activeLocalRecorder,
+           recorder.state == .recording || recorder.state == .saving {
+            Task { @MainActor [weak self] in
+                self?.showToast("Finish or cancel the current recording before importing recovery data.")
+            }
             return
         }
+        let data = try? Data(contentsOf: LiveRecoveryStore.defaultURL)
+        let recovery = data.flatMap { try? JSONDecoder().decode(LiveRecoveryData.self, from: $0) }
+        if data != nil, recovery == nil {
+            do {
+                try Self.quarantineInvalidRecoverySnapshot()
+                Task { @MainActor [weak self] in
+                    self?.showToast(
+                        "Damaged recovery metadata was quarantined; canonical audio will still be recovered when available."
+                    )
+                }
+            } catch {
+                Task { @MainActor [weak self] in
+                    self?.showToast(
+                        "Damaged recovery metadata could not be quarantined: \(error.localizedDescription)"
+                    )
+                }
+            }
+        }
+        let recoveryScan: RecoverablePCMSpool.RecoveryScan
+        do {
+            recoveryScan = try RecoverablePCMSpool.scanOrphans(
+                in: Self.recoveryDirectory
+            )
+        } catch {
+            Task { @MainActor [weak self] in
+                self?.showToast("Couldn't inspect recovery audio: \(error.localizedDescription)")
+            }
+            return
+        }
+        if let warning = recoveryScan.warnings.first {
+            Task { @MainActor [weak self] in self?.showToast(warning) }
+        }
+        let recoveryIsInUse = recovery.map { snapshot in
+            guard let sessionID = snapshot.sessionID?.uuidString else {
+                return !recoveryScan.inUseSessionIDs.isEmpty
+            }
+            return recoveryScan.inUseSessionIDs.contains(sessionID)
+        } ?? !recoveryScan.inUseSessionIDs.isEmpty
+        if recoveryIsInUse {
+            Task { @MainActor [weak self] in
+                self?.showToast(
+                    "Recovery audio is still being written by another WhisperASR process."
+                )
+            }
+            return
+        }
+        let artifacts = recoveryScan.artifacts
+        let matchingArtifact: RecoverablePCMSpool.Artifact?
+        if let sessionID = recovery?.sessionID {
+            matchingArtifact = artifacts.first { $0.sessionID == sessionID.uuidString }
+        } else {
+            matchingArtifact = artifacts.max { lhs, rhs in
+                let left = (try? lhs.manifestURL.resourceValues(
+                    forKeys: [.contentModificationDateKey]
+                ).contentModificationDate) ?? .distantPast
+                let right = (try? rhs.manifestURL.resourceValues(
+                    forKeys: [.contentModificationDateKey]
+                ).contentModificationDate) ?? .distantPast
+                return left < right
+            }
+        }
+        let sourceAudio = matchingArtifact?.audioURL
+            ?? Self.readableRecoveryAudioURL(path: recovery?.audioPath)
+        let hasSnapshotContent = recovery.map {
+            !$0.segments.isEmpty
+                || !$0.fullText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || $0.translatedSegments.contains { !$0.isEmpty }
+        } ?? false
+        guard hasSnapshotContent || sourceAudio != nil else {
+            if FileManager.default.fileExists(atPath: LiveRecoveryStore.defaultURL.path) {
+                try? FileManager.default.removeItem(at: LiveRecoveryStore.defaultURL)
+            }
+            return
+        }
+        let copiedAudio: URL?
+        do {
+            copiedAudio = try sourceAudio.map(Self.copyRecoveryAudioForImport)
+        } catch {
+            Task { @MainActor [weak self] in
+                self?.showToast("Couldn't preserve recovered audio: \(error.localizedDescription)")
+            }
+            return
+        }
+        let audioURL = copiedAudio
+        let segments = recovery?.segments ?? []
+        let isLocalEnglish = recovery?.localSourceLocale != nil
+            || recovery?.localEnglishEngine != nil
+        let isDirectEnglish = recovery?.localEnglishEngine?.producesDirectEnglish == true
         let item = TranscriptionItem(
             fileURL: audioURL ?? URL(
                 fileURLWithPath: "/recovered-source-only-\(UUID().uuidString)"
             ))
-        item.segments = recovery.segments
-        item.fullText = recovery.fullText
-        item.translatedSegments = recovery.translatedSegments.map {
+        item.segments = segments
+        item.fullText = recovery?.fullText ?? ""
+        item.translatedSegments = (recovery?.translatedSegments ?? []).map {
             EnglishSubtitleValidator.normalizedEnglish($0) ?? ""
         }
         item.translationLanguage = item.translatedSegments.contains(where: { !$0.isEmpty })
-            ? recovery.translationLanguage : nil
+            ? recovery?.translationLanguage : nil
         if !isDirectEnglish {
-            item.localSourceLocale = recovery.localSourceLocale
-            item.localTranslationMode = recovery.localTranslationMode
-            item.discardOriginalAfterRetry = recovery.discardOriginalAfterRetry ?? false
+            item.localSourceLocale = recovery?.localSourceLocale
+            item.localTranslationMode = recovery?.localTranslationMode
+            item.discardOriginalAfterRetry = recovery?.discardOriginalAfterRetry ?? false
         }
         item.translateToEnglish = isLocalEnglish && !isDirectEnglish
         item.localSourceTranscriptComplete = !isLocalEnglish
-        if !isLocalEnglish {
+        if recovery == nil {
+            item.status = .failed(
+                "Recovered canonical audio has no transcript snapshot. Re-transcribe the retained audio."
+            )
+        } else if !isLocalEnglish {
             item.status = .completed
         } else if isDirectEnglish {
             item.status = .failed(audioURL != nil
@@ -3740,11 +4080,34 @@ class AppState {
         let recoveryLabel = audioURL == nil && isLocalEnglish
             ? "Recovered partial subtitles"
             : "Recovered"
-        item.fileName = "\(recoveryLabel) \(DateFormatter.localizedString(from: recovery.savedAt, dateStyle: .short, timeStyle: .short))"
+        item.fileName = "\(recoveryLabel) \(DateFormatter.localizedString(from: recovery?.savedAt ?? Date(), dateStyle: .short, timeStyle: .short))"
+        guard persist(item, context: "save the recovered transcription") else {
+            if let copiedAudio {
+                do {
+                    try FileManager.default.removeItem(at: copiedAudio)
+                } catch {
+                    Task { @MainActor [weak self] in
+                        self?.showToast("Couldn't remove the unused recovery copy: \(error.localizedDescription)")
+                    }
+                }
+            }
+            return
+        }
         items.insert(item, at: 0)
         selectedItemID = item.id
-        TranscriptionStore.save(item)
-        removeLiveRecoveryFile()
+        do {
+            if FileManager.default.fileExists(atPath: LiveRecoveryStore.defaultURL.path) {
+                try FileManager.default.removeItem(at: LiveRecoveryStore.defaultURL)
+            }
+            if let matchingArtifact {
+                try RecoverablePCMSpool.removeArtifact(matchingArtifact)
+            }
+        } catch {
+            Task { @MainActor [weak self] in
+                self?.showToast("Recovered the transcription, but couldn't clean recovery data: \(error.localizedDescription)")
+            }
+        }
+        hasUnresolvedLiveRecovery = false
     }
 
     // MARK: - Live Translation

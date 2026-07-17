@@ -65,8 +65,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var openWindow: OpenWindowAction?
     var launchedViaURL = false
     private var pendingURL: URL?
+    private var instanceGuard: SingleInstanceGuard?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        do {
+            instanceGuard = try SingleInstanceGuard()
+        } catch SingleInstanceGuard.GuardError.alreadyRunning {
+            NSRunningApplication.runningApplications(
+                withBundleIdentifier: Bundle.main.bundleIdentifier ?? "com.whisperasr"
+            )
+                .first { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }?
+                .activate(options: [.activateAllWindows])
+            NSApplication.shared.terminate(nil)
+            return
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "WhisperASR could not start safely"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+            NSApplication.shared.terminate(nil)
+            return
+        }
         let icon = AppIconGenerator.generate()
         NSApplication.shared.applicationIconImage = icon
         let imageView = NSImageView(image: icon)
@@ -144,6 +163,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Find the named app and start recording automatically, skipping the picker.
     private func autoStartRecording(appName: String) {
         guard let audioRecorder, let openWindow else { return }
+        guard appState?.hasUnresolvedLiveRecovery != true,
+              appState?.isLiveTranscribing != true else {
+            audioRecorder.error = "Recover the previous recording before starting another one."
+            openWindow(id: "app-picker")
+            bringWindowToFront(title: "Select App to Record")
+            return
+        }
 
         Task {
             do {

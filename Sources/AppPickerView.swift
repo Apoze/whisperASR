@@ -275,6 +275,8 @@ struct AppPickerView: View {
                 .keyboardShortcut(.defaultAction)
                 .disabled(
                     recorder.selectedApp == nil
+                        || appState.isLiveTranscribing
+                        || appState.hasUnresolvedLiveRecovery
                         || (captionMode == .localEnglish && !appState.isLocalEnglishReady)
                 )
             }
