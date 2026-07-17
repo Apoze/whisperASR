@@ -363,9 +363,16 @@ final class LocalEnglishModelManager {
                 try await qwen.prepare { fraction, message in
                     update(fraction, "Qwen: \(message)")
                 }
-            case .voxtralApple:
+            case .voxtralApple, .voxtralTurboApple:
                 phases[engine] = .loading(message: "Loading and warming continuous Voxtral Q4…")
                 try await voxtralHelper.prepare(progress: update)
+            case .voxtralQwenApple:
+                phases[engine] = .loading(message: "Loading and warming continuous Voxtral Q4…")
+                try await voxtralHelper.prepare(progress: update)
+                phases[engine] = .loading(message: "Loading Qwen3-ASR final…")
+                try await qwen.prepare { fraction, message in
+                    update(fraction, "Qwen: \(message)")
+                }
             case .voxtralCohereApple:
                 phases[engine] = .loading(message: "Loading and warming Voxtral Q4…")
                 try await voxtral.prepare()
@@ -376,7 +383,7 @@ final class LocalEnglishModelManager {
                 try await cohere.prepare()
             }
 
-            let helperResident = engine == .voxtralApple
+            let helperResident = engine.usesContinuousVoxtral
                 ? await voxtralHelper.progress().helperRSSBytes ?? 0
                 : 0
             let resident = Self.measuredMemoryBytes() + helperResident

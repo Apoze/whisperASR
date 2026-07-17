@@ -329,7 +329,7 @@ struct AppPickerView: View {
         case .original:
             return "Transcribes locally in the detected spoken language."
         case .localEnglish:
-            if localEnglishEngine == .voxtralApple {
+            if localEnglishEngine.usesContinuousVoxtral {
                 switch appleTranslationMode {
                 case .adaptive:
                     return "Voxtral continuously transcribes the source. Apple low-latency revises the live English line; Apple high-fidelity replaces it with the saved final. Everything stays on this Mac."

@@ -986,6 +986,9 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
                 case .qwenApple:
                     XCTFail("Qwen is intentionally outside this three-candidate bakeoff.")
                     return
+                case .voxtralQwenApple, .voxtralTurboApple:
+                    XCTFail("Dual-model live engines are intentionally outside this three-candidate bakeoff.")
+                    return
                 case .whisperLargeV3Direct:
                     XCTFail("Direct-English engines are intentionally outside this Japanese-source bakeoff.")
                     return

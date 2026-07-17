@@ -59,6 +59,8 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
     case whisperTurboApple
     case qwenApple
     case voxtralApple
+    case voxtralQwenApple
+    case voxtralTurboApple
     case voxtralCohereApple
     case whisperLargeV3Direct
     case cohereApple
@@ -75,6 +77,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Qwen → Apple"
         case .voxtralApple:
             return "Voxtral live → Apple"
+        case .voxtralQwenApple:
+            return "Voxtral live + Qwen final → Apple"
+        case .voxtralTurboApple:
+            return "Voxtral live + Turbo final → Apple"
         case .voxtralCohereApple:
             return "Voxtral live + Cohere final → Apple"
         case .whisperLargeV3Direct:
@@ -92,6 +98,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Experimental: Qwen transcribes each FireRedVAD phrase, then Apple translates."
         case .voxtralApple:
             return "Experimental: one continuous Voxtral session supplies live source text and each stable clause for Apple Translation."
+        case .voxtralQwenApple:
+            return "Experimental: Voxtral supplies live previews while Qwen re-decodes each stable final."
+        case .voxtralTurboApple:
+            return "Experimental: Voxtral supplies live previews while Whisper Turbo re-decodes each stable final."
         case .voxtralCohereApple:
             return "Experimental: Voxtral supplies live previews while Cohere Q8 re-decodes each stable final."
         case .whisperLargeV3Direct:
@@ -109,6 +119,10 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return [.fireRedVAD, .qwen, .appleTranslation]
         case .voxtralApple:
             return [.fireRedVAD, .voxtral, .appleTranslation]
+        case .voxtralQwenApple:
+            return [.fireRedVAD, .voxtral, .qwen, .appleTranslation]
+        case .voxtralTurboApple:
+            return [.fireRedVAD, .voxtral, .whisperTurbo, .appleTranslation]
         case .voxtralCohereApple:
             return [.fireRedVAD, .voxtral, .cohere, .appleTranslation]
         case .whisperLargeV3Direct:
@@ -119,7 +133,11 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
     }
 
     var usesVoxtralStreaming: Bool {
-        self == .voxtralApple || self == .voxtralCohereApple
+        usesContinuousVoxtral || self == .voxtralCohereApple
+    }
+
+    var usesContinuousVoxtral: Bool {
+        self == .voxtralApple || self == .voxtralQwenApple || self == .voxtralTurboApple
     }
 
     var usesAppleSpeechPreview: Bool { !usesVoxtralStreaming }
@@ -137,12 +155,12 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
     var usesAppleFinalTranslation: Bool { !producesDirectEnglish }
 
     var usesWhisperFinal: Bool {
-        self == .whisperTurboApple || self == .whisperLargeV3Direct
+        self == .whisperTurboApple || self == .voxtralTurboApple || self == .whisperLargeV3Direct
     }
 
     var whisperModelID: String? {
         switch self {
-        case .whisperTurboApple: return "large-v3-turbo"
+        case .whisperTurboApple, .voxtralTurboApple: return "large-v3-turbo"
         case .whisperLargeV3Direct: return "large-v3"
         default: return nil
         }

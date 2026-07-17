@@ -121,6 +121,10 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
         defaults.set(LocalEnglishEngine.voxtralApple.rawValue, forKey: LocalEnglishEngine.storageKey)
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralApple)
+        defaults.set(LocalEnglishEngine.voxtralQwenApple.rawValue, forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralQwenApple)
+        defaults.set(LocalEnglishEngine.voxtralTurboApple.rawValue, forKey: LocalEnglishEngine.storageKey)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralTurboApple)
         defaults.set(LocalEnglishEngine.voxtralCohereApple.rawValue, forKey: LocalEnglishEngine.storageKey)
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .voxtralCohereApple)
         defaults.set(LocalEnglishEngine.whisperLargeV3Direct.rawValue, forKey: LocalEnglishEngine.storageKey)
@@ -159,6 +163,14 @@ final class LiveCaptionTests: XCTestCase {
             [.fireRedVAD, .voxtral, .appleTranslation]
         )
         XCTAssertEqual(
+            LocalEnglishEngine.voxtralQwenApple.requiredComponents,
+            [.fireRedVAD, .voxtral, .qwen, .appleTranslation]
+        )
+        XCTAssertEqual(
+            LocalEnglishEngine.voxtralTurboApple.requiredComponents,
+            [.fireRedVAD, .voxtral, .whisperTurbo, .appleTranslation]
+        )
+        XCTAssertEqual(
             LocalEnglishEngine.voxtralCohereApple.requiredComponents,
             [.fireRedVAD, .voxtral, .cohere, .appleTranslation]
         )
@@ -175,6 +187,10 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertFalse(LocalEnglishEngine.whisperLargeV3Direct.requiresAppleHighFidelity(for: .adaptive))
         XCTAssertTrue(LocalEnglishEngine.whisperLargeV3Direct.requiresAppleLowLatency(for: .adaptive))
         XCTAssertTrue(LocalEnglishEngine.voxtralApple.usesVoxtralStreaming)
+        XCTAssertTrue(LocalEnglishEngine.voxtralQwenApple.usesContinuousVoxtral)
+        XCTAssertTrue(LocalEnglishEngine.voxtralTurboApple.usesContinuousVoxtral)
+        XCTAssertTrue(LocalEnglishEngine.voxtralTurboApple.usesWhisperFinal)
+        XCTAssertEqual(LocalEnglishEngine.voxtralTurboApple.whisperModelID, "large-v3-turbo")
         XCTAssertTrue(LocalEnglishEngine.voxtralCohereApple.usesCohereFinal)
         XCTAssertFalse(LocalEnglishEngine.voxtralApple.usesAppleSpeechPreview)
         XCTAssertTrue(LocalEnglishEngine.voxtralApple.usesVoxtralSourcePreview)

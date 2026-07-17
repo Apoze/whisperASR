@@ -362,7 +362,7 @@ class AppState {
         let previewReady = !mode.showsPreview
             || !engine.usesAppleSpeechPreview
             || appleSpeechReady
-        let diarizationReady = engine != .voxtralApple
+        let diarizationReady = !engine.usesContinuousVoxtral
             || !LocalDiarizationShadowConfiguration.isEnabled
             || localDiarizationPreparationFinished
         let whisperReady = !engine.usesWhisperFinal || isLiveTranslationModelReady
@@ -633,7 +633,7 @@ class AppState {
             let sourceMismatch = !isDirectEnglish
                 && localCommittedSegments.count != localSourceSegments.count
             let uncommittedSourceAudio = localCommittedSampleCount < localSourceFinalizedSampleCount
-            let pendingVoxtralSource = activeLocalEnglishEngine == .voxtralApple
+            let pendingVoxtralSource = activeLocalEnglishEngine.usesContinuousVoxtral
                 && !localVoxtralClausePlanner.pendingSourceText
                     .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             let sourceFailure = localContinuousVoxtralFailure
@@ -650,10 +650,10 @@ class AppState {
                 englishFailure = "\(operation) failed after \(failedJob.attempts.count) attempt\(failedJob.attempts.count == 1 ? "" : "s"): \(failedJob.attempts.lastError ?? "Unknown finalization error.")"
             } else if !localTranslationQueue.isEmpty {
                 englishFailure = "An English final is waiting for retry."
-            } else if activeLocalEnglishEngine == .voxtralApple,
+            } else if activeLocalEnglishEngine.usesContinuousVoxtral,
                       localVoxtralClausePlanner.pendingValidationCount != 0 {
                 englishFailure = "One or more staged Voxtral clauses were not validated in English."
-            } else if activeLocalEnglishEngine == .voxtralApple,
+            } else if activeLocalEnglishEngine.usesContinuousVoxtral,
                       localVoxtralClausePlanner.englishValidatedThrough
                         != localVoxtralClausePlanner.sourceStagedThrough {
                 englishFailure = "The Voxtral source and English validation cursors do not match."
@@ -1190,7 +1190,7 @@ class AppState {
         let speechReady = !mode.showsPreview
             || !engine.usesAppleSpeechPreview
             || appleSpeechReady
-        let diarizationReady = engine != .voxtralApple
+        let diarizationReady = !engine.usesContinuousVoxtral
             || !LocalDiarizationShadowConfiguration.isEnabled
             || localDiarizationPreparationFinished
         if localModelManager.phase(for: engine).isReady,
@@ -1236,7 +1236,7 @@ class AppState {
                         self.preparingLiveModelFileName = nil
                     }
                 }
-                if engine != .voxtralApple {
+                if !engine.usesContinuousVoxtral {
                     await self.localDiarizationShadow.shutdown()
                     await MainActor.run {
                         self.localDiarizationPreparationFinished = false
@@ -1246,7 +1246,7 @@ class AppState {
                     try await self.localModelManager.prepare(engine)
                 }
                 if LocalDiarizationShadowConfiguration.isEnabled,
-                   engine == .voxtralApple {
+                   engine.usesContinuousVoxtral {
                     await self.localDiarizationShadow.prepare()
                     let status = await self.localDiarizationShadow.status()
                     await MainActor.run {
@@ -1759,9 +1759,10 @@ class AppState {
         engine: LocalEnglishEngine,
         sourceLocale: String
     ) async {
-        if engine == .voxtralApple {
+        if engine.usesContinuousVoxtral {
             await runContinuousVoxtralAppleCaptions(
                 recorder: recorder,
+                engine: engine,
                 sourceLocale: sourceLocale
             )
             return
@@ -1795,6 +1796,7 @@ class AppState {
     @MainActor
     private func runContinuousVoxtralAppleCaptions(
         recorder: AudioRecorder,
+        engine: LocalEnglishEngine,
         sourceLocale: String
     ) async {
         let fifo = LocalEndpointFIFO()
@@ -1856,7 +1858,7 @@ class AppState {
 
         async let consumer: Void = consumePrototypeEndpoints(
             recorder: recorder,
-            engine: .voxtralApple,
+            engine: engine,
             sourceLocale: sourceLocale,
             fifo: fifo
         )
@@ -2781,7 +2783,7 @@ class AppState {
 
         let finalText: String
         switch engine {
-        case .whisperTurboApple:
+        case .whisperTurboApple, .voxtralTurboApple:
             let result = try await service.transcribeChunk(
                 samples: audio,
                 language: Self.languageCode(for: sourceLocale),
@@ -2789,7 +2791,7 @@ class AppState {
                 modelPath: try Self.whisperModelPath(for: engine)
             )
             finalText = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .qwenApple:
+        case .qwenApple, .voxtralQwenApple:
             finalText = try await localModelManager.transcribeQwen(
                 audio: audio,
                 language: Self.languageName(for: sourceLocale)
@@ -2845,7 +2847,7 @@ class AppState {
                 asrMilliseconds: asrMilliseconds
             )
         if !queued {
-            if engine == .voxtralApple {
+            if engine.usesContinuousVoxtral {
                 throw LocalPrototypeError.cursorMismatch(
                     "A staged Voxtral clause could not be queued for English translation. Its PCM was retained."
                 )
@@ -3232,7 +3234,7 @@ class AppState {
                 let normalized = text
                 guard localTranslationQueue.first?.index == job.index else { continue }
                 if let decision = job.decision,
-                   activeLocalEnglishEngine == .voxtralApple,
+                   activeLocalEnglishEngine.usesContinuousVoxtral,
                    !localVoxtralClausePlanner.validate(through: decision.stableThrough) {
                     throw LocalPrototypeError.cursorMismatch(
                         "Voxtral English validation did not match the oldest staged PCM range. No audio was released."
@@ -3254,7 +3256,7 @@ class AppState {
                         localCommittedSampleCount,
                         decision.stableThrough
                     )
-                    let retainedOverlap = activeLocalEnglishEngine == .voxtralApple
+                    let retainedOverlap = activeLocalEnglishEngine.usesContinuousVoxtral
                         ? VoxtralClausePlanner.stabilityGuard
                         : LocalEndpointPlanner.forcedOverlap
                     let requestedTrim = max(
