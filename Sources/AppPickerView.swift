@@ -367,7 +367,9 @@ struct AppPickerView: View {
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
-        } else if let error = appState.localResourceError ?? appState.liveModelPreparationError {
+        } else if let error = appState.localResourceError
+                    ?? appState.appleTranslationPreparationError
+                    ?? appState.liveModelPreparationError {
             Label(error, systemImage: "exclamationmark.triangle.fill")
                 .font(.caption2)
                 .foregroundStyle(.red)
@@ -416,18 +418,26 @@ struct AppPickerView: View {
         if captionMode == .localEnglish,
            !localSourceLocale.isEmpty,
            let preparationMode = applePreparationMode {
+            let capturedEngine = localEnglishEngine
+            let capturedMode = appleTranslationMode
+            let capturedSourceLocale = localSourceLocale
+            let capturedGeneration = appState.localPreparationGeneration
             if #available(macOS 26.4, *) {
                 AppleTranslationPreparationView(
-                    sourceLocale: localSourceLocale,
+                    sourceLocale: capturedSourceLocale,
                     mode: preparationMode
                 ) { highFidelity, ready, error in
                     appState.reportAppleTranslationPreparation(
                         highFidelity: highFidelity,
                         ready: ready,
-                        error: error
+                        error: error,
+                        engine: capturedEngine,
+                        translationMode: capturedMode,
+                        sourceLocale: capturedSourceLocale,
+                        generation: capturedGeneration
                     )
                 }
-                .id("\(localSourceLocale)|\(appleTranslationMode.rawValue)|\(localEnglishEngine.rawValue)")
+                .id("\(capturedSourceLocale)|\(capturedMode.rawValue)|\(capturedEngine.rawValue)|\(capturedGeneration)")
             }
         }
     }

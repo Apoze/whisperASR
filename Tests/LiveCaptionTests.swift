@@ -101,6 +101,131 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertFalse(AppleTranslationMode.lowLatencyOnly.requiresHighFidelity)
     }
 
+    @MainActor
+    func testApplePreparationCallbackIsScopedToCapturedSelection() {
+        let defaults = UserDefaults.standard
+        let keys = [
+            LiveCaptionMode.storageKey,
+            LocalEnglishEngine.storageKey,
+            AppleTranslationMode.storageKey,
+            LocalSpeechEngine.sourceLocaleKey,
+            APIServer.enabledKey,
+        ]
+        let previous = Dictionary(uniqueKeysWithValues: keys.map {
+            ($0, defaults.object(forKey: $0))
+        })
+        defer {
+            for key in keys {
+                if let value = previous[key] ?? nil {
+                    defaults.set(value, forKey: key)
+                } else {
+                    defaults.removeObject(forKey: key)
+                }
+            }
+        }
+
+        defaults.set(false, forKey: APIServer.enabledKey)
+        defaults.set(LiveCaptionMode.localEnglish.rawValue, forKey: LiveCaptionMode.storageKey)
+        defaults.set(LocalEnglishEngine.voxtralApple.rawValue, forKey: LocalEnglishEngine.storageKey)
+        defaults.set(AppleTranslationMode.adaptive.rawValue, forKey: AppleTranslationMode.storageKey)
+        defaults.set("ja", forKey: LocalSpeechEngine.sourceLocaleKey)
+        let state = AppState()
+        let generation = state.localPreparationGeneration
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: true,
+            error: nil,
+            engine: .qwenApple,
+            translationMode: .adaptive,
+            sourceLocale: "ja",
+            generation: generation
+        )
+        XCTAssertFalse(state.appleTranslationLowReady)
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: true,
+            error: nil,
+            engine: .voxtralApple,
+            translationMode: .highFidelityOnly,
+            sourceLocale: "ja",
+            generation: generation
+        )
+        XCTAssertFalse(state.appleTranslationLowReady)
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: true,
+            error: nil,
+            engine: .voxtralApple,
+            translationMode: .adaptive,
+            sourceLocale: "fr",
+            generation: generation
+        )
+        XCTAssertFalse(state.appleTranslationLowReady)
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: true,
+            error: nil,
+            engine: .voxtralApple,
+            translationMode: .adaptive,
+            sourceLocale: "ja",
+            generation: generation
+        )
+        XCTAssertTrue(state.appleTranslationLowReady)
+
+        state.resetAppleTranslationPreparation()
+        let nextGeneration = state.localPreparationGeneration
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: false,
+            error: "stale failure",
+            engine: .voxtralApple,
+            translationMode: .adaptive,
+            sourceLocale: "ja",
+            generation: generation
+        )
+        XCTAssertNil(state.appleTranslationPreparationError)
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: false,
+            error: "temporary failure",
+            engine: .voxtralApple,
+            translationMode: .adaptive,
+            sourceLocale: "ja",
+            generation: nextGeneration
+        )
+        XCTAssertEqual(state.appleTranslationPreparationError, "temporary failure")
+        XCTAssertNil(state.localResourceError)
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: true,
+            ready: true,
+            error: nil,
+            engine: .voxtralApple,
+            translationMode: .adaptive,
+            sourceLocale: "ja",
+            generation: nextGeneration
+        )
+        XCTAssertEqual(state.appleTranslationPreparationError, "temporary failure")
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: true,
+            error: nil,
+            engine: .voxtralApple,
+            translationMode: .adaptive,
+            sourceLocale: "ja",
+            generation: nextGeneration
+        )
+        XCTAssertTrue(state.appleTranslationLowReady)
+        XCTAssertNil(state.appleTranslationPreparationError)
+        state.shutdown()
+    }
+
     func testTranslationOnlyPrimarySegmentsDropMissingTranslations() {
         let source = [
             TranscriptionSegment(start: 0, end: 1, text: "one"),

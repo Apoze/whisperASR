@@ -218,6 +218,12 @@ private enum LiveSessionClosureOperation {
     case cancel
 }
 
+private struct LocalPreparationKey: Equatable {
+    let engine: LocalEnglishEngine
+    let translationMode: AppleTranslationMode
+    let sourceLocale: String
+}
+
 @Observable
 class AppState {
     var items: [TranscriptionItem] = []
@@ -238,6 +244,7 @@ class AppState {
     private(set) var localResourceError: String?
     private(set) var appleTranslationLowReady = false
     private(set) var appleTranslationHighReady = false
+    private(set) var appleTranslationPreparationError: String?
     private(set) var appleSpeechReady = false
 
     // Inline error banners surfaced in RecordingView. Nil when no error.
@@ -347,8 +354,14 @@ class AppState {
     private var preparingLiveModelFileName: String?
     private var verifiedWhisperModelChecksums: Set<String> = []
     private var localModelPreparationTask: Task<Void, Never>?
-    private var preparingLocalEnglishEngine: LocalEnglishEngine?
-    private var preparingLocalTranslationMode: AppleTranslationMode?
+    private var localReadinessMonitorTask: Task<Void, Never>?
+    private(set) var localPreparationGeneration: UInt64 = 0
+    private var preparingLocalResourcesKey: LocalPreparationKey?
+    private var preparedLocalResourcesKey: LocalPreparationKey?
+    private var appleTranslationLowReadyKey: LocalPreparationKey?
+    private var appleTranslationHighReadyKey: LocalPreparationKey?
+    private var appleSpeechReadyKey: LocalPreparationKey?
+    private var continuousVoxtralHelperReady = false
     let localModelManager = LocalEnglishModelManager()
     @ObservationIgnored private let localMetricRecorder = LocalCaptionMetricRecorder()
     @ObservationIgnored private let localBenchmarkEnabled =
@@ -370,18 +383,18 @@ class AppState {
     @MainActor
     var isLocalEnglishReady: Bool {
         guard #available(macOS 26.4, *) else { return false }
-        let defaults = UserDefaults.standard
-        let source = defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
-        let engine = LocalEnglishEngine.stored(in: defaults)
-        let mode = AppleTranslationMode.stored(in: defaults)
-        let translationReady = (!engine.requiresAppleLowLatency(for: mode) || appleTranslationLowReady)
-            && (!engine.requiresAppleHighFidelity(for: mode) || appleTranslationHighReady)
+        let key = currentLocalPreparationKey
+        let source = key.sourceLocale
+        let engine = key.engine
+        let mode = key.translationMode
+        let translationReady = appleTranslationIsPrepared(for: key)
         let previewReady = !mode.showsPreview
             || !engine.usesAppleSpeechPreview
-            || appleSpeechReady
+            || appleSpeechReadyKey == key
         let diarizationReady = !engine.usesContinuousVoxtral
             || !LocalDiarizationShadowConfiguration.isEnabled
             || localDiarizationPreparationFinished
+        let helperReady = !engine.usesContinuousVoxtral || continuousVoxtralHelperReady
         let whisperReady = !engine.usesWhisperFinal || isLiveTranslationModelReady
         let sourceCode = Locale(identifier: source).language.languageCode?.identifier
         let sourceSupported = localSourceLocales.contains {
@@ -392,9 +405,29 @@ class AppState {
             && translationReady
             && previewReady
             && diarizationReady
+            && helperReady
             && whisperReady
+            && preparedLocalResourcesKey == key
+            && localModelManager.loadedEngine == engine
             && localModelManager.phase(for: engine).isReady
+            && appleTranslationPreparationError == nil
             && localResourceError == nil
+    }
+
+    private var currentLocalPreparationKey: LocalPreparationKey {
+        let defaults = UserDefaults.standard
+        return LocalPreparationKey(
+            engine: LocalEnglishEngine.stored(in: defaults),
+            translationMode: AppleTranslationMode.stored(in: defaults),
+            sourceLocale: defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
+        )
+    }
+
+    private func appleTranslationIsPrepared(for key: LocalPreparationKey) -> Bool {
+        (!key.engine.requiresAppleLowLatency(for: key.translationMode)
+            || appleTranslationLowReadyKey == key)
+            && (!key.engine.requiresAppleHighFidelity(for: key.translationMode)
+                || appleTranslationHighReadyKey == key)
     }
 
     private var liveModelSelectionKey: String {
@@ -1278,20 +1311,39 @@ class AppState {
 
     @MainActor
     func resetAppleTranslationPreparation() {
+        localPreparationGeneration &+= 1
+        localModelPreparationTask?.cancel()
+        localReadinessMonitorTask?.cancel()
+        localReadinessMonitorTask = nil
+        preparingLocalResourcesKey = nil
+        preparedLocalResourcesKey = nil
+        appleTranslationLowReadyKey = nil
+        appleTranslationHighReadyKey = nil
+        appleSpeechReadyKey = nil
+        continuousVoxtralHelperReady = false
         appleTranslationLowReady = false
         appleTranslationHighReady = false
+        appleTranslationPreparationError = nil
         appleSpeechReady = false
         localResourceError = nil
     }
 
     @MainActor
     func deactivateLocalEnglishResources() {
-        localModelPreparationTask?.cancel()
-        localModelPreparationTask = nil
+        localPreparationGeneration &+= 1
+        let previousPreparation = localModelPreparationTask
+        previousPreparation?.cancel()
+        localReadinessMonitorTask?.cancel()
+        localReadinessMonitorTask = nil
         liveModelPreparationTask?.cancel()
         liveModelPreparationTask = nil
-        preparingLocalEnglishEngine = nil
-        preparingLocalTranslationMode = nil
+        preparingLocalResourcesKey = nil
+        preparedLocalResourcesKey = nil
+        appleTranslationLowReadyKey = nil
+        appleTranslationHighReadyKey = nil
+        appleSpeechReadyKey = nil
+        appleTranslationPreparationError = nil
+        continuousVoxtralHelperReady = false
         preparingLiveModelFileName = nil
         preparedLiveModelFileName = nil
         isPreparingLiveModel = false
@@ -1301,16 +1353,18 @@ class AppState {
         localPreviewTranslationTask = nil
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
-        Task {
-            if #available(macOS 26.0, *), let speech = appleSpeechRuntime as? AppleSpeechService {
+        localModelPreparationTask = Task { [weak self] in
+            await previousPreparation?.value
+            guard let self else { return }
+            if #available(macOS 26.0, *), let speech = self.appleSpeechRuntime as? AppleSpeechService {
                 await speech.cancel()
             }
-            if #available(macOS 26.4, *), let preview = applePreviewTranslationRuntime as? AppleTranslationService {
+            if #available(macOS 26.4, *), let preview = self.applePreviewTranslationRuntime as? AppleTranslationService {
                 await preview.cancel()
             }
-            await localModelManager.unload()
-            await localDiarizationShadow.shutdown()
-            await service.unloadModel()
+            await self.localModelManager.unload()
+            await self.localDiarizationShadow.shutdown()
+            await self.service.unloadModel()
         }
     }
 
@@ -1318,14 +1372,31 @@ class AppState {
     func reportAppleTranslationPreparation(
         highFidelity: Bool,
         ready: Bool,
-        error: String?
+        error: String?,
+        engine: LocalEnglishEngine,
+        translationMode: AppleTranslationMode,
+        sourceLocale: String,
+        generation: UInt64
     ) {
+        let key = LocalPreparationKey(
+            engine: engine,
+            translationMode: translationMode,
+            sourceLocale: sourceLocale
+        )
+        guard generation == localPreparationGeneration,
+              key == currentLocalPreparationKey else { return }
         if highFidelity {
             appleTranslationHighReady = ready
+            appleTranslationHighReadyKey = ready ? key : nil
         } else {
             appleTranslationLowReady = ready
+            appleTranslationLowReadyKey = ready ? key : nil
         }
-        if let error { localResourceError = error }
+        if ready, appleTranslationIsPrepared(for: key) {
+            appleTranslationPreparationError = nil
+        } else if let error {
+            appleTranslationPreparationError = error
+        }
     }
 
     @MainActor
@@ -1335,26 +1406,36 @@ class AppState {
             localResourceError = "Local Apple translation requires macOS 26.4 or later."
             return
         }
-        let defaults = UserDefaults.standard
-        let locale = defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
+        let key = currentLocalPreparationKey
+        let locale = key.sourceLocale
         guard !locale.isEmpty else {
+            localPreparationGeneration &+= 1
+            localModelPreparationTask?.cancel()
+            localReadinessMonitorTask?.cancel()
+            localReadinessMonitorTask = nil
+            preparingLocalResourcesKey = nil
+            preparedLocalResourcesKey = nil
+            continuousVoxtralHelperReady = false
+            isPreparingLocalResources = false
             localResourceProgress = 0
             localResourceError = nil
             return
         }
-        let engine = LocalEnglishEngine.stored(in: defaults)
-        let mode = AppleTranslationMode.stored(in: defaults)
-        if preparingLocalEnglishEngine == engine,
-           preparingLocalTranslationMode == mode { return }
+        let engine = key.engine
+        let mode = key.translationMode
+        if preparingLocalResourcesKey == key { return }
         let speechReady = !mode.showsPreview
             || !engine.usesAppleSpeechPreview
-            || appleSpeechReady
+            || appleSpeechReadyKey == key
         let diarizationReady = !engine.usesContinuousVoxtral
             || !LocalDiarizationShadowConfiguration.isEnabled
             || localDiarizationPreparationFinished
-        if localModelManager.phase(for: engine).isReady,
+        if preparedLocalResourcesKey == key,
+           localModelManager.loadedEngine == engine,
+           localModelManager.phase(for: engine).isReady,
            speechReady,
-           diarizationReady {
+           diarizationReady,
+           (!engine.usesContinuousVoxtral || continuousVoxtralHelperReady) {
             isPreparingLocalResources = false
             localResourceProgress = 1
             localResourceError = nil
@@ -1364,78 +1445,133 @@ class AppState {
 
         let previousPreparation = localModelPreparationTask
         previousPreparation?.cancel()
-        preparingLocalEnglishEngine = engine
-        preparingLocalTranslationMode = mode
+        localPreparationGeneration &+= 1
+        let generation = localPreparationGeneration
+        localReadinessMonitorTask?.cancel()
+        localReadinessMonitorTask = nil
+        preparingLocalResourcesKey = key
+        preparedLocalResourcesKey = nil
+        continuousVoxtralHelperReady = false
         isPreparingLocalResources = true
         localResourceProgress = 0
         localResourceError = nil
         localModelPreparationTask = Task { [weak self] in
             guard let self else { return }
             await previousPreparation?.value
-            guard !Task.isCancelled else { return }
+            guard self.localPreparationIsCurrent(key, generation: generation) else { return }
             do {
                 if mode.showsPreview, engine.usesAppleSpeechPreview {
                     try await self.appleSpeechService().prepare(
                         localeIdentifier: locale
                     ) { progress in
                         Task { @MainActor [weak self] in
-                            self?.localResourceProgress = progress
+                            guard let self,
+                                  self.localPreparationIsCurrent(
+                                    key,
+                                    generation: generation
+                                  ) else { return }
+                            self.localResourceProgress = progress
                         }
                     }
-                    await MainActor.run { self.appleSpeechReady = true }
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                    self.appleSpeechReady = true
+                    self.appleSpeechReadyKey = key
                 }
                 if !engine.usesWhisperFinal {
                     let previousWhisperPreparation = self.liveModelPreparationTask
                     previousWhisperPreparation?.cancel()
                     await previousWhisperPreparation?.value
-                    guard !Task.isCancelled else { return }
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
                     await self.service.unloadModel()
-                    await MainActor.run {
-                        self.preparedLiveModelFileName = nil
-                        self.preparingLiveModelFileName = nil
-                    }
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                    self.preparedLiveModelFileName = nil
+                    self.preparingLiveModelFileName = nil
                 }
                 if !engine.usesContinuousVoxtral {
                     await self.localDiarizationShadow.shutdown()
-                    await MainActor.run {
-                        self.localDiarizationPreparationFinished = false
-                    }
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                    self.localDiarizationPreparationFinished = false
                 }
-                if !self.localModelManager.phase(for: engine).isReady {
-                    try await self.localModelManager.prepare(engine)
+                try await self.localModelManager.prepare(engine)
+                guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                if engine.usesContinuousVoxtral {
+                    let helperReady = await self.localModelManager.continuousVoxtralIsReady()
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                    guard helperReady else {
+                        throw LocalPrototypeError.modelNotLoaded("Voxtral helper")
+                    }
+                    self.continuousVoxtralHelperReady = true
                 }
                 if LocalDiarizationShadowConfiguration.isEnabled,
                    engine.usesContinuousVoxtral {
                     await self.localDiarizationShadow.prepare()
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
                     let status = await self.localDiarizationShadow.status()
-                    await MainActor.run {
-                        self.localDiarizationPreparationFinished = true
-                        if LocalDiarizationShadowConfiguration
-                            .isAssistRequestedButUnpromoted {
-                            self.livePreviewError = "Speaker changes are in shadow mode only: no tested diarizer met the promotion thresholds. Punctuation and pauses remain authoritative."
-                        } else if let reason = status.failureReason {
-                            self.livePreviewError = "Speaker-change assistance unavailable: \(reason) Punctuation and pauses remain active."
-                        }
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                    self.localDiarizationPreparationFinished = true
+                    if LocalDiarizationShadowConfiguration
+                        .isAssistRequestedButUnpromoted {
+                        self.livePreviewError = "Speaker changes are in shadow mode only: no tested diarizer met the promotion thresholds. Punctuation and pauses remain authoritative."
+                    } else if let reason = status.failureReason {
+                        self.livePreviewError = "Speaker-change assistance unavailable: \(reason) Punctuation and pauses remain active."
                     }
                 }
                 if engine.usesWhisperFinal {
-                    await MainActor.run { self.prepareLiveTranslationModel() }
+                    self.prepareLiveTranslationModel()
                 }
-                guard !Task.isCancelled else { return }
-                await MainActor.run {
-                    self.isPreparingLocalResources = false
-                    self.localResourceProgress = 1
-                    self.preparingLocalEnglishEngine = nil
-                    self.preparingLocalTranslationMode = nil
-                }
+                guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                self.isPreparingLocalResources = false
+                self.localResourceProgress = 1
+                self.preparingLocalResourcesKey = nil
+                self.preparedLocalResourcesKey = key
+                self.startLocalReadinessMonitor(for: key, generation: generation)
             } catch {
-                guard !Task.isCancelled else { return }
-                await MainActor.run {
-                    self.isPreparingLocalResources = false
-                    self.localResourceError = error.localizedDescription
-                    self.preparingLocalEnglishEngine = nil
-                    self.preparingLocalTranslationMode = nil
-                }
+                guard self.localPreparationIsCurrent(key, generation: generation) else { return }
+                self.isPreparingLocalResources = false
+                self.localResourceError = error.localizedDescription
+                self.preparingLocalResourcesKey = nil
+                self.preparedLocalResourcesKey = nil
+                self.continuousVoxtralHelperReady = false
+            }
+        }
+    }
+
+    @MainActor
+    private func localPreparationIsCurrent(
+        _ key: LocalPreparationKey,
+        generation: UInt64
+    ) -> Bool {
+        !Task.isCancelled
+            && localPreparationGeneration == generation
+            && preparingLocalResourcesKey == key
+            && currentLocalPreparationKey == key
+    }
+
+    @MainActor
+    private func startLocalReadinessMonitor(
+        for key: LocalPreparationKey,
+        generation: UInt64
+    ) {
+        localReadinessMonitorTask?.cancel()
+        guard key.engine.usesContinuousVoxtral else { return }
+        localReadinessMonitorTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled, let self,
+                      self.localPreparationGeneration == generation,
+                      self.preparedLocalResourcesKey == key,
+                      self.currentLocalPreparationKey == key else { return }
+                if self.isLiveTranscribing { continue }
+                let helperReady = await self.localModelManager.continuousVoxtralIsReady()
+                guard !Task.isCancelled,
+                      self.localPreparationGeneration == generation,
+                      self.preparedLocalResourcesKey == key,
+                      self.currentLocalPreparationKey == key else { return }
+                guard !helperReady else { continue }
+                self.continuousVoxtralHelperReady = false
+                self.preparedLocalResourcesKey = nil
+                self.localResourceError = "Voxtral helper stopped. Prepare the selected pipeline again."
+                return
             }
         }
     }
