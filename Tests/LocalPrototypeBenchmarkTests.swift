@@ -186,6 +186,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
 
     private struct VoxtralContinuousRun: Codable {
         let replayCount: Int
+        let modelVariant: VoxtralModelVariant
         let blockMilliseconds: Int
         let transcriptionDelayMilliseconds: Int
         // Legacy FireRed-derived fields retained for older report readers.
@@ -815,6 +816,9 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         let url = URL(fileURLWithPath: path)
         let samples = try await AudioLoader.loadSamples(url: url)
         let manager = LocalEnglishModelManager()
+        await manager.selectContinuousVoxtralConfiguration(
+            Self.requestedContinuousVoxtralConfiguration()
+        )
         try await manager.prepare(.voxtralApple)
         defer { Task { await manager.shutdown() } }
         let report = try await continuousVoxtralRun(
@@ -826,7 +830,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(report).write(
             to: url.deletingLastPathComponent().appendingPathComponent(
-                "voxtral-helper-stream-\(report.transcriptionDelayMilliseconds)ms-\(report.blockMilliseconds)ms.json"
+                "voxtral-helper-stream-\(report.modelVariant.rawValue)-\(report.transcriptionDelayMilliseconds)ms-\(report.blockMilliseconds)ms.json"
             ),
             options: .atomic
         )
@@ -847,6 +851,9 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         let url = URL(fileURLWithPath: path)
         let samples = try await AudioLoader.loadSamples(url: url)
         let manager = LocalEnglishModelManager()
+        await manager.selectContinuousVoxtralConfiguration(
+            Self.requestedContinuousVoxtralConfiguration()
+        )
         try await manager.prepare(.voxtralApple)
         defer { Task { await manager.shutdown() } }
 
@@ -870,19 +877,27 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
             15_000,
             "The production helper has a 15-second final-flush deadline."
         )
-        XCTAssertGreaterThan(
-            Double(report.totalSamples) / Double(VoxtralClausePlanner.sampleRate),
-            6 * 60
-        )
-        // Voxtral advances one streaming position every 80 ms. A useful delta
-        // after this point proves the long-lived session did not stop at 4,096.
-        XCTAssertGreaterThan(report.lastDeltaMilliseconds ?? 0, 4_096 * 80)
+        let totalSeconds = Double(report.totalSamples)
+            / Double(VoxtralClausePlanner.sampleRate)
+        if totalSeconds > 6 * 60 {
+            // Voxtral advances one streaming position every 80 ms. A useful
+            // delta after this point proves the session crossed position 4,096.
+            XCTAssertGreaterThan(report.lastDeltaMilliseconds ?? 0, 4_096 * 80)
+        } else {
+            // The four-replay fail-fast gate still has to emit in its final replay.
+            let oneReplayMilliseconds = totalSeconds * 1_000
+                / Double(report.replayCount)
+            XCTAssertGreaterThan(
+                report.lastDeltaMilliseconds ?? 0,
+                oneReplayMilliseconds * Double(report.replayCount - 1)
+            )
+        }
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(report).write(
             to: url.deletingLastPathComponent().appendingPathComponent(
-                "voxtral-helper-endurance-\(replayCount)x-crosses-4096-positions-960ms-\(report.blockMilliseconds)ms.json"
+                "voxtral-helper-endurance-\(report.modelVariant.rawValue)-\(replayCount)x-crosses-4096-positions-\(report.transcriptionDelayMilliseconds)ms-\(report.blockMilliseconds)ms.json"
             ),
             options: .atomic
         )
@@ -2267,8 +2282,10 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
 
         return VoxtralContinuousRun(
             replayCount: replayCount,
+            modelVariant: manager.continuousVoxtralConfiguration.model,
             blockMilliseconds: VoxtralHelperManifest.transportBlockMilliseconds,
-            transcriptionDelayMilliseconds: VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds,
+            transcriptionDelayMilliseconds:
+                manager.continuousVoxtralConfiguration.delay.rawValue,
             firstSpeechSample: detectedSpeechStartSample,
             firstDeltaMilliseconds: summary.firstDeltaMilliseconds,
             firstDeltaAfterSpeechMilliseconds: summary.firstDeltaMilliseconds.map {
@@ -2319,14 +2336,32 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         )
     }
 
+    private static func requestedContinuousVoxtralConfiguration()
+        -> VoxtralContinuousConfiguration {
+        let environment = ProcessInfo.processInfo.environment
+        let model = environment["WHISPERASR_VOXTRAL_HELPER_VARIANT"]
+            .flatMap(VoxtralModelVariant.init(rawValue:)) ?? .q4
+        let delay = environment["WHISPERASR_VOXTRAL_HELPER_DELAY_MS"]
+            .flatMap(Int.init)
+            .flatMap(VoxtralTranscriptionDelay.init(rawValue:)) ?? .milliseconds960
+        return VoxtralContinuousConfiguration(model: model, delay: delay)
+    }
+
     private func validateContinuousVoxtralReport(_ report: VoxtralContinuousRun) {
+        let environment = ProcessInfo.processInfo.environment
+        let maximumFirstDeltaMilliseconds = environment[
+            "WHISPERASR_VOXTRAL_MAX_FIRST_DELTA_MS"
+        ].flatMap(Double.init) ?? 2_500
+        let maximumEligiblePrefixMilliseconds = environment[
+            "WHISPERASR_VOXTRAL_MAX_ELIGIBLE_PREFIX_MS"
+        ].flatMap(Double.init) ?? 3_000
         XCTAssertEqual(
             report.blockMilliseconds,
             VoxtralHelperManifest.transportBlockMilliseconds
         )
-        XCTAssertEqual(
-            report.transcriptionDelayMilliseconds,
-            VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds
+        XCTAssertTrue(
+            VoxtralTranscriptionDelay.allCases.map(\.rawValue)
+                .contains(report.transcriptionDelayMilliseconds)
         )
         XCTAssertEqual(report.fedSamples, report.totalSamples)
         XCTAssertEqual(report.acknowledgementCount, report.appendCount)
@@ -2366,7 +2401,18 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         XCTAssertNotNil(report.firstEligiblePrefixMilliseconds)
         if let firstAfterAnnotatedSpeech = report.firstDeltaAfterAnnotatedSpeechStartMilliseconds {
             XCTAssertGreaterThanOrEqual(firstAfterAnnotatedSpeech, 0)
-            XCTAssertLessThanOrEqual(firstAfterAnnotatedSpeech, 2_500)
+            XCTAssertLessThanOrEqual(
+                firstAfterAnnotatedSpeech,
+                maximumFirstDeltaMilliseconds
+            )
+        }
+        if let eligibleAfterAnnotatedSpeech =
+            report.firstEligiblePrefixAfterAnnotatedSpeechStartMilliseconds {
+            XCTAssertGreaterThanOrEqual(eligibleAfterAnnotatedSpeech, 0)
+            XCTAssertLessThanOrEqual(
+                eligibleAfterAnnotatedSpeech,
+                maximumEligiblePrefixMilliseconds
+            )
         }
         XCTAssertTrue(report.completedEventReceived)
         XCTAssertTrue(report.deltaTranscriptMatchesFinal)

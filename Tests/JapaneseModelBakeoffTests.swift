@@ -266,7 +266,7 @@ private struct JapaneseBenchmarkManifest: Codable {
 
 private enum JapaneseBakeoffEngine: String, Codable, CaseIterable {
     case whisperTurbo = "whisper-large-v3-turbo"
-    case voxtralContinuous = "voxtral-q4-continuous-960ms"
+    case voxtralContinuous = "voxtral-continuous"
     case qwenASR = "qwen3-asr-1.7b-mlx-8bit"
     case cohereQ8 = "cohere-transcribe-03-2026-mlx-8bit"
 }
@@ -335,6 +335,7 @@ private struct JapaneseBakeoffFullReport: Codable {
     let productionBoundaryStatus: String
     let productionBoundaryNote: String
     let appleHighFidelityEnabled: Bool
+    let voxtralConfiguration: VoxtralContinuousConfiguration
     let engines: [JapaneseBakeoffEngineReport]
 }
 
@@ -506,9 +507,12 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         let translation = try await optionalAppleTranslation(environment: environment)
         let modelManager = LocalEnglishModelManager()
         let whisper = TranscriptionService()
+        let voxtralConfiguration = requestedVoxtralConfiguration(environment: environment)
+        await modelManager.selectContinuousVoxtralConfiguration(voxtralConfiguration)
+        let requestedEngines = selectedEngines(environment: environment)
 
         var engineReports: [JapaneseBakeoffEngineReport] = []
-        for engine in JapaneseBakeoffEngine.allCases {
+        for engine in requestedEngines {
             print("[JapaneseBakeoff] preparing \(engine.rawValue)")
             let report = await runEngine(
                 engine,
@@ -540,6 +544,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             productionBoundaryStatus: "not-reproduced",
             productionBoundaryNote: "Production boundaries depend on AppState's continuous VoxtralClausePlanner, VAD, preview scheduler and optional diarization state. Recreating them turn-by-turn here would be a false simulation; use the existing real-time replay reports for that pass.",
             appleHighFidelityEnabled: translation != nil,
+            voxtralConfiguration: voxtralConfiguration,
             engines: engineReports
         )
         let artifacts = blindArtifacts(
@@ -701,6 +706,28 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             return Set(raw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) })
         }
         return scope == "smoke" ? Set([3, 4, 6, 7]) : Set(1...59)
+    }
+
+    private func requestedVoxtralConfiguration(
+        environment: [String: String]
+    ) -> VoxtralContinuousConfiguration {
+        let model = environment["WHISPERASR_VOXTRAL_HELPER_VARIANT"]
+            .flatMap(VoxtralModelVariant.init(rawValue:)) ?? .q4
+        let delay = environment["WHISPERASR_VOXTRAL_HELPER_DELAY_MS"]
+            .flatMap(Int.init)
+            .flatMap(VoxtralTranscriptionDelay.init(rawValue:)) ?? .milliseconds960
+        return VoxtralContinuousConfiguration(model: model, delay: delay)
+    }
+
+    private func selectedEngines(
+        environment: [String: String]
+    ) -> [JapaneseBakeoffEngine] {
+        guard let raw = environment["WHISPERASR_JAPANESE_BAKEOFF_ENGINES"] else {
+            return JapaneseBakeoffEngine.allCases
+        }
+        return raw.split(separator: ",").compactMap {
+            JapaneseBakeoffEngine(rawValue: String($0))
+        }
     }
 
     @MainActor
