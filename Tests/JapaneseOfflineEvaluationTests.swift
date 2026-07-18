@@ -107,23 +107,38 @@ enum FirefoxCanonicalAudioAlignment {
         let refinementSamples = config.sampleRefinementMilliseconds * config.sampleRate / 1_000
         let refinementOffset = (anchorSamples - refinementSamples) / 2
         let refinementRadius = config.coarseHopSamples * 2
+        let refinementHop = max(1, config.coarseHopSamples / 8)
         var rawAnchors: [(canonical: Int, firefox: Int, coarse: Double, sample: Double)] = []
         for match in coarseMatches {
             let canonicalStart = match.canonical * config.coarseHopSamples + refinementOffset
             let firefoxEstimate = match.firefox * config.coarseHopSamples + refinementOffset
-            let reference = Array(canonical[canonicalStart..<(canonicalStart + refinementSamples)])
             let lower = max(0, firefoxEstimate - refinementRadius)
             let upper = min(firefox.count - refinementSamples, firefoxEstimate + refinementRadius)
             guard lower <= upper else {
                 throw AlignmentError.invalid("Refined anchor falls outside Firefox audio.")
             }
-            let refined = try bestMatch(anchor: reference, signal: firefox, starts: lower...upper)
+            let reference = energyEnvelope(
+                Array(canonical[canonicalStart..<(canonicalStart + refinementSamples)]),
+                hop: refinementHop
+            )
+            let searchEnd = upper + refinementSamples
+            let search = energyEnvelope(Array(firefox[lower..<searchEnd]), hop: refinementHop)
+            let refined = try bestMatch(
+                anchor: reference,
+                signal: search,
+                starts: 0...((upper - lower) / refinementHop)
+            )
             guard refined.score >= config.minimumCorrelation else {
                 throw AlignmentError.invalid(
                     "Sample correlation \(refined.score) is below \(config.minimumCorrelation)."
                 )
             }
-            rawAnchors.append((canonicalStart, refined.start, match.score, refined.score))
+            rawAnchors.append((
+                canonicalStart,
+                lower + refined.start * refinementHop,
+                match.score,
+                refined.score
+            ))
         }
         guard zip(rawAnchors, rawAnchors.dropFirst()).allSatisfy({ pair in
             pair.0.firefox < pair.1.firefox
@@ -348,6 +363,48 @@ enum ManyToManyTurnScorer {
         return groups
     }
 
+    /// Human review stays one item per annotated turn. A caption spanning
+    /// turns is intentionally repeated in each affected item instead of
+    /// joining all turns through a transitive fragment chain.
+    static func reviewGroups(
+        turns: [Turn],
+        candidatesByRole: [String: [Fragment]]
+    ) -> [Group] {
+        turns.sorted { $0.startSample < $1.startSample }.map { turn in
+            let candidates = candidatesByRole.keys.sorted().map { role in
+                let fragments = candidatesByRole[role, default: []]
+                    .filter { overlaps(turn, $0) }
+                    .sorted { $0.startSample < $1.startSample }
+                return Candidate(
+                    role: role,
+                    fragmentIDs: fragments.map(\.id),
+                    text: fragments.map(\.text).joined(separator: "\n"),
+                    hasUncoveredTurnGap: false
+                )
+            }
+            return Group(
+                id: turn.id,
+                turnIDs: [turn.id],
+                highConfidenceTurnCount: turn.confidence == "high" ? 1 : 0,
+                diagnosticTurnCount: turn.confidence == "high" ? 0 : 1,
+                referenceJapanese: turn.japanese,
+                candidates: candidates
+            )
+        }
+    }
+
+    static func unmatchedFragments(
+        candidatesByRole: [String: [Fragment]],
+        groups: [Group]
+    ) -> [String: [Fragment]] {
+        Dictionary(uniqueKeysWithValues: candidatesByRole.map { role, fragments in
+            let matched = Set(groups.flatMap { group in
+                group.candidates.first(where: { $0.role == role })?.fragmentIDs ?? []
+            })
+            return (role, fragments.filter { !matched.contains($0.id) })
+        })
+    }
+
     private static func overlaps(_ turn: Turn, _ fragment: Fragment) -> Bool {
         max(turn.startSample, fragment.startSample) < min(turn.endSample, fragment.endSample)
     }
@@ -419,6 +476,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let alignment: FirefoxCanonicalAudioAlignment.Result
         let coverage: Coverage
         let groups: [ManyToManyTurnScorer.Group]
+        let unmatchedFragmentsByRole: [String: [ManyToManyTurnScorer.Fragment]]
     }
 
     private struct BlindCandidate: Codable {
@@ -544,6 +602,68 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         XCTAssertFalse(groups[0].candidates[0].hasUncoveredTurnGap)
     }
 
+    func testHumanReviewDoesNotFollowTransitiveFragmentChains() {
+        let turns = (1...3).map { id in
+            ManyToManyTurnScorer.Turn(
+                id: id,
+                confidence: "high",
+                startSample: (id - 1) * 100,
+                endSample: id * 100,
+                japanese: "参照\(id)"
+            )
+        }
+        let fragments = [
+            ManyToManyTurnScorer.Fragment(
+                id: 1, startSample: 0, endSample: 150, text: "one"
+            ),
+            ManyToManyTurnScorer.Fragment(
+                id: 2, startSample: 150, endSample: 300, text: "two"
+            ),
+        ]
+
+        let audit = ManyToManyTurnScorer.groups(
+            turns: turns,
+            candidatesByRole: ["final": fragments]
+        )
+        let review = ManyToManyTurnScorer.reviewGroups(
+            turns: turns,
+            candidatesByRole: ["final": fragments]
+        )
+
+        XCTAssertEqual(audit.map(\.turnIDs), [[1, 2, 3]])
+        XCTAssertEqual(review.map(\.turnIDs), [[1], [2], [3]])
+        XCTAssertEqual(review[0].candidates[0].fragmentIDs, [1])
+        XCTAssertEqual(review[1].candidates[0].fragmentIDs, [1, 2])
+        XCTAssertEqual(review[1].candidates[0].text, "one\ntwo")
+        XCTAssertEqual(review[2].candidates[0].fragmentIDs, [2])
+    }
+
+    func testAuditRetainsUnmatchedFragments() {
+        let turns = [ManyToManyTurnScorer.Turn(
+            id: 1, confidence: "high", startSample: 0, endSample: 100, japanese: "参照"
+        )]
+        let fragments = [
+            ManyToManyTurnScorer.Fragment(
+                id: 1, startSample: 0, endSample: 100, text: "matched"
+            ),
+            ManyToManyTurnScorer.Fragment(
+                id: 2, startSample: 120, endSample: 140, text: "between turns"
+            ),
+        ]
+        let groups = ManyToManyTurnScorer.groups(
+            turns: turns,
+            candidatesByRole: ["final": fragments]
+        )
+
+        XCTAssertEqual(
+            ManyToManyTurnScorer.unmatchedFragments(
+                candidatesByRole: ["final": fragments],
+                groups: groups
+            )["final"]?.map(\.id),
+            [2]
+        )
+    }
+
     func testMultiAnchorAlignmentRejectsDriftBeyond20Milliseconds() {
         let sampleRate = 4_000
         let canonical = syntheticSignal(count: sampleRate * 20)
@@ -609,6 +729,41 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         XCTAssertEqual(blind.report.items.count, 59)
         XCTAssertEqual(blind.key.count, 177)
         XCTAssertNotEqual(blind.key["1:A"], blind.key["2:A"])
+    }
+
+    func testBlindArtifactsAcceptStableFinalOnly() {
+        let turns = [ManyToManyTurnScorer.Turn(
+            id: 1,
+            confidence: "high",
+            startSample: 0,
+            endSample: 100,
+            japanese: "参照"
+        )]
+        let groups = ManyToManyTurnScorer.groups(
+            turns: turns,
+            candidatesByRole: ["final": [.init(
+                id: 1,
+                startSample: 0,
+                endSample: 100,
+                text: "final"
+            )]]
+        )
+        let identity = Identity(fileName: "fixture", sha256: "fixture")
+        let blind = blindArtifacts(
+            corpusID: "fixture",
+            provenance: Provenance(
+                session: identity,
+                manifest: identity,
+                canonicalAudio: identity,
+                firefoxAudio: identity,
+                metrics: identity
+            ),
+            coverage: coverage(groups: groups),
+            groups: groups
+        )
+
+        XCTAssertEqual(blind.report.items.first?.candidates.count, 1)
+        XCTAssertEqual(blind.key["1:A"], "final")
     }
 
     func testGeneratePreviewFinalBlindReportWhenOptedIn() async throws {
@@ -677,8 +832,11 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             from: metrics.filter { $0.kind == "final" },
             alignment: alignment, canonicalCount: canonical.count
         )
-        guard !firstPreview.isEmpty, !lastPreview.isEmpty, !final.isEmpty else {
-            throw inputError("Metrics must contain first preview, last preview and final records.")
+        guard !final.isEmpty else {
+            throw inputError("Metrics must contain final records.")
+        }
+        guard firstPreview.isEmpty == lastPreview.isEmpty else {
+            throw inputError("Preview metrics must contain both first and last revisions.")
         }
         let turns = manifest.annotations.turns.map {
             ManyToManyTurnScorer.Turn(
@@ -689,26 +847,49 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                 japanese: $0.japanese
             )
         }
-        let groups = ManyToManyTurnScorer.groups(
+        var candidatesByRole = ["final": final]
+        if !firstPreview.isEmpty {
+            candidatesByRole["firstPreview"] = firstPreview
+            candidatesByRole["lastPreview"] = lastPreview
+        }
+        let auditGroups = ManyToManyTurnScorer.groups(
             turns: turns,
-            candidatesByRole: [
-                "firstPreview": firstPreview,
-                "lastPreview": lastPreview,
-                "final": final,
-            ]
+            candidatesByRole: candidatesByRole
         )
-        let reportCoverage = coverage(groups: groups)
-        guard reportCoverage.turnCount == 59,
-              reportCoverage.highConfidenceTurnCount == 46,
-              reportCoverage.diagnosticTurnCount == 13 else {
+        let sourceFragmentCounts = candidatesByRole.mapValues(\.count)
+        let auditCoverage = coverage(
+            groups: auditGroups,
+            sourceFragmentCounts: sourceFragmentCounts
+        )
+        guard auditCoverage.turnCount == 59,
+              auditCoverage.highConfidenceTurnCount == 46,
+              auditCoverage.diagnosticTurnCount == 13 else {
             throw inputError("Many-to-many grouping lost annotated turns.")
         }
-        guard groups.allSatisfy({ group in
+        guard auditGroups.allSatisfy({ group in
             group.candidates.first(where: { $0.role == "final" })?
                 .hasUncoveredTurnGap == false
         }) else {
-            throw inputError("Final metric ranges contain a hidden gap or overlap.")
+            throw inputError("Final metric ranges contain a hidden internal gap.")
         }
+        let orderedFinal = final.sorted { $0.startSample < $1.startSample }
+        guard zip(orderedFinal, orderedFinal.dropFirst()).allSatisfy({ pair in
+            pair.0.endSample == pair.1.startSample
+        }) else {
+            throw inputError("Final metric ranges contain a gap or overlap.")
+        }
+        let reviewGroups = ManyToManyTurnScorer.reviewGroups(
+            turns: turns,
+            candidatesByRole: candidatesByRole
+        )
+        let reviewCoverage = coverage(
+            groups: reviewGroups,
+            sourceFragmentCounts: sourceFragmentCounts
+        )
+        let unmatched = ManyToManyTurnScorer.unmatchedFragments(
+            candidatesByRole: candidatesByRole,
+            groups: auditGroups
+        )
         let provenance = Provenance(
             session: try identity(sessionURL),
             manifest: try identity(manifestURL),
@@ -717,20 +898,21 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             metrics: try identity(metricsURL)
         )
         let full = FullReport(
-            schemaVersion: 1,
+            schemaVersion: 2,
             status: "diagnostic-only",
             note: "Offline evidence only. Firefox ranges were accepted after five-anchor audio correlation with <=20 ms drift; this report does not promote a product baseline.",
             corpusID: manifest.corpusID,
             provenance: provenance,
             alignment: alignment,
-            coverage: reportCoverage,
-            groups: groups
+            coverage: auditCoverage,
+            groups: auditGroups,
+            unmatchedFragmentsByRole: unmatched
         )
         let blind = blindArtifacts(
             corpusID: manifest.corpusID,
             provenance: provenance,
-            coverage: reportCoverage,
-            groups: groups
+            coverage: reviewCoverage,
+            groups: reviewGroups
         )
         try write(
             full: full,
@@ -777,22 +959,25 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         )
     }
 
-    private func coverage(groups: [ManyToManyTurnScorer.Group]) -> Coverage {
+    private func coverage(
+        groups: [ManyToManyTurnScorer.Group],
+        sourceFragmentCounts: [String: Int] = [:]
+    ) -> Coverage {
         Coverage(
             turnCount: groups.reduce(0) { $0 + $1.turnIDs.count },
             highConfidenceTurnCount: groups.reduce(0) { $0 + $1.highConfidenceTurnCount },
             diagnosticTurnCount: groups.reduce(0) { $0 + $1.diagnosticTurnCount },
-            firstPreviewFragmentCount: groups.reduce(0) { total, group in
+            firstPreviewFragmentCount: sourceFragmentCounts["firstPreview"] ?? groups.reduce(0) { total, group in
                 total + (group.candidates.first {
                     $0.role == "firstPreview"
                 }?.fragmentIDs.count ?? 0)
             },
-            lastPreviewFragmentCount: groups.reduce(0) { total, group in
+            lastPreviewFragmentCount: sourceFragmentCounts["lastPreview"] ?? groups.reduce(0) { total, group in
                 total + (group.candidates.first {
                     $0.role == "lastPreview"
                 }?.fragmentIDs.count ?? 0)
             },
-            finalFragmentCount: groups.reduce(0) { total, group in
+            finalFragmentCount: sourceFragmentCounts["final"] ?? groups.reduce(0) { total, group in
                 total + (group.candidates.first { $0.role == "final" }?.fragmentIDs.count ?? 0)
             },
             groupCount: groups.count
@@ -833,9 +1018,9 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         }
         return (
             BlindReport(
-                schemaVersion: 1,
+                schemaVersion: 2,
                 corpusID: corpusID,
-                note: "Judge first preview, last preview and final for fidelity and subtitle naturalness without opening the separate key. High-confidence turns are primary; the 13 other turns are diagnostics only.",
+                note: "Judge first preview, last preview and final for fidelity and subtitle naturalness without opening the separate key. Each item is one reference turn. A caption crossing turns is repeated verbatim in every affected item; newlines separate distinct caption fragments. High-confidence turns are primary; the 13 other turns are diagnostics only.",
                 provenance: provenance,
                 coverage: coverage,
                 items: items
