@@ -46,6 +46,14 @@ final class LocalFinalTranslationRetryTests: XCTestCase {
         XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish("ｺﾝﾋﾟｭｰﾀｰ"))
         XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish("﨑"))
         XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish("𠮷"))
+        XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish("\u{3005}"))
+        XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish("\u{3031}"))
+        XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish("\u{1B000}"))
+        XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish("\u{1F201}"))
+        XCTAssertEqual(
+            EnglishSubtitleValidator.normalizedEnglish("  Tokyo 2026 \u{2014} OK.  "),
+            "Tokyo 2026 \u{2014} OK."
+        )
         XCTAssertThrowsError(
             try EnglishSubtitleValidator.requireEnglish("お姉さん？")
         ) { error in

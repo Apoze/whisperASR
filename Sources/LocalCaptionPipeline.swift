@@ -404,10 +404,12 @@ enum EnglishSubtitleValidator {
     }
 
     static func containsSourceScript(_ text: String) -> Bool {
-        text.unicodeScalars.contains { scalar in
+        text.precomposedStringWithCompatibilityMapping.unicodeScalars.contains { scalar in
             switch scalar.value {
             case 0x1100...0x11FF, // Hangul Jamo
                  0x2E80...0x2FFF, // CJK radicals and ideographic punctuation
+                 0x3005...0x3007, // CJK iteration marks and ideographic zero
+                 0x3031...0x3035, 0x303B...0x303C, // Kana iteration marks
                  0x3040...0x30FF, // Hiragana + Katakana
                  0x3100...0x312F, 0x31A0...0x31BF, // Bopomofo
                  0x3130...0x318F, // Hangul compatibility Jamo
@@ -416,6 +418,7 @@ enum EnglishSubtitleValidator {
                  0xA960...0xA97F, 0xAC00...0xD7FF, // Hangul syllables/extensions
                  0xF900...0xFAFF, // CJK compatibility ideographs
                  0xFF65...0xFF9F, // Half-width Japanese punctuation/Katakana
+                 0x1AFF0...0x1B16F, // Kana extended/supplement blocks
                  0x20000...0x323AF: // CJK extensions B through H
                 return true
             default:
