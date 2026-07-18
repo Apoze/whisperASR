@@ -161,6 +161,7 @@ struct LocalEndpointDecision: Equatable, Sendable {
     let vadOnlyEndpointAt: Int
     let stableThrough: Int
     let cleanBreak: Bool
+    var boundaryDegradation: String? = nil
 }
 
 /// Pure endpoint state. VAD proposes boundaries; only `accept` releases a
@@ -438,6 +439,7 @@ struct LocalCaptionMetric: Codable, Sendable {
     let kind: LocalCaptionMetricKind
     let engine: String
     let boundaryKind: String?
+    var boundaryDegradation: String? = nil
     let rangeStart: Int
     let rangeEnd: Int
     let speechEnd: Int
@@ -564,7 +566,7 @@ actor LocalCaptionMetricRecorder {
     }
 
     static func csvData(for records: [LocalCaptionMetric]) -> Data {
-        var csv = "kind,engine,boundary_kind,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,source,english\n"
+        var csv = "kind,engine,boundary_kind,boundary_degradation,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,source,english\n"
         for record in records {
             let revision = record.revision.map(String.init) ?? ""
             let previewLatency = record.previewLatencyMilliseconds.map {
@@ -582,6 +584,7 @@ actor LocalCaptionMetricRecorder {
             let fields: [String] = [
                 record.kind.rawValue, record.engine,
                 record.boundaryKind ?? "",
+                record.boundaryDegradation ?? "",
                 String(record.rangeStart), String(record.rangeEnd),
                 String(record.speechEnd), String(record.endpointDetectedAt),
                 String(record.vadOnlyEndpointAt),

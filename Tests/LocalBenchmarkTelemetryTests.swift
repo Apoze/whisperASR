@@ -17,6 +17,7 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
             kind: .final,
             engine: "voxtralApple",
             boundaryKind: "pause",
+            boundaryDegradation: "degradedForcedBoundary",
             rangeStart: 0,
             rangeEnd: 16_000,
             speechEnd: 15_000,
@@ -71,6 +72,20 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(
             atPath: root.appendingPathComponent("\(stem)-metrics.csv").path
         ))
+        let metricJSON = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(contentsOf: metrics))
+                as? [[String: Any]]
+        )
+        XCTAssertEqual(
+            metricJSON.first?["boundaryDegradation"] as? String,
+            "degradedForcedBoundary"
+        )
+        let csv = try String(
+            contentsOf: root.appendingPathComponent("\(stem)-metrics.csv"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(csv.contains("boundary_degradation"))
+        XCTAssertTrue(csv.contains("degradedForcedBoundary"))
         let sessionURL = root.appendingPathComponent("\(stem)-session.json")
         let json = try XCTUnwrap(
             JSONSerialization.jsonObject(with: Data(contentsOf: sessionURL))

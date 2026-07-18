@@ -2732,7 +2732,8 @@ class AppState {
             vadOnlyEndpointAt: boundary.kind == .pause
                 ? boundary.endpointDetectedAt : -1,
             stableThrough: boundary.sampleRange.upperBound,
-            cleanBreak: boundary.kind != .forced
+            cleanBreak: boundary.kind != .forced,
+            boundaryDegradation: boundary.degradation?.rawValue
         )
         suspendLocalPreview(for: decision)
         localVoxtralPreviewSourceText = ""
@@ -3668,6 +3669,7 @@ class AppState {
                         kind: .final,
                         engine: activeLocalEnglishEngine.rawValue,
                         boundaryKind: decision.kind.rawValue,
+                        boundaryDegradation: decision.boundaryDegradation,
                         rangeStart: decision.audioStart,
                         rangeEnd: decision.audioEnd,
                         speechEnd: decision.speechEnd,
@@ -3761,6 +3763,7 @@ class AppState {
             kind: .finalAttempt,
             engine: activeLocalEnglishEngine.rawValue,
             boundaryKind: decision?.kind.rawValue,
+            boundaryDegradation: decision?.boundaryDegradation,
             rangeStart: rangeStart,
             rangeEnd: rangeEnd,
             speechEnd: decision?.speechEnd ?? rangeEnd,
