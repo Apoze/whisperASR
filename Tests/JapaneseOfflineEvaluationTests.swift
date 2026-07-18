@@ -410,6 +410,176 @@ enum ManyToManyTurnScorer {
     }
 }
 
+enum ContinuousJapaneseCER {
+    struct Scope: Codable, Equatable {
+        let turnCount: Int
+        let referenceCharacterCount: Int
+        let substitutions: Int
+        let deletions: Int
+        let insertions: Int
+        let rateLowerBound: Double?
+        let rateUpperBound: Double?
+    }
+
+    struct Overall: Codable, Equatable {
+        let editDistance: Int
+        let referenceCharacterCount: Int
+        let hypothesisCharacterCount: Int
+        let rate: Double?
+    }
+
+    struct Result: Codable, Equatable {
+        let overall: Overall
+        let highConfidence: Scope
+        let diagnostic: Scope
+        let ambiguousBoundaryInsertions: Int
+        let note: String
+    }
+
+    private enum Owner { case high, diagnostic }
+    private struct Counts {
+        var substitutions = 0
+        var deletions = 0
+        var insertions = 0
+    }
+
+    static func score(
+        turns: [ManyToManyTurnScorer.Turn],
+        finalSourceFragments: [ManyToManyTurnScorer.Fragment]
+    ) -> Result? {
+        let orderedTurns = turns.sorted { $0.startSample < $1.startSample }
+        let orderedFragments = finalSourceFragments.sorted { $0.startSample < $1.startSample }
+        guard !orderedTurns.isEmpty, !orderedFragments.isEmpty,
+              orderedFragments.allSatisfy({ !$0.text.trimmingCharacters(
+                in: .whitespacesAndNewlines
+              ).isEmpty }) else { return nil }
+
+        var reference: [Character] = []
+        var owners: [Owner] = []
+        for turn in orderedTurns {
+            let normalized = JapaneseCER.normalized(turn.japanese)
+            reference += normalized
+            owners += Array(
+                repeating: turn.confidence == "high" ? .high : .diagnostic,
+                count: normalized.count
+            )
+        }
+        let hypothesisText = orderedFragments.map(\.text).joined()
+        let hypothesis = JapaneseCER.normalized(hypothesisText)
+        guard !reference.isEmpty, !hypothesis.isEmpty else { return nil }
+
+        var matrix = Array(
+            repeating: Array(repeating: 0, count: hypothesis.count + 1),
+            count: reference.count + 1
+        )
+        for index in 0...reference.count { matrix[index][0] = index }
+        for index in 0...hypothesis.count { matrix[0][index] = index }
+        for referenceIndex in reference.indices {
+            for hypothesisIndex in hypothesis.indices {
+                matrix[referenceIndex + 1][hypothesisIndex + 1] = min(
+                    matrix[referenceIndex][hypothesisIndex + 1] + 1,
+                    matrix[referenceIndex + 1][hypothesisIndex] + 1,
+                    matrix[referenceIndex][hypothesisIndex]
+                        + (reference[referenceIndex] == hypothesis[hypothesisIndex] ? 0 : 1)
+                )
+            }
+        }
+
+        var high = Counts()
+        var diagnostic = Counts()
+        var ambiguousInsertions = 0
+        var referenceIndex = reference.count
+        var hypothesisIndex = hypothesis.count
+
+        func add(_ operation: WritableKeyPath<Counts, Int>, to owner: Owner) {
+            switch owner {
+            case .high: high[keyPath: operation] += 1
+            case .diagnostic: diagnostic[keyPath: operation] += 1
+            }
+        }
+
+        while referenceIndex > 0 || hypothesisIndex > 0 {
+            if referenceIndex > 0, hypothesisIndex > 0,
+               matrix[referenceIndex][hypothesisIndex]
+                    == matrix[referenceIndex - 1][hypothesisIndex - 1]
+                        + (reference[referenceIndex - 1] == hypothesis[hypothesisIndex - 1] ? 0 : 1) {
+                if reference[referenceIndex - 1] != hypothesis[hypothesisIndex - 1] {
+                    add(\.substitutions, to: owners[referenceIndex - 1])
+                }
+                referenceIndex -= 1
+                hypothesisIndex -= 1
+            } else if referenceIndex > 0,
+                      matrix[referenceIndex][hypothesisIndex]
+                        == matrix[referenceIndex - 1][hypothesisIndex] + 1 {
+                add(\.deletions, to: owners[referenceIndex - 1])
+                referenceIndex -= 1
+            } else {
+                let left = referenceIndex > 0 ? owners[referenceIndex - 1] : nil
+                let right = referenceIndex < owners.count ? owners[referenceIndex] : nil
+                if let owner = left ?? right, left == nil || right == nil || left == right {
+                    add(\.insertions, to: owner)
+                } else {
+                    ambiguousInsertions += 1
+                }
+                hypothesisIndex -= 1
+            }
+        }
+
+        let overall = JapaneseCER.score([(
+            reference: orderedTurns.map(\.japanese).joined(),
+            hypothesis: hypothesisText
+        )])
+        let highReferenceCount = owners.filter { $0 == .high }.count
+        let diagnosticReferenceCount = owners.count - highReferenceCount
+        let highErrors = high.substitutions + high.deletions + high.insertions
+        let diagnosticErrors = diagnostic.substitutions
+            + diagnostic.deletions + diagnostic.insertions
+        guard highErrors + diagnosticErrors + ambiguousInsertions == overall.editDistance else {
+            return nil
+        }
+
+        func scope(
+            turnCount: Int,
+            referenceCount: Int,
+            counts: Counts
+        ) -> Scope {
+            let errors = counts.substitutions + counts.deletions + counts.insertions
+            return Scope(
+                turnCount: turnCount,
+                referenceCharacterCount: referenceCount,
+                substitutions: counts.substitutions,
+                deletions: counts.deletions,
+                insertions: counts.insertions,
+                rateLowerBound: referenceCount > 0
+                    ? Double(errors) / Double(referenceCount) : nil,
+                rateUpperBound: referenceCount > 0
+                    ? Double(errors + ambiguousInsertions) / Double(referenceCount) : nil
+            )
+        }
+
+        return Result(
+            overall: Overall(
+                editDistance: overall.editDistance,
+                referenceCharacterCount: overall.referenceCharacterCount,
+                hypothesisCharacterCount: overall.hypothesisCharacterCount,
+                rate: overall.rate
+            ),
+            highConfidence: scope(
+                turnCount: orderedTurns.filter { $0.confidence == "high" }.count,
+                referenceCount: highReferenceCount,
+                counts: high
+            ),
+            diagnostic: scope(
+                turnCount: orderedTurns.filter { $0.confidence != "high" }.count,
+                referenceCount: diagnosticReferenceCount,
+                counts: diagnostic
+            ),
+            ambiguousBoundaryInsertions: ambiguousInsertions,
+            note: "Overall CER is exact and segmentation-independent. With the fixed deterministic traceback, high/diagnostic rates are bounds because insertions exactly between scopes have no character timestamp."
+        )
+    }
+}
+
 final class JapaneseOfflineEvaluationTests: XCTestCase {
     private struct Manifest: Decodable {
         struct Fixture: Decodable { let sha256: String; let sampleCount: Int }
@@ -430,13 +600,18 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let kind: String
         let rangeStart: Int
         let rangeEnd: Int
+        let sourceText: String
         let englishText: String
         let revision: Int?
         let renderedUptimeNanoseconds: UInt64
     }
 
     private struct SessionReport: Decodable {
-        struct Summary: Decodable { let sessionID: UUID }
+        struct Summary: Decodable {
+            let sessionID: UUID
+            let sourceStagedThrough: Int
+            let englishValidatedThrough: Int
+        }
         let summary: Summary
         let metricsFile: String
         let metricsSHA256: String
@@ -475,6 +650,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let provenance: Provenance
         let alignment: FirefoxCanonicalAudioAlignment.Result
         let coverage: Coverage
+        let productionJapaneseCER: ContinuousJapaneseCER.Result
         let groups: [ManyToManyTurnScorer.Group]
         let unmatchedFragmentsByRole: [String: [ManyToManyTurnScorer.Fragment]]
     }
@@ -664,6 +840,78 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         )
     }
 
+    func testContinuousJapaneseCERIgnoresProductClauseBoundaries() throws {
+        let turns = [
+            ManyToManyTurnScorer.Turn(
+                id: 1, confidence: "high", startSample: 0, endSample: 100,
+                japanese: "みなさん"
+            ),
+            ManyToManyTurnScorer.Turn(
+                id: 2, confidence: "medium", startSample: 100, endSample: 200,
+                japanese: "こんにちは"
+            ),
+        ]
+        let fragments = [
+            ManyToManyTurnScorer.Fragment(
+                id: 1, startSample: 0, endSample: 70, text: "みな"
+            ),
+            ManyToManyTurnScorer.Fragment(
+                id: 2, startSample: 70, endSample: 200, text: "さんこんにちは"
+            ),
+        ]
+        let result = try XCTUnwrap(ContinuousJapaneseCER.score(
+            turns: turns,
+            finalSourceFragments: fragments
+        ))
+        XCTAssertEqual(result.overall.editDistance, 0)
+        XCTAssertEqual(result.highConfidence.turnCount, 1)
+        XCTAssertEqual(result.diagnostic.turnCount, 1)
+    }
+
+    func testContinuousJapaneseCERKeepsCrossScopeInsertionsAmbiguous() throws {
+        let turns = [
+            ManyToManyTurnScorer.Turn(
+                id: 1, confidence: "high", startSample: 0, endSample: 100,
+                japanese: "あ"
+            ),
+            ManyToManyTurnScorer.Turn(
+                id: 2, confidence: "medium", startSample: 100, endSample: 200,
+                japanese: "い"
+            ),
+        ]
+        let result = try XCTUnwrap(ContinuousJapaneseCER.score(
+            turns: turns,
+            finalSourceFragments: [.init(
+                id: 1, startSample: 0, endSample: 200, text: "あうい"
+            )]
+        ))
+        XCTAssertEqual(result.overall.editDistance, 1)
+        XCTAssertEqual(result.ambiguousBoundaryInsertions, 1)
+        XCTAssertEqual(result.highConfidence.rateLowerBound, 0)
+        XCTAssertEqual(result.highConfidence.rateUpperBound, 1)
+        XCTAssertEqual(result.diagnostic.rateLowerBound, 0)
+        XCTAssertEqual(result.diagnostic.rateUpperBound, 1)
+    }
+
+    func testContinuousJapaneseCERCountsUnmatchedSourceAndRejectsMissingSource() throws {
+        let turns = [ManyToManyTurnScorer.Turn(
+            id: 1, confidence: "high", startSample: 0, endSample: 100,
+            japanese: "あ"
+        )]
+        let unmatched = ManyToManyTurnScorer.Fragment(
+            id: 1, startSample: 120, endSample: 140, text: "い"
+        )
+        let result = try XCTUnwrap(ContinuousJapaneseCER.score(
+            turns: turns,
+            finalSourceFragments: [unmatched]
+        ))
+        XCTAssertEqual(result.overall.editDistance, 1)
+        XCTAssertNil(ContinuousJapaneseCER.score(
+            turns: turns,
+            finalSourceFragments: []
+        ))
+    }
+
     func testMultiAnchorAlignmentRejectsDriftBeyond20Milliseconds() {
         let sampleRate = 4_000
         let canonical = syntheticSignal(count: sampleRate * 20)
@@ -780,6 +1028,12 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let session = try JSONDecoder().decode(
             SessionReport.self, from: Data(contentsOf: sessionURL)
         )
+        guard session.summary.sourceStagedThrough
+                == session.summary.englishValidatedThrough else {
+            throw inputError(
+                "Source and English validation cursors differ; final metrics would hide staged Japanese."
+            )
+        }
         let metricsURL = try siblingArtifact(
             named: session.metricsFile,
             beside: sessionURL
@@ -832,6 +1086,12 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             from: metrics.filter { $0.kind == "final" },
             alignment: alignment, canonicalCount: canonical.count
         )
+        let finalSource = fragments(
+            from: metrics.filter { $0.kind == "final" },
+            alignment: alignment,
+            canonicalCount: canonical.count,
+            text: \.sourceText
+        )
         guard !final.isEmpty else {
             throw inputError("Metrics must contain final records.")
         }
@@ -846,6 +1106,12 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                 endSample: $0.endSample,
                 japanese: $0.japanese
             )
+        }
+        guard let productionJapaneseCER = ContinuousJapaneseCER.score(
+            turns: turns,
+            finalSourceFragments: finalSource
+        ) else {
+            throw inputError("Final source metrics cannot produce an honest continuous Japanese CER.")
         }
         var candidatesByRole = ["final": final]
         if !firstPreview.isEmpty {
@@ -898,13 +1164,14 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             metrics: try identity(metricsURL)
         )
         let full = FullReport(
-            schemaVersion: 2,
+            schemaVersion: 3,
             status: "diagnostic-only",
             note: "Offline evidence only. Firefox ranges were accepted after five-anchor audio correlation with <=20 ms drift; this report does not promote a product baseline.",
             corpusID: manifest.corpusID,
             provenance: provenance,
             alignment: alignment,
             coverage: auditCoverage,
+            productionJapaneseCER: productionJapaneseCER,
             groups: auditGroups,
             unmatchedFragmentsByRole: unmatched
         )
@@ -926,7 +1193,8 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
     private func fragments(
         from metrics: [Metric],
         alignment: FirefoxCanonicalAudioAlignment.Result,
-        canonicalCount: Int
+        canonicalCount: Int,
+        text: KeyPath<Metric, String> = \.englishText
     ) -> [ManyToManyTurnScorer.Fragment] {
         metrics.enumerated().compactMap { index, metric in
             let start = min(canonicalCount, max(0,
@@ -938,7 +1206,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                 id: index + 1,
                 startSample: start,
                 endSample: end,
-                text: metric.englishText
+                text: metric[keyPath: text]
             )
         }
     }
