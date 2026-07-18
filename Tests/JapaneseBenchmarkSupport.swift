@@ -3,6 +3,115 @@ import Foundation
 import XCTest
 @testable import WhisperASRApp
 
+struct JapaneseCERScore: Equatable {
+    let editDistance: Int
+    let substitutionCount: Int
+    let deletionCount: Int
+    let insertionCount: Int
+    let referenceCharacterCount: Int
+    let hypothesisCharacterCount: Int
+    let omissionCount: Int
+
+    var rate: Double? {
+        referenceCharacterCount > 0
+            ? Double(editDistance) / Double(referenceCharacterCount)
+            : nil
+    }
+}
+
+enum JapaneseCER {
+    static func normalized(_ text: String) -> [Character] {
+        let ignored = CharacterSet.whitespacesAndNewlines
+            .union(.punctuationCharacters)
+            .union(.controlCharacters)
+        let compatibilityNormalized = text.precomposedStringWithCompatibilityMapping
+            .lowercased(with: Locale(identifier: "ja_JP"))
+        var result = ""
+        for scalar in compatibilityNormalized.unicodeScalars where !ignored.contains(scalar) {
+            result.unicodeScalars.append(scalar)
+        }
+        return Array(result)
+    }
+
+    static func score(_ pairs: [(reference: String, hypothesis: String)]) -> JapaneseCERScore {
+        var substitutions = 0
+        var deletions = 0
+        var insertions = 0
+        var referenceCount = 0
+        var hypothesisCount = 0
+        var omissions = 0
+        for pair in pairs {
+            let reference = normalized(pair.reference)
+            let hypothesis = normalized(pair.hypothesis)
+            let alignment = alignment(reference, hypothesis)
+            substitutions += alignment.substitutions
+            deletions += alignment.deletions
+            insertions += alignment.insertions
+            referenceCount += reference.count
+            hypothesisCount += hypothesis.count
+            if !reference.isEmpty, hypothesis.isEmpty { omissions += 1 }
+        }
+        return JapaneseCERScore(
+            editDistance: substitutions + deletions + insertions,
+            substitutionCount: substitutions,
+            deletionCount: deletions,
+            insertionCount: insertions,
+            referenceCharacterCount: referenceCount,
+            hypothesisCharacterCount: hypothesisCount,
+            omissionCount: omissions
+        )
+    }
+
+    private static func alignment(
+        _ reference: [Character],
+        _ hypothesis: [Character]
+    ) -> (substitutions: Int, deletions: Int, insertions: Int) {
+        var matrix = Array(
+            repeating: Array(repeating: 0, count: hypothesis.count + 1),
+            count: reference.count + 1
+        )
+        for index in 0...reference.count { matrix[index][0] = index }
+        for index in 0...hypothesis.count { matrix[0][index] = index }
+        for referenceIndex in reference.indices {
+            for hypothesisIndex in hypothesis.indices {
+                matrix[referenceIndex + 1][hypothesisIndex + 1] = min(
+                    matrix[referenceIndex][hypothesisIndex + 1] + 1,
+                    matrix[referenceIndex + 1][hypothesisIndex] + 1,
+                    matrix[referenceIndex][hypothesisIndex]
+                        + (reference[referenceIndex] == hypothesis[hypothesisIndex] ? 0 : 1)
+                )
+            }
+        }
+
+        var substitutions = 0
+        var deletions = 0
+        var insertions = 0
+        var referenceIndex = reference.count
+        var hypothesisIndex = hypothesis.count
+        while referenceIndex > 0 || hypothesisIndex > 0 {
+            if referenceIndex > 0, hypothesisIndex > 0,
+               matrix[referenceIndex][hypothesisIndex]
+                    == matrix[referenceIndex - 1][hypothesisIndex - 1]
+                        + (reference[referenceIndex - 1] == hypothesis[hypothesisIndex - 1] ? 0 : 1) {
+                if reference[referenceIndex - 1] != hypothesis[hypothesisIndex - 1] {
+                    substitutions += 1
+                }
+                referenceIndex -= 1
+                hypothesisIndex -= 1
+            } else if referenceIndex > 0,
+                      matrix[referenceIndex][hypothesisIndex]
+                        == matrix[referenceIndex - 1][hypothesisIndex] + 1 {
+                deletions += 1
+                referenceIndex -= 1
+            } else {
+                insertions += 1
+                hypothesisIndex -= 1
+            }
+        }
+        return (substitutions, deletions, insertions)
+    }
+}
+
 enum JapaneseBenchmarkSupport {
     struct Manifest: Codable {
         enum Purpose: String, Codable {

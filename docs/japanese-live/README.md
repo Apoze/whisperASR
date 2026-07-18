@@ -16,7 +16,7 @@ L3 peut démarrer après L1, mais aucun moteur ne peut être promu avant la vali
 | [L0 — Baseline et pilotage](lots/L00-baseline.md) | aucune | terminé | mesures reproductibles et SLO figés |
 | [L1 — Oracle fiable](lots/L01-oracle.md) | L0 | terminé | ASR, produit et voix évalués séparément |
 | [L2 — Corpus holdout](lots/L02-corpus-holdout.md) | L1 | bloqué par revue humaine | trois holdouts validés humainement |
-| L3 — Bakeoff ASR | L1; L2 pour promouvoir | suivant, exploratoire | candidats comparés sur le même PCM |
+| [L3 — Bakeoff ASR](lots/L03-bakeoff-asr.md) | L1; L2 pour promouvoir | terminé, aucune promotion | quatre candidats comparés sur le même PCM |
 | L4 — Intégration du gagnant | L2, L3 | bloqué par gate | une seule ASR produit |
 | L5 — Traduction | L4 | non démarré | Apple conservé ou CAT testé conditionnellement |
 | L6 — Séparation des voix | L4, gate L5 | non démarré | coupures fiables, sans identité persistante |
@@ -31,6 +31,8 @@ L3 peut démarrer après L1, mais aucun moteur ne peut être promu avant la vali
 - Promotion qualité : CER relatif amélioré d'au moins 10 % avec bootstrap apparié à 95 %, ou p95 preview gagné d'au moins 200 ms avec une dégradation CER ≤ 2 points; aucun holdout dégradé de plus de 2 points.
 
 Les résultats d'un holdout dont `annotations.status` n'est pas `complete` sont exploratoires. Deux juges bilingues sont requis pour toute promotion fondée sur la fidélité anglaise.
+
+Le corpus dev utilise la vidéo, le transcript japonais et le transcript anglais fournis, tous épinglés par SHA. La référence anglaise est vérifiée pour le futur jugement bilingue, mais n'influence pas le score ASR L3.
 
 ## Discipline
 

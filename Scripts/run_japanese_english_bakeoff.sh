@@ -6,7 +6,16 @@ DEFAULT_MANIFEST="$ROOT/docs/japanese-live/corpora/easy-japanese-1/manifest.json
 MANIFEST="${WHISPERASR_JAPANESE_BENCHMARK_MANIFEST:-$DEFAULT_MANIFEST}"
 CORPUS_ID="$(/usr/bin/jq -r '.corpusID' "$MANIFEST")"
 EXPECTED_TURNS="$(/usr/bin/jq -r '.annotations.turns | length' "$MANIFEST")"
-REPORT="${WHISPERASR_JAPANESE_ASR_APPLE_REPORT:-$ROOT/.build/benchmarks/$CORPUS_ID-asr-bakeoff-full-full.json}"
+REPORT="${WHISPERASR_JAPANESE_ASR_APPLE_REPORT:-}"
+
+if [[ -z "$REPORT" ]]; then
+  REPORT="$(/usr/bin/find "$ROOT/.build/benchmarks/japanese-live" -type f \
+    -name "$CORPUS_ID-asr-bakeoff-full-full.json" -print | /usr/bin/sort | /usr/bin/tail -n 1)"
+fi
+if [[ -z "$REPORT" || ! -f "$REPORT" ]]; then
+  echo "No full ASR report found. Run Scripts/run_japanese_bakeoff.sh full first." >&2
+  exit 2
+fi
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 cd "$ROOT"
@@ -18,8 +27,8 @@ if ! /usr/bin/jq -e --argjson expectedTurns "$EXPECTED_TURNS" '
   .scope == "full"
   and (.selectedTurnIDs | length) == $expectedTurns
   and ([.engines[].engine] | sort) == ([
-    "cohere-transcribe-03-2026-mlx-8bit",
-    "qwen3-asr-1.7b-mlx-8bit",
+    "nemotron-multilingual-coreml-1120ms",
+    "nemotron-multilingual-coreml-560ms",
     "voxtral-q4-continuous-960ms",
     "whisper-large-v3-turbo"
   ] | sort)

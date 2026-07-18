@@ -8,8 +8,8 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         case humanApple = "human-japanese-apple-high-fidelity"
         case turboApple = "whisper-large-v3-turbo-apple-high-fidelity"
         case voxtralApple = "voxtral-q4-continuous-960ms-apple-high-fidelity"
-        case qwenApple = "qwen3-asr-1.7b-mlx-8bit-apple-high-fidelity"
-        case cohereApple = "cohere-transcribe-03-2026-mlx-8bit-apple-high-fidelity"
+        case nemotron1120Apple = "nemotron-multilingual-coreml-1120ms-apple-high-fidelity"
+        case nemotron560Apple = "nemotron-multilingual-coreml-560ms-apple-high-fidelity"
         case whisperLargeV3Direct = "whisper-large-v3-direct-ja-en"
     }
 
@@ -17,7 +17,6 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         struct Engine: Decodable {
             let engine: String
             let status: String
-            let maximumResidentBytes: UInt64
             let turns: [Turn]
         }
 
@@ -35,7 +34,8 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         }
 
         let corpusID: String
-        let corpusSHA256: String
+        let manifestSHA256: String
+        let audioSHA256: String
         let corpusAnnotationStatus: String
         let promotionEligibleReference: Bool
         let scope: String
@@ -73,7 +73,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         let p50Milliseconds: Double?
         let p95Milliseconds: Double?
         let worstMilliseconds: Double?
-        let maximumResidentBytes: UInt64
+        let maximumObservedResidentBytes: UInt64
     }
 
     private struct CandidateAvailability: Codable {
@@ -85,7 +85,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
     private struct FullReport: Codable {
         let schemaVersion: Int
         let corpusID: String
-        let corpusSHA256: String
+        let audioSHA256: String
         let corpusAnnotationStatus: String
         let promotionEligibleReference: Bool
         let generatedAt: String
@@ -123,8 +123,8 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
     private static let sourceEngines: [(String, CandidateID)] = [
         ("whisper-large-v3-turbo", .turboApple),
         ("voxtral-q4-continuous-960ms", .voxtralApple),
-        ("qwen3-asr-1.7b-mlx-8bit", .qwenApple),
-        ("cohere-transcribe-03-2026-mlx-8bit", .cohereApple),
+        ("nemotron-multilingual-coreml-1120ms", .nemotron1120Apple),
+        ("nemotron-multilingual-coreml-560ms", .nemotron560Apple),
     ]
 
     @MainActor
@@ -149,7 +149,11 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             ASRBakeoffReport.self,
             from: Data(contentsOf: asrReportURL)
         )
-        try validate(asrReport: asrReport, manifest: manifest)
+        try validate(
+            asrReport: asrReport,
+            manifest: manifest,
+            manifestSHA256: try JapaneseBenchmarkSupport.sha256(at: manifestURL)
+        )
 
         let fixtureURL = try JapaneseBenchmarkSupport.fixtureURL(
             for: manifest,
@@ -290,7 +294,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             switch id {
             case .humanApple:
                 return CandidateAvailability(id: id, status: humanStatus, note: appleEnrichmentStatus)
-            case .turboApple, .voxtralApple, .qwenApple, .cohereApple:
+            case .turboApple, .voxtralApple, .nemotron1120Apple, .nemotron560Apple:
                 return CandidateAvailability(
                     id: id,
                     status: asrReport.appleHighFidelityEnabled ? "complete" : "unavailable",
@@ -318,7 +322,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         let full = FullReport(
             schemaVersion: 1,
             corpusID: manifest.corpusID,
-            corpusSHA256: manifest.fixture.sha256,
+            audioSHA256: manifest.fixture.sha256,
             corpusAnnotationStatus: manifest.annotations.status.rawValue,
             promotionEligibleReference: manifest.annotations.status == .complete,
             generatedAt: ISO8601DateFormatter().string(from: Date()),
@@ -417,11 +421,13 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
 
     private func validate(
         asrReport: ASRBakeoffReport,
-        manifest: JapaneseBenchmarkSupport.Manifest
+        manifest: JapaneseBenchmarkSupport.Manifest,
+        manifestSHA256: String
     ) throws {
         let expectedIDs = manifest.annotations.turns.map(\.id)
         guard asrReport.corpusID == manifest.corpusID,
-              asrReport.corpusSHA256 == manifest.fixture.sha256,
+              asrReport.manifestSHA256 == manifestSHA256,
+              asrReport.audioSHA256 == manifest.fixture.sha256,
               asrReport.corpusAnnotationStatus == manifest.annotations.status.rawValue,
               asrReport.promotionEligibleReference
                 == (manifest.annotations.status == .complete),
@@ -500,7 +506,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             p50Milliseconds: percentile(timings, 0.50),
             p95Milliseconds: percentile(timings, 0.95),
             worstMilliseconds: timings.last,
-            maximumResidentBytes: outputs.map(\.residentBytes).max() ?? 0
+            maximumObservedResidentBytes: outputs.map(\.residentBytes).max() ?? 0
         )
     }
 

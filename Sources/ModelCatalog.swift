@@ -57,9 +57,10 @@ enum ModelCatalog {
             displayName: "Whisper Large v3 Turbo",
             detail: "Fast, accurate transcription; does not translate",
             fileName: "ggml-large-v3-turbo.bin",
-            url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!,
+            url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin")!,
             approxBytes: 1_620_000_000,
-            supportsEnglishTranslation: false
+            supportsEnglishTranslation: false,
+            sha256: "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
         ),
         WhisperModelInfo(
             id: "large-v3",
