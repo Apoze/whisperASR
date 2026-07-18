@@ -23,18 +23,6 @@ WHISPERASR_VOXTRAL_DELAY_MS=960 WHISPERASR_BENCHMARK_WAV="$WAV" xcrun swift test
   --skip-build \
   --filter LocalPrototypeBenchmarkTests/testCanonicalQualityBenchmarkWhenOptedIn
 
-# Optional four-rung oracle. Candidate JSON may be `{ "corpusID": "…",
-# "turns": [...] }` or a bare turn array; absent candidates remain explicit in
-# scaffold reports. The complete gate must never silently skip the oracle.
-if [[ "${WHISPERASR_QUALITY_ORACLE_REQUIRE_COMPLETE:-0}" == "1" && -z "${WHISPERASR_QUALITY_ORACLE_MANIFEST:-}" ]]; then
-  echo "WHISPERASR_QUALITY_ORACLE_REQUIRE_COMPLETE=1 requires WHISPERASR_QUALITY_ORACLE_MANIFEST" >&2
-  exit 1
-fi
-if [[ -n "${WHISPERASR_QUALITY_ORACLE_MANIFEST:-}" ]]; then
-  xcrun swift test --skip-build \
-    --filter LocalPrototypeBenchmarkTests/testJapaneseEnglishQualityOracleWhenOptedIn
-fi
-
 xcrun swift test -c release \
   --filter LiveCaptionTests/testEachPrototypeLoadsOnlyItsRequiredModels
 "$ROOT/Scripts/build_mlx_metallib.sh" release

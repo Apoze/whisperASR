@@ -14,8 +14,8 @@ L3 peut démarrer après L1, mais aucun moteur ne peut être promu avant la vali
 | Lot | Dépendances | État | Résultat attendu |
 | --- | --- | --- | --- |
 | [L0 — Baseline et pilotage](lots/L00-baseline.md) | aucune | terminé | mesures reproductibles et SLO figés |
-| L1 — Oracle fiable | L0 | suivant | ASR, produit et voix évalués séparément |
-| L2 — Corpus holdout | L1 | non démarré | trois holdouts validés humainement |
+| [L1 — Oracle fiable](lots/L01-oracle.md) | L0 | terminé | ASR, produit et voix évalués séparément |
+| L2 — Corpus holdout | L1 | suivant | trois holdouts validés humainement |
 | L3 — Bakeoff ASR | L1; L2 pour promouvoir | non démarré | candidats comparés sur le même PCM |
 | L4 — Intégration du gagnant | L2, L3 | bloqué par gate | une seule ASR produit |
 | L5 — Traduction | L4 | non démarré | Apple conservé ou CAT testé conditionnellement |

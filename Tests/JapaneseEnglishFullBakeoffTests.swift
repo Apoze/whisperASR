@@ -13,29 +13,6 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         case whisperLargeV3Direct = "whisper-large-v3-direct-ja-en"
     }
 
-    private struct Manifest: Decodable {
-        struct Fixture: Decodable {
-            let sha256: String
-            let sampleCount: Int
-        }
-
-        struct Annotations: Decodable {
-            let turns: [Turn]
-        }
-
-        struct Turn: Decodable {
-            let id: Int
-            let startSample: Int
-            let endSample: Int
-            let japanese: String
-            let confidence: String
-        }
-
-        let corpusID: String
-        let fixture: Fixture
-        let annotations: Annotations
-    }
-
     private struct ASRBakeoffReport: Decodable {
         struct Engine: Decodable {
             let engine: String
@@ -155,9 +132,8 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let corpus = URL(fileURLWithPath: environment["WHISPERASR_JAPANESE_BAKEOFF_CORPUS"]
             ?? root.appendingPathComponent(".build/benchmarks/corpora/easy-japanese-1").path)
-        let manifest = try JSONDecoder().decode(
-            Manifest.self,
-            from: Data(contentsOf: corpus.appendingPathComponent("manifest.json"))
+        let manifest = try JapaneseBenchmarkSupport.loadManifest(
+            at: corpus.appendingPathComponent("manifest.json")
         )
         let asrReportURL = URL(fileURLWithPath: environment["WHISPERASR_JAPANESE_ASR_APPLE_REPORT"]
             ?? root.appendingPathComponent(
@@ -287,7 +263,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             candidates.append(try required(direct[turn.id], "Missing direct turn \(turn.id)."))
             return TurnOutput(
                 turnID: turn.id,
-                confidence: turn.confidence,
+                confidence: turn.confidence.rawValue,
                 startSample: turn.startSample,
                 endSample: turn.endSample,
                 referenceJapanese: turn.japanese,
@@ -320,6 +296,14 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             }
         }
         let completeIDs = Set(availability.filter { $0.status == "complete" }.map(\.id))
+        if environment["WHISPERASR_JAPANESE_ENGLISH_REQUIRE_COMPLETE"] == "1",
+           completeIDs != Set(CandidateID.allCases) {
+            let missing = CandidateID.allCases
+                .filter { !completeIDs.contains($0) }
+                .map(\.rawValue)
+                .joined(separator: ", ")
+            throw inputError("Complete bilingual review requires every candidate: \(missing)")
+        }
         let full = FullReport(
             schemaVersion: 1,
             corpusID: manifest.corpusID,
@@ -334,6 +318,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         )
         let blind = blindArtifacts(
             corpusID: manifest.corpusID,
+            seed: asrReport.corpusSHA256,
             turns: outputs,
             completeCandidateIDs: completeIDs,
             appleEnrichmentStatus: appleEnrichmentStatus
@@ -353,7 +338,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         XCTAssertTrue(outputs.flatMap(\.candidates).allSatisfy { $0.residentBytes < 10 * 1_024 * 1_024 * 1_024 })
     }
 
-    func testBlindArtifactsRotateAllSixCandidates() {
+    func testBlindArtifactsMaskEveryAvailableCandidate() {
         let candidates = CandidateID.allCases.map {
             CandidateOutput(
                 id: $0,
@@ -379,6 +364,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         }
         let artifacts = blindArtifacts(
             corpusID: "fixture",
+            seed: "fixture",
             turns: turns,
             completeCandidateIDs: Set(CandidateID.allCases),
             appleEnrichmentStatus: "complete"
@@ -386,11 +372,12 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         XCTAssertEqual(artifacts.report.turns.count, 2)
         XCTAssertTrue(artifacts.report.turns.allSatisfy { $0.candidates.count == 6 })
         XCTAssertEqual(artifacts.key.count, 12)
-        XCTAssertNotEqual(
-            artifacts.key["1:A"],
-            artifacts.key["2:A"],
-            "Aliases must rotate between turns."
-        )
+        for turnID in 1...2 {
+            let identities = Set(artifacts.key.compactMap { entry in
+                entry.key.hasPrefix("\(turnID):") ? entry.value : nil
+            })
+            XCTAssertEqual(identities, Set(CandidateID.allCases.map(\.rawValue)))
+        }
     }
 
     @available(macOS 26.4, *)
@@ -407,7 +394,10 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         throw lastError ?? LocalPrototypeError.invalidResponse
     }
 
-    private func validate(asrReport: ASRBakeoffReport, manifest: Manifest) throws {
+    private func validate(
+        asrReport: ASRBakeoffReport,
+        manifest: JapaneseBenchmarkSupport.Manifest
+    ) throws {
         let expectedIDs = manifest.annotations.turns.map(\.id)
         guard asrReport.corpusID == manifest.corpusID,
               asrReport.corpusSHA256 == manifest.fixture.sha256,
@@ -490,15 +480,20 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
 
     private func blindArtifacts(
         corpusID: String,
+        seed: String,
         turns: [TurnOutput],
         completeCandidateIDs: Set<CandidateID>,
         appleEnrichmentStatus: String
     ) -> (report: BlindReport, key: [String: String]) {
         var key: [String: String] = [:]
         let blindTurns = turns.map { turn in
-            let available = turn.candidates.filter { completeCandidateIDs.contains($0.id) }
-            let ordered = available.indices.map { aliasIndex -> BlindCandidate in
-                let candidate = available[(aliasIndex + turn.turnID) % available.count]
+            let available = JapaneseBenchmarkSupport.blindOrder(
+                turn.candidates.filter { completeCandidateIDs.contains($0.id) },
+                seed: seed,
+                itemID: turn.turnID,
+                identity: { $0.id.rawValue }
+            )
+            let ordered = available.enumerated().map { aliasIndex, candidate in
                 let alias = String(UnicodeScalar(65 + aliasIndex)!)
                 key["\(turn.turnID):\(alias)"] = candidate.id.rawValue
                 return BlindCandidate(
@@ -521,7 +516,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             BlindReport(
                 schemaVersion: 1,
                 corpusID: corpusID,
-                note: "No human English reference exists. Judge only available candidates; do not treat any candidate as ground truth. Apple enrichment: \(appleEnrichmentStatus).",
+                note: "Candidate identities are pseudo-randomized independently per source-aware item from the corpus SHA. Score fidelity and subtitle naturalness separately; no candidate is ground truth. Apple enrichment: \(appleEnrichmentStatus).",
                 turns: blindTurns
             ),
             key

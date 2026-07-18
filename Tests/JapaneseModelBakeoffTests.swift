@@ -210,59 +210,7 @@ enum JapaneseCER {
     }
 }
 
-private struct JapaneseBenchmarkManifest: Codable {
-    struct Source: Codable {
-        let videoPath: String
-        let videoSHA256: String
-        let transcriptArchivePath: String
-        let transcriptArchiveSHA256: String
-        let turnsCSVSHA256: String
-        let detailedCSVSHA256: String
-        let speakersSRTSHA256: String
-    }
-
-    struct Fixture: Codable {
-        let path: String
-        let sha256: String
-        let sampleRate: Int
-        let channelCount: Int
-        let sampleFormat: String
-        let sampleCount: Int
-    }
-
-    struct Annotations: Codable {
-        let turnCount: Int
-        let detailedFragmentCount: Int
-        let speakerCount: Int
-        let speakerChangeCount: Int
-        let highConfidenceTurnCount: Int
-        let mediumConfidenceTurnCount: Int
-        let annotatedSampleCount: Int
-        let turns: [Turn]
-    }
-
-    struct Turn: Codable {
-        enum Confidence: String, Codable {
-            case high
-            case medium
-        }
-
-        let id: Int
-        let speaker: String
-        let speakerDescription: String
-        let startSample: Int
-        let endSample: Int
-        let japanese: String
-        let confidence: Confidence
-        let note: String?
-    }
-
-    let schemaVersion: Int
-    let corpusID: String
-    let source: Source
-    let fixture: Fixture
-    let annotations: Annotations
-}
+private typealias JapaneseBenchmarkManifest = JapaneseBenchmarkSupport.Manifest
 
 private enum JapaneseBakeoffEngine: String, Codable, CaseIterable {
     case whisperTurbo = "whisper-large-v3-turbo"
@@ -488,10 +436,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 ).path
         ).standardizedFileURL
         let manifestURL = corpusURL.appendingPathComponent("manifest.json")
-        let manifest = try JSONDecoder().decode(
-            JapaneseBenchmarkManifest.self,
-            from: Data(contentsOf: manifestURL)
-        )
+        let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
         let wavURL = corpusURL.appendingPathComponent("audio-16k-mono.wav")
         XCTAssertEqual(try sha256(wavURL), manifest.fixture.sha256)
         let samples = try await AudioLoader.loadSamples(url: wavURL)

@@ -581,21 +581,6 @@ enum ContinuousJapaneseCER {
 }
 
 final class JapaneseOfflineEvaluationTests: XCTestCase {
-    private struct Manifest: Decodable {
-        struct Fixture: Decodable { let sha256: String; let sampleCount: Int }
-        struct Annotations: Decodable { let turns: [Turn] }
-        struct Turn: Decodable {
-            let id: Int
-            let startSample: Int
-            let endSample: Int
-            let japanese: String
-            let confidence: String
-        }
-        let corpusID: String
-        let fixture: Fixture
-        let annotations: Annotations
-    }
-
     private struct Metric: Decodable {
         let kind: String
         let rangeStart: Int
@@ -964,6 +949,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let identity = Identity(fileName: "fixture", sha256: "fixture")
         let blind = blindArtifacts(
             corpusID: "fixture",
+            seed: "fixture",
             provenance: Provenance(
                 session: identity,
                 manifest: identity,
@@ -976,7 +962,12 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         )
         XCTAssertEqual(blind.report.items.count, 59)
         XCTAssertEqual(blind.key.count, 177)
-        XCTAssertNotEqual(blind.key["1:A"], blind.key["2:A"])
+        for itemID in 1...59 {
+            let roles = Set(blind.key.compactMap { entry in
+                entry.key.hasPrefix("\(itemID):") ? entry.value : nil
+            })
+            XCTAssertEqual(roles, Set(["firstPreview", "lastPreview", "final"]))
+        }
     }
 
     func testBlindArtifactsAcceptStableFinalOnly() {
@@ -999,6 +990,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let identity = Identity(fileName: "fixture", sha256: "fixture")
         let blind = blindArtifacts(
             corpusID: "fixture",
+            seed: "fixture",
             provenance: Provenance(
                 session: identity,
                 manifest: identity,
@@ -1047,12 +1039,10 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
               try sha256(firefoxURL) == canonicalPCMSHA256 else {
             throw inputError("Benchmark artifacts no longer match their session sidecar.")
         }
-        let manifest = try JSONDecoder().decode(
-            Manifest.self, from: Data(contentsOf: manifestURL)
-        )
+        let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
         guard manifest.annotations.turns.count == 59,
-              manifest.annotations.turns.filter({ $0.confidence == "high" }).count == 46,
-              manifest.annotations.turns.filter({ $0.confidence != "high" }).count == 13 else {
+              manifest.annotations.turns.filter({ $0.confidence == .high }).count == 46,
+              manifest.annotations.turns.filter({ $0.confidence != .high }).count == 13 else {
             throw inputError("Expected the reviewed 59-turn corpus (46 primary + 13 diagnostic).")
         }
         guard try sha256(canonicalURL) == manifest.fixture.sha256 else {
@@ -1101,7 +1091,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let turns = manifest.annotations.turns.map {
             ManyToManyTurnScorer.Turn(
                 id: $0.id,
-                confidence: $0.confidence,
+                confidence: $0.confidence.rawValue,
                 startSample: $0.startSample,
                 endSample: $0.endSample,
                 japanese: $0.japanese
@@ -1177,6 +1167,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         )
         let blind = blindArtifacts(
             corpusID: manifest.corpusID,
+            seed: provenance.metrics.sha256,
             provenance: provenance,
             coverage: reviewCoverage,
             groups: reviewGroups
@@ -1254,15 +1245,20 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
 
     private func blindArtifacts(
         corpusID: String,
+        seed: String,
         provenance: Provenance,
         coverage: Coverage,
         groups: [ManyToManyTurnScorer.Group]
     ) -> (report: BlindReport, key: [String: String]) {
         var key: [String: String] = [:]
         let items = groups.map { group in
-            let shift = (group.id - 1) % group.candidates.count
-            let candidates = group.candidates.indices.map { index in
-                let candidate = group.candidates[(index + shift) % group.candidates.count]
+            let ordered = JapaneseBenchmarkSupport.blindOrder(
+                group.candidates,
+                seed: seed,
+                itemID: group.id,
+                identity: { $0.role }
+            )
+            let candidates = ordered.enumerated().map { index, candidate in
                 let alias = String(UnicodeScalar(65 + index)!)
                 key["\(group.id):\(alias)"] = candidate.role
                 return BlindCandidate(
@@ -1288,7 +1284,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             BlindReport(
                 schemaVersion: 2,
                 corpusID: corpusID,
-                note: "Judge first preview, last preview and final for fidelity and subtitle naturalness without opening the separate key. Each item is one reference turn. A caption crossing turns is repeated verbatim in every affected item; newlines separate distinct caption fragments. High-confidence turns are primary; the 13 other turns are diagnostics only.",
+                note: "Candidate identities are pseudo-randomized independently per source-aware item from the metrics SHA. Judge fidelity and subtitle naturalness separately without opening the key. A caption crossing turns is repeated in every affected item; newlines separate fragments. High-confidence turns are primary; the other turns are diagnostics only.",
                 provenance: provenance,
                 coverage: coverage,
                 items: items

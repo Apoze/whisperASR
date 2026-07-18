@@ -23,16 +23,17 @@ if ! /usr/bin/jq -e '
   exit 2
 fi
 
-if /usr/bin/jq -e '.appleHighFidelityEnabled == true' "$REPORT" >/dev/null; then
-  echo "Apple enrichment: enabled from the existing ASR+Apple report"
-else
-  echo "Apple enrichment: unavailable; producing an explicit Whisper-direct-only blind report"
+if ! /usr/bin/jq -e '.appleHighFidelityEnabled == true' "$REPORT" >/dev/null; then
+  echo "The bilingual oracle requires a complete ASR+Apple report: $REPORT" >&2
+  echo "Run: WHISPERASR_JAPANESE_BAKEOFF_APPLE=1 Scripts/run_japanese_bakeoff.sh full" >&2
+  exit 3
 fi
 
 xcrun swift test -c release \
-  --filter JapaneseEnglishFullBakeoffTests/testBlindArtifactsRotateAllSixCandidates
+  --filter JapaneseEnglishFullBakeoffTests/testBlindArtifactsMaskEveryAvailableCandidate
 
 WHISPERASR_JAPANESE_ENGLISH_BAKEOFF=1 \
+WHISPERASR_JAPANESE_ENGLISH_REQUIRE_COMPLETE=1 \
 WHISPERASR_JAPANESE_ASR_APPLE_REPORT="$REPORT" \
   xcrun swift test -c release --skip-build \
     --filter JapaneseEnglishFullBakeoffTests/testFullEnglishBakeoffWhenOptedIn
