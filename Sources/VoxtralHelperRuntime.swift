@@ -930,10 +930,19 @@ actor VoxtralHelperRuntime {
         let installed = try? String(contentsOf: modelStamp, encoding: .utf8)
         if installed == expectedStamp, modelInstallationIsValid(at: modelDirectory) { return }
 
+        let parentDirectory = modelDirectory.deletingLastPathComponent()
+        let stagingPrefix = ".\(modelDirectory.lastPathComponent).partial-"
+        for item in try FileManager.default.contentsOfDirectory(
+            at: parentDirectory,
+            includingPropertiesForKeys: nil
+        ) where item.lastPathComponent.hasPrefix(stagingPrefix) {
+            try FileManager.default.removeItem(at: item)
+        }
+
         let stagingDirectory = modelDirectory
             .deletingLastPathComponent()
             .appendingPathComponent(
-                ".\(modelDirectory.lastPathComponent).partial-\(UUID().uuidString)",
+                "\(stagingPrefix)\(UUID().uuidString)",
                 isDirectory: true
             )
         try FileManager.default.createDirectory(
