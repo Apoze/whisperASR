@@ -149,11 +149,20 @@ final class VoxtralHelperRuntimeTests: XCTestCase {
             XCTAssertEqual(progress.sentThrough, samples.count)
             XCTAssertEqual(progress.acknowledgedThrough, samples.count)
             XCTAssertNotNil(progress.helperRSSBytes)
+            let firstProcess = try XCTUnwrap(progress.helperProcessIdentifier)
             let collected = await collector.value
             XCTAssertTrue(collected.contains {
                 if case .completed = $0 { return true }
                 return false
             })
+
+            await runtime.shutdown()
+            try await runtime.prepare()
+            let replacementProgress = await runtime.progress()
+            let replacement = try XCTUnwrap(replacementProgress.helperProcessIdentifier)
+            XCTAssertNotEqual(firstProcess, replacement)
+            _ = try await runtime.startSession()
+            await runtime.cancel()
         } catch {
             await runtime.shutdown()
             throw error
@@ -177,6 +186,45 @@ final class VoxtralHelperRuntimeTests: XCTestCase {
         for await event in second { secondEvents.append(event) }
         XCTAssertEqual(firstEvents, [.delta(text: "old", sentThrough: 1)])
         XCTAssertEqual(secondEvents, [.ready])
+    }
+
+    func testSessionGenerationRejectsStaleReceiverWork() {
+        var generation = VoxtralHelperSessionGeneration()
+        let first = generation.begin()
+        XCTAssertTrue(generation.accepts(first))
+
+        let second = generation.begin()
+        XCTAssertFalse(generation.accepts(first))
+        XCTAssertTrue(generation.accepts(second))
+
+        generation.invalidate()
+        XCTAssertFalse(generation.accepts(second))
+    }
+
+    func testFinalFlushDeadlineDoesNotWaitForBlockedWork() async {
+        let started = ContinuousClock.now
+        do {
+            _ = try await VoxtralHelperRuntime.awaitFinalTranscript(
+                deadline: .milliseconds(20)
+            ) {
+                try await withCheckedThrowingContinuation { continuation in
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
+                        continuation.resume(returning: "late")
+                    }
+                }
+            }
+            XCTFail("Expected the final flush deadline to expire")
+        } catch let error as VoxtralHelperError {
+            XCTAssertEqual(
+                error,
+                .serverUnavailable(
+                    "Voxtral did not finish its final transcript within 15 seconds. Audio was retained."
+                )
+            )
+            XCTAssertLessThan(started.duration(to: .now), .milliseconds(200))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     func testManifestPinsTheAuditedRuntimeAndModel() {

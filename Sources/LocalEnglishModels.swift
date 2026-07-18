@@ -343,7 +343,10 @@ final class LocalEnglishModelManager {
     }
 
     func prepare(_ engine: LocalEnglishEngine) async throws {
-        if loadedEngine == engine, phase(for: engine).isReady { return }
+        if loadedEngine == engine, phase(for: engine).isReady {
+            guard engine.usesContinuousVoxtral else { return }
+            if await continuousVoxtralIsReady() { return }
+        }
         await unload()
         Memory.peakMemory = 0
         phases[engine] = .downloading(progress: 0, message: "Checking local models…")
@@ -430,8 +433,16 @@ final class LocalEnglishModelManager {
     }
 
     func recoverContinuousVoxtral() async throws -> AsyncStream<VoxtralHelperEvent> {
-        await voxtralHelper.cancel()
+        let previousProcess = await voxtralHelper.progress().helperProcessIdentifier
+        await voxtralHelper.shutdown()
         try await voxtralHelper.prepare()
+        let replacementProcess = await voxtralHelper.progress().helperProcessIdentifier
+        guard let replacementProcess,
+              previousProcess == nil || replacementProcess != previousProcess else {
+            throw VoxtralHelperError.serverUnavailable(
+                "Voxtral recovery did not start a fresh helper process."
+            )
+        }
         return try await voxtralHelper.startSession()
     }
 
@@ -449,6 +460,13 @@ final class LocalEnglishModelManager {
 
     func continuousVoxtralProgress() async -> VoxtralHelperProgress {
         await voxtralHelper.progress()
+    }
+
+    func continuousVoxtralIsReady() async -> Bool {
+        let processIdentifier = await voxtralHelper.progress().helperProcessIdentifier
+        let helperStatus = await voxtralHelper.currentStatus()
+        return processIdentifier != nil
+            && (helperStatus == .ready || helperStatus == .streaming)
     }
 
     func setVoxtralTranscriptionDelay(_ milliseconds: Int) async throws {

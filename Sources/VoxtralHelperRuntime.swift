@@ -153,6 +153,25 @@ struct VoxtralHelperProgress: Equatable, Sendable {
     let helperProcessIdentifier: Int32?
 }
 
+struct VoxtralHelperSessionGeneration: Equatable, Sendable {
+    private(set) var current: UInt64?
+    private var next: UInt64 = 0
+
+    mutating func begin() -> UInt64 {
+        next &+= 1
+        current = next
+        return next
+    }
+
+    mutating func invalidate() {
+        current = nil
+    }
+
+    func accepts(_ generation: UInt64) -> Bool {
+        current == generation
+    }
+}
+
 struct VoxtralHelperFeedCursor: Equatable, Sendable {
     private(set) var sessionBaseSample: Int?
     private(set) var sentThrough: Int?
@@ -331,8 +350,10 @@ actor VoxtralHelperRuntime {
     private var serverPort: Int?
     private var webSocket: URLSessionWebSocketTask?
     private var receiverTask: Task<Void, Never>?
+    private var receiverGeneration: UInt64?
     private var sendTail: Task<Void, Error>?
     private var finishContinuation: CheckedContinuation<String, Error>?
+    private var sessionGeneration = VoxtralHelperSessionGeneration()
     private var feedCursor = VoxtralHelperFeedCursor()
     private var maximumBacklogSamples = 0
     private var transcript = ""
@@ -363,8 +384,15 @@ actor VoxtralHelperRuntime {
     func prepare(
         progress: @escaping @Sendable (Double, String) -> Void = { _, _ in }
     ) async throws {
-        if status == .ready || status == .streaming { return }
-        guard status == .idle || isFailed else {
+        if (status == .ready || status == .streaming), serverProcess?.isRunning == true {
+            return
+        }
+        if status == .ready || status == .streaming || isFailed {
+            await cancel()
+            stopServer()
+            status = .idle
+        }
+        guard status == .idle else {
             throw VoxtralHelperError.invalidState("Voxtral helper is already being prepared.")
         }
         status = .preparing
@@ -403,28 +431,58 @@ actor VoxtralHelperRuntime {
         guard status == .ready, serverProcess?.isRunning == true else {
             throw VoxtralHelperError.invalidState("Voxtral helper is not ready.")
         }
+        if let receiver = receiverTask {
+            let generation = receiverGeneration
+            await receiver.value
+            if receiverGeneration == generation {
+                receiverTask = nil
+                receiverGeneration = nil
+            }
+            guard status == .ready, serverProcess?.isRunning == true else {
+                throw VoxtralHelperError.invalidState("Voxtral helper is not ready.")
+            }
+        }
         let socket = try makeWebSocket()
-        socket.resume()
-        try await awaitEvent(.sessionCreated, from: socket)
-        try await send(VoxtralRealtimeWire.sessionUpdateMessage(model: modelDirectory.path), to: socket)
-        try await awaitEvent(.sessionUpdated, from: socket)
-
         webSocket = socket
         feedCursor = VoxtralHelperFeedCursor()
         maximumBacklogSamples = 0
         transcript = ""
         status = .streaming
-        let events = eventPipe.start()
-        eventPipe.yield(.ready)
-        receiverTask = Task { [weak self] in
-            await self?.receiveLoop(socket)
+        let generation = sessionGeneration.begin()
+        socket.resume()
+        do {
+            try await awaitEvent(.sessionCreated, from: socket)
+            guard sessionGeneration.accepts(generation), webSocket === socket else {
+                throw CancellationError()
+            }
+            try await send(
+                VoxtralRealtimeWire.sessionUpdateMessage(model: modelDirectory.path),
+                to: socket
+            )
+            try await awaitEvent(.sessionUpdated, from: socket)
+            guard sessionGeneration.accepts(generation), webSocket === socket else {
+                throw CancellationError()
+            }
+
+            let events = eventPipe.start()
+            eventPipe.yield(.ready)
+            receiverTask = Task { [weak self] in
+                await self?.receiveLoop(socket, generation: generation)
+            }
+            receiverGeneration = generation
+            return events
+        } catch {
+            failSession(error, generation: generation)
+            throw error
         }
-        return events
     }
 
     func append(samples: [Float], range: Range<Int>) async throws {
         guard status == .streaming, let webSocket else {
             throw VoxtralHelperError.invalidState("Voxtral is not streaming.")
+        }
+        guard let generation = sessionGeneration.current else {
+            throw VoxtralHelperError.invalidState("Voxtral session is unavailable.")
         }
         guard !samples.isEmpty else { return }
 
@@ -433,10 +491,23 @@ actor VoxtralHelperRuntime {
         try feedCursor.stage(range, sampleCount: samples.count)
         maximumBacklogSamples = max(maximumBacklogSamples, feedCursor.backlogSamples)
         let previous = sendTail
+        let runtime = self
         let send = Task {
-            if let previous { try await previous.value }
-            try await webSocket.send(.string(append))
-            try await webSocket.send(.string(barrier))
+            try await withAsyncDeadline(
+                .seconds(15),
+                operationName: "Voxtral audio append",
+                onTimeout: {
+                    webSocket.cancel(with: .goingAway, reason: nil)
+                }
+            ) {
+                if let previous { try await previous.value }
+                try await webSocket.send(.string(append))
+                try await webSocket.send(.string(barrier))
+                try await runtime.waitUntilAcknowledged(
+                    through: range.upperBound,
+                    generation: generation
+                )
+            }
         }
         sendTail = send
         do {
@@ -444,28 +515,29 @@ actor VoxtralHelperRuntime {
             // session.update is a FIFO barrier: session.updated is emitted only
             // after the preceding audio has been fed and decoded.
             try await send.value
-            try await waitUntilAcknowledged(through: range.upperBound)
         } catch {
-            failSession(error)
-            throw error
+            let reportedError: Error = error is AsyncDeadlineError
+                ? VoxtralHelperError.serverUnavailable(
+                    "Voxtral stopped processing audio for 15 seconds. Audio was retained."
+                )
+                : error
+            failSession(reportedError, generation: generation)
+            throw reportedError
         }
     }
 
     /// Keep at most one audio block in flight. Capture remains independent in
     /// AudioRecorder, while transient MLX scheduling delays can recover without
     /// filling the WebSocket queue or triggering a destructive stream restart.
-    private func waitUntilAcknowledged(through target: Int) async throws {
-        let deadline = DispatchTime.now().uptimeNanoseconds + 15_000_000_000
+    private func waitUntilAcknowledged(
+        through target: Int,
+        generation: UInt64
+    ) async throws {
         while (feedCursor.acknowledgedThrough ?? Int.min) < target {
             try Task.checkCancellation()
-            guard status == .streaming else {
+            guard status == .streaming, sessionGeneration.accepts(generation) else {
                 throw VoxtralHelperError.invalidState(
                     "Voxtral stopped before acknowledging audio through sample \(target)."
-                )
-            }
-            guard DispatchTime.now().uptimeNanoseconds < deadline else {
-                throw VoxtralHelperError.serverUnavailable(
-                    "Voxtral stopped processing audio for 15 seconds. Audio was retained."
                 )
             }
             try await Task.sleep(for: .milliseconds(10))
@@ -476,28 +548,35 @@ actor VoxtralHelperRuntime {
         guard status == .streaming, webSocket != nil else {
             throw VoxtralHelperError.invalidState("Voxtral is not streaming.")
         }
+        guard let generation = sessionGeneration.current else {
+            throw VoxtralHelperError.invalidState("Voxtral session is unavailable.")
+        }
         status = .stopping
+        let runtime = self
         do {
-            return try await withThrowingTaskGroup(of: String.self) { group in
-                group.addTask { [weak self] in
-                    guard let self else { throw CancellationError() }
-                    return try await self.waitForFinalTranscript()
-                }
-                group.addTask {
-                    try await Task.sleep(for: .seconds(15))
-                    throw VoxtralHelperError.serverUnavailable(
-                        "Voxtral did not finish its final transcript within 15 seconds. Audio was retained."
-                    )
-                }
-                guard let result = try await group.next() else {
-                    throw CancellationError()
-                }
-                group.cancelAll()
-                return result
+            return try await Self.awaitFinalTranscript {
+                try await runtime.waitForFinalTranscript()
             }
         } catch {
-            failSession(error)
+            failSession(error, generation: generation)
             throw error
+        }
+    }
+
+    static func awaitFinalTranscript(
+        deadline: Duration = .seconds(15),
+        operation: @escaping @Sendable () async throws -> String
+    ) async throws -> String {
+        do {
+            return try await withAsyncDeadline(
+                deadline,
+                operationName: "Voxtral final transcript",
+                operation: operation
+            )
+        } catch is AsyncDeadlineError {
+            throw VoxtralHelperError.serverUnavailable(
+                "Voxtral did not finish its final transcript within 15 seconds. Audio was retained."
+            )
         }
     }
 
@@ -510,7 +589,7 @@ actor VoxtralHelperRuntime {
                     do {
                         try await self.sendCommit()
                     } catch {
-                        await self.failSession(error)
+                        await self.failCurrentSession(error)
                     }
                 }
             }
@@ -526,16 +605,24 @@ actor VoxtralHelperRuntime {
         finishContinuation = nil
     }
 
-    func cancel() {
+    func cancel() async {
+        status = .stopping
+        sessionGeneration.invalidate()
         finishContinuation?.resume(throwing: CancellationError())
         finishContinuation = nil
-        receiverTask?.cancel()
-        receiverTask = nil
+        let receiver = receiverTask
+        let retiringGeneration = receiverGeneration
+        receiver?.cancel()
         sendTail?.cancel()
         sendTail = nil
         webSocket?.cancel(with: .goingAway, reason: nil)
         webSocket = nil
         eventPipe.finish()
+        await receiver?.value
+        if receiverGeneration == retiringGeneration {
+            receiverTask = nil
+            receiverGeneration = nil
+        }
         feedCursor = VoxtralHelperFeedCursor()
         maximumBacklogSamples = 0
         transcript = ""
@@ -543,7 +630,7 @@ actor VoxtralHelperRuntime {
     }
 
     func shutdown() async {
-        cancel()
+        await cancel()
         stopServer()
         status = .idle
     }
@@ -838,9 +925,15 @@ actor VoxtralHelperRuntime {
         )
     }
 
-    private func receiveLoop(_ socket: URLSessionWebSocketTask) async {
+    private func receiveLoop(
+        _ socket: URLSessionWebSocketTask,
+        generation: UInt64
+    ) async {
         do {
             while !Task.isCancelled {
+                guard sessionGeneration.accepts(generation), webSocket === socket else {
+                    return
+                }
                 let message = try await socket.receive()
                 let text: String
                 switch message {
@@ -850,16 +943,26 @@ actor VoxtralHelperRuntime {
                     text = value
                 @unknown default: continue
                 }
-                try handle(VoxtralRealtimeWire.decode(text))
+                guard sessionGeneration.accepts(generation), webSocket === socket else {
+                    return
+                }
+                try handle(VoxtralRealtimeWire.decode(text), generation: generation)
+                guard sessionGeneration.accepts(generation), webSocket === socket else {
+                    return
+                }
             }
         } catch is CancellationError {
             return
         } catch {
-            failSession(error)
+            failSession(error, generation: generation)
         }
     }
 
-    private func handle(_ event: VoxtralRealtimeWire.Event) throws {
+    private func handle(
+        _ event: VoxtralRealtimeWire.Event,
+        generation: UInt64
+    ) throws {
+        guard sessionGeneration.accepts(generation) else { return }
         switch event {
         case .sessionUpdated:
             if let end = feedCursor.acknowledgeNext() {
@@ -911,8 +1014,7 @@ actor VoxtralHelperRuntime {
             guard status == .stopping else { return }
             finishContinuation?.resume(returning: completed)
             finishContinuation = nil
-            receiverTask?.cancel()
-            receiverTask = nil
+            sessionGeneration.invalidate()
             sendTail = nil
             webSocket?.cancel(with: .normalClosure, reason: nil)
             webSocket = nil
@@ -933,11 +1035,17 @@ actor VoxtralHelperRuntime {
         try await send(VoxtralRealtimeWire.commitMessage(), to: webSocket)
     }
 
-    private func failSession(_ error: Error) {
+    private func failCurrentSession(_ error: Error) {
+        guard let generation = sessionGeneration.current else { return }
+        failSession(error, generation: generation)
+    }
+
+    private func failSession(_ error: Error, generation: UInt64) {
+        guard sessionGeneration.accepts(generation) else { return }
+        sessionGeneration.invalidate()
         finishContinuation?.resume(throwing: error)
         finishContinuation = nil
         receiverTask?.cancel()
-        receiverTask = nil
         sendTail?.cancel()
         sendTail = nil
         webSocket?.cancel(with: .goingAway, reason: nil)
