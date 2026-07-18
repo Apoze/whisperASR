@@ -351,6 +351,9 @@ class AppState {
     private var preparingLocalTranslationMode: AppleTranslationMode?
     let localModelManager = LocalEnglishModelManager()
     @ObservationIgnored private let localMetricRecorder = LocalCaptionMetricRecorder()
+    @ObservationIgnored private let localBenchmarkEnabled =
+        ProcessInfo.processInfo.environment["WHISPERASR_BENCHMARK"] == "1"
+    @ObservationIgnored private var localBenchmarkSessionID = UUID()
     @ObservationIgnored private let localDiarizationShadow = LocalDiarizationShadow()
     @ObservationIgnored private let localDiarizationJournal = LocalDiarizationShadowJournal()
     @ObservationIgnored private weak var activeLocalRecorder: AudioRecorder?
@@ -731,20 +734,59 @@ class AppState {
             )
             localFailure = completion.failure
             localSourceTranscriptComplete = completion.sourceTranscriptComplete
-            _ = try? await localMetricRecorder.writeOptInReport()
         } else {
             segments = liveSegments
             service.endRealtimeSession()
         }
 
+        let benchmarkStem = LocalBenchmarkOutput.stem(sessionID: localBenchmarkSessionID)
+        var canonicalBenchmarkURL: URL?
         do {
             if let canonical = try CanonicalBenchmarkCorpus.writeIfRequested(
-                samples: recorder.getAccumulatedSamples()
+                artifact: stopResult.recoverablePCM,
+                stem: benchmarkStem
             ) {
+                canonicalBenchmarkURL = canonical
                 print("[Benchmark] Canonical PCM saved to \(canonical.path)")
             }
         } catch {
             showToast("Couldn't save the canonical benchmark PCM: \(error.localizedDescription)")
+            print("[Benchmark] canonical PCM failed: \(error)")
+        }
+        if captionMode == .localEnglish {
+            let finalHelperProgress = activeLocalEnglishEngine.usesContinuousVoxtral
+                ? await localModelManager.continuousVoxtralProgress() : nil
+            if localBenchmarkEnabled {
+                await localMetricRecorder.observe(
+                    combinedResidentBytes: localModelManager.currentMemoryBytes()
+                        + (finalHelperProgress?.helperRSSBytes ?? 0),
+                    helperBacklogSamples: finalHelperProgress?.maximumBacklogSamples ?? 0,
+                    helperProcessIdentifier: finalHelperProgress?.helperProcessIdentifier
+                )
+            }
+            do {
+                _ = try await localMetricRecorder.writeOptInReport(
+                    stem: benchmarkStem,
+                    canonicalPCMURL: canonicalBenchmarkURL,
+                    summary: LocalCaptionBenchmarkSummary(
+                        sessionID: localBenchmarkSessionID,
+                        engine: activeLocalEnglishEngine.rawValue,
+                        translationMode: activeLocalTranslationMode.rawValue,
+                        finalSampleCount: stopResult.finalSampleCount,
+                        pcmComplete: stopResult.pcmComplete,
+                        m4aDroppedSampleCount: stopResult.m4aDroppedSampleCount,
+                        helperSentThrough: finalHelperProgress?.sentThrough,
+                        helperAcknowledgedThrough: finalHelperProgress?.acknowledgedThrough,
+                        endingHelperBacklogSamples: finalHelperProgress?.backlogSamples,
+                        sourceStagedThrough: localVoxtralClausePlanner.sourceStagedThrough,
+                        englishValidatedThrough: localVoxtralClausePlanner.englishValidatedThrough,
+                        committedSampleCount: localCommittedSampleCount
+                    )
+                )
+            } catch {
+                showToast("Couldn't save the benchmark report: \(error.localizedDescription)")
+                print("[Benchmark] report failed: \(error)")
+            }
         }
         let fullText = segments.map(\.text).joined()
         var translations = liveTranslatedSegments
@@ -1529,6 +1571,7 @@ class AppState {
         activeLocalTranslationMode = localMode
         activeLocalEnglishEngine = localEngine
         activeLocalSourceLocale = sourceLocale
+        if localBenchmarkEnabled { localBenchmarkSessionID = UUID() }
         activeLocalRecorder = recorder
         hasUnresolvedLiveRecovery = false
         liveSegments = []
@@ -1580,10 +1623,10 @@ class AppState {
             ? "Preparing local speech and translation…" : "Preparing Whisper model..."
         isLiveTranscribing = true
         beginLiveRecovery(recorder: recorder)
-        Task { await localMetricRecorder.reset() }
 
         liveTranscriptionTask = Task { [weak self] in
             guard let self else { return }
+            await self.localMetricRecorder.reset()
             if captionMode == .localEnglish {
                 guard #available(macOS 26.4, *), !sourceLocale.isEmpty else {
                     await MainActor.run {
@@ -2306,6 +2349,13 @@ class AppState {
                 }
                 let combinedResident = localModelManager.currentMemoryBytes()
                     + (progress.helperRSSBytes ?? 0)
+                if localBenchmarkEnabled {
+                    await localMetricRecorder.observe(
+                        combinedResidentBytes: combinedResident,
+                        helperBacklogSamples: progress.maximumBacklogSamples,
+                        helperProcessIdentifier: progress.helperProcessIdentifier
+                    )
+                }
                 if combinedResident >= 10 * 1_024 * 1_024 * 1_024 {
                     throw LocalPrototypeError.memoryLimit(combinedResident)
                 }

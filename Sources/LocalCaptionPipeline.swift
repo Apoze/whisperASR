@@ -460,36 +460,103 @@ struct LocalCaptionMetric: Codable, Sendable {
 }
 
 actor LocalCaptionMetricRecorder {
-    private let enabled = ProcessInfo.processInfo.environment["WHISPERASR_BENCHMARK"] == "1"
+    private let enabled: Bool
     private var records: [LocalCaptionMetric] = []
+    private var maximumCombinedResidentBytes: UInt64 = 0
+    private var maximumHelperBacklogSamples = 0
+    private var helperProcessIdentifier: Int32?
+
+    init(
+        enabled: Bool = ProcessInfo.processInfo.environment["WHISPERASR_BENCHMARK"] == "1"
+    ) {
+        self.enabled = enabled
+    }
 
     func reset() {
-        if enabled { records.removeAll(keepingCapacity: true) }
+        guard enabled else { return }
+        records.removeAll(keepingCapacity: true)
+        maximumCombinedResidentBytes = 0
+        maximumHelperBacklogSamples = 0
+        helperProcessIdentifier = nil
     }
+
     func append(_ metric: LocalCaptionMetric) {
         if enabled { records.append(metric) }
     }
+
+    func observe(
+        combinedResidentBytes: UInt64,
+        helperBacklogSamples: Int,
+        helperProcessIdentifier: Int32?
+    ) {
+        guard enabled else { return }
+        maximumCombinedResidentBytes = max(
+            maximumCombinedResidentBytes,
+            combinedResidentBytes
+        )
+        maximumHelperBacklogSamples = max(
+            maximumHelperBacklogSamples,
+            helperBacklogSamples
+        )
+        if let helperProcessIdentifier {
+            self.helperProcessIdentifier = helperProcessIdentifier
+        }
+    }
+
     func snapshot() -> [LocalCaptionMetric] { records }
 
     /// Opt-in integration runs stay out of source control by living under
     /// `.build/benchmarks`. Normal recordings incur no disk instrumentation.
-    func writeOptInReport() throws -> URL? {
-        guard ProcessInfo.processInfo.environment["WHISPERASR_BENCHMARK"] == "1" else {
-            return nil
-        }
-        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-            .appendingPathComponent(".build/benchmarks", isDirectory: true)
+    func writeOptInReport(
+        stem: String,
+        canonicalPCMURL: URL?,
+        summary: LocalCaptionBenchmarkSummary,
+        outputDirectory: URL? = nil
+    ) throws -> URL? {
+        guard enabled else { return nil }
+        let root = try outputDirectory ?? LocalBenchmarkOutput.directory()
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        let formatter = ISO8601DateFormatter()
-        let stem = "local-captions-\(formatter.string(from: Date()).replacingOccurrences(of: ":", with: "-" ))"
-        let file = root.appendingPathComponent("\(stem).json")
+        let file = root.appendingPathComponent("\(stem)-metrics.json")
+        let csv = root.appendingPathComponent("\(stem)-metrics.csv")
+        let session = root.appendingPathComponent("\(stem)-session.json")
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(records).write(to: file, options: .atomic)
         try Self.csvData(for: records).write(
-            to: root.appendingPathComponent("\(stem).csv"),
+            to: csv,
             options: .atomic
         )
+        guard let executableURL = Bundle.main.executableURL else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        let report = LocalCaptionBenchmarkSessionReport(
+            summary: summary,
+            applicationProcessIdentifier: ProcessInfo.processInfo.processIdentifier,
+            applicationVersion: Bundle.main.object(
+                forInfoDictionaryKey: "CFBundleShortVersionString"
+            ) as? String,
+            applicationBuild: Bundle.main.object(
+                forInfoDictionaryKey: "CFBundleVersion"
+            ) as? String,
+            applicationExecutableFile: executableURL.lastPathComponent,
+            applicationExecutableSHA256: try LocalBenchmarkOutput.sha256(executableURL),
+            operatingSystemVersion: ProcessInfo.processInfo.operatingSystemVersionString,
+            helperProcessIdentifier: helperProcessIdentifier,
+            maximumCombinedResidentBytes: maximumCombinedResidentBytes,
+            maximumHelperBacklogSamples: maximumHelperBacklogSamples,
+            metricsFile: file.lastPathComponent,
+            metricsSHA256: try LocalBenchmarkOutput.sha256(file),
+            metricsCSVFile: csv.lastPathComponent,
+            canonicalPCMFile: canonicalPCMURL?.lastPathComponent,
+            canonicalPCMSHA256: try canonicalPCMURL.map(LocalBenchmarkOutput.sha256),
+            voxtralModelID: VoxtralHelperManifest.modelID,
+            voxtralModelRevision: VoxtralHelperManifest.modelRevision,
+            voxtralRuntimePatchSHA256: VoxtralHelperManifest.runtimePatchSHA256,
+            voxtralDelayMilliseconds:
+                VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds,
+            transportBlockMilliseconds: VoxtralHelperManifest.transportBlockMilliseconds
+        )
+        try encoder.encode(report).write(to: session, options: .atomic)
         return file
     }
 
@@ -542,6 +609,72 @@ actor LocalCaptionMetricRecorder {
     }
 }
 
+struct LocalCaptionBenchmarkSummary: Codable, Equatable, Sendable {
+    let sessionID: UUID
+    let engine: String
+    let translationMode: String
+    let finalSampleCount: Int
+    let pcmComplete: Bool
+    let m4aDroppedSampleCount: Int
+    let helperSentThrough: Int?
+    let helperAcknowledgedThrough: Int?
+    let endingHelperBacklogSamples: Int?
+    let sourceStagedThrough: Int
+    let englishValidatedThrough: Int
+    let committedSampleCount: Int
+}
+
+private struct LocalCaptionBenchmarkSessionReport: Codable {
+    let summary: LocalCaptionBenchmarkSummary
+    let applicationProcessIdentifier: Int32
+    let applicationVersion: String?
+    let applicationBuild: String?
+    let applicationExecutableFile: String
+    let applicationExecutableSHA256: String
+    let operatingSystemVersion: String
+    let helperProcessIdentifier: Int32?
+    let maximumCombinedResidentBytes: UInt64
+    let maximumHelperBacklogSamples: Int
+    let metricsFile: String
+    let metricsSHA256: String
+    let metricsCSVFile: String
+    let canonicalPCMFile: String?
+    let canonicalPCMSHA256: String?
+    let voxtralModelID: String
+    let voxtralModelRevision: String
+    let voxtralRuntimePatchSHA256: String
+    let voxtralDelayMilliseconds: Int
+    let transportBlockMilliseconds: Int
+}
+
+enum LocalBenchmarkOutput {
+    static func directory() throws -> URL {
+        let environment = ProcessInfo.processInfo.environment
+        guard let explicit = environment["WHISPERASR_BENCHMARK_OUTPUT_DIR"],
+              !explicit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw NSError(
+                domain: "LocalBenchmarkOutput",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey:
+                    "WHISPERASR_BENCHMARK_OUTPUT_DIR is required for benchmark runs."]
+            )
+        }
+        let url = URL(fileURLWithPath: explicit, isDirectory: true)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url.standardizedFileURL
+    }
+
+    static func stem(sessionID: UUID, date: Date = Date()) -> String {
+        let formatter = ISO8601DateFormatter()
+        let timestamp = formatter.string(from: date).replacingOccurrences(of: ":", with: "-")
+        return "local-captions-\(timestamp)-\(sessionID.uuidString.lowercased())"
+    }
+
+    static func sha256(_ url: URL) throws -> String {
+        try ModelDownloader.sha256(of: url)
+    }
+}
+
 enum PCM16WAV {
     static func data(samples: [Float], sampleRate: UInt32 = 16_000) -> Data {
         let pcm = samples.map { sample -> Int16 in
@@ -585,19 +718,26 @@ enum CanonicalBenchmarkCorpus {
         }
     }
 
-    static func writeIfRequested(samples: [Float]) throws -> URL? {
+    static func writeIfRequested(
+        artifact: RecoverablePCMSpool.Artifact?,
+        stem: String
+    ) throws -> URL? {
         guard ProcessInfo.processInfo.environment["WHISPERASR_CAPTURE_CANONICAL"] == "1" else {
             return nil
         }
-        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-            .appendingPathComponent(".build/benchmarks", isDirectory: true)
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        let wav = root.appendingPathComponent("canonical-firefox-16k-mono.wav")
-        try PCM16WAV.data(samples: samples).write(to: wav, options: .atomic)
-        let manifest = root.appendingPathComponent("canonical-passages.json")
+        guard let artifact, artifact.isComplete else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        let root = try LocalBenchmarkOutput.directory()
+        let wav = root.appendingPathComponent("\(stem)-canonical-f32.wav")
+        if FileManager.default.fileExists(atPath: wav.path) {
+            try FileManager.default.removeItem(at: wav)
+        }
+        try FileManager.default.copyItem(at: artifact.audioURL, to: wav)
+        let manifest = root.appendingPathComponent("\(stem)-canonical-passages.json")
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        try encoder.encode(passages(totalSamples: samples.count)).write(
+        try encoder.encode(passages(totalSamples: artifact.sampleCount)).write(
             to: manifest,
             options: .atomic
         )

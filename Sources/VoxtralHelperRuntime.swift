@@ -147,8 +147,10 @@ struct VoxtralHelperProgress: Equatable, Sendable {
     let sentThrough: Int?
     let acknowledgedThrough: Int?
     let backlogSamples: Int
+    let maximumBacklogSamples: Int
     let transcript: String
     let helperRSSBytes: UInt64?
+    let helperProcessIdentifier: Int32?
 }
 
 struct VoxtralHelperFeedCursor: Equatable, Sendable {
@@ -332,6 +334,7 @@ actor VoxtralHelperRuntime {
     private var sendTail: Task<Void, Error>?
     private var finishContinuation: CheckedContinuation<String, Error>?
     private var feedCursor = VoxtralHelperFeedCursor()
+    private var maximumBacklogSamples = 0
     private var transcript = ""
 
     init(rootDirectory: URL? = nil) {
@@ -349,8 +352,11 @@ actor VoxtralHelperRuntime {
             sentThrough: feedCursor.sentThrough,
             acknowledgedThrough: feedCursor.acknowledgedThrough,
             backlogSamples: feedCursor.backlogSamples,
+            maximumBacklogSamples: maximumBacklogSamples,
             transcript: transcript,
-            helperRSSBytes: helperRSSBytes()
+            helperRSSBytes: helperRSSBytes(),
+            helperProcessIdentifier: serverProcess?.isRunning == true
+                ? serverProcess?.processIdentifier : nil
         )
     }
 
@@ -405,6 +411,7 @@ actor VoxtralHelperRuntime {
 
         webSocket = socket
         feedCursor = VoxtralHelperFeedCursor()
+        maximumBacklogSamples = 0
         transcript = ""
         status = .streaming
         let events = eventPipe.start()
@@ -424,6 +431,7 @@ actor VoxtralHelperRuntime {
         let append = try VoxtralRealtimeWire.appendMessage(samples: samples)
         let barrier = try VoxtralRealtimeWire.barrierMessage()
         try feedCursor.stage(range, sampleCount: samples.count)
+        maximumBacklogSamples = max(maximumBacklogSamples, feedCursor.backlogSamples)
         let previous = sendTail
         let send = Task {
             if let previous { try await previous.value }
@@ -529,6 +537,7 @@ actor VoxtralHelperRuntime {
         webSocket = nil
         eventPipe.finish()
         feedCursor = VoxtralHelperFeedCursor()
+        maximumBacklogSamples = 0
         transcript = ""
         status = serverProcess?.isRunning == true ? .ready : .idle
     }

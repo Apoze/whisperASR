@@ -2234,7 +2234,10 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
                 maxBacklogNanoseconds = max(maxBacklogNanoseconds, endingBacklogNanoseconds)
 
                 let progress = await manager.continuousVoxtralProgress()
-                maxHelperBacklogSamples = max(maxHelperBacklogSamples, progress.backlogSamples)
+                maxHelperBacklogSamples = max(
+                    maxHelperBacklogSamples,
+                    progress.maximumBacklogSamples
+                )
                 let appRSS = manager.currentMemoryBytes()
                 let helperRSS = progress.helperRSSBytes ?? 0
                 maxAppRSSBytes = max(maxAppRSSBytes, appRSS)
