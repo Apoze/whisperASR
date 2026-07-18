@@ -125,10 +125,16 @@ final class VoxtralHelperRuntimeTests: XCTestCase {
             throw XCTSkip("Set WHISPERASR_VOXTRAL_HELPER_SMOKE_WAV to exercise the real helper.")
         }
         let samples = try await AudioLoader.loadSamples(url: URL(fileURLWithPath: path))
-        let runtime = VoxtralHelperRuntime()
+        let model = ProcessInfo.processInfo.environment["WHISPERASR_VOXTRAL_HELPER_VARIANT"]
+            .flatMap(VoxtralModelVariant.init(rawValue:)) ?? .q4
+        let delay = ProcessInfo.processInfo.environment["WHISPERASR_VOXTRAL_HELPER_DELAY_MS"]
+            .flatMap(Int.init)
+            .flatMap(VoxtralTranscriptionDelay.init(rawValue:)) ?? .milliseconds960
+        let configuration = VoxtralContinuousConfiguration(model: model, delay: delay)
+        let runtime = VoxtralHelperRuntime(configuration: configuration)
         do {
             try await runtime.prepare()
-            let events = try await runtime.startSession()
+            let events = try await runtime.startSession(delayMilliseconds: delay.rawValue)
             let collector = Task { () -> [VoxtralHelperEvent] in
                 var result: [VoxtralHelperEvent] = []
                 for await event in events { result.append(event) }
@@ -242,6 +248,94 @@ final class VoxtralHelperRuntimeTests: XCTestCase {
         XCTAssertEqual(VoxtralHelperManifest.modelFrameSamples, 1_280)
         XCTAssertEqual(VoxtralHelperManifest.transportBlockMilliseconds, 160)
         XCTAssertEqual(VoxtralHelperManifest.runtimePatchVersion, "continuous-stream-v4")
+    }
+
+    func testContinuousConfigurationsPinBothModelsAndSupportedDelays() throws {
+        XCTAssertEqual(VoxtralModelVariant.q4.modelID, "iris-sfg/Voxtral-Mini-4B-Realtime-2602-4bit")
+        XCTAssertEqual(
+            VoxtralModelVariant.q4.modelRevision,
+            "12091661ce5f58788624fa49fad9ddbbf67cf063"
+        )
+        XCTAssertEqual(VoxtralModelVariant.q6.modelID, "mlx-community/Voxtral-Mini-4B-Realtime-6bit")
+        XCTAssertEqual(
+            VoxtralModelVariant.q6.modelRevision,
+            "02eb0caeb9dafb554c17a72b93dbf40cd3736c31"
+        )
+        XCTAssertEqual(
+            VoxtralModelVariant.q6.conversionSource?.modelID,
+            "mlx-community/Voxtral-Mini-4B-Realtime-2602-fp16"
+        )
+        XCTAssertEqual(
+            VoxtralModelVariant.q6.conversionSource?.revision,
+            "9977a0f5c0fce8472083af92957497118adc412b"
+        )
+        XCTAssertEqual(
+            VoxtralModelVariant.q6.localSnapshotID,
+            "mlx-audio-q6-9977a0f5-v1"
+        )
+        XCTAssertEqual(
+            VoxtralModelVariant.q6.localArtifactRevision,
+            "mlx-audio-04151c6abb74b886f879a4457ccdc96761f10102-9977a0f5c0fce8472083af92957497118adc412b-q6-g64-affine"
+        )
+        XCTAssertEqual(
+            Set(VoxtralTranscriptionDelay.allCases.map(\.rawValue)),
+            [960, 1_200, 2_400]
+        )
+
+        let configurations = VoxtralModelVariant.allCases.flatMap { model in
+            VoxtralTranscriptionDelay.allCases.map {
+                VoxtralContinuousConfiguration(model: model, delay: $0)
+            }
+        }
+        XCTAssertEqual(Set(configurations.map(\.modelSnapshotDirectoryName)).count, 2)
+        for configuration in configurations {
+            XCTAssertEqual(
+                try JSONDecoder().decode(
+                    VoxtralContinuousConfiguration.self,
+                    from: JSONEncoder().encode(configuration)
+                ),
+                configuration
+            )
+        }
+    }
+
+    func testStabilityGuardTracksSelectedDelayPlusTransportBlock() {
+        XCTAssertEqual(
+            VoxtralContinuousConfiguration(
+                model: .q4,
+                delay: .milliseconds960
+            ).stabilityGuardSamples,
+            17_920
+        )
+        XCTAssertEqual(
+            VoxtralContinuousConfiguration(
+                model: .q6,
+                delay: .milliseconds1200
+            ).stabilityGuardSamples,
+            21_760
+        )
+        XCTAssertEqual(
+            VoxtralContinuousConfiguration(
+                model: .q6,
+                delay: .milliseconds2400
+            ).stabilityGuardSamples,
+            40_960
+        )
+    }
+
+    func testStoredConfigurationDefaultsSafelyAndAcceptsOnlySelectablePairs() {
+        let suite = "VoxtralHelperRuntimeTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        XCTAssertEqual(VoxtralContinuousConfiguration.stored(in: defaults), .default)
+        defaults.set("q4-2400", forKey: VoxtralContinuousConfiguration.storageKey)
+        XCTAssertEqual(VoxtralContinuousConfiguration.stored(in: defaults), .default)
+        defaults.set("q6-1200", forKey: VoxtralContinuousConfiguration.storageKey)
+        XCTAssertEqual(
+            VoxtralContinuousConfiguration.stored(in: defaults),
+            .init(model: .q6, delay: .milliseconds1200)
+        )
     }
 
     func testBundledPythonLockMatchesTheAuditedHash() throws {

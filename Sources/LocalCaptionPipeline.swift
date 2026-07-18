@@ -516,6 +516,8 @@ actor LocalCaptionMetricRecorder {
         stem: String,
         canonicalPCMURL: URL?,
         summary: LocalCaptionBenchmarkSummary,
+        voxtralConfiguration: VoxtralContinuousConfiguration? = nil,
+        japaneseGlossary: JapaneseGlossary = .empty,
         outputDirectory: URL? = nil
     ) throws -> URL? {
         guard enabled else { return nil }
@@ -554,12 +556,19 @@ actor LocalCaptionMetricRecorder {
             metricsCSVFile: csv.lastPathComponent,
             canonicalPCMFile: canonicalPCMURL?.lastPathComponent,
             canonicalPCMSHA256: try canonicalPCMURL.map(LocalBenchmarkOutput.sha256),
-            voxtralModelID: VoxtralHelperManifest.modelID,
-            voxtralModelRevision: VoxtralHelperManifest.modelRevision,
-            voxtralRuntimePatchSHA256: VoxtralHelperManifest.runtimePatchSHA256,
-            voxtralDelayMilliseconds:
-                VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds,
-            transportBlockMilliseconds: VoxtralHelperManifest.transportBlockMilliseconds
+            voxtralModelID: voxtralConfiguration?.model.modelID,
+            voxtralModelRevision: voxtralConfiguration?.model.modelRevision,
+            voxtralLocalSnapshotID: voxtralConfiguration?.model.localSnapshotID,
+            voxtralLocalArtifactRevision: voxtralConfiguration?.model.localArtifactRevision,
+            voxtralConversionSourceID: voxtralConfiguration?.model.conversionSource?.modelID,
+            voxtralConversionSourceRevision:
+                voxtralConfiguration?.model.conversionSource?.revision,
+            voxtralRuntimePatchSHA256: voxtralConfiguration == nil
+                ? nil : VoxtralHelperManifest.runtimePatchSHA256,
+            voxtralDelayMilliseconds: voxtralConfiguration?.delay.rawValue,
+            transportBlockMilliseconds: voxtralConfiguration == nil
+                ? nil : VoxtralHelperManifest.transportBlockMilliseconds,
+            japaneseGlossarySHA256: japaneseGlossary.fingerprint
         )
         try encoder.encode(report).write(to: session, options: .atomic)
         return file
@@ -646,11 +655,16 @@ private struct LocalCaptionBenchmarkSessionReport: Codable {
     let metricsCSVFile: String
     let canonicalPCMFile: String?
     let canonicalPCMSHA256: String?
-    let voxtralModelID: String
-    let voxtralModelRevision: String
-    let voxtralRuntimePatchSHA256: String
-    let voxtralDelayMilliseconds: Int
-    let transportBlockMilliseconds: Int
+    let voxtralModelID: String?
+    let voxtralModelRevision: String?
+    let voxtralLocalSnapshotID: String?
+    let voxtralLocalArtifactRevision: String?
+    let voxtralConversionSourceID: String?
+    let voxtralConversionSourceRevision: String?
+    let voxtralRuntimePatchSHA256: String?
+    let voxtralDelayMilliseconds: Int?
+    let transportBlockMilliseconds: Int?
+    let japaneseGlossarySHA256: String?
 }
 
 enum LocalBenchmarkOutput {

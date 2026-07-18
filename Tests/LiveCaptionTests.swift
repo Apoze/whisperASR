@@ -108,6 +108,7 @@ final class LiveCaptionTests: XCTestCase {
             LiveCaptionMode.storageKey,
             LocalEnglishEngine.storageKey,
             AppleTranslationMode.storageKey,
+            VoxtralContinuousConfiguration.storageKey,
             LocalSpeechEngine.sourceLocaleKey,
             APIServer.enabledKey,
         ]
@@ -128,6 +129,10 @@ final class LiveCaptionTests: XCTestCase {
         defaults.set(LiveCaptionMode.localEnglish.rawValue, forKey: LiveCaptionMode.storageKey)
         defaults.set(LocalEnglishEngine.voxtralApple.rawValue, forKey: LocalEnglishEngine.storageKey)
         defaults.set(AppleTranslationMode.adaptive.rawValue, forKey: AppleTranslationMode.storageKey)
+        defaults.set(
+            VoxtralContinuousConfiguration.default.storageValue,
+            forKey: VoxtralContinuousConfiguration.storageKey
+        )
         defaults.set("ja", forKey: LocalSpeechEngine.sourceLocaleKey)
         let state = AppState()
         let generation = state.localPreparationGeneration
@@ -139,6 +144,18 @@ final class LiveCaptionTests: XCTestCase {
             engine: .qwenApple,
             translationMode: .adaptive,
             sourceLocale: "ja",
+            generation: generation
+        )
+        XCTAssertFalse(state.appleTranslationLowReady)
+
+        state.reportAppleTranslationPreparation(
+            highFidelity: false,
+            ready: true,
+            error: nil,
+            engine: .voxtralApple,
+            translationMode: .adaptive,
+            sourceLocale: "ja",
+            voxtralConfiguration: .init(model: .q6, delay: .milliseconds1200),
             generation: generation
         )
         XCTAssertFalse(state.appleTranslationLowReady)
@@ -702,6 +719,8 @@ final class LiveCaptionTests: XCTestCase {
         item.status = .failed("Apple translation failed")
         item.translateToEnglish = true
         item.localSourceTranscriptComplete = true
+        item.localVoxtralConfiguration = .init(model: .q6, delay: .milliseconds1200)
+        item.localJapaneseGlossary = JapaneseGlossary(rules: "配給=ハイキュー")
         item.segments = [TranscriptionSegment(start: 0, end: 1, text: "はい。")]
         item.fullText = "はい。"
 
@@ -709,16 +728,22 @@ final class LiveCaptionTests: XCTestCase {
         let restored = try TranscriptionStore.decodedItem(from: encoded)
         XCTAssertTrue(restored.translateToEnglish)
         XCTAssertTrue(restored.localSourceTranscriptComplete)
+        XCTAssertEqual(restored.localVoxtralConfiguration, item.localVoxtralConfiguration)
+        XCTAssertEqual(restored.localJapaneseGlossary, item.localJapaneseGlossary)
         XCTAssertEqual(restored.segments, item.segments)
 
         var legacy = try XCTUnwrap(
             JSONSerialization.jsonObject(with: encoded) as? [String: Any]
         )
         legacy.removeValue(forKey: "localSourceTranscriptComplete")
+        legacy.removeValue(forKey: "localVoxtralConfiguration")
+        legacy.removeValue(forKey: "localJapaneseGlossary")
         let legacyRestored = try TranscriptionStore.decodedItem(
             from: JSONSerialization.data(withJSONObject: legacy)
         )
         XCTAssertFalse(legacyRestored.localSourceTranscriptComplete)
+        XCTAssertNil(legacyRestored.localVoxtralConfiguration)
+        XCTAssertNil(legacyRestored.localJapaneseGlossary)
     }
 
     private func makeDefaults() -> (UserDefaults, String) {

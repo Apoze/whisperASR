@@ -222,6 +222,7 @@ private struct LocalPreparationKey: Equatable {
     let engine: LocalEnglishEngine
     let translationMode: AppleTranslationMode
     let sourceLocale: String
+    let voxtralConfiguration: VoxtralContinuousConfiguration?
 }
 
 @Observable
@@ -315,6 +316,8 @@ class AppState {
     private var activeLocalTranslationMode: AppleTranslationMode = .adaptive
     private var activeLocalEnglishEngine: LocalEnglishEngine = .whisperTurboApple
     private var activeLocalSourceLocale = ""
+    private var activeContinuousVoxtralConfiguration: VoxtralContinuousConfiguration = .default
+    private var activeJapaneseGlossary = JapaneseGlossary.empty
     private var localPreviewPlanner = LocalPreviewPlanner()
     private var localPreviewSegment: TranscriptionSegment?
     private var localPreviewTranslationTask: Task<Void, Never>?
@@ -400,12 +403,15 @@ class AppState {
         let sourceSupported = localSourceLocales.contains {
             Locale(identifier: $0.id).language.languageCode?.identifier == sourceCode
         }
+        let helperConfigurationReady = !engine.usesContinuousVoxtral
+            || localModelManager.continuousVoxtralConfiguration == key.voxtralConfiguration
         return !source.isEmpty
             && sourceSupported
             && translationReady
             && previewReady
             && diarizationReady
             && helperReady
+            && helperConfigurationReady
             && whisperReady
             && preparedLocalResourcesKey == key
             && localModelManager.loadedEngine == engine
@@ -416,10 +422,13 @@ class AppState {
 
     private var currentLocalPreparationKey: LocalPreparationKey {
         let defaults = UserDefaults.standard
+        let engine = LocalEnglishEngine.stored(in: defaults)
         return LocalPreparationKey(
-            engine: LocalEnglishEngine.stored(in: defaults),
+            engine: engine,
             translationMode: AppleTranslationMode.stored(in: defaults),
-            sourceLocale: defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
+            sourceLocale: defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? "",
+            voxtralConfiguration: engine.usesContinuousVoxtral
+                ? VoxtralContinuousConfiguration.stored(in: defaults) : nil
         )
     }
 
@@ -568,9 +577,14 @@ class AppState {
                     sourceLocale: locale,
                     mode: mode
                 )
+                let retryGlossary = item.localJapaneseGlossary ?? .empty
                 var english: [TranscriptionSegment] = []
                 for (index, source) in sources.enumerated() {
-                    let text = try await self.translateStableSource(source.text, mode: mode)
+                    let translationSource = retryGlossary.applying(to: source.text)
+                    let text = try await self.translateStableSource(
+                        translationSource,
+                        mode: mode
+                    )
                     english.append(TranscriptionSegment(
                         start: source.start,
                         end: source.end,
@@ -814,7 +828,11 @@ class AppState {
                         sourceStagedThrough: localVoxtralClausePlanner.sourceStagedThrough,
                         englishValidatedThrough: localVoxtralClausePlanner.englishValidatedThrough,
                         committedSampleCount: localCommittedSampleCount
-                    )
+                    ),
+                    voxtralConfiguration: activeLocalEnglishEngine.usesContinuousVoxtral
+                        ? activeContinuousVoxtralConfiguration : nil,
+                    japaneseGlossary: activeLocalEnglishEngine.usesContinuousVoxtral
+                        ? activeJapaneseGlossary : .empty
                 )
             } catch {
                 showToast("Couldn't save the benchmark report: \(error.localizedDescription)")
@@ -925,6 +943,11 @@ class AppState {
             if !directEnglish {
                 item.localSourceLocale = activeLocalSourceLocale
                 item.localTranslationMode = activeLocalTranslationMode
+                if activeLocalEnglishEngine.usesContinuousVoxtral {
+                    item.localVoxtralConfiguration = activeContinuousVoxtralConfiguration
+                    item.localJapaneseGlossary = activeJapaneseGlossary.isEmpty
+                        ? nil : activeJapaneseGlossary
+                }
                 item.discardOriginalAfterRetry = !keepOriginal
                 item.localSourceTranscriptComplete = localSourceTranscriptComplete
             }
@@ -1376,12 +1399,17 @@ class AppState {
         engine: LocalEnglishEngine,
         translationMode: AppleTranslationMode,
         sourceLocale: String,
+        voxtralConfiguration: VoxtralContinuousConfiguration? = nil,
         generation: UInt64
     ) {
+        let resolvedVoxtralConfiguration = engine.usesContinuousVoxtral
+            ? voxtralConfiguration ?? VoxtralContinuousConfiguration.stored()
+            : nil
         let key = LocalPreparationKey(
             engine: engine,
             translationMode: translationMode,
-            sourceLocale: sourceLocale
+            sourceLocale: sourceLocale,
+            voxtralConfiguration: resolvedVoxtralConfiguration
         )
         guard generation == localPreparationGeneration,
               key == currentLocalPreparationKey else { return }
@@ -1433,6 +1461,8 @@ class AppState {
         if preparedLocalResourcesKey == key,
            localModelManager.loadedEngine == engine,
            localModelManager.phase(for: engine).isReady,
+           (!engine.usesContinuousVoxtral
+                || localModelManager.continuousVoxtralConfiguration == key.voxtralConfiguration),
            speechReady,
            diarizationReady,
            (!engine.usesContinuousVoxtral || continuousVoxtralHelperReady) {
@@ -1491,6 +1521,12 @@ class AppState {
                     await self.localDiarizationShadow.shutdown()
                     guard self.localPreparationIsCurrent(key, generation: generation) else { return }
                     self.localDiarizationPreparationFinished = false
+                }
+                if let configuration = key.voxtralConfiguration {
+                    await self.localModelManager.selectContinuousVoxtralConfiguration(
+                        configuration
+                    )
+                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
                 }
                 try await self.localModelManager.prepare(engine)
                 guard self.localPreparationIsCurrent(key, generation: generation) else { return }
@@ -1702,11 +1738,15 @@ class AppState {
         let localMode = AppleTranslationMode.stored(in: defaults)
         let localEngine = LocalEnglishEngine.stored(in: defaults)
         let sourceLocale = defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
+        let continuousVoxtralConfiguration = VoxtralContinuousConfiguration.stored(in: defaults)
         activeLiveCaptionMode = captionMode
         activeKeepOriginalTranscript = defaults.bool(forKey: LiveCaptionMode.keepOriginalKey)
         activeLocalTranslationMode = localMode
         activeLocalEnglishEngine = localEngine
         activeLocalSourceLocale = sourceLocale
+        activeContinuousVoxtralConfiguration = continuousVoxtralConfiguration
+        activeJapaneseGlossary = localEngine.usesContinuousVoxtral
+            ? JapaneseGlossary.stored(in: defaults) : .empty
         if localBenchmarkEnabled { localBenchmarkSessionID = UUID() }
         activeLocalRecorder = recorder
         hasUnresolvedLiveRecovery = false
@@ -1733,7 +1773,9 @@ class AppState {
         localPreviewSpeechStartSample = nil
         localPreviewFeedStarted = false
         localVoxtralPreviewSourceText = ""
-        localVoxtralClausePlanner = VoxtralClausePlanner()
+        localVoxtralClausePlanner = VoxtralClausePlanner(
+            stabilityGuardSamples: continuousVoxtralConfiguration.stabilityGuardSamples
+        )
         localContinuousVoxtralAcknowledgedSampleCount = 0
         localContinuousVoxtralTranscript = ""
         localContinuousVoxtralFailure = nil
@@ -1804,7 +1846,10 @@ class AppState {
     ) async {
         do {
             guard localModelManager.loadedEngine == engine,
-                  localModelManager.phase(for: engine).isReady else {
+                  localModelManager.phase(for: engine).isReady,
+                  !engine.usesContinuousVoxtral
+                    || localModelManager.continuousVoxtralConfiguration
+                        == activeContinuousVoxtralConfiguration else {
                 throw LocalPrototypeError.modelNotLoaded(engine.label)
             }
             if engine.usesAppleFinalTranslation {
@@ -1923,7 +1968,11 @@ class AppState {
             }
             guard !localPreviewIsBlockedByFinal else { return }
             guard let work = localPreviewPlanner.takeLatest() else { return }
-            let source = work.update.segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawSource = work.update.segment.text.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+            let source = activeLocalEnglishEngine.usesContinuousVoxtral
+                ? activeJapaneseGlossary.applying(to: rawSource) : rawSource
             guard !source.isEmpty else { continue }
 
             localPreviewLastStartedUptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
@@ -2141,7 +2190,8 @@ class AppState {
             && authoritativeMarkerCalibration != nil
         localVoxtralSpeakerMarkersAreAuthoritative = localDiarizationAssistActive
         localVoxtralClausePlanner = VoxtralClausePlanner(
-            markerCalibration: authoritativeMarkerCalibration
+            markerCalibration: authoritativeMarkerCalibration,
+            stabilityGuardSamples: activeContinuousVoxtralConfiguration.stabilityGuardSamples
         )
         localContinuousVoxtralAcknowledgedSampleCount = 0
         localContinuousVoxtralTranscript = ""
@@ -2240,7 +2290,7 @@ class AppState {
             let replayStart = max(
                 0,
                 localVoxtralClausePlanner.sourceStagedThrough
-                    - VoxtralClausePlanner.stabilityGuard
+                    - activeContinuousVoxtralConfiguration.stabilityGuardSamples
             )
             localVoxtralReplayDeduplicator = VoxtralReplayDeduplicator(
                 previousTranscript: previousTranscript
@@ -2453,7 +2503,8 @@ class AppState {
 
                 let earliestRetained = max(
                     0,
-                    localCommittedSampleCount - VoxtralClausePlanner.stabilityGuard
+                    localCommittedSampleCount
+                        - activeContinuousVoxtralConfiguration.stabilityGuardSamples
                 )
                 let windowStart = max(earliestRetained, total - 16_000 * 3)
                 let window = recorder.getSamples(from: windowStart, upTo: total)
@@ -3607,8 +3658,10 @@ class AppState {
                 let text: String
                 switch job.input {
                 case .japaneseSource(let source):
+                    let translationSource = activeLocalEnglishEngine.usesContinuousVoxtral
+                        ? activeJapaneseGlossary.applying(to: source.text) : source.text
                     text = try await translateStableSource(
-                        source.text,
+                        translationSource,
                         mode: activeLocalTranslationMode
                     )
                 case .directEnglish(let english):
@@ -3643,7 +3696,7 @@ class AppState {
                         decision.stableThrough
                     )
                     let retainedOverlap = activeLocalEnglishEngine.usesContinuousVoxtral
-                        ? VoxtralClausePlanner.stabilityGuard
+                        ? activeContinuousVoxtralConfiguration.stabilityGuardSamples
                         : LocalEndpointPlanner.forcedOverlap
                     let requestedTrim = max(
                         0, localCommittedSampleCount - retainedOverlap
@@ -3945,6 +3998,8 @@ class AppState {
         let localSourceLocale: String?
         let localTranslationMode: AppleTranslationMode?
         let localEnglishEngine: LocalEnglishEngine?
+        let voxtralConfiguration: VoxtralContinuousConfiguration?
+        let japaneseGlossary: JapaneseGlossary?
         let discardOriginalAfterRetry: Bool?
         let savedAt: Date
     }
@@ -3994,6 +4049,8 @@ class AppState {
         let sourceLocale = isLocalEnglish ? activeLocalSourceLocale : nil
         let translationMode = isLocalEnglish ? activeLocalTranslationMode : nil
         let localEngine = isLocalEnglish ? activeLocalEnglishEngine : nil
+        let voxtralConfiguration = isLocalEnglish && activeLocalEnglishEngine.usesContinuousVoxtral
+            ? activeContinuousVoxtralConfiguration : nil
         let discardOriginal = isLocalEnglish && !isDirectEnglish
             ? !activeKeepOriginalTranscript : nil
         let audioPath = activeLocalRecorder?.recordingFileURL?.path
@@ -4019,6 +4076,9 @@ class AppState {
             localSourceLocale: sourceLocale,
             localTranslationMode: translationMode,
             localEnglishEngine: localEngine,
+            voxtralConfiguration: voxtralConfiguration,
+            japaneseGlossary: isLocalEnglish && activeLocalEnglishEngine.usesContinuousVoxtral
+                ? activeJapaneseGlossary : nil,
             discardOriginalAfterRetry: discardOriginal,
             savedAt: Date()
         )
@@ -4243,6 +4303,8 @@ class AppState {
         if !isDirectEnglish {
             item.localSourceLocale = recovery?.localSourceLocale
             item.localTranslationMode = recovery?.localTranslationMode
+            item.localVoxtralConfiguration = recovery?.voxtralConfiguration
+            item.localJapaneseGlossary = recovery?.japaneseGlossary
             item.discardOriginalAfterRetry = recovery?.discardOriginalAfterRetry ?? false
         }
         item.translateToEnglish = isLocalEnglish && !isDirectEnglish

@@ -8,6 +8,8 @@ struct SettingsView: View {
     @AppStorage("translationEndpoint") private var translationEndpoint = ""
     @AppStorage("translationAPIKey") private var translationAPIKey = ""
     @AppStorage("translationModel") private var translationModel = ""
+    @AppStorage(JapaneseGlossary.enabledKey) private var japaneseGlossaryEnabled = false
+    @AppStorage(JapaneseGlossary.rulesKey) private var japaneseGlossaryRules = ""
 
     // Local OpenAI-compatible API server
     @AppStorage(APIServer.enabledKey) private var apiServerEnabled = false
@@ -109,6 +111,17 @@ struct SettingsView: View {
                     ModelRowView(model: model)
                 }
                 Text("Local English captions use these models only for source transcription; Apple Translation produces the English. Turbo is recommended for the Whisper source option.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Japanese caption glossary") {
+                Toggle("Apply exact corrections before Apple Translation", isOn: $japaneseGlossaryEnabled)
+                TextEditor(text: $japaneseGlossaryRules)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(minHeight: 72)
+                    .disabled(!japaneseGlossaryEnabled)
+                Text("One exact rule per line: recognized=canonical. Example: 配給=ハイキュー. The raw Voxtral transcript is never changed.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

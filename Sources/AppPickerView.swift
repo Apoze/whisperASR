@@ -13,6 +13,8 @@ struct AppPickerView: View {
     @AppStorage(LocalEnglishEngine.storageKey) private var localEnglishEngineRaw = LocalEnglishEngine.whisperTurboApple.rawValue
     @AppStorage(LocalSpeechEngine.sourceLocaleKey) private var localSourceLocale = ""
     @AppStorage(AppleTranslationMode.storageKey) private var appleTranslationModeRaw = AppleTranslationMode.adaptive.rawValue
+    @AppStorage(VoxtralContinuousConfiguration.storageKey) private var voxtralConfigurationRaw =
+        VoxtralContinuousConfiguration.default.storageValue
     @AppStorage("targetLanguage") private var targetLanguage = ""
 
     private var captionMode: LiveCaptionMode {
@@ -35,6 +37,12 @@ struct AppPickerView: View {
 
     private var appleTranslationMode: AppleTranslationMode {
         AppleTranslationMode(rawValue: appleTranslationModeRaw) ?? .adaptive
+    }
+
+    private var voxtralConfiguration: VoxtralContinuousConfiguration {
+        VoxtralContinuousConfiguration.selectableConfigurations.first {
+            $0.storageValue == voxtralConfigurationRaw
+        } ?? .default
     }
 
     private var availableTranslationModes: [AppleTranslationMode] {
@@ -111,6 +119,10 @@ struct AppPickerView: View {
         }
         .onChange(of: appleTranslationModeRaw) { _, _ in
             appState.resetAppleTranslationPreparation()
+            appState.reloadLocalEnglishCapabilities()
+        }
+        .onChange(of: voxtralConfigurationRaw) { _, _ in
+            guard localEnglishEngine.usesContinuousVoxtral else { return }
             appState.reloadLocalEnglishCapabilities()
         }
     }
@@ -218,6 +230,17 @@ struct AppPickerView: View {
                         Picker("Subtitle timing", selection: $appleTranslationModeRaw) {
                             ForEach(availableTranslationModes) { mode in
                                 Text(translationModeLabel(mode)).tag(mode.rawValue)
+                            }
+                        }
+
+                        if localEnglishEngine.usesContinuousVoxtral {
+                            Picker("Voxtral", selection: $voxtralConfigurationRaw) {
+                                ForEach(
+                                    VoxtralContinuousConfiguration.selectableConfigurations,
+                                    id: \.storageValue
+                                ) { configuration in
+                                    Text(configuration.label).tag(configuration.storageValue)
+                                }
                             }
                         }
 
@@ -421,6 +444,8 @@ struct AppPickerView: View {
             let capturedEngine = localEnglishEngine
             let capturedMode = appleTranslationMode
             let capturedSourceLocale = localSourceLocale
+            let capturedVoxtralConfiguration = localEnglishEngine.usesContinuousVoxtral
+                ? voxtralConfiguration : nil
             let capturedGeneration = appState.localPreparationGeneration
             if #available(macOS 26.4, *) {
                 AppleTranslationPreparationView(
@@ -434,10 +459,11 @@ struct AppPickerView: View {
                         engine: capturedEngine,
                         translationMode: capturedMode,
                         sourceLocale: capturedSourceLocale,
+                        voxtralConfiguration: capturedVoxtralConfiguration,
                         generation: capturedGeneration
                     )
                 }
-                .id("\(capturedSourceLocale)|\(capturedMode.rawValue)|\(capturedEngine.rawValue)|\(capturedGeneration)")
+                .id("\(capturedSourceLocale)|\(capturedMode.rawValue)|\(capturedEngine.rawValue)|\(capturedVoxtralConfiguration?.storageValue ?? "none")|\(capturedGeneration)")
             }
         }
     }

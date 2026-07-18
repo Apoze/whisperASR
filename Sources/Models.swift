@@ -364,6 +364,8 @@ class TranscriptionItem: Identifiable {
     var translateToEnglish = false
     var localSourceLocale: String?
     var localTranslationMode: AppleTranslationMode?
+    var localVoxtralConfiguration: VoxtralContinuousConfiguration?
+    var localJapaneseGlossary: JapaneseGlossary?
     var discardOriginalAfterRetry = false
     /// False means the persisted source is only a recoverable prefix. Retry
     /// must re-transcribe the retained audio before it may mark the item done.
@@ -383,6 +385,8 @@ class TranscriptionItem: Identifiable {
          translatedSegments: [String] = [], translationLanguage: String? = nil,
          translateToEnglish: Bool = false, localSourceLocale: String? = nil,
          localTranslationMode: AppleTranslationMode? = nil,
+         localVoxtralConfiguration: VoxtralContinuousConfiguration? = nil,
+         localJapaneseGlossary: JapaneseGlossary? = nil,
          discardOriginalAfterRetry: Bool = false,
          localSourceTranscriptComplete: Bool = true) {
         self.id = id
@@ -397,6 +401,8 @@ class TranscriptionItem: Identifiable {
         self.translateToEnglish = translateToEnglish
         self.localSourceLocale = localSourceLocale
         self.localTranslationMode = localTranslationMode
+        self.localVoxtralConfiguration = localVoxtralConfiguration
+        self.localJapaneseGlossary = localJapaneseGlossary
         self.discardOriginalAfterRetry = discardOriginalAfterRetry
         self.localSourceTranscriptComplete = localSourceTranscriptComplete
     }

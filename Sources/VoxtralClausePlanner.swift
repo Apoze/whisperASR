@@ -117,6 +117,8 @@ struct VoxtralMarkerCalibration: Equatable, Sendable {
 struct VoxtralClausePlanner: Sendable {
     static let sampleRate = 16_000
     static let vadSilence = sampleRate * 350 / 1_000
+    /// Compatibility value for the default Q4/960 configuration. Production
+    /// planners use their selected configuration's instance guard.
     static let stabilityGuard = sampleRate * 1_120 / 1_000
     static let softClauseTarget = sampleRate * 5
     /// Ten stable seconds is a checkpoint, not an arbitrary text cut.
@@ -138,6 +140,7 @@ struct VoxtralClausePlanner: Sendable {
     private static let meaningfulCharacters = CharacterSet.letters.union(.decimalDigits)
 
     private let markerCalibration: VoxtralMarkerCalibration?
+    private let stabilityGuardSamples: Int
 
     private(set) var generation = 0
     private(set) var fedThrough = 0
@@ -157,8 +160,12 @@ struct VoxtralClausePlanner: Sendable {
     private var pendingSpeakerDecision: VoxtralClauseBoundary.SpeakerDecision?
     private var awaitingValidation: [VoxtralClauseBoundary] = []
 
-    init(markerCalibration: VoxtralMarkerCalibration? = nil) {
+    init(
+        markerCalibration: VoxtralMarkerCalibration? = nil,
+        stabilityGuardSamples: Int = Self.stabilityGuard
+    ) {
         self.markerCalibration = markerCalibration
+        self.stabilityGuardSamples = stabilityGuardSamples
     }
 
     var pendingValidationCount: Int { awaitingValidation.count }
@@ -214,7 +221,7 @@ struct VoxtralClausePlanner: Sendable {
         }
         observeSpeech(speech)
 
-        let stableThrough = max(sourceStagedThrough, fedThrough - Self.stabilityGuard)
+        let stableThrough = max(sourceStagedThrough, fedThrough - stabilityGuardSamples)
         let start = clauseSpeechStart ?? sourceStagedThrough
         guard stableThrough > sourceStagedThrough else { return nil }
 
@@ -244,13 +251,13 @@ struct VoxtralClausePlanner: Sendable {
         }) : nil
 
         let pauseReady = lastSpeechEnd.map {
-            fedThrough - $0 >= Self.stabilityGuard
+            fedThrough - $0 >= stabilityGuardSamples
         } ?? false
         let stableDuration = stableThrough - start
         let softSemanticReady = stableDuration >= Self.softClauseTarget
             && hasConservativeJapaneseEnding(pendingSourceText)
             && lastSourceUpdateThrough.map {
-                fedThrough - $0 >= Self.stabilityGuard
+                fedThrough - $0 >= stabilityGuardSamples
             } == true
         let forcedCheckpointReached = stableDuration >= Self.hardClauseTarget
 
@@ -293,7 +300,7 @@ struct VoxtralClausePlanner: Sendable {
         guard forcedCheckpointReached else { return nil }
         if let markerCut = forcedMarkerCut(
             checkpoint: start + Self.hardClauseTarget,
-            limit: start + Self.hardClauseLimit,
+            limit: start + Self.hardClauseTarget + stabilityGuardSamples,
             stableThrough: stableThrough
         ) {
             return stage(
@@ -306,7 +313,7 @@ struct VoxtralClausePlanner: Sendable {
             )
         }
 
-        guard stableDuration >= Self.hardClauseLimit else { return nil }
+        guard stableDuration >= Self.hardClauseTarget + stabilityGuardSamples else { return nil }
         return stageAll(
             kind: .forced,
             // Without a trustworthy marker there is no safe text offset.

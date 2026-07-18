@@ -2,25 +2,130 @@ import CryptoKit
 import Darwin
 import Foundation
 
+enum VoxtralModelVariant: String, CaseIterable, Codable, Sendable {
+    case q4
+    case q6
+
+    var modelID: String {
+        switch self {
+        case .q4: "iris-sfg/Voxtral-Mini-4B-Realtime-2602-4bit"
+        case .q6: "mlx-community/Voxtral-Mini-4B-Realtime-6bit"
+        }
+    }
+
+    var modelRevision: String {
+        switch self {
+        case .q4: "12091661ce5f58788624fa49fad9ddbbf67cf063"
+        case .q6: "02eb0caeb9dafb554c17a72b93dbf40cd3736c31"
+        }
+    }
+
+    /// The public Q6 snapshot is a voxmlx export, while the bundled helper
+    /// loads mlx-audio snapshots. Keep the requested artifact pinned for
+    /// provenance, but build the compatible Q6 once from the official FP16
+    /// source with mlx-audio's pinned converter.
+    var conversionSource: (modelID: String, revision: String)? {
+        switch self {
+        case .q4:
+            nil
+        case .q6:
+            (
+                "mlx-community/Voxtral-Mini-4B-Realtime-2602-fp16",
+                "9977a0f5c0fce8472083af92957497118adc412b"
+            )
+        }
+    }
+
+    var localSnapshotID: String {
+        switch self {
+        case .q4:
+            modelRevision
+        case .q6:
+            "mlx-audio-q6-9977a0f5-v1"
+        }
+    }
+
+    var localArtifactRevision: String {
+        switch self {
+        case .q4:
+            modelRevision
+        case .q6:
+            "mlx-audio-\(VoxtralHelperManifest.mlxAudioCommit)-9977a0f5c0fce8472083af92957497118adc412b-q6-g64-affine"
+        }
+    }
+
+    var displayName: String { rawValue.uppercased() }
+}
+
+enum VoxtralTranscriptionDelay: Int, CaseIterable, Codable, Sendable {
+    case milliseconds960 = 960
+    case milliseconds1200 = 1_200
+    case milliseconds2400 = 2_400
+}
+
+struct VoxtralContinuousConfiguration: Codable, Equatable, Sendable {
+    let model: VoxtralModelVariant
+    let delay: VoxtralTranscriptionDelay
+
+    static let `default` = Self(model: .q4, delay: .milliseconds960)
+    static let storageKey = "localVoxtralContinuousConfiguration"
+    static let selectableConfigurations: [Self] = [
+        .default,
+        Self(model: .q6, delay: .milliseconds960),
+        Self(model: .q6, delay: .milliseconds1200),
+        Self(model: .q6, delay: .milliseconds2400),
+    ]
+
+    var storageValue: String { "\(model.rawValue)-\(delay.rawValue)" }
+
+    var label: String {
+        if self == .default { return "Voxtral Q4 — 960 ms (recommended)" }
+        if model == .q6, delay == .milliseconds2400 {
+            return "Voxtral Q6 — 2400 ms (quality test, slow)"
+        }
+        return "Voxtral \(model.displayName) — \(delay.rawValue) ms (experimental)"
+    }
+
+    static func stored(in defaults: UserDefaults = .standard) -> Self {
+        guard let value = defaults.string(forKey: storageKey),
+              let configuration = selectableConfigurations.first(where: {
+                  $0.storageValue == value
+              }) else { return .default }
+        return configuration
+    }
+
+    var modelSnapshotDirectoryName: String {
+        "voxtral-\(model.localSnapshotID)"
+    }
+
+    var stabilityGuardSamples: Int {
+        VoxtralHelperManifest.sampleRate
+            * (delay.rawValue + VoxtralHelperManifest.transportBlockMilliseconds)
+            / 1_000
+    }
+}
+
 enum VoxtralHelperManifest {
     static let mlxAudioVersion = "0.4.5"
     static let mlxAudioCommit = "04151c6abb74b886f879a4457ccdc96761f10102"
-    static let modelID = "iris-sfg/Voxtral-Mini-4B-Realtime-2602-4bit"
-    static let modelRevision = "12091661ce5f58788624fa49fad9ddbbf67cf063"
+    // Compatibility aliases for the existing Q4/960 product default. Runtime
+    // work must use its selected VoxtralContinuousConfiguration instead.
+    static let modelID = VoxtralContinuousConfiguration.default.model.modelID
+    static let modelRevision = VoxtralContinuousConfiguration.default.model.modelRevision
     static let pythonVersion = "3.12"
     static let uvVersion = "0.11.28"
     static let uvArchiveSHA256 = "33540eb7c883ab857eff79bd5ac2aa31fe27b595abecb4a9c003a2c998447232"
     static let uvLockSHA256 = "d8047fd0a07300a8bfac4472c4d3ec5f0af46fa74f87217ed8eaf2292203d0db"
     static let runtimePatchVersion = "continuous-stream-v4"
     static let runtimePatchSHA256 = "67768e28e14087b79b7eae9960bf3e8719a64864b689949a312cb76177656efe"
-    static let transcriptionDelayMilliseconds = 960
+    static let transcriptionDelayMilliseconds =
+        VoxtralContinuousConfiguration.default.delay.rawValue
     static let sampleRate = 16_000
     static let modelFrameSamples = 1_280
     static let transportBlockMilliseconds = 160
     static let metalCacheLimitBytes = 512 * 1_024 * 1_024
 
-    /// Product builds always use 960 ms. The opt-in benchmark may exercise
-    /// 480 ms only after the 960 ms first-preview target has demonstrably failed.
+    /// Compatibility hook retained for older Q4/960 benchmark readers.
     static var runtimeTranscriptionDelayMilliseconds: Int {
         ProcessInfo.processInfo.environment["WHISPERASR_VOXTRAL_TEST_DELAY_MS"] == "480"
             ? 480 : transcriptionDelayMilliseconds
@@ -342,6 +447,7 @@ actor VoxtralHelperRuntime {
 
     private let rootDirectory: URL
     private let urlSession: URLSession
+    private var configuration: VoxtralContinuousConfiguration
 
     private var status: Status = .idle
     private var eventPipe = VoxtralHelperEventPipe()
@@ -358,15 +464,20 @@ actor VoxtralHelperRuntime {
     private var maximumBacklogSamples = 0
     private var transcript = ""
 
-    init(rootDirectory: URL? = nil) {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 600
-        configuration.timeoutIntervalForResource = 3_600
-        urlSession = URLSession(configuration: configuration)
+    init(
+        rootDirectory: URL? = nil,
+        configuration: VoxtralContinuousConfiguration = .default
+    ) {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.timeoutIntervalForRequest = 600
+        sessionConfiguration.timeoutIntervalForResource = 3_600
+        urlSession = URLSession(configuration: sessionConfiguration)
         self.rootDirectory = rootDirectory ?? Self.defaultRootDirectory()
+        self.configuration = configuration
     }
 
     func currentStatus() -> Status { status }
+    func currentConfiguration() -> VoxtralContinuousConfiguration { configuration }
 
     func progress() -> VoxtralHelperProgress {
         VoxtralHelperProgress(
@@ -382,8 +493,15 @@ actor VoxtralHelperRuntime {
     }
 
     func prepare(
+        configuration requestedConfiguration: VoxtralContinuousConfiguration? = nil,
         progress: @escaping @Sendable (Double, String) -> Void = { _, _ in }
     ) async throws {
+        if let requestedConfiguration, requestedConfiguration != configuration {
+            await cancel()
+            stopServer()
+            status = .idle
+            configuration = requestedConfiguration
+        }
         if (status == .ready || status == .streaming), serverProcess?.isRunning == true {
             return
         }
@@ -402,17 +520,22 @@ actor VoxtralHelperRuntime {
             try await installUVIfNeeded()
             progress(0.15, "Preparing managed Python 3.12…")
             try installEnvironmentIfNeeded()
-            progress(0.45, "Downloading the audited Voxtral Q4 snapshot…")
+            progress(
+                0.45,
+                configuration.model.conversionSource == nil
+                    ? "Downloading the audited Voxtral \(configuration.model.displayName) snapshot…"
+                    : "Downloading the source and building local Voxtral Q6…"
+            )
             try downloadModelIfNeeded()
             progress(0.80, "Starting the local Voxtral helper…")
             try launchServer()
             try await waitForServer()
-            progress(0.88, "Loading Voxtral Q4…")
+            progress(0.88, "Loading Voxtral \(configuration.model.displayName)…")
             try await loadModel()
             progress(0.95, "Warming the incremental stream…")
             try await warmStreamingPath()
             status = .ready
-            progress(1, "Voxtral Q4 is ready.")
+            progress(1, "Voxtral \(configuration.model.displayName) is ready.")
         } catch {
             stopServer()
             status = .failed(error.localizedDescription)
@@ -421,11 +544,12 @@ actor VoxtralHelperRuntime {
     }
 
     func startSession(
-        delayMilliseconds: Int = VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds
+        delayMilliseconds: Int? = nil
     ) async throws -> AsyncStream<VoxtralHelperEvent> {
-        guard delayMilliseconds == VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds else {
+        let selectedDelay = configuration.delay.rawValue
+        guard delayMilliseconds == nil || delayMilliseconds == selectedDelay else {
             throw VoxtralHelperError.invalidState(
-                "This Voxtral helper process is pinned to \(VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds) ms."
+                "This Voxtral helper process is pinned to \(selectedDelay) ms."
             )
         }
         guard status == .ready, serverProcess?.isRunning == true else {
@@ -648,7 +772,7 @@ actor VoxtralHelperRuntime {
     private var modelDirectory: URL {
         rootDirectory
             .appendingPathComponent("Models", isDirectory: true)
-            .appendingPathComponent("voxtral-\(VoxtralHelperManifest.modelRevision)", isDirectory: true)
+            .appendingPathComponent(configuration.modelSnapshotDirectoryName, isDirectory: true)
     }
     private var logsDirectory: URL { rootDirectory.appendingPathComponent("Logs", isDirectory: true) }
     private var environmentStamp: URL { environmentDirectory.appendingPathComponent(".installation-id") }
@@ -664,8 +788,13 @@ actor VoxtralHelperRuntime {
         let manifest: [String: String] = [
             "mlxAudioVersion": VoxtralHelperManifest.mlxAudioVersion,
             "mlxAudioCommit": VoxtralHelperManifest.mlxAudioCommit,
-            "modelID": VoxtralHelperManifest.modelID,
-            "modelRevision": VoxtralHelperManifest.modelRevision,
+            "modelID": configuration.model.modelID,
+            "modelRevision": configuration.model.modelRevision,
+            "modelLocalSnapshotID": configuration.model.localSnapshotID,
+            "modelLocalArtifactRevision": configuration.model.localArtifactRevision,
+            "modelConversionSourceID": configuration.model.conversionSource?.modelID ?? "",
+            "modelConversionSourceRevision": configuration.model.conversionSource?.revision ?? "",
+            "transcriptionDelayMilliseconds": String(configuration.delay.rawValue),
             "pythonVersion": VoxtralHelperManifest.pythonVersion,
             "uvVersion": VoxtralHelperManifest.uvVersion,
         ]
@@ -783,36 +912,140 @@ actor VoxtralHelperRuntime {
     }
 
     private func downloadModelIfNeeded() throws {
-        let installed = try? String(contentsOf: modelStamp, encoding: .utf8)
-        if installed == VoxtralHelperManifest.modelRevision,
-           FileManager.default.fileExists(atPath: modelDirectory.appendingPathComponent("config.json").path) {
-            return
-        }
-        try? FileManager.default.removeItem(at: modelDirectory)
-        try FileManager.default.createDirectory(at: modelDirectory, withIntermediateDirectories: true)
-        let script = """
-        import os
-        from huggingface_hub import snapshot_download
-        snapshot_download(
-            repo_id=os.environ["WHISPERASR_MODEL_ID"],
-            revision=os.environ["WHISPERASR_MODEL_REVISION"],
-            local_dir=os.environ["WHISPERASR_MODEL_DIRECTORY"],
+        let parentDirectory = modelDirectory.deletingLastPathComponent()
+        try FileManager.default.createDirectory(
+            at: parentDirectory,
+            withIntermediateDirectories: true
         )
-        """
+        let lockURL = parentDirectory.appendingPathComponent(
+            ".\(modelDirectory.lastPathComponent).install.lock"
+        )
+        try withExclusiveFileLock(at: lockURL) {
+            try downloadModelWhileLocked()
+        }
+    }
+
+    private func downloadModelWhileLocked() throws {
+        let expectedStamp = configuration.model.localArtifactRevision
+        let installed = try? String(contentsOf: modelStamp, encoding: .utf8)
+        if installed == expectedStamp, modelInstallationIsValid(at: modelDirectory) { return }
+
+        let stagingDirectory = modelDirectory
+            .deletingLastPathComponent()
+            .appendingPathComponent(
+                ".\(modelDirectory.lastPathComponent).partial-\(UUID().uuidString)",
+                isDirectory: true
+            )
+        try FileManager.default.createDirectory(
+            at: stagingDirectory,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: stagingDirectory) }
+
+        let script: String
+        if configuration.model.conversionSource != nil {
+            script = """
+            import os
+            from mlx_audio.convert import convert
+            convert(
+                hf_path=os.environ["WHISPERASR_SOURCE_MODEL_ID"],
+                revision=os.environ["WHISPERASR_SOURCE_MODEL_REVISION"],
+                mlx_path=os.environ["WHISPERASR_MODEL_DIRECTORY"],
+                quantize=True,
+                q_bits=6,
+                q_group_size=64,
+                q_mode="affine",
+                model_domain="stt",
+            )
+            """
+        } else {
+            script = """
+            import os
+            from huggingface_hub import snapshot_download
+            snapshot_download(
+                repo_id=os.environ["WHISPERASR_MODEL_ID"],
+                revision=os.environ["WHISPERASR_MODEL_REVISION"],
+                local_dir=os.environ["WHISPERASR_MODEL_DIRECTORY"],
+            )
+            """
+        }
         var environment = managedEnvironment()
-        environment["WHISPERASR_MODEL_ID"] = VoxtralHelperManifest.modelID
-        environment["WHISPERASR_MODEL_REVISION"] = VoxtralHelperManifest.modelRevision
-        environment["WHISPERASR_MODEL_DIRECTORY"] = modelDirectory.path
+        environment["WHISPERASR_MODEL_ID"] = configuration.model.modelID
+        environment["WHISPERASR_MODEL_REVISION"] = configuration.model.modelRevision
+        environment["WHISPERASR_SOURCE_MODEL_ID"] =
+            configuration.model.conversionSource?.modelID ?? configuration.model.modelID
+        environment["WHISPERASR_SOURCE_MODEL_REVISION"] =
+            configuration.model.conversionSource?.revision ?? configuration.model.modelRevision
+        environment["WHISPERASR_MODEL_DIRECTORY"] = stagingDirectory.path
         try run(
             executable: pythonExecutable,
             arguments: ["-c", script],
             environment: environment
         )
-        try VoxtralHelperManifest.modelRevision.write(
-            to: modelStamp,
+        guard modelInstallationIsValid(at: stagingDirectory) else {
+            throw VoxtralHelperError.processFailed("The Voxtral model installation is incomplete.")
+        }
+        try expectedStamp.write(
+            to: stagingDirectory.appendingPathComponent(".revision"),
             atomically: true,
             encoding: .utf8
         )
+        if FileManager.default.fileExists(atPath: modelDirectory.path) {
+            _ = try FileManager.default.replaceItemAt(
+                modelDirectory,
+                withItemAt: stagingDirectory,
+                backupItemName: nil,
+                options: [.usingNewMetadataOnly]
+            )
+        } else {
+            try FileManager.default.moveItem(at: stagingDirectory, to: modelDirectory)
+        }
+    }
+
+    private func withExclusiveFileLock<T>(at url: URL, _ body: () throws -> T) throws -> T {
+        let descriptor = open(url.path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard descriptor >= 0 else {
+            throw VoxtralHelperError.processFailed("The Voxtral model install lock could not be opened.")
+        }
+        defer { close(descriptor) }
+        guard flock(descriptor, LOCK_EX) == 0 else {
+            throw VoxtralHelperError.processFailed("The Voxtral model install lock could not be acquired.")
+        }
+        defer { flock(descriptor, LOCK_UN) }
+        return try body()
+    }
+
+    private func modelInstallationIsValid(at directory: URL) -> Bool {
+        let required = ["config.json", "model.safetensors"]
+        guard required.allSatisfy({ fileName in
+            let path = directory.appendingPathComponent(fileName).path
+            guard FileManager.default.fileExists(atPath: path),
+                  let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+                  let size = attributes[.size] as? NSNumber else { return false }
+            return size.uint64Value > 0
+        }) else { return false }
+
+        guard configuration.model == .q6 else { return true }
+        guard ["model.safetensors.index.json", "tekken.json"].allSatisfy({ fileName in
+            let path = directory.appendingPathComponent(fileName).path
+            guard FileManager.default.fileExists(atPath: path),
+                  let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+                  let size = attributes[.size] as? NSNumber else { return false }
+            return size.uint64Value > 0
+        }), let attributes = try? FileManager.default.attributesOfItem(
+            atPath: directory.appendingPathComponent("model.safetensors").path
+        ), let weightSize = attributes[.size] as? NSNumber,
+        weightSize.uint64Value == 3_623_484_043,
+        let data = try? Data(contentsOf: directory.appendingPathComponent("config.json")),
+        let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        object["model_type"] as? String == "voxtral_realtime",
+        let quantization = object["quantization"] as? [String: Any],
+        quantization["bits"] as? Int == 6,
+        quantization["group_size"] as? Int == 64,
+        quantization["mode"] as? String == "affine" else {
+            return false
+        }
+        return true
     }
 
     private func launchServer() throws {
@@ -846,7 +1079,7 @@ actor VoxtralHelperRuntime {
             "--realtime",
             "--realtime-model", modelDirectory.path,
             "--realtime-transcription-delay-ms",
-            String(VoxtralHelperManifest.runtimeTranscriptionDelayMilliseconds),
+            String(configuration.delay.rawValue),
             "--log-dir", logsDirectory.path,
         ]
         var environment = managedEnvironment()
@@ -892,7 +1125,9 @@ actor VoxtralHelperRuntime {
         request.timeoutInterval = 3_600
         let (_, response) = try await urlSession.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw VoxtralHelperError.serverUnavailable("Voxtral Q4 could not be loaded.")
+            throw VoxtralHelperError.serverUnavailable(
+                "Voxtral \(configuration.model.displayName) could not be loaded."
+            )
         }
     }
 
@@ -1125,7 +1360,10 @@ actor VoxtralHelperRuntime {
         var environment = ProcessInfo.processInfo.environment
         environment["UV_PYTHON_INSTALL_DIR"] = rootDirectory.appendingPathComponent("Python").path
         environment["UV_CACHE_DIR"] = rootDirectory.appendingPathComponent("Cache/uv").path
-        environment["HF_HOME"] = rootDirectory.appendingPathComponent("Cache/huggingface").path
+        let huggingFaceCache = rootDirectory.appendingPathComponent("Cache/huggingface")
+        environment["HF_HOME"] = huggingFaceCache.path
+        environment["HF_HUB_CACHE"] = huggingFaceCache
+            .appendingPathComponent("hub", isDirectory: true).path
         return environment
     }
 

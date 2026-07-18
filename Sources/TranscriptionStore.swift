@@ -18,6 +18,8 @@ enum TranscriptionStore {
         let translateToEnglish: Bool?
         let localSourceLocale: String?
         let localTranslationMode: AppleTranslationMode?
+        let localVoxtralConfiguration: VoxtralContinuousConfiguration?
+        let localJapaneseGlossary: JapaneseGlossary?
         let discardOriginalAfterRetry: Bool?
         let localSourceTranscriptComplete: Bool?
     }
@@ -103,6 +105,8 @@ enum TranscriptionStore {
             translateToEnglish: item.translateToEnglish ? true : nil,
             localSourceLocale: item.localSourceLocale,
             localTranslationMode: item.localTranslationMode,
+            localVoxtralConfiguration: item.localVoxtralConfiguration,
+            localJapaneseGlossary: item.localJapaneseGlossary,
             discardOriginalAfterRetry: item.discardOriginalAfterRetry ? true : nil,
             // Local-English items retain this bit even after a partial recovery
             // has translated every saved clause and no retry remains possible.
@@ -155,6 +159,8 @@ enum TranscriptionStore {
             translateToEnglish: stored.translateToEnglish ?? false,
             localSourceLocale: stored.localSourceLocale,
             localTranslationMode: stored.localTranslationMode,
+            localVoxtralConfiguration: stored.localVoxtralConfiguration,
+            localJapaneseGlossary: stored.localJapaneseGlossary,
             discardOriginalAfterRetry: stored.discardOriginalAfterRetry ?? false,
             localSourceTranscriptComplete: stored.localSourceTranscriptComplete
                 ?? !(stored.translateToEnglish ?? false)

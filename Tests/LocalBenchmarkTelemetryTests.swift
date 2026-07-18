@@ -64,6 +64,10 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
                 englishValidatedThrough: 16_000,
                 committedSampleCount: 16_000
             ),
+            voxtralConfiguration: .init(model: .q6, delay: .milliseconds1200),
+            japaneseGlossary: JapaneseGlossary(entries: [
+                .init(recognized: "配給", canonical: "ハイキュー"),
+            ]),
             outputDirectory: root
         )
         let metrics = try XCTUnwrap(metricsURL)
@@ -94,6 +98,13 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         XCTAssertEqual(json["helperProcessIdentifier"] as? Int, 42)
         XCTAssertEqual(json["maximumCombinedResidentBytes"] as? Int, 4_000)
         XCTAssertEqual(json["maximumHelperBacklogSamples"] as? Int, 320)
+        XCTAssertEqual(json["voxtralModelID"] as? String, VoxtralModelVariant.q6.modelID)
+        XCTAssertEqual(json["voxtralDelayMilliseconds"] as? Int, 1_200)
+        XCTAssertFalse((json["japaneseGlossarySHA256"] as? String ?? "").isEmpty)
+        XCTAssertEqual(
+            json["voxtralConversionSourceRevision"] as? String,
+            VoxtralModelVariant.q6.conversionSource?.revision
+        )
         XCTAssertFalse((json["applicationExecutableSHA256"] as? String ?? "").isEmpty)
         XCTAssertEqual(json["canonicalPCMFile"] as? String, pcm.lastPathComponent)
         XCTAssertEqual(

@@ -330,6 +330,7 @@ final class LocalEnglishModelManager {
     private(set) var loadedEngine: LocalEnglishEngine?
     private(set) var memoryWarning: String?
     private(set) var cohereQuantization: CoherePrototypeQuantization = .q8
+    private(set) var continuousVoxtralConfiguration: VoxtralContinuousConfiguration = .default
 
     @ObservationIgnored private let vad = FireRedVADRuntime()
     @ObservationIgnored private let qwen = QwenRuntime()
@@ -367,11 +368,21 @@ final class LocalEnglishModelManager {
                     update(fraction, "Qwen: \(message)")
                 }
             case .voxtralApple, .voxtralTurboApple:
-                phases[engine] = .loading(message: "Loading and warming continuous Voxtral Q4…")
-                try await voxtralHelper.prepare(progress: update)
+                phases[engine] = .loading(
+                    message: "Loading and warming continuous Voxtral \(continuousVoxtralConfiguration.model.displayName)…"
+                )
+                try await voxtralHelper.prepare(
+                    configuration: continuousVoxtralConfiguration,
+                    progress: update
+                )
             case .voxtralQwenApple:
-                phases[engine] = .loading(message: "Loading and warming continuous Voxtral Q4…")
-                try await voxtralHelper.prepare(progress: update)
+                phases[engine] = .loading(
+                    message: "Loading and warming continuous Voxtral \(continuousVoxtralConfiguration.model.displayName)…"
+                )
+                try await voxtralHelper.prepare(
+                    configuration: continuousVoxtralConfiguration,
+                    progress: update
+                )
                 phases[engine] = .loading(message: "Loading Qwen3-ASR final…")
                 try await qwen.prepare { fraction, message in
                     update(fraction, "Qwen: \(message)")
@@ -429,13 +440,15 @@ final class LocalEnglishModelManager {
     }
 
     func startContinuousVoxtral() async throws -> AsyncStream<VoxtralHelperEvent> {
-        try await voxtralHelper.startSession()
+        try await voxtralHelper.startSession(
+            delayMilliseconds: continuousVoxtralConfiguration.delay.rawValue
+        )
     }
 
     func recoverContinuousVoxtral() async throws -> AsyncStream<VoxtralHelperEvent> {
         let previousProcess = await voxtralHelper.progress().helperProcessIdentifier
         await voxtralHelper.shutdown()
-        try await voxtralHelper.prepare()
+        try await voxtralHelper.prepare(configuration: continuousVoxtralConfiguration)
         let replacementProcess = await voxtralHelper.progress().helperProcessIdentifier
         guard let replacementProcess,
               previousProcess == nil || replacementProcess != previousProcess else {
@@ -443,7 +456,9 @@ final class LocalEnglishModelManager {
                 "Voxtral recovery did not start a fresh helper process."
             )
         }
-        return try await voxtralHelper.startSession()
+        return try await voxtralHelper.startSession(
+            delayMilliseconds: continuousVoxtralConfiguration.delay.rawValue
+        )
     }
 
     func feedContinuousVoxtral(samples: [Float], range: Range<Int>) async throws {
@@ -465,8 +480,18 @@ final class LocalEnglishModelManager {
     func continuousVoxtralIsReady() async -> Bool {
         let processIdentifier = await voxtralHelper.progress().helperProcessIdentifier
         let helperStatus = await voxtralHelper.currentStatus()
+        let helperConfiguration = await voxtralHelper.currentConfiguration()
         return processIdentifier != nil
+            && helperConfiguration == continuousVoxtralConfiguration
             && (helperStatus == .ready || helperStatus == .streaming)
+    }
+
+    func selectContinuousVoxtralConfiguration(
+        _ configuration: VoxtralContinuousConfiguration
+    ) async {
+        guard continuousVoxtralConfiguration != configuration else { return }
+        await unload()
+        continuousVoxtralConfiguration = configuration
     }
 
     func setVoxtralTranscriptionDelay(_ milliseconds: Int) async throws {

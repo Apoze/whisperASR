@@ -44,6 +44,9 @@ enum BackupService {
         var localSpeechEngine: String?
         var localSourceLocale: String?
         var appleTranslationMode: String?
+        var voxtralContinuousConfiguration: String?
+        var japaneseGlossaryEnabled: Bool?
+        var japaneseGlossaryRules: String?
         var recentRecordingApps: [String]?
     }
 
@@ -71,6 +74,12 @@ enum BackupService {
             localSpeechEngine: d.string(forKey: LocalSpeechEngine.storageKey),
             localSourceLocale: d.string(forKey: LocalSpeechEngine.sourceLocaleKey),
             appleTranslationMode: d.string(forKey: AppleTranslationMode.storageKey),
+            voxtralContinuousConfiguration: d.string(
+                forKey: VoxtralContinuousConfiguration.storageKey
+            ),
+            japaneseGlossaryEnabled: d.object(forKey: JapaneseGlossary.enabledKey) == nil
+                ? nil : d.bool(forKey: JapaneseGlossary.enabledKey),
+            japaneseGlossaryRules: d.string(forKey: JapaneseGlossary.rulesKey),
             recentRecordingApps: d.stringArray(forKey: "recentRecordingApps")
         )
 
@@ -146,6 +155,14 @@ enum BackupService {
                 forKey: AppleTranslationMode.storageKey
             )
         }
+        set(
+            c.voxtralContinuousConfiguration,
+            VoxtralContinuousConfiguration.storageKey
+        )
+        if let enabled = c.japaneseGlossaryEnabled {
+            d.set(enabled, forKey: JapaneseGlossary.enabledKey)
+        }
+        set(c.japaneseGlossaryRules, JapaneseGlossary.rulesKey)
         if let apps = c.recentRecordingApps { d.set(apps, forKey: "recentRecordingApps") }
 
         // ModelManager caches the selection in a stored property; nudge it so the
