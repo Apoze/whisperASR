@@ -36,6 +36,8 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
 
         let corpusID: String
         let corpusSHA256: String
+        let corpusAnnotationStatus: String
+        let promotionEligibleReference: Bool
         let scope: String
         let selectedTurnIDs: [Int]
         let boundaryMode: String
@@ -84,6 +86,8 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         let schemaVersion: Int
         let corpusID: String
         let corpusSHA256: String
+        let corpusAnnotationStatus: String
+        let promotionEligibleReference: Bool
         let generatedAt: String
         let boundaryMode: String
         let note: String
@@ -130,11 +134,13 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             throw XCTSkip("Run Scripts/run_japanese_english_bakeoff.sh after the full ASR bakeoff.")
         }
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let corpus = URL(fileURLWithPath: environment["WHISPERASR_JAPANESE_BAKEOFF_CORPUS"]
-            ?? root.appendingPathComponent(".build/benchmarks/corpora/easy-japanese-1").path)
-        let manifest = try JapaneseBenchmarkSupport.loadManifest(
-            at: corpus.appendingPathComponent("manifest.json")
+        let manifestURL = URL(
+            fileURLWithPath: environment["WHISPERASR_JAPANESE_BENCHMARK_MANIFEST"]
+                ?? root.appendingPathComponent(
+                    "docs/japanese-live/corpora/easy-japanese-1/manifest.json"
+                ).path
         )
+        let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
         let asrReportURL = URL(fileURLWithPath: environment["WHISPERASR_JAPANESE_ASR_APPLE_REPORT"]
             ?? root.appendingPathComponent(
                 ".build/benchmarks/easy-japanese-1-asr-bakeoff-full-full.json"
@@ -145,9 +151,14 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         )
         try validate(asrReport: asrReport, manifest: manifest)
 
-        let audio = try await AudioLoader.loadSamples(
-            url: corpus.appendingPathComponent("audio-16k-mono.wav")
+        let fixtureURL = try JapaneseBenchmarkSupport.fixtureURL(
+            for: manifest,
+            workspaceRoot: root
         )
+        guard try JapaneseBenchmarkSupport.sha256(at: fixtureURL) == manifest.fixture.sha256 else {
+            throw inputError("Corpus WAV no longer matches its manifest.")
+        }
+        let audio = try await AudioLoader.loadSamples(url: fixtureURL)
         guard audio.count == manifest.fixture.sampleCount else {
             throw inputError("Corpus sample count no longer matches its manifest.")
         }
@@ -308,9 +319,13 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             schemaVersion: 1,
             corpusID: manifest.corpusID,
             corpusSHA256: manifest.fixture.sha256,
+            corpusAnnotationStatus: manifest.annotations.status.rawValue,
+            promotionEligibleReference: manifest.annotations.status == .complete,
             generatedAt: ISO8601DateFormatter().string(from: Date()),
-            boundaryMode: "human-reference-turns",
-            note: "No human English reference exists. Scores must be human blind judgments; human Japanese→Apple is a comparative ceiling, not ground truth.",
+            boundaryMode: manifest.annotations.status == .complete
+                ? "human-reference-turns"
+                : "exploratory-unverified-turns",
+            note: "Optional reference English is not ground truth without bilingual sign-off. Scores must come from blind human judgments; human Japanese→Apple is only a comparative ceiling.",
             appleEnrichmentStatus: appleEnrichmentStatus,
             candidateAvailability: availability,
             turns: outputs,
@@ -318,12 +333,18 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         )
         let blind = blindArtifacts(
             corpusID: manifest.corpusID,
-            seed: asrReport.corpusSHA256,
+            seed: UUID().uuidString,
             turns: outputs,
             completeCandidateIDs: completeIDs,
             appleEnrichmentStatus: appleEnrichmentStatus
         )
-        try write(full: full, blind: blind.report, key: blind.key, root: root)
+        try write(
+            full: full,
+            blind: blind.report,
+            key: blind.key,
+            corpusID: manifest.corpusID,
+            root: root
+        )
 
         let invalid = direct.values.filter { !$0.validEnglish }
         XCTAssertTrue(
@@ -401,14 +422,19 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         let expectedIDs = manifest.annotations.turns.map(\.id)
         guard asrReport.corpusID == manifest.corpusID,
               asrReport.corpusSHA256 == manifest.fixture.sha256,
+              asrReport.corpusAnnotationStatus == manifest.annotations.status.rawValue,
+              asrReport.promotionEligibleReference
+                == (manifest.annotations.status == .complete),
               asrReport.scope == "full",
-              asrReport.boundaryMode == "human-reference-turns",
+              asrReport.boundaryMode == (manifest.annotations.status == .complete
+                ? "human-reference-turns"
+                : "exploratory-unverified-turns"),
               asrReport.selectedTurnIDs == expectedIDs else {
-            throw inputError("ASR report is not the complete 59-turn human-boundary run.")
+            throw inputError("ASR report does not match the selected corpus and boundaries.")
         }
         for (engineID, _) in Self.sourceEngines {
             guard let engine = asrReport.engines.first(where: { $0.engine == engineID }),
-                  engine.status == "complete",
+                  engine.status == "execution-complete",
                   engine.turns.count == expectedIDs.count,
                   engine.turns.map(\.turnID) == expectedIDs,
                   engine.turns.allSatisfy({ $0.asrError == nil }) else {
@@ -516,7 +542,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
             BlindReport(
                 schemaVersion: 1,
                 corpusID: corpusID,
-                note: "Candidate identities are pseudo-randomized independently per source-aware item from the corpus SHA. Score fidelity and subtitle naturalness separately; no candidate is ground truth. Apple enrichment: \(appleEnrichmentStatus).",
+                note: "Candidate identities are randomized independently per source-aware item with a secret stored only in the separate key. Score fidelity and subtitle naturalness separately; no candidate is ground truth. Apple enrichment: \(appleEnrichmentStatus).",
                 turns: blindTurns
             ),
             key
@@ -527,6 +553,7 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         full: FullReport,
         blind: BlindReport,
         key: [String: String],
+        corpusID: String,
         root: URL
     ) throws {
         let directory = root.appendingPathComponent(".build/benchmarks")
@@ -534,9 +561,9 @@ final class JapaneseEnglishFullBakeoffTests: XCTestCase {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         for (name, data) in [
-            ("easy-japanese-1-english-bakeoff-full.json", try encoder.encode(full)),
-            ("easy-japanese-1-english-bakeoff-blind.json", try encoder.encode(blind)),
-            ("easy-japanese-1-english-bakeoff-key.json", try encoder.encode(key)),
+            ("\(corpusID)-english-bakeoff-full.json", try encoder.encode(full)),
+            ("\(corpusID)-english-bakeoff-blind.json", try encoder.encode(blind)),
+            ("\(corpusID)-english-bakeoff-key.json", try encoder.encode(key)),
         ] {
             let url = directory.appendingPathComponent(name)
             try data.write(to: url, options: .atomic)

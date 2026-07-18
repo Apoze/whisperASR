@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 2,
+  "corpusID": "okkei-shun-1541-1711",
+  "purpose": "holdout-podcast",
+  "source": {
+    "description": "Podcast excerpt with an official Japanese transcript. Utterance-level timing and speaker attribution are not yet annotated.",
+    "references": [
+      {
+        "label": "video",
+        "locator": "https://youtu.be/MmvaYPjogwQ",
+        "sha256": null
+      },
+      {
+        "label": "official-transcript-page",
+        "locator": "https://www.okkeijapanese.com/childhood-home-listening-okkei-japanese-72/",
+        "sha256": "60ecae3ec71135ced9f5c8430b361aed34313a80c2a843a365e382e2278bdd44"
+      },
+      {
+        "label": "plain-transcript-pdf",
+        "locator": "urn:sha256:36be09ad9044d6a1a69971a094c496cb3e614f5d462f869f2e014e48cab1aee8",
+        "sha256": "36be09ad9044d6a1a69971a094c496cb3e614f5d462f869f2e014e48cab1aee8"
+      },
+      {
+        "label": "furigana-transcript-pdf",
+        "locator": "urn:sha256:f855cb46159bc57a8e4cd4abe01da41df3f6a2621385fc7ae891a3cf5d1ff962",
+        "sha256": "f855cb46159bc57a8e4cd4abe01da41df3f6a2621385fc7ae891a3cf5d1ff962"
+      }
+    ]
+  },
+  "fixture": {
+    "path": ".build/benchmarks/okkei-shun-1541-1711-16k-mono.wav",
+    "sha256": "b28b70bd19ff437df53c829f0c06674672effa3709435e5ac7bea46c4bfbfb5d",
+    "sampleRate": 16000,
+    "channelCount": 1,
+    "sampleFormat": "pcm_s16le",
+    "sampleCount": 1440000
+  },
+  "annotations": {
+    "status": "incomplete",
+    "reviewedBy": [],
+    "reviewNote": "The 25 official Japanese lines have no verified PCM ranges or speaker labels. They are preserved below but are not turns and cannot be scored.",
+    "pendingJapanese": [
+      "しゅんさん、僕の話聞いてますか?",
+      "何ですかその質問",
+      "何ですかその質問は",
+      "僕しゅんさんのポッドキャストを聞いていました",
+      "しゅんさんは言っていました",
+      "人の話を聞くのが得意じゃない苦手だって",
+      "あーなんかちょっと痛いところをつかれましたね",
+      "本当ですかそれは",
+      "いやあのね",
+      "あの私の話聞いてますかって",
+      "何回も何回も言われたことがあります",
+      "そうですか",
+      "いやでもね聞くようにしてますよ",
+      "聞くようにしてる",
+      "聞くようにしてるんですけど",
+      "時々聞いてないですね",
+      "あー",
+      "時々聞けてない",
+      "面白いですね",
+      "それはなぜ",
+      "しょうがない",
+      "なぜですか",
+      "なんでですかね",
+      "聞けますか人の話ずっと",
+      "僕は人の話を聞くのが好きです"
+    ],
+    "turns": [],
+    "voiceChanges": []
+  }
+}

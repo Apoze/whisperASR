@@ -1,0 +1,409 @@
+{
+  "schemaVersion": 2,
+  "corpusID": "kikusasaizu-l1-1",
+  "purpose": "holdout-dialogue",
+  "source": {
+    "description": "Short three-speaker Japanese dialogue with an official bilingual script and auto-caption-assisted timing.",
+    "references": [
+      {
+        "label": "video",
+        "locator": "https://youtu.be/deU37CExm0w",
+        "sha256": null
+      },
+      {
+        "label": "bilingual-reference",
+        "locator": "urn:sha256:b04080741241067068880b950f4128b1471d9e16635bbd8707073acaa7913cb1",
+        "sha256": "b04080741241067068880b950f4128b1471d9e16635bbd8707073acaa7913cb1"
+      }
+    ]
+  },
+  "fixture": {
+    "path": ".build/benchmarks/kikusasaizu-l1-1-16k-mono.wav",
+    "sha256": "768e2e9d7334d58419e9397885044a634f4a7aff7f7343904c5ab07b53b91e89",
+    "sampleRate": 16000,
+    "channelCount": 1,
+    "sampleFormat": "pcm_s16le",
+    "sampleCount": 944000
+  },
+  "annotations": {
+    "status": "pending-human-review",
+    "reviewedBy": [],
+    "reviewNote": "Turn ranges were derived from official text plus automatic caption offsets. The first and last ranges include unreviewed intro/outro audio; waveform and bilingual review are required before promotion.",
+    "turns": [
+      {
+        "id": 1,
+        "speaker": "Nakai",
+        "startSample": 0,
+        "endSample": 140000,
+        "japanese": "星野さん、星野さん。",
+        "english": "Hoshino-san, Hoshino-san.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 2,
+        "speaker": "Yuichi",
+        "startSample": 164480,
+        "endSample": 188800,
+        "japanese": "あ、こんにちは。",
+        "english": "Hello.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 3,
+        "speaker": "Nakai",
+        "startSample": 194560,
+        "endSample": 259520,
+        "japanese": "こんにちは。星野さん、こちら大月さんです。",
+        "english": "Hello. Hoshino-san, this is Otsuki-san.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 4,
+        "speaker": "Yuichi",
+        "startSample": 268000,
+        "endSample": 319200,
+        "japanese": "あ、初めまして。星野優一です。",
+        "english": "How do you do? My name is Youichi Hoshino.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 5,
+        "speaker": "Kento",
+        "startSample": 324320,
+        "endSample": 380960,
+        "japanese": "初めまして、大月健人です。よろしくお願いします。",
+        "english": "How do you do? I’m Kento Otsuki. Nice to meet you.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 6,
+        "speaker": "Yuichi",
+        "startSample": 389120,
+        "endSample": 480000,
+        "japanese": "こちらこそ、よろしくお願いします。あのう、どこの大学ですか。",
+        "english": "Likewise, glad to meet you. Eh… which university are you going to?",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 7,
+        "speaker": "Kento",
+        "startSample": 487040,
+        "endSample": 524960,
+        "japanese": "ロッキー大学です。星野さんは？",
+        "english": "I’m going to Rocky university. How about you, Hoshino-san?",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 8,
+        "speaker": "Yuichi",
+        "startSample": 526400,
+        "endSample": 553920,
+        "japanese": "メープル大学です。",
+        "english": "I’m going to Maple university.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 9,
+        "speaker": "Kento",
+        "startSample": 560000,
+        "endSample": 612800,
+        "japanese": "あ、そうですか。専攻は何ですか。",
+        "english": "Oh really? What is your major?",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 10,
+        "speaker": "Yuichi",
+        "startSample": 619200,
+        "endSample": 665600,
+        "japanese": "コンピューターです。大月さんの専攻は？",
+        "english": "Computer Science. How about you?",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 11,
+        "speaker": "Kento",
+        "startSample": 667040,
+        "endSample": 681120,
+        "japanese": "経済です。",
+        "english": "Economics.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 12,
+        "speaker": "Yuichi",
+        "startSample": 687680,
+        "endSample": 729600,
+        "japanese": "あ、そうですか。何年生ですか。",
+        "english": "Is that right? What year are you in?",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 13,
+        "speaker": "Kento",
+        "startSample": 737120,
+        "endSample": 766400,
+        "japanese": "３年生です。星野さんは？",
+        "english": "Third year. How about you, Hoshino-san?",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      },
+      {
+        "id": 14,
+        "speaker": "Yuichi",
+        "startSample": 768320,
+        "endSample": 944000,
+        "japanese": "僕は2年生です。",
+        "english": "I’m in my second year.",
+        "confidence": "unverified",
+        "criticalTerms": [],
+        "note": "Exploratory range derived from automatic caption offsets."
+      }
+    ],
+    "voiceChanges": [
+      {
+        "id": "kiku-turn-01-02",
+        "previousSpeaker": "Nakai",
+        "nextSpeaker": "Yuichi",
+        "previousSpeechEndSample": 140000,
+        "nextSpeechStartSample": 164480,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          151680,
+          177280
+        ],
+        "expectedJapaneseBefore": "星野さん、星野さん。",
+        "expectedJapaneseAfter": "あ、こんにちは。"
+      },
+      {
+        "id": "kiku-turn-02-03",
+        "previousSpeaker": "Yuichi",
+        "nextSpeaker": "Nakai",
+        "previousSpeechEndSample": 188800,
+        "nextSpeechStartSample": 194560,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          181760,
+          207360
+        ],
+        "expectedJapaneseBefore": "あ、こんにちは。",
+        "expectedJapaneseAfter": "こんにちは。星野さん、こちら大月さんです。"
+      },
+      {
+        "id": "kiku-turn-03-04",
+        "previousSpeaker": "Nakai",
+        "nextSpeaker": "Yuichi",
+        "previousSpeechEndSample": 259520,
+        "nextSpeechStartSample": 268000,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          255200,
+          280800
+        ],
+        "expectedJapaneseBefore": "こんにちは。星野さん、こちら大月さんです。",
+        "expectedJapaneseAfter": "あ、初めまして。星野優一です。"
+      },
+      {
+        "id": "kiku-turn-04-05",
+        "previousSpeaker": "Yuichi",
+        "nextSpeaker": "Kento",
+        "previousSpeechEndSample": 319200,
+        "nextSpeechStartSample": 324320,
+        "kind": "gapless",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          311520,
+          337120
+        ],
+        "expectedJapaneseBefore": "あ、初めまして。星野優一です。",
+        "expectedJapaneseAfter": "初めまして、大月健人です。よろしくお願いします。"
+      },
+      {
+        "id": "kiku-turn-05-06",
+        "previousSpeaker": "Kento",
+        "nextSpeaker": "Yuichi",
+        "previousSpeechEndSample": 380960,
+        "nextSpeechStartSample": 389120,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          376320,
+          401920
+        ],
+        "expectedJapaneseBefore": "初めまして、大月健人です。よろしくお願いします。",
+        "expectedJapaneseAfter": "こちらこそ、よろしくお願いします。あのう、どこの大学ですか。"
+      },
+      {
+        "id": "kiku-turn-06-07",
+        "previousSpeaker": "Yuichi",
+        "nextSpeaker": "Kento",
+        "previousSpeechEndSample": 480000,
+        "nextSpeechStartSample": 487040,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          474240,
+          499840
+        ],
+        "expectedJapaneseBefore": "こちらこそ、よろしくお願いします。あのう、どこの大学ですか。",
+        "expectedJapaneseAfter": "ロッキー大学です。星野さんは？"
+      },
+      {
+        "id": "kiku-turn-07-08",
+        "previousSpeaker": "Kento",
+        "nextSpeaker": "Yuichi",
+        "previousSpeechEndSample": 524960,
+        "nextSpeechStartSample": 526400,
+        "kind": "gapless",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          513600,
+          539200
+        ],
+        "expectedJapaneseBefore": "ロッキー大学です。星野さんは？",
+        "expectedJapaneseAfter": "メープル大学です。"
+      },
+      {
+        "id": "kiku-turn-08-09",
+        "previousSpeaker": "Yuichi",
+        "nextSpeaker": "Kento",
+        "previousSpeechEndSample": 553920,
+        "nextSpeechStartSample": 560000,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          547200,
+          572800
+        ],
+        "expectedJapaneseBefore": "メープル大学です。",
+        "expectedJapaneseAfter": "あ、そうですか。専攻は何ですか。"
+      },
+      {
+        "id": "kiku-turn-09-10",
+        "previousSpeaker": "Kento",
+        "nextSpeaker": "Yuichi",
+        "previousSpeechEndSample": 612800,
+        "nextSpeechStartSample": 619200,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          606400,
+          632000
+        ],
+        "expectedJapaneseBefore": "あ、そうですか。専攻は何ですか。",
+        "expectedJapaneseAfter": "コンピューターです。大月さんの専攻は？"
+      },
+      {
+        "id": "kiku-turn-10-11",
+        "previousSpeaker": "Yuichi",
+        "nextSpeaker": "Kento",
+        "previousSpeechEndSample": 665600,
+        "nextSpeechStartSample": 667040,
+        "kind": "gapless",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          654240,
+          679840
+        ],
+        "expectedJapaneseBefore": "コンピューターです。大月さんの専攻は？",
+        "expectedJapaneseAfter": "経済です。"
+      },
+      {
+        "id": "kiku-turn-11-12",
+        "previousSpeaker": "Kento",
+        "nextSpeaker": "Yuichi",
+        "previousSpeechEndSample": 681120,
+        "nextSpeechStartSample": 687680,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          674880,
+          700480
+        ],
+        "expectedJapaneseBefore": "経済です。",
+        "expectedJapaneseAfter": "あ、そうですか。何年生ですか。"
+      },
+      {
+        "id": "kiku-turn-12-13",
+        "previousSpeaker": "Yuichi",
+        "nextSpeaker": "Kento",
+        "previousSpeechEndSample": 729600,
+        "nextSpeechStartSample": 737120,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          724320,
+          749920
+        ],
+        "expectedJapaneseBefore": "あ、そうですか。何年生ですか。",
+        "expectedJapaneseAfter": "３年生です。星野さんは？"
+      },
+      {
+        "id": "kiku-turn-13-14",
+        "previousSpeaker": "Kento",
+        "nextSpeaker": "Yuichi",
+        "previousSpeechEndSample": 766400,
+        "nextSpeechStartSample": 768320,
+        "kind": "gapless",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          755520,
+          781120
+        ],
+        "expectedJapaneseBefore": "３年生です。星野さんは？",
+        "expectedJapaneseAfter": "僕は2年生です。"
+      }
+    ],
+    "negativeRanges": [
+      {
+        "range": [
+          0,
+          130000
+        ],
+        "reason": "intro and first single-speaker turn"
+      },
+      {
+        "range": [
+          401920,
+          474240
+        ],
+        "reason": "single Yuichi question"
+      },
+      {
+        "range": [
+          781120,
+          944000
+        ],
+        "reason": "last turn and outro music"
+      }
+    ]
+  }
+}

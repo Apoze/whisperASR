@@ -6,6 +6,7 @@ VIDEO="${1:-/Users/maz/Downloads/Easy Japanese 1 - Typical Japanese.mp4}"
 ARCHIVE="${2:-/Users/maz/Downloads/transcription_japonaise_avec_locuteurs.zip}"
 PARENT="$ROOT/.build/benchmarks/corpora"
 TARGET="$PARENT/easy-japanese-1"
+MANIFEST="$ROOT/docs/japanese-live/corpora/easy-japanese-1/manifest.json"
 EXPECTED_VIDEO_SHA256="6b6fee800edaf8fe5ffea029f673b37e04b648cd24aaa779c1c53dc9446b2667"
 EXPECTED_ARCHIVE_SHA256="1da9a9d3d2d41455eef067cee3a57d8c0ea7aca9c0a33291347e492a1ae238c1"
 
@@ -29,29 +30,22 @@ verify_sha256() {
   fi
 }
 
-require_file "$VIDEO"
-require_file "$ARCHIVE"
-verify_sha256 "$VIDEO" "$EXPECTED_VIDEO_SHA256"
-verify_sha256 "$ARCHIVE" "$EXPECTED_ARCHIVE_SHA256"
-
 /bin/mkdir -p "$PARENT"
 if [[ "${WHISPERASR_REBUILD_JAPANESE_CORPUS:-0}" != "1" \
-      && -f "$TARGET/manifest.json" \
       && -f "$TARGET/audio-16k-mono.wav" \
-      && -f "$TARGET/turns.csv" \
-      && -f "$TARGET/detailed.csv" \
-      && -f "$TARGET/speakers.srt" ]]; then
-  stored_video_sha="$(/usr/bin/plutil -extract source.videoSHA256 raw -o - "$TARGET/manifest.json")"
-  stored_archive_sha="$(/usr/bin/plutil -extract source.transcriptArchiveSHA256 raw -o - "$TARGET/manifest.json")"
-  stored_wav_sha="$(/usr/bin/plutil -extract fixture.sha256 raw -o - "$TARGET/manifest.json")"
+      && -f "$MANIFEST" ]]; then
+  stored_wav_sha="$(/usr/bin/jq -r '.fixture.sha256' "$MANIFEST")"
   actual_wav_sha="$(/usr/bin/shasum -a 256 "$TARGET/audio-16k-mono.wav" | /usr/bin/awk '{print $1}')"
-  if [[ "$stored_video_sha" == "$EXPECTED_VIDEO_SHA256" \
-        && "$stored_archive_sha" == "$EXPECTED_ARCHIVE_SHA256" \
-        && "$stored_wav_sha" == "$actual_wav_sha" ]]; then
+  if [[ "$stored_wav_sha" == "$actual_wav_sha" ]]; then
     echo "Using existing canonical corpus: $TARGET"
     exit 0
   fi
 fi
+
+require_file "$VIDEO"
+require_file "$ARCHIVE"
+verify_sha256 "$VIDEO" "$EXPECTED_VIDEO_SHA256"
+verify_sha256 "$ARCHIVE" "$EXPECTED_ARCHIVE_SHA256"
 
 WORK="$(/usr/bin/mktemp -d "$PARENT/.easy-japanese-1.XXXXXX")"
 EXTRACTED="$WORK/extracted"
@@ -85,7 +79,7 @@ DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}" \
   xcrun swift test \
     --filter JapaneseModelBakeoffTests/testPrepareEasyJapaneseCorpusWhenOptedIn
 
-for file in audio-16k-mono.wav turns.csv detailed.csv speakers.srt manifest.json; do
+for file in audio-16k-mono.wav turns.csv detailed.csv speakers.srt; do
   require_file "$STAGING/$file"
 done
 

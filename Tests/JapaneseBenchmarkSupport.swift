@@ -1,16 +1,26 @@
+import CryptoKit
 import Foundation
 import XCTest
+@testable import WhisperASRApp
 
 enum JapaneseBenchmarkSupport {
     struct Manifest: Codable {
+        enum Purpose: String, Codable {
+            case development
+            case holdoutDialogue = "holdout-dialogue"
+            case holdoutPodcast = "holdout-podcast"
+            case holdoutSpeakerChanges = "holdout-speaker-changes"
+        }
+
         struct Source: Codable {
-            let videoPath: String
-            let videoSHA256: String
-            let transcriptArchivePath: String
-            let transcriptArchiveSHA256: String
-            let turnsCSVSHA256: String
-            let detailedCSVSHA256: String
-            let speakersSRTSHA256: String
+            struct Reference: Codable {
+                let label: String
+                let locator: String
+                let sha256: String?
+            }
+
+            let description: String
+            let references: [Reference]
         }
 
         struct Fixture: Codable {
@@ -23,34 +33,74 @@ enum JapaneseBenchmarkSupport {
         }
 
         struct Annotations: Codable {
-            let turnCount: Int
-            let detailedFragmentCount: Int
-            let speakerCount: Int
-            let speakerChangeCount: Int
-            let highConfidenceTurnCount: Int
-            let mediumConfidenceTurnCount: Int
-            let annotatedSampleCount: Int
+            enum Status: String, Codable {
+                case complete
+                case pendingHumanReview = "pending-human-review"
+                case incomplete
+            }
+
+            let status: Status
+            let reviewedBy: [String]
+            let reviewNote: String
+            let pendingJapanese: [String]?
             let turns: [Turn]
+            let voiceChanges: [VoiceChange]
+            let negativeRanges: [NegativeRange]?
+        }
+
+        struct NegativeRange: Codable {
+            let range: [Int]
+            let reason: String?
         }
 
         struct Turn: Codable {
             enum Confidence: String, Codable {
                 case high
                 case medium
+                case unverified
+            }
+
+            struct CriticalTerm: Codable, Equatable {
+                enum Category: String, Codable {
+                    case negation
+                    case number
+                    case name
+                    case question
+                    case shortReply = "short-reply"
+                }
+
+                let category: Category
+                let japanese: String
+                let expectedEnglish: [String]?
             }
 
             let id: Int
             let speaker: String
-            let speakerDescription: String
             let startSample: Int
             let endSample: Int
             let japanese: String
+            let english: String?
             let confidence: Confidence
+            let criticalTerms: [CriticalTerm]
             let note: String?
+        }
+
+        struct VoiceChange: Codable {
+            let id: String
+            let previousSpeaker: String
+            let nextSpeaker: String
+            let previousSpeechEndSample: Int?
+            let nextSpeechStartSample: Int
+            let kind: String?
+            let overlapRange: [Int]?
+            let acceptableBreakRange: [Int]
+            let expectedJapaneseBefore: String?
+            let expectedJapaneseAfter: String?
         }
 
         let schemaVersion: Int
         let corpusID: String
+        let purpose: Purpose
         let source: Source
         let fixture: Fixture
         let annotations: Annotations
@@ -58,23 +108,44 @@ enum JapaneseBenchmarkSupport {
 
     enum ValidationError: LocalizedError, Equatable {
         case unsupportedSchema(Int)
+        case conflictingDuplicateKey
         case invalidCorpusID
+        case absolutePath(String)
+        case pathEscapesWorkspace(String)
+        case invalidSourceReference(String)
         case invalidFixture
-        case inconsistentCounts
+        case invalidReview
+        case duplicateTurnID
         case invalidTurn(Int)
+        case invalidCriticalTerm(Int)
+        case invalidVoiceChange(String)
 
         var errorDescription: String? {
             switch self {
             case let .unsupportedSchema(version):
                 "Unsupported Japanese corpus schema v\(version)."
+            case .conflictingDuplicateKey:
+                "The Japanese corpus JSON contains a conflicting duplicate key."
             case .invalidCorpusID:
                 "Corpus ID is empty."
+            case let .absolutePath(path):
+                "Schema v2 local paths must be repo-relative: \(path)"
+            case let .pathEscapesWorkspace(path):
+                "Corpus fixture escapes the workspace: \(path)"
+            case let .invalidSourceReference(locator):
+                "Corpus source reference is not repo-relative, HTTPS or a pinned SHA-256 URN: \(locator)"
             case .invalidFixture:
-                "Fixture must be mono Float/PCM at 16 kHz with a positive sample count and SHA-256."
-            case .inconsistentCounts:
-                "Annotation summary does not match its turns."
+                "Fixture must be mono PCM at 16 kHz with a positive sample count and SHA-256."
+            case .invalidReview:
+                "Annotations require a review note; complete corpora also need named reviewers and verified purpose-specific evidence."
+            case .duplicateTurnID:
+                "Turn IDs are not unique."
             case let .invalidTurn(id):
-                "Turn \(id) has invalid text, speaker, confidence or sample bounds."
+                "Turn \(id) has invalid text, speaker or sample bounds."
+            case let .invalidCriticalTerm(id):
+                "Turn \(id) has an invalid critical term."
+            case let .invalidVoiceChange(id):
+                "Voice change \(id) has an invalid break range or speaker pair."
             }
         }
     }
@@ -84,38 +155,102 @@ enum JapaneseBenchmarkSupport {
     }
 
     static func decode(_ data: Data) throws -> Manifest {
-        let manifest = try JSONDecoder().decode(Manifest.self, from: data)
+        var keyScanner = JSONKeyScanner(data: data)
+        do {
+            try keyScanner.validate()
+        } catch JSONKeyScanner.ScanError.duplicateKey {
+            throw ValidationError.conflictingDuplicateKey
+        } catch {
+            // JSONDecoder below remains authoritative for syntax errors.
+        }
+        let decoder = JSONDecoder()
+        let manifest = try decoder.decode(Manifest.self, from: data)
         try validate(manifest)
         return manifest
     }
 
     static func validate(_ manifest: Manifest) throws {
-        guard manifest.schemaVersion == 1 else {
+        guard manifest.schemaVersion == 2 else {
             throw ValidationError.unsupportedSchema(manifest.schemaVersion)
         }
-        guard !manifest.corpusID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        guard manifest.corpusID.range(
+            of: #"^[a-z0-9]+(?:-[a-z0-9]+)*$"#,
+            options: .regularExpression
+        ) != nil else {
             throw ValidationError.invalidCorpusID
         }
+        let localLocators = [manifest.fixture.path]
+            + manifest.source.references.compactMap { reference -> String? in
+                let locator = reference.locator
+                guard let scheme = URL(string: locator)?.scheme else { return locator }
+                return scheme == "file" ? locator : nil
+            }
+        if let absolute = localLocators.first(where: {
+            NSString(string: $0).isAbsolutePath || $0.hasPrefix("file:")
+        }) {
+            throw ValidationError.absolutePath(absolute)
+        }
+        if let escaping = localLocators.first(where: {
+            NSString(string: $0).pathComponents.contains("..")
+        }) {
+            throw ValidationError.pathEscapesWorkspace(escaping)
+        }
         let fixture = manifest.fixture
-        guard fixture.sampleRate == 16_000,
+        guard !manifest.source.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              fixture.sampleRate == 16_000,
               fixture.channelCount == 1,
+              fixture.sampleFormat == "pcm_s16le",
               fixture.sampleCount > 0,
-              fixture.sha256.range(of: #"^[0-9a-f]{64}$"#, options: .regularExpression) != nil else {
+              isSHA256(fixture.sha256),
+              manifest.source.references.allSatisfy({ reference in
+                  !reference.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                      && !reference.locator.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                      && reference.sha256.map(isSHA256) != false
+              }) else {
             throw ValidationError.invalidFixture
         }
+        for reference in manifest.source.references {
+            guard let scheme = URL(string: reference.locator)?.scheme else { continue }
+            switch scheme {
+            case "https": break
+            case "urn":
+                guard let sha256 = reference.sha256,
+                      reference.locator == "urn:sha256:\(sha256)" else {
+                    throw ValidationError.invalidSourceReference(reference.locator)
+                }
+            default:
+                throw ValidationError.invalidSourceReference(reference.locator)
+            }
+        }
+
         let annotations = manifest.annotations
-        let turns = annotations.turns
-        guard annotations.turnCount == turns.count,
-              annotations.highConfidenceTurnCount == turns.filter({ $0.confidence == .high }).count,
-              annotations.mediumConfidenceTurnCount == turns.filter({ $0.confidence == .medium }).count,
-              annotations.speakerCount == Set(turns.map(\.speaker)).count,
-              annotations.speakerChangeCount == zip(turns, turns.dropFirst())
-                .filter({ $0.speaker != $1.speaker }).count,
-              Set(turns.map(\.id)).count == turns.count else {
-            throw ValidationError.inconsistentCounts
+        guard !annotations.reviewNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw ValidationError.invalidReview
+        }
+        guard annotations.pendingJapanese?.allSatisfy({
+            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }) != false else {
+            throw ValidationError.invalidReview
+        }
+        if annotations.status == .complete {
+            let hasRequiredAnnotations = manifest.purpose == .holdoutSpeakerChanges
+                ? !annotations.voiceChanges.isEmpty
+                : !annotations.turns.isEmpty
+            guard !annotations.reviewedBy.isEmpty,
+                  annotations.reviewedBy.allSatisfy({
+                      !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                  }),
+                  hasRequiredAnnotations,
+                  annotations.pendingJapanese?.isEmpty != false,
+                  annotations.turns.allSatisfy({ $0.confidence != .unverified }) else {
+                throw ValidationError.invalidReview
+            }
+        }
+        guard Set(annotations.turns.map(\.id)).count == annotations.turns.count else {
+            throw ValidationError.duplicateTurnID
         }
         var previousStart = 0
-        for turn in turns {
+        for turn in annotations.turns {
             guard turn.id > 0,
                   !turn.speaker.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   !turn.japanese.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -124,8 +259,70 @@ enum JapaneseBenchmarkSupport {
                   turn.endSample <= fixture.sampleCount else {
                 throw ValidationError.invalidTurn(turn.id)
             }
+            guard turn.criticalTerms.allSatisfy({ term in
+                !term.japanese.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && turn.japanese.contains(term.japanese)
+                    && (term.expectedEnglish?.allSatisfy({ !$0.isEmpty }) ?? true)
+            }) else {
+                throw ValidationError.invalidCriticalTerm(turn.id)
+            }
             previousStart = turn.startSample
         }
+        guard Set(annotations.voiceChanges.map(\.id)).count
+                == annotations.voiceChanges.count else {
+            throw ValidationError.invalidVoiceChange("duplicate")
+        }
+        for change in annotations.voiceChanges {
+            guard change.acceptableBreakRange.count == 2,
+                  !change.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  change.nextSpeechStartSample >= 0,
+                  change.nextSpeechStartSample <= fixture.sampleCount,
+                  change.previousSpeechEndSample.map({
+                      $0 >= 0 && $0 <= fixture.sampleCount
+                  }) != false,
+                  change.overlapRange.map({ range in
+                      range.count == 2
+                          && range[0] >= 0
+                          && range[1] >= range[0]
+                          && range[1] <= fixture.sampleCount
+                  }) != false,
+                  change.acceptableBreakRange[0] >= 0,
+                  change.acceptableBreakRange[1] >= change.acceptableBreakRange[0],
+                  change.acceptableBreakRange[1] <= fixture.sampleCount,
+                  !change.previousSpeaker.isEmpty,
+                  !change.nextSpeaker.isEmpty,
+                  change.previousSpeaker != change.nextSpeaker else {
+                throw ValidationError.invalidVoiceChange(change.id)
+            }
+        }
+        for negativeRange in annotations.negativeRanges ?? [] {
+            guard negativeRange.range.count == 2,
+                  negativeRange.range[0] >= 0,
+                  negativeRange.range[1] >= negativeRange.range[0],
+                  negativeRange.range[1] <= fixture.sampleCount else {
+                throw ValidationError.invalidVoiceChange("negative-range")
+            }
+        }
+    }
+
+    static func fixtureURL(for manifest: Manifest, workspaceRoot: URL) throws -> URL {
+        let root = workspaceRoot.standardizedFileURL
+        let result = root.appendingPathComponent(manifest.fixture.path).standardizedFileURL
+        let rootPrefix = root.path.hasSuffix("/") ? root.path : root.path + "/"
+        guard result.path.hasPrefix(rootPrefix) else {
+            throw ValidationError.pathEscapesWorkspace(manifest.fixture.path)
+        }
+        return result
+    }
+
+    static func sha256(at url: URL) throws -> String {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while let data = try handle.read(upToCount: 1_048_576), !data.isEmpty {
+            hasher.update(data: data)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     static func blindOrder<Element>(
@@ -143,57 +340,217 @@ enum JapaneseBenchmarkSupport {
         }
     }
 
+    private static func isSHA256(_ value: String) -> Bool {
+        value.range(of: #"^[0-9a-f]{64}$"#, options: .regularExpression) != nil
+    }
+
     private static func stableHash(_ value: String) -> UInt64 {
         value.utf8.reduce(14_695_981_039_346_656_037) { hash, byte in
             (hash ^ UInt64(byte)) &* 1_099_511_628_211
         }
     }
+
+    private struct JSONKeyScanner {
+        enum ScanError: Error {
+            case malformed
+            case duplicateKey
+        }
+
+        private let bytes: [UInt8]
+        private var index = 0
+
+        init(data: Data) {
+            bytes = Array(data)
+            if bytes.starts(with: [0xEF, 0xBB, 0xBF]) {
+                index = 3
+            }
+        }
+
+        mutating func validate() throws {
+            try value()
+            skipWhitespace()
+            guard index == bytes.count else { throw ScanError.malformed }
+        }
+
+        private mutating func value() throws {
+            skipWhitespace()
+            guard let byte = current else { throw ScanError.malformed }
+            switch byte {
+            case 0x7B: try object() // {
+            case 0x5B: try array() // [
+            case 0x22: _ = try string() // "
+            default: try scalar()
+            }
+        }
+
+        private mutating func object() throws {
+            index += 1
+            skipWhitespace()
+            if consume(0x7D) { return }
+            var keys = Set<String>()
+            while true {
+                skipWhitespace()
+                let key = try string()
+                guard keys.insert(key).inserted else { throw ScanError.duplicateKey }
+                skipWhitespace()
+                guard consume(0x3A) else { throw ScanError.malformed }
+                try value()
+                skipWhitespace()
+                if consume(0x7D) { return }
+                guard consume(0x2C) else { throw ScanError.malformed }
+            }
+        }
+
+        private mutating func array() throws {
+            index += 1
+            skipWhitespace()
+            if consume(0x5D) { return }
+            while true {
+                try value()
+                skipWhitespace()
+                if consume(0x5D) { return }
+                guard consume(0x2C) else { throw ScanError.malformed }
+            }
+        }
+
+        private mutating func string() throws -> String {
+            let start = index
+            guard consume(0x22) else { throw ScanError.malformed }
+            while let byte = current {
+                index += 1
+                if byte == 0x5C {
+                    guard current != nil else { throw ScanError.malformed }
+                    index += 1
+                } else if byte == 0x22 {
+                    return try JSONDecoder().decode(
+                        String.self,
+                        from: Data(bytes[start..<index])
+                    )
+                }
+            }
+            throw ScanError.malformed
+        }
+
+        private mutating func scalar() throws {
+            let start = index
+            while let byte = current,
+                  ![0x20, 0x09, 0x0A, 0x0D, 0x2C, 0x5D, 0x7D].contains(byte) {
+                index += 1
+            }
+            guard index > start else { throw ScanError.malformed }
+        }
+
+        private mutating func skipWhitespace() {
+            while let byte = current, [0x20, 0x09, 0x0A, 0x0D].contains(byte) {
+                index += 1
+            }
+        }
+
+        private mutating func consume(_ byte: UInt8) -> Bool {
+            guard current == byte else { return false }
+            index += 1
+            return true
+        }
+
+        private var current: UInt8? {
+            index < bytes.count ? bytes[index] : nil
+        }
+    }
 }
 
 final class JapaneseBenchmarkSupportTests: XCTestCase {
-    func testV1ValidatesCorpusAndBlindOrderIsReproducible() throws {
+    private static let versionedCorpusIDs = [
+        "easy-japanese-1",
+        "kikusasaizu-l1-1",
+        "okkei-shun-1541-1711",
+        "interview-speakers-0245-0325",
+    ]
+
+    func testV2ValidatesReviewPathsAndReproducibleBlindOrder() throws {
         let valid = Data(#"""
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "corpusID": "fixture",
+          "purpose": "development",
           "source": {
-            "videoPath": "/local/video.mp4",
-            "videoSHA256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-            "transcriptArchivePath": "/local/transcript.zip",
-            "transcriptArchiveSHA256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-            "turnsCSVSHA256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-            "detailedCSVSHA256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            "speakersSRTSHA256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            "description": "fixture",
+            "references": [{
+              "label": "source",
+              "locator": "source.wav",
+              "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }]
           },
           "fixture": {
-            "path": ".build/benchmarks/corpora/fixture/audio.wav",
+            "path": ".build/benchmarks/japanese-live/fixture/audio.wav",
             "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "sampleRate": 16000,
             "channelCount": 1,
-            "sampleFormat": "pcm_f32le",
+            "sampleFormat": "pcm_s16le",
             "sampleCount": 100
           },
           "annotations": {
-            "turnCount": 1,
-            "detailedFragmentCount": 1,
-            "speakerCount": 1,
-            "speakerChangeCount": 0,
-            "highConfidenceTurnCount": 1,
-            "mediumConfidenceTurnCount": 0,
-            "annotatedSampleCount": 100,
+            "status": "complete",
+            "reviewedBy": ["human-reviewer"],
+            "reviewNote": "Japanese and timing checked against the waveform.",
             "turns": [{
               "id": 1,
               "speaker": "A",
-              "speakerDescription": "voice A",
               "startSample": 0,
               "endSample": 100,
               "japanese": "はい",
-              "confidence": "high"
-            }]
+              "english": "Yes",
+              "confidence": "high",
+              "criticalTerms": [{
+                "category": "short-reply",
+                "japanese": "はい",
+                "expectedEnglish": ["yes"]
+              }],
+              "note": null
+            }],
+            "voiceChanges": []
           }
         }
         """#.utf8)
-        XCTAssertNoThrow(try JapaneseBenchmarkSupport.decode(valid))
+        let manifest = try JapaneseBenchmarkSupport.decode(valid)
+        XCTAssertEqual(
+            try JapaneseBenchmarkSupport.fixtureURL(
+                for: manifest,
+                workspaceRoot: URL(fileURLWithPath: "/workspace")
+            ).path,
+            "/workspace/.build/benchmarks/japanese-live/fixture/audio.wav"
+        )
+
+        let absolute = Data(String(decoding: valid, as: UTF8.self)
+            .replacingOccurrences(
+                of: ".build/benchmarks/japanese-live/fixture/audio.wav",
+                with: "/tmp/audio.wav"
+            ).utf8)
+        XCTAssertThrowsError(try JapaneseBenchmarkSupport.decode(absolute))
+
+        let unsupportedSource = Data(String(decoding: valid, as: UTF8.self)
+            .replacingOccurrences(of: "source.wav", with: "ftp://example.com/source.wav")
+            .utf8)
+        XCTAssertThrowsError(try JapaneseBenchmarkSupport.decode(unsupportedSource))
+
+        let duplicate = Data(String(decoding: valid, as: UTF8.self)
+            .replacingOccurrences(
+                of: #""status": "complete""#,
+                with: #""status": "complete", "status": "incomplete""#
+            ).utf8)
+        XCTAssertThrowsError(try JapaneseBenchmarkSupport.decode(duplicate)) { error in
+            XCTAssertEqual(
+                error as? JapaneseBenchmarkSupport.ValidationError,
+                .conflictingDuplicateKey
+            )
+        }
+        var duplicateWithBOM = Data([0xEF, 0xBB, 0xBF])
+        duplicateWithBOM.append(duplicate)
+        XCTAssertThrowsError(try JapaneseBenchmarkSupport.decode(duplicateWithBOM))
+
+        let traversal = Data(String(decoding: valid, as: UTF8.self)
+            .replacingOccurrences(of: #""corpusID": "fixture""#, with: #""corpusID": "../fixture""#)
+            .utf8)
+        XCTAssertThrowsError(try JapaneseBenchmarkSupport.decode(traversal))
 
         let values = ["alpha", "beta", "gamma"]
         let first = JapaneseBenchmarkSupport.blindOrder(
@@ -206,5 +563,72 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
             )
         )
         XCTAssertEqual(Set(first), Set(values))
+    }
+
+    func testVersionedCorporaRemainBlockedUntilHumanReview() throws {
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let directory = root.appendingPathComponent("docs/japanese-live/corpora")
+        let expected: [String: JapaneseBenchmarkSupport.Manifest.Annotations.Status] = [
+            "easy-japanese-1": .pendingHumanReview,
+            "kikusasaizu-l1-1": .pendingHumanReview,
+            "okkei-shun-1541-1711": .incomplete,
+            "interview-speakers-0245-0325": .incomplete,
+        ]
+
+        let manifests = try expected.map { corpusID, status in
+            let manifest = try JapaneseBenchmarkSupport.loadManifest(
+                at: directory.appendingPathComponent("\(corpusID)/manifest.json")
+            )
+            XCTAssertEqual(manifest.corpusID, corpusID)
+            XCTAssertEqual(manifest.annotations.status, status)
+            _ = try JapaneseBenchmarkSupport.fixtureURL(for: manifest, workspaceRoot: root)
+            return manifest
+        }
+
+        XCTAssertFalse(manifests.contains { $0.annotations.status == .complete })
+        XCTAssertEqual(
+            manifests.first(where: { $0.corpusID == "easy-japanese-1" })?
+                .annotations.turns.count,
+            59
+        )
+        XCTAssertEqual(
+            manifests.first(where: { $0.corpusID == "kikusasaizu-l1-1" })?
+                .annotations.turns.count,
+            14
+        )
+        XCTAssertEqual(
+            manifests.first(where: { $0.corpusID == "okkei-shun-1541-1711" })?
+                .annotations.turns.count,
+            0
+        )
+        XCTAssertEqual(
+            manifests.first(where: { $0.corpusID == "interview-speakers-0245-0325" })?
+                .annotations.turns.count,
+            14
+        )
+    }
+
+    func testLocalFixturesMatchVersionedManifestsWhenOptedIn() async throws {
+        guard ProcessInfo.processInfo.environment["WHISPERASR_VERIFY_JAPANESE_CORPORA"] == "1" else {
+            throw XCTSkip("Run Scripts/verify_japanese_corpora.sh to verify local WAV fixtures.")
+        }
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let directory = root.appendingPathComponent("docs/japanese-live/corpora")
+
+        for corpusID in Self.versionedCorpusIDs {
+            let manifest = try JapaneseBenchmarkSupport.loadManifest(
+                at: directory.appendingPathComponent("\(corpusID)/manifest.json")
+            )
+            let fixture = try JapaneseBenchmarkSupport.fixtureURL(
+                for: manifest,
+                workspaceRoot: root
+            )
+            XCTAssertEqual(
+                try JapaneseBenchmarkSupport.sha256(at: fixture),
+                manifest.fixture.sha256
+            )
+            let samples = try await AudioLoader.loadSamples(url: fixture)
+            XCTAssertEqual(samples.count, manifest.fixture.sampleCount)
+        }
     }
 }

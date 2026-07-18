@@ -1,0 +1,1552 @@
+{
+  "schemaVersion": 2,
+  "corpusID": "easy-japanese-1",
+  "purpose": "development",
+  "source": {
+    "description": "Japanese street interview. Audio and annotations are local-only; provenance is content-addressed.",
+    "references": [
+      {
+        "label": "source-video",
+        "locator": "urn:sha256:6b6fee800edaf8fe5ffea029f673b37e04b648cd24aaa779c1c53dc9446b2667",
+        "sha256": "6b6fee800edaf8fe5ffea029f673b37e04b648cd24aaa779c1c53dc9446b2667"
+      },
+      {
+        "label": "japanese-transcript-archive",
+        "locator": "urn:sha256:1da9a9d3d2d41455eef067cee3a57d8c0ea7aca9c0a33291347e492a1ae238c1",
+        "sha256": "1da9a9d3d2d41455eef067cee3a57d8c0ea7aca9c0a33291347e492a1ae238c1"
+      },
+      {
+        "label": "japanese-turns-csv",
+        "locator": ".build/benchmarks/corpora/easy-japanese-1/turns.csv",
+        "sha256": "d9a81899c6bb0e424161f732f53761cabcac41d14fed144e885cec2a0835e25d"
+      },
+      {
+        "label": "english-transcript-archive",
+        "locator": "urn:sha256:721be7072dd9eca908a17099c077115e37b73851d8dcedce3c102ba23dbdc12f",
+        "sha256": "721be7072dd9eca908a17099c077115e37b73851d8dcedce3c102ba23dbdc12f"
+      }
+    ]
+  },
+  "fixture": {
+    "channelCount": 1,
+    "path": ".build/benchmarks/corpora/easy-japanese-1/audio-16k-mono.wav",
+    "sampleCount": 4523613,
+    "sampleFormat": "pcm_s16le",
+    "sampleRate": 16000,
+    "sha256": "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c"
+  },
+  "annotations": {
+    "status": "pending-human-review",
+    "reviewedBy": [],
+    "reviewNote": "The 59 Japanese turns and PCM ranges are internally consistent. Formal waveform review, critical-term annotation and bilingual sign-off are still missing, so this corpus cannot promote a model.",
+    "turns": [
+      {
+        "id": 1,
+        "speaker": "INT",
+        "startSample": 28832,
+        "endSample": 200208,
+        "japanese": "みなさんこんにちは！熊谷望那です。イージージャパニーズは仙台からお送りします。今日は街の人たちに日本についてどう思っているか聞いてみたいと思います。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 2,
+        "speaker": "INT",
+        "startSample": 413216,
+        "endSample": 530128,
+        "japanese": "こんにちは。えっと、今日はですね、日本について、日本の良い所について、はい、お聞きしてるんですけど。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 3,
+        "speaker": "P01",
+        "startSample": 530128,
+        "endSample": 546144,
+        "japanese": "日本のいいとこ？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 4,
+        "speaker": "INT",
+        "startSample": 546144,
+        "endSample": 552000,
+        "japanese": "はい。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Limite estimée dans une réplique très brève."
+      },
+      {
+        "id": 5,
+        "speaker": "P01",
+        "startSample": 552000,
+        "endSample": 759152,
+        "japanese": "思う、あの、ニッポンのいいところ。魚だったらやっぱりね、日本は一番、ほら、新鮮な魚がすぐ海の、周りが海なんで、新鮮な魚、いつでも手に入るっつうとこは一番いいところですね。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Début estimé à ±0,3 s."
+      },
+      {
+        "id": 6,
+        "speaker": "P02",
+        "startSample": 759152,
+        "endSample": 832832,
+        "japanese": "日本は、あの、食べ物がおいしいですね。はい。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 7,
+        "speaker": "INT",
+        "startSample": 832832,
+        "endSample": 904912,
+        "japanese": "お姉さんもやっぱり、日本で一番好きな食べ物はお米？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 8,
+        "speaker": "P02",
+        "startSample": 904912,
+        "endSample": 932128,
+        "japanese": "はい、お米ですね。はい。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 9,
+        "speaker": "P03",
+        "startSample": 932128,
+        "endSample": 986592,
+        "japanese": "食べ物とかはやっぱり、和食が。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 10,
+        "speaker": "INT",
+        "startSample": 986592,
+        "endSample": 1092288,
+        "japanese": "んー、今ね、なんか健康的に世界的に注目されてますもんね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 11,
+        "speaker": "P03",
+        "startSample": 1092288,
+        "endSample": 1146752,
+        "japanese": "そうですね。まあ、お味噌汁とかがやっぱり落ち着くかなっていう。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 12,
+        "speaker": "INT",
+        "startSample": 1146752,
+        "endSample": 1180384,
+        "japanese": "んー、たしかにー。こんにちは！",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 13,
+        "speaker": "P04",
+        "startSample": 1180384,
+        "endSample": 1191584,
+        "japanese": "あ、どうも。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 14,
+        "speaker": "INT",
+        "startSample": 1191584,
+        "endSample": 1300496,
+        "japanese": "はい、ええと、今日ですね、日本の良いところについてお聞きしたいのですけれど。日本のいい所、どんなところがいい所だと思いますか？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 15,
+        "speaker": "P04",
+        "startSample": 1300496,
+        "endSample": 1375776,
+        "japanese": "そーですね、やっぱ黒髪が似合う女性がいっぱいいるところかなっていう。はい、そう思います。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 16,
+        "speaker": "INT",
+        "startSample": 1375776,
+        "endSample": 1393392,
+        "japanese": "あっ、黒髪の女性がタイプですか？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 17,
+        "speaker": "P04",
+        "startSample": 1393392,
+        "endSample": 1479872,
+        "japanese": "はい、そうですね。ロングの黒髪の女性がやっぱり一番、まあ美人かなって感じですね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 18,
+        "speaker": "P05",
+        "startSample": 1479872,
+        "endSample": 1513520,
+        "japanese": "思いやりあるよね。みんな。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 19,
+        "speaker": "P06",
+        "startSample": 1513520,
+        "endSample": 1524720,
+        "japanese": "あるね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 20,
+        "speaker": "INT",
+        "startSample": 1524720,
+        "endSample": 1608000,
+        "japanese": "素敵。やっぱり普段生活してても感じる？あ、やさしいって。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 21,
+        "speaker": "P05",
+        "startSample": 1608000,
+        "endSample": 1648048,
+        "japanese": "なんか高齢者にすごいやさしいです。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 22,
+        "speaker": "P07",
+        "startSample": 1648048,
+        "endSample": 1686480,
+        "japanese": "おもてなしの心とか。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 23,
+        "speaker": "P08",
+        "startSample": 1686480,
+        "endSample": 1704096,
+        "japanese": "思いやり。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Voix hors champ ; attribution visuelle moins certaine."
+      },
+      {
+        "id": 24,
+        "speaker": "INT",
+        "startSample": 1704096,
+        "endSample": 1769776,
+        "japanese": "思いやり。あー、いいですよね。これはこう、外国にも広めたい言葉ですよね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 25,
+        "speaker": "P09",
+        "startSample": 1769776,
+        "endSample": 2058064,
+        "japanese": "そうだね。おもいやりっていう言葉は何にでも使えるんじゃないですか。例えば、食事しに行って、残さないで食べて行くのも思いやりの一つですよね。作った人への。ね、人の気遣いをしてあげるのもおもいやり。思いやりっていう言葉は何にでも使えると思う。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 26,
+        "speaker": "INT",
+        "startSample": 2058064,
+        "endSample": 2102896,
+        "japanese": "んー、素敵ですね。あー、そうなんだ。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 27,
+        "speaker": "P09",
+        "startSample": 2102896,
+        "endSample": 2126928,
+        "japanese": "恥ずかしい。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 28,
+        "speaker": "P10",
+        "startSample": 2126928,
+        "endSample": 2530528,
+        "japanese": "なんていうんだろう、わびさびというか。わびさびってのは人に対する思いやりとか、そういったものってのは、ことば一つにしてもそうだよね。例えば雪が降るにしても、雪なんてのは十種類くらい言い方があるでしょ。ささめ雪とか、ね、あわ雪とか。やっぱりそういう表現が豊かってのは他の国には無いと思う。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 29,
+        "speaker": "INT",
+        "startSample": 2530528,
+        "endSample": 2692288,
+        "japanese": "今日はじゃあ、みんなの思うニッポンの良い所とかあるかな？なんかパッと出てくるもの。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 30,
+        "speaker": "P11",
+        "startSample": 2692288,
+        "endSample": 2733936,
+        "japanese": "アニメ。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 31,
+        "speaker": "P12",
+        "startSample": 2733936,
+        "endSample": 2759552,
+        "japanese": "アニメですかね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 32,
+        "speaker": "P03",
+        "startSample": 2759552,
+        "endSample": 2839632,
+        "japanese": "いやぁ、思い浮かばないな。アニメとか。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 33,
+        "speaker": "INT",
+        "startSample": 2839632,
+        "endSample": 2874880,
+        "japanese": "あー、アニメ好きですか？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 34,
+        "speaker": "P03",
+        "startSample": 2874880,
+        "endSample": 2942144,
+        "japanese": "あんま詳しくはないんですけど、あんまり他の国にはないかなっていう。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 35,
+        "speaker": "P12",
+        "startSample": 2942144,
+        "endSample": 2970976,
+        "japanese": "アニメ文化。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 36,
+        "speaker": "P13",
+        "startSample": 2970976,
+        "endSample": 2986400,
+        "japanese": "あと「オタク文化」ですかね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 37,
+        "speaker": "P12",
+        "startSample": 2986400,
+        "endSample": 2998192,
+        "japanese": "そーですね。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Début estimé à ±0,3 s dans un échange rapide."
+      },
+      {
+        "id": 38,
+        "speaker": "INT",
+        "startSample": 2998192,
+        "endSample": 3052656,
+        "japanese": "なるほど。え、たとえばどんなアニメ好きなんですか？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 39,
+        "speaker": "P12",
+        "startSample": 3052656,
+        "endSample": 3107104,
+        "japanese": "まあ、ドラゴンボールとかドラえもんとか。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 40,
+        "speaker": "INT",
+        "startSample": 3107104,
+        "endSample": 3119200,
+        "japanese": "ドラえもんボール。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Attribution et limite estimées dans un échange plaisanté."
+      },
+      {
+        "id": 41,
+        "speaker": "P13",
+        "startSample": 3119200,
+        "endSample": 3128800,
+        "japanese": "ドラえもん。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Attribution et limite estimées à ±0,3 s."
+      },
+      {
+        "id": 42,
+        "speaker": "P12",
+        "startSample": 3128800,
+        "endSample": 3227232,
+        "japanese": "そう、ドラえもん。ドラゴンボールとか。ちなみに今日僕たちは「プリキュア」を意識して。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Attribution et limite estimées à ±0,3 s."
+      },
+      {
+        "id": 43,
+        "speaker": "P13",
+        "startSample": 3227232,
+        "endSample": 3251248,
+        "japanese": "そーなんですよ。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 44,
+        "speaker": "INT",
+        "startSample": 3251248,
+        "endSample": 3280800,
+        "japanese": "プリキュア意識してる？こうやって？",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Limite estimée dans une réplique partagée."
+      },
+      {
+        "id": 45,
+        "speaker": "P12",
+        "startSample": 3280800,
+        "endSample": 3328128,
+        "japanese": "こうやってね。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Début estimé à ±0,4 s."
+      },
+      {
+        "id": 46,
+        "speaker": "P11",
+        "startSample": 3328128,
+        "endSample": 3427424,
+        "japanese": "「ハイキュー！！」とか「黒バス」とか。あ、もう最近のアニメです。あ、すいません。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 47,
+        "speaker": "P14",
+        "startSample": 3427424,
+        "endSample": 3441840,
+        "japanese": "オタクです。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 48,
+        "speaker": "P11",
+        "startSample": 3441840,
+        "endSample": 3456256,
+        "japanese": "ごめんなさい。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 49,
+        "speaker": "INT",
+        "startSample": 3456256,
+        "endSample": 3561952,
+        "japanese": "あとは逆に、なんか暮らして、良くないなあとか、ここあんま好きじゃないなあと思うニッポンの所ってある？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 50,
+        "speaker": "P05",
+        "startSample": 3561952,
+        "endSample": 3579584,
+        "japanese": "きらい？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 51,
+        "speaker": "P06",
+        "startSample": 3579584,
+        "endSample": 3657600,
+        "japanese": "嫌いな所？ある？えー、なんだろう？",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Limite estimée dans une réplique partagée."
+      },
+      {
+        "id": 52,
+        "speaker": "P05",
+        "startSample": 3657600,
+        "endSample": 3736528,
+        "japanese": "携帯ばっか見てる？よね？",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Début estimé au changement de plan, à ±0,3 s."
+      },
+      {
+        "id": 53,
+        "speaker": "P06",
+        "startSample": 3736528,
+        "endSample": 3778176,
+        "japanese": "歩き、歩きスマホ！",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 54,
+        "speaker": "P10",
+        "startSample": 3778176,
+        "endSample": 4207408,
+        "japanese": "言語が乱れてるよね、最近。むかし我々若いとき、「やばい」とかそういうのはヤクザの使う言葉だったのよ。うん。だからそれが変化していった。例えば、入れ墨、タトゥー、全然違うのよ。入れ墨ってのは、あのー、いわゆる罪を犯せばここに入れていったの。犯罪者の証だったの。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 55,
+        "speaker": "P09",
+        "startSample": 4207408,
+        "endSample": 4253856,
+        "japanese": "ごめんなさいね。何言ったらいいのかわからないんだけど。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 56,
+        "speaker": "INT",
+        "startSample": 4253856,
+        "endSample": 4273072,
+        "japanese": "もー、完璧です。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 57,
+        "speaker": "P09",
+        "startSample": 4273072,
+        "endSample": 4299200,
+        "japanese": "完璧？ヤッター！",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": null
+      },
+      {
+        "id": 58,
+        "speaker": "INT",
+        "startSample": 4299200,
+        "endSample": 4322400,
+        "japanese": "ありがとうございました！",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Audio sous le fondu/générique ; début estimé à ±0,5 s."
+      },
+      {
+        "id": 59,
+        "speaker": "P09",
+        "startSample": 4322400,
+        "endSample": 4353600,
+        "japanese": "はい、どうもご苦労様でした！",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Audio sous le générique ; début estimé à ±0,6 s."
+      }
+    ],
+    "voiceChanges": [
+      {
+        "id": "easy-turn-2-3",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P01",
+        "previousSpeechEndSample": 530128,
+        "nextSpeechStartSample": 530128,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          530128,
+          530128
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-3-4",
+        "previousSpeaker": "P01",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 546144,
+        "nextSpeechStartSample": 546144,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          546144,
+          546144
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-4-5",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P01",
+        "previousSpeechEndSample": 552000,
+        "nextSpeechStartSample": 552000,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          552000,
+          552000
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-5-6",
+        "previousSpeaker": "P01",
+        "nextSpeaker": "P02",
+        "previousSpeechEndSample": 759152,
+        "nextSpeechStartSample": 759152,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          759152,
+          759152
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-6-7",
+        "previousSpeaker": "P02",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 832832,
+        "nextSpeechStartSample": 832832,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          832832,
+          832832
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-7-8",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P02",
+        "previousSpeechEndSample": 904912,
+        "nextSpeechStartSample": 904912,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          904912,
+          904912
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-8-9",
+        "previousSpeaker": "P02",
+        "nextSpeaker": "P03",
+        "previousSpeechEndSample": 932128,
+        "nextSpeechStartSample": 932128,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          932128,
+          932128
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-9-10",
+        "previousSpeaker": "P03",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 986592,
+        "nextSpeechStartSample": 986592,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          986592,
+          986592
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-10-11",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P03",
+        "previousSpeechEndSample": 1092288,
+        "nextSpeechStartSample": 1092288,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1092288,
+          1092288
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-11-12",
+        "previousSpeaker": "P03",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 1146752,
+        "nextSpeechStartSample": 1146752,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1146752,
+          1146752
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-12-13",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P04",
+        "previousSpeechEndSample": 1180384,
+        "nextSpeechStartSample": 1180384,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1180384,
+          1180384
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-13-14",
+        "previousSpeaker": "P04",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 1191584,
+        "nextSpeechStartSample": 1191584,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1191584,
+          1191584
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-14-15",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P04",
+        "previousSpeechEndSample": 1300496,
+        "nextSpeechStartSample": 1300496,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1300496,
+          1300496
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-15-16",
+        "previousSpeaker": "P04",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 1375776,
+        "nextSpeechStartSample": 1375776,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1375776,
+          1375776
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-16-17",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P04",
+        "previousSpeechEndSample": 1393392,
+        "nextSpeechStartSample": 1393392,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1393392,
+          1393392
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-17-18",
+        "previousSpeaker": "P04",
+        "nextSpeaker": "P05",
+        "previousSpeechEndSample": 1479872,
+        "nextSpeechStartSample": 1479872,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1479872,
+          1479872
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-18-19",
+        "previousSpeaker": "P05",
+        "nextSpeaker": "P06",
+        "previousSpeechEndSample": 1513520,
+        "nextSpeechStartSample": 1513520,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1513520,
+          1513520
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-19-20",
+        "previousSpeaker": "P06",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 1524720,
+        "nextSpeechStartSample": 1524720,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1524720,
+          1524720
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-20-21",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P05",
+        "previousSpeechEndSample": 1608000,
+        "nextSpeechStartSample": 1608000,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1608000,
+          1608000
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-21-22",
+        "previousSpeaker": "P05",
+        "nextSpeaker": "P07",
+        "previousSpeechEndSample": 1648048,
+        "nextSpeechStartSample": 1648048,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1648048,
+          1648048
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-22-23",
+        "previousSpeaker": "P07",
+        "nextSpeaker": "P08",
+        "previousSpeechEndSample": 1686480,
+        "nextSpeechStartSample": 1686480,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1686480,
+          1686480
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-23-24",
+        "previousSpeaker": "P08",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 1704096,
+        "nextSpeechStartSample": 1704096,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1704096,
+          1704096
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-24-25",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P09",
+        "previousSpeechEndSample": 1769776,
+        "nextSpeechStartSample": 1769776,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          1769776,
+          1769776
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-25-26",
+        "previousSpeaker": "P09",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 2058064,
+        "nextSpeechStartSample": 2058064,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2058064,
+          2058064
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-26-27",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P09",
+        "previousSpeechEndSample": 2102896,
+        "nextSpeechStartSample": 2102896,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2102896,
+          2102896
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-27-28",
+        "previousSpeaker": "P09",
+        "nextSpeaker": "P10",
+        "previousSpeechEndSample": 2126928,
+        "nextSpeechStartSample": 2126928,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2126928,
+          2126928
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-28-29",
+        "previousSpeaker": "P10",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 2530528,
+        "nextSpeechStartSample": 2530528,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2530528,
+          2530528
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-29-30",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P11",
+        "previousSpeechEndSample": 2692288,
+        "nextSpeechStartSample": 2692288,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2692288,
+          2692288
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-30-31",
+        "previousSpeaker": "P11",
+        "nextSpeaker": "P12",
+        "previousSpeechEndSample": 2733936,
+        "nextSpeechStartSample": 2733936,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2733936,
+          2733936
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-31-32",
+        "previousSpeaker": "P12",
+        "nextSpeaker": "P03",
+        "previousSpeechEndSample": 2759552,
+        "nextSpeechStartSample": 2759552,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2759552,
+          2759552
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-32-33",
+        "previousSpeaker": "P03",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 2839632,
+        "nextSpeechStartSample": 2839632,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2839632,
+          2839632
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-33-34",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P03",
+        "previousSpeechEndSample": 2874880,
+        "nextSpeechStartSample": 2874880,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2874880,
+          2874880
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-34-35",
+        "previousSpeaker": "P03",
+        "nextSpeaker": "P12",
+        "previousSpeechEndSample": 2942144,
+        "nextSpeechStartSample": 2942144,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2942144,
+          2942144
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-35-36",
+        "previousSpeaker": "P12",
+        "nextSpeaker": "P13",
+        "previousSpeechEndSample": 2970976,
+        "nextSpeechStartSample": 2970976,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2970976,
+          2970976
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-36-37",
+        "previousSpeaker": "P13",
+        "nextSpeaker": "P12",
+        "previousSpeechEndSample": 2986400,
+        "nextSpeechStartSample": 2986400,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2986400,
+          2986400
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-37-38",
+        "previousSpeaker": "P12",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 2998192,
+        "nextSpeechStartSample": 2998192,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          2998192,
+          2998192
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-38-39",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P12",
+        "previousSpeechEndSample": 3052656,
+        "nextSpeechStartSample": 3052656,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3052656,
+          3052656
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-39-40",
+        "previousSpeaker": "P12",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 3107104,
+        "nextSpeechStartSample": 3107104,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3107104,
+          3107104
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-40-41",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P13",
+        "previousSpeechEndSample": 3119200,
+        "nextSpeechStartSample": 3119200,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3119200,
+          3119200
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-41-42",
+        "previousSpeaker": "P13",
+        "nextSpeaker": "P12",
+        "previousSpeechEndSample": 3128800,
+        "nextSpeechStartSample": 3128800,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3128800,
+          3128800
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-42-43",
+        "previousSpeaker": "P12",
+        "nextSpeaker": "P13",
+        "previousSpeechEndSample": 3227232,
+        "nextSpeechStartSample": 3227232,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3227232,
+          3227232
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-43-44",
+        "previousSpeaker": "P13",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 3251248,
+        "nextSpeechStartSample": 3251248,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3251248,
+          3251248
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-44-45",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P12",
+        "previousSpeechEndSample": 3280800,
+        "nextSpeechStartSample": 3280800,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3280800,
+          3280800
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-45-46",
+        "previousSpeaker": "P12",
+        "nextSpeaker": "P11",
+        "previousSpeechEndSample": 3328128,
+        "nextSpeechStartSample": 3328128,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3328128,
+          3328128
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-46-47",
+        "previousSpeaker": "P11",
+        "nextSpeaker": "P14",
+        "previousSpeechEndSample": 3427424,
+        "nextSpeechStartSample": 3427424,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3427424,
+          3427424
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-47-48",
+        "previousSpeaker": "P14",
+        "nextSpeaker": "P11",
+        "previousSpeechEndSample": 3441840,
+        "nextSpeechStartSample": 3441840,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3441840,
+          3441840
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-48-49",
+        "previousSpeaker": "P11",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 3456256,
+        "nextSpeechStartSample": 3456256,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3456256,
+          3456256
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-49-50",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P05",
+        "previousSpeechEndSample": 3561952,
+        "nextSpeechStartSample": 3561952,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3561952,
+          3561952
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-50-51",
+        "previousSpeaker": "P05",
+        "nextSpeaker": "P06",
+        "previousSpeechEndSample": 3579584,
+        "nextSpeechStartSample": 3579584,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3579584,
+          3579584
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-51-52",
+        "previousSpeaker": "P06",
+        "nextSpeaker": "P05",
+        "previousSpeechEndSample": 3657600,
+        "nextSpeechStartSample": 3657600,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3657600,
+          3657600
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-52-53",
+        "previousSpeaker": "P05",
+        "nextSpeaker": "P06",
+        "previousSpeechEndSample": 3736528,
+        "nextSpeechStartSample": 3736528,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3736528,
+          3736528
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-53-54",
+        "previousSpeaker": "P06",
+        "nextSpeaker": "P10",
+        "previousSpeechEndSample": 3778176,
+        "nextSpeechStartSample": 3778176,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          3778176,
+          3778176
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-54-55",
+        "previousSpeaker": "P10",
+        "nextSpeaker": "P09",
+        "previousSpeechEndSample": 4207408,
+        "nextSpeechStartSample": 4207408,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          4207408,
+          4207408
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-55-56",
+        "previousSpeaker": "P09",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 4253856,
+        "nextSpeechStartSample": 4253856,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          4253856,
+          4253856
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-56-57",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P09",
+        "previousSpeechEndSample": 4273072,
+        "nextSpeechStartSample": 4273072,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          4273072,
+          4273072
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-57-58",
+        "previousSpeaker": "P09",
+        "nextSpeaker": "INT",
+        "previousSpeechEndSample": 4299200,
+        "nextSpeechStartSample": 4299200,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          4299200,
+          4299200
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      },
+      {
+        "id": "easy-turn-58-59",
+        "previousSpeaker": "INT",
+        "nextSpeaker": "P09",
+        "previousSpeechEndSample": 4322400,
+        "nextSpeechStartSample": 4322400,
+        "kind": "turn-boundary",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          4322400,
+          4322400
+        ],
+        "expectedJapaneseBefore": null,
+        "expectedJapaneseAfter": null
+      }
+    ],
+    "negativeRanges": []
+  }
+}

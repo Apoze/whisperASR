@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WAV="${WHISPERASR_VOXTRAL_BAKEOFF_WAV:-$ROOT/.build/benchmarks/canonical-firefox-16k-mono.wav}"
-CORPUS="${WHISPERASR_JAPANESE_BAKEOFF_CORPUS:-$ROOT/.build/benchmarks/corpora/easy-japanese-1}"
+MANIFEST="${WHISPERASR_JAPANESE_BENCHMARK_MANIFEST:-$ROOT/docs/japanese-live/corpora/easy-japanese-1/manifest.json}"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 
 cd "$ROOT"
@@ -45,7 +45,7 @@ for specification in q4:960 q6:960 q6:1200 q6:2400; do
 
   WHISPERASR_JAPANESE_BAKEOFF=1 \
   WHISPERASR_JAPANESE_BAKEOFF_SCOPE="$scope" \
-  WHISPERASR_JAPANESE_BAKEOFF_CORPUS="$CORPUS" \
+  WHISPERASR_JAPANESE_BENCHMARK_MANIFEST="$MANIFEST" \
   WHISPERASR_JAPANESE_BAKEOFF_ENGINES=voxtral-continuous \
   WHISPERASR_JAPANESE_BAKEOFF_APPLE=1 \
   WHISPERASR_VOXTRAL_HELPER_VARIANT="$variant" \

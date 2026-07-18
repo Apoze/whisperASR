@@ -34,20 +34,20 @@ private enum DiarizationBakeoffCandidate: String, Codable, CaseIterable {
     }
 }
 
-private struct DiarizationBenchmarkManifest: Decodable {
-    struct Fixture: Decodable {
+private struct DiarizationBenchmarkManifest {
+    struct Fixture {
         let sampleRate: Int
         let sampleCount: Int
         let scoredRange: [Int]?
     }
 
-    struct Annotations: Decodable {
-        let status: String?
+    struct Annotations {
+        let status: String
         let events: [Event]
         let negativeRanges: [NegativeRange]?
     }
 
-    struct Event: Decodable {
+    struct Event {
         let eventID: String
         let previousSpeechEndSample: Int?
         let nextSpeechStartSample: Int
@@ -70,7 +70,7 @@ private struct DiarizationBenchmarkManifest: Decodable {
         }
     }
 
-    struct NegativeRange: Decodable {
+    struct NegativeRange {
         let range: [Int]
         let reason: String?
 
@@ -80,15 +80,37 @@ private struct DiarizationBenchmarkManifest: Decodable {
         }
     }
 
-    let schemaVersion: Int
     let corpusID: String
     let fixture: Fixture
     let annotations: Annotations
 
+    init(_ manifest: JapaneseBenchmarkSupport.Manifest) {
+        corpusID = manifest.corpusID
+        fixture = Fixture(
+            sampleRate: manifest.fixture.sampleRate,
+            sampleCount: manifest.fixture.sampleCount,
+            scoredRange: nil
+        )
+        annotations = Annotations(
+            status: manifest.annotations.status.rawValue,
+            events: manifest.annotations.voiceChanges.map { change in
+                Event(
+                    eventID: change.id,
+                    previousSpeechEndSample: change.previousSpeechEndSample,
+                    nextSpeechStartSample: change.nextSpeechStartSample,
+                    overlapStartSample: change.overlapRange?.first,
+                    overlapEndSample: change.overlapRange?.last,
+                    kind: change.kind ?? "clear",
+                    acceptableBreakRange: change.acceptableBreakRange
+                )
+            },
+            negativeRanges: manifest.annotations.negativeRanges?.map {
+                NegativeRange(range: $0.range, reason: $0.reason)
+            }
+        )
+    }
+
     func validate(sampleCount actualSampleCount: Int) throws {
-        guard schemaVersion == 1 else {
-            throw DiarizationBakeoffError.unsupportedManifestVersion(schemaVersion)
-        }
         guard fixture.sampleRate == 16_000,
               fixture.sampleCount == actualSampleCount else {
             throw DiarizationBakeoffError.fixtureMismatch
@@ -308,7 +330,7 @@ private enum DiarizationBenchmarkScorer {
         return DiarizationBenchmarkScore(
             referenceCount: manifest.annotations.events.count,
             predictedCount: scoredTransitions.count,
-            annotationStatus: manifest.annotations.status ?? "unspecified",
+            annotationStatus: manifest.annotations.status,
             isPromotionEligibleReference: manifest.annotations.status == "complete",
             truePositiveCount: truePositiveCount,
             falsePositiveCount: falseSamples.count,
@@ -821,7 +843,6 @@ private enum DiarizationBakeoffRunner {
 
 private enum DiarizationBakeoffError: LocalizedError {
     case unknownCandidate(String)
-    case unsupportedManifestVersion(Int)
     case invalidBreakRange
     case fixtureMismatch
 
@@ -829,8 +850,6 @@ private enum DiarizationBakeoffError: LocalizedError {
         switch self {
         case .unknownCandidate(let value):
             return "Unknown diarization candidate: \(value)"
-        case .unsupportedManifestVersion(let version):
-            return "Unsupported diarization manifest schema version: \(version)"
         case .invalidBreakRange:
             return "Every diarization annotation needs a valid two-sample acceptableBreakRange"
         case .fixtureMismatch:
@@ -893,21 +912,36 @@ final class DiarizationBakeoffTests: XCTestCase {
     func testScorerMatchesEachPredictionAtMostOnceAndCountsFalseChanges() throws {
         let manifestData = Data(#"""
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "corpusID": "unit",
-          "fixture": {"sampleRate": 16000, "sampleCount": 960000},
+          "purpose": "holdout-speaker-changes",
+          "source": {
+            "description": "unit fixture",
+            "references": [{"label":"source", "locator":"source.wav", "sha256":null}]
+          },
+          "fixture": {
+            "path": ".build/benchmarks/unit.wav",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "sampleRate": 16000,
+            "channelCount": 1,
+            "sampleFormat": "pcm_s16le",
+            "sampleCount": 960000
+          },
           "annotations": {
-            "events": [
-              {"eventID":"a", "nextSpeechStartSample":1000, "kind":"gapless", "acceptableBreakRange":[900,1100]},
-              {"eventID":"b", "nextSpeechStartSample":3000, "overlapStartSample":2900, "kind":"overlap", "acceptableBreakRange":[2800,3200]}
+            "status": "pending-human-review",
+            "reviewedBy": [],
+            "reviewNote": "Unit-test annotations only.",
+            "turns": [],
+            "voiceChanges": [
+              {"id":"a", "previousSpeaker":"A", "nextSpeaker":"B", "previousSpeechEndSample":900, "nextSpeechStartSample":1000, "kind":"gapless", "overlapRange":null, "acceptableBreakRange":[900,1100]},
+              {"id":"b", "previousSpeaker":"B", "nextSpeaker":"A", "previousSpeechEndSample":3000, "nextSpeechStartSample":3000, "kind":"overlap", "overlapRange":[2900,3000], "acceptableBreakRange":[2800,3200]}
             ],
             "negativeRanges": [{"range":[7000,9000], "reason":"music"}]
           }
         }
         """#.utf8)
-        let manifest = try JSONDecoder().decode(
-            DiarizationBenchmarkManifest.self,
-            from: manifestData
+        let manifest = DiarizationBenchmarkManifest(
+            try JapaneseBenchmarkSupport.decode(manifestData)
         )
         let transitions = [
             DiarizationBenchmarkTransition(
@@ -968,9 +1002,23 @@ final class DiarizationBakeoffTests: XCTestCase {
     @MainActor
     func testOptInReplay() async throws {
         let environment = ProcessInfo.processInfo.environment
-        guard let wavPath = environment["WHISPERASR_DIARIZATION_BENCHMARK_WAV"],
-              !wavPath.isEmpty else {
-            throw XCTSkip("Set WHISPERASR_DIARIZATION_BENCHMARK_WAV to run the shadow bakeoff")
+        guard let manifestPath = environment["WHISPERASR_DIARIZATION_BENCHMARK_MANIFEST"],
+              !manifestPath.isEmpty else {
+            throw XCTSkip(
+                "Set WHISPERASR_DIARIZATION_BENCHMARK_MANIFEST to a versioned v2 corpus."
+            )
+        }
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let sharedManifest = try JapaneseBenchmarkSupport.loadManifest(
+            at: URL(fileURLWithPath: manifestPath)
+        )
+        let wavURL = try JapaneseBenchmarkSupport.fixtureURL(
+            for: sharedManifest,
+            workspaceRoot: root
+        )
+        guard try JapaneseBenchmarkSupport.sha256(at: wavURL)
+                == sharedManifest.fixture.sha256 else {
+            throw DiarizationBakeoffError.fixtureMismatch
         }
         let candidate = try DiarizationBakeoffCandidate(
             environmentValue: environment["WHISPERASR_DIARIZATION_CANDIDATE"]
@@ -979,20 +1027,9 @@ final class DiarizationBakeoffTests: XCTestCase {
             1,
             Int(environment["WHISPERASR_DIARIZATION_REPLAY_COUNT"] ?? "1") ?? 1
         )
-        let samples = try await AudioLoader.loadSamples(
-            url: URL(fileURLWithPath: wavPath)
-        )
-        let manifest: DiarizationBenchmarkManifest?
-        if let path = environment["WHISPERASR_DIARIZATION_BENCHMARK_MANIFEST"],
-           !path.isEmpty {
-            manifest = try JSONDecoder().decode(
-                DiarizationBenchmarkManifest.self,
-                from: Data(contentsOf: URL(fileURLWithPath: path))
-            )
-            try manifest?.validate(sampleCount: samples.count)
-        } else {
-            manifest = nil
-        }
+        let samples = try await AudioLoader.loadSamples(url: wavURL)
+        let manifest = DiarizationBenchmarkManifest(sharedManifest)
+        try manifest.validate(sampleCount: samples.count)
 
         let report = try await DiarizationBakeoffRunner.run(
             candidate: candidate,
@@ -1002,10 +1039,10 @@ final class DiarizationBakeoffTests: XCTestCase {
         )
         let output = environment["WHISPERASR_DIARIZATION_BENCHMARK_OUTPUT"]
             .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
-            ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            ?? root
                 .appendingPathComponent(
                     ".build/benchmarks/diarization-\(candidate.rawValue)-"
-                        + "\(URL(fileURLWithPath: wavPath).deletingPathExtension().lastPathComponent).json"
+                        + "\(wavURL.deletingPathExtension().lastPathComponent).json"
                 )
         try FileManager.default.createDirectory(
             at: output.deletingLastPathComponent(),

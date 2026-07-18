@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 2,
+  "corpusID": "interview-speakers-0245-0325",
+  "purpose": "holdout-speaker-changes",
+  "source": {
+    "description": "Forty-second street-interview excerpt aligned sample-for-sample with the Easy Japanese source.",
+    "references": [
+      {
+        "label": "video",
+        "locator": "https://www.youtube.com/watch?v=qzzweIQoIOU&t=165s",
+        "sha256": null
+      },
+      {
+        "label": "source-recording",
+        "locator": "urn:sha256:935292b358452a149148c530583cdad2a1e2794771adb8e29ee416f3967475a3",
+        "sha256": "935292b358452a149148c530583cdad2a1e2794771adb8e29ee416f3967475a3"
+      },
+      {
+        "label": "aligned-easy-manifest-v1",
+        "locator": "urn:sha256:58c50cb447252bd08ad80f8a263dd08c3157454603d4b7f7b251593e4ecd5543",
+        "sha256": "58c50cb447252bd08ad80f8a263dd08c3157454603d4b7f7b251593e4ecd5543"
+      }
+    ]
+  },
+  "fixture": {
+    "path": ".build/benchmarks/interview-speakers-0245-0325-16k-mono.wav",
+    "sha256": "8394cb66fb693d9d9b3c50d47c42d6f34086850fc6d475681e4f999f478cf80a",
+    "sampleRate": 16000,
+    "channelCount": 1,
+    "sampleFormat": "pcm_s16le",
+    "sampleCount": 640000
+  },
+  "annotations": {
+    "status": "incomplete",
+    "reviewedBy": [],
+    "reviewNote": "Fourteen complete internal turns align exactly with Easy Japanese after subtracting 2,640,464 samples. The clipped edge turns and all but one speaker transition still lack independent human review, so promotion is blocked.",
+    "turns": [
+      {
+        "id": 30,
+        "speaker": "P11",
+        "startSample": 51824,
+        "endSample": 93472,
+        "japanese": "アニメ。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 31,
+        "speaker": "P12",
+        "startSample": 93472,
+        "endSample": 119088,
+        "japanese": "アニメですかね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 32,
+        "speaker": "P03",
+        "startSample": 119088,
+        "endSample": 199168,
+        "japanese": "いやぁ、思い浮かばないな。アニメとか。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 33,
+        "speaker": "INT",
+        "startSample": 199168,
+        "endSample": 234416,
+        "japanese": "あー、アニメ好きですか？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 34,
+        "speaker": "P03",
+        "startSample": 234416,
+        "endSample": 301680,
+        "japanese": "あんま詳しくはないんですけど、あんまり他の国にはないかなっていう。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 35,
+        "speaker": "P12",
+        "startSample": 301680,
+        "endSample": 330512,
+        "japanese": "アニメ文化。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 36,
+        "speaker": "P13",
+        "startSample": 330512,
+        "endSample": 345936,
+        "japanese": "あと「オタク文化」ですかね。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 37,
+        "speaker": "P12",
+        "startSample": 345936,
+        "endSample": 357728,
+        "japanese": "そーですね。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 38,
+        "speaker": "INT",
+        "startSample": 357728,
+        "endSample": 412192,
+        "japanese": "なるほど。え、たとえばどんなアニメ好きなんですか？",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 39,
+        "speaker": "P12",
+        "startSample": 412192,
+        "endSample": 466640,
+        "japanese": "まあ、ドラゴンボールとかドラえもんとか。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 40,
+        "speaker": "INT",
+        "startSample": 466640,
+        "endSample": 478736,
+        "japanese": "ドラえもんボール。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 41,
+        "speaker": "P13",
+        "startSample": 478736,
+        "endSample": 488336,
+        "japanese": "ドラえもん。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 42,
+        "speaker": "P12",
+        "startSample": 488336,
+        "endSample": 586768,
+        "japanese": "そう、ドラえもん。ドラゴンボールとか。ちなみに今日僕たちは「プリキュア」を意識して。",
+        "english": null,
+        "confidence": "medium",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      },
+      {
+        "id": 43,
+        "speaker": "P13",
+        "startSample": 586768,
+        "endSample": 610784,
+        "japanese": "そーなんですよ。",
+        "english": null,
+        "confidence": "high",
+        "criticalTerms": [],
+        "note": "Transferred from the sample-aligned Easy Japanese annotation; independent review pending."
+      }
+    ],
+    "voiceChanges": [
+      {
+        "id": "interview-0305-scene-turn",
+        "previousSpeaker": "P03",
+        "nextSpeaker": "P12",
+        "previousSpeechEndSample": 304000,
+        "nextSpeechStartSample": 320000,
+        "kind": "shortGap",
+        "overlapRange": null,
+        "acceptableBreakRange": [
+          304000,
+          320000
+        ],
+        "expectedJapaneseBefore": "あんまり他の国にはないかなっていう。",
+        "expectedJapaneseAfter": "アニメ文化。"
+      }
+    ],
+    "negativeRanges": []
+  }
+}

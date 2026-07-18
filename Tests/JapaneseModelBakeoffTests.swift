@@ -276,6 +276,8 @@ private struct JapaneseBakeoffFullReport: Codable {
     let schemaVersion: Int
     let corpusID: String
     let corpusSHA256: String
+    let corpusAnnotationStatus: String
+    let promotionEligibleReference: Bool
     let generatedAt: String
     let scope: String
     let selectedTurnIDs: [Int]
@@ -391,10 +393,11 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         let artifacts = blindArtifacts(
             corpusID: "fixture",
             scope: "unit",
+            seed: "unit-secret",
             reports: JapaneseBakeoffEngine.allCases.map { engine in
                 JapaneseBakeoffEngineReport(
                     engine: engine,
-                    status: "complete",
+                    status: "execution-complete",
                     setupError: nil,
                     primaryHighConfidenceCER: high,
                     diagnosticMediumConfidenceCER: medium,
@@ -429,24 +432,33 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         }
 
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let corpusURL = URL(
-            fileURLWithPath: environment["WHISPERASR_JAPANESE_BAKEOFF_CORPUS"]
+        let manifestURL = URL(
+            fileURLWithPath: environment["WHISPERASR_JAPANESE_BENCHMARK_MANIFEST"]
                 ?? root.appendingPathComponent(
-                    ".build/benchmarks/corpora/easy-japanese-1"
+                    "docs/japanese-live/corpora/easy-japanese-1/manifest.json"
                 ).path
         ).standardizedFileURL
-        let manifestURL = corpusURL.appendingPathComponent("manifest.json")
         let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
-        let wavURL = corpusURL.appendingPathComponent("audio-16k-mono.wav")
-        XCTAssertEqual(try sha256(wavURL), manifest.fixture.sha256)
+        let wavURL = try JapaneseBenchmarkSupport.fixtureURL(
+            for: manifest,
+            workspaceRoot: root
+        )
+        XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: wavURL), manifest.fixture.sha256)
         let samples = try await AudioLoader.loadSamples(url: wavURL)
         XCTAssertEqual(samples.count, manifest.fixture.sampleCount)
         XCTAssertEqual(manifest.fixture.sampleRate, 16_000)
 
         let scope = environment["WHISPERASR_JAPANESE_BAKEOFF_SCOPE"] ?? "full"
-        let selectedIDs = selectedTurnIDs(environment: environment, scope: scope)
+        let selectedIDs = selectedTurnIDs(
+            environment: environment,
+            scope: scope,
+            turns: manifest.annotations.turns
+        )
         let selectedTurns = manifest.annotations.turns.filter { selectedIDs.contains($0.id) }
-        XCTAssertEqual(selectedTurns.count, selectedIDs.count)
+        guard !selectedTurns.isEmpty, selectedTurns.count == selectedIDs.count else {
+            XCTFail("The selected corpus has no complete set of scorable turns.")
+            return
+        }
         XCTAssertTrue(selectedTurns.allSatisfy { $0.endSample <= samples.count })
 
         let translation = try await optionalAppleTranslation(environment: environment)
@@ -482,10 +494,14 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             schemaVersion: 1,
             corpusID: manifest.corpusID,
             corpusSHA256: manifest.fixture.sha256,
+            corpusAnnotationStatus: manifest.annotations.status.rawValue,
+            promotionEligibleReference: manifest.annotations.status == .complete,
             generatedAt: ISO8601DateFormatter().string(from: Date()),
             scope: scope,
             selectedTurnIDs: selectedTurns.map(\.id),
-            boundaryMode: "human-reference-turns",
+            boundaryMode: manifest.annotations.status == .complete
+                ? "human-reference-turns"
+                : "exploratory-unverified-turns",
             productionBoundaryStatus: "not-reproduced",
             productionBoundaryNote: "Production boundaries depend on AppState's continuous VoxtralClausePlanner, VAD, preview scheduler and optional diarization state. Recreating them turn-by-turn here would be a false simulation; use the existing real-time replay reports for that pass.",
             appleHighFidelityEnabled: translation != nil,
@@ -495,19 +511,21 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         let artifacts = blindArtifacts(
             corpusID: manifest.corpusID,
             scope: scope,
+            seed: UUID().uuidString,
             reports: engineReports
         )
         try writeBakeoffArtifacts(
             report: report,
             blind: artifacts.report,
             key: artifacts.key,
+            corpusID: manifest.corpusID,
             scope: scope,
             root: root
         )
 
         let failures = engineReports.flatMap { engine -> [String] in
             var result: [String] = []
-            if engine.status != "complete" {
+            if engine.status != "execution-complete" {
                 result.append("\(engine.engine.rawValue): \(engine.setupError ?? engine.status)")
             }
             result += engine.turns.compactMap { turn in
@@ -535,8 +553,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         let speakersURL = outputURL.appendingPathComponent("speakers.srt")
         let wavURL = outputURL.appendingPathComponent("audio-16k-mono.wav")
 
-        let videoSHA = try sha256(videoURL)
-        let archiveSHA = try sha256(archiveURL)
+        let videoSHA = try JapaneseBenchmarkSupport.sha256(at: videoURL)
+        let archiveSHA = try JapaneseBenchmarkSupport.sha256(at: archiveURL)
         XCTAssertEqual(
             videoSHA,
             "6b6fee800edaf8fe5ffea029f673b37e04b648cd24aaa779c1c53dc9446b2667"
@@ -604,53 +622,23 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         XCTAssertEqual(speakerChanges, 57)
         XCTAssertEqual(annotatedSamples, 4_111_760)
 
-        let manifest = JapaneseBenchmarkManifest(
-            schemaVersion: 1,
-            corpusID: "easy-japanese-1",
-            source: .init(
-                videoPath: videoURL.path,
-                videoSHA256: videoSHA,
-                transcriptArchivePath: archiveURL.path,
-                transcriptArchiveSHA256: archiveSHA,
-                turnsCSVSHA256: digest(turnsData),
-                detailedCSVSHA256: digest(detailedData),
-                speakersSRTSHA256: digest(speakersData)
-            ),
-            fixture: .init(
-                path: ".build/benchmarks/corpora/easy-japanese-1/audio-16k-mono.wav",
-                sha256: digest(wavData),
-                sampleRate: 16_000,
-                channelCount: 1,
-                sampleFormat: "pcm_s16le",
-                sampleCount: samples.count
-            ),
-            annotations: .init(
-                turnCount: turns.count,
-                detailedFragmentCount: detailedRecords.count,
-                speakerCount: speakerCount,
-                speakerChangeCount: speakerChanges,
-                highConfidenceTurnCount: highCount,
-                mediumConfidenceTurnCount: mediumCount,
-                annotatedSampleCount: annotatedSamples,
-                turns: turns
-            )
-        )
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        try encoder.encode(manifest).write(
-            to: outputURL.appendingPathComponent("manifest.json"),
-            options: .atomic
+        XCTAssertEqual(
+            digest(wavData),
+            "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c"
         )
     }
 
     private func selectedTurnIDs(
         environment: [String: String],
-        scope: String
+        scope: String,
+        turns: [JapaneseBenchmarkManifest.Turn]
     ) -> Set<Int> {
         if let raw = environment["WHISPERASR_JAPANESE_BAKEOFF_TURN_IDS"] {
             return Set(raw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) })
         }
-        return scope == "smoke" ? Set([3, 4, 6, 7]) : Set(1...59)
+        return scope == "smoke"
+            ? Set(turns.prefix(4).map(\.id))
+            : Set(turns.map(\.id))
     }
 
     private func requestedVoxtralConfiguration(
@@ -900,7 +888,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         } else if turns.count != expectedTurnCount || asrFailures > 0 || translationFailures > 0 {
             status = "partial"
         } else {
-            status = "complete"
+            status = "execution-complete"
         }
         let asr = turns.filter { $0.asrError == nil }.map(\.asrMilliseconds)
         let translations = turns.compactMap(\.appleHighFidelityMilliseconds)
@@ -1003,6 +991,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     private func blindArtifacts(
         corpusID: String,
         scope: String,
+        seed: String,
         reports: [JapaneseBakeoffEngineReport]
     ) -> (report: JapaneseBakeoffBlindReport, key: [String: String]) {
         let engines = JapaneseBakeoffEngine.allCases
@@ -1014,8 +1003,18 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 report.turns.first { $0.turnID == turnID }
             }
             guard let reference = available.first else { return nil }
-            let candidates = engines.indices.compactMap { aliasIndex -> JapaneseBakeoffBlindCandidate? in
-                let engine = engines[(aliasIndex + turnID) % engines.count]
+            let availableEngines = JapaneseBenchmarkSupport.blindOrder(
+                engines.filter { engine in
+                    reportsByEngine[engine]?.turns.contains(where: {
+                        $0.turnID == turnID
+                    }) == true
+                },
+                seed: seed,
+                itemID: turnID,
+                identity: { $0.rawValue }
+            )
+            let candidates = availableEngines.enumerated().compactMap {
+                aliasIndex, engine -> JapaneseBakeoffBlindCandidate? in
                 guard let turn = reportsByEngine[engine]?.turns.first(where: {
                     $0.turnID == turnID
                 }) else { return nil }
@@ -1039,7 +1038,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 schemaVersion: 1,
                 corpusID: corpusID,
                 scope: scope,
-                note: "Aliases are rotated independently for each turn. English is present only when WHISPERASR_JAPANESE_BAKEOFF_APPLE=1.",
+                note: "Aliases are randomized independently for each turn with a secret stored only in the separate key. English is present only when WHISPERASR_JAPANESE_BAKEOFF_APPLE=1.",
                 items: items
             ),
             key
@@ -1050,13 +1049,14 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         report: JapaneseBakeoffFullReport,
         blind: JapaneseBakeoffBlindReport,
         key: [String: String],
+        corpusID: String,
         scope: String,
         root: URL
     ) throws {
         let output = root.appendingPathComponent(".build/benchmarks", isDirectory: true)
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
         let safeScope = scope.replacingOccurrences(of: "/", with: "-")
-        let stem = "easy-japanese-1-asr-bakeoff-\(safeScope)"
+        let stem = "\(corpusID)-asr-bakeoff-\(safeScope)"
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let artifacts: [(String, Data)] = [
@@ -1099,14 +1099,12 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         return JapaneseBenchmarkManifest.Turn(
             id: id,
             speaker: try required(record["locuteur"], field: "locuteur"),
-            speakerDescription: try required(
-                record["description_locuteur"],
-                field: "description_locuteur"
-            ),
             startSample: start,
             endSample: end,
             japanese: try required(record["japonais"], field: "japonais"),
+            english: nil,
             confidence: confidence,
+            criticalTerms: [],
             note: note
         )
     }
@@ -1148,6 +1146,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             switch try confidence(record["confiance"]) {
             case .high: high += 1
             case .medium: medium += 1
+            case .unverified:
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Detailed CSV cannot contain unverified confidence."
+                )
             }
             previousEnd = end
         }
@@ -1183,16 +1185,6 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             throw JapaneseBenchmarkCSV.ParseError.malformed("Missing \(field).")
         }
         return value
-    }
-
-    private func sha256(_ url: URL) throws -> String {
-        let handle = try FileHandle(forReadingFrom: url)
-        defer { try? handle.close() }
-        var hasher = SHA256()
-        while let data = try handle.read(upToCount: 1_048_576), !data.isEmpty {
-            hasher.update(data: data)
-        }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     private func digest(_ data: Data) -> String {

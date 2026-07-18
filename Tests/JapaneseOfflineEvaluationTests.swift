@@ -1012,10 +1012,12 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             throw XCTSkip("Run Scripts/run_japanese_offline_evaluation.sh with a benchmark session sidecar.")
         }
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let corpus = URL(fileURLWithPath: environment["WHISPERASR_JAPANESE_OFFLINE_CORPUS"]
-            ?? root.appendingPathComponent(".build/benchmarks/corpora/easy-japanese-1").path)
-        let manifestURL = corpus.appendingPathComponent("manifest.json")
-        let canonicalURL = corpus.appendingPathComponent("audio-16k-mono.wav")
+        let manifestURL = URL(
+            fileURLWithPath: environment["WHISPERASR_JAPANESE_BENCHMARK_MANIFEST"]
+                ?? root.appendingPathComponent(
+                    "docs/japanese-live/corpora/easy-japanese-1/manifest.json"
+                ).path
+        )
         let sessionURL = URL(fileURLWithPath: sessionPath).standardizedFileURL
         let session = try JSONDecoder().decode(
             SessionReport.self, from: Data(contentsOf: sessionURL)
@@ -1035,17 +1037,21 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             throw inputError("Benchmark session has no canonical ScreenCaptureKit PCM proof.")
         }
         let firefoxURL = try siblingArtifact(named: canonicalPCMFile, beside: sessionURL)
-        guard try sha256(metricsURL) == session.metricsSHA256,
-              try sha256(firefoxURL) == canonicalPCMSHA256 else {
+        guard try JapaneseBenchmarkSupport.sha256(at: metricsURL) == session.metricsSHA256,
+              try JapaneseBenchmarkSupport.sha256(at: firefoxURL) == canonicalPCMSHA256 else {
             throw inputError("Benchmark artifacts no longer match their session sidecar.")
         }
         let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
+        let canonicalURL = try JapaneseBenchmarkSupport.fixtureURL(
+            for: manifest,
+            workspaceRoot: root
+        )
         guard manifest.annotations.turns.count == 59,
               manifest.annotations.turns.filter({ $0.confidence == .high }).count == 46,
               manifest.annotations.turns.filter({ $0.confidence != .high }).count == 13 else {
             throw inputError("Expected the reviewed 59-turn corpus (46 primary + 13 diagnostic).")
         }
-        guard try sha256(canonicalURL) == manifest.fixture.sha256 else {
+        guard try JapaneseBenchmarkSupport.sha256(at: canonicalURL) == manifest.fixture.sha256 else {
             throw inputError("Canonical WAV no longer matches its manifest.")
         }
         let canonical = try await AudioLoader.loadSamples(url: canonicalURL)
@@ -1167,7 +1173,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         )
         let blind = blindArtifacts(
             corpusID: manifest.corpusID,
-            seed: provenance.metrics.sha256,
+            seed: UUID().uuidString,
             provenance: provenance,
             coverage: reviewCoverage,
             groups: reviewGroups
@@ -1284,7 +1290,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             BlindReport(
                 schemaVersion: 2,
                 corpusID: corpusID,
-                note: "Candidate identities are pseudo-randomized independently per source-aware item from the metrics SHA. Judge fidelity and subtitle naturalness separately without opening the key. A caption crossing turns is repeated in every affected item; newlines separate fragments. High-confidence turns are primary; the other turns are diagnostics only.",
+                note: "Candidate identities are randomized independently per source-aware item with a secret stored only in the separate key. Judge fidelity and subtitle naturalness separately without opening the key. A caption crossing turns is repeated in every affected item; newlines separate fragments. High-confidence turns are primary; the other turns are diagnostics only.",
                 provenance: provenance,
                 coverage: coverage,
                 items: items
@@ -1322,7 +1328,10 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
     }
 
     private func identity(_ url: URL) throws -> Identity {
-        Identity(fileName: url.lastPathComponent, sha256: try sha256(url))
+        Identity(
+            fileName: url.lastPathComponent,
+            sha256: try JapaneseBenchmarkSupport.sha256(at: url)
+        )
     }
 
     private func siblingArtifact(named name: String, beside sessionURL: URL) throws -> URL {
@@ -1336,10 +1345,6 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             throw inputError("Missing benchmark artifact: \(name)")
         }
         return url
-    }
-
-    private func sha256(_ url: URL) throws -> String {
-        digest(try Data(contentsOf: url, options: .mappedIfSafe))
     }
 
     private func digest(_ data: Data) -> String {
