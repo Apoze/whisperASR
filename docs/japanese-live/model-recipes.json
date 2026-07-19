@@ -10,6 +10,9 @@
     "productEndpoint": {
       "detector": "aufklarer/FireRedVAD-CoreML",
       "revision": "1cb0565191fbdc630c2fe8f111ba31c392d05706",
+      "coreMLWeightsSHA256": "3e33ae44922bcdaf668d4b18b16fc0e29acec582be810d6a5d58fc56cd27e81d",
+      "configSHA256": "e6a9858564115fbb152c6b61111af5f2723e4a0e851d2064e9f36200a345a9f7",
+      "cmvnSHA256": "62bcb8c5a3150391a21553b8bddbb0f37431650afe1b8610651080063ccda931",
       "preRollSamples": 4000,
       "postRollSamples": 8000,
       "minimumBatchSamples": 24000,
@@ -44,7 +47,8 @@
         "task": "transcribe",
         "temperature": 0,
         "conditionOnPreviousText": false,
-        "decoder": "greedy"
+        "decoder": "greedy-or-beam5",
+        "decoderCalibration": "easy-japanese-decoder-calibration; beam5 only if CER improves >=1 point and p95 <=1500ms"
       }
     },
     {
@@ -73,7 +77,8 @@
         "task": "transcribe",
         "temperature": 0,
         "conditionOnPreviousText": false,
-        "decoder": "greedy"
+        "decoder": "greedy-or-beam5",
+        "decoderCalibration": "easy-japanese-decoder-calibration; beam5 only if CER improves >=1 point and p95 <=1500ms"
       }
     },
     {
@@ -213,7 +218,8 @@
         "conditionOnPreviousText": false,
         "withoutTimestamps": true,
         "wordTimestamps": false,
-        "decoder": "greedy"
+        "decoder": "greedy-or-beam5",
+        "decoderCalibration": "easy-japanese-decoder-calibration; beam5 only if CER improves >=1 point and p95 <=1500ms"
       }
     },
     {

@@ -1481,79 +1481,14 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
         samples: [Float],
         manager: LocalEnglishModelManager
     ) async throws -> [CanonicalBenchmarkPassage] {
-        var planner = LocalEndpointPlanner()
-        var passages: [CanonicalBenchmarkPassage] = []
-        let frame = 1_600
-        let vadWindow = 48_000
-        var total = 0
-
-        while total < samples.count {
-            total = min(samples.count, total + frame)
-            let windowStart = max(0, total - vadWindow)
-            let speech = try await manager.detectSpeech(
-                audio: Array(samples[windowStart..<total]),
-                windowStart: windowStart
-            )
-            if let decision = planner.observe(totalSample: total, speech: speech) {
-                passages.append(CanonicalBenchmarkPassage(
-                    id: passages.count + 1,
-                    startSample: decision.audioStart,
-                    endSample: decision.audioEnd
-                ))
-                planner.stage(decision)
-                planner.accept(decision)
-            }
-        }
-
-        let tailStart = max(0, samples.count - vadWindow)
-        let tailSpeech = try await manager.detectSpeech(
-            audio: Array(samples[tailStart..<samples.count]),
-            windowStart: tailStart
-        )
-        if let decision = planner.observe(
-            totalSample: samples.count,
-            speech: tailSpeech,
-            finishing: true
-        ) {
-            passages.append(CanonicalBenchmarkPassage(
-                id: passages.count + 1,
-                startSample: decision.audioStart,
-                endSample: decision.audioEnd
-            ))
-        }
-        return mergeShortPassages(passages)
-    }
-
-    private func mergeShortPassages(
-        _ passages: [CanonicalBenchmarkPassage]
-    ) -> [CanonicalBenchmarkPassage] {
-        var result: [CanonicalBenchmarkPassage] = []
-        for passage in passages {
-            if let previous = result.last {
-                let previousDuration = previous.endSample - previous.startSample
-                let duration = passage.endSample - passage.startSample
-                let combinedDuration = passage.endSample - previous.startSample
-                if (previousDuration < 48_000 || duration < 48_000),
-                   combinedDuration <= 16_000 * 16 {
-                    result[result.count - 1] = CanonicalBenchmarkPassage(
-                        id: previous.id,
-                        startSample: previous.startSample,
-                        endSample: passage.endSample
-                    )
-                    continue
-                }
-            }
-            result.append(CanonicalBenchmarkPassage(
-                id: result.count + 1,
-                startSample: passage.startSample,
-                endSample: passage.endSample
-            ))
-        }
-        return result.enumerated().map {
+        try await JapaneseBenchmarkSupport.productEndpointRanges(
+            samples: samples,
+            manager: manager
+        ).enumerated().map {
             CanonicalBenchmarkPassage(
                 id: $0.offset + 1,
-                startSample: $0.element.startSample,
-                endSample: $0.element.endSample
+                startSample: $0.element.lowerBound,
+                endSample: $0.element.upperBound
             )
         }
     }

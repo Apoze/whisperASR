@@ -121,6 +121,111 @@ enum JapaneseCER {
 }
 
 enum JapaneseBenchmarkSupport {
+    struct StressWindow: Codable, Equatable, Sendable {
+        let id: String
+        let corpusID: String
+        let startSample: Int
+        let endSample: Int
+
+        var sampleCount: Int { endSample - startSample }
+    }
+
+    struct LastSpeechEvidence: Codable, Equatable, Sendable {
+        let turnID: Int
+        let referenceJapanese: String
+        let observedJapanese: String
+        let observationScope: String
+        let matchedReferenceCharacters: Int
+        let referenceCharacterCount: Int
+        let referenceCoveragePercent: Double
+        let heuristicPresent: Bool
+    }
+
+    static let correctiveStressWindows = [
+        StressWindow(
+            id: "qudu-fast-1",
+            corpusID: "qudu2fx3ncc",
+            startSample: 11_440_000,
+            endSample: 13_160_000
+        ),
+        StressWindow(
+            id: "qudu-fast-2",
+            corpusID: "qudu2fx3ncc",
+            startSample: 14_388_800,
+            endSample: 15_061_440
+        ),
+        StressWindow(
+            id: "md62-dialogue-1",
+            corpusID: "md62mmdz0m",
+            startSample: 7_008_640,
+            endSample: 8_788_320
+        ),
+        StressWindow(
+            id: "md62-dialogue-2",
+            corpusID: "md62mmdz0m",
+            startSample: 13_412_960,
+            endSample: 14_041_920
+        ),
+    ]
+
+    static func referenceTurns(
+        manifest: Manifest,
+        window: StressWindow
+    ) -> [ManyToManyTurnScorer.Turn] {
+        manifest.annotations.turns.compactMap { turn in
+            let start = max(turn.startSample, window.startSample)
+            let end = min(turn.endSample, window.endSample)
+            guard start < end else { return nil }
+            return ManyToManyTurnScorer.Turn(
+                id: turn.id,
+                confidence: turn.confidence.rawValue,
+                startSample: start,
+                endSample: end,
+                japanese: turn.japanese,
+                overlap: turn.overlap ?? false
+            )
+        }
+    }
+
+    static func lastSpeechEvidence(
+        turn: ManyToManyTurnScorer.Turn,
+        fragments: [ManyToManyTurnScorer.Fragment]
+    ) -> LastSpeechEvidence {
+        let observed = fragments.filter {
+            max($0.startSample, turn.startSample) < min($0.endSample, turn.endSample)
+        }.map(\.text).joined()
+        let referenceCharacters = JapaneseCER.normalized(turn.japanese)
+        let allObservedCharacters = JapaneseCER.normalized(observed)
+        let suffixLimit = max(40, referenceCharacters.count * 3)
+        let observedCharacters = Array(allObservedCharacters.suffix(suffixLimit))
+        var previous = Array(repeating: 0, count: observedCharacters.count + 1)
+        for reference in referenceCharacters {
+            var current = Array(repeating: 0, count: observedCharacters.count + 1)
+            for (index, hypothesis) in observedCharacters.enumerated() {
+                current[index + 1] = reference == hypothesis
+                    ? previous[index] + 1
+                    : max(previous[index + 1], current[index])
+            }
+            previous = current
+        }
+        let matched = previous.last ?? 0
+        let coverage = referenceCharacters.isEmpty
+            ? 0 : 100 * Double(matched) / Double(referenceCharacters.count)
+        let present = referenceCharacters.count <= 4
+            ? matched == referenceCharacters.count && matched > 0
+            : matched >= 3 && coverage >= 60
+        return LastSpeechEvidence(
+            turnID: turn.id,
+            referenceJapanese: turn.japanese,
+            observedJapanese: String(observedCharacters),
+            observationScope: "normalized-final-suffix-max(40,3x-reference)",
+            matchedReferenceCharacters: matched,
+            referenceCharacterCount: referenceCharacters.count,
+            referenceCoveragePercent: coverage,
+            heuristicPresent: present
+        )
+    }
+
     struct Manifest: Codable {
         enum Purpose: String, Codable {
             case development
@@ -474,6 +579,72 @@ enum JapaneseBenchmarkSupport {
             hasher.update(data: Data([0xFF]))
         }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Runs the exact FireRedVAD + endpoint planner used by the product. The
+    /// returned ranges are relative to `samples` and can be shared by every
+    /// phrase-based candidate without exposing reference turn boundaries.
+    @MainActor
+    static func productEndpointRanges(
+        samples: [Float],
+        manager: LocalEnglishModelManager
+    ) async throws -> [Range<Int>] {
+        let decisions = try await productEndpointDecisions(samples: samples, manager: manager)
+        return mergeShortEndpointRanges(decisions.map { $0.audioStart..<$0.audioEnd })
+    }
+
+    @MainActor
+    static func productEndpointDecisions(
+        samples: [Float],
+        manager: LocalEnglishModelManager
+    ) async throws -> [LocalEndpointDecision] {
+        var planner = LocalEndpointPlanner()
+        var decisions: [LocalEndpointDecision] = []
+        let frameSamples = 1_600
+        let vadWindowSamples = 48_000
+        var totalSamples = 0
+
+        while totalSamples < samples.count {
+            totalSamples = min(samples.count, totalSamples + frameSamples)
+            let windowStart = max(0, totalSamples - vadWindowSamples)
+            let speech = try await manager.detectSpeech(
+                audio: Array(samples[windowStart..<totalSamples]),
+                windowStart: windowStart
+            )
+            if let decision = planner.observe(totalSample: totalSamples, speech: speech) {
+                decisions.append(decision)
+                planner.stage(decision)
+                planner.accept(decision)
+            }
+        }
+
+        let tailStart = max(0, samples.count - vadWindowSamples)
+        let tailSpeech = try await manager.detectSpeech(
+            audio: Array(samples[tailStart..<samples.count]),
+            windowStart: tailStart
+        )
+        if let decision = planner.observe(
+            totalSample: samples.count,
+            speech: tailSpeech,
+            finishing: true
+        ) {
+            decisions.append(decision)
+        }
+        return decisions
+    }
+
+    private static func mergeShortEndpointRanges(_ ranges: [Range<Int>]) -> [Range<Int>] {
+        var result: [Range<Int>] = []
+        for range in ranges {
+            if let previous = result.last,
+               (previous.count < 48_000 || range.count < 48_000),
+               range.upperBound - previous.lowerBound <= 256_000 {
+                result[result.count - 1] = previous.lowerBound..<range.upperBound
+            } else {
+                result.append(range)
+            }
+        }
+        return result
     }
 
     static func blindOrder<Element>(

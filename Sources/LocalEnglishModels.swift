@@ -1,4 +1,5 @@
 import Darwin
+import AudioCommon
 import Foundation
 import MLX
 import MLXAudioSTT
@@ -88,8 +89,15 @@ private actor FireRedVADRuntime {
             modelID: PrototypeModelID.fireRed,
             expectedRevision: PrototypeModelID.fireRedRevision
         )
+        let cache = try HuggingFaceDownloader.getCacheDirectory(
+            for: PrototypeModelID.fireRed
+        )
         let loaded = try await FireRedVADModel.fromPretrained(
-            modelId: PrototypeModelID.fireRed
+            modelId: PrototypeModelID.fireRed,
+            cacheDir: cache,
+            // A complete local bundle must never trigger a metadata request.
+            // Missing assets still follow the normal first-install download.
+            offlineMode: HuggingFaceDownloader.weightsExist(in: cache)
         ) { fraction, message in
             progress(fraction, "FireRedVAD: \(message)")
         }
@@ -122,8 +130,13 @@ private actor QwenRuntime {
             modelID: PrototypeModelID.qwen,
             expectedRevision: PrototypeModelID.qwenRevision
         )
+        let cache = try HuggingFaceDownloader.getCacheDirectory(
+            for: PrototypeModelID.qwen
+        )
         let loaded = try await Qwen3ASR.Qwen3ASRModel.fromPretrained(
             modelId: PrototypeModelID.qwen,
+            cacheDir: cache,
+            offlineMode: HuggingFaceDownloader.weightsExist(in: cache),
             progressHandler: progress
         )
         _ = loaded.transcribe(

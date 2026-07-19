@@ -454,7 +454,7 @@ enum ContinuousJapaneseCER {
     ) -> Result? {
         let orderedTurns = turns.sorted { $0.startSample < $1.startSample }
         let orderedFragments = finalSourceFragments.sorted { $0.startSample < $1.startSample }
-        guard !orderedTurns.isEmpty, !orderedFragments.isEmpty,
+        guard !orderedTurns.isEmpty,
               orderedFragments.allSatisfy({ !$0.text.trimmingCharacters(
                 in: .whitespacesAndNewlines
               ).isEmpty }) else { return nil }
@@ -472,7 +472,7 @@ enum ContinuousJapaneseCER {
         }
         let hypothesisText = orderedFragments.map(\.text).joined()
         let hypothesis = JapaneseCER.normalized(hypothesisText)
-        guard !reference.isEmpty, !hypothesis.isEmpty else { return nil }
+        guard !reference.isEmpty else { return nil }
 
         var matrix = Array(
             repeating: Array(repeating: 0, count: hypothesis.count + 1),
@@ -723,15 +723,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let allRuntimeSLOsPass: Bool
     }
 
-    private struct LastSpeechEvidence: Codable {
-        let turnID: Int
-        let referenceJapanese: String
-        let observedJapanese: String
-        let matchedReferenceCharacters: Int
-        let referenceCharacterCount: Int
-        let referenceCoveragePercent: Double
-        let heuristicPresent: Bool
-    }
+    private typealias LastSpeechEvidence = JapaneseBenchmarkSupport.LastSpeechEvidence
 
     private struct BlindCandidate: Codable {
         let alias: String
@@ -1025,7 +1017,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         XCTAssertEqual(result.diagnostic.rateUpperBound, 1)
     }
 
-    func testContinuousJapaneseCERCountsUnmatchedSourceAndRejectsMissingSource() throws {
+    func testContinuousJapaneseCERCountsUnmatchedAndEmptySource() throws {
         let turns = [ManyToManyTurnScorer.Turn(
             id: 1, confidence: "high", startSample: 0, endSample: 100,
             japanese: "あ"
@@ -1038,10 +1030,15 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             finalSourceFragments: [unmatched]
         ))
         XCTAssertEqual(result.overall.editDistance, 1)
-        XCTAssertNil(ContinuousJapaneseCER.score(
+        let empty = try XCTUnwrap(ContinuousJapaneseCER.score(
             turns: turns,
             finalSourceFragments: []
         ))
+        XCTAssertEqual(empty.overall.editDistance, 1)
+        XCTAssertEqual(empty.overall.hypothesisCharacterCount, 0)
+        XCTAssertEqual(empty.highConfidence.deletions, 1)
+        XCTAssertEqual(empty.highConfidence.rateLowerBound, 1)
+        XCTAssertEqual(empty.highConfidence.rateUpperBound, 1)
     }
 
     func testMultiAnchorAlignmentRejectsDriftBeyond20Milliseconds() {
@@ -1539,33 +1536,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         turn: ManyToManyTurnScorer.Turn,
         fragments: [ManyToManyTurnScorer.Fragment]
     ) -> LastSpeechEvidence {
-        let observed = fragments.filter {
-            max($0.startSample, turn.startSample) < min($0.endSample, turn.endSample)
-        }.map(\.text).joined()
-        let referenceCharacters = JapaneseCER.normalized(turn.japanese)
-        let observedCharacters = JapaneseCER.normalized(observed)
-        var previous = Array(repeating: 0, count: observedCharacters.count + 1)
-        for reference in referenceCharacters {
-            var current = Array(repeating: 0, count: observedCharacters.count + 1)
-            for (index, hypothesis) in observedCharacters.enumerated() {
-                current[index + 1] = reference == hypothesis
-                    ? previous[index] + 1
-                    : max(previous[index + 1], current[index])
-            }
-            previous = current
-        }
-        let matched = previous.last ?? 0
-        let coverage = referenceCharacters.isEmpty
-            ? 0 : 100 * Double(matched) / Double(referenceCharacters.count)
-        return LastSpeechEvidence(
-            turnID: turn.id,
-            referenceJapanese: turn.japanese,
-            observedJapanese: observed,
-            matchedReferenceCharacters: matched,
-            referenceCharacterCount: referenceCharacters.count,
-            referenceCoveragePercent: coverage,
-            heuristicPresent: coverage >= 50
-        )
+        JapaneseBenchmarkSupport.lastSpeechEvidence(turn: turn, fragments: fragments)
     }
 
     private func finalSegmentIndicesProveAppendOnly(_ indices: [Int?]) -> Bool {

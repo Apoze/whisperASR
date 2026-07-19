@@ -32,7 +32,7 @@ Figer une recette reproductible et adaptée au rôle réel de chaque candidat av
 
 ## Preuves
 
-Le manifeste a le SHA-256 `64e1b57d07bea60386f3d1605d6994ce559d08e70eefa6a2269ec76743e6c2be`. Le test opt-in a vérifié les fichiers et arbres locaux de Whisper, Kotoba, Voxtral, Nemotron, Qwen, MLX et WhisperLiveKit. La suite standard passe : 239 tests, 26 opt-in ignorés, aucun échec.
+Le manifeste L7A avait le SHA-256 `64e1b57d07bea60386f3d1605d6994ce559d08e70eefa6a2269ec76743e6c2be`. L7B l'étend sous une nouvelle empreinte pour épingler les assets FireRedVAD et tracer le calibrage de décodage; l'ancienne empreinte reste ici la preuve historique de L7A. Le test opt-in a vérifié les fichiers et arbres locaux de Whisper, Kotoba, Voxtral, Nemotron, Qwen, MLX et WhisperLiveKit. La suite standard passe : 239 tests, 26 opt-in ignorés, aucun échec.
 
 ## Décision
 

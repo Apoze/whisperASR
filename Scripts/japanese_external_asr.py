@@ -44,21 +44,46 @@ def seed_inference(corpus_id: str, turn_id: int) -> None:
     mx.random.seed(seed)
 
 
-def direct_mlx(model_path: str):
+def public_segments(segments: list[dict]) -> list[dict]:
+    return [
+        {
+            "id": int(segment.get("id", index)),
+            "start": float(segment.get("start", 0)),
+            "end": float(segment.get("end", 0)),
+            "text": str(segment.get("text", "")).strip(),
+        }
+        for index, segment in enumerate(segments)
+    ]
+
+
+def direct_mlx(model_path: str, decoder: str):
     if importlib.metadata.version("mlx-whisper") != "0.4.3":
         raise RuntimeError("mlx-whisper must be exactly 0.4.3")
     import mlx_whisper
 
-    def transcribe(audio: np.ndarray) -> tuple[str, int]:
+    if decoder not in {"greedy", "beam5"}:
+        raise ValueError(f"Unsupported mlx-whisper decoder: {decoder}")
+
+    def transcribe(audio: np.ndarray) -> tuple[str, int, list[dict]]:
+        decode_options = {"without_timestamps": True}
+        if decoder == "beam5":
+            decode_options["beam_size"] = 5
         result = mlx_whisper.transcribe(
             audio,
             path_or_hf_repo=model_path,
             language="ja",
             task="transcribe",
+            temperature=0.0,
+            condition_on_previous_text=False,
             word_timestamps=False,
             verbose=None,
+            **decode_options,
         )
-        return result.get("text", "").strip(), int(audio.size)
+        return (
+            result.get("text", "").strip(),
+            int(audio.size),
+            public_segments(result.get("segments", [])),
+        )
 
     return transcribe
 
@@ -93,13 +118,17 @@ def whispermlx(model_path: str, silero_path: str):
 
     import mlx_whisper
 
-    def transcribe(audio: np.ndarray) -> tuple[str, int]:
+    def transcribe(audio: np.ndarray) -> tuple[str, int, list[dict]]:
         original_transcribe = mlx_whisper.transcribe
         fed_samples = 0
 
         def measured_transcribe(chunk, *args, **kwargs):
             nonlocal fed_samples
             fed_samples += int(np.asarray(chunk).size)
+            kwargs["temperature"] = 0.0
+            kwargs["condition_on_previous_text"] = False
+            kwargs["word_timestamps"] = False
+            kwargs["without_timestamps"] = True
             return original_transcribe(chunk, *args, **kwargs)
 
         mlx_whisper.transcribe = measured_transcribe
@@ -117,7 +146,7 @@ def whispermlx(model_path: str, silero_path: str):
         text = " ".join(
             segment.get("text", "").strip() for segment in result["segments"]
         ).strip()
-        return text, fed_samples
+        return text, fed_samples, public_segments(result["segments"])
 
     return transcribe
 
@@ -128,24 +157,32 @@ def main() -> int:
         return 2
     request_path, response_path = map(Path, sys.argv[1:])
     request = json.loads(request_path.read_text(encoding="utf-8"))
-    response: dict = {"setupError": None, "turns": []}
+    response: dict = {"setupError": None, "turns": [], "windows": []}
 
     try:
         backend = request["backend"]
         if backend == "mlx-whisper":
-            transcribe = direct_mlx(request["modelPath"])
+            transcribe = direct_mlx(request["modelPath"], request.get("decoder", "greedy"))
         elif backend == "whispermlx":
             transcribe = whispermlx(request["modelPath"], request["sileroPath"])
         else:
             raise ValueError(f"Unknown backend: {backend}")
 
-        corpora = [(corpus, load_pcm(corpus["audioPath"])) for corpus in request["corpora"]]
-        first_corpus, first_pcm = corpora[0]
-        first_turn = first_corpus["turns"][0]
-        seed_inference(first_corpus["corpusID"], first_turn["turnID"])
-        transcribe(first_pcm[first_turn["startSample"] : first_turn["endSample"]])
+        corpora = {
+            corpus["corpusID"]: (corpus, load_pcm(corpus["audioPath"]))
+            for corpus in request["corpora"]
+        }
+        if request.get("windows"):
+            first_item = request["windows"][0]
+            first_corpus, first_pcm = corpora[first_item["corpusID"]]
+            first_range = first_item.get("ranges", [first_item])[0]
+        else:
+            first_corpus, first_pcm = next(iter(corpora.values()))
+            first_range = first_corpus["turns"][0]
+        seed_inference(first_corpus["corpusID"], first_range.get("turnID", 0))
+        transcribe(first_pcm[first_range["startSample"] : first_range["endSample"]])
 
-        for corpus, pcm in corpora:
+        for corpus, pcm in corpora.values():
             for turn in corpus["turns"]:
                 audio = pcm[turn["startSample"] : turn["endSample"]]
                 seed_inference(corpus["corpusID"], turn["turnID"])
@@ -154,7 +191,7 @@ def main() -> int:
                 text = ""
                 fed_sample_count = 0
                 try:
-                    text, fed_sample_count = transcribe(audio)
+                    text, fed_sample_count, _ = transcribe(audio)
                 except Exception as exc:  # Keep later turns observable.
                     error = f"{type(exc).__name__}: {exc}"
                 elapsed_ms = (time.perf_counter_ns() - started) / 1_000_000
@@ -170,6 +207,74 @@ def main() -> int:
                         "error": error,
                     }
                 )
+
+        for window in request.get("windows", []):
+            _, pcm = corpora[window["corpusID"]]
+            window_audio = pcm[window["startSample"] : window["endSample"]]
+            seed_inference(window["corpusID"], window["seed"])
+            started = time.perf_counter_ns()
+            compute_ms = 0.0
+            fed_sample_count = 0
+            texts: list[str] = []
+            segments: list[dict] = []
+            range_results: list[dict] = []
+            error = None
+            try:
+                ranges = window.get("ranges")
+                if backend == "whispermlx":
+                    ranges = [{
+                        "startSample": window["startSample"],
+                        "endSample": window["endSample"],
+                    }]
+                for item_range in ranges:
+                    if window.get("realtime"):
+                        deadline = (
+                            item_range["endSample"] - window["startSample"]
+                        ) / 16_000
+                        elapsed = (time.perf_counter_ns() - started) / 1_000_000_000
+                        time.sleep(max(0.0, deadline - elapsed))
+                    audio = pcm[item_range["startSample"] : item_range["endSample"]]
+                    decode_started = time.perf_counter_ns()
+                    text, fed, item_segments = transcribe(audio)
+                    elapsed_ms = (time.perf_counter_ns() - decode_started) / 1_000_000
+                    compute_ms += elapsed_ms
+                    fed_sample_count += fed
+                    texts.append(text)
+                    segments.extend(item_segments)
+                    range_results.append({
+                        "startSample": item_range["startSample"],
+                        "endSample": item_range["endSample"],
+                        "hypothesisJapanese": text,
+                        "asrMilliseconds": elapsed_ms,
+                        "fedSampleCount": fed,
+                        "completedMilliseconds": (
+                            time.perf_counter_ns() - started
+                        ) / 1_000_000,
+                        "backlogMilliseconds": max(
+                            0.0,
+                            (time.perf_counter_ns() - started) / 1_000_000
+                            - (
+                                item_range["endSample"] - window["startSample"]
+                            ) / 16,
+                        ),
+                    })
+            except Exception as exc:  # Keep later windows observable.
+                error = f"{type(exc).__name__}: {exc}"
+            response["windows"].append({
+                "sessionID": window["sessionID"],
+                "corpusID": window["corpusID"],
+                "windowID": window["windowID"],
+                "replay": window["replay"],
+                "hypothesisJapanese": " ".join(filter(None, texts)).strip(),
+                "inputSampleCount": int(window_audio.size),
+                "fedSampleCount": fed_sample_count,
+                "asrMilliseconds": compute_ms,
+                "wallMilliseconds": (time.perf_counter_ns() - started) / 1_000_000,
+                "residentBytes": resident_bytes(),
+                "ranges": range_results,
+                "segments": segments,
+                "error": error,
+            })
     except Exception as exc:
         response["setupError"] = f"{type(exc).__name__}: {exc}"
 

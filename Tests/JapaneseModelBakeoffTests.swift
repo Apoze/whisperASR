@@ -361,10 +361,29 @@ private struct JapaneseExternalASRRequest: Codable {
         let turns: [Turn]
     }
 
+    struct Window: Codable {
+        struct AudioRange: Codable {
+            let startSample: Int
+            let endSample: Int
+        }
+
+        let sessionID: String
+        let corpusID: String
+        let windowID: String
+        let replay: Int
+        let seed: Int
+        let startSample: Int
+        let endSample: Int
+        let realtime: Bool
+        let ranges: [AudioRange]
+    }
+
     let backend: String
     let modelPath: String
     let sileroPath: String?
     let corpora: [Corpus]
+    var decoder: String? = nil
+    var windows: [Window]? = nil
 }
 
 private struct JapaneseExternalASRResponse: Codable {
@@ -379,8 +398,43 @@ private struct JapaneseExternalASRResponse: Codable {
         let error: String?
     }
 
+
+    struct Window: Codable {
+        struct AudioRange: Codable {
+            let startSample: Int
+            let endSample: Int
+            let hypothesisJapanese: String
+            let asrMilliseconds: Double
+            let fedSampleCount: Int
+            let completedMilliseconds: Double
+            let backlogMilliseconds: Double
+        }
+
+        struct Segment: Codable {
+            let id: Int
+            let start: Double
+            let end: Double
+            let text: String
+        }
+
+        let sessionID: String
+        let corpusID: String
+        let windowID: String
+        let replay: Int
+        let hypothesisJapanese: String
+        let inputSampleCount: Int
+        let fedSampleCount: Int
+        let asrMilliseconds: Double
+        let wallMilliseconds: Double
+        let residentBytes: UInt64
+        let ranges: [AudioRange]
+        let segments: [Segment]
+        let error: String?
+    }
+
     let setupError: String?
     let turns: [Turn]
+    var windows: [Window]? = nil
 }
 
 private struct JapaneseBakeoffBlindCandidate: Codable {
@@ -404,7 +458,164 @@ private struct JapaneseBakeoffBlindReport: Codable {
     let items: [JapaneseBakeoffBlindItem]
 }
 
+private struct JapaneseCorrectiveEndpoint: Codable, Sendable {
+    let kind: String
+    let startSample: Int
+    let endSample: Int
+    let speechEndSample: Int
+    let detectedAtSample: Int
+}
+
+private struct JapaneseCorrectiveFragment: Codable, Sendable {
+    let startSample: Int
+    let endSample: Int
+    let text: String
+    let asrMilliseconds: Double
+}
+
+private struct JapaneseCorrectiveCriticalTerms: Codable, Sendable {
+    let status: String
+    let annotatedCount: Int
+    let missing: [String]
+}
+
+private struct JapaneseCorrectiveSession: Codable, Sendable {
+    let recipeID: String
+    let effectiveDecoder: String
+    let effectiveRecipeSHA256: String
+    let corpusID: String
+    let windowID: String
+    let replay: Int
+    let windowStartSample: Int
+    let windowEndSample: Int
+    let expectedSampleCount: Int
+    let asrFedSampleCount: Int
+    let asrFinalizedThrough: Int
+    let endpointDecisionsSHA256: String
+    let endpoints: [JapaneseCorrectiveEndpoint]
+    let fragments: [JapaneseCorrectiveFragment]
+    let japaneseFinal: String
+    let normalizedFinalSHA256: String
+    let continuousCER: ContinuousJapaneseCER.Result?
+    let lastSpeech: JapaneseBenchmarkSupport.LastSpeechEvidence?
+    let criticalTerms: JapaneseCorrectiveCriticalTerms
+    let asrMilliseconds: [Double]
+    let finalLatencyMilliseconds: [Double]
+    let finalLatencyScope: String
+    let audioMilliseconds: Double
+    let completionAfterAudioEndMilliseconds: Double
+    let computeRTF: Double
+    let endToEndWallRTF: Double
+    let maximumBacklogMilliseconds: Double
+    let endingBacklogMilliseconds: Double
+    let maximumResidentBytes: UInt64?
+    let errors: [String]
+}
+
+private struct JapaneseCorrectiveCalibration: Codable, Sendable {
+    let recipeID: String
+    let corpusID: String
+    let windowID: String
+    let greedyCER: Double?
+    let beam5CER: Double?
+    let greedyP95Milliseconds: Double?
+    let beam5P95Milliseconds: Double?
+    let chosenDecoder: String
+    let decision: String
+}
+
+private struct JapaneseCorrectiveStability: Codable, Sendable {
+    let recipeID: String
+    let windowID: String
+    let replayCount: Int
+    let distinctNormalizedFinalCount: Int
+    let normalizedFinalsIdentical: Bool
+    let highCERLowerMinimum: Double?
+    let highCERLowerMaximum: Double?
+    let highCERUpperMinimum: Double?
+    let highCERUpperMaximum: Double?
+    let lastSpeechPresentCount: Int
+    let endingBacklogMaximumMilliseconds: Double
+    let errorCount: Int
+}
+
+private struct JapaneseCorrectiveCorpus: Codable, Sendable {
+    let corpusID: String
+    let manifestSHA256: String
+    let audioSHA256: String
+    let annotationStatus: String
+}
+
+private struct JapaneseCorrectiveReport: Codable, Sendable {
+    let schemaVersion: Int
+    let runID: String
+    let gitCommit: String
+    let sourceTreeSHA256: String
+    let runtimeSHA256: String
+    let worktreeDirty: Bool
+    let networkDenied: Bool
+    let modelRecipesSHA256: String
+    let generatedAt: String
+    let sampleRate: Int
+    let replayCount: Int
+    let expectedRecipeIDs: [String]
+    let matrixAttempted: Bool
+    let matrixComplete: Bool
+    let promotionEligible: Bool
+    let corpora: [JapaneseCorrectiveCorpus]
+    let models: [JapaneseBakeoffModelProvenance]
+    let calibrations: [JapaneseCorrectiveCalibration]
+    let sessions: [JapaneseCorrectiveSession]
+    let stability: [JapaneseCorrectiveStability]
+}
+
+private struct JapaneseCorrectiveWindowInput {
+    let window: JapaneseBenchmarkSupport.StressWindow
+    let manifest: JapaneseBenchmarkSupport.Manifest
+    let samples: [Float]
+    let decisions: [LocalEndpointDecision]
+}
+
+private struct JapaneseCorrectiveEngineResult {
+    let model: JapaneseBakeoffModelProvenance
+    let calibration: JapaneseCorrectiveCalibration?
+    let sessions: [JapaneseCorrectiveSession]
+}
+
+private actor JapaneseCorrectiveVoxtralCollector {
+    private(set) var deltas: [(text: String, sentThrough: Int?)] = []
+    private(set) var acknowledgedThrough: Int?
+    private(set) var completed: (transcript: String, sentThrough: Int?)?
+    private(set) var failures: [String] = []
+
+    func accept(_ event: VoxtralHelperEvent) {
+        switch event {
+        case .delta(let text, let sentThrough):
+            deltas.append((text, sentThrough))
+        case .acknowledged(let through):
+            acknowledgedThrough = through
+        case .completed(let transcript, let sentThrough):
+            completed = (transcript, sentThrough)
+        case .failed(let message):
+            failures.append(message)
+        case .ready, .emissionMarker:
+            break
+        }
+    }
+
+    func snapshot() -> (
+        deltas: [(text: String, sentThrough: Int?)],
+        acknowledgedThrough: Int?,
+        completed: (transcript: String, sentThrough: Int?)?,
+        failures: [String]
+    ) {
+        (deltas, acknowledgedThrough, completed, failures)
+    }
+}
+
 final class JapaneseModelBakeoffTests: XCTestCase {
+    private static let modelRecipesSHA256 =
+        "d4ed138de85c40fee4ae0340ceca39149fbc6e5331845377b4931dc5043f000a"
     private static let fluidAudioVersion = "0.15.5"
     private static let fluidAudioRevision = "19600a485baa4998812e4654b70d2bab8f2c9949"
     private static let nemotronModelID =
@@ -420,6 +631,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb"
     private static let mlxWhisperWeightsSHA256 =
         "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6"
+    private static let mlxWhisperConfigSHA256 =
+        "b34fc29e4e11e0a25e812775dd67f4dd16fc2c8eb43d28ae25ff7d660ecb6379"
     private static let kotobaRevision =
         "e3a0cf6a62b95911703cfb97d819292e058f12c3"
     private static let kotobaQ5SHA256 =
@@ -863,6 +1076,222 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n"))
     }
 
+    @MainActor
+    func testCorrectiveStressReplaysWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_L7B_REPLAY"] == "1" else {
+            throw XCTSkip("Run Scripts/run_japanese_l7b_replay.sh for the corrected stress matrix.")
+        }
+        guard let gitCommit = environment["WHISPERASR_BENCHMARK_COMMIT"],
+              gitCommit.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil else {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "WHISPERASR_BENCHMARK_COMMIT must be an exact Git commit."
+            )
+        }
+
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let recipeURL = root.appendingPathComponent("docs/japanese-live/model-recipes.json")
+        let recipeSHA = try JapaneseBenchmarkSupport.sha256(at: recipeURL)
+        guard recipeSHA == Self.modelRecipesSHA256 else {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "model-recipes.json changed after L7A; audit it before replaying."
+            )
+        }
+        ModelHub.offlineMode = environment["WHISPERASR_OFFLINE"] == "1"
+        defer { ModelHub.offlineMode = false }
+
+        let replayCount = max(1, Int(environment["WHISPERASR_L7B_REPLAY_COUNT"] ?? "3") ?? 3)
+        let windowLimit = min(
+            JapaneseBenchmarkSupport.correctiveStressWindows.count,
+            max(1, Int(environment["WHISPERASR_L7B_WINDOW_LIMIT"] ?? "4") ?? 4)
+        )
+        let selectedWindows = Array(
+            JapaneseBenchmarkSupport.correctiveStressWindows.prefix(windowLimit)
+        )
+        let requestedEngines = try selectedEngines(
+            environment: environment,
+            scope: "corrective"
+        )
+        let runID = try benchmarkRunID(environment: environment)
+
+        var manifests: [String: JapaneseBenchmarkSupport.Manifest] = [:]
+        var allSamples: [String: [Float]] = [:]
+        var corpora: [JapaneseCorrectiveCorpus] = []
+        for corpusID in ["qudu2fx3ncc", "md62mmdz0m"] {
+            let manifestURL = root.appendingPathComponent(
+                "docs/japanese-live/corpora/\(corpusID)/manifest.json"
+            )
+            let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
+            let wavURL = try JapaneseBenchmarkSupport.fixtureURL(
+                for: manifest,
+                workspaceRoot: root
+            )
+            let audioSHA = try JapaneseBenchmarkSupport.sha256(at: wavURL)
+            guard audioSHA == manifest.fixture.sha256 else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Audio SHA mismatch for \(corpusID)."
+                )
+            }
+            let samples = try await AudioLoader.loadSamples(url: wavURL)
+            guard samples.count == manifest.fixture.sampleCount else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Audio sample count mismatch for \(corpusID)."
+                )
+            }
+            manifests[corpusID] = manifest
+            allSamples[corpusID] = samples
+            corpora.append(JapaneseCorrectiveCorpus(
+                corpusID: corpusID,
+                manifestSHA256: try JapaneseBenchmarkSupport.sha256(at: manifestURL),
+                audioSHA256: audioSHA,
+                annotationStatus: manifest.annotations.status.rawValue
+            ))
+        }
+
+        let modelManager = LocalEnglishModelManager()
+        try await modelManager.prepare(.whisperTurboApple)
+        var windows: [JapaneseCorrectiveWindowInput] = []
+        for window in selectedWindows {
+            guard let manifest = manifests[window.corpusID],
+                  let corpusSamples = allSamples[window.corpusID] else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Missing corpus for stress window \(window.id)."
+                )
+            }
+            let samples = Array(corpusSamples[window.startSample..<window.endSample])
+            let decisions = try await JapaneseBenchmarkSupport.productEndpointDecisions(
+                samples: samples,
+                manager: modelManager
+            )
+            guard !decisions.isEmpty,
+                  decisions.last?.audioEnd == samples.count else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "FireRedVAD did not finalize the full window \(window.id)."
+                )
+            }
+            windows.append(JapaneseCorrectiveWindowInput(
+                window: window,
+                manifest: manifest,
+                samples: samples,
+                decisions: decisions
+            ))
+        }
+        let calibrationManifestURL = root.appendingPathComponent(
+            "docs/japanese-live/corpora/easy-japanese-1/manifest.json"
+        )
+        let calibrationManifest = try JapaneseBenchmarkSupport.loadManifest(
+            at: calibrationManifestURL
+        )
+        let calibrationWAV = try JapaneseBenchmarkSupport.fixtureURL(
+            for: calibrationManifest,
+            workspaceRoot: root
+        )
+        guard try JapaneseBenchmarkSupport.sha256(at: calibrationWAV)
+                == calibrationManifest.fixture.sha256 else {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "The decoder calibration WAV failed SHA-256 verification."
+            )
+        }
+        let calibrationCorpusSamples = try await AudioLoader.loadSamples(url: calibrationWAV)
+        let calibrationWindow = JapaneseBenchmarkSupport.StressWindow(
+            id: "easy-japanese-decoder-calibration",
+            corpusID: calibrationManifest.corpusID,
+            startSample: 0,
+            endSample: min(1_200_000, calibrationCorpusSamples.count)
+        )
+        let calibrationSamples = Array(
+            calibrationCorpusSamples[calibrationWindow.startSample..<calibrationWindow.endSample]
+        )
+        let calibrationDecisions = try await JapaneseBenchmarkSupport.productEndpointDecisions(
+            samples: calibrationSamples,
+            manager: modelManager
+        )
+        guard !calibrationDecisions.isEmpty,
+              calibrationDecisions.last?.audioEnd == calibrationSamples.count else {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "FireRedVAD did not finalize the decoder calibration window."
+            )
+        }
+        let calibrationWindows = [JapaneseCorrectiveWindowInput(
+            window: calibrationWindow,
+            manifest: calibrationManifest,
+            samples: calibrationSamples,
+            decisions: calibrationDecisions
+        )]
+        await modelManager.unload()
+
+        let whisper = TranscriptionService()
+        var sessions: [JapaneseCorrectiveSession] = []
+        var calibrations: [JapaneseCorrectiveCalibration] = []
+        var models: [JapaneseBakeoffModelProvenance] = []
+        for engine in requestedEngines {
+            print("[L7B] preparing \(engine.rawValue)")
+            let result = await runCorrectiveEngine(
+                engine,
+                windows: windows,
+                calibrationWindows: calibrationWindows,
+                replayCount: replayCount,
+                modelManager: modelManager,
+                whisper: whisper,
+                root: root,
+                environment: environment,
+                runID: runID
+            )
+            sessions += result.sessions
+            if let calibration = result.calibration { calibrations.append(calibration) }
+            models.append(result.model)
+            let report = correctiveReport(
+                runID: runID,
+                gitCommit: gitCommit,
+                sourceTreeSHA256: environment["WHISPERASR_BENCHMARK_SOURCE_TREE_SHA256"]
+                    ?? "unknown",
+                runtimeSHA256: environment["WHISPERASR_BENCHMARK_RUNTIME_SHA256"]
+                    ?? "unknown",
+                worktreeDirty: environment["WHISPERASR_BENCHMARK_DIRTY"] == "1",
+                networkDenied: environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1",
+                recipeSHA: recipeSHA,
+                replayCount: replayCount,
+                expectedEngines: requestedEngines,
+                windowCount: selectedWindows.count,
+                corpora: corpora,
+                models: models,
+                calibrations: calibrations,
+                sessions: sessions
+            )
+            try writeCorrectiveReport(report, runID: runID, root: root)
+            print("[L7B] \(engine.rawValue) sessions=\(result.sessions.count)")
+        }
+        await modelManager.shutdown()
+        await whisper.unloadModel()
+
+        let expected = requestedEngines.count * selectedWindows.count * replayCount
+        XCTAssertEqual(sessions.count, expected)
+        XCTAssertTrue(sessions.allSatisfy { $0.expectedSampleCount > 0 })
+        if requestedEngines == JapaneseBakeoffEngine.allCases,
+           replayCount == 3,
+           selectedWindows.count == JapaneseBenchmarkSupport.correctiveStressWindows.count {
+            let finalReport = correctiveReport(
+                runID: runID,
+                gitCommit: gitCommit,
+                sourceTreeSHA256: environment["WHISPERASR_BENCHMARK_SOURCE_TREE_SHA256"]
+                    ?? "unknown",
+                runtimeSHA256: environment["WHISPERASR_BENCHMARK_RUNTIME_SHA256"]
+                    ?? "unknown",
+                worktreeDirty: environment["WHISPERASR_BENCHMARK_DIRTY"] == "1",
+                networkDenied: environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1",
+                recipeSHA: recipeSHA,
+                replayCount: replayCount,
+                expectedEngines: requestedEngines,
+                windowCount: selectedWindows.count,
+                corpora: corpora,
+                models: models,
+                calibrations: calibrations,
+                sessions: sessions
+            )
+            XCTAssertTrue(finalReport.matrixAttempted, "The native L7B matrix was not fully attempted.")
+        }
+    }
+
     func testPrepareEasyJapaneseCorpusWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_PREPARE_JAPANESE_CORPUS"] == "1",
@@ -1101,69 +1530,15 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         var provenance = unresolvedProvenance(engine)
 
         do {
-            await modelManager.unload()
-            await whisper.unloadModel()
-            provenance = try modelProvenance(
+            let prepared = try await prepareNativeEngine(
                 engine,
+                modelManager: modelManager,
+                whisper: whisper,
                 root: root,
                 environment: environment
             )
-            guard provenance.artifactSHA256Verified else {
-                throw NSError(
-                    domain: "JapaneseModelBakeoff",
-                    code: 5,
-                    userInfo: [
-                        NSLocalizedDescriptionKey:
-                            "Model artifact SHA-256 does not match the pinned value."
-                    ]
-                )
-            }
-            switch engine {
-            case .whisperTurbo:
-                guard let turbo = ModelCatalog.model(id: "large-v3-turbo"),
-                      ModelManager.shared.isDownloaded(turbo) else {
-                    throw NSError(
-                        domain: "JapaneseModelBakeoff",
-                        code: 1,
-                        userInfo: [NSLocalizedDescriptionKey: "Whisper Large v3 Turbo is not downloaded."]
-                    )
-                }
-                try await whisper.preloadModel(
-                    modelPath: ModelCatalog.path(for: turbo).path,
-                    requireEnglishTranslation: false
-                )
-            case .kotobaQ5:
-                try await whisper.preloadModel(
-                    modelPath: kotobaModelURL(root: root, environment: environment).path,
-                    requireEnglishTranslation: false
-                )
-            case .qwen17:
-                try await modelManager.prepare(.qwenApple)
-            case .voxtralContinuous:
-                try await modelManager.prepare(.voxtralApple)
-            case .nemotron1120, .nemotron560:
-                let manager = StreamingNemotronMultilingualAsrManager()
-                let directory = nemotronModelDirectory(
-                    engine: engine,
-                    root: root,
-                    environment: environment
-                )
-                guard FileManager.default.fileExists(atPath: directory.path) else {
-                    throw NSError(
-                        domain: "JapaneseModelBakeoff",
-                        code: 4,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "Pinned Nemotron model is missing at \(directory.path)."
-                        ]
-                    )
-                }
-                try await manager.loadModels(from: directory)
-                await manager.setLanguage("ja-JP")
-                nemotron = manager
-            case .mlxWhisperTurbo, .whisperMLXBatch:
-                preconditionFailure("Python candidates use the external benchmark adapter.")
-            }
+            provenance = prepared.model
+            nemotron = prepared.nemotron
             if let corpus = corpora.first, let turn = corpus.turns.first {
                 _ = try await transcribe(
                     engine,
@@ -1249,6 +1624,1233 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             turns: turnReports,
             corpora: corpora
         )
+    }
+
+    @MainActor
+    private func prepareNativeEngine(
+        _ engine: JapaneseBakeoffEngine,
+        modelManager: LocalEnglishModelManager,
+        whisper: TranscriptionService,
+        root: URL,
+        environment: [String: String]
+    ) async throws -> (
+        model: JapaneseBakeoffModelProvenance,
+        nemotron: StreamingNemotronMultilingualAsrManager?
+    ) {
+        await modelManager.unload()
+        await whisper.unloadModel()
+        let provenance = try modelProvenance(engine, root: root, environment: environment)
+        guard provenance.artifactSHA256Verified else {
+            throw NSError(
+                domain: "JapaneseModelBakeoff",
+                code: 5,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Model artifact SHA-256 does not match the pinned value."
+                ]
+            )
+        }
+        var nemotron: StreamingNemotronMultilingualAsrManager?
+        switch engine {
+        case .whisperTurbo:
+            guard let turbo = ModelCatalog.model(id: "large-v3-turbo"),
+                  ModelManager.shared.isDownloaded(turbo) else {
+                throw NSError(
+                    domain: "JapaneseModelBakeoff",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Whisper Large v3 Turbo is not downloaded."]
+                )
+            }
+            try await whisper.preloadModel(
+                modelPath: ModelCatalog.path(for: turbo).path,
+                requireEnglishTranslation: false
+            )
+        case .kotobaQ5:
+            try await whisper.preloadModel(
+                modelPath: kotobaModelURL(root: root, environment: environment).path,
+                requireEnglishTranslation: false
+            )
+        case .qwen17:
+            try await modelManager.prepare(.qwenApple)
+        case .voxtralContinuous:
+            try await modelManager.prepare(.voxtralApple)
+        case .nemotron1120, .nemotron560:
+            let manager = StreamingNemotronMultilingualAsrManager()
+            let directory = nemotronModelDirectory(
+                engine: engine,
+                root: root,
+                environment: environment
+            )
+            guard FileManager.default.fileExists(atPath: directory.path) else {
+                throw NSError(
+                    domain: "JapaneseModelBakeoff",
+                    code: 4,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "Pinned Nemotron model is missing at \(directory.path)."
+                    ]
+                )
+            }
+            try await manager.loadModels(from: directory)
+            await manager.setLanguage("ja-JP")
+            nemotron = manager
+        case .mlxWhisperTurbo, .whisperMLXBatch:
+            preconditionFailure("Python candidates use the external benchmark adapter.")
+        }
+        return (provenance, nemotron)
+    }
+
+    @MainActor
+    private func runCorrectiveEngine(
+        _ engine: JapaneseBakeoffEngine,
+        windows: [JapaneseCorrectiveWindowInput],
+        calibrationWindows: [JapaneseCorrectiveWindowInput],
+        replayCount: Int,
+        modelManager: LocalEnglishModelManager,
+        whisper: TranscriptionService,
+        root: URL,
+        environment: [String: String],
+        runID: String
+    ) async -> JapaneseCorrectiveEngineResult {
+        if engine == .mlxWhisperTurbo || engine == .whisperMLXBatch {
+            return await runCorrectiveExternalEngine(
+                engine,
+                windows: windows,
+                calibrationWindows: calibrationWindows,
+                replayCount: replayCount,
+                root: root,
+                environment: environment,
+                runID: runID
+            )
+        }
+
+        var provenance = unresolvedProvenance(engine)
+        var nemotron: StreamingNemotronMultilingualAsrManager?
+        do {
+            let prepared = try await prepareNativeEngine(
+                engine,
+                modelManager: modelManager,
+                whisper: whisper,
+                root: root,
+                environment: environment
+            )
+            provenance = prepared.model
+            nemotron = prepared.nemotron
+        } catch {
+            return JapaneseCorrectiveEngineResult(
+                model: provenance,
+                calibration: nil,
+                sessions: correctiveFailureSessions(
+                    engine: engine,
+                    windows: windows,
+                    replayCount: replayCount,
+                    message: error.localizedDescription
+                )
+            )
+        }
+
+        var decoding = WhisperDecodingStrategy.greedy
+        var calibration: JapaneseCorrectiveCalibration?
+        if engine == .whisperTurbo || engine == .kotobaQ5 {
+            let result = await calibrateNativeWhisperDecoder(
+                engine,
+                windows: calibrationWindows,
+                modelManager: modelManager,
+                whisper: whisper,
+                root: root,
+                environment: environment
+            )
+            calibration = result.report
+            decoding = result.chosen
+        }
+
+        var sessions: [JapaneseCorrectiveSession] = []
+        for replay in 1...replayCount {
+            for window in windows {
+                do {
+                    sessions.append(try await runCorrectiveNativeSession(
+                        engine,
+                        input: window,
+                        replay: replay,
+                        decoding: decoding,
+                        modelManager: modelManager,
+                        whisper: whisper,
+                        nemotron: nemotron,
+                        root: root,
+                        environment: environment
+                    ))
+                } catch {
+                    if engine == .voxtralContinuous {
+                        await modelManager.cancelContinuousVoxtral()
+                    }
+                    if let nemotron { await nemotron.reset() }
+                    sessions.append(correctiveSession(
+                        engine: engine,
+                        input: window,
+                        replay: replay,
+                        asrFedSampleCount: 0,
+                        finalizedThrough: 0,
+                        fragments: [],
+                        asrMilliseconds: [],
+                        wallMilliseconds: 0,
+                        maximumBacklogMilliseconds: 0,
+                        endingBacklogMilliseconds: 0,
+                        maximumResidentBytes: nil,
+                        errors: [error.localizedDescription]
+                    ))
+                }
+            }
+        }
+        if let nemotron { await nemotron.cleanup() }
+        await whisper.unloadModel()
+        await modelManager.unload()
+        return JapaneseCorrectiveEngineResult(
+            model: provenance,
+            calibration: calibration,
+            sessions: sessions
+        )
+    }
+
+    @MainActor
+    private func runCorrectiveNativeSession(
+        _ engine: JapaneseBakeoffEngine,
+        input: JapaneseCorrectiveWindowInput,
+        replay: Int,
+        decoding: WhisperDecodingStrategy,
+        modelManager: LocalEnglishModelManager,
+        whisper: TranscriptionService,
+        nemotron: StreamingNemotronMultilingualAsrManager?,
+        root: URL,
+        environment: [String: String]
+    ) async throws -> JapaneseCorrectiveSession {
+        var started = DispatchTime.now().uptimeNanoseconds
+        var fragments: [JapaneseCorrectiveFragment] = []
+        var timings: [Double] = []
+        var finalLatencies: [Double] = []
+        var finalLatencyScope = "product-vad-final-after-speech-end"
+        var fedSamples = 0
+        var finalizedThrough = 0
+        var maximumBacklog = 0.0
+        var endingBacklog = 0.0
+        var maximumResident = modelManager.currentMemoryBytes()
+
+        switch engine {
+        case .whisperTurbo, .kotobaQ5, .qwen17:
+            for decision in input.decisions {
+                try await sleepCorrectiveReplay(
+                    started: started,
+                    through: decision.audioEnd
+                )
+                let decodeStarted = DispatchTime.now().uptimeNanoseconds
+                let result = try await transcribe(
+                    engine,
+                    audio: Array(input.samples[decision.audioStart..<decision.audioEnd]),
+                    absoluteStartSample: input.window.startSample + decision.audioStart,
+                    modelManager: modelManager,
+                    whisper: whisper,
+                    nemotron: nemotron,
+                    root: root,
+                    environment: environment,
+                    decoding: decoding
+                )
+                let decodeMilliseconds = elapsedMilliseconds(since: decodeStarted)
+                timings.append(decodeMilliseconds)
+                fedSamples += result.asrFedSampleCount
+                var text = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !text.isEmpty else {
+                    throw JapaneseBenchmarkCSV.ParseError.malformed(
+                        "\(engine.rawValue) returned an empty product VAD final."
+                    )
+                }
+                let acceptedStart = max(finalizedThrough, decision.audioStart)
+                if let previous = fragments.last,
+                   input.window.startSample + acceptedStart < previous.endSample {
+                    text = AppState.trimOverlap(previous: previous.text, current: text)
+                }
+                if !text.isEmpty {
+                    fragments.append(JapaneseCorrectiveFragment(
+                        startSample: input.window.startSample + acceptedStart,
+                        endSample: input.window.startSample + decision.speechEnd,
+                        text: text,
+                        asrMilliseconds: decodeMilliseconds
+                    ))
+                }
+                finalizedThrough = max(finalizedThrough, decision.stableThrough)
+                let completion = elapsedMilliseconds(since: started)
+                finalLatencies.append(max(
+                    0,
+                    completion - Double(decision.speechEnd) / 16
+                ))
+                maximumBacklog = max(
+                    maximumBacklog,
+                    completion - Double(decision.audioEnd) / 16
+                )
+                maximumResident = max(maximumResident, modelManager.currentMemoryBytes())
+            }
+
+        case .nemotron1120, .nemotron560:
+            guard let nemotron else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed("Nemotron was not prepared.")
+            }
+            await nemotron.reset()
+            started = DispatchTime.now().uptimeNanoseconds
+            var cursor = input.decisions.first?.audioStart ?? 0
+            var utteranceStart = cursor
+            for decision in input.decisions {
+                if decision.audioStart > cursor {
+                    cursor = decision.audioStart
+                    utteranceStart = cursor
+                }
+                while cursor < decision.audioEnd {
+                    let end = min(decision.audioEnd, cursor + 2_560)
+                    try await sleepCorrectiveReplay(started: started, through: end)
+                    let callStarted = DispatchTime.now().uptimeNanoseconds
+                    _ = try await nemotron.process(samples: Array(input.samples[cursor..<end]))
+                    timings.append(elapsedMilliseconds(since: callStarted))
+                    fedSamples += end - cursor
+                    cursor = end
+                    maximumResident = max(maximumResident, modelManager.currentMemoryBytes())
+                    maximumBacklog = max(
+                        maximumBacklog,
+                        elapsedMilliseconds(since: started) - Double(cursor) / 16
+                    )
+                }
+                guard decision.kind != .forced else { continue }
+                let finalStarted = DispatchTime.now().uptimeNanoseconds
+                let text = try await nemotron.finish()
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                let finalMilliseconds = elapsedMilliseconds(since: finalStarted)
+                timings.append(finalMilliseconds)
+                finalLatencies.append(max(
+                    0,
+                    elapsedMilliseconds(since: started) - Double(decision.speechEnd) / 16
+                ))
+                if !text.isEmpty {
+                    fragments.append(JapaneseCorrectiveFragment(
+                        startSample: input.window.startSample + utteranceStart,
+                        endSample: input.window.startSample + decision.speechEnd,
+                        text: text,
+                        asrMilliseconds: finalMilliseconds
+                    ))
+                }
+                finalizedThrough = max(finalizedThrough, decision.stableThrough)
+                utteranceStart = cursor
+                await nemotron.reset()
+            }
+
+        case .voxtralContinuous:
+            let events = try await modelManager.startContinuousVoxtral()
+            let collector = JapaneseCorrectiveVoxtralCollector()
+            let receiver = Task {
+                for await event in events { await collector.accept(event) }
+            }
+            started = DispatchTime.now().uptimeNanoseconds
+            do {
+                let blockSamples = 2_560
+                for start in stride(from: 0, to: input.samples.count, by: blockSamples) {
+                    let end = min(input.samples.count, start + blockSamples)
+                    try await sleepCorrectiveReplay(started: started, through: end)
+                    let feedStarted = DispatchTime.now().uptimeNanoseconds
+                    try await modelManager.feedContinuousVoxtral(
+                        samples: Array(input.samples[start..<end]),
+                        range: (input.window.startSample + start)..<(input.window.startSample + end)
+                    )
+                    timings.append(elapsedMilliseconds(since: feedStarted))
+                    fedSamples = end
+                    let progress = await modelManager.continuousVoxtralProgress()
+                    maximumResident = max(
+                        maximumResident,
+                        modelManager.currentMemoryBytes() + (progress.helperRSSBytes ?? 0)
+                    )
+                    maximumBacklog = max(
+                        maximumBacklog,
+                        max(
+                            elapsedMilliseconds(since: started) - Double(end) / 16,
+                            Double(progress.maximumBacklogSamples) / 16
+                        )
+                    )
+                }
+                let finalStarted = DispatchTime.now().uptimeNanoseconds
+                let final = try await modelManager.finishContinuousVoxtral()
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                timings.append(elapsedMilliseconds(since: finalStarted))
+                _ = await receiver.result
+                let snapshot = await collector.snapshot()
+                guard snapshot.failures.isEmpty else {
+                    throw JapaneseBenchmarkCSV.ParseError.malformed(
+                        snapshot.failures.joined(separator: "; ")
+                    )
+                }
+                let progress = await modelManager.continuousVoxtralProgress()
+                guard progress.sentThrough == input.window.endSample,
+                      progress.acknowledgedThrough == input.window.endSample,
+                      progress.backlogSamples == 0,
+                      snapshot.acknowledgedThrough == input.window.endSample,
+                      snapshot.completed?.sentThrough == input.window.endSample,
+                      JapaneseCER.normalized(snapshot.completed?.transcript ?? "")
+                        == JapaneseCER.normalized(final) else {
+                    throw JapaneseBenchmarkCSV.ParseError.malformed(
+                        "Voxtral did not prove full acknowledged PCM coverage and a zero final backlog."
+                    )
+                }
+                fragments = correctiveVoxtralFragments(
+                    deltas: snapshot.deltas,
+                    final: final,
+                    input: input,
+                    asrMilliseconds: timings.reduce(0, +)
+                )
+                finalizedThrough = input.samples.count
+                finalLatencyScope = "capture-eos-final-after-last-speech"
+                finalLatencies = [max(
+                    0,
+                    elapsedMilliseconds(since: started)
+                        - Double(input.decisions.last?.speechEnd ?? input.samples.count) / 16
+                )]
+                maximumBacklog = max(
+                    maximumBacklog,
+                    Double(progress.maximumBacklogSamples) / 16
+                )
+                endingBacklog = Double(progress.backlogSamples) / 16
+                maximumResident = max(
+                    maximumResident,
+                    modelManager.currentMemoryBytes() + (progress.helperRSSBytes ?? 0)
+                )
+            } catch {
+                await modelManager.cancelContinuousVoxtral()
+                receiver.cancel()
+                _ = await receiver.result
+                throw error
+            }
+
+        case .mlxWhisperTurbo, .whisperMLXBatch:
+            preconditionFailure("External candidates use the Python adapter.")
+        }
+
+        let wallMilliseconds = elapsedMilliseconds(since: started)
+        return correctiveSession(
+            engine: engine,
+            input: input,
+            replay: replay,
+            asrFedSampleCount: fedSamples,
+            finalizedThrough: finalizedThrough,
+            fragments: fragments,
+            asrMilliseconds: timings,
+            wallMilliseconds: wallMilliseconds,
+            maximumBacklogMilliseconds: max(0, maximumBacklog),
+            endingBacklogMilliseconds: endingBacklog,
+            maximumResidentBytes: maximumResident,
+            errors: [],
+            finalLatencyMilliseconds: finalLatencies,
+            finalLatencyScope: finalLatencyScope,
+            effectiveDecoder: (engine == .whisperTurbo || engine == .kotobaQ5)
+                ? decoding.rawValue : "native-fixed"
+        )
+    }
+
+    @MainActor
+    private func calibrateNativeWhisperDecoder(
+        _ engine: JapaneseBakeoffEngine,
+        windows: [JapaneseCorrectiveWindowInput],
+        modelManager: LocalEnglishModelManager,
+        whisper: TranscriptionService,
+        root: URL,
+        environment: [String: String]
+    ) async -> (report: JapaneseCorrectiveCalibration, chosen: WhisperDecodingStrategy) {
+        func measure(
+            _ strategy: WhisperDecodingStrategy
+        ) async -> (cer: Double?, p95: Double?) {
+            var pairs: [(reference: String, hypothesis: String)] = []
+            var latencies: [Double] = []
+            do {
+                for input in windows {
+                    var hypothesis = ""
+                    var previousEnd = 0
+                    for decision in input.decisions {
+                        let started = DispatchTime.now().uptimeNanoseconds
+                        let result = try await transcribe(
+                            engine,
+                            audio: Array(input.samples[decision.audioStart..<decision.audioEnd]),
+                            absoluteStartSample: input.window.startSample + decision.audioStart,
+                            modelManager: modelManager,
+                            whisper: whisper,
+                            nemotron: nil,
+                            root: root,
+                            environment: environment,
+                            decoding: strategy
+                        )
+                        latencies.append(elapsedMilliseconds(since: started))
+                        var text = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if decision.audioStart < previousEnd {
+                            text = AppState.trimOverlap(previous: hypothesis, current: text)
+                        }
+                        hypothesis += text
+                        previousEnd = decision.speechEnd
+                    }
+                    let turns = JapaneseBenchmarkSupport.referenceTurns(
+                        manifest: input.manifest,
+                        window: input.window
+                    )
+                    pairs.append((turns.map(\.japanese).joined(), hypothesis))
+                }
+            } catch {
+                return (nil, nil)
+            }
+            return (
+                JapaneseCER.score(pairs).rate,
+                percentile(latencies, fraction: 0.95)
+            )
+        }
+
+        let greedy = await measure(.greedy)
+        let beam = await measure(.beam5)
+        let beamWins = greedy.cer.map { greedyCER in
+            beam.cer.map { greedyCER - $0 >= 0.01 } ?? false
+        } ?? false
+            && (beam.p95.map { $0 <= 1_500 } ?? false)
+        let chosen: WhisperDecodingStrategy = beamWins ? .beam5 : .greedy
+        return (
+            JapaneseCorrectiveCalibration(
+                recipeID: engine.rawValue,
+                corpusID: windows.first?.window.corpusID ?? "unknown",
+                windowID: windows.first?.window.id ?? "unknown",
+                greedyCER: greedy.cer,
+                beam5CER: beam.cer,
+                greedyP95Milliseconds: greedy.p95,
+                beam5P95Milliseconds: beam.p95,
+                chosenDecoder: chosen.rawValue,
+                decision: beamWins
+                    ? "beam5: CER improves by at least 1 point and p95 remains <=1.5s"
+                    : "greedy: beam5 did not clear both quality and latency gates"
+            ),
+            chosen
+        )
+    }
+
+    private func correctiveVoxtralFragments(
+        deltas: [(text: String, sentThrough: Int?)],
+        final: String,
+        input: JapaneseCorrectiveWindowInput,
+        asrMilliseconds: Double
+    ) -> [JapaneseCorrectiveFragment] {
+        let deltaText = deltas.map(\.text).joined()
+        guard !final.isEmpty,
+              JapaneseCER.normalized(deltaText) == JapaneseCER.normalized(final) else {
+            return final.isEmpty ? [] : [JapaneseCorrectiveFragment(
+                startSample: input.window.startSample,
+                endSample: input.window.endSample,
+                text: final,
+                asrMilliseconds: asrMilliseconds
+            )]
+        }
+        var result: [JapaneseCorrectiveFragment] = []
+        var pending = ""
+        var start = input.window.startSample
+        for delta in deltas {
+            pending += delta.text
+            guard let reportedEnd = delta.sentThrough else { continue }
+            let end = min(input.window.endSample, max(start, reportedEnd))
+            guard end > start, !pending.isEmpty else { continue }
+            result.append(JapaneseCorrectiveFragment(
+                startSample: start,
+                endSample: end,
+                text: pending,
+                asrMilliseconds: 0
+            ))
+            pending = ""
+            start = end
+        }
+        if !pending.isEmpty {
+            result.append(JapaneseCorrectiveFragment(
+                startSample: start,
+                endSample: input.window.endSample,
+                text: pending,
+                asrMilliseconds: asrMilliseconds
+            ))
+        }
+        return result.isEmpty ? [JapaneseCorrectiveFragment(
+            startSample: input.window.startSample,
+            endSample: input.window.endSample,
+            text: final,
+            asrMilliseconds: asrMilliseconds
+        )] : result
+    }
+
+    private func correctiveSession(
+        engine: JapaneseBakeoffEngine,
+        input: JapaneseCorrectiveWindowInput,
+        replay: Int,
+        asrFedSampleCount: Int,
+        finalizedThrough: Int,
+        fragments: [JapaneseCorrectiveFragment],
+        asrMilliseconds: [Double],
+        wallMilliseconds: Double,
+        maximumBacklogMilliseconds: Double,
+        endingBacklogMilliseconds: Double,
+        maximumResidentBytes: UInt64?,
+        errors: [String],
+        finalLatencyMilliseconds: [Double] = [],
+        finalLatencyScope: String = "unavailable",
+        effectiveDecoder: String = "not-executed"
+    ) -> JapaneseCorrectiveSession {
+        let endpoints = input.decisions.map { decision in
+            JapaneseCorrectiveEndpoint(
+                kind: decision.kind.rawValue,
+                startSample: input.window.startSample + decision.audioStart,
+                endSample: input.window.startSample + decision.audioEnd,
+                speechEndSample: input.window.startSample + decision.speechEnd,
+                detectedAtSample: input.window.startSample + decision.endpointDetectedAt
+            )
+        }
+        let endpointData = (try? JSONEncoder().encode(endpoints)) ?? Data()
+        let scorerFragments = fragments.enumerated().map { index, fragment in
+            ManyToManyTurnScorer.Fragment(
+                id: index + 1,
+                startSample: fragment.startSample,
+                endSample: fragment.endSample,
+                text: fragment.text
+            )
+        }
+        let turns = JapaneseBenchmarkSupport.referenceTurns(
+            manifest: input.manifest,
+            window: input.window
+        )
+        let final = fragments.map(\.text).joined()
+        let normalized = String(JapaneseCER.normalized(final))
+        let terms = input.manifest.annotations.turns.filter {
+            max($0.startSample, input.window.startSample)
+                < min($0.endSample, input.window.endSample)
+        }.flatMap(\.criticalTerms)
+        let missing = terms.compactMap { term -> String? in
+            let expected = String(JapaneseCER.normalized(term.japanese))
+            return expected.isEmpty || normalized.contains(expected) ? nil : term.japanese
+        }
+        let lastSpeech = turns.max { $0.endSample < $1.endSample }.map {
+            JapaneseBenchmarkSupport.lastSpeechEvidence(turn: $0, fragments: scorerFragments)
+        }
+        let audioMilliseconds = Double(input.samples.count) / 16
+        return JapaneseCorrectiveSession(
+            recipeID: engine.rawValue,
+            effectiveDecoder: effectiveDecoder,
+            effectiveRecipeSHA256: digest(Data(
+                "\(Self.modelRecipesSHA256)\u{0}\(engine.rawValue)\u{0}\(effectiveDecoder)".utf8
+            )),
+            corpusID: input.window.corpusID,
+            windowID: input.window.id,
+            replay: replay,
+            windowStartSample: input.window.startSample,
+            windowEndSample: input.window.endSample,
+            expectedSampleCount: input.samples.count,
+            asrFedSampleCount: asrFedSampleCount,
+            asrFinalizedThrough: input.window.startSample + finalizedThrough,
+            endpointDecisionsSHA256: digest(endpointData),
+            endpoints: endpoints,
+            fragments: fragments,
+            japaneseFinal: final,
+            normalizedFinalSHA256: digest(Data(normalized.utf8)),
+            continuousCER: ContinuousJapaneseCER.score(
+                turns: turns,
+                finalSourceFragments: scorerFragments
+            ),
+            lastSpeech: lastSpeech,
+            criticalTerms: JapaneseCorrectiveCriticalTerms(
+                status: terms.isEmpty
+                    ? "not-evaluable-no-human-annotations" : "diagnostic-unreviewed",
+                annotatedCount: terms.count,
+                missing: missing
+            ),
+            asrMilliseconds: asrMilliseconds,
+            finalLatencyMilliseconds: finalLatencyMilliseconds,
+            finalLatencyScope: finalLatencyScope,
+            audioMilliseconds: audioMilliseconds,
+            completionAfterAudioEndMilliseconds: max(0, wallMilliseconds - audioMilliseconds),
+            computeRTF: audioMilliseconds > 0
+                ? asrMilliseconds.reduce(0, +) / audioMilliseconds : 0,
+            endToEndWallRTF: audioMilliseconds > 0 ? wallMilliseconds / audioMilliseconds : 0,
+            maximumBacklogMilliseconds: maximumBacklogMilliseconds,
+            endingBacklogMilliseconds: endingBacklogMilliseconds,
+            maximumResidentBytes: maximumResidentBytes,
+            errors: errors
+        )
+    }
+
+    private func correctiveFailureSessions(
+        engine: JapaneseBakeoffEngine,
+        windows: [JapaneseCorrectiveWindowInput],
+        replayCount: Int,
+        message: String
+    ) -> [JapaneseCorrectiveSession] {
+        (1...replayCount).flatMap { replay in
+            windows.map { input in
+                correctiveSession(
+                    engine: engine,
+                    input: input,
+                    replay: replay,
+                    asrFedSampleCount: 0,
+                    finalizedThrough: 0,
+                    fragments: [],
+                    asrMilliseconds: [],
+                    wallMilliseconds: 0,
+                    maximumBacklogMilliseconds: 0,
+                    endingBacklogMilliseconds: 0,
+                    maximumResidentBytes: nil,
+                    errors: [message]
+                )
+            }
+        }
+    }
+
+    private func sleepCorrectiveReplay(started: UInt64, through sample: Int) async throws {
+        let deadline = started + UInt64(max(0, sample)) * 1_000_000_000 / 16_000
+        let now = DispatchTime.now().uptimeNanoseconds
+        if now < deadline { try await Task.sleep(nanoseconds: deadline - now) }
+    }
+
+    private func elapsedMilliseconds(since started: UInt64) -> Double {
+        Double(DispatchTime.now().uptimeNanoseconds - started) / 1_000_000
+    }
+
+    private func runCorrectiveExternalEngine(
+        _ engine: JapaneseBakeoffEngine,
+        windows: [JapaneseCorrectiveWindowInput],
+        calibrationWindows: [JapaneseCorrectiveWindowInput],
+        replayCount: Int,
+        root: URL,
+        environment: [String: String],
+        runID: String
+    ) async -> JapaneseCorrectiveEngineResult {
+        var provenance = unresolvedProvenance(engine)
+        do {
+            provenance = try modelProvenance(engine, root: root, environment: environment)
+            guard provenance.artifactSHA256Verified else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "The pinned external model artifact failed SHA-256 verification."
+                )
+            }
+            if engine == .whisperMLXBatch {
+                try verifyPinnedGitCheckout(
+                    sileroDirectory(root: root, environment: environment),
+                    revision: Self.sileroRevision
+                )
+            }
+        } catch {
+            return JapaneseCorrectiveEngineResult(
+                model: provenance,
+                calibration: nil,
+                sessions: correctiveFailureSessions(
+                    engine: engine,
+                    windows: windows,
+                    replayCount: replayCount,
+                    message: error.localizedDescription
+                )
+            )
+        }
+
+        var chosenDecoder = "greedy"
+        var calibration: JapaneseCorrectiveCalibration?
+        if engine == .mlxWhisperTurbo {
+            let greedy = executeCorrectiveExternal(
+                engine,
+                windows: calibrationWindows,
+                replayCount: 1,
+                decoder: "greedy",
+                realtime: false,
+                root: root,
+                environment: environment,
+                runID: runID,
+                suffix: "calibration-greedy"
+            )
+            let beam = executeCorrectiveExternal(
+                engine,
+                windows: calibrationWindows,
+                replayCount: 1,
+                decoder: "beam5",
+                realtime: false,
+                root: root,
+                environment: environment,
+                runID: runID,
+                suffix: "calibration-beam5"
+            )
+            let greedySessions = correctiveExternalSessions(
+                engine: engine,
+                windows: calibrationWindows,
+                response: greedy.response,
+                batchAfterCapture: false,
+                decoder: "greedy"
+            )
+            let beamSessions = correctiveExternalSessions(
+                engine: engine,
+                windows: calibrationWindows,
+                response: beam.response,
+                batchAfterCapture: false,
+                decoder: "beam5"
+            )
+            let greedyCER = aggregateOverallCER(greedySessions)
+            let beamCER = aggregateOverallCER(beamSessions)
+            let greedyP95 = percentile(
+                greedySessions.flatMap(\.asrMilliseconds),
+                fraction: 0.95
+            )
+            let beamP95 = percentile(
+                beamSessions.flatMap(\.asrMilliseconds),
+                fraction: 0.95
+            )
+            let beamWins = greedyCER.map { baseline in
+                beamCER.map { baseline - $0 >= 0.01 } ?? false
+            } ?? false
+                && (beamP95.map { $0 <= 1_500 } ?? false)
+            chosenDecoder = beamWins ? "beam5" : "greedy"
+            calibration = JapaneseCorrectiveCalibration(
+                recipeID: engine.rawValue,
+                corpusID: calibrationWindows.first?.window.corpusID ?? "unknown",
+                windowID: calibrationWindows.first?.window.id ?? "unknown",
+                greedyCER: greedyCER,
+                beam5CER: beamCER,
+                greedyP95Milliseconds: greedyP95,
+                beam5P95Milliseconds: beamP95,
+                chosenDecoder: chosenDecoder,
+                decision: beamWins
+                    ? "beam5: CER improves by at least 1 point and p95 remains <=1.5s"
+                    : "greedy: beam5 did not clear both quality and latency gates"
+            )
+        }
+
+        let execution = executeCorrectiveExternal(
+            engine,
+            windows: windows,
+            replayCount: replayCount,
+            decoder: chosenDecoder,
+            realtime: engine == .mlxWhisperTurbo,
+            root: root,
+            environment: environment,
+            runID: runID,
+            suffix: "replay"
+        )
+        if let error = execution.error {
+            return JapaneseCorrectiveEngineResult(
+                model: provenance,
+                calibration: calibration,
+                sessions: correctiveFailureSessions(
+                    engine: engine,
+                    windows: windows,
+                    replayCount: replayCount,
+                    message: error
+                )
+            )
+        }
+        return JapaneseCorrectiveEngineResult(
+            model: provenance,
+            calibration: calibration,
+            sessions: correctiveExternalSessions(
+                engine: engine,
+                windows: windows,
+                response: execution.response,
+                batchAfterCapture: engine == .whisperMLXBatch,
+                decoder: engine == .whisperMLXBatch
+                    ? "native-long-form-silero" : chosenDecoder
+            )
+        )
+    }
+
+    private func executeCorrectiveExternal(
+        _ engine: JapaneseBakeoffEngine,
+        windows: [JapaneseCorrectiveWindowInput],
+        replayCount: Int,
+        decoder: String,
+        realtime: Bool,
+        root: URL,
+        environment: [String: String],
+        runID: String,
+        suffix: String
+    ) -> (response: JapaneseExternalASRResponse?, error: String?) {
+        do {
+            let python = externalPythonURL(engine: engine, root: root, environment: environment)
+            guard FileManager.default.isExecutableFile(atPath: python.path) else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Missing external ASR Python at \(python.path)."
+                )
+            }
+            let output = root.appendingPathComponent(
+                ".build/benchmarks/japanese-live/runs/\(runID)",
+                isDirectory: true
+            )
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            let stem = "\(engine.rawValue)-\(suffix)"
+            let requestURL = output.appendingPathComponent("\(stem)-request.json")
+            let responseURL = output.appendingPathComponent("\(stem)-response.json")
+            let stdoutURL = output.appendingPathComponent("\(stem)-stdout.log")
+            let stderrURL = output.appendingPathComponent("\(stem)-stderr.log")
+            let corpusIDs = Array(Set(windows.map { $0.window.corpusID })).sorted()
+            let corpora = try corpusIDs.map { corpusID -> JapaneseExternalASRRequest.Corpus in
+                guard let input = windows.first(where: { $0.window.corpusID == corpusID }) else {
+                    throw JapaneseBenchmarkCSV.ParseError.malformed("Missing external corpus input.")
+                }
+                let wavURL = try JapaneseBenchmarkSupport.fixtureURL(
+                    for: input.manifest,
+                    workspaceRoot: root
+                )
+                return JapaneseExternalASRRequest.Corpus(
+                    corpusID: corpusID,
+                    audioPath: wavURL.path,
+                    turns: []
+                )
+            }
+            let requestedWindows = (1...replayCount).flatMap { replay in
+                windows.enumerated().map { index, input in
+                    JapaneseExternalASRRequest.Window(
+                        sessionID: "\(engine.rawValue):\(input.window.id):r\(replay)",
+                        corpusID: input.window.corpusID,
+                        windowID: input.window.id,
+                        replay: replay,
+                        // Replays must be bit-for-bit repetitions, not new
+                        // stochastic trials.
+                        seed: index,
+                        startSample: input.window.startSample,
+                        endSample: input.window.endSample,
+                        realtime: realtime,
+                        ranges: input.decisions.map {
+                            JapaneseExternalASRRequest.Window.AudioRange(
+                                startSample: input.window.startSample + $0.audioStart,
+                                endSample: input.window.startSample + $0.audioEnd
+                            )
+                        }
+                    )
+                }
+            }
+            var request = JapaneseExternalASRRequest(
+                backend: engine == .mlxWhisperTurbo ? "mlx-whisper" : "whispermlx",
+                modelPath: mlxWhisperModelDirectory(root: root, environment: environment).path,
+                sileroPath: engine == .whisperMLXBatch
+                    ? sileroDirectory(root: root, environment: environment).path : nil,
+                corpora: corpora
+            )
+            request.decoder = decoder
+            request.windows = requestedWindows
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            try encoder.encode(request).write(to: requestURL, options: .atomic)
+            FileManager.default.createFile(atPath: stdoutURL.path, contents: nil)
+            FileManager.default.createFile(atPath: stderrURL.path, contents: nil)
+            let stdout = try FileHandle(forWritingTo: stdoutURL)
+            let stderr = try FileHandle(forWritingTo: stderrURL)
+            defer {
+                try? stdout.close()
+                try? stderr.close()
+            }
+            let adapterArguments = [
+                root.appendingPathComponent("Scripts/japanese_external_asr.py").path,
+                requestURL.path,
+                responseURL.path,
+            ]
+            let process = Process()
+            if environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1",
+               environment["WHISPERASR_PROCESS_ALREADY_SANDBOXED"] != "1" {
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/sandbox-exec")
+                process.arguments = [
+                    "-p",
+                    "(version 1)(allow default)(deny network*)",
+                    python.path,
+                ] + adapterArguments
+            } else {
+                process.executableURL = python
+                process.arguments = adapterArguments
+            }
+            process.currentDirectoryURL = root
+            process.environment = environment
+            process.standardOutput = stdout
+            process.standardError = stderr
+            try process.run()
+            process.waitUntilExit()
+            let response = try JSONDecoder().decode(
+                JapaneseExternalASRResponse.self,
+                from: Data(contentsOf: responseURL)
+            )
+            if let setupError = response.setupError { return (response, setupError) }
+            if process.terminationStatus != 0 {
+                return (response, "External ASR exited with status \(process.terminationStatus).")
+            }
+            return (response, nil)
+        } catch {
+            return (nil, error.localizedDescription)
+        }
+    }
+
+    private func correctiveExternalSessions(
+        engine: JapaneseBakeoffEngine,
+        windows: [JapaneseCorrectiveWindowInput],
+        response: JapaneseExternalASRResponse?,
+        batchAfterCapture: Bool,
+        decoder: String
+    ) -> [JapaneseCorrectiveSession] {
+        guard let response else { return [] }
+        let inputs = Dictionary(uniqueKeysWithValues: windows.map { ($0.window.id, $0) })
+        return (response.windows ?? []).compactMap { result in
+            guard let input = inputs[result.windowID] else { return nil }
+            var fragments: [JapaneseCorrectiveFragment] = []
+            if engine == .whisperMLXBatch, !result.segments.isEmpty {
+                fragments = result.segments.compactMap { segment in
+                    let start = input.window.startSample
+                        + Int((segment.start * 16_000).rounded())
+                    let end = input.window.startSample
+                        + Int((segment.end * 16_000).rounded())
+                    guard end > start, !segment.text.isEmpty else { return nil }
+                    return JapaneseCorrectiveFragment(
+                        startSample: max(input.window.startSample, start),
+                        endSample: min(input.window.endSample, end),
+                        text: segment.text,
+                        asrMilliseconds: 0
+                    )
+                }
+            } else {
+                var finalized = 0
+                for (index, range) in result.ranges.enumerated() {
+                    guard index < input.decisions.count else { break }
+                    let decision = input.decisions[index]
+                    var text = range.hypothesisJapanese
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    let acceptedStart = max(finalized, decision.audioStart)
+                    if let previous = fragments.last,
+                       input.window.startSample + acceptedStart < previous.endSample {
+                        text = AppState.trimOverlap(previous: previous.text, current: text)
+                    }
+                    if !text.isEmpty {
+                        fragments.append(JapaneseCorrectiveFragment(
+                            startSample: input.window.startSample + acceptedStart,
+                            endSample: input.window.startSample + decision.speechEnd,
+                            text: text,
+                            asrMilliseconds: range.asrMilliseconds
+                        ))
+                    }
+                    finalized = max(finalized, decision.stableThrough)
+                }
+            }
+            if fragments.isEmpty, !result.hypothesisJapanese.isEmpty {
+                fragments = [JapaneseCorrectiveFragment(
+                    startSample: input.window.startSample,
+                    endSample: input.window.endSample,
+                    text: result.hypothesisJapanese,
+                    asrMilliseconds: result.asrMilliseconds
+                )]
+            }
+            let asrTimings = result.ranges.isEmpty
+                ? [result.asrMilliseconds] : result.ranges.map(\.asrMilliseconds)
+            let rawWall = result.wallMilliseconds
+            let audioMilliseconds = Double(input.samples.count) / 16
+            let wall = batchAfterCapture ? audioMilliseconds + rawWall : rawWall
+            let finalLatencies: [Double]
+            let finalLatencyScope: String
+            if batchAfterCapture {
+                finalLatencies = [rawWall]
+                finalLatencyScope = "batch-after-capture"
+            } else {
+                finalLatencies = zip(result.ranges, input.decisions).map { range, decision in
+                    max(
+                        0,
+                        range.completedMilliseconds - Double(decision.speechEnd) / 16
+                    )
+                }
+                finalLatencyScope = "product-vad-final-after-speech-end"
+            }
+            return correctiveSession(
+                engine: engine,
+                input: input,
+                replay: result.replay,
+                asrFedSampleCount: result.fedSampleCount,
+                finalizedThrough: result.error == nil ? input.samples.count : 0,
+                fragments: fragments,
+                asrMilliseconds: asrTimings,
+                wallMilliseconds: wall,
+                maximumBacklogMilliseconds: batchAfterCapture
+                    ? rawWall : (result.ranges.map(\.backlogMilliseconds).max() ?? 0),
+                endingBacklogMilliseconds: 0,
+                maximumResidentBytes: result.residentBytes,
+                errors: result.error.map { [$0] } ?? [],
+                finalLatencyMilliseconds: finalLatencies,
+                finalLatencyScope: finalLatencyScope,
+                effectiveDecoder: decoder
+            )
+        }
+    }
+
+    private func aggregateOverallCER(_ sessions: [JapaneseCorrectiveSession]) -> Double? {
+        let values = sessions.compactMap(\.continuousCER?.overall)
+        let reference = values.reduce(0) { $0 + $1.referenceCharacterCount }
+        guard reference > 0 else { return nil }
+        return Double(values.reduce(0) { $0 + $1.editDistance }) / Double(reference)
+    }
+
+    private func correctiveReport(
+        runID: String,
+        gitCommit: String,
+        sourceTreeSHA256: String,
+        runtimeSHA256: String,
+        worktreeDirty: Bool,
+        networkDenied: Bool,
+        recipeSHA: String,
+        replayCount: Int,
+        expectedEngines: [JapaneseBakeoffEngine],
+        windowCount: Int,
+        corpora: [JapaneseCorrectiveCorpus],
+        models: [JapaneseBakeoffModelProvenance],
+        calibrations: [JapaneseCorrectiveCalibration],
+        sessions: [JapaneseCorrectiveSession]
+    ) -> JapaneseCorrectiveReport {
+        let fullShape = expectedEngines == JapaneseBakeoffEngine.allCases
+            && replayCount == 3
+            && windowCount == JapaneseBenchmarkSupport.correctiveStressWindows.count
+        let expectedCount = JapaneseBakeoffEngine.allCases.count
+            * JapaneseBenchmarkSupport.correctiveStressWindows.count * 3
+        let expectedAttemptKeys = Set(JapaneseBakeoffEngine.allCases.flatMap { engine in
+            JapaneseBenchmarkSupport.correctiveStressWindows.flatMap { window in
+                (1...3).map { "\(engine.rawValue):\(window.id):\($0)" }
+            }
+        })
+        let actualAttemptKeys = sessions.map {
+            "\($0.recipeID):\($0.windowID):\($0.replay)"
+        }
+        let matrixAttempted = fullShape
+            && sessions.count == expectedCount
+            && Set(actualAttemptKeys) == expectedAttemptKeys
+            && Set(actualAttemptKeys).count == actualAttemptKeys.count
+        let matrixComplete = matrixAttempted
+            && sessions.allSatisfy {
+                $0.errors.isEmpty
+                    && !$0.japaneseFinal.isEmpty
+                    && $0.continuousCER != nil
+                    && $0.asrFinalizedThrough == $0.windowEndSample
+            }
+        let qualityAndResourceGates = sessions.allSatisfy {
+            $0.lastSpeech?.heuristicPresent == true
+                && $0.criticalTerms.missing.isEmpty
+                && ($0.maximumResidentBytes ?? UInt64.max) < 10 * 1_024 * 1_024 * 1_024
+                && $0.endingBacklogMilliseconds == 0
+        }
+        let deterministic = correctiveStability(sessions).allSatisfy {
+            $0.replayCount == 3 && $0.normalizedFinalsIdentical && $0.errorCount == 0
+        }
+        let finalP95 = percentile(sessions.flatMap(\.finalLatencyMilliseconds), fraction: 0.95)
+        return JapaneseCorrectiveReport(
+            schemaVersion: 2,
+            runID: runID,
+            gitCommit: gitCommit,
+            sourceTreeSHA256: sourceTreeSHA256,
+            runtimeSHA256: runtimeSHA256,
+            worktreeDirty: worktreeDirty,
+            networkDenied: networkDenied,
+            modelRecipesSHA256: recipeSHA,
+            generatedAt: ISO8601DateFormatter().string(from: Date()),
+            sampleRate: 16_000,
+            replayCount: replayCount,
+            expectedRecipeIDs: expectedEngines.map(\.rawValue),
+            matrixAttempted: matrixAttempted,
+            matrixComplete: matrixComplete,
+            promotionEligible: matrixComplete
+                && !worktreeDirty
+                && networkDenied
+                && qualityAndResourceGates
+                && deterministic
+                && (finalP95.map { $0 <= 1_500 } ?? false)
+                && corpora.allSatisfy { $0.annotationStatus == "complete" },
+            corpora: corpora,
+            models: models,
+            calibrations: calibrations,
+            sessions: sessions,
+            stability: correctiveStability(sessions)
+        )
+    }
+
+    private func correctiveStability(
+        _ sessions: [JapaneseCorrectiveSession]
+    ) -> [JapaneseCorrectiveStability] {
+        Dictionary(grouping: sessions) { "\($0.recipeID):\($0.windowID)" }
+            .values.map { group in
+                let lower = group.compactMap(\.continuousCER?.highConfidence.rateLowerBound)
+                let upper = group.compactMap(\.continuousCER?.highConfidence.rateUpperBound)
+                return JapaneseCorrectiveStability(
+                    recipeID: group[0].recipeID,
+                    windowID: group[0].windowID,
+                    replayCount: group.count,
+                    distinctNormalizedFinalCount: Set(group.map(\.normalizedFinalSHA256)).count,
+                    normalizedFinalsIdentical: Set(group.map(\.normalizedFinalSHA256)).count == 1,
+                    highCERLowerMinimum: lower.min(),
+                    highCERLowerMaximum: lower.max(),
+                    highCERUpperMinimum: upper.min(),
+                    highCERUpperMaximum: upper.max(),
+                    lastSpeechPresentCount: group.filter {
+                        $0.lastSpeech?.heuristicPresent == true
+                    }.count,
+                    endingBacklogMaximumMilliseconds:
+                        group.map(\.endingBacklogMilliseconds).max() ?? 0,
+                    errorCount: group.reduce(0) { $0 + $1.errors.count }
+                )
+            }.sorted {
+                ($0.recipeID, $0.windowID) < ($1.recipeID, $1.windowID)
+            }
+    }
+
+    private func writeCorrectiveReport(
+        _ report: JapaneseCorrectiveReport,
+        runID: String,
+        root: URL
+    ) throws {
+        let output = root.appendingPathComponent(
+            ".build/benchmarks/japanese-live/runs/\(runID)",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(report).write(
+            to: output.appendingPathComponent("live-replay.json"),
+            options: .atomic
+        )
+        try correctiveFrenchReport(report).write(
+            to: output.appendingPathComponent("live-report-fr.md"),
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+
+    private func correctiveFrenchReport(_ report: JapaneseCorrectiveReport) -> String {
+        var lines = [
+            "# L7B — replays corrigés",
+            "",
+            "Matrice complète : \(report.matrixComplete ? "oui" : "non"). Promotion : non, références encore `pending-human-review`.",
+            "",
+            "| Recette | Sessions | CER high | Dernière parole | Final p95 | RSS max | Backlog final | Stabilité | Verdict |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---|",
+        ]
+        for recipeID in report.expectedRecipeIDs {
+            let sessions = report.sessions.filter { $0.recipeID == recipeID }
+            let scopes = sessions.compactMap(\.continuousCER?.highConfidence)
+            let references = scopes.reduce(0) { $0 + $1.referenceCharacterCount }
+            let lower = references > 0 ? scopes.reduce(0.0) {
+                $0 + ($1.rateLowerBound ?? 0) * Double($1.referenceCharacterCount)
+            } / Double(references) : nil
+            let upper = references > 0 ? scopes.reduce(0.0) {
+                $0 + ($1.rateUpperBound ?? 0) * Double($1.referenceCharacterCount)
+            } / Double(references) : nil
+            let p95 = percentile(sessions.flatMap(\.finalLatencyMilliseconds), fraction: 0.95)
+            let resident = sessions.compactMap(\.maximumResidentBytes).max()
+            let last = sessions.filter { $0.lastSpeech?.heuristicPresent == true }.count
+            let stable = report.stability.filter {
+                $0.recipeID == recipeID && $0.normalizedFinalsIdentical
+            }.count
+            let errors = sessions.reduce(0) { $0 + $1.errors.count }
+            let verdict = errors > 0 ? "échec observé" : "mesuré, attente L7C"
+            lines.append(
+                "| \(recipeID) | \(sessions.count) | \(percent(lower))–\(percent(upper)) "
+                    + "| \(last)/\(sessions.count) | \(milliseconds(p95)) | "
+                    + "\(resident.map { String(format: "%.2f Gio", Double($0) / 1_073_741_824) } ?? "n/a") | "
+                    + "\(milliseconds(sessions.map(\.endingBacklogMilliseconds).max())) | "
+                    + "\(stable)/4 | \(verdict) |"
+            )
+        }
+        lines += [
+            "",
+            "Le p95 final mesure la fin VAD → final, sauf Voxtral (`capture-eos`) et `whispermlx` (`batch-after-capture`), affichés mais non comparables aux finales par phrase.",
+            "Les termes critiques sont `n/a` : les deux manifests n'en contiennent aucun. Le CER high est un intervalle; le CER global reste diagnostique.",
+        ]
+        return lines.joined(separator: "\n") + "\n"
     }
 
     private func runExternalEngine(
@@ -1338,7 +2940,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 requestURL.path,
                 responseURL.path,
             ]
-            if environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1" {
+            if environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1",
+               environment["WHISPERASR_PROCESS_ALREADY_SANDBOXED"] != "1" {
                 process.executableURL = URL(fileURLWithPath: "/usr/bin/sandbox-exec")
                 process.arguments = [
                     "-p",
@@ -1419,7 +3022,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         whisper: TranscriptionService,
         nemotron: StreamingNemotronMultilingualAsrManager?,
         root: URL,
-        environment: [String: String]
+        environment: [String: String],
+        decoding: WhisperDecodingStrategy = .greedy
     ) async throws -> JapaneseASRResult {
         switch engine {
         case .whisperTurbo, .kotobaQ5:
@@ -1442,7 +3046,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 samples: audio,
                 language: "ja",
                 translate: false,
-                modelPath: modelPath
+                modelPath: modelPath,
+                decoding: decoding
             )
             return JapaneseASRResult(
                 text: text.text,
@@ -2028,8 +3633,15 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             }
             artifact = ModelCatalog.path(for: turbo)
         case .mlxWhisperTurbo, .whisperMLXBatch:
-            artifact = mlxWhisperModelDirectory(root: root, environment: environment)
-                .appendingPathComponent("weights.safetensors")
+            let directory = mlxWhisperModelDirectory(root: root, environment: environment)
+            guard try JapaneseBenchmarkSupport.sha256(
+                at: directory.appendingPathComponent("config.json")
+            ) == Self.mlxWhisperConfigSHA256 else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "The pinned MLX Whisper config failed SHA-256 verification."
+                )
+            }
+            artifact = directory.appendingPathComponent("weights.safetensors")
         case .voxtralContinuous:
             artifact = AppStoragePaths.root
                 .appendingPathComponent("Runtime/Models", isDirectory: true)
@@ -2087,6 +3699,33 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 + "mlx-whisper-large-v3-turbo/\(Self.mlxWhisperModelRevision)",
             isDirectory: true
         )
+    }
+
+    private func verifyPinnedGitCheckout(_ directory: URL, revision: String) throws {
+        func git(_ arguments: [String]) throws -> String {
+            let process = Process()
+            let output = Pipe()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+            process.arguments = ["-C", directory.path] + arguments
+            process.standardOutput = output
+            process.standardError = output
+            try process.run()
+            process.waitUntilExit()
+            let text = String(
+                data: output.fileHandleForReading.readDataToEndOfFile(),
+                encoding: .utf8
+            )?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard process.terminationStatus == 0 else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(text)
+            }
+            return text
+        }
+        guard try git(["rev-parse", "HEAD"]) == revision,
+              try git(["status", "--porcelain", "--untracked-files=no"]).isEmpty else {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "Pinned checkout \(directory.lastPathComponent) is modified or at the wrong revision."
+            )
+        }
     }
 
     private func kotobaModelURL(

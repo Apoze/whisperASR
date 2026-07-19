@@ -24,7 +24,7 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | L6A — Alignement `whispermlx` | gate L6 | conditionnel | valeur propre de l'alignement japonais |
 | [L7 — Firefox et décision](lots/L07-firefox-decision.md) | L5, L6 | terminé, aucune promotion | quatre replays Firefox; aucun gagnant produit |
 | [L7A — Recettes natives](lots/L07A-recettes-natives.md) | L7 | terminé | dix recettes corrigées et épinglées |
-| L7B — Replays corrigés | L7A | non créé | quatre fenêtres difficiles rejouées trois fois |
+| [L7B — Replays corrigés](lots/L07B-replays-corriges.md) | L7A | en validation | quatre fenêtres difficiles rejouées trois fois |
 | L7C — Deux vidéos complètes | L7B | non créé | tous les candidats comparés sur les mêmes captures |
 | L7D — Comparaison et décision | L7C | non créé | japonais, anglais, latence et ressources séparés |
 | L8 — Intégration gagnante | L7D | non créé, gate non atteint | un seul moteur produit |

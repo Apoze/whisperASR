@@ -17,6 +17,10 @@ final class JapaneseModelRecipeTests: XCTestCase {
         XCTAssertEqual(endpoint["postRollSamples"] as? Int, LocalEndpointPlanner.postRoll)
         XCTAssertEqual(endpoint["minimumBatchSamples"] as? Int, LocalEndpointPlanner.minimumBatch)
         XCTAssertEqual(endpoint["maximumPhraseSamples"] as? Int, LocalEndpointPlanner.maxPhrase)
+        XCTAssertEqual(
+            endpoint["coreMLWeightsSHA256"] as? String,
+            "3e33ae44922bcdaf668d4b18b16fc0e29acec582be810d6a5d58fc56cd27e81d"
+        )
 
         let recipes = try XCTUnwrap(json["recipes"] as? [[String: Any]])
         let byID = Dictionary(uniqueKeysWithValues: recipes.compactMap { recipe in
@@ -53,6 +57,13 @@ final class JapaneseModelRecipeTests: XCTestCase {
         XCTAssertEqual(mlx["temperature"] as? Int, 0)
         XCTAssertEqual(mlx["conditionOnPreviousText"] as? Bool, false)
         XCTAssertEqual(mlx["withoutTimestamps"] as? Bool, true)
+        for id in [
+            "whisper-turbo-whispercpp",
+            "kotoba-v2-q5-whispercpp",
+            "mlx-whisper-turbo",
+        ] {
+            XCTAssertEqual(try execution(id)["decoder"] as? String, "greedy-or-beam5")
+        }
         let whisperMLX = try execution("whispermlx-v3.12.2-turbo")
         XCTAssertEqual(whisperMLX["alignment"] as? Bool, false)
         XCTAssertEqual(whisperMLX["diarization"] as? Bool, false)
@@ -87,6 +98,28 @@ final class JapaneseModelRecipeTests: XCTestCase {
             in: .userDomainMask
         )[0]
         let files: [(String, URL, String)] = [
+            (
+                "FireRedVAD weights",
+                cache.appendingPathComponent(
+                    "qwen3-speech/models/aufklarer/FireRedVAD-CoreML/"
+                        + "fireredvad.mlmodelc/weights/weight.bin"
+                ),
+                "3e33ae44922bcdaf668d4b18b16fc0e29acec582be810d6a5d58fc56cd27e81d"
+            ),
+            (
+                "FireRedVAD config",
+                cache.appendingPathComponent(
+                    "qwen3-speech/models/aufklarer/FireRedVAD-CoreML/config.json"
+                ),
+                "e6a9858564115fbb152c6b61111af5f2723e4a0e851d2064e9f36200a345a9f7"
+            ),
+            (
+                "FireRedVAD CMVN",
+                cache.appendingPathComponent(
+                    "qwen3-speech/models/aufklarer/FireRedVAD-CoreML/cmvn.json"
+                ),
+                "62bcb8c5a3150391a21553b8bddbb0f37431650afe1b8610651080063ccda931"
+            ),
             (
                 "CWhisper",
                 root.appendingPathComponent(
@@ -227,5 +260,37 @@ final class JapaneseModelRecipeTests: XCTestCase {
                 name
             )
         }
+
+        let silero = root.appendingPathComponent(
+            ".build/benchmarks/japanese-live/tools/silero-vad/"
+                + "7e30209a3e901f9842f81b225f3e93d8199902b1"
+        )
+        func git(_ arguments: [String]) throws -> String {
+            let process = Process()
+            let output = Pipe()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+            process.arguments = ["-C", silero.path] + arguments
+            process.standardOutput = output
+            process.standardError = output
+            try process.run()
+            process.waitUntilExit()
+            let text = String(
+                data: output.fileHandleForReading.readDataToEndOfFile(),
+                encoding: .utf8
+            )?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard process.terminationStatus == 0 else {
+                throw NSError(
+                    domain: "JapaneseModelRecipeTests",
+                    code: Int(process.terminationStatus),
+                    userInfo: [NSLocalizedDescriptionKey: text]
+                )
+            }
+            return text
+        }
+        XCTAssertEqual(
+            try git(["rev-parse", "HEAD"]),
+            "7e30209a3e901f9842f81b225f3e93d8199902b1"
+        )
+        XCTAssertEqual(try git(["status", "--porcelain", "--untracked-files=no"]), "")
     }
 }

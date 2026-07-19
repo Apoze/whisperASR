@@ -4,14 +4,7 @@ import XCTest
 @testable import WhisperASRApp
 
 final class JapaneseLiveReplayTests: XCTestCase {
-    private struct StressWindow: Codable, Sendable {
-        let id: String
-        let corpusID: String
-        let startSample: Int
-        let endSample: Int
-
-        var sampleCount: Int { endSample - startSample }
-    }
+    private typealias StressWindow = JapaneseBenchmarkSupport.StressWindow
 
     private struct SourceEvent: Codable, Sendable {
         let sequence: Int
@@ -92,6 +85,8 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let schemaVersion: Int
         let runID: String
         let gitCommit: String
+        let sourceTreeSHA256: String
+        let runtimeSHA256: String
         let worktreeDirty: Bool
         let remoteNetworkDeniedForXCTest: Bool
         let generatedAt: String
@@ -99,6 +94,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let macOSBuild: String
         let replayCount: Int
         let blockSamples: Int
+        let modelRecipesSHA256: String
+        let matrixAttempted: Bool
+        let matrixComplete: Bool
         let promotionEligible: Bool
         let whisperLiveKitVersion: String
         let whisperLiveKitCommit: String
@@ -106,7 +104,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let whisperLiveKitUVLockSHA256: String
         let whisperLiveKitEncoderConfigSHA256: String
         let whisperLiveKitEncoderWeightsSHA256: String
-        let whisperLiveKitDecoderSHA256: String
+        let whisperLiveKitDecoderSHA256: String?
         let whisperLiveKitWarmupSHA256: String
         let whisperLiveKitConfiguration: [String: String]
         let memoryMeasurementScope: String
@@ -131,6 +129,10 @@ final class JapaneseLiveReplayTests: XCTestCase {
     private struct WLKUpdate: Decodable, Sendable {
         let type: String?
         let lines: [WLKLine]?
+        let sequence: Int?
+        let lineCount: Int?
+        let linesPruned: Int?
+        let newLines: [WLKLine]?
         let bufferTranscription: String?
         let remainingTimeTranscription: Double?
         let remainingTimeTranscriptionProcessing: Double?
@@ -139,6 +141,10 @@ final class JapaneseLiveReplayTests: XCTestCase {
 
         enum CodingKeys: String, CodingKey {
             case type, lines, error
+            case sequence = "seq"
+            case lineCount = "n_lines"
+            case linesPruned = "lines_pruned"
+            case newLines = "new_lines"
             case bufferTranscription = "buffer_transcription"
             case remainingTimeTranscription = "remaining_time_transcription"
             case remainingTimeTranscriptionProcessing = "remaining_time_transcription_processing"
@@ -156,32 +162,56 @@ final class JapaneseLiveReplayTests: XCTestCase {
     }
 
     private static let blockSamples = 1_600
-    private static let windows = [
-        StressWindow(
-            id: "qudu-fast-1",
-            corpusID: "qudu2fx3ncc",
-            startSample: 11_440_000,
-            endSample: 13_160_000
-        ),
-        StressWindow(
-            id: "qudu-fast-2",
-            corpusID: "qudu2fx3ncc",
-            startSample: 14_388_800,
-            endSample: 15_061_440
-        ),
-        StressWindow(
-            id: "md62-dialogue-1",
-            corpusID: "md62mmdz0m",
-            startSample: 7_008_640,
-            endSample: 8_788_320
-        ),
-        StressWindow(
-            id: "md62-dialogue-2",
-            corpusID: "md62mmdz0m",
-            startSample: 13_412_960,
-            endSample: 14_041_920
-        ),
-    ]
+    private static let windows = JapaneseBenchmarkSupport.correctiveStressWindows
+
+    @available(macOS 26.4, *)
+    func testWhisperLiveKitDiffReconstructsRewrittenSuffix() throws {
+        let decoder = JSONDecoder()
+        let snapshot = try decoder.decode(WLKUpdate.self, from: Data("""
+        {
+          "seq": 1,
+          "n_lines": 2,
+          "lines": [
+            {"speaker": 0, "text": "前", "start": "00:00:00.000", "end": "00:00:01.000"},
+            {"speaker": 0, "text": "古い", "start": "00:00:01.000", "end": "00:00:02.000"}
+          ]
+        }
+        """.utf8))
+        let changed = try decoder.decode(WLKUpdate.self, from: Data("""
+        {
+          "seq": 2,
+          "n_lines": 2,
+          "lines_pruned": 0,
+          "new_lines": [
+            {"speaker": 0, "text": "新しい", "start": "00:00:01.000", "end": "00:00:02.200"}
+          ]
+        }
+        """.utf8))
+        let initial = try XCTUnwrap(WLKCollector.reconstructWireLines([], update: snapshot))
+        let result = try XCTUnwrap(WLKCollector.reconstructWireLines(initial, update: changed))
+        XCTAssertEqual(result.compactMap(\.text), ["前", "新しい"])
+
+        let pruned = try decoder.decode(WLKUpdate.self, from: Data("""
+        {
+          "seq": 3,
+          "n_lines": 1,
+          "lines_pruned": 1
+        }
+        """.utf8))
+        let prunedResult = try XCTUnwrap(
+            WLKCollector.reconstructWireLines(result, update: pruned)
+        )
+        XCTAssertEqual(prunedResult.compactMap(\.text), ["新しい"])
+    }
+
+    func testPCM16WireEncodingPreservesCanonicalExtremes() {
+        let values: [Float] = [-1, -0.5, 0, 0.5, 1]
+        let data = pcmS16LE(values[...])
+        let decoded = data.withUnsafeBytes { bytes in
+            Array(bytes.bindMemory(to: Int16.self)).map { Int16(littleEndian: $0) }
+        }
+        XCTAssertEqual(decoded, [-32_768, -16_384, 0, 16_384, 32_767])
+    }
 
     @MainActor
     func testStressSourcesWhenOptedIn() async throws {
@@ -194,6 +224,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
         }
 
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let modelRecipesSHA256 = try JapaneseBenchmarkSupport.sha256(
+            at: root.appendingPathComponent("docs/japanese-live/model-recipes.json")
+        )
         let replayCount = max(1, Int(environment["WHISPERASR_L6_REPLAY_COUNT"] ?? "1") ?? 1)
         let windowLimit = min(
             Self.windows.count,
@@ -205,6 +238,17 @@ final class JapaneseLiveReplayTests: XCTestCase {
         guard !requestedSources.isEmpty,
               requestedSources.isSubset(of: ["apple-speech", "whisperlivekit"]) else {
             throw inputError("Unknown or empty WHISPERASR_L6_SOURCES.")
+        }
+        let whisperLiveKitPolicy = environment["WHISPERASR_WLK_POLICY"] ?? "simulstreaming"
+        guard ["simulstreaming", "localagreement"].contains(whisperLiveKitPolicy) else {
+            throw inputError("Unknown WHISPERASR_WLK_POLICY.")
+        }
+        let whisperLiveKitMinChunk = environment["WHISPERASR_WLK_MIN_CHUNK_SECONDS"]
+            ?? "0.1"
+        guard let minimumChunkSeconds = Double(whisperLiveKitMinChunk),
+              minimumChunkSeconds >= 0.1,
+              minimumChunkSeconds <= 5 else {
+            throw inputError("Invalid WHISPERASR_WLK_MIN_CHUNK_SECONDS.")
         }
         let inputs = try await loadInputs(root: root)
 
@@ -251,7 +295,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
 
         if requestedSources.contains("whisperlivekit") {
             guard let url = URL(string: environment["WHISPERASR_WLK_URL"]
-                ?? "ws://127.0.0.1:8765/asr?language=ja") else {
+                ?? "ws://127.0.0.1:8765/asr?language=ja&mode=diff") else {
                 throw inputError("Invalid WHISPERASR_WLK_URL.")
             }
             let serverPID = Int32(environment["WHISPERASR_WLK_PID"] ?? "") ?? 0
@@ -259,12 +303,13 @@ final class JapaneseLiveReplayTests: XCTestCase {
             for replay in 1...replayCount {
                 for window in windows {
                     sessions.append(try await replayWhisperLiveKit(
-                        sessionID: "whisperlivekit:\(window.id):r\(replay)",
+                        sessionID: "whisperlivekit-\(whisperLiveKitPolicy):\(window.id):r\(replay)",
                         window: window,
                         replay: replay,
                         allSamples: inputs.samples[window.corpusID]!,
                         manifest: inputs.manifests[window.corpusID]!,
                         url: url,
+                        policy: whisperLiveKitPolicy,
                         serverPID: serverPID,
                         low: low,
                         high: high,
@@ -274,10 +319,59 @@ final class JapaneseLiveReplayTests: XCTestCase {
             }
         }
 
+        var whisperLiveKitConfiguration = [
+            "backendPolicy": whisperLiveKitPolicy,
+            "backend": "mlx-whisper",
+            "model": "large-v3-turbo",
+            "encoderRevision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
+            "language": "ja",
+            "mode": "diff",
+            "retentionSeconds": "300",
+            "transportBlockSamples": "1600",
+            "minChunkSeconds": String(minimumChunkSeconds),
+            "vacChunkSeconds": "0.04",
+            "vac": "Silero ONNX CPU",
+            "vadFlagEffective": "false",
+            "pcmInput": "s16le-16k-mono",
+            "eosTimeoutSeconds": "120",
+        ]
+        if whisperLiveKitPolicy == "simulstreaming" {
+            whisperLiveKitConfiguration["decoder"] = "beam"
+            whisperLiveKitConfiguration["beams"] = "1"
+            whisperLiveKitConfiguration["frameThreshold"] = "25"
+            whisperLiveKitConfiguration["audioMaxSeconds"] = "30"
+            whisperLiveKitConfiguration["audioMinSeconds"] = "0"
+        } else {
+            whisperLiveKitConfiguration["bufferTrimming"] = "segment"
+            whisperLiveKitConfiguration["bufferTrimmingSeconds"] = "15"
+            whisperLiveKitConfiguration["wordTimestamps"] = "true"
+            whisperLiveKitConfiguration["conditionOnPreviousText"] = "true"
+        }
+        let expectedAttemptKeys = Set(Self.windows.flatMap { window in
+            (1...3).map { "\(window.id):\($0)" }
+        })
+        let actualAttemptKeys = sessions.map { "\($0.windowID):\($0.replay)" }
+        let matrixAttempted = requestedSources == ["whisperlivekit"]
+            && replayCount == 3
+            && windowLimit == Self.windows.count
+            && sessions.count == 12
+            && Set(actualAttemptKeys) == expectedAttemptKeys
+            && Set(actualAttemptKeys).count == actualAttemptKeys.count
+        let matrixComplete = matrixAttempted
+            && sessions.allSatisfy {
+                $0.errors.isEmpty
+                    && !$0.japaneseFinal.isEmpty
+                    && $0.sentSampleCount == $0.expectedSampleCount
+                    && $0.readyToStopReceived
+            }
         let report = LiveReport(
-            schemaVersion: 4,
+            schemaVersion: 7,
             runID: environment["WHISPERASR_L6_RUN_ID"] ?? "l6-live",
             gitCommit: environment["WHISPERASR_BENCHMARK_COMMIT"] ?? "unknown",
+            sourceTreeSHA256: environment["WHISPERASR_BENCHMARK_SOURCE_TREE_SHA256"]
+                ?? "unknown",
+            runtimeSHA256: environment["WHISPERASR_BENCHMARK_RUNTIME_SHA256"]
+                ?? "unknown",
             worktreeDirty: environment["WHISPERASR_BENCHMARK_DIRTY"] == "1",
             remoteNetworkDeniedForXCTest:
                 environment["WHISPERASR_REMOTE_NETWORK_DENIED"] == "1",
@@ -287,38 +381,27 @@ final class JapaneseLiveReplayTests: XCTestCase {
             macOSBuild: environment["WHISPERASR_MACOS_BUILD"] ?? "unknown",
             replayCount: replayCount,
             blockSamples: Self.blockSamples,
-            promotionEligible: replayCount == 3
-                && windowLimit == Self.windows.count
-                && environment["WHISPERASR_BENCHMARK_DIRTY"] == "0"
-                && environment["WHISPERASR_REMOTE_NETWORK_DENIED"] == "1"
-                && inputs.provenance.allSatisfy { $0.annotationStatus == "complete" },
+            modelRecipesSHA256: modelRecipesSHA256,
+            matrixAttempted: matrixAttempted,
+            matrixComplete: matrixComplete,
+            promotionEligible: false,
             whisperLiveKitVersion: "0.2.24",
             whisperLiveKitCommit: "5874bdeeaddf968ab73e005eb287e1b597b0eb37",
-            whisperLiveKitArchitecture: "SimulStreaming: MLX encoder + PyTorch CPU decoder/alignment",
+            whisperLiveKitArchitecture: whisperLiveKitPolicy == "simulstreaming"
+                ? "SimulStreaming: MLX encoder + PyTorch CPU decoder/alignment"
+                : "LocalAgreement: MLX Whisper + longest common prefix",
             whisperLiveKitUVLockSHA256:
                 "06750b16caa60432e7d1a9427cd2196e6bf926f20fc15d3c77cba78469e99ec1",
             whisperLiveKitEncoderConfigSHA256:
                 "b34fc29e4e11e0a25e812775dd67f4dd16fc2c8eb43d28ae25ff7d660ecb6379",
             whisperLiveKitEncoderWeightsSHA256:
                 "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6",
-            whisperLiveKitDecoderSHA256:
-                "aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a",
+            whisperLiveKitDecoderSHA256: whisperLiveKitPolicy == "simulstreaming"
+                ? "aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a"
+                : nil,
             whisperLiveKitWarmupSHA256:
                 "82df6b6ad5cebc55f727443d4a1c5c4a11d2c26cb75ef43e9ee091b8b7029ae5",
-            whisperLiveKitConfiguration: [
-                "backendPolicy": "simulstreaming",
-                "backend": "mlx-whisper",
-                "model": "large-v3-turbo",
-                "encoderRevision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
-                "language": "ja",
-                "mode": "full",
-                "frameThreshold": "25",
-                "beams": "1",
-                "vad": "enabled",
-                "vac": "enabled",
-                "pcmInput": "s16le-16k-mono",
-                "eosTimeoutSeconds": "120",
-            ],
+            whisperLiveKitConfiguration: whisperLiveKitConfiguration,
             memoryMeasurementScope:
                 "Peak sampled sum of XCTest and explicit ASR server PIDs; Apple system services excluded.",
             setupErrors: setupErrors,
@@ -328,9 +411,12 @@ final class JapaneseLiveReplayTests: XCTestCase {
         try write(report: report, root: root)
 
         XCTAssertFalse(sessions.isEmpty)
-        XCTAssertTrue(sessions.allSatisfy { $0.sentSampleCount == $0.expectedSampleCount })
-        XCTAssertTrue(sessions.allSatisfy(\.readyToStopReceived))
         XCTAssertTrue(sessions.allSatisfy { $0.maximumObservedResidentBytes != nil })
+        if requestedSources == ["whisperlivekit"], replayCount == 3,
+           windowLimit == Self.windows.count {
+            XCTAssertEqual(sessions.count, 12)
+            XCTAssertTrue(matrixAttempted)
+        }
     }
 
     @MainActor
@@ -409,7 +495,6 @@ final class JapaneseLiveReplayTests: XCTestCase {
             },
             onFailure: { failure = $0 }
         )
-
         let finalizer = Task { @MainActor in
             var target = LocalAppleSpeechFeedState.progressiveFinalizationInterval
             while target < localSamples.count {
@@ -472,24 +557,19 @@ final class JapaneseLiveReplayTests: XCTestCase {
         allSamples: [Float],
         manifest: JapaneseBenchmarkSupport.Manifest,
         url: URL,
+        policy: String,
         serverPID: Int32,
         low: AppleTranslationService,
         high: AppleTranslationService?,
         setupErrors: [String]
     ) async throws -> SessionReport {
         let samples = Array(allSamples[window.startSample..<window.endSample])
-        let started = DispatchTime.now().uptimeNanoseconds
         let pids = [getpid(), serverPID]
         let usageBefore = processUsage(pids: pids)
         let resourceSampler = startResourceSampler(pids: pids)
         defer { resourceSampler.cancel() }
         let thermalBefore = thermalState()
         let preview = BenchmarkPreviewTranslator(service: low, highFidelity: false)
-        let collector = WLKCollector(
-            window: window,
-            sessionStart: started,
-            preview: preview
-        )
 
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = 70
@@ -503,32 +583,51 @@ final class JapaneseLiveReplayTests: XCTestCase {
 
         let configData = try await messageData(socket.receive())
         let config = try JSONDecoder().decode(WLKConfig.self, from: configData)
-        guard config.type == "config", config.useAudioWorklet, config.mode == "full" else {
-            throw inputError("WhisperLiveKit did not accept raw PCM full mode.")
+        guard config.type == "config", config.useAudioWorklet, config.mode == "diff" else {
+            throw inputError("WhisperLiveKit did not accept raw PCM diff mode.")
         }
+        let started = DispatchTime.now().uptimeNanoseconds
+        let collector = WLKCollector(
+            window: window,
+            sessionStart: started,
+            preview: preview
+        )
 
         let receiver = Task {
             while !Task.isCancelled {
                 let data = try await messageData(socket.receive())
                 let update = try JSONDecoder().decode(WLKUpdate.self, from: data)
                 if update.type == "ready_to_stop" {
+                    await collector.accept(update, received: DispatchTime.now().uptimeNanoseconds)
                     await collector.finish(received: DispatchTime.now().uptimeNanoseconds)
                     return
                 }
                 await collector.accept(update, received: DispatchTime.now().uptimeNanoseconds)
             }
         }
-        let send = try await replayInRealTime(samples, sessionStart: started) {
-            samples, _ in
-            try await socket.send(.data(pcmS16LE(samples)))
+        var sentSampleCount = 0
+        var maximumSendLateness = 0.0
+        var transportErrors = setupErrors
+        do {
+            let send = try await replayInRealTime(samples, sessionStart: started) {
+                samples, _ in
+                try await socket.send(.data(pcmS16LE(samples)))
+            }
+            sentSampleCount = send.sent
+            maximumSendLateness = send.maximumLateness
+            try await socket.send(.data(Data()))
+            let timeout = Task {
+                try await Task.sleep(for: .seconds(120))
+                socket.cancel(with: .goingAway, reason: Data("timeout".utf8))
+            }
+            defer { timeout.cancel() }
+            try await receiver.value
+        } catch {
+            transportErrors.append("WhisperLiveKit transport: \(error.localizedDescription)")
+            socket.cancel(with: .goingAway, reason: Data("session-failed".utf8))
+            receiver.cancel()
+            _ = await receiver.result
         }
-        try await socket.send(.data(Data()))
-        let timeout = Task {
-            try await Task.sleep(for: .seconds(120))
-            socket.cancel(with: .goingAway, reason: Data("timeout".utf8))
-        }
-        defer { timeout.cancel() }
-        try await receiver.value
 
         let snapshot = await collector.snapshot()
         let previewSummary = await preview.finish()
@@ -544,14 +643,16 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let maximumResidentBytes = await resourceSampler.value
         return sessionReport(
             sessionID: sessionID,
-            source: "whisperlivekit-simulstreaming-mlx-encoder-pytorch-cpu-decoder",
+            source: policy == "simulstreaming"
+                ? "whisperlivekit-simulstreaming-mlx-encoder-pytorch-cpu-decoder"
+                : "whisperlivekit-localagreement-mlx",
             window: window,
             replay: replay,
             manifest: manifest,
-            sentSampleCount: send.sent,
+            sentSampleCount: sentSampleCount,
             readyToStopReceived: snapshot.readyReceivedAt != nil,
             finalBoundaryMode: "window-eos-only-no-live-phrase-final",
-            maximumSendLatenessMilliseconds: send.maximumLateness,
+            maximumSendLatenessMilliseconds: maximumSendLateness,
             sourceEvents: snapshot.sourceEvents,
             volatileEvents: snapshot.volatileEvents,
             preview: previewSummary,
@@ -568,7 +669,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
             thermalBefore: thermalBefore,
             thermalAfter: thermalState(),
             started: started,
-            errors: snapshot.errors + setupErrors
+            errors: snapshot.errors + transportErrors
         )
     }
 
@@ -623,6 +724,10 @@ final class JapaneseLiveReplayTests: XCTestCase {
 
     @available(macOS 26.4, *)
     private actor WLKCollector {
+        enum DiffError: Error {
+            case count, pruned, suffix
+        }
+
         struct Snapshot {
             let sourceEvents: [SourceEvent]
             let volatileEvents: [SourceEvent]
@@ -639,11 +744,13 @@ final class JapaneseLiveReplayTests: XCTestCase {
         private let window: StressWindow
         private let sessionStart: UInt64
         private let preview: BenchmarkPreviewTranslator
+        private var wireLines: [WLKLine] = []
         private var lines: [WLKLine] = []
         private var sourceEvents: [SourceEvent] = []
         private var volatileEvents: [SourceEvent] = []
         private var lastBuffer = ""
         private var sequence = 0
+        private var lastWireSequence: Int?
         private var confirmedPrefixRewrites = 0
         private var maximumProcessingBacklog = 0.0
         private var lastReportedProcessingBacklog = 0.0
@@ -660,6 +767,33 @@ final class JapaneseLiveReplayTests: XCTestCase {
             self.window = window
             self.sessionStart = sessionStart
             self.preview = preview
+        }
+
+        nonisolated static func reconstructWireLines(
+            _ current: [WLKLine],
+            update: WLKUpdate
+        ) throws -> [WLKLine]? {
+            if let snapshot = update.lines {
+                guard update.lineCount == nil || update.lineCount == snapshot.count else {
+                    throw DiffError.count
+                }
+                return snapshot
+            }
+            guard let count = update.lineCount,
+                  update.linesPruned != nil || update.newLines != nil else {
+                return nil
+            }
+            let newLines = update.newLines ?? []
+            let pruned = update.linesPruned ?? 0
+            guard pruned >= 0, pruned <= current.count else { throw DiffError.pruned }
+            let retained = Array(current.dropFirst(pruned))
+            let prefixCount = count - newLines.count
+            guard prefixCount >= 0, prefixCount <= retained.count else {
+                throw DiffError.suffix
+            }
+            let result = Array(retained.prefix(prefixCount)) + newLines
+            guard result.count == count else { throw DiffError.count }
+            return result
         }
 
         func accept(_ update: WLKUpdate, received: UInt64) async {
@@ -694,8 +828,28 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 }
             }
 
-            guard let rawLines = update.lines else { return }
-            let current = rawLines.filter {
+            if let wireSequence = update.sequence {
+                if let previous = lastWireSequence, wireSequence != previous + 1 {
+                    errors.append(
+                        "WhisperLiveKit diff sequence gap: expected \(previous + 1), got \(wireSequence)."
+                    )
+                    return
+                }
+                lastWireSequence = wireSequence
+            }
+
+            do {
+                guard let reconstructed = try Self.reconstructWireLines(
+                    wireLines,
+                    update: update
+                ) else { return }
+                wireLines = reconstructed
+            } catch {
+                errors.append("WhisperLiveKit diff reconstruction failed: \(error).")
+                return
+            }
+
+            let current = wireLines.filter {
                 $0.speaker != -2
                     && $0.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             }
@@ -854,7 +1008,10 @@ final class JapaneseLiveReplayTests: XCTestCase {
         started: UInt64,
         errors: [String]
     ) -> SessionReport {
-        let turns = referenceTurns(manifest: manifest, window: window)
+        let turns = JapaneseBenchmarkSupport.referenceTurns(
+            manifest: manifest,
+            window: window
+        )
         let cer = ContinuousJapaneseCER.score(
             turns: turns,
             finalSourceFragments: finalFragments
@@ -898,10 +1055,11 @@ final class JapaneseLiveReplayTests: XCTestCase {
             candidatesByRole: ["final": finalTranslationFragments]
         ).filter { $0.highConfidenceTurnCount == 1 }
         let lastTurn = turns.max { $0.endSample < $1.endSample }
-        let lastPresent = lastTurn.map { turn in
-            review.first(where: { $0.turnIDs.contains(turn.id) })?
-                .candidates.first(where: { $0.role == "source" })?
-                .text.isEmpty == false
+        let lastPresent = lastTurn.map {
+            JapaneseBenchmarkSupport.lastSpeechEvidence(
+                turn: $0,
+                fragments: finalFragments
+            ).heuristicPresent
         } ?? false
         let cpuPercent: Double?
         if let before = usageBefore, let after = usageAfter,
@@ -1018,25 +1176,6 @@ final class JapaneseLiveReplayTests: XCTestCase {
         return (sent, maximumLateness)
     }
 
-    private func referenceTurns(
-        manifest: JapaneseBenchmarkSupport.Manifest,
-        window: StressWindow
-    ) -> [ManyToManyTurnScorer.Turn] {
-        manifest.annotations.turns.filter {
-            max($0.startSample, window.startSample) < min($0.endSample, window.endSample)
-                && $0.confidence != .low
-                && !($0.overlap ?? false)
-        }.map {
-            ManyToManyTurnScorer.Turn(
-                id: $0.id,
-                confidence: $0.confidence.rawValue,
-                startSample: max($0.startSample, window.startSample),
-                endSample: min($0.endSample, window.endSample),
-                japanese: $0.japanese
-            )
-        }
-    }
-
     private func coverage(_ groups: [ManyToManyTurnScorer.Group], role: String) -> Double {
         guard !groups.isEmpty else { return 0 }
         let present = groups.filter {
@@ -1067,7 +1206,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
         var pcm = [Int16]()
         pcm.reserveCapacity(samples.count)
         for sample in samples {
-            let scaled = Int((min(1, max(-1, sample)) * 32_767).rounded())
+            let scaled = Int((min(1, max(-1, sample)) * 32_768).rounded())
             pcm.append(Int16(clamping: scaled).littleEndian)
         }
         return pcm.withUnsafeBytes { Data($0) }
@@ -1172,7 +1311,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
             "Run `\(report.runID)`, commit `\(report.gitCommit)`, worktree "
                 + (report.worktreeDirty ? "modifié" : "propre") + ".",
             includesWhisperLiveKit
-                ? "WhisperLiveKit : encodeur MLX + décodeur/alignement PyTorch CPU."
+                ? "WhisperLiveKit : \(report.whisperLiveKitArchitecture)."
                 : "WhisperLiveKit : non exécuté dans ce run.",
             "Qualité : exploratoire tant que les références restent `pending-human-review`.",
             report.promotionEligible

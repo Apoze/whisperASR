@@ -1,6 +1,11 @@
 import Foundation
 import CWhisper
 
+enum WhisperDecodingStrategy: String, Sendable {
+    case greedy
+    case beam5
+}
+
 final class TranscriptionService: @unchecked Sendable {
     private var ctx: OpaquePointer?
     private var loadedModelPath: String?
@@ -140,7 +145,8 @@ final class TranscriptionService: @unchecked Sendable {
     func transcribeChunk(samples: [Float],
                          language: String? = nil,
                          translate: Bool = false,
-                         modelPath: String? = nil) async throws -> TranscriptionResult {
+                         modelPath: String? = nil,
+                         decoding: WhisperDecodingStrategy = .greedy) async throws -> TranscriptionResult {
         guard !samples.isEmpty else {
             return TranscriptionResult(text: "", segments: [])
         }
@@ -159,7 +165,8 @@ final class TranscriptionService: @unchecked Sendable {
                 let (params, langCStr) = self.makeBaseParams(
                     threadCount: liveThreads,
                     language: language,
-                    translate: translate
+                    translate: translate,
+                    decoding: decoding
                 )
                 defer { free(langCStr) }
 
@@ -262,8 +269,12 @@ final class TranscriptionService: @unchecked Sendable {
     /// Caller must free the returned C string pointer after whisper_full completes.
     private func makeBaseParams(threadCount: Int32? = nil,
                                 language: String? = nil,
-                                translate: Bool = false) -> (whisper_full_params, UnsafeMutablePointer<CChar>?) {
-        var params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY)
+                                translate: Bool = false,
+                                decoding: WhisperDecodingStrategy = .greedy) -> (whisper_full_params, UnsafeMutablePointer<CChar>?) {
+        var params = whisper_full_default_params(
+            decoding == .beam5 ? WHISPER_SAMPLING_BEAM_SEARCH : WHISPER_SAMPLING_GREEDY
+        )
+        if decoding == .beam5 { params.beam_search.beam_size = 5 }
         params.print_progress = false
         params.print_realtime = false
         params.print_timestamps = false
