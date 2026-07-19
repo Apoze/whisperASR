@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SESSION="${1:-}"
 MANIFEST="${2:-$ROOT/docs/japanese-live/corpora/easy-japanese-1/manifest.json}"
+OUTPUT_STEM="${3:-}"
 
 if [[ -z "$SESSION" ]]; then
   echo "Usage: $0 <local-captions-*-session.json> [manifest.json]" >&2
@@ -17,16 +18,12 @@ for file in "$SESSION" "$MANIFEST"; do
     exit 1
   fi
 done
-if [[ "$(/usr/bin/jq -r '.corpusID' "$MANIFEST")" != "easy-japanese-1" ]]; then
-  echo "The exact product replay currently requires the Easy Japanese capture session." >&2
-  exit 2
-fi
-
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 cd "$ROOT"
 xcrun swift test --filter JapaneseOfflineEvaluationTests
 WHISPERASR_JAPANESE_OFFLINE_SESSION="$SESSION" \
 WHISPERASR_JAPANESE_BENCHMARK_MANIFEST="$MANIFEST" \
+WHISPERASR_JAPANESE_OFFLINE_OUTPUT_STEM="$OUTPUT_STEM" \
   xcrun swift test --skip-build \
     --filter JapaneseOfflineEvaluationTests/testGeneratePreviewFinalBlindReportWhenOptedIn
 

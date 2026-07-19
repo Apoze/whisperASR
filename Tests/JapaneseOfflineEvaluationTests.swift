@@ -261,6 +261,7 @@ enum ManyToManyTurnScorer {
         let startSample: Int
         let endSample: Int
         let japanese: String
+        var overlap: Bool = false
     }
 
     struct Fragment: Codable, Equatable {
@@ -354,8 +355,12 @@ enum ManyToManyTurnScorer {
             groups.append(Group(
                 id: groups.count + 1,
                 turnIDs: groupTurns.map(\.id),
-                highConfidenceTurnCount: groupTurns.filter { $0.confidence == "high" }.count,
-                diagnosticTurnCount: groupTurns.filter { $0.confidence != "high" }.count,
+                highConfidenceTurnCount: groupTurns.filter {
+                    $0.confidence == "high" && !$0.overlap
+                }.count,
+                diagnosticTurnCount: groupTurns.filter {
+                    $0.confidence != "high" || $0.overlap
+                }.count,
                 referenceJapanese: groupTurns.map(\.japanese).joined(),
                 candidates: candidates
             ))
@@ -385,8 +390,8 @@ enum ManyToManyTurnScorer {
             return Group(
                 id: turn.id,
                 turnIDs: [turn.id],
-                highConfidenceTurnCount: turn.confidence == "high" ? 1 : 0,
-                diagnosticTurnCount: turn.confidence == "high" ? 0 : 1,
+                highConfidenceTurnCount: turn.confidence == "high" && !turn.overlap ? 1 : 0,
+                diagnosticTurnCount: turn.confidence == "high" && !turn.overlap ? 0 : 1,
                 referenceJapanese: turn.japanese,
                 candidates: candidates
             )
@@ -460,7 +465,8 @@ enum ContinuousJapaneseCER {
             let normalized = JapaneseCER.normalized(turn.japanese)
             reference += normalized
             owners += Array(
-                repeating: turn.confidence == "high" ? .high : .diagnostic,
+                repeating: turn.confidence == "high" && !turn.overlap
+                    ? .high : .diagnostic,
                 count: normalized.count
             )
         }
@@ -565,17 +571,21 @@ enum ContinuousJapaneseCER {
                 rate: overall.rate
             ),
             highConfidence: scope(
-                turnCount: orderedTurns.filter { $0.confidence == "high" }.count,
+                turnCount: orderedTurns.filter {
+                    $0.confidence == "high" && !$0.overlap
+                }.count,
                 referenceCount: highReferenceCount,
                 counts: high
             ),
             diagnostic: scope(
-                turnCount: orderedTurns.filter { $0.confidence != "high" }.count,
+                turnCount: orderedTurns.filter {
+                    $0.confidence != "high" || $0.overlap
+                }.count,
                 referenceCount: diagnosticReferenceCount,
                 counts: diagnostic
             ),
             ambiguousBoundaryInsertions: ambiguousInsertions,
-            note: "Overall CER is exact and segmentation-independent. With the fixed deterministic traceback, high/diagnostic rates are bounds because insertions exactly between scopes have no character timestamp."
+            note: "Overall CER includes every annotation and is diagnostic. The primary high-confidence scope excludes overlaps. With the fixed deterministic traceback, primary/diagnostic rates are bounds because insertions exactly between scopes have no character timestamp."
         )
     }
 }
@@ -583,25 +593,58 @@ enum ContinuousJapaneseCER {
 final class JapaneseOfflineEvaluationTests: XCTestCase {
     private struct Metric: Decodable {
         let kind: String
+        let engine: String
         let rangeStart: Int
         let rangeEnd: Int
         let sourceText: String
         let englishText: String
         let revision: Int?
         let renderedUptimeNanoseconds: UInt64
+        let previewLatencyMilliseconds: Double?
+        let speechEndToRenderedMilliseconds: Double?
+        let previewGeneration: Int?
+        let isFirstEligibleInGeneration: Bool?
+        let acceptedStart: Int?
+        let stableThrough: Int?
+        let committedThrough: Int?
+        let finalSegmentIndex: Int?
     }
 
     private struct SessionReport: Decodable {
         struct Summary: Decodable {
             let sessionID: UUID
+            let engine: String
+            let translationMode: String
+            let finalSampleCount: Int
+            let pcmComplete: Bool
+            let m4aDroppedSampleCount: Int
             let sourceStagedThrough: Int
             let englishValidatedThrough: Int
+            let committedSampleCount: Int
+            let sourceFinalizedThrough: Int?
+            let endingEndpointFIFOCount: Int?
+            let endingTranslationQueueCount: Int?
+            let finalTranslationInFlight: Bool?
+            let sourcePipelineFailure: String?
+            let completionFailure: String?
+            let sourceLocale: String?
+            let captureTiming: AudioCaptureTiming?
+            let capturedApplicationBundleIdentifier: String?
+            let capturedApplicationProcessIdentifier: Int32?
+            let microphoneIncluded: Bool?
         }
         let summary: Summary
+        let maximumCombinedResidentBytes: UInt64
+        let maximumEndpointFIFOCount: Int?
         let metricsFile: String
         let metricsSHA256: String
         let canonicalPCMFile: String?
         let canonicalPCMSHA256: String?
+        let whisperCandidate: String?
+        let whisperModelID: String?
+        let whisperModelRevision: String?
+        let whisperModelFile: String?
+        let whisperModelSHA256: String?
     }
 
     private struct Identity: Codable {
@@ -636,8 +679,58 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let alignment: FirefoxCanonicalAudioAlignment.Result
         let coverage: Coverage
         let productionJapaneseCER: ContinuousJapaneseCER.Result
+        let lastSpeech: LastSpeechEvidence
+        let runtime: RuntimeEvidence
         let groups: [ManyToManyTurnScorer.Group]
         let unmatchedFragmentsByRole: [String: [ManyToManyTurnScorer.Fragment]]
+    }
+
+    private struct LatencyEvidence: Codable {
+        let count: Int
+        let p50Milliseconds: Double?
+        let p95Milliseconds: Double?
+        let worstMilliseconds: Double?
+    }
+
+    private struct RuntimeEvidence: Codable {
+        let captureTiming: AudioCaptureTiming?
+        let maximumCombinedResidentBytes: UInt64
+        let maximumEndpointFIFOCount: Int?
+        let endingEndpointFIFOCount: Int?
+        let endingTranslationQueueCount: Int?
+        let sourceFinalizedThrough: Int?
+        let committedSampleCount: Int
+        let previewFirstRevisionLatency: LatencyEvidence
+        let finalSpeechEndToRendered: LatencyEvidence
+        let slo: SLOAssessment
+    }
+
+    private struct PreviewCoverageEvidence: Codable {
+        let coveredPrimaryTurns: Int
+        let primaryTurnCount: Int
+        let percent: Double
+    }
+
+    private struct SLOAssessment: Codable {
+        let previewCoverage: PreviewCoverageEvidence
+        let previewCoveragePass: Bool
+        let previewP50Pass: Bool
+        let previewP95Pass: Bool
+        let previewWorstPass: Bool
+        let finalP95Pass: Bool
+        let finalImmutabilityPass: Bool
+        let finalImmutabilityEvidence: String
+        let allRuntimeSLOsPass: Bool
+    }
+
+    private struct LastSpeechEvidence: Codable {
+        let turnID: Int
+        let referenceJapanese: String
+        let observedJapanese: String
+        let matchedReferenceCharacters: Int
+        let referenceCharacterCount: Int
+        let referenceCoveragePercent: Double
+        let heuristicPresent: Bool
     }
 
     private struct BlindCandidate: Codable {
@@ -853,6 +946,60 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         XCTAssertEqual(result.diagnostic.turnCount, 1)
     }
 
+    func testContinuousJapaneseCERKeepsHighConfidenceOverlapDiagnostic() throws {
+        let result = try XCTUnwrap(ContinuousJapaneseCER.score(
+            turns: [
+                .init(
+                    id: 1, confidence: "high", startSample: 0, endSample: 100,
+                    japanese: "甲"
+                ),
+                .init(
+                    id: 2, confidence: "high", startSample: 100, endSample: 200,
+                    japanese: "乙", overlap: true
+                ),
+            ],
+            finalSourceFragments: [.init(
+                id: 1, startSample: 0, endSample: 200, text: "甲丙"
+            )]
+        ))
+
+        XCTAssertEqual(result.highConfidence.turnCount, 1)
+        XCTAssertEqual(result.highConfidence.substitutions, 0)
+        XCTAssertEqual(result.diagnostic.turnCount, 1)
+        XCTAssertEqual(result.diagnostic.substitutions, 1)
+    }
+
+    func testLastSpeechEvidenceRequiresHalfTheReferenceInOrder() {
+        let turn = ManyToManyTurnScorer.Turn(
+            id: 9, confidence: "high", startSample: 100, endSample: 200,
+            japanese: "最後の言葉です"
+        )
+        let missing = lastSpeechEvidence(
+            turn: turn,
+            fragments: [.init(
+                id: 1, startSample: 100, endSample: 200, text: "前の話"
+            )]
+        )
+        let present = lastSpeechEvidence(
+            turn: turn,
+            fragments: [.init(
+                id: 1, startSample: 100, endSample: 200, text: "最後の言葉です"
+            )]
+        )
+
+        XCTAssertFalse(missing.heuristicPresent)
+        XCTAssertTrue(present.heuristicPresent)
+        XCTAssertEqual(present.referenceCoveragePercent, 100)
+    }
+
+    func testFinalImmutabilityRequiresAppendOnlySegmentIndices() {
+        XCTAssertFalse(finalSegmentIndicesProveAppendOnly([]))
+        XCTAssertFalse(finalSegmentIndicesProveAppendOnly([nil]))
+        XCTAssertTrue(finalSegmentIndicesProveAppendOnly([0, 1, 2]))
+        XCTAssertFalse(finalSegmentIndicesProveAppendOnly([0, 2]))
+        XCTAssertFalse(finalSegmentIndicesProveAppendOnly([0, 1, 1]))
+    }
+
     func testContinuousJapaneseCERKeepsCrossScopeInsertionsAmbiguous() throws {
         let turns = [
             ManyToManyTurnScorer.Turn(
@@ -1022,8 +1169,9 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let session = try JSONDecoder().decode(
             SessionReport.self, from: Data(contentsOf: sessionURL)
         )
-        guard session.summary.sourceStagedThrough
-                == session.summary.englishValidatedThrough else {
+        guard !session.summary.engine.lowercased().contains("voxtral")
+                || session.summary.sourceStagedThrough
+                    == session.summary.englishValidatedThrough else {
             throw inputError(
                 "Source and English validation cursors differ; final metrics would hide staged Japanese."
             )
@@ -1046,10 +1194,8 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             for: manifest,
             workspaceRoot: root
         )
-        guard manifest.annotations.turns.count == 59,
-              manifest.annotations.turns.filter({ $0.confidence == .high }).count == 46,
-              manifest.annotations.turns.filter({ $0.confidence != .high }).count == 13 else {
-            throw inputError("Expected the reviewed 59-turn corpus (46 primary + 13 diagnostic).")
+        guard !manifest.annotations.turns.isEmpty else {
+            throw inputError("The corpus manifest contains no annotated turns.")
         }
         guard try JapaneseBenchmarkSupport.sha256(at: canonicalURL) == manifest.fixture.sha256 else {
             throw inputError("Canonical WAV no longer matches its manifest.")
@@ -1063,11 +1209,87 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             canonical: canonical,
             firefox: firefox
         )
+        if ["qudu2fx3ncc", "md62mmdz0m"].contains(manifest.corpusID) {
+            guard session.summary.pcmComplete,
+                  session.summary.engine == "whisperTurboApple",
+                  session.summary.translationMode == "adaptive",
+                  session.summary.finalSampleCount == firefox.count,
+                  session.summary.endingEndpointFIFOCount == 0,
+                  session.summary.endingTranslationQueueCount == 0,
+                  session.summary.finalTranslationInFlight == false,
+                  session.summary.sourcePipelineFailure == nil,
+                  session.summary.completionFailure == nil,
+                  session.summary.sourceLocale?.hasPrefix("ja") == true,
+                  session.summary.capturedApplicationBundleIdentifier == "org.mozilla.firefox",
+                  (session.summary.capturedApplicationProcessIdentifier ?? 0) > 0,
+                  session.summary.microphoneIncluded == false else {
+                throw inputError("The L7 session did not finish with a complete, drained Firefox pipeline.")
+            }
+            guard let timing = session.summary.captureTiming,
+                  timing.callbackCount > 0,
+                  timing.firstPresentationUptimeNanoseconds != nil,
+                  timing.firstBufferUptimeNanoseconds != nil,
+                  timing.firstPresentationSample48k != nil,
+                  timing.lastPresentationEndSample48k != nil,
+                  timing.invalidPresentationTimestampCount == 0,
+                  timing.gapCount == 0,
+                  timing.overlapCount == 0,
+                  timing.restartCount == 0 else {
+                throw inputError("ScreenCaptureKit PTS continuity was not proven for the L7 session.")
+            }
+            let baselinePlusTwentyPercent: UInt64 = 5_022_375_945
+            guard session.maximumCombinedResidentBytes < 10 * 1_024 * 1_024 * 1_024,
+                  session.maximumCombinedResidentBytes <= baselinePlusTwentyPercent else {
+                throw inputError("Observed resident memory exceeds the L7 gate.")
+            }
+            guard let candidate = session.whisperCandidate,
+                  let modelID = session.whisperModelID,
+                  let revision = session.whisperModelRevision,
+                  let modelSHA256 = session.whisperModelSHA256,
+                  session.whisperModelFile?.isEmpty == false else {
+                throw inputError("The final Whisper model is not pinned in the L7 sidecar.")
+            }
+            let expectedModel: (id: String, revision: String, sha256: String)
+            switch candidate {
+            case "turbo":
+                expectedModel = (
+                    "large-v3-turbo",
+                    "5359861c739e955e79d9a303bcbc70fb988958b1",
+                    "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
+                )
+            case "kotoba-q5":
+                expectedModel = (
+                    LocalWhisperModelSelection.kotobaModelID,
+                    LocalWhisperModelSelection.kotobaRevision,
+                    LocalWhisperModelSelection.kotobaSHA256
+                )
+            default:
+                throw inputError("Unexpected L7 Whisper candidate: \(candidate).")
+            }
+            guard modelID == expectedModel.id,
+                  revision == expectedModel.revision,
+                  modelSHA256 == expectedModel.sha256 else {
+                throw inputError("The L7 model identity differs from its pinned candidate.")
+            }
+            guard let finalizedThrough = session.summary.sourceFinalizedThrough,
+                  let lastAnnotatedSample = manifest.annotations.turns.map(\.endSample).max(),
+                  alignment.canonicalSample(forFirefoxSample: finalizedThrough)
+                    >= lastAnnotatedSample,
+                  alignment.canonicalSample(
+                    forFirefoxSample: session.summary.committedSampleCount
+                  ) >= lastAnnotatedSample else {
+                throw inputError("The final Japanese or English cursor does not cover the last annotated speech.")
+            }
+        }
         let metrics = try JSONDecoder().decode([Metric].self, from: Data(contentsOf: metricsURL))
         guard metrics.allSatisfy({
             $0.rangeStart >= 0 && $0.rangeEnd >= $0.rangeStart && $0.rangeEnd <= firefox.count
         }) else {
             throw inputError("Metric ranges exceed the matching Firefox audio.")
+        }
+        if ["qudu2fx3ncc", "md62mmdz0m"].contains(manifest.corpusID),
+           !metrics.allSatisfy({ $0.engine == session.summary.engine }) {
+            throw inputError("L7 metric engines differ from the attested session engine.")
         }
         let previews = previewExtremes(metrics)
         let firstPreview = fragments(
@@ -1091,8 +1313,25 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         guard !final.isEmpty else {
             throw inputError("Metrics must contain final records.")
         }
-        guard firstPreview.isEmpty == lastPreview.isEmpty else {
+        guard firstPreview.count == lastPreview.count else {
             throw inputError("Preview metrics must contain both first and last revisions.")
+        }
+        if ["qudu2fx3ncc", "md62mmdz0m"].contains(manifest.corpusID) {
+            let previewMetrics = metrics.filter { $0.kind == "preview" }
+            guard previewMetrics.allSatisfy({
+                $0.previewGeneration != nil && $0.isFirstEligibleInGeneration != nil
+            }), Dictionary(grouping: previewMetrics, by: \.previewGeneration).values
+                .allSatisfy({ revisions in
+                    let ordered = revisions.sorted {
+                        $0.renderedUptimeNanoseconds < $1.renderedUptimeNanoseconds
+                    }
+                    let flagged = ordered.indices.filter {
+                        ordered[$0].isFirstEligibleInGeneration == true
+                    }
+                    return flagged.count <= 1 && (flagged.first == nil || flagged.first == 0)
+                }) else {
+                throw inputError("L7 preview metrics do not carry their phrase generation identity.")
+            }
         }
         let turns = manifest.annotations.turns.map {
             ManyToManyTurnScorer.Turn(
@@ -1100,9 +1339,35 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                 confidence: $0.confidence.rawValue,
                 startSample: $0.startSample,
                 endSample: $0.endSample,
-                japanese: $0.japanese
+                japanese: $0.japanese,
+                overlap: $0.overlap ?? false
             )
         }
+        let finalMetrics = metrics.filter { $0.kind == "final" }.sorted {
+            ($0.acceptedStart ?? Int.max) < ($1.acceptedStart ?? Int.max)
+        }
+        guard finalMetrics.allSatisfy({ metric in
+            guard let acceptedStart = metric.acceptedStart,
+                  let stableThrough = metric.stableThrough,
+                  let committedThrough = metric.committedThrough else { return false }
+            return acceptedStart >= 0
+                && stableThrough > acceptedStart
+                && committedThrough == stableThrough
+        }), zip(finalMetrics, finalMetrics.dropFirst()).allSatisfy({ pair in
+            pair.0.stableThrough == pair.1.acceptedStart
+        }), finalMetrics.last?.stableThrough == session.summary.committedSampleCount,
+        finalMetrics.last?.stableThrough == session.summary.sourceFinalizedThrough else {
+            throw inputError("Accepted final cursors are missing, non-monotone, or contain a PCM hole.")
+        }
+        if let firstTurn = manifest.annotations.turns.min(by: { $0.startSample < $1.startSample }),
+           let firstAccepted = finalMetrics.first?.acceptedStart,
+           alignment.canonicalSample(forFirefoxSample: firstAccepted) > firstTurn.startSample {
+            throw inputError("The accepted final cursor starts after the first annotated speech.")
+        }
+        let lastTurn = try XCTUnwrap(
+            turns.max(by: { $0.endSample < $1.endSample })
+        )
+        let lastSpeech = lastSpeechEvidence(turn: lastTurn, fragments: finalSource)
         guard let productionJapaneseCER = ContinuousJapaneseCER.score(
             turns: turns,
             finalSourceFragments: finalSource
@@ -1123,23 +1388,18 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             groups: auditGroups,
             sourceFragmentCounts: sourceFragmentCounts
         )
-        guard auditCoverage.turnCount == 59,
-              auditCoverage.highConfidenceTurnCount == 46,
-              auditCoverage.diagnosticTurnCount == 13 else {
+        let expectedHighCount = manifest.annotations.turns.filter {
+            $0.confidence == .high && $0.overlap != true
+        }.count
+        guard auditCoverage.turnCount == manifest.annotations.turns.count,
+              auditCoverage.highConfidenceTurnCount == expectedHighCount,
+              auditCoverage.diagnosticTurnCount
+                == manifest.annotations.turns.count - expectedHighCount else {
             throw inputError("Many-to-many grouping lost annotated turns.")
         }
-        guard auditGroups.allSatisfy({ group in
-            group.candidates.first(where: { $0.role == "final" })?
-                .hasUncoveredTurnGap == false
-        }) else {
-            throw inputError("Final metric ranges contain a hidden internal gap.")
-        }
-        let orderedFinal = final.sorted { $0.startSample < $1.startSample }
-        guard zip(orderedFinal, orderedFinal.dropFirst()).allSatisfy({ pair in
-            pair.0.endSample == pair.1.startSample
-        }) else {
-            throw inputError("Final metric ranges contain a gap or overlap.")
-        }
+        // ASR ranges are VAD windows and may omit silence inside a human turn.
+        // The accepted cursor chain above proves PCM continuity; keeping the VAD
+        // ranges here preserves honest transcript scoring and review grouping.
         let reviewGroups = ManyToManyTurnScorer.reviewGroups(
             turns: turns,
             candidatesByRole: candidatesByRole
@@ -1159,15 +1419,63 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             firefoxAudio: try identity(firefoxURL),
             metrics: try identity(metricsURL)
         )
+        let firstPreviewMetrics = previews.first
+        let previewLatency = latencyEvidence(
+            firstPreviewMetrics,
+            value: \.previewLatencyMilliseconds
+        )
+        let finalLatency = latencyEvidence(
+            finalMetrics,
+            value: \.speechEndToRenderedMilliseconds
+        )
+        let previewCoverage = previewCoverage(
+            turns: turns,
+            fragments: firstPreview
+        )
+        let previewCoveragePass = previewCoverage.percent >= 95
+        let previewP50Pass = previewLatency.p50Milliseconds.map { $0 <= 1_000 } ?? false
+        let previewP95Pass = previewLatency.p95Milliseconds.map { $0 <= 1_800 } ?? false
+        let previewWorstPass = previewLatency.worstMilliseconds.map { $0 <= 3_000 } ?? false
+        let finalP95Pass = finalLatency.p95Milliseconds.map { $0 <= 1_500 } ?? false
+        let finalImmutabilityPass = finalSegmentIndicesProveAppendOnly(
+            finalMetrics.map(\.finalSegmentIndex)
+        )
+        let slo = SLOAssessment(
+            previewCoverage: previewCoverage,
+            previewCoveragePass: previewCoveragePass,
+            previewP50Pass: previewP50Pass,
+            previewP95Pass: previewP95Pass,
+            previewWorstPass: previewWorstPass,
+            finalP95Pass: finalP95Pass,
+            finalImmutabilityPass: finalImmutabilityPass,
+            finalImmutabilityEvidence: finalImmutabilityPass
+                ? "proven-append-only-final-segment-indices" : "not-proven",
+            allRuntimeSLOsPass: previewCoveragePass && previewP50Pass
+                && previewP95Pass && previewWorstPass && finalP95Pass
+                && finalImmutabilityPass
+        )
         let full = FullReport(
-            schemaVersion: 3,
+            schemaVersion: 5,
             status: "diagnostic-only",
-            note: "Offline evidence only. Firefox ranges were accepted after five-anchor audio correlation with <=20 ms drift; this report does not promote a product baseline.",
+            note: "Diagnostic evidence only: Firefox audio is correlated with five anchors and L7 sessions additionally require continuous ScreenCaptureKit PTS, drained cursors, pinned models and append-only final indices. Last-speech matching remains a heuristic until annotations are human-reviewed.",
             corpusID: manifest.corpusID,
             provenance: provenance,
             alignment: alignment,
             coverage: auditCoverage,
             productionJapaneseCER: productionJapaneseCER,
+            lastSpeech: lastSpeech,
+            runtime: RuntimeEvidence(
+                captureTiming: session.summary.captureTiming,
+                maximumCombinedResidentBytes: session.maximumCombinedResidentBytes,
+                maximumEndpointFIFOCount: session.maximumEndpointFIFOCount,
+                endingEndpointFIFOCount: session.summary.endingEndpointFIFOCount,
+                endingTranslationQueueCount: session.summary.endingTranslationQueueCount,
+                sourceFinalizedThrough: session.summary.sourceFinalizedThrough,
+                committedSampleCount: session.summary.committedSampleCount,
+                previewFirstRevisionLatency: previewLatency,
+                finalSpeechEndToRendered: finalLatency,
+                slo: slo
+            ),
             groups: auditGroups,
             unmatchedFragmentsByRole: unmatched
         )
@@ -1183,7 +1491,10 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             blind: blind.report,
             key: blind.key,
             directory: sessionURL.deletingLastPathComponent(),
-            stem: "local-captions-\(session.summary.sessionID.uuidString.lowercased())-\(UUID().uuidString.lowercased())"
+            stem: try outputStem(
+                environment["WHISPERASR_JAPANESE_OFFLINE_OUTPUT_STEM"],
+                sessionID: session.summary.sessionID
+            )
         )
     }
 
@@ -1211,7 +1522,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
     private func previewExtremes(_ metrics: [Metric]) -> (first: [Metric], last: [Metric]) {
         let groups = Dictionary(
             grouping: metrics.filter { $0.kind == "preview" },
-            by: \.rangeStart
+            by: { $0.previewGeneration ?? $0.rangeStart }
         ).values.map { revisions in
             revisions.sorted {
                 ($0.renderedUptimeNanoseconds, $0.revision ?? 0)
@@ -1222,6 +1533,93 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             groups.compactMap(\.first),
             groups.compactMap(\.last)
         )
+    }
+
+    private func lastSpeechEvidence(
+        turn: ManyToManyTurnScorer.Turn,
+        fragments: [ManyToManyTurnScorer.Fragment]
+    ) -> LastSpeechEvidence {
+        let observed = fragments.filter {
+            max($0.startSample, turn.startSample) < min($0.endSample, turn.endSample)
+        }.map(\.text).joined()
+        let referenceCharacters = JapaneseCER.normalized(turn.japanese)
+        let observedCharacters = JapaneseCER.normalized(observed)
+        var previous = Array(repeating: 0, count: observedCharacters.count + 1)
+        for reference in referenceCharacters {
+            var current = Array(repeating: 0, count: observedCharacters.count + 1)
+            for (index, hypothesis) in observedCharacters.enumerated() {
+                current[index + 1] = reference == hypothesis
+                    ? previous[index] + 1
+                    : max(previous[index + 1], current[index])
+            }
+            previous = current
+        }
+        let matched = previous.last ?? 0
+        let coverage = referenceCharacters.isEmpty
+            ? 0 : 100 * Double(matched) / Double(referenceCharacters.count)
+        return LastSpeechEvidence(
+            turnID: turn.id,
+            referenceJapanese: turn.japanese,
+            observedJapanese: observed,
+            matchedReferenceCharacters: matched,
+            referenceCharacterCount: referenceCharacters.count,
+            referenceCoveragePercent: coverage,
+            heuristicPresent: coverage >= 50
+        )
+    }
+
+    private func finalSegmentIndicesProveAppendOnly(_ indices: [Int?]) -> Bool {
+        !indices.isEmpty && indices.enumerated().allSatisfy {
+            $0.element == $0.offset
+        }
+    }
+
+    private func latencyEvidence(
+        _ metrics: [Metric],
+        value: KeyPath<Metric, Double?>
+    ) -> LatencyEvidence {
+        let values = metrics.compactMap { $0[keyPath: value] }.sorted()
+        func percentile(_ fraction: Double) -> Double? {
+            guard !values.isEmpty else { return nil }
+            let rank = max(0, min(values.count - 1, Int(ceil(fraction * Double(values.count))) - 1))
+            return values[rank]
+        }
+        return LatencyEvidence(
+            count: values.count,
+            p50Milliseconds: percentile(0.50),
+            p95Milliseconds: percentile(0.95),
+            worstMilliseconds: values.last
+        )
+    }
+
+    private func previewCoverage(
+        turns: [ManyToManyTurnScorer.Turn],
+        fragments: [ManyToManyTurnScorer.Fragment]
+    ) -> PreviewCoverageEvidence {
+        let primary = turns.filter { $0.confidence == "high" && !$0.overlap }
+        let covered = primary.filter { turn in
+            fragments.contains { fragment in
+                !fragment.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && max(turn.startSample, fragment.startSample)
+                        < min(turn.endSample, fragment.endSample)
+            }
+        }.count
+        return PreviewCoverageEvidence(
+            coveredPrimaryTurns: covered,
+            primaryTurnCount: primary.count,
+            percent: primary.isEmpty ? 0 : 100 * Double(covered) / Double(primary.count)
+        )
+    }
+
+    private func outputStem(_ requested: String?, sessionID: UUID) throws -> String {
+        guard let requested, !requested.isEmpty else {
+            return "local-captions-\(sessionID.uuidString.lowercased())-\(UUID().uuidString.lowercased())"
+        }
+        guard requested == URL(fileURLWithPath: requested).lastPathComponent,
+              requested.range(of: "^[A-Za-z0-9._-]+$", options: .regularExpression) != nil else {
+            throw inputError("The requested report stem is not a safe local file name.")
+        }
+        return requested
     }
 
     private func coverage(

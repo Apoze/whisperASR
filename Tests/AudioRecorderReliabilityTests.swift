@@ -93,6 +93,7 @@ final class AudioRecorderReliabilityTests: XCTestCase {
         XCTAssertNotNil(token)
         lifecycle.endRestart(generation: generation, token: token!)
         XCTAssertEqual(lifecycle.beginRestart()?.generation, generation)
+        XCTAssertEqual(lifecycle.restartCount, 2)
 
         lifecycle.m4aDroppedSampleCount = 32
         lifecycle.pcmComplete = false
@@ -101,5 +102,70 @@ final class AudioRecorderReliabilityTests: XCTestCase {
         XCTAssertFalse(lifecycle.restartInProgress)
         XCTAssertEqual(lifecycle.m4aDroppedSampleCount, 32)
         XCTAssertFalse(lifecycle.pcmComplete)
+    }
+
+    func testCaptureTimingDetectsGapsOverlapsAndMissingPTS() {
+        var lifecycle = AudioRecorder.CaptureLifecycle()
+        _ = lifecycle.beginSession()
+
+        lifecycle.noteAudioBuffer(
+            presentationStartSample48k: 1_000,
+            sampleCount: 480,
+            presentationUptimeNanoseconds: 5,
+            receivedUptimeNanoseconds: 10
+        )
+        lifecycle.noteAudioBuffer(
+            presentationStartSample48k: 1_480,
+            sampleCount: 480,
+            presentationUptimeNanoseconds: 15,
+            receivedUptimeNanoseconds: 20
+        )
+        lifecycle.noteAudioBuffer(
+            presentationStartSample48k: 2_000,
+            sampleCount: 480,
+            presentationUptimeNanoseconds: 25,
+            receivedUptimeNanoseconds: 30
+        )
+        lifecycle.noteAudioBuffer(
+            presentationStartSample48k: 2_400,
+            sampleCount: 480,
+            presentationUptimeNanoseconds: 35,
+            receivedUptimeNanoseconds: 40
+        )
+        lifecycle.noteAudioBuffer(
+            presentationStartSample48k: nil,
+            sampleCount: 480,
+            presentationUptimeNanoseconds: nil,
+            receivedUptimeNanoseconds: 50
+        )
+
+        XCTAssertEqual(lifecycle.timing.firstPresentationSample48k, 1_000)
+        XCTAssertEqual(lifecycle.timing.lastPresentationEndSample48k, 2_880)
+        XCTAssertEqual(lifecycle.timing.firstPresentationUptimeNanoseconds, 5)
+        XCTAssertEqual(lifecycle.timing.firstBufferUptimeNanoseconds, 10)
+        XCTAssertEqual(lifecycle.timing.callbackCount, 5)
+        XCTAssertEqual(lifecycle.timing.invalidPresentationTimestampCount, 1)
+        XCTAssertEqual(lifecycle.timing.gapCount, 1)
+        XCTAssertEqual(lifecycle.timing.gapSampleCount48k, 40)
+        XCTAssertEqual(lifecycle.timing.overlapCount, 1)
+        XCTAssertEqual(lifecycle.timing.overlapSampleCount48k, 80)
+    }
+
+    func testPresentationTimeMapsOntoDispatchUptime() {
+        XCTAssertEqual(
+            AudioRecorder.presentationUptimeNanoseconds(
+                receivedUptimeNanoseconds: 5_000_000_000,
+                hostOffsetSeconds: -0.025
+            ),
+            4_975_000_000
+        )
+        XCTAssertNil(AudioRecorder.presentationUptimeNanoseconds(
+            receivedUptimeNanoseconds: 5_000_000_000,
+            hostOffsetSeconds: -Double.infinity
+        ))
+        XCTAssertNil(AudioRecorder.presentationUptimeNanoseconds(
+            receivedUptimeNanoseconds: 5_000_000_000,
+            hostOffsetSeconds: -61
+        ))
     }
 }

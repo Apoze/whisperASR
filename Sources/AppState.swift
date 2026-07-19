@@ -208,6 +208,7 @@ private struct LocalTranslationJob: Sendable {
     let queueMilliseconds: Double
     let asrMilliseconds: Double
     let enqueuedUptimeNanoseconds: UInt64
+    let acceptedStart: Int?
     var attempts = LocalFinalTranslationAttemptState()
 
     var source: TranscriptionSegment { input.segment }
@@ -352,6 +353,7 @@ class AppState {
     private var localCommittedSampleCount = 0
     /// Source ASR has finalized through this sample; it may be ahead of English.
     private var localSourceFinalizedSampleCount = 0
+    private var localEndingEndpointFIFOCount = 0
     private var localSourcePipelineFailure: String?
     private var preparedLiveModelFileName: String?
     private var preparingLiveModelFileName: String?
@@ -441,9 +443,10 @@ class AppState {
 
     private var liveModelSelectionKey: String {
         let engine = LocalEnglishEngine.stored()
-        guard let modelID = engine.whisperModelID,
-              let model = ModelCatalog.model(id: modelID) else { return "" }
-        return "\(engine.rawValue)|\(ModelCatalog.path(for: model).path)"
+        guard let selection = try? LocalWhisperModelSelection.resolve(for: engine) else {
+            return ""
+        }
+        return "\(engine.rawValue)|\(selection.cacheKey)"
     }
 
     /// Maximum chunk duration sent to whisper (30 seconds at 16kHz).
@@ -812,6 +815,9 @@ class AppState {
                 )
             }
             do {
+                let whisperSelection = activeLocalEnglishEngine.usesWhisperFinal
+                    ? (try? LocalWhisperModelSelection.resolve(for: activeLocalEnglishEngine))
+                    : nil
                 _ = try await localMetricRecorder.writeOptInReport(
                     stem: benchmarkStem,
                     canonicalPCMURL: canonicalBenchmarkURL,
@@ -827,8 +833,22 @@ class AppState {
                         endingHelperBacklogSamples: finalHelperProgress?.backlogSamples,
                         sourceStagedThrough: localVoxtralClausePlanner.sourceStagedThrough,
                         englishValidatedThrough: localVoxtralClausePlanner.englishValidatedThrough,
-                        committedSampleCount: localCommittedSampleCount
+                        committedSampleCount: localCommittedSampleCount,
+                        sourceFinalizedThrough: localSourceFinalizedSampleCount,
+                        endingEndpointFIFOCount: localEndingEndpointFIFOCount,
+                        endingTranslationQueueCount: localTranslationQueue.count,
+                        finalTranslationInFlight: localFinalTranslationInFlight,
+                        sourcePipelineFailure: localSourcePipelineFailure,
+                        completionFailure: localFailure,
+                        sourceLocale: activeLocalSourceLocale,
+                        captureTiming: stopResult.captureTiming,
+                        capturedApplicationBundleIdentifier:
+                            stopResult.capturedApplicationBundleIdentifier,
+                        capturedApplicationProcessIdentifier:
+                            stopResult.capturedApplicationProcessIdentifier,
+                        microphoneIncluded: stopResult.microphoneIncluded
                     ),
+                    whisperModelSelection: whisperSelection,
                     voxtralConfiguration: activeLocalEnglishEngine.usesContinuousVoxtral
                         ? activeContinuousVoxtralConfiguration : nil,
                     japaneseGlossary: activeLocalEnglishEngine.usesContinuousVoxtral
@@ -1190,9 +1210,10 @@ class AppState {
             return
         }
 
-        guard let modelID = engine.whisperModelID,
-              let model = ModelCatalog.model(id: modelID),
-              ModelManager.shared.isDownloaded(model) else {
+        let selection: LocalWhisperModelSelection
+        do {
+            selection = try LocalWhisperModelSelection.resolve(for: engine)
+        } catch {
             let previousPreparation = liveModelPreparationTask
             previousPreparation?.cancel()
             liveModelPreparationTask = Task { [weak self] in
@@ -1200,15 +1221,15 @@ class AppState {
                 guard let self else { return }
                 await self.service.unloadModel()
             }
-            liveModelPreparationError = "Download the required Whisper model in Settings before using \(engine.label)."
+            liveModelPreparationError = error.localizedDescription
             preparedLiveModelFileName = nil
             preparingLiveModelFileName = nil
             isPreparingLiveModel = false
             return
         }
 
-        let selected = liveModelSelectionKey
-        let modelPath = ModelCatalog.path(for: model).path
+        let selected = "\(engine.rawValue)|\(selection.cacheKey)"
+        let modelPath = selection.fileURL.path
         guard preparedLiveModelFileName != selected,
               preparingLiveModelFileName != selected else { return }
         let previousPreparation = liveModelPreparationTask
@@ -1221,8 +1242,8 @@ class AppState {
             guard !Task.isCancelled else { return }
             guard let self else { return }
             do {
-                if let expectedSHA256 = model.sha256,
-                   !self.verifiedWhisperModelChecksums.contains(model.fileName) {
+                if let expectedSHA256 = selection.expectedSHA256,
+                   !self.verifiedWhisperModelChecksums.contains(selection.cacheKey) {
                     let modelURL = URL(fileURLWithPath: modelPath)
                     let actualSHA256 = try await Task.detached(priority: .utility) {
                         try ModelDownloader.sha256(of: modelURL)
@@ -1230,12 +1251,12 @@ class AppState {
                     guard !Task.isCancelled else { return }
                     guard actualSHA256 == expectedSHA256 else {
                         throw LocalPrototypeError.invalidModelChecksum(
-                            model: model.displayName,
+                            model: selection.displayName,
                             expected: expectedSHA256,
                             actual: actualSHA256
                         )
                     }
-                    self.verifiedWhisperModelChecksums.insert(model.fileName)
+                    self.verifiedWhisperModelChecksums.insert(selection.cacheKey)
                 }
                 guard !Task.isCancelled else { return }
                 try await self.service.preloadModel(
@@ -1789,6 +1810,7 @@ class AppState {
         localPreviewRuntimeEnabled = false
         localCommittedSampleCount = 0
         localSourceFinalizedSampleCount = 0
+        localEndingEndpointFIFOCount = 0
         localSourcePipelineFailure = nil
         liveError = nil
         liveTranslationError = nil
@@ -2001,12 +2023,14 @@ class AppState {
                 let rendered = DispatchTime.now().uptimeNanoseconds
                 let rangeStart = max(0, Int((work.update.segment.start * 16_000).rounded()))
                 let rangeEnd = max(rangeStart, Int(((work.update.segment.end ?? work.update.segment.start) * 16_000).rounded()))
-                let sourceEndUptime = localRecordingStartedUptimeNanoseconds
+                let captureOrigin = activeLocalRecorder?.firstAudioPresentationUptimeNanoseconds
+                    ?? localRecordingStartedUptimeNanoseconds
+                let sourceEndUptime = captureOrigin
                     + UInt64(rangeEnd) * 1_000_000_000 / 16_000
                 let speechStart = localPreviewSpeechStartSample ?? rangeStart
-                let sourceStartUptime = localRecordingStartedUptimeNanoseconds
+                let sourceStartUptime = captureOrigin
                     + UInt64(max(0, speechStart)) * 1_000_000_000 / 16_000
-                await localMetricRecorder.append(LocalCaptionMetric(
+                var metric = LocalCaptionMetric(
                     kind: .preview,
                     engine: activeLocalEnglishEngine.rawValue,
                     boundaryKind: nil,
@@ -2027,11 +2051,16 @@ class AppState {
                     revision: localPreviewRevision,
                     previewLatencyMilliseconds: rendered > sourceStartUptime
                         ? Double(rendered - sourceStartUptime) / 1_000_000 : 0,
+                    speechEndToRenderedMilliseconds: rendered > sourceEndUptime
+                        ? Double(rendered - sourceEndUptime) / 1_000_000 : 0,
                     firstLexicalUptimeNanoseconds: work.firstLexicalUptimeNanoseconds,
                     sourceEligibleUptimeNanoseconds: work.receivedUptimeNanoseconds,
                     translationStartedUptimeNanoseconds: translationStarted,
                     translationCompletedUptimeNanoseconds: translationCompleted
-                ))
+                )
+                metric.previewGeneration = work.generation
+                metric.isFirstEligibleInGeneration = work.isFirstEligibleInGeneration
+                await localMetricRecorder.append(metric)
             } catch {
                 guard !Task.isCancelled else { return }
                 if case AppleLiveError.translationAssetsUnavailable = error {
@@ -2143,6 +2172,20 @@ class AppState {
             return
         }
         let fifo = LocalEndpointFIFO()
+        let memorySampler: Task<Void, Never>? = localBenchmarkEnabled
+            ? Task { @MainActor [weak self] in
+                guard let self else { return }
+                while !Task.isCancelled {
+                    await self.localMetricRecorder.observe(
+                        combinedResidentBytes: self.localModelManager.currentMemoryBytes(),
+                        helperBacklogSamples: 0,
+                        helperProcessIdentifier: nil,
+                        endpointFIFOCount: await fifo.pendingCount()
+                    )
+                    try? await Task.sleep(for: .milliseconds(250))
+                }
+            }
+            : nil
 
         async let producerError: Error? = producePrototypeEndpoints(
             recorder: recorder,
@@ -2158,6 +2201,10 @@ class AppState {
 
         let error = await producerError
         await consumer
+        await finishLocalTranslationQueue()
+        memorySampler?.cancel()
+        await memorySampler?.value
+        localEndingEndpointFIFOCount = await fifo.pendingCount()
         if let error {
             localSourcePipelineFailure = error.localizedDescription
             liveError = error.localizedDescription
@@ -2314,6 +2361,7 @@ class AppState {
         }
         await fifo.finishProducing()
         await consumer
+        localEndingEndpointFIFOCount = await fifo.pendingCount()
         if let diarizationTask {
             do {
                 try await withAsyncDeadline(
@@ -2966,6 +3014,14 @@ class AppState {
                     await fifo.stage(decision, voxtralText: voxtralText)
                 }
                 let queuedPhrases = await fifo.pendingCount()
+                if localBenchmarkEnabled {
+                    await localMetricRecorder.observe(
+                        combinedResidentBytes: 0,
+                        helperBacklogSamples: 0,
+                        helperProcessIdentifier: nil,
+                        endpointFIFOCount: queuedPhrases
+                    )
+                }
                 if queuedPhrases > 1 {
                     setLocalStatus(
                         "Catching up — \(queuedPhrases - 1) phrase\(queuedPhrases == 2 ? "" : "s") queued"
@@ -3232,16 +3288,19 @@ class AppState {
             text: finalText
         )
         let asrMilliseconds = Self.elapsedMilliseconds(since: asrStart)
+        let acceptedStart = localSourceFinalizedSampleCount
         let queued = engine.producesDirectEnglish
             ? enqueueDirectEnglish(
                 segment,
                 decision: decision,
+                acceptedStart: acceptedStart,
                 queueMilliseconds: queueMilliseconds,
                 asrMilliseconds: asrMilliseconds
             )
             : enqueueLocalSource(
                 segment,
                 decision: decision,
+                acceptedStart: acceptedStart,
                 queueMilliseconds: queueMilliseconds,
                 asrMilliseconds: asrMilliseconds
             )
@@ -3266,19 +3325,18 @@ class AppState {
     }
 
     private static func whisperModelPath(for engine: LocalEnglishEngine) throws -> String {
-        guard let modelID = engine.whisperModelID,
-              let model = ModelCatalog.model(id: modelID) else {
-            throw LocalPrototypeError.modelNotLoaded(engine.label)
-        }
-        let path = ModelCatalog.path(for: model).path
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw LocalPrototypeError.modelNotLoaded(model.displayName)
-        }
-        return path
+        try LocalWhisperModelSelection.resolve(for: engine).fileURL.path
     }
 
     private static func elapsedMilliseconds(since start: UInt64) -> Double {
         Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000
+    }
+
+    private func localCaptureUptime(atSample sample: Int) -> UInt64? {
+        let origin = activeLocalRecorder?.firstAudioPresentationUptimeNanoseconds
+            ?? localRecordingStartedUptimeNanoseconds
+        guard origin > 0 else { return nil }
+        return origin + UInt64(max(0, sample)) * 1_000_000_000 / 16_000
     }
 
     @MainActor
@@ -3517,6 +3575,7 @@ class AppState {
         localPreviewRuntimeEnabled = false
         localCommittedSampleCount = 0
         localSourceFinalizedSampleCount = 0
+        localEndingEndpointFIFOCount = 0
         localSourcePipelineFailure = nil
         activeLocalRecorder = nil
         if !isTranscribing, items.contains(where: { $0.status == .pending }) {
@@ -3528,6 +3587,7 @@ class AppState {
     private func enqueueLocalSource(
         _ source: TranscriptionSegment,
         decision: LocalEndpointDecision? = nil,
+        acceptedStart: Int? = nil,
         queueMilliseconds: Double = 0,
         asrMilliseconds: Double = 0
     ) -> Bool {
@@ -3558,6 +3618,7 @@ class AppState {
             .japaneseSource(normalized),
             index: index,
             decision: decision,
+            acceptedStart: acceptedStart,
             queueMilliseconds: queueMilliseconds,
             asrMilliseconds: asrMilliseconds
         )
@@ -3568,6 +3629,7 @@ class AppState {
     private func enqueueDirectEnglish(
         _ segment: TranscriptionSegment,
         decision: LocalEndpointDecision? = nil,
+        acceptedStart: Int? = nil,
         queueMilliseconds: Double = 0,
         asrMilliseconds: Double = 0
     ) -> Bool {
@@ -3594,6 +3656,7 @@ class AppState {
             .directEnglish(normalized),
             index: localCommittedSegments.count + localTranslationQueue.count,
             decision: decision,
+            acceptedStart: acceptedStart,
             queueMilliseconds: queueMilliseconds,
             asrMilliseconds: asrMilliseconds
         )
@@ -3605,6 +3668,7 @@ class AppState {
         _ input: LocalFinalInput,
         index: Int,
         decision: LocalEndpointDecision?,
+        acceptedStart: Int?,
         queueMilliseconds: Double,
         asrMilliseconds: Double
     ) {
@@ -3614,7 +3678,8 @@ class AppState {
             decision: decision,
             queueMilliseconds: queueMilliseconds,
             asrMilliseconds: asrMilliseconds,
-            enqueuedUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds
+            enqueuedUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
+            acceptedStart: acceptedStart
         ))
         localFinalTranslationState.noteEnqueued(
             isOnlyJob: localTranslationQueue.count == 1
@@ -3672,6 +3737,11 @@ class AppState {
                 startLocalPreviewWorkerIfNeeded()
                 let normalized = text
                 guard localTranslationQueue.first?.index == job.index else { continue }
+                guard job.index == localCommittedSegments.count else {
+                    throw LocalPrototypeError.cursorMismatch(
+                        "Final subtitles must be appended once, in FIFO order."
+                    )
+                }
                 if let decision = job.decision,
                    activeLocalEnglishEngine.usesContinuousVoxtral,
                    !localVoxtralClausePlanner.validate(through: decision.stableThrough) {
@@ -3685,11 +3755,7 @@ class AppState {
                     end: job.source.end,
                     text: normalized
                 )
-                if job.index < localCommittedSegments.count {
-                    localCommittedSegments[job.index] = translated
-                } else {
-                    localCommittedSegments.append(translated)
-                }
+                localCommittedSegments.append(translated)
                 if let decision = job.decision {
                     localCommittedSampleCount = max(
                         localCommittedSampleCount,
@@ -3707,6 +3773,7 @@ class AppState {
                 localFinalTranslationState = localTranslationQueue.isEmpty ? .idle : .queued
                 liveTranslationError = nil
                 publishLocalCaptions()
+                let rendered = DispatchTime.now().uptimeNanoseconds
                 await recordLocalFinalTranslationAttempt(
                     job: job,
                     attempt: attempt,
@@ -3718,7 +3785,10 @@ class AppState {
                     englishText: normalized
                 )
                 if let decision = job.decision {
-                    await localMetricRecorder.append(LocalCaptionMetric(
+                    let speechEndUptime = localCaptureUptime(
+                        atSample: decision.speechEnd
+                    )
+                    var metric = LocalCaptionMetric(
                         kind: .final,
                         engine: activeLocalEnglishEngine.rawValue,
                         boundaryKind: decision.kind.rawValue,
@@ -3732,16 +3802,25 @@ class AppState {
                         asrMilliseconds: job.asrMilliseconds,
                         translationMilliseconds: translationCompleted > translationStart
                             ? Double(translationCompleted - translationStart) / 1_000_000 : 0,
-                        renderedUptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
+                        renderedUptimeNanoseconds: rendered,
                         sourceText: job.source.text,
                         englishText: normalized,
                         revision: nil,
                         previewLatencyMilliseconds: nil,
+                        speechEndToRenderedMilliseconds: speechEndUptime.map {
+                            rendered > $0 ? Double(rendered - $0) / 1_000_000 : 0
+                        },
                         firstLexicalUptimeNanoseconds: nil,
                         sourceEligibleUptimeNanoseconds: nil,
                         translationStartedUptimeNanoseconds: translationStart,
                         translationCompletedUptimeNanoseconds: translationCompleted
-                    ))
+                    )
+                    metric.acceptedStart = job.acceptedStart
+                        ?? max(0, Int((job.source.start * 16_000).rounded()))
+                    metric.stableThrough = decision.stableThrough
+                    metric.committedThrough = localCommittedSampleCount
+                    metric.finalSegmentIndex = job.index
+                    await localMetricRecorder.append(metric)
                 }
             } catch {
                 let translationCompleted = DispatchTime.now().uptimeNanoseconds

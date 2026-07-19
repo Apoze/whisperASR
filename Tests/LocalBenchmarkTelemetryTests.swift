@@ -13,7 +13,7 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
 
         let recorder = LocalCaptionMetricRecorder(enabled: true)
         await recorder.reset()
-        await recorder.append(LocalCaptionMetric(
+        var metric = LocalCaptionMetric(
             kind: .final,
             engine: "voxtralApple",
             boundaryKind: "pause",
@@ -31,15 +31,19 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
             englishText: "Hello.",
             revision: nil,
             previewLatencyMilliseconds: nil,
+            speechEndToRenderedMilliseconds: 1.5,
             firstLexicalUptimeNanoseconds: nil,
             sourceEligibleUptimeNanoseconds: nil,
             translationStartedUptimeNanoseconds: nil,
             translationCompletedUptimeNanoseconds: nil
-        ))
+        )
+        metric.finalSegmentIndex = 0
+        await recorder.append(metric)
         await recorder.observe(
             combinedResidentBytes: 4_000,
             helperBacklogSamples: 320,
-            helperProcessIdentifier: 42
+            helperProcessIdentifier: 42,
+            endpointFIFOCount: 2
         )
 
         let sessionID = UUID()
@@ -62,7 +66,29 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
                 endingHelperBacklogSamples: 0,
                 sourceStagedThrough: 16_000,
                 englishValidatedThrough: 16_000,
-                committedSampleCount: 16_000
+                committedSampleCount: 16_000,
+                sourceFinalizedThrough: 16_000,
+                captureTiming: AudioCaptureTiming(
+                    firstPresentationSample48k: 0,
+                    lastPresentationEndSample48k: 48_000,
+                    firstPresentationUptimeNanoseconds: 1,
+                    firstBufferUptimeNanoseconds: 1,
+                    callbackCount: 100,
+                    invalidPresentationTimestampCount: 0,
+                    gapCount: 0,
+                    gapSampleCount48k: 0,
+                    overlapCount: 0,
+                    overlapSampleCount48k: 0,
+                    restartCount: 0
+                )
+            ),
+            whisperModelSelection: LocalWhisperModelSelection(
+                candidate: "turbo",
+                modelID: "large-v3-turbo",
+                revision: "revision",
+                displayName: "Turbo",
+                fileURL: pcm,
+                expectedSHA256: "model-sha"
             ),
             voxtralConfiguration: .init(model: .q6, delay: .milliseconds1200),
             japaneseGlossary: JapaneseGlossary(entries: [
@@ -84,11 +110,13 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
             metricJSON.first?["boundaryDegradation"] as? String,
             "degradedForcedBoundary"
         )
+        XCTAssertEqual(metricJSON.first?["finalSegmentIndex"] as? Int, 0)
         let csv = try String(
             contentsOf: root.appendingPathComponent("\(stem)-metrics.csv"),
             encoding: .utf8
         )
         XCTAssertTrue(csv.contains("boundary_degradation"))
+        XCTAssertTrue(csv.contains("final_segment_index"))
         XCTAssertTrue(csv.contains("degradedForcedBoundary"))
         let sessionURL = root.appendingPathComponent("\(stem)-session.json")
         let json = try XCTUnwrap(
@@ -98,6 +126,9 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         XCTAssertEqual(json["helperProcessIdentifier"] as? Int, 42)
         XCTAssertEqual(json["maximumCombinedResidentBytes"] as? Int, 4_000)
         XCTAssertEqual(json["maximumHelperBacklogSamples"] as? Int, 320)
+        XCTAssertEqual(json["maximumEndpointFIFOCount"] as? Int, 2)
+        XCTAssertEqual(json["whisperCandidate"] as? String, "turbo")
+        XCTAssertEqual(json["whisperModelSHA256"] as? String, "model-sha")
         XCTAssertEqual(json["voxtralModelID"] as? String, VoxtralModelVariant.q6.modelID)
         XCTAssertEqual(json["voxtralDelayMilliseconds"] as? Int, 1_200)
         XCTAssertFalse((json["japaneseGlossarySHA256"] as? String ?? "").isEmpty)

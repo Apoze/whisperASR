@@ -340,6 +340,69 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertTrue(LocalEnglishEngine.voxtralCohereApple.usesVoxtralSourcePreview)
     }
 
+    func testKotobaOverrideIsIgnoredOutsideBenchmark() throws {
+        let selection = try LocalWhisperModelSelection.resolve(
+            for: .whisperTurboApple,
+            environment: [
+                LocalWhisperModelSelection.benchmarkCandidateEnvironmentKey: "kotoba-q5",
+                LocalWhisperModelSelection.kotobaPathEnvironmentKey: "/missing/kotoba.bin",
+            ],
+            fileExists: { _ in true }
+        )
+
+        XCTAssertEqual(selection.candidate, "turbo")
+        XCTAssertEqual(selection.modelID, "large-v3-turbo")
+    }
+
+    func testKotobaOverrideUsesPinnedModelOnlyInsideBenchmark() throws {
+        let path = "/bench/ggml-kotoba-whisper-v2.0-q5_0.bin"
+        let selection = try LocalWhisperModelSelection.resolve(
+            for: .whisperTurboApple,
+            environment: [
+                "WHISPERASR_BENCHMARK": "1",
+                LocalWhisperModelSelection.benchmarkCandidateEnvironmentKey: "kotoba-q5",
+                LocalWhisperModelSelection.kotobaPathEnvironmentKey: path,
+            ],
+            fileExists: { $0 == path }
+        )
+
+        XCTAssertEqual(selection.candidate, "kotoba-q5")
+        XCTAssertEqual(selection.modelID, LocalWhisperModelSelection.kotobaModelID)
+        XCTAssertEqual(selection.revision, LocalWhisperModelSelection.kotobaRevision)
+        XCTAssertEqual(selection.expectedSHA256, LocalWhisperModelSelection.kotobaSHA256)
+        XCTAssertEqual(selection.fileURL.path, path)
+    }
+
+    func testBenchmarkWhisperOverrideRejectsUnknownOrMissingCandidate() {
+        XCTAssertThrowsError(try LocalWhisperModelSelection.resolve(
+            for: .whisperTurboApple,
+            environment: [
+                "WHISPERASR_BENCHMARK": "1",
+                LocalWhisperModelSelection.benchmarkCandidateEnvironmentKey: "unknown",
+            ],
+            fileExists: { _ in true }
+        )) { error in
+            XCTAssertEqual(
+                error as? LocalWhisperModelSelectionError,
+                .unknownCandidate("unknown")
+            )
+        }
+
+        XCTAssertThrowsError(try LocalWhisperModelSelection.resolve(
+            for: .whisperTurboApple,
+            environment: [
+                "WHISPERASR_BENCHMARK": "1",
+                LocalWhisperModelSelection.benchmarkCandidateEnvironmentKey: "kotoba-q5",
+            ],
+            fileExists: { _ in true }
+        )) { error in
+            XCTAssertEqual(
+                error as? LocalWhisperModelSelectionError,
+                .missingKotobaPath
+            )
+        }
+    }
+
     func testAppleSpeechFeedCursorsAreContiguousAndIndependent() {
         var feed = LocalAppleSpeechFeedState()
 

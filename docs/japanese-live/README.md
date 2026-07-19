@@ -21,16 +21,16 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L5 — Bakeoff japonais](lots/L05-bakeoff-japonais.md) | L4 | terminé, aucune promotion | huit ASR finales comparées; `whispermlx` arrêté après le stress pack |
 | [L6 — Architectures live et anglais](lots/L06-live-anglais.md) | L5 | terminé, aucune promotion | Apple manque le p50; WhisperLiveKit est écarté |
 | L6A — Alignement `whispermlx` | gate L6 | conditionnel | valeur propre de l'alignement japonais |
-| L7 — Firefox et décision | L5, L6 | non démarré | deux finalistes dans l'application réelle |
-| L8 — Intégration gagnante | L7 | non démarré | un seul moteur produit |
+| [L7 — Firefox et décision](lots/L07-firefox-decision.md) | L5, L6 | terminé, aucune promotion | quatre replays Firefox; aucun gagnant produit |
+| L8 — Intégration gagnante | L7 | non créé, gate non atteint | un seul moteur produit |
 | L9 — Changements de voix | L8 | non démarré | frontières fiables, sans identité persistante |
 | L10 — Nettoyage et endurance | lots retenus | non démarré | application minimale, stable et hors ligne |
 
 ## SLO et gates communs
 
 - Preview anglaise : couverture ≥ 95 %, p50 ≤ 1 s, p95 ≤ 1,8 s, pire ≤ 3 s.
-- Final anglais : p95 ≤ 1,5 s après la fin de parole, puis aucune révision.
-- Intégrité : PCM entièrement couvert, dernière parole présente, aucun terme critique nouvellement omis et backlog final nul.
+- Final anglais : p95 ≤ 1,5 s après la fin de parole, puis aucune révision prouvée par des indices append-only.
+- Intégrité : PCM entièrement couvert, dernière parole validée humainement, aucun terme critique nouvellement omis et backlog final nul. Le rapprochement automatique de la dernière phrase reste une heuristique.
 - Mémoire : moins de 10 Gio et au plus 20 % au-dessus du baseline L0.
 - Promotion qualité : CER relatif amélioré d'au moins 10 % avec bootstrap apparié à 95 %, ou p95 preview gagné d'au moins 200 ms avec une dégradation CER ≤ 2 points; aucun holdout dégradé de plus de 2 points.
 

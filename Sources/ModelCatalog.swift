@@ -140,6 +140,104 @@ enum ModelCatalog {
     }
 }
 
+/// Resolves the one Whisper model used by the local-English pipeline. L7 may
+/// substitute Kotoba only in an explicitly opted-in benchmark process; normal
+/// application runs always use the catalog model selected by the pipeline.
+struct LocalWhisperModelSelection: Equatable {
+    static let benchmarkCandidateEnvironmentKey = "WHISPERASR_L7_WHISPER_CANDIDATE"
+    static let kotobaPathEnvironmentKey = "WHISPERASR_KOTOBA_Q5_MODEL"
+    static let kotobaModelID = "kotoba-tech/kotoba-whisper-v2.0-ggml"
+    static let kotobaRevision = "e3a0cf6a62b95911703cfb97d819292e058f12c3"
+    static let kotobaSHA256 = "4a3b92192b5d3578ff854a5876213e2e27af0c2d357492c2d14271e82c303658"
+
+    let candidate: String
+    let modelID: String
+    let revision: String?
+    let displayName: String
+    let fileURL: URL
+    let expectedSHA256: String?
+
+    var cacheKey: String {
+        "\(candidate)|\(fileURL.path)|\(expectedSHA256 ?? "unpinned")"
+    }
+
+    static func resolve(
+        for engine: LocalEnglishEngine,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        fileExists: (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }
+    ) throws -> Self {
+        let benchmarkCandidate = environment[benchmarkCandidateEnvironmentKey]
+        if environment["WHISPERASR_BENCHMARK"] == "1",
+           engine == .whisperTurboApple,
+           let benchmarkCandidate,
+           !benchmarkCandidate.isEmpty,
+           benchmarkCandidate != "turbo" {
+            guard benchmarkCandidate == "kotoba-q5" else {
+                throw LocalWhisperModelSelectionError.unknownCandidate(benchmarkCandidate)
+            }
+            guard let path = environment[kotobaPathEnvironmentKey], path.hasPrefix("/") else {
+                throw LocalWhisperModelSelectionError.missingKotobaPath
+            }
+            let fileURL = URL(fileURLWithPath: path).standardizedFileURL
+            guard fileExists(fileURL.path) else {
+                throw LocalWhisperModelSelectionError.modelNotFound(fileURL.path)
+            }
+            return Self(
+                candidate: benchmarkCandidate,
+                modelID: kotobaModelID,
+                revision: kotobaRevision,
+                displayName: "Kotoba Whisper v2.0 Q5",
+                fileURL: fileURL,
+                expectedSHA256: kotobaSHA256
+            )
+        }
+
+        guard let modelID = engine.whisperModelID,
+              let model = ModelCatalog.model(id: modelID) else {
+            throw LocalWhisperModelSelectionError.engineHasNoWhisperModel(engine.rawValue)
+        }
+        let fileURL = ModelCatalog.path(for: model).standardizedFileURL
+        guard fileExists(fileURL.path) else {
+            throw LocalWhisperModelSelectionError.modelNotFound(fileURL.path)
+        }
+        return Self(
+            candidate: model.id == "large-v3-turbo" ? "turbo" : model.id,
+            modelID: model.id,
+            revision: revision(from: model.url),
+            displayName: model.displayName,
+            fileURL: fileURL,
+            expectedSHA256: model.sha256
+        )
+    }
+
+    private static func revision(from url: URL) -> String? {
+        let components = url.pathComponents
+        guard let resolve = components.firstIndex(of: "resolve"),
+              components.indices.contains(resolve + 1) else { return nil }
+        return components[resolve + 1]
+    }
+}
+
+enum LocalWhisperModelSelectionError: LocalizedError, Equatable {
+    case unknownCandidate(String)
+    case missingKotobaPath
+    case modelNotFound(String)
+    case engineHasNoWhisperModel(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unknownCandidate(let candidate):
+            return "Unknown L7 Whisper benchmark candidate: \(candidate)."
+        case .missingKotobaPath:
+            return "WHISPERASR_KOTOBA_Q5_MODEL must contain an absolute Kotoba model path."
+        case .modelNotFound(let path):
+            return "The required Whisper model was not found at \(path)."
+        case .engineHasNoWhisperModel(let engine):
+            return "The \(engine) pipeline does not use a Whisper model."
+        }
+    }
+}
+
 // MARK: - Model Manager
 
 /// Tracks which models are on disk, in-flight downloads, and the user's

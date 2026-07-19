@@ -20,9 +20,27 @@ struct RecordingStopResult: Equatable, Sendable {
     let finalSampleCount: Int
     let m4aDroppedSampleCount: Int
     let pcmComplete: Bool
+    let captureTiming: AudioCaptureTiming
+    let capturedApplicationBundleIdentifier: String?
+    let capturedApplicationProcessIdentifier: Int32?
+    let microphoneIncluded: Bool
     let recoverySessionID: UUID?
     let recoveryLocation: RecoverablePCMSpool.Location?
     let recoverablePCM: RecoverablePCMSpool.Artifact?
+}
+
+struct AudioCaptureTiming: Codable, Equatable, Sendable {
+    let firstPresentationSample48k: Int64?
+    let lastPresentationEndSample48k: Int64?
+    let firstPresentationUptimeNanoseconds: UInt64?
+    let firstBufferUptimeNanoseconds: UInt64?
+    let callbackCount: Int
+    let invalidPresentationTimestampCount: Int
+    let gapCount: Int
+    let gapSampleCount48k: Int64
+    let overlapCount: Int
+    let overlapSampleCount48k: Int64
+    let restartCount: Int
 }
 
 enum CanonicalPCMResamplerError: LocalizedError {
@@ -212,6 +230,17 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         var sealedFinalSampleCount: Int?
         var m4aDroppedSampleCount = 0
         var pcmComplete = true
+        var firstPresentationSample48k: Int64?
+        var lastPresentationEndSample48k: Int64?
+        var firstPresentationUptimeNanoseconds: UInt64?
+        var firstBufferUptimeNanoseconds: UInt64?
+        var callbackCount = 0
+        var invalidPresentationTimestampCount = 0
+        var gapCount = 0
+        var gapSampleCount48k: Int64 = 0
+        var overlapCount = 0
+        var overlapSampleCount48k: Int64 = 0
+        var restartCount = 0
 
         mutating func beginSession() -> UInt64 {
             generation &+= 1
@@ -223,6 +252,17 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             sealedFinalSampleCount = nil
             m4aDroppedSampleCount = 0
             pcmComplete = true
+            firstPresentationSample48k = nil
+            lastPresentationEndSample48k = nil
+            firstPresentationUptimeNanoseconds = nil
+            firstBufferUptimeNanoseconds = nil
+            callbackCount = 0
+            invalidPresentationTimestampCount = 0
+            gapCount = 0
+            gapSampleCount48k = 0
+            overlapCount = 0
+            overlapSampleCount48k = 0
+            restartCount = 0
             return generation
         }
 
@@ -244,7 +284,57 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             let token = UUID()
             restartInProgress = true
             restartToken = token
+            restartCount += 1
             return (generation, token)
+        }
+
+        mutating func noteAudioBuffer(
+            presentationStartSample48k: Int64?,
+            sampleCount: Int,
+            presentationUptimeNanoseconds: UInt64?,
+            receivedUptimeNanoseconds: UInt64
+        ) {
+            callbackCount += 1
+            if firstBufferUptimeNanoseconds == nil {
+                firstBufferUptimeNanoseconds = receivedUptimeNanoseconds
+            }
+            guard let start = presentationStartSample48k else {
+                invalidPresentationTimestampCount += 1
+                return
+            }
+            if firstPresentationSample48k == nil {
+                firstPresentationSample48k = start
+                firstPresentationUptimeNanoseconds = presentationUptimeNanoseconds
+            }
+            if let previousEnd = lastPresentationEndSample48k {
+                let delta = start - previousEnd
+                // ScreenCaptureKit timestamps are converted to 48 kHz. Allow
+                // only rounding noise smaller than one 16 kHz output sample.
+                if delta > 2 {
+                    gapCount += 1
+                    gapSampleCount48k += delta
+                } else if delta < -2 {
+                    overlapCount += 1
+                    overlapSampleCount48k += -delta
+                }
+            }
+            lastPresentationEndSample48k = start + Int64(max(0, sampleCount))
+        }
+
+        var timing: AudioCaptureTiming {
+            AudioCaptureTiming(
+                firstPresentationSample48k: firstPresentationSample48k,
+                lastPresentationEndSample48k: lastPresentationEndSample48k,
+                firstPresentationUptimeNanoseconds: firstPresentationUptimeNanoseconds,
+                firstBufferUptimeNanoseconds: firstBufferUptimeNanoseconds,
+                callbackCount: callbackCount,
+                invalidPresentationTimestampCount: invalidPresentationTimestampCount,
+                gapCount: gapCount,
+                gapSampleCount48k: gapSampleCount48k,
+                overlapCount: overlapCount,
+                overlapSampleCount48k: overlapSampleCount48k,
+                restartCount: restartCount
+            )
         }
 
         mutating func endRestart(generation expected: UInt64, token: UUID) {
@@ -315,6 +405,10 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     var sealedFinalSampleCount: Int? {
         captureLifecycle.withLock { $0.sealedFinalSampleCount }
+    }
+
+    var firstAudioPresentationUptimeNanoseconds: UInt64? {
+        captureLifecycle.withLock { $0.firstPresentationUptimeNanoseconds }
     }
 
     var recoverySessionID: UUID? {
@@ -710,6 +804,8 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 
     private func sealRecording(keepArchive: Bool) async -> RecordingStopResult {
+        let capturedApplication = recordingApp
+        let microphoneIncluded = includeMicrophone
         await MainActor.run {
             state = .saving
             timer?.invalidate()
@@ -756,7 +852,19 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let pcmSnapshot = await withCheckedContinuation { continuation in
             captureQueue.async { [weak self] in
                 guard let self else {
-                    continuation.resume(returning: (0, false, 0))
+                    continuation.resume(returning: (0, false, 0, AudioCaptureTiming(
+                        firstPresentationSample48k: nil,
+                        lastPresentationEndSample48k: nil,
+                        firstPresentationUptimeNanoseconds: nil,
+                        firstBufferUptimeNanoseconds: nil,
+                        callbackCount: 0,
+                        invalidPresentationTimestampCount: 0,
+                        gapCount: 0,
+                        gapSampleCount48k: 0,
+                        overlapCount: 0,
+                        overlapSampleCount48k: 0,
+                        restartCount: 0
+                    )))
                     return
                 }
                 do {
@@ -786,7 +894,8 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                     return (
                         finalSampleCount,
                         lifecycle.pcmComplete,
-                        lifecycle.m4aDroppedSampleCount
+                        lifecycle.m4aDroppedSampleCount,
+                        lifecycle.timing
                     )
                 }
                 self.pcmResampler.reset()
@@ -873,6 +982,10 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             finalSampleCount: pcmSnapshot.0,
             m4aDroppedSampleCount: pcmSnapshot.2,
             pcmComplete: pcmComplete,
+            captureTiming: pcmSnapshot.3,
+            capturedApplicationBundleIdentifier: capturedApplication?.bundleIdentifier,
+            capturedApplicationProcessIdentifier: capturedApplication?.processID,
+            microphoneIncluded: microphoneIncluded,
             recoverySessionID: recoveryContext.sessionID,
             recoveryLocation: recoveryContext.spool.map {
                 RecoverablePCMSpool.Location(
@@ -1233,6 +1346,29 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         guard sampleBuffer.isValid, sampleBuffer.numSamples > 0 else { return }
         guard captureLifecycle.withLock({ $0.accepts(streamID: ObjectIdentifier(stream)) }) else { return }
 
+        let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        let presentationSeconds = CMTimeGetSeconds(presentationTime)
+        let presentationSample = presentationSeconds.isFinite
+            ? Int64((presentationSeconds * 48_000).rounded()) : nil
+        let presentationSampleCount = sampleBuffer.numSamples
+        let receivedUptime = DispatchTime.now().uptimeNanoseconds
+        let hostTime = CMClockGetTime(CMClockGetHostTimeClock())
+        let hostOffsetSeconds = CMTimeGetSeconds(
+            CMTimeSubtract(presentationTime, hostTime)
+        )
+        let presentationUptime = Self.presentationUptimeNanoseconds(
+            receivedUptimeNanoseconds: receivedUptime,
+            hostOffsetSeconds: hostOffsetSeconds
+        )
+        captureLifecycle.withLock {
+            $0.noteAudioBuffer(
+                presentationStartSample48k: presentationSample,
+                sampleCount: presentationSampleCount,
+                presentationUptimeNanoseconds: presentationUptime,
+                receivedUptimeNanoseconds: receivedUptime
+            )
+        }
+
         // Track that we're still receiving audio (for stall detection)
         lastAudioBufferTime.withLock { $0 = Date() }
 
@@ -1278,6 +1414,22 @@ class AudioRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         captureLifecycle.withLock {
             $0.m4aDroppedSampleCount += max(0, count)
         }
+    }
+
+    static func presentationUptimeNanoseconds(
+        receivedUptimeNanoseconds: UInt64,
+        hostOffsetSeconds: Double
+    ) -> UInt64? {
+        guard hostOffsetSeconds.isFinite, abs(hostOffsetSeconds) <= 60 else { return nil }
+        let offset = Int64((hostOffsetSeconds * 1_000_000_000).rounded())
+        if offset >= 0 {
+            let positive = UInt64(offset)
+            guard receivedUptimeNanoseconds <= UInt64.max - positive else { return nil }
+            return receivedUptimeNanoseconds + positive
+        }
+        let magnitude = UInt64(-offset)
+        guard receivedUptimeNanoseconds >= magnitude else { return nil }
+        return receivedUptimeNanoseconds - magnitude
     }
 
     /// Extracts Float32 samples from a CMSampleBuffer (48kHz) and resamples to 16kHz

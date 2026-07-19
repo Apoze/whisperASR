@@ -453,6 +453,7 @@ struct LocalCaptionMetric: Codable, Sendable {
     let englishText: String
     let revision: Int?
     let previewLatencyMilliseconds: Double?
+    var speechEndToRenderedMilliseconds: Double? = nil
     let firstLexicalUptimeNanoseconds: UInt64?
     let sourceEligibleUptimeNanoseconds: UInt64?
     let translationStartedUptimeNanoseconds: UInt64?
@@ -462,6 +463,12 @@ struct LocalCaptionMetric: Codable, Sendable {
     var finalErrorClassification: String? = nil
     var retryBackoffMilliseconds: Double? = nil
     var finalEnqueuedUptimeNanoseconds: UInt64? = nil
+    var previewGeneration: Int? = nil
+    var isFirstEligibleInGeneration: Bool? = nil
+    var acceptedStart: Int? = nil
+    var stableThrough: Int? = nil
+    var committedThrough: Int? = nil
+    var finalSegmentIndex: Int? = nil
 }
 
 actor LocalCaptionMetricRecorder {
@@ -469,6 +476,7 @@ actor LocalCaptionMetricRecorder {
     private var records: [LocalCaptionMetric] = []
     private var maximumCombinedResidentBytes: UInt64 = 0
     private var maximumHelperBacklogSamples = 0
+    private var maximumEndpointFIFOCount = 0
     private var helperProcessIdentifier: Int32?
 
     init(
@@ -482,6 +490,7 @@ actor LocalCaptionMetricRecorder {
         records.removeAll(keepingCapacity: true)
         maximumCombinedResidentBytes = 0
         maximumHelperBacklogSamples = 0
+        maximumEndpointFIFOCount = 0
         helperProcessIdentifier = nil
     }
 
@@ -492,7 +501,8 @@ actor LocalCaptionMetricRecorder {
     func observe(
         combinedResidentBytes: UInt64,
         helperBacklogSamples: Int,
-        helperProcessIdentifier: Int32?
+        helperProcessIdentifier: Int32?,
+        endpointFIFOCount: Int = 0
     ) {
         guard enabled else { return }
         maximumCombinedResidentBytes = max(
@@ -503,6 +513,7 @@ actor LocalCaptionMetricRecorder {
             maximumHelperBacklogSamples,
             helperBacklogSamples
         )
+        maximumEndpointFIFOCount = max(maximumEndpointFIFOCount, endpointFIFOCount)
         if let helperProcessIdentifier {
             self.helperProcessIdentifier = helperProcessIdentifier
         }
@@ -516,6 +527,7 @@ actor LocalCaptionMetricRecorder {
         stem: String,
         canonicalPCMURL: URL?,
         summary: LocalCaptionBenchmarkSummary,
+        whisperModelSelection: LocalWhisperModelSelection? = nil,
         voxtralConfiguration: VoxtralContinuousConfiguration? = nil,
         japaneseGlossary: JapaneseGlossary = .empty,
         outputDirectory: URL? = nil
@@ -551,11 +563,17 @@ actor LocalCaptionMetricRecorder {
             helperProcessIdentifier: helperProcessIdentifier,
             maximumCombinedResidentBytes: maximumCombinedResidentBytes,
             maximumHelperBacklogSamples: maximumHelperBacklogSamples,
+            maximumEndpointFIFOCount: maximumEndpointFIFOCount,
             metricsFile: file.lastPathComponent,
             metricsSHA256: try LocalBenchmarkOutput.sha256(file),
             metricsCSVFile: csv.lastPathComponent,
             canonicalPCMFile: canonicalPCMURL?.lastPathComponent,
             canonicalPCMSHA256: try canonicalPCMURL.map(LocalBenchmarkOutput.sha256),
+            whisperCandidate: whisperModelSelection?.candidate,
+            whisperModelID: whisperModelSelection?.modelID,
+            whisperModelRevision: whisperModelSelection?.revision,
+            whisperModelFile: whisperModelSelection?.fileURL.lastPathComponent,
+            whisperModelSHA256: whisperModelSelection?.expectedSHA256,
             voxtralModelID: voxtralConfiguration?.model.modelID,
             voxtralModelRevision: voxtralConfiguration?.model.modelRevision,
             voxtralLocalSnapshotID: voxtralConfiguration?.model.localSnapshotID,
@@ -575,10 +593,13 @@ actor LocalCaptionMetricRecorder {
     }
 
     static func csvData(for records: [LocalCaptionMetric]) -> Data {
-        var csv = "kind,engine,boundary_kind,boundary_degradation,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,source,english\n"
+        var csv = "kind,engine,boundary_kind,boundary_degradation,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,speech_end_to_rendered_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,preview_generation,is_first_eligible,accepted_start,stable_through,committed_through,final_segment_index,source,english\n"
         for record in records {
             let revision = record.revision.map(String.init) ?? ""
             let previewLatency = record.previewLatencyMilliseconds.map {
+                String(format: "%.3f", $0)
+            } ?? ""
+            let speechEndLatency = record.speechEndToRenderedMilliseconds.map {
                 String(format: "%.3f", $0)
             } ?? ""
             let firstLexical = record.firstLexicalUptimeNanoseconds.map { String($0) } ?? ""
@@ -602,6 +623,7 @@ actor LocalCaptionMetricRecorder {
                 String(format: "%.3f", record.translationMilliseconds),
                 revision,
                 previewLatency,
+                speechEndLatency,
                 firstLexical,
                 sourceEligible,
                 translationStarted,
@@ -612,6 +634,12 @@ actor LocalCaptionMetricRecorder {
                 record.finalErrorClassification ?? "",
                 retryBackoff,
                 finalEnqueued,
+                record.previewGeneration.map(String.init) ?? "",
+                record.isFirstEligibleInGeneration.map(String.init) ?? "",
+                record.acceptedStart.map(String.init) ?? "",
+                record.stableThrough.map(String.init) ?? "",
+                record.committedThrough.map(String.init) ?? "",
+                record.finalSegmentIndex.map(String.init) ?? "",
                 Self.csv(record.sourceText ?? ""), Self.csv(record.englishText),
             ]
             csv += fields.joined(separator: ",") + "\n"
@@ -637,6 +665,17 @@ struct LocalCaptionBenchmarkSummary: Codable, Equatable, Sendable {
     let sourceStagedThrough: Int
     let englishValidatedThrough: Int
     let committedSampleCount: Int
+    var sourceFinalizedThrough: Int = 0
+    var endingEndpointFIFOCount: Int = 0
+    var endingTranslationQueueCount: Int = 0
+    var finalTranslationInFlight: Bool = false
+    var sourcePipelineFailure: String? = nil
+    var completionFailure: String? = nil
+    var sourceLocale: String? = nil
+    var captureTiming: AudioCaptureTiming? = nil
+    var capturedApplicationBundleIdentifier: String? = nil
+    var capturedApplicationProcessIdentifier: Int32? = nil
+    var microphoneIncluded: Bool = false
 }
 
 private struct LocalCaptionBenchmarkSessionReport: Codable {
@@ -650,11 +689,17 @@ private struct LocalCaptionBenchmarkSessionReport: Codable {
     let helperProcessIdentifier: Int32?
     let maximumCombinedResidentBytes: UInt64
     let maximumHelperBacklogSamples: Int
+    let maximumEndpointFIFOCount: Int
     let metricsFile: String
     let metricsSHA256: String
     let metricsCSVFile: String
     let canonicalPCMFile: String?
     let canonicalPCMSHA256: String?
+    let whisperCandidate: String?
+    let whisperModelID: String?
+    let whisperModelRevision: String?
+    let whisperModelFile: String?
+    let whisperModelSHA256: String?
     let voxtralModelID: String?
     let voxtralModelRevision: String?
     let voxtralLocalSnapshotID: String?
