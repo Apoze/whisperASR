@@ -1,15 +1,15 @@
 # Optimisation locale japonais → anglais
 
-Ce dossier pilote les expériences sans mélanger mesures, décisions et code produit. Les WAV et rapports générés restent sous `.build/benchmarks/japanese-live/<run-id>/`, donc hors Git.
+Ce dossier pilote les expériences sans mélanger mesures, décisions et code produit. Les WAV, outils externes et rapports générés restent sous `.build/benchmarks/japanese-live/`, donc hors Git.
 
 ## Graphe des lots
 
 ```text
-L0 ─▶ L1 ─▶ L2 ─▶ L3 ─▶ L4 ─▶ L5 ─▶ L6 ─▶ L7
-             └──── gate de promotion ────▲
+L0 ─▶ L1 ─▶ L2 ─▶ L3 ─▶ L4 ─▶ L5 ─▶ L6 ─▶ L7 ─▶ L8 ─▶ L9 ─▶ L10
+                                      └── L6A conditionnel ──▲
 ```
 
-L3 peut démarrer après L1, mais aucun moteur ne peut être promu avant la validation humaine de L2. Les sous-lots CAT et stéréo ne seront créés que si leur gate d'entrée échoue ou réussit comme prévu.
+L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournies; L5 repart de ce PCM identique pour tous les candidats. Les sous-lots conditionnels ne sont créés qu'après échec mesuré de leur gate.
 
 | Lot | Dépendances | État | Résultat attendu |
 | --- | --- | --- | --- |
@@ -17,10 +17,14 @@ L3 peut démarrer après L1, mais aucun moteur ne peut être promu avant la vali
 | [L1 — Oracle fiable](lots/L01-oracle.md) | L0 | terminé | ASR, produit et voix évalués séparément |
 | [L2 — Corpus holdout](lots/L02-corpus-holdout.md) | L1 | bloqué par revue humaine | trois holdouts validés humainement |
 | [L3 — Bakeoff ASR](lots/L03-bakeoff-asr.md) | L1; L2 pour promouvoir | terminé, aucune promotion | quatre candidats comparés sur le même PCM |
-| L4 — Intégration du gagnant | L2, L3 | bloqué par gate | une seule ASR produit |
-| L5 — Traduction | L4 | non démarré | Apple conservé ou CAT testé conditionnellement |
-| L6 — Séparation des voix | L4, gate L5 | non démarré | coupures fiables, sans identité persistante |
-| L7 — Simplification | lots retenus | non démarré | application minimale et endurante |
+| [L4 — Corpus vidéo et preuves](lots/L04-corpus-video.md) | L2, L3 | terminé | deux vidéos converties et épinglées |
+| L5 — Bakeoff japonais | L4 | non démarré | ASR finales comparées, dont MLX et `whispermlx` |
+| L6 — Architectures live et anglais | L5 | non démarré | previews et traductions séparément mesurées |
+| L6A — Alignement `whispermlx` | gate L6 | conditionnel | valeur propre de l'alignement japonais |
+| L7 — Firefox et décision | L5, L6 | non démarré | deux finalistes dans l'application réelle |
+| L8 — Intégration gagnante | L7 | non démarré | un seul moteur produit |
+| L9 — Changements de voix | L8 | non démarré | frontières fiables, sans identité persistante |
+| L10 — Nettoyage et endurance | lots retenus | non démarré | application minimale, stable et hors ligne |
 
 ## SLO et gates communs
 
@@ -30,9 +34,9 @@ L3 peut démarrer après L1, mais aucun moteur ne peut être promu avant la vali
 - Mémoire : moins de 10 Gio et au plus 20 % au-dessus du baseline L0.
 - Promotion qualité : CER relatif amélioré d'au moins 10 % avec bootstrap apparié à 95 %, ou p95 preview gagné d'au moins 200 ms avec une dégradation CER ≤ 2 points; aucun holdout dégradé de plus de 2 points.
 
-Les résultats d'un holdout dont `annotations.status` n'est pas `complete` sont exploratoires. Deux juges bilingues sont requis pour toute promotion fondée sur la fidélité anglaise.
+Les lignes `high` des deux vidéos fournies sont l'autorité du benchmark de développement. Leur statut reste `pending-human-review`, car les packs déclarent eux-mêmes une consolidation ASR/captions et des timings de caractères interpolés; `medium`, `low`, overlap et non-parole restent séparés dans les rapports.
 
-Le corpus dev utilise la vidéo, le transcript japonais et le transcript anglais fournis, tous épinglés par SHA. La référence anglaise est vérifiée pour le futur jugement bilingue, mais n'influence pas le score ASR L3.
+La référence anglaise n'influence jamais le CER japonais. Un cas anglais réellement ambigu est exporté aveugle pour revue GPT Pro; il n'est pas transformé en score automatique local.
 
 ## Discipline
 

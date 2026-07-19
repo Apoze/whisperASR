@@ -24,7 +24,15 @@ enum JapaneseCER {
         let ignored = CharacterSet.whitespacesAndNewlines
             .union(.punctuationCharacters)
             .union(.controlCharacters)
-        let compatibilityNormalized = text.precomposedStringWithCompatibilityMapping
+        let annotationStripped = text
+            .replacingOccurrences(
+                of: #"[［\[].*?[］\]]"#,
+                with: "",
+                options: .regularExpression
+            )
+            .replacingOccurrences(of: "（笑）", with: "")
+            .replacingOccurrences(of: "(笑)", with: "")
+        let compatibilityNormalized = annotationStripped.precomposedStringWithCompatibilityMapping
             .lowercased(with: Locale(identifier: "ja_JP"))
         var result = ""
         for scalar in compatibilityNormalized.unicodeScalars where !ignored.contains(scalar) {
@@ -166,6 +174,7 @@ enum JapaneseBenchmarkSupport {
             enum Confidence: String, Codable {
                 case high
                 case medium
+                case low
                 case unverified
             }
 
@@ -191,6 +200,7 @@ enum JapaneseBenchmarkSupport {
             let english: String?
             let confidence: Confidence
             let criticalTerms: [CriticalTerm]
+            let overlap: Bool?
             let note: String?
         }
 
@@ -573,6 +583,8 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
         "kikusasaizu-l1-1",
         "okkei-shun-1541-1711",
         "interview-speakers-0245-0325",
+        "qudu2fx3ncc",
+        "md62mmdz0m",
     ]
 
     func testV2ValidatesReviewPathsAndReproducibleBlindOrder() throws {
@@ -682,6 +694,8 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
             "kikusasaizu-l1-1": .pendingHumanReview,
             "okkei-shun-1541-1711": .incomplete,
             "interview-speakers-0245-0325": .incomplete,
+            "qudu2fx3ncc": .pendingHumanReview,
+            "md62mmdz0m": .pendingHumanReview,
         ]
 
         let manifests = try expected.map { corpusID, status in
@@ -715,6 +729,16 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
                 .annotations.turns.count,
             14
         )
+        XCTAssertEqual(
+            manifests.first(where: { $0.corpusID == "qudu2fx3ncc" })?
+                .annotations.turns.count,
+            199
+        )
+        XCTAssertEqual(
+            manifests.first(where: { $0.corpusID == "md62mmdz0m" })?
+                .annotations.turns.count,
+            271
+        )
     }
 
     func testLocalFixturesMatchVersionedManifestsWhenOptedIn() async throws {
@@ -736,8 +760,50 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
                 try JapaneseBenchmarkSupport.sha256(at: fixture),
                 manifest.fixture.sha256
             )
+            for reference in manifest.source.references {
+                guard URL(string: reference.locator)?.scheme == nil,
+                      let expectedSHA256 = reference.sha256 else { continue }
+                let referenceURL = root.appendingPathComponent(reference.locator)
+                XCTAssertEqual(
+                    try JapaneseBenchmarkSupport.sha256(at: referenceURL),
+                    expectedSHA256
+                )
+            }
             let samples = try await AudioLoader.loadSamples(url: fixture)
             XCTAssertEqual(samples.count, manifest.fixture.sampleCount)
+        }
+    }
+
+    func testLongFormCorporaKeepScoringBandsSeparate() throws {
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let directory = root.appendingPathComponent("docs/japanese-live/corpora")
+        let expected = [
+            "qudu2fx3ncc": (high: 143, medium: 44, low: 12, overlap: 37, negatives: 1),
+            "md62mmdz0m": (high: 179, medium: 89, low: 3, overlap: 2, negatives: 2),
+        ]
+
+        for (corpusID, counts) in expected {
+            let manifest = try JapaneseBenchmarkSupport.loadManifest(
+                at: directory.appendingPathComponent("\(corpusID)/manifest.json")
+            )
+            XCTAssertEqual(
+                manifest.annotations.turns.filter { $0.confidence == .high }.count,
+                counts.high
+            )
+            XCTAssertEqual(
+                manifest.annotations.turns.filter { $0.confidence == .medium }.count,
+                counts.medium
+            )
+            XCTAssertEqual(
+                manifest.annotations.turns.filter { $0.confidence == .low }.count,
+                counts.low
+            )
+            XCTAssertEqual(manifest.annotations.negativeRanges?.count, counts.negatives)
+            XCTAssertTrue(manifest.annotations.turns.allSatisfy { $0.overlap != nil })
+            XCTAssertEqual(
+                manifest.annotations.turns.filter { $0.overlap == true }.count,
+                counts.overlap
+            )
         }
     }
 }

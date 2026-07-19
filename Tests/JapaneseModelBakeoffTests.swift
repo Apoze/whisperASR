@@ -167,6 +167,7 @@ private struct JapaneseBakeoffModelProvenance: Codable {
 private struct JapaneseBakeoffTurnReport: Codable {
     let turnID: Int
     let confidence: JapaneseBenchmarkManifest.Turn.Confidence
+    let overlap: Bool
     let speaker: String
     let startSample: Int
     let endSample: Int
@@ -362,6 +363,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         )
 
         XCTAssertEqual(String(JapaneseCER.normalized(" ＡＢＣ、１２３。 みな ")), "abc123みな")
+        XCTAssertEqual(String(JapaneseCER.normalized("［実況不明瞭］ガード（笑）")), "ガード")
         let score = JapaneseCER.score([
             (reference: "日本語", hypothesis: "日本後"),
             (reference: "はい", hypothesis: ""),
@@ -380,6 +382,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             JapaneseBakeoffTurnReport(
                 turnID: 1,
                 confidence: .high,
+                overlap: false,
                 speaker: "A",
                 startSample: 0,
                 endSample: 16_000,
@@ -405,6 +408,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             JapaneseBakeoffTurnReport(
                 turnID: 2,
                 confidence: .medium,
+                overlap: false,
                 speaker: "B",
                 startSample: 16_000,
                 endSample: 32_000,
@@ -418,6 +422,26 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 appleHighFidelityMilliseconds: nil,
                 validEnglish: nil,
                 residentBytes: 2,
+                asrError: nil,
+                translationError: nil
+            ),
+            JapaneseBakeoffTurnReport(
+                turnID: 3,
+                confidence: .high,
+                overlap: true,
+                speaker: "A+B",
+                startSample: 24_000,
+                endSample: 40_000,
+                referenceJapanese: "重複",
+                hypothesisJapanese: "",
+                criticalTerms: [],
+                inputSampleCount: 16_000,
+                fedSampleCount: 16_000,
+                asrMilliseconds: 30,
+                appleEnglish: nil,
+                appleHighFidelityMilliseconds: nil,
+                validEnglish: nil,
+                residentBytes: 3,
                 asrError: nil,
                 translationError: nil
             ),
@@ -451,25 +475,25 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     diagnosticMediumConfidenceCER: medium,
                     exploratoryUnverifiedCER: cerReport(reports, confidence: .unverified),
                     criticalDiagnostics: criticalDiagnostics(reports),
-                    expectedPCMSamples: 32_000,
-                    fedPCMSamples: 32_000,
+                    expectedPCMSamples: 48_000,
+                    fedPCMSamples: 48_000,
                     pcmInputCoverageComplete: true,
                     pcmConsumptionStatus: "not-exposed-by-benchmark-api",
                     lastReferenceTurnHasHypothesis: false,
                     asrP50Milliseconds: 10,
-                    asrP95Milliseconds: 20,
-                    asrWorstMilliseconds: 20,
+                    asrP95Milliseconds: 30,
+                    asrWorstMilliseconds: 30,
                     appleHighFidelityP50Milliseconds: nil,
                     appleHighFidelityP95Milliseconds: nil,
                     appleHighFidelityWorstMilliseconds: nil,
-                    maximumObservedResidentBytes: 2,
+                    maximumObservedResidentBytes: 3,
                     turns: reports
                 )
             }
         )
-        XCTAssertEqual(artifacts.report.items.count, 2)
+        XCTAssertEqual(artifacts.report.items.count, 3)
         XCTAssertEqual(Set(artifacts.report.items[0].candidates.map(\.alias)), Set(["A", "B", "C", "D"]))
-        XCTAssertEqual(artifacts.key.count, 8)
+        XCTAssertEqual(artifacts.key.count, 12)
     }
 
     func testBakeoffModelArtifactsArePinned() throws {
@@ -1051,6 +1075,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 turnReports.append(JapaneseBakeoffTurnReport(
                     turnID: turn.id,
                     confidence: turn.confidence,
+                    overlap: turn.overlap ?? false,
                     speaker: turn.speaker,
                     startSample: turn.startSample,
                     endSample: turn.endSample,
@@ -1226,7 +1251,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         _ turns: [JapaneseBakeoffTurnReport],
         confidence: JapaneseBenchmarkManifest.Turn.Confidence
     ) -> JapaneseBakeoffCERReport {
-        let selected = turns.filter { $0.confidence == confidence }
+        let selected = turns.filter { $0.confidence == confidence && !$0.overlap }
         let score = JapaneseCER.score(selected.map {
             (reference: $0.referenceJapanese, hypothesis: $0.hypothesisJapanese)
         })
@@ -1246,8 +1271,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     private func criticalDiagnostics(
         _ turns: [JapaneseBakeoffTurnReport]
     ) -> JapaneseBakeoffCriticalDiagnostics {
-        let annotatedTermCount = turns.reduce(0) { $0 + $1.criticalTerms.count }
-        let missing: [JapaneseBakeoffCriticalDiagnostics.MissingTerm] = turns.flatMap { turn in
+        let scorableTurns = turns.filter { !$0.overlap }
+        let annotatedTermCount = scorableTurns.reduce(0) { $0 + $1.criticalTerms.count }
+        let missing: [JapaneseBakeoffCriticalDiagnostics.MissingTerm] = scorableTurns.flatMap { turn in
             let hypothesis = String(JapaneseCER.normalized(turn.hypothesisJapanese))
             return turn.criticalTerms.compactMap {
                 term -> JapaneseBakeoffCriticalDiagnostics.MissingTerm? in
@@ -1332,7 +1358,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         let baselineTurns = Dictionary(uniqueKeysWithValues: baseline.turns.map { ($0.turnID, $0) })
         return reports.filter { $0.engine != .whisperTurbo }.map { candidate in
             let observations = candidate.turns.compactMap { turn -> JapanesePairedCERObservation? in
-                guard turn.confidence == .high,
+                guard turn.confidence == .high, !turn.overlap,
                       let baselineTurn = baselineTurns[turn.turnID] else { return nil }
                 let baselineScore = JapaneseCER.score([(
                     reference: turn.referenceJapanese,
@@ -1725,6 +1751,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             english: nil,
             confidence: confidence,
             criticalTerms: [],
+            overlap: nil,
             note: note
         )
     }
@@ -1766,9 +1793,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             switch try confidence(record["confiance"]) {
             case .high: high += 1
             case .medium: medium += 1
-            case .unverified:
+            case .low, .unverified:
                 throw JapaneseBenchmarkCSV.ParseError.malformed(
-                    "Detailed CSV cannot contain unverified confidence."
+                    "Detailed CSV can only contain high or medium confidence."
                 )
             }
             previousEnd = end
