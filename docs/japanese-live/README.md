@@ -18,7 +18,7 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L2 — Corpus holdout](lots/L02-corpus-holdout.md) | L1 | bloqué par revue humaine | trois holdouts validés humainement |
 | [L3 — Bakeoff ASR](lots/L03-bakeoff-asr.md) | L1; L2 pour promouvoir | terminé, aucune promotion | quatre candidats comparés sur le même PCM |
 | [L4 — Corpus vidéo et preuves](lots/L04-corpus-video.md) | L2, L3 | terminé | deux vidéos converties et épinglées |
-| L5 — Bakeoff japonais | L4 | non démarré | ASR finales comparées, dont MLX et `whispermlx` |
+| [L5 — Bakeoff japonais](lots/L05-bakeoff-japonais.md) | L4 | terminé, aucune promotion | huit ASR finales comparées; `whispermlx` arrêté après le stress pack |
 | L6 — Architectures live et anglais | L5 | non démarré | previews et traductions séparément mesurées |
 | L6A — Alignement `whispermlx` | gate L6 | conditionnel | valeur propre de l'alignement japonais |
 | L7 — Firefox et décision | L5, L6 | non démarré | deux finalistes dans l'application réelle |

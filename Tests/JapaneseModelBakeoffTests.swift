@@ -147,9 +147,22 @@ private typealias JapaneseBenchmarkManifest = JapaneseBenchmarkSupport.Manifest
 
 private enum JapaneseBakeoffEngine: String, Codable, CaseIterable {
     case whisperTurbo = "whisper-large-v3-turbo"
+    case mlxWhisperTurbo = "mlx-whisper-large-v3-turbo"
     case voxtralContinuous = "voxtral-q4-continuous-960ms"
     case nemotron1120 = "nemotron-multilingual-coreml-1120ms"
     case nemotron560 = "nemotron-multilingual-coreml-560ms"
+    case kotobaQ5 = "kotoba-whisper-v2.0-q5"
+    case qwen17 = "qwen3-asr-1.7b"
+    case whisperMLXBatch = "whispermlx-v3.12.2-turbo"
+
+    var finalLatencyIsMeasuredByOfflineRun: Bool {
+        switch self {
+        case .voxtralContinuous, .nemotron1120, .nemotron560:
+            false
+        default:
+            true
+        }
+    }
 }
 
 private struct JapaneseBakeoffModelProvenance: Codable {
@@ -165,6 +178,7 @@ private struct JapaneseBakeoffModelProvenance: Codable {
 }
 
 private struct JapaneseBakeoffTurnReport: Codable {
+    let corpusID: String
     let turnID: Int
     let confidence: JapaneseBenchmarkManifest.Turn.Confidence
     let overlap: Bool
@@ -175,14 +189,10 @@ private struct JapaneseBakeoffTurnReport: Codable {
     let hypothesisJapanese: String
     let criticalTerms: [JapaneseBenchmarkManifest.Turn.CriticalTerm]
     let inputSampleCount: Int
-    let fedSampleCount: Int
+    let asrFedSampleCount: Int
     let asrMilliseconds: Double
-    let appleEnglish: String?
-    let appleHighFidelityMilliseconds: Double?
-    let validEnglish: Bool?
     let residentBytes: UInt64
     let asrError: String?
-    let translationError: String?
 }
 
 private struct JapaneseBakeoffCERReport: Codable, Equatable {
@@ -204,25 +214,37 @@ private struct JapaneseBakeoffEngineReport: Codable {
     let setupError: String?
     let primaryHighConfidenceCER: JapaneseBakeoffCERReport
     let diagnosticMediumConfidenceCER: JapaneseBakeoffCERReport
+    let diagnosticLowConfidenceCER: JapaneseBakeoffCERReport
+    let diagnosticOverlapCER: JapaneseBakeoffCERReport
     let exploratoryUnverifiedCER: JapaneseBakeoffCERReport
     let criticalDiagnostics: JapaneseBakeoffCriticalDiagnostics
     let expectedPCMSamples: Int
-    let fedPCMSamples: Int
+    let inputPCMSamples: Int
+    let asrFedPCMSamples: Int
     let pcmInputCoverageComplete: Bool
     let pcmConsumptionStatus: String
-    let lastReferenceTurnHasHypothesis: Bool
+    let corpusCoverage: [JapaneseBakeoffCorpusCoverage]
     let asrP50Milliseconds: Double?
     let asrP95Milliseconds: Double?
     let asrWorstMilliseconds: Double?
-    let appleHighFidelityP50Milliseconds: Double?
-    let appleHighFidelityP95Milliseconds: Double?
-    let appleHighFidelityWorstMilliseconds: Double?
+    let primaryEmptySpeechTurnCount: Int
+    let diagnosticEmptySpeechTurnCount: Int
     let maximumObservedResidentBytes: UInt64
     let turns: [JapaneseBakeoffTurnReport]
 }
 
+private struct JapaneseBakeoffCorpusCoverage: Codable {
+    let corpusID: String
+    let expectedSelectedPCMSamples: Int
+    let inputSelectedPCMSamples: Int
+    let asrFedSelectedPCMSamples: Int
+    let selectedPCMInputComplete: Bool
+    let lastSelectedSpeechPresent: Bool
+}
+
 private struct JapaneseBakeoffCriticalDiagnostics: Codable {
     struct MissingTerm: Codable {
+        let corpusID: String
         let turnID: Int
         let category: JapaneseBenchmarkManifest.Turn.CriticalTerm.Category
         let japanese: String
@@ -242,6 +264,10 @@ private struct JapaneseBakeoffConfiguration: Codable {
     let engineOrder: [JapaneseBakeoffEngine]
     let fluidAudioVersion: String
     let fluidAudioRevision: String
+    let mlxWhisperVersion: String
+    let whisperMLXVersion: String
+    let sileroRevision: String
+    let mlxInferenceSeedStrategy: String
 }
 
 private struct JapaneseBakeoffBootstrapInterval: Codable, Equatable {
@@ -255,9 +281,22 @@ private struct JapaneseBakeoffComparison: Codable {
     let baseline: JapaneseBakeoffEngine
     let candidate: JapaneseBakeoffEngine
     let pairedCERBootstrap: JapaneseBakeoffBootstrapInterval
+    let corpusCERDeltas: [JapaneseBakeoffCorpusCERDelta]
     let qualityPathPasses: Bool
+    let criticalCorrectionPathPasses: Bool
+    let l5GatePasses: Bool
+    let l5BlockingReasons: [String]
+    let normalizedTextAgreement: Double?
     let previewPathStatus: String
     let blockingReasons: [String]
+}
+
+private struct JapaneseBakeoffCorpusCERDelta: Codable {
+    let corpusID: String
+    let baselineRate: Double?
+    let candidateRate: Double?
+    let delta: Double?
+    let noMoreThanTwoPointRegression: Bool
 }
 
 private struct JapanesePairedCERObservation {
@@ -266,28 +305,29 @@ private struct JapanesePairedCERObservation {
     let referenceCharacters: Int
 }
 
+private struct JapaneseBakeoffCorpusReport: Codable {
+    let corpusID: String
+    let purpose: String
+    let manifestSHA256: String
+    let audioSHA256: String
+    let annotationStatus: String
+    let promotionEligibleReference: Bool
+    let selectedTurnIDs: [Int]
+}
+
 private struct JapaneseBakeoffFullReport: Codable {
     let schemaVersion: Int
     let runID: String
     let gitCommit: String
     let worktreeDirty: Bool
     let modelHubOfflineMode: Bool
-    let corpusID: String
-    let corpusPurpose: String
-    let manifestSHA256: String
-    let audioSHA256: String
-    let humanEnglishReferenceSHA256: String?
-    let humanEnglishReferenceTurnCount: Int
-    let humanEnglishReferenceStatus: String
-    let corpusAnnotationStatus: String
-    let promotionEligibleReference: Bool
+    let externalNetworkAccessDenied: Bool
+    let corpora: [JapaneseBakeoffCorpusReport]
     let generatedAt: String
     let scope: String
-    let selectedTurnIDs: [Int]
     let boundaryMode: String
     let productionBoundaryStatus: String
     let productionBoundaryNote: String
-    let appleHighFidelityEnabled: Bool
     let voxtralConfiguration: VoxtralContinuousConfiguration
     let configuration: JapaneseBakeoffConfiguration
     let engines: [JapaneseBakeoffEngineReport]
@@ -297,16 +337,59 @@ private struct JapaneseBakeoffFullReport: Codable {
 
 private struct JapaneseASRResult {
     let text: String
-    let fedSampleCount: Int
+    let asrFedSampleCount: Int
+}
+
+private struct JapaneseBakeoffCorpusInput {
+    let manifest: JapaneseBenchmarkManifest
+    let manifestSHA256: String
+    let wavURL: URL
+    let samples: [Float]
+    let turns: [JapaneseBenchmarkManifest.Turn]
+}
+
+private struct JapaneseExternalASRRequest: Codable {
+    struct Corpus: Codable {
+        struct Turn: Codable {
+            let turnID: Int
+            let startSample: Int
+            let endSample: Int
+        }
+
+        let corpusID: String
+        let audioPath: String
+        let turns: [Turn]
+    }
+
+    let backend: String
+    let modelPath: String
+    let sileroPath: String?
+    let corpora: [Corpus]
+}
+
+private struct JapaneseExternalASRResponse: Codable {
+    struct Turn: Codable {
+        let corpusID: String
+        let turnID: Int
+        let hypothesisJapanese: String
+        let inputSampleCount: Int
+        let fedSampleCount: Int
+        let asrMilliseconds: Double
+        let residentBytes: UInt64
+        let error: String?
+    }
+
+    let setupError: String?
+    let turns: [Turn]
 }
 
 private struct JapaneseBakeoffBlindCandidate: Codable {
     let alias: String
     let japanese: String
-    let english: String?
 }
 
 private struct JapaneseBakeoffBlindItem: Codable {
+    let corpusID: String
     let turnID: Int
     let confidence: JapaneseBenchmarkManifest.Turn.Confidence
     let referenceJapanese: String
@@ -315,13 +398,11 @@ private struct JapaneseBakeoffBlindItem: Codable {
 
 private struct JapaneseBakeoffBlindReport: Codable {
     let schemaVersion: Int
-    let corpusID: String
+    let corpusIDs: [String]
     let scope: String
     let note: String
     let items: [JapaneseBakeoffBlindItem]
 }
-
-private typealias JapaneseBakeoffTranslation = @Sendable (String) async throws -> String
 
 final class JapaneseModelBakeoffTests: XCTestCase {
     private static let fluidAudioVersion = "0.15.5"
@@ -332,11 +413,33 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     private static let whisperRevision = "5359861c739e955e79d9a303bcbc70fb988958b1"
     private static let whisperTurboSHA256 =
         "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
-    private static let easyJapaneseEnglishArchiveSHA256 =
-        "721be7072dd9eca908a17099c077115e37b73851d8dcedce3c102ba23dbdc12f"
-    private static let easyJapaneseEnglishTurnsSHA256 =
-        "3efda22bbd72c109d1ba57b646bea68d76141060a5607ccaafcd397f3d0eeecb"
+    private static let mlxWhisperVersion = "0.4.3"
+    private static let mlxWhisperWheelSHA256 =
+        "6b82b6597a994643a3e5496c7bc229a672e5ca308458455bfe276e76ae024489"
+    private static let mlxWhisperModelRevision =
+        "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb"
+    private static let mlxWhisperWeightsSHA256 =
+        "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6"
+    private static let kotobaRevision =
+        "e3a0cf6a62b95911703cfb97d819292e058f12c3"
+    private static let kotobaQ5SHA256 =
+        "4a3b92192b5d3578ff854a5876213e2e27af0c2d357492c2d14271e82c303658"
+    private static let qwenRevision =
+        "e5450a26d1fd417c45fc9c405651ddc3180a27a6"
+    private static let qwenWeightsSHA256 =
+        "bf304b009cc7eca79283056f787b44c952d24ac22cec787b39732bba3c23c13c"
+    private static let whisperMLXVersion = "3.12.2"
+    private static let whisperMLXRevision =
+        "37816743c29a569405f300bbb4b3ef8001152651"
+    private static let whisperMLXWheelSHA256 =
+        "60845ff695168aeb3b8d8b1887481ffe02f5e11ec0426c706a9f7cd0a37917a4"
+    private static let sileroRevision =
+        "7e30209a3e901f9842f81b225f3e93d8199902b1"
     private static let baselineResidentBytes: UInt64 = 4_185_313_288
+    private static let stressTurnIDs: [String: [Int]] = [
+        "qudu2fx3ncc": Array(147...183) + Array(193...199),
+        "md62mmdz0m": Array(149...187) + Array(265...273),
+    ]
     private static let turnsHeader = [
         "tour", "debut_switch", "fin", "locuteur", "description_locuteur",
         "japonais", "confiance", "note",
@@ -344,10 +447,6 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     private static let detailedHeader = [
         "index", "debut", "fin", "locuteur", "description_locuteur",
         "changement_de_locuteur", "japonais", "confiance", "note",
-    ]
-    private static let englishTurnsHeader = [
-        "turn", "speaker_switch_start", "end", "speaker", "speaker_description",
-        "english", "japanese_source", "confidence", "note",
     ]
 
     func testCSVTimecodeAndCERPrimitives() throws {
@@ -375,11 +474,14 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         XCTAssertEqual(score.referenceCharacterCount, 5)
         XCTAssertEqual(score.omissionCount, 1)
         XCTAssertEqual(score.rate, 0.6)
+        XCTAssertTrue(lastSpeechPresent(reference: "私でも重いのかな", hypothesis: "私でも重いかな"))
+        XCTAssertFalse(lastSpeechPresent(reference: "私でも重いのかな", hypothesis: "ありがとうございました"))
     }
 
     func testBakeoffScoringSeparatesPrimaryAndDiagnosticTurns() {
         let reports = [
             JapaneseBakeoffTurnReport(
+                corpusID: "fixture",
                 turnID: 1,
                 confidence: .high,
                 overlap: false,
@@ -396,16 +498,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     )
                 ],
                 inputSampleCount: 16_000,
-                fedSampleCount: 16_000,
+                asrFedSampleCount: 16_000,
                 asrMilliseconds: 10,
-                appleEnglish: nil,
-                appleHighFidelityMilliseconds: nil,
-                validEnglish: nil,
                 residentBytes: 1,
-                asrError: nil,
-                translationError: nil
+                asrError: nil
             ),
             JapaneseBakeoffTurnReport(
+                corpusID: "fixture",
                 turnID: 2,
                 confidence: .medium,
                 overlap: false,
@@ -416,16 +515,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 hypothesisJapanese: "",
                 criticalTerms: [],
                 inputSampleCount: 16_000,
-                fedSampleCount: 16_000,
+                asrFedSampleCount: 16_000,
                 asrMilliseconds: 20,
-                appleEnglish: nil,
-                appleHighFidelityMilliseconds: nil,
-                validEnglish: nil,
                 residentBytes: 2,
-                asrError: nil,
-                translationError: nil
+                asrError: nil
             ),
             JapaneseBakeoffTurnReport(
+                corpusID: "fixture",
                 turnID: 3,
                 confidence: .high,
                 overlap: true,
@@ -436,14 +532,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 hypothesisJapanese: "",
                 criticalTerms: [],
                 inputSampleCount: 16_000,
-                fedSampleCount: 16_000,
+                asrFedSampleCount: 16_000,
                 asrMilliseconds: 30,
-                appleEnglish: nil,
-                appleHighFidelityMilliseconds: nil,
-                validEnglish: nil,
                 residentBytes: 3,
-                asrError: nil,
-                translationError: nil
+                asrError: nil
             ),
         ]
 
@@ -456,13 +548,20 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         XCTAssertEqual(medium.turnCount, 1)
         XCTAssertEqual(medium.editDistance, 2)
         XCTAssertEqual(medium.omissionCount, 1)
+        let emptySpeech = emptySpeechCounts(reports)
+        XCTAssertEqual(emptySpeech.primary, 0)
+        XCTAssertEqual(emptySpeech.diagnostic, 2)
+        XCTAssertTrue(JapaneseBakeoffEngine.whisperTurbo.finalLatencyIsMeasuredByOfflineRun)
+        XCTAssertFalse(
+            JapaneseBakeoffEngine.voxtralContinuous.finalLatencyIsMeasuredByOfflineRun
+        )
         let critical = criticalDiagnostics(reports)
         XCTAssertEqual(critical.annotatedTermCount, 1)
         XCTAssertEqual(critical.missingAnnotatedTermCount, 1)
         XCTAssertEqual(critical.missingTerms.first?.japanese, "語")
 
         let artifacts = blindArtifacts(
-            corpusID: "fixture",
+            corpusIDs: ["fixture"],
             scope: "unit",
             seed: "unit-secret",
             reports: JapaneseBakeoffEngine.allCases.map { engine in
@@ -473,33 +572,78 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     setupError: nil,
                     primaryHighConfidenceCER: high,
                     diagnosticMediumConfidenceCER: medium,
+                    diagnosticLowConfidenceCER: cerReport(reports, confidence: .low),
+                    diagnosticOverlapCER: cerReport(reports, overlapOnly: true),
                     exploratoryUnverifiedCER: cerReport(reports, confidence: .unverified),
                     criticalDiagnostics: criticalDiagnostics(reports),
                     expectedPCMSamples: 48_000,
-                    fedPCMSamples: 48_000,
+                    inputPCMSamples: 48_000,
+                    asrFedPCMSamples: 48_000,
                     pcmInputCoverageComplete: true,
                     pcmConsumptionStatus: "not-exposed-by-benchmark-api",
-                    lastReferenceTurnHasHypothesis: false,
+                    corpusCoverage: [
+                        JapaneseBakeoffCorpusCoverage(
+                            corpusID: "fixture",
+                            expectedSelectedPCMSamples: 48_000,
+                            inputSelectedPCMSamples: 48_000,
+                            asrFedSelectedPCMSamples: 48_000,
+                            selectedPCMInputComplete: true,
+                            lastSelectedSpeechPresent: false
+                        )
+                    ],
                     asrP50Milliseconds: 10,
                     asrP95Milliseconds: 30,
                     asrWorstMilliseconds: 30,
-                    appleHighFidelityP50Milliseconds: nil,
-                    appleHighFidelityP95Milliseconds: nil,
-                    appleHighFidelityWorstMilliseconds: nil,
+                    primaryEmptySpeechTurnCount: emptySpeech.primary,
+                    diagnosticEmptySpeechTurnCount: emptySpeech.diagnostic,
                     maximumObservedResidentBytes: 3,
                     turns: reports
                 )
             }
         )
         XCTAssertEqual(artifacts.report.items.count, 3)
-        XCTAssertEqual(Set(artifacts.report.items[0].candidates.map(\.alias)), Set(["A", "B", "C", "D"]))
-        XCTAssertEqual(artifacts.key.count, 12)
+        XCTAssertEqual(
+            Set(artifacts.report.items[0].candidates.map(\.alias)),
+            Set(["A", "B", "C", "D", "E", "F", "G", "H"])
+        )
+        XCTAssertEqual(artifacts.key.count, 24)
     }
 
     func testBakeoffModelArtifactsArePinned() throws {
         let turbo = try XCTUnwrap(ModelCatalog.model(id: "large-v3-turbo"))
         XCTAssertEqual(turbo.sha256, Self.whisperTurboSHA256)
         XCTAssertTrue(turbo.url.path.contains(Self.whisperRevision))
+    }
+
+    func testL5StressPackIsFixedAndBandSeparated() throws {
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let manifests = try ["qudu2fx3ncc", "md62mmdz0m"].map { corpusID in
+            try JapaneseBenchmarkSupport.loadManifest(
+                at: root.appendingPathComponent(
+                    "docs/japanese-live/corpora/\(corpusID)/manifest.json"
+                )
+            )
+        }
+        let selected = try manifests.flatMap { manifest -> [JapaneseBenchmarkManifest.Turn] in
+            let identifiers = try selectedTurnIDs(
+                environment: [:],
+                scope: "stress",
+                corpusID: manifest.corpusID,
+                turns: manifest.annotations.turns
+            )
+            return manifest.annotations.turns.filter { identifiers.contains($0.id) }
+        }
+        XCTAssertEqual(selected.count, 92)
+        XCTAssertEqual(selected.filter { $0.confidence == .high && $0.overlap != true }.count, 58)
+        XCTAssertEqual(selected.filter { $0.confidence == .medium && $0.overlap != true }.count, 19)
+        XCTAssertEqual(selected.filter { $0.confidence == .low && $0.overlap != true }.count, 2)
+        XCTAssertEqual(selected.filter { $0.overlap == true }.count, 13)
+        XCTAssertThrowsError(try selectedTurnIDs(
+            environment: ["WHISPERASR_JAPANESE_BAKEOFF_TURN_IDS": "1"],
+            scope: "stress",
+            corpusID: manifests[0].corpusID,
+            turns: manifests[0].annotations.turns
+        ))
     }
 
     func testPairedBootstrapUsesTheSameTurns() {
@@ -548,7 +692,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         }
     }
 
-    /// Run with `Scripts/run_japanese_bakeoff.sh [smoke|full]`.
+    /// Run with `Scripts/run_japanese_l5_bakeoff.sh` or the earlier single-corpus script.
     ///
     /// Every engine receives the exact same annotated human turn ranges. The
     /// production clause planner is deliberately not approximated here: its
@@ -558,7 +702,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     func testJapaneseASRBakeoffWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_JAPANESE_BAKEOFF"] == "1" else {
-            throw XCTSkip("Run Scripts/run_japanese_bakeoff.sh to compare local Japanese ASR models.")
+            throw XCTSkip("Run Scripts/run_japanese_l5_bakeoff.sh to compare local Japanese ASR models.")
         }
         guard let gitCommit = environment["WHISPERASR_BENCHMARK_COMMIT"],
               gitCommit.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil else {
@@ -569,41 +713,50 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         defer { ModelHub.offlineMode = false }
 
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let manifestURL = URL(
-            fileURLWithPath: environment["WHISPERASR_JAPANESE_BENCHMARK_MANIFEST"]
-                ?? root.appendingPathComponent(
-                    "docs/japanese-live/corpora/easy-japanese-1/manifest.json"
-                ).path
-        ).standardizedFileURL
-        let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
-        let manifestSHA256 = try JapaneseBenchmarkSupport.sha256(at: manifestURL)
-        let wavURL = try JapaneseBenchmarkSupport.fixtureURL(
-            for: manifest,
-            workspaceRoot: root
-        )
-        XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: wavURL), manifest.fixture.sha256)
-        let samples = try await AudioLoader.loadSamples(url: wavURL)
-        XCTAssertEqual(samples.count, manifest.fixture.sampleCount)
-        XCTAssertEqual(manifest.fixture.sampleRate, 16_000)
-        let englishReference = try validateHumanEnglishReference(
-            environment: environment,
-            manifest: manifest
-        )
-
         let scope = environment["WHISPERASR_JAPANESE_BAKEOFF_SCOPE"] ?? "full"
-        let selectedIDs = selectedTurnIDs(
+        let manifestURLs = try benchmarkManifestURLs(
             environment: environment,
             scope: scope,
-            turns: manifest.annotations.turns
+            root: root
         )
-        let selectedTurns = manifest.annotations.turns.filter { selectedIDs.contains($0.id) }
-        guard !selectedTurns.isEmpty, selectedTurns.count == selectedIDs.count else {
-            XCTFail("The selected corpus has no complete set of scorable turns.")
-            return
+        var corpora: [JapaneseBakeoffCorpusInput] = []
+        for manifestURL in manifestURLs {
+            let manifest = try JapaneseBenchmarkSupport.loadManifest(at: manifestURL)
+            let wavURL = try JapaneseBenchmarkSupport.fixtureURL(
+                for: manifest,
+                workspaceRoot: root
+            )
+            XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: wavURL), manifest.fixture.sha256)
+            let samples = try await AudioLoader.loadSamples(url: wavURL)
+            XCTAssertEqual(samples.count, manifest.fixture.sampleCount)
+            XCTAssertEqual(manifest.fixture.sampleRate, 16_000)
+            let selectedIDs = try selectedTurnIDs(
+                environment: environment,
+                scope: scope,
+                corpusID: manifest.corpusID,
+                turns: manifest.annotations.turns
+            )
+            let selectedTurns = manifest.annotations.turns.filter { selectedIDs.contains($0.id) }
+            guard !selectedTurns.isEmpty, selectedTurns.count == selectedIDs.count else {
+                XCTFail("Corpus \(manifest.corpusID) has no complete set of scorable turns.")
+                return
+            }
+            XCTAssertTrue(selectedTurns.allSatisfy { $0.endSample <= samples.count })
+            corpora.append(JapaneseBakeoffCorpusInput(
+                manifest: manifest,
+                manifestSHA256: try JapaneseBenchmarkSupport.sha256(at: manifestURL),
+                wavURL: wavURL,
+                samples: samples,
+                turns: selectedTurns
+            ))
         }
-        XCTAssertTrue(selectedTurns.allSatisfy { $0.endSample <= samples.count })
+        if scope == "stress",
+           corpora.map({ $0.manifest.corpusID }) != ["qudu2fx3ncc", "md62mmdz0m"] {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "The L5 stress manifests must be ordered qudu2fx3ncc, then md62mmdz0m."
+            )
+        }
 
-        let translation = try await optionalAppleTranslation(environment: environment)
         let modelManager = LocalEnglishModelManager()
         let whisper = TranscriptionService()
         let voxtralConfiguration = try requestedVoxtralConfiguration(environment: environment)
@@ -616,13 +769,12 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             print("[JapaneseBakeoff] preparing \(engine.rawValue)")
             let report = await runEngine(
                 engine,
-                turns: selectedTurns,
-                samples: samples,
+                corpora: corpora,
                 modelManager: modelManager,
                 whisper: whisper,
-                translation: translation,
                 root: root,
-                environment: environment
+                environment: environment,
+                runID: runID
             )
             engineReports.append(report)
             print(
@@ -636,48 +788,54 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         await whisper.unloadModel()
         let comparisons = bakeoffComparisons(
             reports: engineReports,
-            manifest: manifest
+            manifests: corpora.map(\.manifest)
         )
 
         let report = JapaneseBakeoffFullReport(
-            schemaVersion: 3,
+            schemaVersion: 6,
             runID: runID,
             gitCommit: gitCommit,
             worktreeDirty: environment["WHISPERASR_BENCHMARK_DIRTY"] == "1",
             modelHubOfflineMode: environment["WHISPERASR_OFFLINE"] == "1",
-            corpusID: manifest.corpusID,
-            corpusPurpose: manifest.purpose.rawValue,
-            manifestSHA256: manifestSHA256,
-            audioSHA256: manifest.fixture.sha256,
-            humanEnglishReferenceSHA256: englishReference.sha256,
-            humanEnglishReferenceTurnCount: englishReference.turnCount,
-            humanEnglishReferenceStatus: englishReference.status,
-            corpusAnnotationStatus: manifest.annotations.status.rawValue,
-            promotionEligibleReference: manifest.annotations.status == .complete,
+            externalNetworkAccessDenied:
+                environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1",
+            corpora: corpora.map { corpus in
+                JapaneseBakeoffCorpusReport(
+                    corpusID: corpus.manifest.corpusID,
+                    purpose: corpus.manifest.purpose.rawValue,
+                    manifestSHA256: corpus.manifestSHA256,
+                    audioSHA256: corpus.manifest.fixture.sha256,
+                    annotationStatus: corpus.manifest.annotations.status.rawValue,
+                    promotionEligibleReference: corpus.manifest.annotations.status == .complete,
+                    selectedTurnIDs: corpus.turns.map(\.id)
+                )
+            },
             generatedAt: ISO8601DateFormatter().string(from: Date()),
             scope: scope,
-            selectedTurnIDs: selectedTurns.map(\.id),
-            boundaryMode: manifest.annotations.status == .complete
+            boundaryMode: corpora.allSatisfy { $0.manifest.annotations.status == .complete }
                 ? "human-reference-turns"
                 : "exploratory-unverified-turns",
             productionBoundaryStatus: "not-reproduced",
             productionBoundaryNote: "Production boundaries depend on AppState's continuous VoxtralClausePlanner, VAD, preview scheduler and optional diarization state. Recreating them turn-by-turn here would be a false simulation; use the existing real-time replay reports for that pass.",
-            appleHighFidelityEnabled: translation != nil,
             voxtralConfiguration: voxtralConfiguration,
             configuration: JapaneseBakeoffConfiguration(
                 language: "ja-JP",
                 sampleRate: 16_000,
-                executionMode: "sequential-offline-human-turns",
+                executionMode: "sequential-warmed-human-turns",
                 engineOrder: requestedEngines,
                 fluidAudioVersion: Self.fluidAudioVersion,
-                fluidAudioRevision: Self.fluidAudioRevision
+                fluidAudioRevision: Self.fluidAudioRevision,
+                mlxWhisperVersion: Self.mlxWhisperVersion,
+                whisperMLXVersion: Self.whisperMLXVersion,
+                sileroRevision: Self.sileroRevision,
+                mlxInferenceSeedStrategy: "crc32(corpusID:turnID)"
             ),
             engines: engineReports,
             comparisons: comparisons,
-            promotionDecision: promotionDecision(manifest: manifest)
+            promotionDecision: promotionDecision(manifests: corpora.map(\.manifest))
         )
         let artifacts = blindArtifacts(
-            corpusID: manifest.corpusID,
+            corpusIDs: corpora.map { $0.manifest.corpusID },
             scope: scope,
             seed: UUID().uuidString,
             reports: engineReports
@@ -686,8 +844,6 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             report: report,
             blind: artifacts.report,
             key: artifacts.key,
-            corpusID: manifest.corpusID,
-            scope: scope,
             runID: runID,
             root: root
         )
@@ -698,7 +854,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 result.append("\(engine.engine.rawValue): \(engine.setupError ?? engine.status)")
             }
             result += engine.turns.compactMap { turn in
-                turn.asrError.map { "\(engine.engine.rawValue) turn \(turn.turnID): \($0)" }
+                turn.asrError.map {
+                    "\(engine.engine.rawValue) \(turn.corpusID) turn \(turn.turnID): \($0)"
+                }
             }
             return result
         }
@@ -797,78 +955,66 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         )
     }
 
+    private func benchmarkManifestURLs(
+        environment: [String: String],
+        scope: String,
+        root: URL
+    ) throws -> [URL] {
+        let fallback = root.appendingPathComponent(
+            "docs/japanese-live/corpora/easy-japanese-1/manifest.json"
+        ).path
+        let raw = environment["WHISPERASR_JAPANESE_BENCHMARK_MANIFESTS"]
+            ?? environment["WHISPERASR_JAPANESE_BENCHMARK_MANIFEST"]
+            ?? fallback
+        let paths = raw.split(separator: ",", omittingEmptySubsequences: false).map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        guard !paths.isEmpty, paths.allSatisfy({ !$0.isEmpty }), Set(paths).count == paths.count else {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "Benchmark manifest paths must be non-empty and unique."
+            )
+        }
+        if scope == "stress", paths.count != 2 {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "The fixed L5 stress pack requires exactly two manifests."
+            )
+        }
+        return paths.map { URL(fileURLWithPath: $0).standardizedFileURL }
+    }
+
     private func selectedTurnIDs(
         environment: [String: String],
         scope: String,
+        corpusID: String,
         turns: [JapaneseBenchmarkManifest.Turn]
-    ) -> Set<Int> {
+    ) throws -> Set<Int> {
+        if scope == "stress" {
+            guard environment["WHISPERASR_JAPANESE_BAKEOFF_TURN_IDS"] == nil,
+                  let expected = Self.stressTurnIDs[corpusID],
+                  Set(expected).isSubset(of: Set(turns.map(\.id))) else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "The L5 stress pack is fixed and cannot be overridden."
+                )
+            }
+            return Set(expected)
+        }
         if let raw = environment["WHISPERASR_JAPANESE_BAKEOFF_TURN_IDS"] {
-            return Set(raw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) })
+            let fields = raw.split(separator: ",", omittingEmptySubsequences: false).map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            let identifiers = fields.compactMap(Int.init)
+            guard !identifiers.isEmpty,
+                  identifiers.count == fields.count,
+                  Set(identifiers).count == identifiers.count else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Turn IDs must be non-empty, numeric and unique."
+                )
+            }
+            return Set(identifiers)
         }
         return scope == "smoke"
             ? Set(turns.prefix(4).map(\.id))
             : Set(turns.map(\.id))
-    }
-
-    private func validateHumanEnglishReference(
-        environment: [String: String],
-        manifest: JapaneseBenchmarkManifest
-    ) throws -> (sha256: String?, turnCount: Int, status: String) {
-        guard let path = environment["WHISPERASR_JAPANESE_ENGLISH_TURNS"]?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-              !path.isEmpty else {
-            return (nil, 0, "not-provided-for-this-corpus")
-        }
-        let url = URL(fileURLWithPath: path).standardizedFileURL
-        let data = try Data(contentsOf: url)
-        let sha256 = digest(data)
-        let records = try JapaneseBenchmarkCSV.records(
-            data: data,
-            expectedHeader: Self.englishTurnsHeader
-        )
-        guard records.count == manifest.annotations.turns.count else {
-            throw JapaneseBenchmarkCSV.ParseError.malformed(
-                "The human English reference must cover every Japanese turn."
-            )
-        }
-        let turns = Dictionary(uniqueKeysWithValues: manifest.annotations.turns.map { ($0.id, $0) })
-        let recordIDs = records.compactMap { $0["turn"].flatMap(Int.init) }
-        guard recordIDs.count == records.count,
-              Set(recordIDs).count == records.count,
-              Set(recordIDs) == Set(turns.keys) else {
-            throw JapaneseBenchmarkCSV.ParseError.malformed(
-                "The human English reference must contain each turn exactly once."
-            )
-        }
-        for record in records {
-            guard let rawID = record["turn"], let id = Int(rawID),
-                  let turn = turns[id],
-                  let english = record["english"],
-                  !english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  record["speaker"] == turn.speaker,
-                  record["japanese_source"] == turn.japanese,
-                  record["confidence"] == turn.confidence.rawValue,
-                  let start = record["speaker_switch_start"],
-                  let end = record["end"],
-                  try JapaneseBenchmarkCSV.sampleIndex(timecode: start) == turn.startSample,
-                  try JapaneseBenchmarkCSV.sampleIndex(timecode: end) == turn.endSample else {
-                throw JapaneseBenchmarkCSV.ParseError.malformed(
-                    "The human English reference is not aligned with the Japanese manifest."
-                )
-            }
-        }
-        if manifest.corpusID == "easy-japanese-1" {
-            guard sha256 == Self.easyJapaneseEnglishTurnsSHA256,
-                  manifest.source.references.contains(where: {
-                      $0.label == "english-transcript-archive"
-                          && $0.sha256 == Self.easyJapaneseEnglishArchiveSHA256
-                  }) else {
-                throw JapaneseBenchmarkCSV.ParseError.malformed(
-                    "The Easy Japanese English reference does not match its pinned source."
-                )
-            }
-        }
-        return (sha256, records.count, "verified-reference-not-scored-by-asr-bakeoff")
     }
 
     private func requestedVoxtralConfiguration(
@@ -919,43 +1065,36 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         let canonicalOrder = JapaneseBakeoffEngine.allCases.filter { engines.contains($0) }
         guard engines == canonicalOrder else {
             throw JapaneseBenchmarkCSV.ParseError.malformed(
-                "ASR engines must follow the fixed L3 order."
+                "ASR engines must follow the fixed L5 order."
             )
         }
-        if scope == "full", engines != JapaneseBakeoffEngine.allCases {
+        if scope == "stress", engines != JapaneseBakeoffEngine.allCases {
             throw JapaneseBenchmarkCSV.ParseError.malformed(
-                "A full L3 proof must execute all four ASR engines."
+                "The L5 stress proof must execute all eight ASR engines."
             )
         }
         return engines
     }
 
     @MainActor
-    private func optionalAppleTranslation(
-        environment: [String: String]
-    ) async throws -> JapaneseBakeoffTranslation? {
-        guard environment["WHISPERASR_JAPANESE_BAKEOFF_APPLE"] == "1" else { return nil }
-        guard #available(macOS 26.4, *) else {
-            throw XCTSkip("Apple high-fidelity comparison requires macOS 26.4 or later.")
-        }
-        let service = AppleTranslationService()
-        try await service.configure(sourceLocale: "ja", mode: .highFidelityOnly)
-        return { text in
-            try await service.translate(text, highFidelity: true)
-        }
-    }
-
-    @MainActor
     private func runEngine(
         _ engine: JapaneseBakeoffEngine,
-        turns: [JapaneseBenchmarkManifest.Turn],
-        samples: [Float],
+        corpora: [JapaneseBakeoffCorpusInput],
         modelManager: LocalEnglishModelManager,
         whisper: TranscriptionService,
-        translation: JapaneseBakeoffTranslation?,
         root: URL,
-        environment: [String: String]
+        environment: [String: String],
+        runID: String
     ) async -> JapaneseBakeoffEngineReport {
+        if engine == .mlxWhisperTurbo || engine == .whisperMLXBatch {
+            return await runExternalEngine(
+                engine,
+                corpora: corpora,
+                root: root,
+                environment: environment,
+                runID: runID
+            )
+        }
         var turnReports: [JapaneseBakeoffTurnReport] = []
         var setupError: String?
         var nemotron: StreamingNemotronMultilingualAsrManager?
@@ -993,6 +1132,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     modelPath: ModelCatalog.path(for: turbo).path,
                     requireEnglishTranslation: false
                 )
+            case .kotobaQ5:
+                try await whisper.preloadModel(
+                    modelPath: kotobaModelURL(root: root, environment: environment).path,
+                    requireEnglishTranslation: false
+                )
+            case .qwen17:
+                try await modelManager.prepare(.qwenApple)
             case .voxtralContinuous:
                 try await modelManager.prepare(.voxtralApple)
             case .nemotron1120, .nemotron560:
@@ -1015,18 +1161,35 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 try await manager.loadModels(from: directory)
                 await manager.setLanguage("ja-JP")
                 nemotron = manager
+            case .mlxWhisperTurbo, .whisperMLXBatch:
+                preconditionFailure("Python candidates use the external benchmark adapter.")
+            }
+            if let corpus = corpora.first, let turn = corpus.turns.first {
+                _ = try await transcribe(
+                    engine,
+                    audio: Array(corpus.samples[turn.startSample..<turn.endSample]),
+                    absoluteStartSample: turn.startSample,
+                    modelManager: modelManager,
+                    whisper: whisper,
+                    nemotron: nemotron,
+                    root: root,
+                    environment: environment
+                )
             }
         } catch {
             setupError = error.localizedDescription
         }
 
         if setupError == nil {
-            for (index, turn) in turns.enumerated() {
-                let audio = Array(samples[turn.startSample..<turn.endSample])
+            let totalTurns = corpora.reduce(0) { $0 + $1.turns.count }
+            var completedTurns = 0
+            for corpus in corpora {
+                for turn in corpus.turns {
+                let audio = Array(corpus.samples[turn.startSample..<turn.endSample])
                 let asrStarted = DispatchTime.now().uptimeNanoseconds
                 var asrResult = JapaneseASRResult(
                     text: "",
-                    fedSampleCount: 0
+                    asrFedSampleCount: 0
                 )
                 var asrError: String?
                 do {
@@ -1036,7 +1199,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                         absoluteStartSample: turn.startSample,
                         modelManager: modelManager,
                         whisper: whisper,
-                        nemotron: nemotron
+                        nemotron: nemotron,
+                        root: root,
+                        environment: environment
                     )
                 } catch {
                     asrError = error.localizedDescription
@@ -1044,35 +1209,11 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 let asrFinished = DispatchTime.now().uptimeNanoseconds
                 let hypothesis = asrResult.text.trimmingCharacters(in: .whitespacesAndNewlines)
 
-                var english: String?
-                var translationMilliseconds: Double?
-                var validEnglish: Bool?
-                var translationError: String?
-                if let translation, asrError == nil, !hypothesis.isEmpty {
-                    let translationStarted = DispatchTime.now().uptimeNanoseconds
-                    do {
-                        let candidate = try await translation(hypothesis)
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
-                        let valid = !candidate.isEmpty
-                            && !EnglishSubtitleValidator.containsSourceScript(candidate)
-                        english = candidate
-                        validEnglish = valid
-                        if !valid {
-                            translationError = "Apple highFidelity returned empty or source-script text."
-                        }
-                    } catch {
-                        translationError = error.localizedDescription
-                        validEnglish = false
-                    }
-                    translationMilliseconds = Double(
-                        DispatchTime.now().uptimeNanoseconds - translationStarted
-                    ) / 1_000_000
-                }
-
                 let helperBytes = engine == .voxtralContinuous
                     ? await modelManager.continuousVoxtralProgress().helperRSSBytes ?? 0
                     : 0
                 turnReports.append(JapaneseBakeoffTurnReport(
+                    corpusID: corpus.manifest.corpusID,
                     turnID: turn.id,
                     confidence: turn.confidence,
                     overlap: turn.overlap ?? false,
@@ -1083,19 +1224,18 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     hypothesisJapanese: hypothesis,
                     criticalTerms: turn.criticalTerms,
                     inputSampleCount: audio.count,
-                    fedSampleCount: asrResult.fedSampleCount,
+                    asrFedSampleCount: asrResult.asrFedSampleCount,
                     asrMilliseconds: Double(asrFinished - asrStarted) / 1_000_000,
-                    appleEnglish: english,
-                    appleHighFidelityMilliseconds: translationMilliseconds,
-                    validEnglish: validEnglish,
                     residentBytes: modelManager.currentMemoryBytes() + helperBytes,
-                    asrError: asrError,
-                    translationError: translationError
+                    asrError: asrError
                 ))
+                completedTurns += 1
                 print(
                     "[JapaneseBakeoff] \(engine.rawValue) "
-                        + "turn=\(turn.id) progress=\(index + 1)/\(turns.count)"
+                        + "corpus=\(corpus.manifest.corpusID) turn=\(turn.id) "
+                        + "progress=\(completedTurns)/\(totalTurns)"
                 )
+                }
             }
         }
 
@@ -1107,7 +1247,166 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             model: provenance,
             setupError: setupError,
             turns: turnReports,
-            expectedTurnCount: turns.count
+            corpora: corpora
+        )
+    }
+
+    private func runExternalEngine(
+        _ engine: JapaneseBakeoffEngine,
+        corpora: [JapaneseBakeoffCorpusInput],
+        root: URL,
+        environment: [String: String],
+        runID: String
+    ) async -> JapaneseBakeoffEngineReport {
+        var provenance = unresolvedProvenance(engine)
+        var setupError: String?
+        var reports: [JapaneseBakeoffTurnReport] = []
+        do {
+            provenance = try modelProvenance(engine, root: root, environment: environment)
+            guard provenance.artifactSHA256Verified else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "The pinned external model artifact failed SHA-256 verification."
+                )
+            }
+            let python = externalPythonURL(
+                engine: engine,
+                root: root,
+                environment: environment
+            )
+            guard FileManager.default.isExecutableFile(atPath: python.path) else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Missing external ASR Python at \(python.path)."
+                )
+            }
+            if engine == .whisperMLXBatch {
+                let head = try String(
+                    contentsOf: sileroDirectory(root: root, environment: environment)
+                        .appendingPathComponent(".git/HEAD"),
+                    encoding: .utf8
+                ).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard head == Self.sileroRevision else {
+                    throw JapaneseBenchmarkCSV.ParseError.malformed(
+                        "Silero VAD is not at the pinned revision."
+                    )
+                }
+            }
+            let output = root.appendingPathComponent(
+                ".build/benchmarks/japanese-live/runs/\(runID)",
+                isDirectory: true
+            )
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            let requestURL = output.appendingPathComponent("\(engine.rawValue)-request.json")
+            let responseURL = output.appendingPathComponent("\(engine.rawValue)-response.json")
+            let stdoutURL = output.appendingPathComponent("\(engine.rawValue)-stdout.log")
+            let stderrURL = output.appendingPathComponent("\(engine.rawValue)-stderr.log")
+            let request = JapaneseExternalASRRequest(
+                backend: engine == .mlxWhisperTurbo ? "mlx-whisper" : "whispermlx",
+                modelPath: mlxWhisperModelDirectory(root: root, environment: environment).path,
+                sileroPath: engine == .whisperMLXBatch
+                    ? sileroDirectory(root: root, environment: environment).path : nil,
+                corpora: corpora.map { corpus in
+                    JapaneseExternalASRRequest.Corpus(
+                        corpusID: corpus.manifest.corpusID,
+                        audioPath: corpus.wavURL.path,
+                        turns: corpus.turns.map {
+                            JapaneseExternalASRRequest.Corpus.Turn(
+                                turnID: $0.id,
+                                startSample: $0.startSample,
+                                endSample: $0.endSample
+                            )
+                        }
+                    )
+                }
+            )
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            try encoder.encode(request).write(to: requestURL, options: .atomic)
+            FileManager.default.createFile(atPath: stdoutURL.path, contents: nil)
+            FileManager.default.createFile(atPath: stderrURL.path, contents: nil)
+            let stdout = try FileHandle(forWritingTo: stdoutURL)
+            let stderr = try FileHandle(forWritingTo: stderrURL)
+            defer {
+                try? stdout.close()
+                try? stderr.close()
+            }
+            let process = Process()
+            let adapterPath = root.appendingPathComponent(
+                "Scripts/japanese_external_asr.py"
+            ).path
+            let adapterArguments = [
+                adapterPath,
+                requestURL.path,
+                responseURL.path,
+            ]
+            if environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1" {
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/sandbox-exec")
+                process.arguments = [
+                    "-p",
+                    "(version 1)(allow default)(deny network*)",
+                    python.path,
+                ] + adapterArguments
+            } else {
+                process.executableURL = python
+                process.arguments = adapterArguments
+            }
+            process.currentDirectoryURL = root
+            process.environment = environment
+            process.standardOutput = stdout
+            process.standardError = stderr
+            try process.run()
+            process.waitUntilExit()
+
+            let response = try JSONDecoder().decode(
+                JapaneseExternalASRResponse.self,
+                from: Data(contentsOf: responseURL)
+            )
+            if let responseError = response.setupError {
+                setupError = responseError
+            } else if process.terminationStatus != 0 {
+                setupError = "External ASR exited with status \(process.terminationStatus)."
+            } else {
+                let byID = Dictionary(
+                    uniqueKeysWithValues: response.turns.map {
+                        ("\($0.corpusID):\($0.turnID)", $0)
+                    }
+                )
+                for corpus in corpora {
+                    for turn in corpus.turns {
+                        let key = "\(corpus.manifest.corpusID):\(turn.id)"
+                        guard let result = byID[key] else {
+                            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                                "External ASR omitted \(key)."
+                            )
+                        }
+                        reports.append(JapaneseBakeoffTurnReport(
+                            corpusID: corpus.manifest.corpusID,
+                            turnID: turn.id,
+                            confidence: turn.confidence,
+                            overlap: turn.overlap ?? false,
+                            speaker: turn.speaker,
+                            startSample: turn.startSample,
+                            endSample: turn.endSample,
+                            referenceJapanese: turn.japanese,
+                            hypothesisJapanese: result.hypothesisJapanese,
+                            criticalTerms: turn.criticalTerms,
+                            inputSampleCount: result.inputSampleCount,
+                            asrFedSampleCount: result.fedSampleCount,
+                            asrMilliseconds: result.asrMilliseconds,
+                            residentBytes: result.residentBytes,
+                            asrError: result.error
+                        ))
+                    }
+                }
+            }
+        } catch {
+            setupError = error.localizedDescription
+        }
+        return engineReport(
+            engine: engine,
+            model: provenance,
+            setupError: setupError,
+            turns: reports,
+            corpora: corpora
         )
     }
 
@@ -1118,26 +1417,44 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         absoluteStartSample: Int,
         modelManager: LocalEnglishModelManager,
         whisper: TranscriptionService,
-        nemotron: StreamingNemotronMultilingualAsrManager?
+        nemotron: StreamingNemotronMultilingualAsrManager?,
+        root: URL,
+        environment: [String: String]
     ) async throws -> JapaneseASRResult {
         switch engine {
-        case .whisperTurbo:
-            guard let turbo = ModelCatalog.model(id: "large-v3-turbo") else {
-                throw NSError(
-                    domain: "JapaneseModelBakeoff",
-                    code: 3,
-                    userInfo: [NSLocalizedDescriptionKey: "Whisper Turbo is absent from ModelCatalog."]
-                )
+        case .whisperTurbo, .kotobaQ5:
+            let modelPath: String
+            if engine == .whisperTurbo {
+                guard let turbo = ModelCatalog.model(id: "large-v3-turbo") else {
+                    throw NSError(
+                        domain: "JapaneseModelBakeoff",
+                        code: 3,
+                        userInfo: [
+                            NSLocalizedDescriptionKey: "Whisper Turbo is absent from ModelCatalog."
+                        ]
+                    )
+                }
+                modelPath = ModelCatalog.path(for: turbo).path
+            } else {
+                modelPath = kotobaModelURL(root: root, environment: environment).path
             }
             let text = try await whisper.transcribeChunk(
                 samples: audio,
                 language: "ja",
                 translate: false,
-                modelPath: ModelCatalog.path(for: turbo).path
+                modelPath: modelPath
             )
             return JapaneseASRResult(
                 text: text.text,
-                fedSampleCount: audio.count
+                asrFedSampleCount: audio.count
+            )
+        case .qwen17:
+            return JapaneseASRResult(
+                text: try await modelManager.transcribeQwen(
+                    audio: audio,
+                    language: "Japanese"
+                ),
+                asrFedSampleCount: audio.count
             )
         case .voxtralContinuous:
             let events = try await modelManager.startContinuousVoxtral()
@@ -1170,7 +1487,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 }
                 return JapaneseASRResult(
                     text: transcript,
-                    fedSampleCount: audio.count
+                    asrFedSampleCount: audio.count
                 )
             } catch {
                 await modelManager.cancelContinuousVoxtral()
@@ -1195,8 +1512,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             let final = try await nemotron.finish()
             return JapaneseASRResult(
                 text: final,
-                fedSampleCount: audio.count
+                asrFedSampleCount: audio.count
             )
+        case .mlxWhisperTurbo, .whisperMLXBatch:
+            preconditionFailure("Python candidates use the external benchmark adapter.")
         }
     }
 
@@ -1205,8 +1524,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         model: JapaneseBakeoffModelProvenance,
         setupError: String?,
         turns: [JapaneseBakeoffTurnReport],
-        expectedTurnCount: Int
+        corpora: [JapaneseBakeoffCorpusInput]
     ) -> JapaneseBakeoffEngineReport {
+        let expectedTurnCount = corpora.reduce(0) { $0 + $1.turns.count }
         let asrFailures = turns.filter { $0.asrError != nil }.count
         let status: String
         if setupError != nil {
@@ -1217,9 +1537,37 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             status = "execution-complete"
         }
         let asr = turns.filter { $0.asrError == nil }.map(\.asrMilliseconds)
-        let translations = turns.compactMap(\.appleHighFidelityMilliseconds)
-        let expectedPCMSamples = turns.reduce(0) { $0 + $1.inputSampleCount }
-        let fedPCMSamples = turns.reduce(0) { $0 + $1.fedSampleCount }
+        let expectedPCMSamples = corpora.flatMap(\.turns).reduce(0) {
+            $0 + $1.endSample - $1.startSample
+        }
+        let inputPCMSamples = turns.reduce(0) { $0 + $1.inputSampleCount }
+        let asrFedPCMSamples = turns.reduce(0) { $0 + $1.asrFedSampleCount }
+        let corpusCoverage = corpora.map { corpus -> JapaneseBakeoffCorpusCoverage in
+            let corpusTurns = turns.filter { $0.corpusID == corpus.manifest.corpusID }
+            let expected = corpus.turns.reduce(0) { $0 + $1.endSample - $1.startSample }
+            let input = corpusTurns.reduce(0) { $0 + $1.inputSampleCount }
+            let asrFed = corpusTurns.reduce(0) { $0 + $1.asrFedSampleCount }
+            let lastTurn = corpus.turns.last
+            let lastPresent = lastTurn.map { expectedTurn in
+                guard let actual = corpusTurns.first(where: {
+                    $0.turnID == expectedTurn.id
+                }) else { return false }
+                return lastSpeechPresent(
+                    reference: expectedTurn.japanese,
+                    hypothesis: actual.hypothesisJapanese
+                )
+            } ?? false
+            return JapaneseBakeoffCorpusCoverage(
+                corpusID: corpus.manifest.corpusID,
+                expectedSelectedPCMSamples: expected,
+                inputSelectedPCMSamples: input,
+                asrFedSelectedPCMSamples: asrFed,
+                selectedPCMInputComplete: corpusTurns.count == corpus.turns.count
+                    && input == expected,
+                lastSelectedSpeechPresent: lastPresent
+            )
+        }
+        let emptySpeech = emptySpeechCounts(turns)
         return JapaneseBakeoffEngineReport(
             engine: engine,
             model: model,
@@ -1227,21 +1575,24 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             setupError: setupError,
             primaryHighConfidenceCER: cerReport(turns, confidence: .high),
             diagnosticMediumConfidenceCER: cerReport(turns, confidence: .medium),
+            diagnosticLowConfidenceCER: cerReport(turns, confidence: .low),
+            diagnosticOverlapCER: cerReport(turns, overlapOnly: true),
             exploratoryUnverifiedCER: cerReport(turns, confidence: .unverified),
             criticalDiagnostics: criticalDiagnostics(turns),
             expectedPCMSamples: expectedPCMSamples,
-            fedPCMSamples: fedPCMSamples,
+            inputPCMSamples: inputPCMSamples,
+            asrFedPCMSamples: asrFedPCMSamples,
             pcmInputCoverageComplete: expectedPCMSamples > 0
-                && fedPCMSamples == expectedPCMSamples,
-            pcmConsumptionStatus: "not-exposed-by-benchmark-api",
-            lastReferenceTurnHasHypothesis:
-                !(turns.last.map(\.hypothesisJapanese) ?? "").isEmpty,
+                && inputPCMSamples == expectedPCMSamples,
+            pcmConsumptionStatus: asrFedPCMSamples == expectedPCMSamples
+                ? "all-selected-pcm-reached-asr"
+                : "vad-filtered-before-asr",
+            corpusCoverage: corpusCoverage,
             asrP50Milliseconds: percentile(asr, fraction: 0.50),
             asrP95Milliseconds: percentile(asr, fraction: 0.95),
             asrWorstMilliseconds: asr.max(),
-            appleHighFidelityP50Milliseconds: percentile(translations, fraction: 0.50),
-            appleHighFidelityP95Milliseconds: percentile(translations, fraction: 0.95),
-            appleHighFidelityWorstMilliseconds: translations.max(),
+            primaryEmptySpeechTurnCount: emptySpeech.primary,
+            diagnosticEmptySpeechTurnCount: emptySpeech.diagnostic,
             maximumObservedResidentBytes: turns.map(\.residentBytes).max() ?? 0,
             turns: turns
         )
@@ -1249,9 +1600,12 @@ final class JapaneseModelBakeoffTests: XCTestCase {
 
     private func cerReport(
         _ turns: [JapaneseBakeoffTurnReport],
-        confidence: JapaneseBenchmarkManifest.Turn.Confidence
+        confidence: JapaneseBenchmarkManifest.Turn.Confidence? = nil,
+        overlapOnly: Bool = false
     ) -> JapaneseBakeoffCERReport {
-        let selected = turns.filter { $0.confidence == confidence && !$0.overlap }
+        let selected = turns.filter { turn in
+            overlapOnly ? turn.overlap : !turn.overlap && turn.confidence == confidence
+        }
         let score = JapaneseCER.score(selected.map {
             (reference: $0.referenceJapanese, hypothesis: $0.hypothesisJapanese)
         })
@@ -1268,6 +1622,19 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         )
     }
 
+    private func emptySpeechCounts(
+        _ turns: [JapaneseBakeoffTurnReport]
+    ) -> (primary: Int, diagnostic: Int) {
+        let emptySpeech = turns.filter {
+            !JapaneseCER.normalized($0.referenceJapanese).isEmpty
+                && JapaneseCER.normalized($0.hypothesisJapanese).isEmpty
+        }
+        let primary = emptySpeech.filter {
+            !$0.overlap && $0.confidence == .high
+        }.count
+        return (primary, emptySpeech.count - primary)
+    }
+
     private func criticalDiagnostics(
         _ turns: [JapaneseBakeoffTurnReport]
     ) -> JapaneseBakeoffCriticalDiagnostics {
@@ -1280,6 +1647,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 let normalizedTerm = String(JapaneseCER.normalized(term.japanese))
                 guard !hypothesis.contains(normalizedTerm) else { return nil }
                 return JapaneseBakeoffCriticalDiagnostics.MissingTerm(
+                    corpusID: turn.corpusID,
                     turnID: turn.turnID,
                     category: term.category,
                     japanese: term.japanese
@@ -1295,6 +1663,33 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 : "scored-from-manifest-critical-terms",
             note: "Only manifest criticalTerms are admissible. Heuristic marker matching is intentionally excluded from promotion evidence."
         )
+    }
+
+    private func lastSpeechPresent(reference: String, hypothesis: String) -> Bool {
+        let score = JapaneseCER.score([(reference: reference, hypothesis: hypothesis)])
+        guard score.referenceCharacterCount > 0 else { return false }
+        let matchingCharacters = score.referenceCharacterCount
+            - score.substitutionCount
+            - score.deletionCount
+        return matchingCharacters * 2 >= score.referenceCharacterCount
+    }
+
+    private func normalizedTextAgreement(
+        candidate: [JapaneseBakeoffTurnReport],
+        baseline: [String: JapaneseBakeoffTurnReport]
+    ) -> Double? {
+        let comparable = candidate.compactMap { turn -> (String, String)? in
+            guard turn.confidence == .high, !turn.overlap,
+                  let reference = baseline["\(turn.corpusID):\(turn.turnID)"] else {
+                return nil
+            }
+            return (
+                String(JapaneseCER.normalized(turn.hypothesisJapanese)),
+                String(JapaneseCER.normalized(reference.hypothesisJapanese))
+            )
+        }
+        guard !comparable.isEmpty else { return nil }
+        return Double(comparable.filter { $0.0 == $0.1 }.count) / Double(comparable.count)
     }
 
     private func percentile(_ values: [Double], fraction: Double) -> Double? {
@@ -1350,16 +1745,22 @@ final class JapaneseModelBakeoffTests: XCTestCase {
 
     private func bakeoffComparisons(
         reports: [JapaneseBakeoffEngineReport],
-        manifest: JapaneseBenchmarkManifest
+        manifests: [JapaneseBenchmarkManifest]
     ) -> [JapaneseBakeoffComparison] {
-        guard let baseline = reports.first(where: { $0.engine == .whisperTurbo }) else {
-            return []
-        }
-        let baselineTurns = Dictionary(uniqueKeysWithValues: baseline.turns.map { ($0.turnID, $0) })
-        return reports.filter { $0.engine != .whisperTurbo }.map { candidate in
+        reports.filter { $0.engine != .whisperTurbo }.compactMap { candidate in
+            let baselineEngine: JapaneseBakeoffEngine = candidate.engine == .whisperMLXBatch
+                ? .mlxWhisperTurbo : .whisperTurbo
+            guard let baseline = reports.first(where: { $0.engine == baselineEngine }) else {
+                return nil
+            }
+            let baselineTurns = Dictionary(uniqueKeysWithValues: baseline.turns.map {
+                ("\($0.corpusID):\($0.turnID)", $0)
+            })
             let observations = candidate.turns.compactMap { turn -> JapanesePairedCERObservation? in
                 guard turn.confidence == .high, !turn.overlap,
-                      let baselineTurn = baselineTurns[turn.turnID] else { return nil }
+                      let baselineTurn = baselineTurns["\(turn.corpusID):\(turn.turnID)"] else {
+                    return nil
+                }
                 let baselineScore = JapaneseCER.score([(
                     reference: turn.referenceJapanese,
                     hypothesis: baselineTurn.hypothesisJapanese,
@@ -1375,52 +1776,106 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 )
             }
             let bootstrap = pairedBootstrap(observations)
-            let qualityPasses = bootstrap.lower95.map { $0 >= 0.10 } == true
-            var blockers: [String] = []
-            if manifest.annotations.status != .complete {
-                blockers.append("corpus annotations are not complete")
+            let statisticalQualityPasses = bootstrap.lower95.map { $0 >= 0.10 } == true
+            let textAgreement = normalizedTextAgreement(
+                candidate: candidate.turns,
+                baseline: baselineTurns
+            )
+            let corpusDeltas = manifests.map { manifest -> JapaneseBakeoffCorpusCERDelta in
+                let baselineRate = cerReport(
+                    baseline.turns.filter { $0.corpusID == manifest.corpusID },
+                    confidence: .high
+                ).rate
+                let candidateRate = cerReport(
+                    candidate.turns.filter { $0.corpusID == manifest.corpusID },
+                    confidence: .high
+                ).rate
+                let delta = baselineRate.flatMap { base in candidateRate.map { $0 - base } }
+                return JapaneseBakeoffCorpusCERDelta(
+                    corpusID: manifest.corpusID,
+                    baselineRate: baselineRate,
+                    candidateRate: candidateRate,
+                    delta: delta,
+                    noMoreThanTwoPointRegression: delta.map { $0 <= 0.02 } == true
+                )
             }
+            var l5Blockers: [String] = []
             if baseline.status != "execution-complete"
                 || candidate.status != "execution-complete" {
-                blockers.append("one or both ASR executions are incomplete")
+                l5Blockers.append("one or both ASR executions are incomplete")
             }
-            if !baseline.model.artifactSHA256Verified
+            if !baseline.model.revisionEnforced || !candidate.model.revisionEnforced
+                || !baseline.model.artifactSHA256Verified
                 || !candidate.model.artifactSHA256Verified {
-                blockers.append("one or both model artifacts are not SHA-pinned")
+                l5Blockers.append("one or both model artifacts are not revision and SHA-pinned")
             }
             if !baseline.pcmInputCoverageComplete || !candidate.pcmInputCoverageComplete {
-                blockers.append("PCM input coverage is incomplete")
+                l5Blockers.append("not all selected PCM reached the benchmark adapter")
             }
-            if !baseline.lastReferenceTurnHasHypothesis
-                || !candidate.lastReferenceTurnHasHypothesis {
-                blockers.append("the final annotated turn is absent")
+            if !baseline.corpusCoverage.allSatisfy(\.lastSelectedSpeechPresent)
+                || !candidate.corpusCoverage.allSatisfy(\.lastSelectedSpeechPresent) {
+                l5Blockers.append("the final annotated speech is not recognizably present")
             }
             let baselineMissingTerms = Set(baseline.criticalDiagnostics.missingTerms.map {
-                "\($0.turnID)|\($0.category.rawValue)|\($0.japanese)"
+                "\($0.corpusID)|\($0.turnID)|\($0.category.rawValue)|\($0.japanese)"
             })
             let candidateMissingTerms = Set(candidate.criticalDiagnostics.missingTerms.map {
-                "\($0.turnID)|\($0.category.rawValue)|\($0.japanese)"
+                "\($0.corpusID)|\($0.turnID)|\($0.category.rawValue)|\($0.japanese)"
             })
-            if candidate.criticalDiagnostics.annotatedTermCount == 0 {
-                blockers.append("critical terms are not human-annotated")
-            } else if !candidateMissingTerms.subtracting(baselineMissingTerms).isEmpty {
-                blockers.append("the candidate adds critical-term omissions")
+            let addsCriticalOmissions = !candidateMissingTerms
+                .subtracting(baselineMissingTerms).isEmpty
+            let corpusQualityIsSafe = corpusDeltas.allSatisfy(\.noMoreThanTwoPointRegression)
+            let criticalCorrectionPasses = candidate.criticalDiagnostics.annotatedTermCount > 0
+                && candidateMissingTerms.isStrictSubset(of: baselineMissingTerms)
+                && !addsCriticalOmissions
+                && corpusQualityIsSafe
+            let qualityPasses = statisticalQualityPasses || criticalCorrectionPasses
+            if addsCriticalOmissions {
+                l5Blockers.append("the candidate adds critical-term omissions")
             }
             if !qualityPasses {
-                blockers.append("paired CER bootstrap does not clear the 10% quality gate")
+                l5Blockers.append(
+                    "neither the paired CER 10% quality gate nor critical correction passes"
+                )
+            }
+            if !corpusQualityIsSafe {
+                l5Blockers.append("at least one corpus regresses by more than 2 CER points")
+            }
+            if candidate.primaryEmptySpeechTurnCount
+                > baseline.primaryEmptySpeechTurnCount {
+                l5Blockers.append("the candidate adds primary empty speech turns")
+            }
+            if candidate.engine == .whisperMLXBatch, textAgreement.map({ $0 >= 0.95 }) == true {
+                l5Blockers.append("whispermlx duplicates at least 95% of normalized MLX outputs")
+            }
+            if candidate.engine.finalLatencyIsMeasuredByOfflineRun,
+               candidate.asrP95Milliseconds.map({ $0 > 1_500 }) != false {
+                l5Blockers.append("batch final p95 exceeds the 1.5 second budget")
             }
             if candidate.maximumObservedResidentBytes >= 10 * 1_024 * 1_024 * 1_024
                 || Double(candidate.maximumObservedResidentBytes)
                     > Double(Self.baselineResidentBytes) * 1.20 {
-                blockers.append("an observed post-turn RSS snapshot exceeds the L0 gate")
+                l5Blockers.append("observed memory exceeds the L0 gate")
+            }
+            var blockers = l5Blockers
+            if manifests.contains(where: { $0.annotations.status != .complete }) {
+                blockers.insert("corpus annotations are not complete", at: 0)
+            }
+            if candidate.criticalDiagnostics.annotatedTermCount == 0 {
+                blockers.append("critical terms are not human-annotated")
             }
             blockers.append("English preview, final stability and backlog need exact product replay")
             blockers.append("all independent holdouts must be evaluated together")
             return JapaneseBakeoffComparison(
-                baseline: .whisperTurbo,
+                baseline: baselineEngine,
                 candidate: candidate.engine,
                 pairedCERBootstrap: bootstrap,
+                corpusCERDeltas: corpusDeltas,
                 qualityPathPasses: qualityPasses,
+                criticalCorrectionPathPasses: criticalCorrectionPasses,
+                l5GatePasses: l5Blockers.isEmpty,
+                l5BlockingReasons: l5Blockers,
+                normalizedTextAgreement: textAgreement,
                 previewPathStatus: "not-measured-by-offline-ASR-oracle",
                 blockingReasons: blockers
             )
@@ -1428,10 +1883,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     }
 
     private func promotionDecision(
-        manifest: JapaneseBenchmarkManifest
+        manifests: [JapaneseBenchmarkManifest]
     ) -> String {
-        if manifest.annotations.status != .complete {
-            return "blocked: corpus requires human validation"
+        if manifests.contains(where: { $0.annotations.status != .complete }) {
+            return "blocked: corpora require human validation"
         }
         return "blocked: exact product replay and all complete holdouts are still required"
     }
@@ -1484,6 +1939,18 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 runtime: "CWhisper.xcframework",
                 runtimeRevision: "repository-binary"
             )
+        case .mlxWhisperTurbo:
+            return JapaneseBakeoffModelProvenance(
+                modelID: "mlx-community/whisper-large-v3-turbo",
+                revision: Self.mlxWhisperModelRevision,
+                revisionEnforced: true,
+                artifactSHA256: nil,
+                expectedArtifactSHA256: Self.expectedArtifactSHA256(for: engine),
+                artifactSHA256Verified: false,
+                license: "MIT",
+                runtime: "mlx-whisper \(Self.mlxWhisperVersion)",
+                runtimeRevision: Self.mlxWhisperWheelSHA256
+            )
         case .voxtralContinuous:
             return JapaneseBakeoffModelProvenance(
                 modelID: VoxtralModelVariant.q4.modelID,
@@ -1500,13 +1967,49 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             return JapaneseBakeoffModelProvenance(
                 modelID: Self.nemotronModelID,
                 revision: Self.nemotronRevision,
-                revisionEnforced: false,
+                revisionEnforced: true,
                 artifactSHA256: nil,
                 expectedArtifactSHA256: Self.expectedArtifactSHA256(for: engine),
                 artifactSHA256Verified: false,
                 license: "OpenMDW-1.1",
                 runtime: "FluidAudio \(Self.fluidAudioVersion)",
                 runtimeRevision: Self.fluidAudioRevision
+            )
+        case .kotobaQ5:
+            return JapaneseBakeoffModelProvenance(
+                modelID: "kotoba-tech/kotoba-whisper-v2.0-ggml:q5_0",
+                revision: Self.kotobaRevision,
+                revisionEnforced: true,
+                artifactSHA256: nil,
+                expectedArtifactSHA256: Self.expectedArtifactSHA256(for: engine),
+                artifactSHA256Verified: false,
+                license: "Apache-2.0",
+                runtime: "CWhisper.xcframework",
+                runtimeRevision: "repository-binary"
+            )
+        case .qwen17:
+            return JapaneseBakeoffModelProvenance(
+                modelID: "aufklarer/Qwen3-ASR-1.7B-MLX-8bit",
+                revision: Self.qwenRevision,
+                revisionEnforced: true,
+                artifactSHA256: nil,
+                expectedArtifactSHA256: Self.expectedArtifactSHA256(for: engine),
+                artifactSHA256Verified: false,
+                license: "Apache-2.0",
+                runtime: "Qwen3ASR Swift/MLX",
+                runtimeRevision: "pinned-by-benchmark-git-commit"
+            )
+        case .whisperMLXBatch:
+            return JapaneseBakeoffModelProvenance(
+                modelID: "mlx-community/whisper-large-v3-turbo",
+                revision: Self.mlxWhisperModelRevision,
+                revisionEnforced: true,
+                artifactSHA256: nil,
+                expectedArtifactSHA256: Self.expectedArtifactSHA256(for: engine),
+                artifactSHA256Verified: false,
+                license: "MIT + BSD-2-Clause wrapper",
+                runtime: "whispermlx \(Self.whisperMLXVersion)",
+                runtimeRevision: "\(Self.whisperMLXRevision):\(Self.whisperMLXWheelSHA256)"
             )
         }
     }
@@ -1524,6 +2027,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 throw JapaneseBenchmarkCSV.ParseError.malformed("Whisper Turbo is absent.")
             }
             artifact = ModelCatalog.path(for: turbo)
+        case .mlxWhisperTurbo, .whisperMLXBatch:
+            artifact = mlxWhisperModelDirectory(root: root, environment: environment)
+                .appendingPathComponent("weights.safetensors")
         case .voxtralContinuous:
             artifact = AppStoragePaths.root
                 .appendingPathComponent("Runtime/Models", isDirectory: true)
@@ -1537,6 +2043,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 root: root,
                 environment: environment
             )
+        case .kotobaQ5:
+            artifact = kotobaModelURL(root: root, environment: environment)
+        case .qwen17:
+            artifact = qwenModelURL(environment: environment)
         }
         let observed = try artifactSHA256(at: artifact)
         return JapaneseBakeoffModelProvenance(
@@ -1565,6 +2075,73 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         )
     }
 
+    private func mlxWhisperModelDirectory(
+        root: URL,
+        environment: [String: String]
+    ) -> URL {
+        if let path = environment["WHISPERASR_MLX_WHISPER_MODEL"] {
+            return URL(fileURLWithPath: path).standardizedFileURL
+        }
+        return root.appendingPathComponent(
+            ".build/benchmarks/japanese-live/tools/models/"
+                + "mlx-whisper-large-v3-turbo/\(Self.mlxWhisperModelRevision)",
+            isDirectory: true
+        )
+    }
+
+    private func kotobaModelURL(
+        root: URL,
+        environment: [String: String]
+    ) -> URL {
+        if let path = environment["WHISPERASR_KOTOBA_Q5_MODEL"] {
+            return URL(fileURLWithPath: path).standardizedFileURL
+        }
+        return root.appendingPathComponent(
+            ".build/benchmarks/japanese-live/tools/models/"
+                + "kotoba-whisper-v2.0-ggml/\(Self.kotobaRevision)/"
+                + "ggml-kotoba-whisper-v2.0-q5_0.bin"
+        )
+    }
+
+    private func qwenModelURL(environment: [String: String]) -> URL {
+        if let path = environment["WHISPERASR_QWEN_MODEL_FILE"] {
+            return URL(fileURLWithPath: path).standardizedFileURL
+        }
+        return FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(
+                "qwen3-speech/models/aufklarer/Qwen3-ASR-1.7B-MLX-8bit/model.safetensors"
+            )
+    }
+
+    private func sileroDirectory(
+        root: URL,
+        environment: [String: String]
+    ) -> URL {
+        if let path = environment["WHISPERASR_SILERO_DIRECTORY"] {
+            return URL(fileURLWithPath: path).standardizedFileURL
+        }
+        return root.appendingPathComponent(
+            ".build/benchmarks/japanese-live/tools/silero-vad/\(Self.sileroRevision)",
+            isDirectory: true
+        )
+    }
+
+    private func externalPythonURL(
+        engine: JapaneseBakeoffEngine,
+        root: URL,
+        environment: [String: String]
+    ) -> URL {
+        let key = engine == .mlxWhisperTurbo
+            ? "WHISPERASR_MLX_WHISPER_PYTHON" : "WHISPERASR_WHISPERMLX_PYTHON"
+        if let path = environment[key] {
+            return URL(fileURLWithPath: path).standardizedFileURL
+        }
+        let relative = engine == .mlxWhisperTurbo
+            ? ".build/benchmarks/japanese-live/tools/mlx-whisper/0.4.3/venv/bin/python"
+            : ".build/benchmarks/japanese-live/tools/whispermlx/v3.12.2/venv/bin/python"
+        return root.appendingPathComponent(relative)
+    }
+
     private func nemotronModelDirectory(
         engine: JapaneseBakeoffEngine,
         root: URL,
@@ -1574,7 +2151,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         switch engine {
         case .nemotron1120: chunkMilliseconds = 1_120
         case .nemotron560: chunkMilliseconds = 560
-        case .whisperTurbo, .voxtralContinuous:
+        case .whisperTurbo, .mlxWhisperTurbo, .voxtralContinuous,
+             .kotobaQ5, .qwen17, .whisperMLXBatch:
             preconditionFailure("Only Nemotron engines have a chunk duration.")
         }
         return nemotronModelRoot(root: root, environment: environment)
@@ -1588,12 +2166,18 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         switch engine {
         case .whisperTurbo:
             whisperTurboSHA256
+        case .mlxWhisperTurbo, .whisperMLXBatch:
+            mlxWhisperWeightsSHA256
         case .voxtralContinuous:
             "178e8cd18ffe0e6788504cac1146bbc0c0eafb262acecd24aa63c0e863333d86"
         case .nemotron1120:
             "a398b4fb9d1818395934191c7301571f6a958b8ad2a82e670029da38bd3efae9"
         case .nemotron560:
             "ad9a4c88796e765d60e304d36ae2688b914835447203f44af92056212cfc340d"
+        case .kotobaQ5:
+            kotobaQ5SHA256
+        case .qwen17:
+            qwenWeightsSHA256
         }
     }
 
@@ -1631,56 +2215,59 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     }
 
     private func blindArtifacts(
-        corpusID: String,
+        corpusIDs: [String],
         scope: String,
         seed: String,
         reports: [JapaneseBakeoffEngineReport]
     ) -> (report: JapaneseBakeoffBlindReport, key: [String: String]) {
         let engines = JapaneseBakeoffEngine.allCases
         let reportsByEngine = Dictionary(uniqueKeysWithValues: reports.map { ($0.engine, $0) })
-        let turnIDs = Set(reports.flatMap { $0.turns.map(\.turnID) }).sorted()
         var key: [String: String] = [:]
-        let items = turnIDs.compactMap { turnID -> JapaneseBakeoffBlindItem? in
+        let items = corpusIDs.enumerated().flatMap { corpusIndex, corpusID in
+          Set(reports.flatMap { report in
+              report.turns.filter { $0.corpusID == corpusID }.map(\.turnID)
+          }).sorted().compactMap { turnID -> JapaneseBakeoffBlindItem? in
             let available = reports.compactMap { report in
-                report.turns.first { $0.turnID == turnID }
+                report.turns.first { $0.corpusID == corpusID && $0.turnID == turnID }
             }
             guard let reference = available.first else { return nil }
             let availableEngines = JapaneseBenchmarkSupport.blindOrder(
                 engines.filter { engine in
                     reportsByEngine[engine]?.turns.contains(where: {
-                        $0.turnID == turnID
+                        $0.corpusID == corpusID && $0.turnID == turnID
                     }) == true
                 },
                 seed: seed,
-                itemID: turnID,
+                itemID: corpusIndex * 1_000_000 + turnID,
                 identity: { $0.rawValue }
             )
             let candidates = availableEngines.enumerated().compactMap {
                 aliasIndex, engine -> JapaneseBakeoffBlindCandidate? in
                 guard let turn = reportsByEngine[engine]?.turns.first(where: {
-                    $0.turnID == turnID
+                    $0.corpusID == corpusID && $0.turnID == turnID
                 }) else { return nil }
                 let alias = String(UnicodeScalar(65 + aliasIndex)!)
-                key["\(turnID):\(alias)"] = engine.rawValue
+                key["\(corpusID):\(turnID):\(alias)"] = engine.rawValue
                 return JapaneseBakeoffBlindCandidate(
                     alias: alias,
-                    japanese: turn.hypothesisJapanese,
-                    english: turn.appleEnglish
+                    japanese: turn.hypothesisJapanese
                 )
             }
             return JapaneseBakeoffBlindItem(
+                corpusID: corpusID,
                 turnID: turnID,
                 confidence: reference.confidence,
                 referenceJapanese: reference.referenceJapanese,
                 candidates: candidates
             )
+          }
         }
         return (
             JapaneseBakeoffBlindReport(
                 schemaVersion: 1,
-                corpusID: corpusID,
+                corpusIDs: corpusIDs,
                 scope: scope,
-                note: "Aliases are randomized independently for each turn with a secret stored only in the separate key. English is present only when WHISPERASR_JAPANESE_BAKEOFF_APPLE=1.",
+                note: "Aliases are randomized independently for each turn; the key is stored separately.",
                 items: items
             ),
             key
@@ -1691,29 +2278,141 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         report: JapaneseBakeoffFullReport,
         blind: JapaneseBakeoffBlindReport,
         key: [String: String],
-        corpusID: String,
-        scope: String,
         runID: String,
         root: URL
     ) throws {
         let output = root.appendingPathComponent(
-            ".build/benchmarks/japanese-live/\(runID)",
+            ".build/benchmarks/japanese-live/runs/\(runID)",
             isDirectory: true
         )
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
-        let safeScope = scope.replacingOccurrences(of: "/", with: "-")
-        let stem = "\(corpusID)-asr-bakeoff-\(safeScope)"
+        let blindOutput = output.appendingPathComponent("blind-review", isDirectory: true)
+        try FileManager.default.createDirectory(at: blindOutput, withIntermediateDirectories: true)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let artifacts: [(String, Data)] = [
-            ("\(stem)-full.json", try encoder.encode(report)),
-            ("\(stem)-blind.json", try encoder.encode(blind)),
-            ("\(stem)-key.json", try encoder.encode(key)),
+        let artifacts: [(URL, Data)] = [
+            (output.appendingPathComponent("ja-asr.json"), try encoder.encode(report)),
+            (output.appendingPathComponent("comparison.json"), try encoder.encode(report.comparisons)),
+            (blindOutput.appendingPathComponent("blind.json"), try encoder.encode(blind)),
+            (blindOutput.appendingPathComponent("key.json"), try encoder.encode(key)),
+            (
+                output.appendingPathComponent("report-fr.md"),
+                Data(frenchReport(report).utf8)
+            ),
         ]
-        for (name, data) in artifacts {
-            let url = output.appendingPathComponent(name)
+        for (url, data) in artifacts {
             try data.write(to: url, options: .atomic)
             print("[JapaneseBakeoff] wrote \(url.path)")
+        }
+    }
+
+    private func frenchReport(_ report: JapaneseBakeoffFullReport) -> String {
+        let comparisons = Dictionary(
+            uniqueKeysWithValues: report.comparisons.map { ($0.candidate, $0) }
+        )
+        var lines = [
+            "# L5 — Bakeoff japonais",
+            "",
+            "Run `\(report.runID)`, commit `\(report.gitCommit)`, worktree "
+                + (report.worktreeDirty ? "modifié" : "propre") + ".",
+            "Réseau des moteurs Python : "
+                + (report.externalNetworkAccessDenied
+                    ? "interdit par sandbox macOS." : "autorisé."),
+            "",
+            "Les scores restent exploratoires tant que les annotations ne sont pas validées humainement.",
+            "",
+            "| Moteur | CER high | medium | overlap | p95 calcul ASR | RSS max | Vides high/diag | PCM vers ASR | Dernière parole | Verdict |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        ]
+        for engine in report.engines {
+            let comparison = comparisons[engine.engine]
+            let memory = String(format: "%.2f Gio", Double(engine.maximumObservedResidentBytes) / 1_073_741_824)
+            let lastSpeech = engine.corpusCoverage.allSatisfy(\.lastSelectedSpeechPresent)
+                ? "oui" : "non"
+            let verdict: String
+            if engine.engine == .whisperTurbo {
+                verdict = "témoin retenu"
+            } else if comparison?.l5GatePasses == true {
+                verdict = "survit L5"
+            } else if engine.engine == .whisperMLXBatch {
+                verdict = "arrêté L5"
+            } else {
+                verdict = "écarté L5"
+            }
+            lines.append(
+                "| \(engine.engine.rawValue) | \(percent(engine.primaryHighConfidenceCER.rate)) "
+                    + "| \(percent(engine.diagnosticMediumConfidenceCER.rate)) "
+                    + "| \(percent(engine.diagnosticOverlapCER.rate)) "
+                    + "| \(milliseconds(engine.asrP95Milliseconds)) | \(memory) "
+                    + "| \(engine.primaryEmptySpeechTurnCount)/"
+                    + "\(engine.diagnosticEmptySpeechTurnCount) "
+                    + "| \(pcmCoverage(engine)) | \(lastSpeech) | \(verdict) |"
+            )
+        }
+        lines += [
+            "",
+            "Décisions mesurées :",
+            "",
+        ]
+        lines += report.engines.compactMap { engine in
+            guard let comparison = comparisons[engine.engine] else { return nil }
+            let useful = comparison.l5BlockingReasons.filter {
+                !$0.contains("critical terms are not human-annotated")
+            }
+            let reasons = useful.prefix(3).map(frenchBlockingReason).joined(separator: "; ")
+            return "- `\(engine.engine.rawValue)` : "
+                + (reasons.isEmpty ? "aucun échec L5 mesuré" : reasons) + "."
+        }
+        lines += [
+            "",
+            "Les termes critiques attendent la validation humaine. La preview et l’anglais appartiennent à L6.",
+            "",
+        ]
+        return lines.joined(separator: "\n")
+    }
+
+    private func percent(_ rate: Double?) -> String {
+        rate.map { String(format: "%.2f %%", $0 * 100) } ?? "n/a"
+    }
+
+    private func milliseconds(_ value: Double?) -> String {
+        value.map { String(format: "%.0f ms", $0) } ?? "n/a"
+    }
+
+    private func pcmCoverage(_ engine: JapaneseBakeoffEngineReport) -> String {
+        guard engine.expectedPCMSamples > 0 else { return "n/a" }
+        return String(
+            format: "%.1f %%",
+            Double(engine.asrFedPCMSamples) / Double(engine.expectedPCMSamples) * 100
+        )
+    }
+
+    private func frenchBlockingReason(_ reason: String) -> String {
+        switch reason {
+        case let value where value.contains("executions are incomplete"):
+            "exécution incomplète"
+        case let value where value.contains("revision and SHA-pinned"):
+            "pin modèle invalide"
+        case let value where value.contains("benchmark adapter"):
+            "couverture PCM d’entrée incomplète"
+        case let value where value.contains("final annotated speech"):
+            "dernière parole absente"
+        case let value where value.contains("critical-term omissions"):
+            "nouvelles omissions critiques"
+        case let value where value.contains("10% quality gate"):
+            "gain CER inférieur au gate de 10 %"
+        case let value where value.contains("corpus regresses"):
+            "régression de plus de 2 points sur un corpus"
+        case let value where value.contains("primary empty speech turns"):
+            "tours high vides supplémentaires"
+        case let value where value.contains("duplicates at least"):
+            "sorties MLX pratiquement identiques"
+        case let value where value.contains("batch final p95"):
+            "p95 final batch supérieur à 1,5 s"
+        case let value where value.contains("memory"):
+            "mémoire au-dessus du gate"
+        default:
+            reason
         }
     }
 
