@@ -2,56 +2,43 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEFAULT_MANIFEST="$ROOT/docs/japanese-live/corpora/easy-japanese-1/manifest.json"
-MANIFEST="${WHISPERASR_JAPANESE_BENCHMARK_MANIFEST:-$DEFAULT_MANIFEST}"
-CORPUS_ID="$(/usr/bin/jq -r '.corpusID' "$MANIFEST")"
-EXPECTED_TURNS="$(/usr/bin/jq -r '.annotations.turns | length' "$MANIFEST")"
-REPORT="${WHISPERASR_JAPANESE_ASR_APPLE_REPORT:-}"
+L5_REPORT="${WHISPERASR_L5_REPORT:-$ROOT/.build/benchmarks/japanese-live/runs/l5-final-offline/ja-asr.json}"
+RUN_ID="${WHISPERASR_L6_RUN_ID:-l6-apple-$(date -u +%Y%m%dT%H%M%SZ)}"
 
-if [[ -z "$REPORT" ]]; then
-  REPORT="$(/usr/bin/find "$ROOT/.build/benchmarks/japanese-live" -type f \
-    -name "$CORPUS_ID-asr-bakeoff-full-full.json" -print | /usr/bin/sort | /usr/bin/tail -n 1)"
-fi
-if [[ -z "$REPORT" || ! -f "$REPORT" ]]; then
-  echo "No full ASR report found. Run Scripts/run_japanese_bakeoff.sh full first." >&2
+if [[ ! -f "$L5_REPORT" ]]; then
+  echo "Missing L5 report: $L5_REPORT" >&2
   exit 2
 fi
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+export WHISPERASR_MACOS_VERSION="$(/usr/bin/sw_vers -productVersion)"
+export WHISPERASR_MACOS_BUILD="$(/usr/bin/sw_vers -buildVersion)"
 cd "$ROOT"
-if [[ "$MANIFEST" == "$DEFAULT_MANIFEST" ]]; then
-  "$ROOT/Scripts/prepare_japanese_bakeoff.sh"
+xcrun swift test -c release --filter JapaneseEnglishFullBakeoffTests
+
+BENCHMARK_COMMIT="$(git rev-parse HEAD)"
+BENCHMARK_DIRTY=0
+if [[ -n "$(git status --porcelain)" ]]; then
+  BENCHMARK_DIRTY=1
 fi
 
-if ! /usr/bin/jq -e --argjson expectedTurns "$EXPECTED_TURNS" '
-  .scope == "full"
-  and (.selectedTurnIDs | length) == $expectedTurns
-  and ([.engines[].engine] | sort) == ([
-    "nemotron-multilingual-coreml-1120ms",
-    "nemotron-multilingual-coreml-560ms",
-    "voxtral-q4-continuous-960ms",
-    "whisper-large-v3-turbo"
-  ] | sort)
-' "$REPORT" >/dev/null; then
-  echo "Missing complete $EXPECTED_TURNS-turn ASR report: $REPORT" >&2
-  echo "Run: Scripts/run_japanese_bakeoff.sh full" >&2
-  exit 2
-fi
+RUNNER=(
+  /Applications/Xcode.app/Contents/Developer/usr/bin/xctest
+  -XCTest WhisperASRTests.JapaneseEnglishFullBakeoffTests/testFullEnglishBakeoffWhenOptedIn
+  "$ROOT/.build/release/WhisperASRPackageTests.xctest"
+)
+export WHISPERASR_REMOTE_NETWORK_DENIED=1
+RUNNER=(
+  /usr/bin/sandbox-exec
+  -p '(version 1)(allow default)(deny network-outbound (remote ip "*:*"))(allow network-outbound (remote ip "localhost:*"))'
+  "${RUNNER[@]}"
+)
 
-if ! /usr/bin/jq -e '.appleHighFidelityEnabled == true' "$REPORT" >/dev/null; then
-  echo "The bilingual oracle requires a complete ASR+Apple report: $REPORT" >&2
-  echo "Run: WHISPERASR_JAPANESE_BAKEOFF_APPLE=1 Scripts/run_japanese_bakeoff.sh full" >&2
-  exit 3
-fi
+WHISPERASR_L6_APPLE_BAKEOFF=1 \
+WHISPERASR_L5_REPORT="$L5_REPORT" \
+WHISPERASR_L6_RUN_ID="$RUN_ID" \
+WHISPERASR_BENCHMARK_COMMIT="$BENCHMARK_COMMIT" \
+WHISPERASR_BENCHMARK_DIRTY="$BENCHMARK_DIRTY" \
+  "${RUNNER[@]}"
 
-xcrun swift test -c release \
-  --filter JapaneseEnglishFullBakeoffTests/testBlindArtifactsMaskEveryAvailableCandidate
-
-WHISPERASR_JAPANESE_ENGLISH_BAKEOFF=1 \
-WHISPERASR_JAPANESE_ENGLISH_REQUIRE_COMPLETE=1 \
-WHISPERASR_JAPANESE_BENCHMARK_MANIFEST="$MANIFEST" \
-WHISPERASR_JAPANESE_ASR_APPLE_REPORT="$REPORT" \
-  xcrun swift test -c release --skip-build \
-    --filter JapaneseEnglishFullBakeoffTests/testFullEnglishBakeoffWhenOptedIn
-
-echo "Reports: $ROOT/.build/benchmarks/$CORPUS_ID-english-bakeoff-*.json"
+echo "Reports: $ROOT/.build/benchmarks/japanese-live/runs/$RUN_ID"

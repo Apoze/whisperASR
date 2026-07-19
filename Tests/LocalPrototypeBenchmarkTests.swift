@@ -2,107 +2,6 @@ import Foundation
 import XCTest
 @testable import WhisperASRApp
 
-@available(macOS 26.4, *)
-private actor BenchmarkPreviewTranslator {
-    private struct Job {
-        let source: String
-        let phraseKey: UInt64
-        let phraseStartUptimeNanoseconds: UInt64
-    }
-
-    private let service: AppleTranslationService
-    private let highFidelity: Bool
-    private var pending: Job?
-    private var running = false
-    private var lastStartedUptimeNanoseconds: UInt64 = 0
-    private var lastStartedPhraseKey: UInt64?
-    private(set) var count = 0
-    private var firstSourceLatencyByPhrase: [UInt64: Double] = [:]
-    private var firstLatencyByPhrase: [UInt64: Double] = [:]
-    private var revisionsByPhrase: [UInt64: Int] = [:]
-    private var translationLatencies: [Double] = []
-
-    init(service: AppleTranslationService, highFidelity: Bool) {
-        self.service = service
-        self.highFidelity = highFidelity
-    }
-
-    func submit(
-        source: String,
-        phraseKey: UInt64,
-        phraseStartUptimeNanoseconds: UInt64
-    ) {
-        guard LocalPreviewPlanner.isEligibleSource(source) else { return }
-        let received = DispatchTime.now().uptimeNanoseconds
-        if firstSourceLatencyByPhrase[phraseKey] == nil {
-            firstSourceLatencyByPhrase[phraseKey] = received > phraseStartUptimeNanoseconds
-                ? Double(received - phraseStartUptimeNanoseconds) / 1_000_000 : 0
-        }
-        pending = Job(
-            source: source,
-            phraseKey: phraseKey,
-            phraseStartUptimeNanoseconds: phraseStartUptimeNanoseconds
-        )
-        guard !running else { return }
-        running = true
-        Task { await drain() }
-    }
-
-    func finish() async -> (
-        count: Int,
-        sourceLatencies: [Double],
-        firstLatencies: [Double],
-        revisions: [Int],
-        translationLatencies: [Double]
-    ) {
-        while running || pending != nil {
-            try? await Task.sleep(for: .milliseconds(10))
-        }
-        let phrases = revisionsByPhrase.keys.sorted()
-        return (
-            count,
-            phrases.compactMap { firstSourceLatencyByPhrase[$0] },
-            phrases.compactMap { firstLatencyByPhrase[$0] },
-            phrases.compactMap { revisionsByPhrase[$0] },
-            translationLatencies
-        )
-    }
-
-    private func drain() async {
-        while let job = pending {
-            pending = nil
-            let now = DispatchTime.now().uptimeNanoseconds
-            if lastStartedPhraseKey == job.phraseKey,
-               lastStartedUptimeNanoseconds > 0,
-               now - lastStartedUptimeNanoseconds < 500_000_000 {
-                try? await Task.sleep(
-                    nanoseconds: 500_000_000 - (now - lastStartedUptimeNanoseconds)
-                )
-            }
-            lastStartedUptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
-            lastStartedPhraseKey = job.phraseKey
-            let translationStarted = lastStartedUptimeNanoseconds
-            guard let translated = try? await service.translate(
-                job.source,
-                highFidelity: highFidelity
-            ),
-                  !translated.isEmpty,
-                  !EnglishSubtitleValidator.containsSourceScript(translated) else { continue }
-            let completed = DispatchTime.now().uptimeNanoseconds
-            translationLatencies.append(
-                Double(completed - translationStarted) / 1_000_000
-            )
-            count += 1
-            revisionsByPhrase[job.phraseKey, default: 0] += 1
-            if firstLatencyByPhrase[job.phraseKey] == nil {
-                firstLatencyByPhrase[job.phraseKey] = completed > job.phraseStartUptimeNanoseconds
-                    ? Double(completed - job.phraseStartUptimeNanoseconds) / 1_000_000 : 0
-            }
-        }
-        running = false
-    }
-}
-
 final class LocalPrototypeBenchmarkTests: XCTestCase {
     func testExportBenchmarkClipWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
@@ -1109,24 +1008,14 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
 
         if let appleFeeder { try await appleFeeder.value }
         if let appleFinalizer { try await appleFinalizer.value }
-        if let appleSpeech {
-            try await appleSpeech.finalizeAvailableAudio()
-            try await Task.sleep(for: .milliseconds(500))
-            await appleSpeech.cancel()
-        }
+        if let appleSpeech { try await appleSpeech.finish() }
 
         var finalTimings: [FinalTiming] = []
         for task in finalTasks {
             if let timing = await task.value { finalTimings.append(timing) }
         }
         let preview = previewsEnabled
-            ? await previewWorker.finish() : (
-                count: 0,
-                sourceLatencies: [Double](),
-                firstLatencies: [Double](),
-                revisions: [Int](),
-                translationLatencies: [Double]()
-            )
+            ? await previewWorker.finish() : BenchmarkPreviewTranslationSummary.empty
         await previewService.cancel()
         await finalService.cancel()
         let previewSourceLatencies = preview.sourceLatencies
