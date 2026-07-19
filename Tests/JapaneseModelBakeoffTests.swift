@@ -426,11 +426,11 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         "4a3b92192b5d3578ff854a5876213e2e27af0c2d357492c2d14271e82c303658"
     private static let qwenRevision =
         "e5450a26d1fd417c45fc9c405651ddc3180a27a6"
+    private static let qwenRuntimeRevision =
+        "9c4bff5a8f0287a179b9a039da25ff9fa02553a3"
     private static let qwenWeightsSHA256 =
         "bf304b009cc7eca79283056f787b44c952d24ac22cec787b39732bba3c23c13c"
     private static let whisperMLXVersion = "3.12.2"
-    private static let whisperMLXRevision =
-        "37816743c29a569405f300bbb4b3ef8001152651"
     private static let whisperMLXWheelSHA256 =
         "60845ff695168aeb3b8d8b1887481ffe02f5e11ec0426c706a9f7cd0a37917a4"
     private static let sileroRevision =
@@ -677,7 +677,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 chunkMs: chunkMilliseconds,
                 to: modelRoot
             )
-            let hash = try artifactSHA256(at: directory)
+            let hash = try JapaneseBenchmarkSupport.artifactSHA256(at: directory)
             let engine: JapaneseBakeoffEngine = chunkMilliseconds == 1_120
                 ? .nemotron1120 : .nemotron560
             XCTAssertEqual(
@@ -1997,7 +1997,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 artifactSHA256Verified: false,
                 license: "Apache-2.0",
                 runtime: "Qwen3ASR Swift/MLX",
-                runtimeRevision: "pinned-by-benchmark-git-commit"
+                runtimeRevision: Self.qwenRuntimeRevision
             )
         case .whisperMLXBatch:
             return JapaneseBakeoffModelProvenance(
@@ -2009,7 +2009,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 artifactSHA256Verified: false,
                 license: "MIT + BSD-2-Clause wrapper",
                 runtime: "whispermlx \(Self.whisperMLXVersion)",
-                runtimeRevision: "\(Self.whisperMLXRevision):\(Self.whisperMLXWheelSHA256)"
+                runtimeRevision: "wheel:\(Self.whisperMLXWheelSHA256)"
             )
         }
     }
@@ -2048,7 +2048,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         case .qwen17:
             artifact = qwenModelURL(environment: environment)
         }
-        let observed = try artifactSHA256(at: artifact)
+        let observed = try JapaneseBenchmarkSupport.artifactSHA256(at: artifact)
         return JapaneseBakeoffModelProvenance(
             modelID: base.modelID,
             revision: base.revision,
@@ -2179,39 +2179,6 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         case .qwen17:
             qwenWeightsSHA256
         }
-    }
-
-    private func artifactSHA256(at url: URL) throws -> String {
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
-            throw JapaneseBenchmarkCSV.ParseError.malformed("Missing artifact at \(url.path).")
-        }
-        if !isDirectory.boolValue { return try JapaneseBenchmarkSupport.sha256(at: url) }
-
-        let keys: [URLResourceKey] = [.isRegularFileKey]
-        guard let enumerator = FileManager.default.enumerator(
-            at: url,
-            includingPropertiesForKeys: keys,
-            options: [.skipsHiddenFiles]
-        ) else {
-            throw JapaneseBenchmarkCSV.ParseError.malformed("Cannot enumerate \(url.path).")
-        }
-        let files = enumerator.compactMap { $0 as? URL }.filter { file in
-            (try? file.resourceValues(forKeys: Set(keys)).isRegularFile) == true
-        }.sorted { $0.path < $1.path }
-        var hasher = SHA256()
-        for file in files {
-            let relative = String(file.path.dropFirst(url.path.count + 1))
-            hasher.update(data: Data(relative.utf8))
-            hasher.update(data: Data([0]))
-            let handle = try FileHandle(forReadingFrom: file)
-            defer { try? handle.close() }
-            while let chunk = try handle.read(upToCount: 1_048_576), !chunk.isEmpty {
-                hasher.update(data: chunk)
-            }
-            hasher.update(data: Data([0xFF]))
-        }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     private func blindArtifacts(

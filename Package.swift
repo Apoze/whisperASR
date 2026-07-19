@@ -64,6 +64,7 @@ let package = Package(
         .testTarget(
             name: "WhisperASRTests",
             dependencies: [
+                "CWhisper",
                 "WhisperASRApp",
                 .product(name: "HuggingFace", package: "swift-huggingface"),
                 .product(name: "MLX", package: "mlx-swift"),

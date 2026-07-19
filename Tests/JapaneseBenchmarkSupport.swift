@@ -444,6 +444,38 @@ enum JapaneseBenchmarkSupport {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Files use their byte digest. Model directories use one stable digest
+    /// over relative paths and bytes so every runtime can attest its tree.
+    static func artifactSHA256(at url: URL) throws -> String {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        if !isDirectory.boolValue { return try sha256(at: url) }
+
+        let keys: Set<URLResourceKey> = [.isRegularFileKey]
+        guard let enumerator = FileManager.default.enumerator(
+            at: url,
+            includingPropertiesForKeys: Array(keys),
+            options: [.skipsHiddenFiles]
+        ) else { throw CocoaError(.fileReadUnknown) }
+        let files = enumerator.compactMap { $0 as? URL }.filter { file in
+            (try? file.resourceValues(forKeys: keys).isRegularFile) == true
+        }.sorted { $0.path < $1.path }
+        var hasher = SHA256()
+        for file in files {
+            hasher.update(data: Data(file.path.dropFirst(url.path.count + 1).utf8))
+            hasher.update(data: Data([0]))
+            let handle = try FileHandle(forReadingFrom: file)
+            defer { try? handle.close() }
+            while let chunk = try handle.read(upToCount: 1_048_576), !chunk.isEmpty {
+                hasher.update(data: chunk)
+            }
+            hasher.update(data: Data([0xFF]))
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
     static func blindOrder<Element>(
         _ values: [Element],
         seed: String,

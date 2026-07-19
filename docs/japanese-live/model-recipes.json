@@ -1,0 +1,356 @@
+{
+  "schemaVersion": 1,
+  "common": {
+    "sampleRate": 16000,
+    "sourceLanguage": "ja",
+    "translation": {
+      "preview": "Apple Translation lowLatency",
+      "final": "Apple Translation highFidelity"
+    },
+    "productEndpoint": {
+      "detector": "aufklarer/FireRedVAD-CoreML",
+      "revision": "1cb0565191fbdc630c2fe8f111ba31c392d05706",
+      "preRollSamples": 4000,
+      "postRollSamples": 8000,
+      "minimumBatchSamples": 24000,
+      "maximumPhraseSamples": 240000,
+      "forcedOverlapSamples": 12800
+    }
+  },
+  "recipes": [
+    {
+      "id": "whisper-turbo-whispercpp",
+      "role": "vad-final",
+      "model": {
+        "id": "ggerganov/whisper.cpp:ggml-large-v3-turbo.bin",
+        "revision": "5359861c739e955e79d9a303bcbc70fb988958b1",
+        "sha256": "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69",
+        "license": "MIT"
+      },
+      "runtime": {
+        "id": "ggml-org/whisper.cpp",
+        "version": "1.8.3",
+        "revision": "2eeeba56e9edd762b4b38467bab96c2517163158",
+        "artifactSHA256": "358986f0ac0f2669a015e6e832047089053081d41387383223afa69e7c2b7d90",
+        "acceleration": "Metal+Accelerate",
+        "flashAttention": true,
+        "coreML": false
+      },
+      "execution": {
+        "sessionScope": "capture-model-vad-phrase-decode",
+        "boundarySource": "product-fire-red-vad",
+        "resetPolicy": "decoder-call-per-vad-phrase",
+        "language": "ja",
+        "task": "transcribe",
+        "temperature": 0,
+        "conditionOnPreviousText": false,
+        "decoder": "greedy"
+      }
+    },
+    {
+      "id": "kotoba-v2-q5-whispercpp",
+      "role": "vad-final",
+      "model": {
+        "id": "kotoba-tech/kotoba-whisper-v2.0-ggml",
+        "revision": "e3a0cf6a62b95911703cfb97d819292e058f12c3",
+        "sha256": "4a3b92192b5d3578ff854a5876213e2e27af0c2d357492c2d14271e82c303658",
+        "license": "Apache-2.0"
+      },
+      "runtime": {
+        "id": "ggml-org/whisper.cpp",
+        "version": "1.8.3",
+        "revision": "2eeeba56e9edd762b4b38467bab96c2517163158",
+        "artifactSHA256": "358986f0ac0f2669a015e6e832047089053081d41387383223afa69e7c2b7d90",
+        "acceleration": "Metal+Accelerate",
+        "flashAttention": true,
+        "coreML": false
+      },
+      "execution": {
+        "sessionScope": "capture-model-vad-phrase-decode",
+        "boundarySource": "product-fire-red-vad",
+        "resetPolicy": "decoder-call-per-vad-phrase",
+        "language": "ja",
+        "task": "transcribe",
+        "temperature": 0,
+        "conditionOnPreviousText": false,
+        "decoder": "greedy"
+      }
+    },
+    {
+      "id": "voxtral-q4-960",
+      "role": "continuous-live",
+      "model": {
+        "id": "iris-sfg/Voxtral-Mini-4B-Realtime-2602-4bit",
+        "revision": "12091661ce5f58788624fa49fad9ddbbf67cf063",
+        "sha256": "178e8cd18ffe0e6788504cac1146bbc0c0eafb262acecd24aa63c0e863333d86",
+        "license": "Apache-2.0"
+      },
+      "runtime": {
+        "id": "Blaizzy/mlx-audio",
+        "version": "0.4.5",
+        "revision": "04151c6abb74b886f879a4457ccdc96761f10102",
+        "patchVersion": "continuous-stream-v4",
+        "patchSHA256": "67768e28e14087b79b7eae9960bf3e8719a64864b689949a312cb76177656efe",
+        "acceleration": "MLX"
+      },
+      "execution": {
+        "sessionScope": "one-session-per-capture",
+        "boundarySource": "continuous-transcript-plus-product-vad",
+        "resetPolicy": "finish-only",
+        "language": "ja",
+        "task": "transcribe",
+        "transportBlockMilliseconds": 160,
+        "transcriptionDelayMilliseconds": 960
+      }
+    },
+    {
+      "id": "nemotron-1120",
+      "role": "stateful-live-final",
+      "model": {
+        "id": "FluidInference/Nemotron-3.5-ASR-Streaming-Multilingual-0.6b-CoreML",
+        "revision": "1a41b75758b0337ff67db7d5408280aaaf23074e",
+        "sha256": "a398b4fb9d1818395934191c7301571f6a958b8ad2a82e670029da38bd3efae9",
+        "license": "OpenMDW-1.1"
+      },
+      "runtime": {
+        "id": "FluidInference/FluidAudio",
+        "version": "0.15.5",
+        "revision": "19600a485baa4998812e4654b70d2bab8f2c9949",
+        "acceleration": "CoreML cpuAndNeuralEngine"
+      },
+      "execution": {
+        "sessionScope": "stateful-vad-utterance",
+        "boundarySource": "product-fire-red-vad",
+        "resetPolicy": "after-safe-vad-final",
+        "language": "ja-JP",
+        "task": "transcribe",
+        "chunkMilliseconds": 1120,
+        "transportBlockSamples": 2560
+      }
+    },
+    {
+      "id": "nemotron-560",
+      "role": "stateful-live-final",
+      "model": {
+        "id": "FluidInference/Nemotron-3.5-ASR-Streaming-Multilingual-0.6b-CoreML",
+        "revision": "1a41b75758b0337ff67db7d5408280aaaf23074e",
+        "sha256": "ad9a4c88796e765d60e304d36ae2688b914835447203f44af92056212cfc340d",
+        "license": "OpenMDW-1.1"
+      },
+      "runtime": {
+        "id": "FluidInference/FluidAudio",
+        "version": "0.15.5",
+        "revision": "19600a485baa4998812e4654b70d2bab8f2c9949",
+        "acceleration": "CoreML cpuAndNeuralEngine"
+      },
+      "execution": {
+        "sessionScope": "stateful-vad-utterance",
+        "boundarySource": "product-fire-red-vad",
+        "resetPolicy": "after-safe-vad-final",
+        "language": "ja-JP",
+        "task": "transcribe",
+        "chunkMilliseconds": 560,
+        "transportBlockSamples": 2560
+      }
+    },
+    {
+      "id": "qwen3-asr-1.7b-mlx-8bit",
+      "role": "vad-final",
+      "model": {
+        "id": "aufklarer/Qwen3-ASR-1.7B-MLX-8bit",
+        "revision": "e5450a26d1fd417c45fc9c405651ddc3180a27a6",
+        "sha256": "bf304b009cc7eca79283056f787b44c952d24ac22cec787b39732bba3c23c13c",
+        "license": "Apache-2.0"
+      },
+      "runtime": {
+        "id": "SpeechSwiftPrototype/Qwen3ASR",
+        "revision": "9c4bff5a8f0287a179b9a039da25ff9fa02553a3",
+        "mlxSwiftVersion": "0.31.6",
+        "quantization": "8bit",
+        "acceleration": "MLX"
+      },
+      "execution": {
+        "sessionScope": "capture-model-vad-phrase-decode",
+        "boundarySource": "product-fire-red-vad",
+        "resetPolicy": "decoder-call-per-vad-phrase",
+        "language": "Japanese",
+        "task": "transcribe",
+        "maxTokens": 448,
+        "decoder": "greedy"
+      },
+      "auxiliaryArtifactSHA256": {
+        "config.json": "1b76b3b6c655fc54595da025f7a96474ad9fa86363303fbdd61a7d8483ccfaf7",
+        "tokenizer_config.json": "4942d005604266809309cabc9f4e9cb89ce855d59b14681fdc0e1cc62ea26c4c",
+        "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+        "merges.txt": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+        "model.safetensors.index.json": "0a5d0ec11188602242ff81a9969883d0fdeb98cd5d85cd1413089d897c201af5"
+      }
+    },
+    {
+      "id": "mlx-whisper-turbo",
+      "role": "vad-final-with-long-form-control",
+      "model": {
+        "id": "mlx-community/whisper-large-v3-turbo",
+        "revision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
+        "sha256": "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6",
+        "license": "MIT"
+      },
+      "runtime": {
+        "id": "mlx-whisper",
+        "version": "0.4.3",
+        "mlxVersion": "0.32.0",
+        "wheelSHA256": "6b82b6597a994643a3e5496c7bc229a672e5ca308458455bfe276e76ae024489",
+        "requirementsSHA256": "5bb13acfb0e9f977873594c0fcb71d896dced5458c62596e085194a23ef717dd",
+        "acceleration": "MLX"
+      },
+      "execution": {
+        "sessionScope": "capture-model-vad-phrase-decode",
+        "boundarySource": "product-fire-red-vad",
+        "resetPolicy": "decoder-call-per-vad-phrase",
+        "language": "ja",
+        "task": "transcribe",
+        "temperature": 0,
+        "conditionOnPreviousText": false,
+        "withoutTimestamps": true,
+        "wordTimestamps": false,
+        "decoder": "greedy"
+      }
+    },
+    {
+      "id": "whispermlx-v3.12.2-turbo",
+      "role": "batch-and-vad-final-diagnostic",
+      "model": {
+        "id": "mlx-community/whisper-large-v3-turbo",
+        "revision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
+        "sha256": "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6",
+        "configSHA256": "b34fc29e4e11e0a25e812775dd67f4dd16fc2c8eb43d28ae25ff7d660ecb6379",
+        "license": "MIT"
+      },
+      "runtime": {
+        "id": "KalebJS/whispermlx",
+        "version": "3.12.2",
+        "upstreamRevisionClaimed": "37816743c29a569405f300bbb4b3ef8001152651",
+        "upstreamRevisionVerifiedByWheel": false,
+        "wheelSHA256": "60845ff695168aeb3b8d8b1887481ffe02f5e11ec0426c706a9f7cd0a37917a4",
+        "requirementsSHA256": "09820ba8667aa2563acbd1b22f00be8ed1f06df78c8078e13fb255b903ea7580",
+        "resolvedEnvironmentEvidenceOnly": true,
+        "pythonVersion": "3.12.13",
+        "uvVersion": "0.11.28",
+        "acceleration": "MLX ASR plus CPU Silero"
+      },
+      "execution": {
+        "sessionScope": "whole-capture-silero-chunked-batch-and-product-vad-control",
+        "boundarySource": "silero-native-long-form",
+        "resetPolicy": "decoder-call-per-silero-chunk-without-inter-chunk-context",
+        "language": "ja",
+        "task": "transcribe",
+        "vad": "silero-v6.2.1",
+        "sileroRevision": "7e30209a3e901f9842f81b225f3e93d8199902b1",
+        "chunkSeconds": 30,
+        "vadOnset": 0.5,
+        "vadOffsetConfigured": 0.363,
+        "vadOffsetIgnoredBySileroMerge": true,
+        "minimumSpeechMilliseconds": 250,
+        "minimumSilenceMilliseconds": 100,
+        "speechPadMilliseconds": 30,
+        "maximumSpeechSeconds": 30,
+        "alignment": false,
+        "diarization": false
+      }
+    },
+    {
+      "id": "whisperlivekit-simulstreaming-mlx-hybrid",
+      "role": "continuous-live",
+      "model": {
+        "id": "mlx-community/whisper-large-v3-turbo plus openai/large-v3-turbo",
+        "revision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
+        "sha256": "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6",
+        "decoderSHA256": "aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a",
+        "license": "MIT"
+      },
+      "runtime": {
+        "id": "QuentinFuxa/WhisperLiveKit",
+        "version": "0.2.24",
+        "revision": "5874bdeeaddf968ab73e005eb287e1b597b0eb37",
+        "lockSHA256": "06750b16caa60432e7d1a9427cd2196e6bf926f20fc15d3c77cba78469e99ec1",
+        "requirementsSHA256": "a7f409f37cc3bfbbc849f1724a9aaf8310fefaa7c54433c2b4e9bbef88161ab0",
+        "acceleration": "MLX encoder plus PyTorch CPU decoder"
+      },
+      "execution": {
+        "sessionScope": "one-websocket-per-capture",
+        "boundarySource": "WhisperLiveKit VAC Silero ONNX CPU",
+        "resetPolicy": "segment-reset-on-vac-silence>=5s; websocket-reset-at-finish",
+        "language": "ja",
+        "task": "transcribe",
+        "policy": "simulstreaming",
+        "backend": "mlx-whisper",
+        "decoder": "beam",
+        "beams": 1,
+        "decoderHardcodedUpstream": true,
+        "fullMLXExperimental": false,
+        "pcmInput": true,
+        "transportBlockSamples": 1600,
+        "minChunkSeconds": 0.1,
+        "responseMode": "diff",
+        "retentionSeconds": 300,
+        "vadFlagEffective": false,
+        "vac": true,
+        "vacChunkSeconds": 0.04,
+        "vacThreshold": 0.5,
+        "vacExitThreshold": 0.35,
+        "vacMinimumSilenceMilliseconds": 100,
+        "vacSpeechPadMilliseconds": 30,
+        "frameThreshold": 25,
+        "audioMaxSeconds": 30,
+        "audioMinSeconds": 0,
+        "cif": null,
+        "alwaysFire": true,
+        "correctiveRecipeStatus": "not-yet-run"
+      }
+    },
+    {
+      "id": "whisperlivekit-localagreement-mlx",
+      "role": "continuous-live",
+      "model": {
+        "id": "mlx-community/whisper-large-v3-turbo",
+        "revision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
+        "sha256": "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6",
+        "license": "MIT"
+      },
+      "runtime": {
+        "id": "QuentinFuxa/WhisperLiveKit",
+        "version": "0.2.24",
+        "revision": "5874bdeeaddf968ab73e005eb287e1b597b0eb37",
+        "lockSHA256": "06750b16caa60432e7d1a9427cd2196e6bf926f20fc15d3c77cba78469e99ec1",
+        "requirementsSHA256": "a7f409f37cc3bfbbc849f1724a9aaf8310fefaa7c54433c2b4e9bbef88161ab0",
+        "acceleration": "MLX"
+      },
+      "execution": {
+        "sessionScope": "one-websocket-per-capture",
+        "boundarySource": "WhisperLiveKit VAC Silero ONNX CPU",
+        "resetPolicy": "segment-reset-on-vac-silence>=5s; websocket-reset-at-finish",
+        "language": "ja",
+        "task": "transcribe",
+        "policy": "localagreement",
+        "backend": "mlx-whisper",
+        "bufferTrimming": "segment",
+        "bufferTrimmingSeconds": 15,
+        "wordTimestamps": true,
+        "conditionOnPreviousText": true,
+        "pcmInput": true,
+        "transportBlockSamples": 1600,
+        "minChunkSeconds": 0.1,
+        "responseMode": "diff",
+        "retentionSeconds": 300,
+        "vadFlagEffective": false,
+        "vac": true,
+        "vacChunkSeconds": 0.04,
+        "vacThreshold": 0.5,
+        "vacExitThreshold": 0.35,
+        "vacMinimumSilenceMilliseconds": 100,
+        "vacSpeechPadMilliseconds": 30,
+        "correctiveRecipeStatus": "not-yet-run"
+      }
+    }
+  ]
+}

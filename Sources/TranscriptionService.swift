@@ -271,6 +271,11 @@ final class TranscriptionService: @unchecked Sendable {
         params.translate = translate
         params.no_context = true
         params.audio_ctx = 0
+        // Live captions must be deterministic. The whisper.cpp default may
+        // retry hotter temperatures after a decode failure, which produced
+        // repeated Japanese text in the earlier short-clip benchmark.
+        params.temperature = 0
+        params.temperature_inc = 0
 
         let lang = (language?.isEmpty == false) ? language! : "auto"
         let langCStr = strdup(lang)

@@ -5,8 +5,9 @@ Ce dossier pilote les expériences sans mélanger mesures, décisions et code pr
 ## Graphe des lots
 
 ```text
-L0 ─▶ L1 ─▶ L2 ─▶ L3 ─▶ L4 ─▶ L5 ─▶ L6 ─▶ L7 ─▶ L8 ─▶ L9 ─▶ L10
-                                      └── L6A conditionnel ──▲
+L0 ─▶ L1 ─▶ L2 ─▶ L3 ─▶ L4 ─▶ L5 ─▶ L6 ─▶ L7
+                                      └── L6A conditionnel
+L7 ─▶ L7A ─▶ L7B ─▶ L7C ─▶ L7D ─▶ L8 ─▶ L9 ─▶ L10
 ```
 
 L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournies; L5 repart de ce PCM identique pour tous les candidats. Les sous-lots conditionnels ne sont créés qu'après échec mesuré de leur gate.
@@ -22,7 +23,11 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L6 — Architectures live et anglais](lots/L06-live-anglais.md) | L5 | terminé, aucune promotion | Apple manque le p50; WhisperLiveKit est écarté |
 | L6A — Alignement `whispermlx` | gate L6 | conditionnel | valeur propre de l'alignement japonais |
 | [L7 — Firefox et décision](lots/L07-firefox-decision.md) | L5, L6 | terminé, aucune promotion | quatre replays Firefox; aucun gagnant produit |
-| L8 — Intégration gagnante | L7 | non créé, gate non atteint | un seul moteur produit |
+| [L7A — Recettes natives](lots/L07A-recettes-natives.md) | L7 | terminé | dix recettes corrigées et épinglées |
+| L7B — Replays corrigés | L7A | non créé | quatre fenêtres difficiles rejouées trois fois |
+| L7C — Deux vidéos complètes | L7B | non créé | tous les candidats comparés sur les mêmes captures |
+| L7D — Comparaison et décision | L7C | non créé | japonais, anglais, latence et ressources séparés |
+| L8 — Intégration gagnante | L7D | non créé, gate non atteint | un seul moteur produit |
 | L9 — Changements de voix | L8 | non démarré | frontières fiables, sans identité persistante |
 | L10 — Nettoyage et endurance | lots retenus | non démarré | application minimale, stable et hors ligne |
 
@@ -44,3 +49,4 @@ La référence anglaise n'influence jamais le CER japonais. Un cas anglais réel
 - Un commit Conventional Commit clôt chaque lot terminé.
 - `ponytail` impose la solution minimale. `code-structure` autorise une extraction seulement quand au moins deux flux partagent réellement la même mécanique.
 - Les rapports doivent contenir le commit, les SHA du corpus et du modèle, la configuration, la couverture PCM et les latences.
+- Les runs L7B/L7C doivent aussi contenir le SHA de `model-recipes.json`; aucun ancien résultat obtenu avec une autre recette ne classe un moteur.

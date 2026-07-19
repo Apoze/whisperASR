@@ -7,14 +7,24 @@ WHISPER_DIR="$PROJECT_DIR/.whisper.cpp"
 OUTPUT_DIR="$PROJECT_DIR/Frameworks"
 HEADERS_DIR="$OUTPUT_DIR/headers"
 XCF_DIR="$OUTPUT_DIR/CWhisper.xcframework"
+WHISPER_COMMIT="2eeeba56e9edd762b4b38467bab96c2517163158"
 
 echo "=== Building whisper.cpp with Metal GPU acceleration ==="
 echo ""
 
 if [ ! -d "$WHISPER_DIR" ]; then
     echo "Cloning whisper.cpp..."
-    git clone --depth 1 https://github.com/ggml-org/whisper.cpp "$WHISPER_DIR"
+    git clone --filter=blob:none --no-checkout \
+        https://github.com/ggml-org/whisper.cpp "$WHISPER_DIR"
 fi
+
+if [ -n "$(git -C "$WHISPER_DIR" status --porcelain)" ]; then
+    echo "Refusing to replace a modified whisper.cpp checkout: $WHISPER_DIR" >&2
+    exit 1
+fi
+git -C "$WHISPER_DIR" fetch --depth 1 origin "$WHISPER_COMMIT"
+git -C "$WHISPER_DIR" checkout --detach "$WHISPER_COMMIT"
+test "$(git -C "$WHISPER_DIR" rev-parse HEAD)" = "$WHISPER_COMMIT"
 
 # Build with cmake — Metal + embedded shader library
 echo "Building with Metal support..."
