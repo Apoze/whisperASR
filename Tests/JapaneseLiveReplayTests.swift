@@ -1,4 +1,5 @@
 import Darwin
+import CryptoKit
 import Foundation
 import XCTest
 @testable import WhisperASRApp
@@ -48,8 +49,15 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let sourceEvents: [SourceEvent]
         let volatileEvents: [SourceEvent]
         let previewEvents: [BenchmarkPreviewTranslationEvent]
+        let previewLatencyScope: String
+        let previewTranslationComplete: Bool
         let finalEvents: [FinalTranslationEvent]
+        let finalLatencyScope: String
+        let finalExpectedEventCount: Int
+        let finalTranslationsAppendOnly: Bool
+        let finalTranslationComplete: Bool
         let japaneseFinal: String
+        let japaneseCERDetail: ContinuousJapaneseCER.Result?
         let japaneseCER: Double?
         let highConfidenceCERLowerBound: Double?
         let highConfidenceCERUpperBound: Double?
@@ -63,6 +71,11 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let previewFirstLatencyMilliseconds: [Double]
         let previewTranslationMilliseconds: [Double]
         let finalEndpointLatencyMilliseconds: [Double]
+        let audioMilliseconds: Double
+        let asrWallMilliseconds: Double
+        let pipelineWallMilliseconds: Double
+        let completionAfterAudioEndMilliseconds: Double
+        let endToEndWallRTF: Double
         let maximumProcessingBacklogSeconds: Double
         let endingProcessingBacklogSeconds: Double
         let maximumPolicyLagSeconds: Double
@@ -84,6 +97,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
     private struct LiveReport: Codable, Sendable {
         let schemaVersion: Int
         let runID: String
+        let benchmarkScope: String
         let gitCommit: String
         let sourceTreeSHA256: String
         let runtimeSHA256: String
@@ -95,6 +109,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let replayCount: Int
         let blockSamples: Int
         let modelRecipesSHA256: String
+        let effectiveRecipeSHA256: String?
         let matrixAttempted: Bool
         let matrixComplete: Bool
         let promotionEligible: Bool
@@ -152,13 +167,38 @@ final class JapaneseLiveReplayTests: XCTestCase {
         }
     }
 
-    private struct ProcessUsage {
-        let residentBytes: UInt64
-        let cpuNanoseconds: UInt64
-    }
-
     private struct FinalSummary {
         let events: [FinalTranslationEvent]
+        let latencyScope: String
+        let expectedEventCount: Int
+        let appendOnly: Bool
+
+        static let previewOnly = Self(
+            events: [],
+            latencyScope: "not-applicable-preview-only",
+            expectedEventCount: 0,
+            appendOnly: true
+        )
+
+        static let unavailable = Self(
+            events: [],
+            latencyScope: "unavailable",
+            expectedEventCount: 0,
+            appendOnly: true
+        )
+
+        var complete: Bool {
+            expectedEventCount > 0
+                && events.count == expectedEventCount
+                && appendOnly
+                && Set(events.map(\.finalID)).count == events.count
+                && events.allSatisfy {
+                    $0.error == nil
+                        && !$0.japanese.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        && !$0.english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        && $0.localEndSample > $0.localStartSample
+                }
+        }
     }
 
     private static let blockSamples = 1_600
@@ -213,6 +253,89 @@ final class JapaneseLiveReplayTests: XCTestCase {
         XCTAssertEqual(decoded, [-32_768, -16_384, 0, 16_384, 32_767])
     }
 
+    func testEffectiveRecipeSHAIsCanonicalAndIncludesRetention() throws {
+        let first = ["policy": "simulstreaming", "retentionSeconds": "1200"]
+        var reordered = ["retentionSeconds": "1200"]
+        reordered["policy"] = "simulstreaming"
+        var changed = first
+        changed["retentionSeconds"] = "300"
+
+        XCTAssertEqual(
+            try effectiveRecipeSHA256(first),
+            try effectiveRecipeSHA256(reordered)
+        )
+        XCTAssertNotEqual(
+            try effectiveRecipeSHA256(first),
+            try effectiveRecipeSHA256(changed)
+        )
+    }
+
+    func testFinalSummaryRequiresExactSuccessfulAppendOnlyEvents() {
+        let event = FinalTranslationEvent(
+            finalID: "final-1",
+            sourceSequence: 1,
+            japanese: "日本語",
+            english: "English",
+            localStartSample: 0,
+            localEndSample: 16_000,
+            sourceReceivedMilliseconds: 1,
+            translationStartedMilliseconds: 2,
+            acceptedMilliseconds: 3,
+            endpointToAcceptedMilliseconds: 3,
+            error: nil
+        )
+        XCTAssertTrue(FinalSummary(
+            events: [event],
+            latencyScope: "capture-eos-to-accepted-apple-high-fidelity",
+            expectedEventCount: 1,
+            appendOnly: true
+        ).complete)
+        XCTAssertFalse(FinalSummary(
+            events: [],
+            latencyScope: "capture-eos-to-accepted-apple-high-fidelity",
+            expectedEventCount: 1,
+            appendOnly: true
+        ).complete)
+        XCTAssertFalse(FinalSummary(
+            events: [event],
+            latencyScope: "capture-eos-to-accepted-apple-high-fidelity",
+            expectedEventCount: 1,
+            appendOnly: false
+        ).complete)
+        XCTAssertFalse(FinalSummary(
+            events: [event, event],
+            latencyScope: "capture-eos-to-accepted-apple-high-fidelity",
+            expectedEventCount: 2,
+            appendOnly: true
+        ).complete)
+    }
+
+    @available(macOS 26.4, *)
+    func testWhisperLiveKitBacklogKeepsMaximumAndCurrentSeparate() async throws {
+        let decoder = JSONDecoder()
+        let high = try decoder.decode(WLKUpdate.self, from: Data(
+            #"{"remaining_time_transcription_processing":35}"#.utf8
+        ))
+        let recovered = try decoder.decode(WLKUpdate.self, from: Data(
+            #"{"remaining_time_transcription_processing":2}"#.utf8
+        ))
+        let collector = WLKCollector(
+            window: try XCTUnwrap(Self.windows.first),
+            sessionStart: DispatchTime.now().uptimeNanoseconds,
+            preview: BenchmarkPreviewTranslator(
+                service: AppleTranslationService(),
+                highFidelity: false
+            )
+        )
+
+        await collector.accept(high, received: DispatchTime.now().uptimeNanoseconds)
+        await collector.accept(recovered, received: DispatchTime.now().uptimeNanoseconds)
+        let snapshot = await collector.snapshot()
+
+        XCTAssertEqual(snapshot.maximumProcessingBacklog, 35)
+        XCTAssertEqual(snapshot.currentProcessingBacklog, 2)
+    }
+
     @MainActor
     func testStressSourcesWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
@@ -227,12 +350,11 @@ final class JapaneseLiveReplayTests: XCTestCase {
         let modelRecipesSHA256 = try JapaneseBenchmarkSupport.sha256(
             at: root.appendingPathComponent("docs/japanese-live/model-recipes.json")
         )
+        let replayScope = environment["WHISPERASR_L6_SCOPE"] ?? "corrective"
+        guard ["corrective", "full-video"].contains(replayScope) else {
+            throw inputError("Unknown WHISPERASR_L6_SCOPE.")
+        }
         let replayCount = max(1, Int(environment["WHISPERASR_L6_REPLAY_COUNT"] ?? "1") ?? 1)
-        let windowLimit = min(
-            Self.windows.count,
-            max(1, Int(environment["WHISPERASR_L6_WINDOW_LIMIT"] ?? "1") ?? 1)
-        )
-        let windows = Array(Self.windows.prefix(windowLimit))
         let requestedSources = Set((environment["WHISPERASR_L6_SOURCES"]
             ?? "apple-speech,whisperlivekit").split(separator: ",").map(String.init))
         guard !requestedSources.isEmpty,
@@ -250,7 +372,29 @@ final class JapaneseLiveReplayTests: XCTestCase {
               minimumChunkSeconds <= 5 else {
             throw inputError("Invalid WHISPERASR_WLK_MIN_CHUNK_SECONDS.")
         }
+        let expectedRetentionSeconds = replayScope == "full-video" ? "1200" : "300"
+        let retentionSeconds = environment["WHISPERASR_WLK_RETENTION_SECONDS"]
+            ?? expectedRetentionSeconds
+        guard !requestedSources.contains("whisperlivekit")
+                || retentionSeconds == expectedRetentionSeconds else {
+            throw inputError(
+                "WHISPERASR_WLK_RETENTION_SECONDS must be \(expectedRetentionSeconds) "
+                    + "for \(replayScope)."
+            )
+        }
         let inputs = try await loadInputs(root: root)
+        let windows: [StressWindow]
+        if replayScope == "full-video" {
+            windows = ["qudu2fx3ncc", "md62mmdz0m"].compactMap {
+                inputs.manifests[$0].map(JapaneseBenchmarkSupport.fullWindow(for:))
+            }
+        } else {
+            let windowLimit = min(
+                Self.windows.count,
+                max(1, Int(environment["WHISPERASR_L6_WINDOW_LIMIT"] ?? "1") ?? 1)
+            )
+            windows = Array(Self.windows.prefix(windowLimit))
+        }
 
         let low = AppleTranslationService()
         try await low.configure(sourceLocale: "ja", mode: .lowLatencyOnly)
@@ -280,15 +424,27 @@ final class JapaneseLiveReplayTests: XCTestCase {
             try await speech.prepare(localeIdentifier: "ja-JP") { _ in }
             for replay in 1...replayCount {
                 for window in windows {
-                    sessions.append(try await replayAppleSpeech(
-                        sessionID: "apple-speech:\(window.id):r\(replay)",
-                        window: window,
-                        replay: replay,
-                        samples: inputs.samples[window.corpusID]!,
-                        manifest: inputs.manifests[window.corpusID]!,
-                        speech: speech,
-                        low: low
-                    ))
+                    let sessionID = "apple-speech:\(window.id):r\(replay)"
+                    do {
+                        sessions.append(try await replayAppleSpeech(
+                            sessionID: sessionID,
+                            window: window,
+                            replay: replay,
+                            samples: inputs.samples[window.corpusID]!,
+                            manifest: inputs.manifests[window.corpusID]!,
+                            speech: speech,
+                            low: low
+                        ))
+                    } catch {
+                        sessions.append(failedSessionReport(
+                            sessionID: sessionID,
+                            source: "apple-speech",
+                            window: window,
+                            replay: replay,
+                            manifest: inputs.manifests[window.corpusID]!,
+                            error: error
+                        ))
+                    }
                 }
             }
         }
@@ -302,19 +458,31 @@ final class JapaneseLiveReplayTests: XCTestCase {
             guard serverPID > 0 else { throw inputError("Missing WHISPERASR_WLK_PID.") }
             for replay in 1...replayCount {
                 for window in windows {
-                    sessions.append(try await replayWhisperLiveKit(
-                        sessionID: "whisperlivekit-\(whisperLiveKitPolicy):\(window.id):r\(replay)",
-                        window: window,
-                        replay: replay,
-                        allSamples: inputs.samples[window.corpusID]!,
-                        manifest: inputs.manifests[window.corpusID]!,
-                        url: url,
-                        policy: whisperLiveKitPolicy,
-                        serverPID: serverPID,
-                        low: low,
-                        high: high,
-                        setupErrors: setupErrors
-                    ))
+                    let sessionID = "whisperlivekit-\(whisperLiveKitPolicy):\(window.id):r\(replay)"
+                    do {
+                        sessions.append(try await replayWhisperLiveKit(
+                            sessionID: sessionID,
+                            window: window,
+                            replay: replay,
+                            allSamples: inputs.samples[window.corpusID]!,
+                            manifest: inputs.manifests[window.corpusID]!,
+                            url: url,
+                            policy: whisperLiveKitPolicy,
+                            serverPID: serverPID,
+                            low: low,
+                            high: high,
+                            setupErrors: setupErrors
+                        ))
+                    } catch {
+                        sessions.append(failedSessionReport(
+                            sessionID: sessionID,
+                            source: "whisperlivekit-\(whisperLiveKitPolicy)",
+                            window: window,
+                            replay: replay,
+                            manifest: inputs.manifests[window.corpusID]!,
+                            error: error
+                        ))
+                    }
                 }
             }
         }
@@ -326,7 +494,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
             "encoderRevision": "a4aaeec0636e6fef84abdcbe3544cb2bf7e9f6fb",
             "language": "ja",
             "mode": "diff",
-            "retentionSeconds": "300",
+            "retentionSeconds": retentionSeconds,
             "transportBlockSamples": "1600",
             "minChunkSeconds": String(minimumChunkSeconds),
             "vacChunkSeconds": "0.04",
@@ -347,26 +515,74 @@ final class JapaneseLiveReplayTests: XCTestCase {
             whisperLiveKitConfiguration["wordTimestamps"] = "true"
             whisperLiveKitConfiguration["conditionOnPreviousText"] = "true"
         }
-        let expectedAttemptKeys = Set(Self.windows.flatMap { window in
-            (1...3).map { "\(window.id):\($0)" }
+        let whisperLiveKitVersion = "0.2.24"
+        let whisperLiveKitCommit = "5874bdeeaddf968ab73e005eb287e1b597b0eb37"
+        let whisperLiveKitUVLockSHA256 =
+            "06750b16caa60432e7d1a9427cd2196e6bf926f20fc15d3c77cba78469e99ec1"
+        let whisperLiveKitEncoderConfigSHA256 =
+            "b34fc29e4e11e0a25e812775dd67f4dd16fc2c8eb43d28ae25ff7d660ecb6379"
+        let whisperLiveKitEncoderWeightsSHA256 =
+            "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6"
+        let whisperLiveKitDecoderSHA256 = whisperLiveKitPolicy == "simulstreaming"
+            ? "aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a"
+            : nil
+        let whisperLiveKitWarmupSHA256 =
+            "82df6b6ad5cebc55f727443d4a1c5c4a11d2c26cb75ef43e9ee091b8b7029ae5"
+        var effectiveRecipe = whisperLiveKitConfiguration
+        effectiveRecipe["benchmarkScope"] = replayScope
+        effectiveRecipe["modelRecipesSHA256"] = modelRecipesSHA256
+        effectiveRecipe["runtimeVersion"] = whisperLiveKitVersion
+        effectiveRecipe["runtimeCommit"] = whisperLiveKitCommit
+        effectiveRecipe["runtimeLockSHA256"] = whisperLiveKitUVLockSHA256
+        effectiveRecipe["encoderConfigSHA256"] = whisperLiveKitEncoderConfigSHA256
+        effectiveRecipe["encoderWeightsSHA256"] = whisperLiveKitEncoderWeightsSHA256
+        effectiveRecipe["warmupSHA256"] = whisperLiveKitWarmupSHA256
+        if let whisperLiveKitDecoderSHA256 {
+            effectiveRecipe["decoderSHA256"] = whisperLiveKitDecoderSHA256
+        }
+        let effectiveRecipeSHA = requestedSources.contains("whisperlivekit")
+            ? try effectiveRecipeSHA256(effectiveRecipe) : nil
+
+        let expectedSessionKeys = Set(windows.flatMap { window in
+            (1...replayCount).map {
+                let sessionID =
+                    "whisperlivekit-\(whisperLiveKitPolicy):\(window.id):r\($0)"
+                return "\(sessionID)|\(window.corpusID)|\(window.id)|\($0)"
+            }
         })
-        let actualAttemptKeys = sessions.map { "\($0.windowID):\($0.replay)" }
+        let actualSessionKeys = sessions.map {
+            "\($0.sessionID)|\($0.corpusID)|\($0.windowID)|\($0.replay)"
+        }
+        let expectedSource = whisperLiveKitPolicy == "simulstreaming"
+            ? "whisperlivekit-simulstreaming-mlx-encoder-pytorch-cpu-decoder"
+            : "whisperlivekit-localagreement-mlx"
         let matrixAttempted = requestedSources == ["whisperlivekit"]
-            && replayCount == 3
-            && windowLimit == Self.windows.count
-            && sessions.count == 12
-            && Set(actualAttemptKeys) == expectedAttemptKeys
-            && Set(actualAttemptKeys).count == actualAttemptKeys.count
+            && sessions.count == windows.count * replayCount
+            && Set(actualSessionKeys) == expectedSessionKeys
+            && Set(actualSessionKeys).count == actualSessionKeys.count
         let matrixComplete = matrixAttempted
             && sessions.allSatisfy {
                 $0.errors.isEmpty
+                    && $0.source == expectedSource
                     && !$0.japaneseFinal.isEmpty
                     && $0.sentSampleCount == $0.expectedSampleCount
                     && $0.readyToStopReceived
+                    && $0.sourceEvents.contains { $0.isFinal && !$0.text.isEmpty }
+                    && $0.lastAnnotatedSpeechPresent
+                    && $0.previewTranslationComplete
+                    && $0.previewLatencyScope
+                        == "source-phrase-start-to-accepted-apple-low-latency"
+                    && $0.finalTranslationComplete
+                    && $0.finalTranslationsAppendOnly
+                    && $0.finalLatencyScope
+                        == "capture-eos-to-accepted-apple-high-fidelity"
+                    && $0.finalBoundaryMode == "window-eos-only-no-live-phrase-final"
+                    && $0.endingProcessingBacklogSeconds <= 0.1
             }
         let report = LiveReport(
-            schemaVersion: 7,
+            schemaVersion: replayScope == "full-video" ? 9 : 8,
             runID: environment["WHISPERASR_L6_RUN_ID"] ?? "l6-live",
+            benchmarkScope: replayScope,
             gitCommit: environment["WHISPERASR_BENCHMARK_COMMIT"] ?? "unknown",
             sourceTreeSHA256: environment["WHISPERASR_BENCHMARK_SOURCE_TREE_SHA256"]
                 ?? "unknown",
@@ -382,25 +598,20 @@ final class JapaneseLiveReplayTests: XCTestCase {
             replayCount: replayCount,
             blockSamples: Self.blockSamples,
             modelRecipesSHA256: modelRecipesSHA256,
+            effectiveRecipeSHA256: effectiveRecipeSHA,
             matrixAttempted: matrixAttempted,
             matrixComplete: matrixComplete,
             promotionEligible: false,
-            whisperLiveKitVersion: "0.2.24",
-            whisperLiveKitCommit: "5874bdeeaddf968ab73e005eb287e1b597b0eb37",
+            whisperLiveKitVersion: whisperLiveKitVersion,
+            whisperLiveKitCommit: whisperLiveKitCommit,
             whisperLiveKitArchitecture: whisperLiveKitPolicy == "simulstreaming"
                 ? "SimulStreaming: MLX encoder + PyTorch CPU decoder/alignment"
                 : "LocalAgreement: MLX Whisper + longest common prefix",
-            whisperLiveKitUVLockSHA256:
-                "06750b16caa60432e7d1a9427cd2196e6bf926f20fc15d3c77cba78469e99ec1",
-            whisperLiveKitEncoderConfigSHA256:
-                "b34fc29e4e11e0a25e812775dd67f4dd16fc2c8eb43d28ae25ff7d660ecb6379",
-            whisperLiveKitEncoderWeightsSHA256:
-                "951ed3fc1203e6a62467abb2144a96ce7eafca8fa77e3704fdb8635ff3e7f8a6",
-            whisperLiveKitDecoderSHA256: whisperLiveKitPolicy == "simulstreaming"
-                ? "aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a"
-                : nil,
-            whisperLiveKitWarmupSHA256:
-                "82df6b6ad5cebc55f727443d4a1c5c4a11d2c26cb75ef43e9ee091b8b7029ae5",
+            whisperLiveKitUVLockSHA256: whisperLiveKitUVLockSHA256,
+            whisperLiveKitEncoderConfigSHA256: whisperLiveKitEncoderConfigSHA256,
+            whisperLiveKitEncoderWeightsSHA256: whisperLiveKitEncoderWeightsSHA256,
+            whisperLiveKitDecoderSHA256: whisperLiveKitDecoderSHA256,
+            whisperLiveKitWarmupSHA256: whisperLiveKitWarmupSHA256,
             whisperLiveKitConfiguration: whisperLiveKitConfiguration,
             memoryMeasurementScope:
                 "Peak sampled sum of XCTest and explicit ASR server PIDs; Apple system services excluded.",
@@ -411,10 +622,11 @@ final class JapaneseLiveReplayTests: XCTestCase {
         try write(report: report, root: root)
 
         XCTAssertFalse(sessions.isEmpty)
-        XCTAssertTrue(sessions.allSatisfy { $0.maximumObservedResidentBytes != nil })
-        if requestedSources == ["whisperlivekit"], replayCount == 3,
-           windowLimit == Self.windows.count {
-            XCTAssertEqual(sessions.count, 12)
+        XCTAssertTrue(sessions.allSatisfy {
+            !$0.errors.isEmpty || $0.maximumObservedResidentBytes != nil
+        })
+        if requestedSources == ["whisperlivekit"] {
+            XCTAssertEqual(sessions.count, windows.count * replayCount)
             XCTAssertTrue(matrixAttempted)
         }
     }
@@ -431,12 +643,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
         low: AppleTranslationService
     ) async throws -> SessionReport {
         let localSamples = Array(samples[window.startSample..<window.endSample])
-        let started = DispatchTime.now().uptimeNanoseconds
-        let pids = [getpid()]
-        let usageBefore = processUsage(pids: pids)
-        let resourceSampler = startResourceSampler(pids: pids)
-        defer { resourceSampler.cancel() }
-        let thermalBefore = thermalState()
+        var started: UInt64 = 0
         let preview = BenchmarkPreviewTranslator(service: low, highFidelity: false)
         var planner = LocalPreviewPlanner()
         var sourceEvents: [SourceEvent] = []
@@ -448,6 +655,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
             localeIdentifier: "ja-JP",
             priority: .userInitiated,
             onUpdate: { update in
+                guard started > 0 else { return }
                 let received = DispatchTime.now().uptimeNanoseconds
                 sequence += 1
                 let localStart = max(0, Int((update.segment.start * 16_000).rounded()))
@@ -495,6 +703,10 @@ final class JapaneseLiveReplayTests: XCTestCase {
             },
             onFailure: { failure = $0 }
         )
+        started = DispatchTime.now().uptimeNanoseconds
+        let pids = [getpid()]
+        let resourceSampler = startBenchmarkResourceSampler { pids }
+        defer { resourceSampler.cancel() }
         let finalizer = Task { @MainActor in
             var target = LocalAppleSpeechFeedState.progressiveFinalizationInterval
             while target < localSamples.count {
@@ -511,8 +723,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
         try await speech.finish()
         for task in submissions { await task.value }
         let previewSummary = await preview.finish()
+        let completed = DispatchTime.now().uptimeNanoseconds
         resourceSampler.cancel()
-        let maximumResidentBytes = await resourceSampler.value
+        let resources = await resourceSampler.value
         if let failure { throw failure }
 
         let finalFragments = sourceEvents.filter(\.isFinal).compactMap {
@@ -521,6 +734,8 @@ final class JapaneseLiveReplayTests: XCTestCase {
         return sessionReport(
             sessionID: sessionID,
             source: "apple-speech",
+            sessionStart: started,
+            sessionEnd: completed,
             window: window,
             replay: replay,
             manifest: manifest,
@@ -531,19 +746,14 @@ final class JapaneseLiveReplayTests: XCTestCase {
             sourceEvents: sourceEvents,
             volatileEvents: [],
             preview: previewSummary,
-            final: FinalSummary(events: []),
+            final: .previewOnly,
             finalFragments: finalFragments,
             confirmedPrefixRewriteCount: 0,
             maximumProcessingBacklogSeconds: 0,
             endingProcessingBacklogSeconds: 0,
             maximumPolicyLagSeconds: 0,
             endingPolicyLagSeconds: 0,
-            maximumObservedResidentBytes: maximumResidentBytes,
-            usageBefore: usageBefore,
-            usageAfter: processUsage(pids: pids),
-            thermalBefore: thermalBefore,
-            thermalAfter: thermalState(),
-            started: started,
+            resourceSummary: resources,
             errors: []
         )
     }
@@ -565,14 +775,12 @@ final class JapaneseLiveReplayTests: XCTestCase {
     ) async throws -> SessionReport {
         let samples = Array(allSamples[window.startSample..<window.endSample])
         let pids = [getpid(), serverPID]
-        let usageBefore = processUsage(pids: pids)
-        let resourceSampler = startResourceSampler(pids: pids)
+        let resourceSampler = startBenchmarkResourceSampler { pids }
         defer { resourceSampler.cancel() }
-        let thermalBefore = thermalState()
         let preview = BenchmarkPreviewTranslator(service: low, highFidelity: false)
 
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 70
+        configuration.timeoutIntervalForRequest = Double(samples.count) / 16_000 + 180
         let session = URLSession(configuration: configuration)
         let socket = session.webSocketTask(with: url)
         socket.resume()
@@ -605,6 +813,26 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 await collector.accept(update, received: DispatchTime.now().uptimeNanoseconds)
             }
         }
+        let backlogWatchdog = Task {
+            var watchdog = BenchmarkBacklogWatchdog()
+            while !Task.isCancelled {
+                try await Task.sleep(for: .seconds(1))
+                let snapshot = await collector.snapshot()
+                if watchdog.observe(
+                    milliseconds: snapshot.currentProcessingBacklog * 1_000
+                ) {
+                    await collector.noteError(
+                        "Backlog exceeded 30 seconds continuously for one minute."
+                    )
+                    socket.cancel(
+                        with: .goingAway,
+                        reason: Data("sustained-backlog".utf8)
+                    )
+                    return
+                }
+            }
+        }
+        defer { backlogWatchdog.cancel() }
         var sentSampleCount = 0
         var maximumSendLateness = 0.0
         var transportErrors = setupErrors
@@ -639,13 +867,16 @@ final class JapaneseLiveReplayTests: XCTestCase {
             snapshot: snapshot,
             unavailableReason: setupErrors.first
         )
+        let completed = DispatchTime.now().uptimeNanoseconds
         resourceSampler.cancel()
-        let maximumResidentBytes = await resourceSampler.value
+        let resources = await resourceSampler.value
         return sessionReport(
             sessionID: sessionID,
             source: policy == "simulstreaming"
                 ? "whisperlivekit-simulstreaming-mlx-encoder-pytorch-cpu-decoder"
                 : "whisperlivekit-localagreement-mlx",
+            sessionStart: started,
+            sessionEnd: completed,
             window: window,
             replay: replay,
             manifest: manifest,
@@ -660,15 +891,10 @@ final class JapaneseLiveReplayTests: XCTestCase {
             finalFragments: snapshot.finalFragments,
             confirmedPrefixRewriteCount: snapshot.confirmedPrefixRewrites,
             maximumProcessingBacklogSeconds: snapshot.maximumProcessingBacklog,
-            endingProcessingBacklogSeconds: snapshot.lastReportedProcessingBacklog,
+            endingProcessingBacklogSeconds: snapshot.currentProcessingBacklog,
             maximumPolicyLagSeconds: snapshot.maximumPolicyLag,
-            endingPolicyLagSeconds: snapshot.lastReportedPolicyLag,
-            maximumObservedResidentBytes: maximumResidentBytes,
-            usageBefore: usageBefore,
-            usageAfter: processUsage(pids: pids),
-            thermalBefore: thermalBefore,
-            thermalAfter: thermalState(),
-            started: started,
+            endingPolicyLagSeconds: snapshot.currentPolicyLag,
+            resourceSummary: resources,
             errors: snapshot.errors + transportErrors
         )
     }
@@ -682,44 +908,78 @@ final class JapaneseLiveReplayTests: XCTestCase {
         snapshot: WLKCollector.Snapshot,
         unavailableReason: String?
     ) async -> FinalSummary {
-        let japanese = snapshot.finalFragments.map(\.text).joined(separator: " ")
         let received = snapshot.readyReceivedAt ?? DispatchTime.now().uptimeNanoseconds
-        let translationStarted = DispatchTime.now().uptimeNanoseconds
-        var english = ""
-        var failure: String?
-        if japanese.isEmpty {
-            failure = "WhisperLiveKit returned an empty EOS transcript."
-        } else if let service {
-            do {
-                english = try EnglishSubtitleValidator.requireEnglish(
-                    try await service.translate(japanese, highFidelity: true)
-                )
-            } catch {
-                failure = error.localizedDescription
-            }
-        } else {
-            failure = unavailableReason ?? "Apple highFidelity unavailable"
-        }
-        let completed = DispatchTime.now().uptimeNanoseconds
         let endpoint = sessionStart
             + UInt64(window.sampleCount) * 1_000_000_000 / 16_000
-        let event = FinalTranslationEvent(
-            finalID: "\(sessionID):eos",
-            sourceSequence: snapshot.sourceEvents.last?.sequence ?? 0,
-            japanese: japanese,
-            english: english,
-            localStartSample: 0,
-            localEndSample: window.sampleCount,
-            sourceReceivedMilliseconds: elapsedMilliseconds(received, after: sessionStart),
-            translationStartedMilliseconds: elapsedMilliseconds(
-                translationStarted,
-                after: sessionStart
-            ),
-            acceptedMilliseconds: elapsedMilliseconds(completed, after: sessionStart),
-            endpointToAcceptedMilliseconds: elapsedMilliseconds(completed, after: endpoint),
-            error: failure
+        guard !snapshot.finalFragments.isEmpty else {
+            let now = DispatchTime.now().uptimeNanoseconds
+            return FinalSummary(
+                events: [FinalTranslationEvent(
+                    finalID: "\(sessionID):eos-empty",
+                    sourceSequence: snapshot.sourceEvents.last?.sequence ?? 0,
+                    japanese: "",
+                    english: "",
+                    localStartSample: 0,
+                    localEndSample: window.sampleCount,
+                    sourceReceivedMilliseconds: elapsedMilliseconds(received, after: sessionStart),
+                    translationStartedMilliseconds: elapsedMilliseconds(now, after: sessionStart),
+                    acceptedMilliseconds: elapsedMilliseconds(now, after: sessionStart),
+                    endpointToAcceptedMilliseconds: elapsedMilliseconds(now, after: endpoint),
+                    error: "WhisperLiveKit returned an empty EOS transcript."
+                )],
+                latencyScope: "capture-eos-to-accepted-apple-high-fidelity",
+                expectedEventCount: 0,
+                appendOnly: true
+            )
+        }
+        let translator = BenchmarkFinalTranslator(
+            service: service,
+            unavailableReason: unavailableReason
         )
-        return FinalSummary(events: [event])
+        let expectedIDs = snapshot.finalFragments.indices.map { "\(sessionID):line:\($0)" }
+        for (index, fragment) in snapshot.finalFragments.enumerated() {
+            await translator.submit(
+                finalID: expectedIDs[index],
+                source: fragment.text,
+                sourceStartSample: fragment.startSample,
+                sourceEndSample: fragment.endSample,
+                endpointUptimeNanoseconds: endpoint,
+                receivedUptimeNanoseconds: received
+            )
+        }
+        let summary = await translator.finish()
+        return FinalSummary(
+            events: summary.events.enumerated().map { index, event in
+                FinalTranslationEvent(
+                    finalID: event.finalID,
+                    sourceSequence: index + 1,
+                    japanese: event.source,
+                    english: event.english,
+                    localStartSample: max(0, event.sourceStartSample - window.startSample),
+                    localEndSample: min(
+                        window.sampleCount,
+                        max(0, event.sourceEndSample - window.startSample)
+                    ),
+                    sourceReceivedMilliseconds: elapsedMilliseconds(
+                        event.sourceReceivedUptimeNanoseconds,
+                        after: sessionStart
+                    ),
+                    translationStartedMilliseconds: elapsedMilliseconds(
+                        event.translationStartedUptimeNanoseconds,
+                        after: sessionStart
+                    ),
+                    acceptedMilliseconds: elapsedMilliseconds(
+                        event.acceptedUptimeNanoseconds,
+                        after: sessionStart
+                    ),
+                    endpointToAcceptedMilliseconds: event.endpointToAcceptedMilliseconds,
+                    error: event.error
+                )
+            },
+            latencyScope: "capture-eos-to-accepted-apple-high-fidelity",
+            expectedEventCount: expectedIDs.count,
+            appendOnly: summary.appendOnly && summary.events.map(\.finalID) == expectedIDs
+        )
     }
 
     @available(macOS 26.4, *)
@@ -734,9 +994,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
             let finalFragments: [ManyToManyTurnScorer.Fragment]
             let confirmedPrefixRewrites: Int
             let maximumProcessingBacklog: Double
-            let lastReportedProcessingBacklog: Double
+            let currentProcessingBacklog: Double
             let maximumPolicyLag: Double
-            let lastReportedPolicyLag: Double
+            let currentPolicyLag: Double
             let readyReceivedAt: UInt64?
             let errors: [String]
         }
@@ -753,9 +1013,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
         private var lastWireSequence: Int?
         private var confirmedPrefixRewrites = 0
         private var maximumProcessingBacklog = 0.0
-        private var lastReportedProcessingBacklog = 0.0
+        private var currentProcessingBacklog = 0.0
         private var maximumPolicyLag = 0.0
-        private var lastReportedPolicyLag = 0.0
+        private var currentPolicyLag = 0.0
         private var readyReceivedAt: UInt64?
         private var errors: [String] = []
 
@@ -805,9 +1065,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
             )
             let policy = max(0, update.remainingTimeTranscriptionPolicy ?? 0)
             maximumProcessingBacklog = max(maximumProcessingBacklog, processing)
-            lastReportedProcessingBacklog = processing
+            currentProcessingBacklog = processing
             maximumPolicyLag = max(maximumPolicyLag, policy)
-            lastReportedPolicyLag = policy
+            currentPolicyLag = policy
 
             if let rawBuffer = update.bufferTranscription {
                 let buffer = rawBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -900,6 +1160,10 @@ final class JapaneseLiveReplayTests: XCTestCase {
             appendFinalEvents(received: received)
         }
 
+        func noteError(_ message: String) {
+            errors.append(message)
+        }
+
         func snapshot() -> Snapshot {
             let fragments = lines.enumerated().compactMap { index, line -> ManyToManyTurnScorer.Fragment? in
                 guard let text = line.text?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -920,9 +1184,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 finalFragments: fragments,
                 confirmedPrefixRewrites: confirmedPrefixRewrites,
                 maximumProcessingBacklog: maximumProcessingBacklog,
-                lastReportedProcessingBacklog: lastReportedProcessingBacklog,
+                currentProcessingBacklog: currentProcessingBacklog,
                 maximumPolicyLag: maximumPolicyLag,
-                lastReportedPolicyLag: lastReportedPolicyLag,
+                currentPolicyLag: currentPolicyLag,
                 readyReceivedAt: readyReceivedAt,
                 errors: errors
             )
@@ -983,6 +1247,8 @@ final class JapaneseLiveReplayTests: XCTestCase {
     private func sessionReport(
         sessionID: String,
         source: String,
+        sessionStart: UInt64,
+        sessionEnd: UInt64,
         window: StressWindow,
         replay: Int,
         manifest: JapaneseBenchmarkSupport.Manifest,
@@ -1000,12 +1266,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
         endingProcessingBacklogSeconds: Double,
         maximumPolicyLagSeconds: Double,
         endingPolicyLagSeconds: Double,
-        maximumObservedResidentBytes: UInt64?,
-        usageBefore: ProcessUsage?,
-        usageAfter: ProcessUsage?,
-        thermalBefore: String,
-        thermalAfter: String,
-        started: UInt64,
+        resourceSummary: BenchmarkResourceSummary,
         errors: [String]
     ) -> SessionReport {
         let turns = JapaneseBenchmarkSupport.referenceTurns(
@@ -1061,15 +1322,23 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 fragments: finalFragments
             ).heuristicPresent
         } ?? false
-        let cpuPercent: Double?
-        if let before = usageBefore, let after = usageAfter,
-           after.cpuNanoseconds >= before.cpuNanoseconds {
-            let elapsed = max(1, DispatchTime.now().uptimeNanoseconds - started)
-            cpuPercent = Double(after.cpuNanoseconds - before.cpuNanoseconds)
-                / Double(elapsed) * 100
-        } else {
-            cpuPercent = nil
-        }
+        let previewTranslationComplete = !preview.events.isEmpty
+            && preview.events.allSatisfy {
+                $0.error == nil
+                    && !$0.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && !$0.english.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && ($0.sourceStartSample ?? 0) < ($0.sourceEndSample ?? 0)
+            }
+        let audioMilliseconds = Double(window.sampleCount) / 16
+        let asrWallMilliseconds = sourceEvents.map(\.receivedMilliseconds).max() ?? 0
+        let previewWallMilliseconds = preview.events.map {
+            elapsedMilliseconds($0.completedUptimeNanoseconds, after: sessionStart)
+        }.max() ?? 0
+        let finalWallMilliseconds = final.events.map(\.acceptedMilliseconds).max() ?? 0
+        let pipelineWallMilliseconds = max(
+            elapsedMilliseconds(sessionEnd, after: sessionStart),
+            max(asrWallMilliseconds, max(previewWallMilliseconds, finalWallMilliseconds))
+        )
         return SessionReport(
             sessionID: sessionID,
             source: source,
@@ -1086,8 +1355,15 @@ final class JapaneseLiveReplayTests: XCTestCase {
             sourceEvents: sourceEvents,
             volatileEvents: volatileEvents,
             previewEvents: preview.events,
+            previewLatencyScope: "source-phrase-start-to-accepted-apple-low-latency",
+            previewTranslationComplete: previewTranslationComplete,
             finalEvents: final.events,
+            finalLatencyScope: final.latencyScope,
+            finalExpectedEventCount: final.expectedEventCount,
+            finalTranslationsAppendOnly: final.appendOnly,
+            finalTranslationComplete: final.complete,
             japaneseFinal: finalFragments.map(\.text).joined(),
+            japaneseCERDetail: cer,
             japaneseCER: cer?.overall.rate,
             highConfidenceCERLowerBound: cer?.highConfidence.rateLowerBound,
             highConfidenceCERUpperBound: cer?.highConfidence.rateUpperBound,
@@ -1106,16 +1382,66 @@ final class JapaneseLiveReplayTests: XCTestCase {
             previewFirstLatencyMilliseconds: preview.firstLatencies,
             previewTranslationMilliseconds: preview.translationLatencies,
             finalEndpointLatencyMilliseconds: final.events.map(\.endpointToAcceptedMilliseconds),
+            audioMilliseconds: audioMilliseconds,
+            asrWallMilliseconds: asrWallMilliseconds,
+            pipelineWallMilliseconds: pipelineWallMilliseconds,
+            completionAfterAudioEndMilliseconds: max(
+                0,
+                pipelineWallMilliseconds - audioMilliseconds
+            ),
+            endToEndWallRTF: audioMilliseconds > 0
+                ? pipelineWallMilliseconds / audioMilliseconds : 0,
             maximumProcessingBacklogSeconds: maximumProcessingBacklogSeconds,
             endingProcessingBacklogSeconds: endingProcessingBacklogSeconds,
             maximumPolicyLagSeconds: maximumPolicyLagSeconds,
             endingPolicyLagSeconds: endingPolicyLagSeconds,
-            maximumObservedResidentBytes: maximumObservedResidentBytes,
-            averageCPUPercent: cpuPercent,
-            thermalStateBefore: thermalBefore,
-            thermalStateAfter: thermalAfter,
+            maximumObservedResidentBytes: resourceSummary.maximumResidentBytes,
+            averageCPUPercent: resourceSummary.averageCPUPercent,
+            thermalStateBefore: resourceSummary.thermalStateBefore,
+            thermalStateAfter: resourceSummary.thermalStateAfter,
             errors: errors + preview.events.compactMap(\.error)
                 + final.events.compactMap(\.error)
+        )
+    }
+
+    private func failedSessionReport(
+        sessionID: String,
+        source: String,
+        window: StressWindow,
+        replay: Int,
+        manifest: JapaneseBenchmarkSupport.Manifest,
+        error: Error
+    ) -> SessionReport {
+        let now = DispatchTime.now().uptimeNanoseconds
+        return sessionReport(
+            sessionID: sessionID,
+            source: source,
+            sessionStart: now,
+            sessionEnd: now,
+            window: window,
+            replay: replay,
+            manifest: manifest,
+            sentSampleCount: 0,
+            readyToStopReceived: false,
+            finalBoundaryMode: "session-setup-failed",
+            maximumSendLatenessMilliseconds: 0,
+            sourceEvents: [],
+            volatileEvents: [],
+            preview: .empty,
+            final: .unavailable,
+            finalFragments: [],
+            confirmedPrefixRewriteCount: 0,
+            maximumProcessingBacklogSeconds: 0,
+            endingProcessingBacklogSeconds: 0,
+            maximumPolicyLagSeconds: 0,
+            endingPolicyLagSeconds: 0,
+            resourceSummary: BenchmarkResourceSummary(
+                maximumResidentBytes: nil,
+                averageCPUPercent: nil,
+                thermalStateBefore: benchmarkThermalState(),
+                thermalStateAfter: benchmarkThermalState()
+            ),
+            errors: [error.localizedDescription]
         )
     }
 
@@ -1227,61 +1553,6 @@ final class JapaneseLiveReplayTests: XCTestCase {
         if now < deadline { try await Task.sleep(nanoseconds: deadline - now) }
     }
 
-    @MainActor
-    private func startResourceSampler(pids: [Int32]) -> Task<UInt64?, Never> {
-        Task { @MainActor in
-            var maximum: UInt64?
-            while true {
-                if let resident = processUsage(pids: pids)?.residentBytes {
-                    maximum = max(maximum ?? 0, resident)
-                }
-                if Task.isCancelled { return maximum }
-                do {
-                    try await Task.sleep(for: .milliseconds(250))
-                } catch {
-                    return maximum
-                }
-            }
-        }
-    }
-
-    private func processUsage(pids: [Int32]) -> ProcessUsage? {
-        var residentBytes: UInt64 = 0
-        var cpuNanoseconds: UInt64 = 0
-        for pid in pids {
-            guard let usage = processUsage(pid: pid) else { return nil }
-            residentBytes += usage.residentBytes
-            cpuNanoseconds += usage.cpuNanoseconds
-        }
-        return ProcessUsage(residentBytes: residentBytes, cpuNanoseconds: cpuNanoseconds)
-    }
-
-    private func processUsage(pid: Int32) -> ProcessUsage? {
-        guard pid > 0 else { return nil }
-        var info = rusage_info_v4()
-        let result = withUnsafeMutablePointer(to: &info) { pointer in
-            UnsafeMutableRawPointer(pointer).withMemoryRebound(
-                to: rusage_info_t?.self,
-                capacity: 1
-            ) { proc_pid_rusage(pid, RUSAGE_INFO_V4, $0) }
-        }
-        guard result == 0 else { return nil }
-        return ProcessUsage(
-            residentBytes: info.ri_phys_footprint,
-            cpuNanoseconds: info.ri_user_time + info.ri_system_time
-        )
-    }
-
-    private func thermalState() -> String {
-        switch ProcessInfo.processInfo.thermalState {
-        case .nominal: "nominal"
-        case .fair: "fair"
-        case .serious: "serious"
-        case .critical: "critical"
-        @unknown default: "unknown"
-        }
-    }
-
     private func write(report: LiveReport, root: URL) throws {
         let output = root.appendingPathComponent(
             ".build/benchmarks/japanese-live/runs/\(report.runID)",
@@ -1313,6 +1584,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
             includesWhisperLiveKit
                 ? "WhisperLiveKit : \(report.whisperLiveKitArchitecture)."
                 : "WhisperLiveKit : non exécuté dans ce run.",
+            includesWhisperLiveKit
+                ? "Recette effective : `\(report.effectiveRecipeSHA256 ?? "absente")`."
+                : "Recette effective : non applicable.",
             "Qualité : exploratoire tant que les références restent `pending-human-review`.",
             report.promotionEligible
                 ? "Matrice promotable : 3 replays × 4 fenêtres, commit propre, réseau distant bloqué."
@@ -1321,7 +1595,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 ? "Initialisation : OK."
                 : "Initialisation : " + report.setupErrors.joined(separator: "; "),
             "",
-            "| Source | Sessions | CER japonais | Couverture source | Preview EN cov / p50 / p95 / pire | Final EN cov / p95 | Révisions / réécritures | Traitement / stabilisation fin | Pic RSS observé | Verdict |",
+            "| Source | Sessions | CER japonais | Couverture source | Preview EN cov / p50 / p95 / pire (scope) | Final EN cov / p95 (scope) | Révisions / réécritures | Traitement / stabilisation fin | Pic RSS observé | Verdict |",
             "| --- | ---: | ---: | ---: | --- | --- | ---: | --- | ---: | --- |",
         ]
         for source in Set(report.sessions.map(\.source)).sorted() {
@@ -1330,19 +1604,21 @@ final class JapaneseLiveReplayTests: XCTestCase {
             let sourceCoverage = sessions.map(\.highConfidenceSourceCoverage).min()
             let previewCoverage = sessions.map(\.highConfidencePreviewCoverage).min()
             let finalCoverage = sessions.map(\.highConfidenceFinalCoverage).min()
-            let previewP50 = percentile(
-                sessions.flatMap(\.previewFirstLatencyMilliseconds).sorted(),
-                0.50
-            )
-            let previewP95 = percentile(
-                sessions.flatMap(\.previewFirstLatencyMilliseconds).sorted(),
-                0.95
-            )
-            let finalP95 = percentile(
-                sessions.flatMap(\.finalEndpointLatencyMilliseconds).sorted(),
-                0.95
-            )
-            let previewWorst = sessions.flatMap(\.previewFirstLatencyMilliseconds).max()
+            let previewScopes = Set(sessions.map(\.previewLatencyScope))
+            let previewScope = previewScopes.count == 1 ? previewScopes.first! : "mixed"
+            let previewP50 = previewScopes.count == 1
+                ? percentile(sessions.flatMap(\.previewFirstLatencyMilliseconds).sorted(), 0.50)
+                : nil
+            let previewP95 = previewScopes.count == 1
+                ? percentile(sessions.flatMap(\.previewFirstLatencyMilliseconds).sorted(), 0.95)
+                : nil
+            let finalScopes = Set(sessions.map(\.finalLatencyScope))
+            let finalScope = finalScopes.count == 1 ? finalScopes.first! : "mixed"
+            let finalP95 = finalScopes.count == 1
+                ? percentile(sessions.flatMap(\.finalEndpointLatencyMilliseconds).sorted(), 0.95)
+                : nil
+            let previewWorst = previewScopes.count == 1
+                ? sessions.flatMap(\.previewFirstLatencyMilliseconds).max() : nil
             let revisions = sessions.reduce(0) { $0 + $1.previewRevisionCount }
             let rewrites = sessions.reduce(0) { $0 + $1.confirmedPrefixRewriteCount }
             let endingProcessing = sessions.map(\.endingProcessingBacklogSeconds).max() ?? 0
@@ -1357,6 +1633,7 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 failures.append("intégrité PCM")
             }
             if sessions.contains(where: { !$0.errors.isEmpty }) { failures.append("erreurs") }
+            if previewScopes.count != 1 { failures.append("scopes preview mixtes") }
             if (previewCoverage ?? 0) < 0.95
                 || (previewP50 ?? .infinity) > 1_000
                 || (previewP95 ?? .infinity) > 1_800
@@ -1364,8 +1641,14 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 failures.append("preview")
             }
             if source != "apple-speech" {
+                if finalScopes.count != 1 { failures.append("scopes final mixtes") }
                 if (finalCoverage ?? 0) < 0.95 || (finalP95 ?? .infinity) > 1_500 {
                     failures.append("final")
+                }
+                if sessions.contains(where: {
+                    !$0.finalTranslationComplete || !$0.finalTranslationsAppendOnly
+                }) {
+                    failures.append("final incomplet ou révisé")
                 }
                 if sessions.contains(where: { $0.finalBoundaryMode != "phrase" }) {
                     failures.append("final EOS seulement")
@@ -1383,8 +1666,9 @@ final class JapaneseLiveReplayTests: XCTestCase {
                 "| \(source) | \(sessions.count) | \(percent(cer)) | "
                     + "\(percent(sourceCoverage)) | \(percent(previewCoverage)) / "
                     + "\(milliseconds(previewP50)) / \(milliseconds(previewP95)) / "
-                    + "\(milliseconds(previewWorst)) | \(percent(finalCoverage)) / "
-                    + "\(milliseconds(finalP95)) | \(revisions) / \(rewrites) | "
+                    + "\(milliseconds(previewWorst)) (\(previewScope)) | "
+                    + "\(percent(finalCoverage)) / "
+                    + "\(milliseconds(finalP95)) (\(finalScope)) | \(revisions) / \(rewrites) | "
                     + "\(String(format: "%.2f s", endingProcessing)) / "
                     + "\(String(format: "%.2f s", endingPolicy)) | "
                     + "\(bytes(maximumResident)) | \(verdict) |"
@@ -1419,6 +1703,14 @@ final class JapaneseLiveReplayTests: XCTestCase {
     private func bytes(_ value: UInt64?) -> String {
         guard let value else { return "n/a" }
         return ByteCountFormatter.string(fromByteCount: Int64(value), countStyle: .memory)
+    }
+
+    private func effectiveRecipeSHA256(_ recipe: [String: String]) throws -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return SHA256.hash(data: try encoder.encode(recipe))
+            .map { String(format: "%02x", $0) }
+            .joined()
     }
 
     private func inputError(_ message: String) -> NSError {

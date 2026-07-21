@@ -56,6 +56,11 @@ def public_segments(segments: list[dict]) -> list[dict]:
     ]
 
 
+def emit_event(enabled: bool, payload: dict) -> None:
+    if enabled:
+        print(json.dumps(payload, ensure_ascii=False), flush=True)
+
+
 def direct_mlx(model_path: str, decoder: str):
     if importlib.metadata.version("mlx-whisper") != "0.4.3":
         raise RuntimeError("mlx-whisper must be exactly 0.4.3")
@@ -158,8 +163,15 @@ def main() -> int:
     request_path, response_path = map(Path, sys.argv[1:])
     request = json.loads(request_path.read_text(encoding="utf-8"))
     response: dict = {"setupError": None, "turns": [], "windows": []}
+    emit_events = bool(request.get("emitEvents", False))
+    wait_for_session_ack = request.get("waitForSessionAck", False)
 
     try:
+        if not isinstance(wait_for_session_ack, bool):
+            raise ValueError("waitForSessionAck must be a boolean")
+        if wait_for_session_ack and not emit_events:
+            raise ValueError("waitForSessionAck requires emitEvents=true")
+        setup_started = time.perf_counter_ns()
         backend = request["backend"]
         if backend == "mlx-whisper":
             transcribe = direct_mlx(request["modelPath"], request.get("decoder", "greedy"))
@@ -167,6 +179,9 @@ def main() -> int:
             transcribe = whispermlx(request["modelPath"], request["sileroPath"])
         else:
             raise ValueError(f"Unknown backend: {backend}")
+        response["setupMilliseconds"] = (
+            time.perf_counter_ns() - setup_started
+        ) / 1_000_000
 
         corpora = {
             corpus["corpusID"]: (corpus, load_pcm(corpus["audioPath"]))
@@ -180,7 +195,11 @@ def main() -> int:
             first_corpus, first_pcm = next(iter(corpora.values()))
             first_range = first_corpus["turns"][0]
         seed_inference(first_corpus["corpusID"], first_range.get("turnID", 0))
+        warmup_started = time.perf_counter_ns()
         transcribe(first_pcm[first_range["startSample"] : first_range["endSample"]])
+        response["warmupMilliseconds"] = (
+            time.perf_counter_ns() - warmup_started
+        ) / 1_000_000
 
         for corpus, pcm in corpora.values():
             for turn in corpus["turns"]:
@@ -208,7 +227,8 @@ def main() -> int:
                     }
                 )
 
-        for window in request.get("windows", []):
+        windows = request.get("windows", [])
+        for window_index, window in enumerate(windows):
             _, pcm = corpora[window["corpusID"]]
             window_audio = pcm[window["startSample"] : window["endSample"]]
             seed_inference(window["corpusID"], window["seed"])
@@ -219,14 +239,27 @@ def main() -> int:
             segments: list[dict] = []
             range_results: list[dict] = []
             error = None
+            emit_event(emit_events, {
+                "type": "session-start",
+                "sessionID": window["sessionID"],
+                "corpusID": window["corpusID"],
+                "windowID": window["windowID"],
+                "replay": window["replay"],
+            })
             try:
                 ranges = window.get("ranges")
-                if backend == "whispermlx":
+                mode = request.get(
+                    "mode",
+                    "long-form" if backend == "whispermlx" else "vad-finals",
+                )
+                if mode not in {"long-form", "vad-finals"}:
+                    raise ValueError(f"Unsupported execution mode: {mode}")
+                if backend == "whispermlx" and mode == "long-form":
                     ranges = [{
                         "startSample": window["startSample"],
                         "endSample": window["endSample"],
                     }]
-                for item_range in ranges:
+                for range_index, item_range in enumerate(ranges):
                     if window.get("realtime"):
                         deadline = (
                             item_range["endSample"] - window["startSample"]
@@ -240,8 +273,15 @@ def main() -> int:
                     compute_ms += elapsed_ms
                     fed_sample_count += fed
                     texts.append(text)
-                    segments.extend(item_segments)
-                    range_results.append({
+                    segment_offset = (
+                        item_range["startSample"] - window["startSample"]
+                    ) / 16_000
+                    for segment in item_segments:
+                        segment = dict(segment)
+                        segment["start"] += segment_offset
+                        segment["end"] += segment_offset
+                        segments.append(segment)
+                    range_result = {
                         "startSample": item_range["startSample"],
                         "endSample": item_range["endSample"],
                         "hypothesisJapanese": text,
@@ -257,10 +297,41 @@ def main() -> int:
                                 item_range["endSample"] - window["startSample"]
                             ) / 16,
                         ),
-                    })
+                    }
+                    range_results.append(range_result)
+                    if mode == "long-form" and item_segments:
+                        for segment_index, segment in enumerate(item_segments):
+                            emit_event(emit_events, {
+                                "type": "final",
+                                "sessionID": window["sessionID"],
+                                "rangeIndex": segment_index,
+                                "startSample": window["startSample"]
+                                + int(round(segment["start"] * 16_000)),
+                                "endSample": window["startSample"]
+                                + int(round(segment["end"] * 16_000)),
+                                "hypothesisJapanese": segment["text"],
+                                "asrMilliseconds": elapsed_ms,
+                                "completedMilliseconds": range_result[
+                                    "completedMilliseconds"
+                                ],
+                                "backlogMilliseconds": None,
+                            })
+                    else:
+                        emit_event(emit_events, {
+                            "type": "final",
+                            "sessionID": window["sessionID"],
+                            "rangeIndex": range_index,
+                            **range_result,
+                        })
+                if window.get("realtime"):
+                    deadline = (
+                        window["endSample"] - window["startSample"]
+                    ) / 16_000
+                    elapsed = (time.perf_counter_ns() - started) / 1_000_000_000
+                    time.sleep(max(0.0, deadline - elapsed))
             except Exception as exc:  # Keep later windows observable.
                 error = f"{type(exc).__name__}: {exc}"
-            response["windows"].append({
+            window_result = {
                 "sessionID": window["sessionID"],
                 "corpusID": window["corpusID"],
                 "windowID": window["windowID"],
@@ -274,7 +345,15 @@ def main() -> int:
                 "ranges": range_results,
                 "segments": segments,
                 "error": error,
+            }
+            response["windows"].append(window_result)
+            emit_event(emit_events, {
+                "type": "session-end",
+                **window_result,
             })
+            if wait_for_session_ack and window_index + 1 < len(windows):
+                if sys.stdin.readline() == "":
+                    raise EOFError("Missing session acknowledgement")
     except Exception as exc:
         response["setupError"] = f"{type(exc).__name__}: {exc}"
 

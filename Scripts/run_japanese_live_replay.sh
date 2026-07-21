@@ -12,6 +12,14 @@ DECODER="$BASE/models/openai/large-v3-turbo.pt"
 WARMUP="$BASE/models/warmup-ja.wav"
 POLICY="${WHISPERASR_WLK_POLICY:-simulstreaming}"
 MIN_CHUNK_SECONDS="${WHISPERASR_WLK_MIN_CHUNK_SECONDS:-0.1}"
+REPLAY_SCOPE="${WHISPERASR_L6_SCOPE:-corrective}"
+if [[ -n "${WHISPERASR_WLK_RETENTION_SECONDS:-}" ]]; then
+  RETENTION_SECONDS="$WHISPERASR_WLK_RETENTION_SECONDS"
+elif [[ "$REPLAY_SCOPE" == "full-video" ]]; then
+  RETENTION_SECONDS=1200
+else
+  RETENTION_SECONDS=300
+fi
 case "$POLICY" in
   simulstreaming|localagreement) ;;
   *) echo "Unsupported WHISPERASR_WLK_POLICY: $POLICY" >&2; exit 2 ;;
@@ -26,16 +34,28 @@ fi
 SOURCES="${WHISPERASR_L6_SOURCES:-apple-speech,whisperlivekit}"
 SANDBOX='(version 1)(allow default)(deny network-outbound (remote ip "*:*"))(allow network-outbound (remote ip "localhost:*"))'
 
+if [[ -e "$OUTPUT" ]]; then
+  echo "Refusing to reuse an existing live replay directory: $OUTPUT" >&2
+  exit 2
+fi
 mkdir -p "$OUTPUT"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 cd "$ROOT"
-xcrun swift test -c release --filter JapaneseLiveReplayTests
+/usr/bin/sandbox-exec -p "$SANDBOX" \
+  xcrun swift test --disable-sandbox -c release --filter JapaneseLiveReplayTests
 
 SERVER_PID=0
 
 cleanup() {
   if [[ "$SERVER_PID" -gt 0 ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
     kill "$SERVER_PID" 2>/dev/null || true
+    for _ in {1..100}; do
+      if ! kill -0 "$SERVER_PID" 2>/dev/null; then break; fi
+      sleep 0.05
+    done
+    if kill -0 "$SERVER_PID" 2>/dev/null; then
+      kill -KILL "$SERVER_PID" 2>/dev/null || true
+    fi
     wait "$SERVER_PID" 2>/dev/null || true
   fi
 }
@@ -70,7 +90,7 @@ if [[ ",$SOURCES," == *,whisperlivekit,* ]]; then
     --warmup-file "$WARMUP"
     --min-chunk-size "$MIN_CHUNK_SECONDS"
     --vac-chunk-size 0.04
-    --retention-seconds 300
+    --retention-seconds "$RETENTION_SECONDS"
     --log-level INFO
   )
   if [[ "$POLICY" == "simulstreaming" ]]; then
@@ -142,7 +162,9 @@ WHISPERASR_L6_RUN_ID="$RUN_ID" \
 WHISPERASR_L6_REPLAY_COUNT="${WHISPERASR_L6_REPLAY_COUNT:-1}" \
 WHISPERASR_L6_WINDOW_LIMIT="${WHISPERASR_L6_WINDOW_LIMIT:-1}" \
 WHISPERASR_L6_SOURCES="$SOURCES" \
+WHISPERASR_L6_SCOPE="$REPLAY_SCOPE" \
 WHISPERASR_WLK_POLICY="$POLICY" \
+WHISPERASR_WLK_RETENTION_SECONDS="$RETENTION_SECONDS" \
 WHISPERASR_WLK_MIN_CHUNK_SECONDS="$MIN_CHUNK_SECONDS" \
 WHISPERASR_WLK_URL="ws://127.0.0.1:$PORT/asr?language=ja&mode=diff" \
 WHISPERASR_WLK_PID="$SERVER_PID" \

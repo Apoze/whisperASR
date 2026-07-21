@@ -1,4 +1,5 @@
 import CryptoKit
+import Darwin
 import FluidAudio
 import Foundation
 import XCTest
@@ -175,6 +176,9 @@ private struct JapaneseBakeoffModelProvenance: Codable {
     let license: String
     let runtime: String
     let runtimeRevision: String
+    var setupMilliseconds: Double? = nil
+    var warmupMilliseconds: Double? = nil
+    var startupMeasurementScope: String? = nil
 }
 
 private struct JapaneseBakeoffTurnReport: Codable {
@@ -383,6 +387,9 @@ private struct JapaneseExternalASRRequest: Codable {
     let sileroPath: String?
     let corpora: [Corpus]
     var decoder: String? = nil
+    var mode: String? = nil
+    var emitEvents: Bool? = nil
+    var waitForSessionAck: Bool? = nil
     var windows: [Window]? = nil
 }
 
@@ -433,8 +440,22 @@ private struct JapaneseExternalASRResponse: Codable {
     }
 
     let setupError: String?
+    var setupMilliseconds: Double? = nil
+    var warmupMilliseconds: Double? = nil
     let turns: [Turn]
     var windows: [Window]? = nil
+}
+
+private struct JapaneseExternalASREvent: Decodable, Sendable {
+    let type: String
+    let sessionID: String
+    var rangeIndex: Int? = nil
+    var startSample: Int? = nil
+    var endSample: Int? = nil
+    var hypothesisJapanese: String? = nil
+    var completedMilliseconds: Double? = nil
+    var backlogMilliseconds: Double? = nil
+    var error: String? = nil
 }
 
 private struct JapaneseBakeoffBlindCandidate: Codable {
@@ -490,7 +511,12 @@ private struct JapaneseCorrectiveSession: Codable, Sendable {
     let windowEndSample: Int
     let expectedSampleCount: Int
     let asrFedSampleCount: Int
+    let pcmAnalyzedThrough: Int
     let asrFinalizedThrough: Int
+    let englishValidatedThrough: Int
+    let terminalSilenceStartSample: Int?
+    let terminalSilenceEndSample: Int?
+    let unaccountedSampleCount: Int
     let endpointDecisionsSHA256: String
     let endpoints: [JapaneseCorrectiveEndpoint]
     let fragments: [JapaneseCorrectiveFragment]
@@ -502,13 +528,28 @@ private struct JapaneseCorrectiveSession: Codable, Sendable {
     let asrMilliseconds: [Double]
     let finalLatencyMilliseconds: [Double]
     let finalLatencyScope: String
+    let previewRole: String
+    let previewLatencyScope: String
+    let previewEvents: [BenchmarkPreviewTranslationEvent]
+    let previewSourceFirstLatencyMilliseconds: [Double]
+    let previewFirstLatencyMilliseconds: [Double]
+    let previewRevisionCount: Int
+    let confirmedPrefixRewriteCount: Int
+    let finalTranslationEvents: [BenchmarkFinalTranslationEvent]
+    let finalTranslationsAppendOnly: Bool
     let audioMilliseconds: Double
+    let asrWallMilliseconds: Double
+    let pipelineWallMilliseconds: Double
     let completionAfterAudioEndMilliseconds: Double
     let computeRTF: Double
     let endToEndWallRTF: Double
     let maximumBacklogMilliseconds: Double
     let endingBacklogMilliseconds: Double
     let maximumResidentBytes: UInt64?
+    let averageCPUPercent: Double?
+    let thermalStateBefore: String
+    let thermalStateAfter: String
+    let backlogApplicable: Bool
     let errors: [String]
 }
 
@@ -549,6 +590,7 @@ private struct JapaneseCorrectiveCorpus: Codable, Sendable {
 private struct JapaneseCorrectiveReport: Codable, Sendable {
     let schemaVersion: Int
     let runID: String
+    let benchmarkScope: String
     let gitCommit: String
     let sourceTreeSHA256: String
     let runtimeSHA256: String
@@ -573,7 +615,9 @@ private struct JapaneseCorrectiveWindowInput {
     let window: JapaneseBenchmarkSupport.StressWindow
     let manifest: JapaneseBenchmarkSupport.Manifest
     let samples: [Float]
+    let analyzedThrough: Int
     let decisions: [LocalEndpointDecision]
+    let speechObservations: [JapaneseBenchmarkSupport.EndpointSpeechObservation]
 }
 
 private struct JapaneseCorrectiveEngineResult {
@@ -582,34 +626,172 @@ private struct JapaneseCorrectiveEngineResult {
     let sessions: [JapaneseCorrectiveSession]
 }
 
+private struct JapaneseCorrectiveExternalExecution {
+    let response: JapaneseExternalASRResponse?
+    let error: String?
+    let finalTranslations: [String: BenchmarkFinalTranslationSummary]
+    let pipelineWallMilliseconds: [String: Double]
+    let resources: [String: BenchmarkResourceSummary]
+}
+
+@available(macOS 26.4, *)
 private actor JapaneseCorrectiveVoxtralCollector {
     private(set) var deltas: [(text: String, sentThrough: Int?)] = []
     private(set) var acknowledgedThrough: Int?
     private(set) var completed: (transcript: String, sentThrough: Int?)?
     private(set) var failures: [String] = []
+    private var planner: VoxtralClausePlanner
+    private let windowStartSample: Int
+    private let sessionStart: UInt64
+    private let preview: BenchmarkPreviewTranslator?
+    private let final: BenchmarkFinalTranslator?
+    private var transcript = ""
+    private var fragments: [JapaneseCorrectiveFragment] = []
+    private var lastPreview: (generation: Int, text: String)?
+    private var confirmedPrefixRewrites = 0
 
-    func accept(_ event: VoxtralHelperEvent) {
+    init(
+        windowStartSample: Int,
+        sessionStart: UInt64,
+        stabilityGuardSamples: Int,
+        preview: BenchmarkPreviewTranslator?,
+        final: BenchmarkFinalTranslator?
+    ) {
+        self.windowStartSample = windowStartSample
+        self.sessionStart = sessionStart
+        self.preview = preview
+        self.final = final
+        planner = VoxtralClausePlanner(stabilityGuardSamples: stabilityGuardSamples)
+    }
+
+    func accept(_ event: VoxtralHelperEvent) async {
+        var boundary: VoxtralClauseBoundary?
         switch event {
         case .delta(let text, let sentThrough):
             deltas.append((text, sentThrough))
+            transcript += text
+            boundary = planner.observe(
+                delta: text,
+                fedThrough: local(sentThrough ?? acknowledgedThrough ?? windowStartSample),
+                sourceUpdateThrough: sentThrough.map(local)
+            )
         case .acknowledged(let through):
             acknowledgedThrough = through
+            boundary = planner.observe(fedThrough: local(through))
         case .completed(let transcript, let sentThrough):
             completed = (transcript, sentThrough)
+            let finalDelta: String
+            if transcript.hasPrefix(self.transcript) {
+                finalDelta = String(transcript.dropFirst(self.transcript.count))
+            } else if self.transcript.isEmpty {
+                finalDelta = transcript
+            } else {
+                failures.append("Voxtral final source differed from its append-only stream.")
+                return
+            }
+            self.transcript = transcript
+            boundary = planner.finish(
+                delta: finalDelta,
+                fedThrough: local(sentThrough ?? acknowledgedThrough ?? windowStartSample)
+            )
         case .failed(let message):
             failures.append(message)
-        case .ready, .emissionMarker:
-            break
+        case .emissionMarker(let marker):
+            let localMarker = VoxtralEmissionMarker(
+                generatedIndex: marker.generatedIndex,
+                decoderPosition: marker.decoderPosition,
+                delayFrames: marker.delayFrames,
+                proxyEndSample: local(marker.proxyEndSample),
+                groupTextStartUTF8: marker.groupTextStartUTF8,
+                isUsable: marker.isUsable
+            )
+            boundary = planner.observe(
+                fedThrough: local(acknowledgedThrough ?? windowStartSample),
+                emissionMarkers: [localMarker]
+            )
+        case .ready:
+            return
         }
+        if let boundary { await stage(boundary) }
+        await publishPreview()
+    }
+
+    func observeSpeech(
+        _ ranges: [SpeechSampleRange],
+        observedThrough: Int
+    ) async {
+        if let boundary = planner.observe(
+            fedThrough: max(planner.fedThrough, observedThrough),
+            speech: ranges
+        ) {
+            await stage(boundary)
+        }
+        await publishPreview()
     }
 
     func snapshot() -> (
         deltas: [(text: String, sentThrough: Int?)],
         acknowledgedThrough: Int?,
         completed: (transcript: String, sentThrough: Int?)?,
-        failures: [String]
+        failures: [String],
+        fragments: [JapaneseCorrectiveFragment],
+        confirmedPrefixRewrites: Int
     ) {
-        (deltas, acknowledgedThrough, completed, failures)
+        (
+            deltas,
+            acknowledgedThrough,
+            completed,
+            failures,
+            fragments,
+            confirmedPrefixRewrites
+        )
+    }
+
+    private func local(_ absolute: Int) -> Int {
+        max(0, absolute - windowStartSample)
+    }
+
+    private func stage(_ boundary: VoxtralClauseBoundary) async {
+        let text = boundary.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        fragments.append(JapaneseCorrectiveFragment(
+            startSample: windowStartSample + boundary.sampleRange.lowerBound,
+            endSample: windowStartSample + boundary.sampleRange.upperBound,
+            text: text,
+            asrMilliseconds: 0
+        ))
+        let endpoint = sessionStart
+            + UInt64(max(0, boundary.endpointDetectedAt)) * 1_000_000_000 / 16_000
+        await final?.submit(
+            finalID: "voxtral:\(boundary.generation)",
+            source: text,
+            sourceStartSample: windowStartSample + boundary.sampleRange.lowerBound,
+            sourceEndSample: windowStartSample + boundary.sampleRange.upperBound,
+            endpointUptimeNanoseconds: endpoint
+        )
+    }
+
+    private func publishPreview() async {
+        guard let current = planner.preview else { return }
+        let text = current.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty,
+              lastPreview?.generation != current.generation
+                || lastPreview?.text != text else { return }
+        if let previous = lastPreview,
+           previous.generation == current.generation,
+           !text.hasPrefix(previous.text) {
+            confirmedPrefixRewrites += 1
+        }
+        lastPreview = (current.generation, text)
+        let phraseStart = sessionStart
+            + UInt64(max(0, current.sampleRange.lowerBound)) * 1_000_000_000 / 16_000
+        await preview?.submit(
+            source: text,
+            phraseKey: UInt64(current.generation),
+            phraseStartUptimeNanoseconds: phraseStart,
+            sourceStartSample: windowStartSample + current.sampleRange.lowerBound,
+            sourceEndSample: windowStartSample + current.sampleRange.upperBound
+        )
     }
 }
 
@@ -1079,8 +1261,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     @MainActor
     func testCorrectiveStressReplaysWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
-        guard environment["WHISPERASR_L7B_REPLAY"] == "1" else {
-            throw XCTSkip("Run Scripts/run_japanese_l7b_replay.sh for the corrected stress matrix.")
+        let fullReplay = environment["WHISPERASR_L7C_REPLAY"] == "1"
+        let vadPreflight = environment["WHISPERASR_L7C_VAD_PREFLIGHT"] == "1"
+        guard environment["WHISPERASR_L7B_REPLAY"] == "1" || fullReplay || vadPreflight else {
+            throw XCTSkip("Run the L7B or L7C replay script.")
+        }
+        guard #available(macOS 26.4, *) else {
+            throw XCTSkip("L7B/L7C requires the local Apple Translation runtime.")
         }
         guard let gitCommit = environment["WHISPERASR_BENCHMARK_COMMIT"],
               gitCommit.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil else {
@@ -1100,17 +1287,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         ModelHub.offlineMode = environment["WHISPERASR_OFFLINE"] == "1"
         defer { ModelHub.offlineMode = false }
 
-        let replayCount = max(1, Int(environment["WHISPERASR_L7B_REPLAY_COUNT"] ?? "3") ?? 3)
-        let windowLimit = min(
-            JapaneseBenchmarkSupport.correctiveStressWindows.count,
-            max(1, Int(environment["WHISPERASR_L7B_WINDOW_LIMIT"] ?? "4") ?? 4)
-        )
-        let selectedWindows = Array(
-            JapaneseBenchmarkSupport.correctiveStressWindows.prefix(windowLimit)
-        )
+        let benchmarkScope = fullReplay ? "full-video" : "corrective"
+        let replayCount = fullReplay
+            ? max(1, Int(environment["WHISPERASR_L7C_REPLAY_COUNT"] ?? "1") ?? 1)
+            : max(1, Int(environment["WHISPERASR_L7B_REPLAY_COUNT"] ?? "3") ?? 3)
         let requestedEngines = try selectedEngines(
             environment: environment,
-            scope: "corrective"
+            scope: benchmarkScope
         )
         let runID = try benchmarkRunID(environment: environment)
 
@@ -1148,6 +1331,21 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             ))
         }
 
+        let selectedWindows: [JapaneseBenchmarkSupport.StressWindow]
+        if fullReplay {
+            selectedWindows = ["qudu2fx3ncc", "md62mmdz0m"].compactMap {
+                manifests[$0].map(JapaneseBenchmarkSupport.fullWindow(for:))
+            }
+        } else {
+            let windowLimit = min(
+                JapaneseBenchmarkSupport.correctiveStressWindows.count,
+                max(1, Int(environment["WHISPERASR_L7B_WINDOW_LIMIT"] ?? "4") ?? 4)
+            )
+            selectedWindows = Array(
+                JapaneseBenchmarkSupport.correctiveStressWindows.prefix(windowLimit)
+            )
+        }
+
         let modelManager = LocalEnglishModelManager()
         try await modelManager.prepare(.whisperTurboApple)
         var windows: [JapaneseCorrectiveWindowInput] = []
@@ -1159,12 +1357,12 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 )
             }
             let samples = Array(corpusSamples[window.startSample..<window.endSample])
-            let decisions = try await JapaneseBenchmarkSupport.productEndpointDecisions(
+            let trace = try await JapaneseBenchmarkSupport.productEndpointTrace(
                 samples: samples,
                 manager: modelManager
             )
-            guard !decisions.isEmpty,
-                  decisions.last?.audioEnd == samples.count else {
+            guard !trace.decisions.isEmpty,
+                  fullReplay || trace.decisions.last?.audioEnd == samples.count else {
                 throw JapaneseBenchmarkCSV.ParseError.malformed(
                     "FireRedVAD did not finalize the full window \(window.id)."
                 )
@@ -1173,7 +1371,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 window: window,
                 manifest: manifest,
                 samples: samples,
-                decisions: decisions
+                analyzedThrough: samples.count,
+                decisions: trace.decisions,
+                speechObservations: trace.speechObservations
             ))
         }
         let calibrationManifestURL = root.appendingPathComponent(
@@ -1216,9 +1416,34 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             window: calibrationWindow,
             manifest: calibrationManifest,
             samples: calibrationSamples,
-            decisions: calibrationDecisions
+            analyzedThrough: calibrationSamples.count,
+            decisions: calibrationDecisions,
+            speechObservations: []
         )]
         await modelManager.unload()
+
+        var finalService: AppleTranslationService?
+        var finalServiceError: String?
+        var previewService: AppleTranslationService?
+        var previewServiceError: String?
+        if fullReplay {
+            let finalCandidate = AppleTranslationService()
+            do {
+                try await finalCandidate.configure(sourceLocale: "ja", mode: .highFidelityOnly)
+                try await finalCandidate.warmup(highFidelity: true)
+                finalService = finalCandidate
+            } catch {
+                finalServiceError = error.localizedDescription
+            }
+            let previewCandidate = AppleTranslationService()
+            do {
+                try await previewCandidate.configure(sourceLocale: "ja", mode: .lowLatencyOnly)
+                try await previewCandidate.warmup(highFidelity: false)
+                previewService = previewCandidate
+            } catch {
+                previewServiceError = error.localizedDescription
+            }
+        }
 
         let whisper = TranscriptionService()
         var sessions: [JapaneseCorrectiveSession] = []
@@ -1235,13 +1460,19 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 whisper: whisper,
                 root: root,
                 environment: environment,
-                runID: runID
+                runID: runID,
+                benchmarkScope: benchmarkScope,
+                previewService: previewService,
+                previewServiceError: previewServiceError,
+                finalService: finalService,
+                finalServiceError: finalServiceError
             )
             sessions += result.sessions
             if let calibration = result.calibration { calibrations.append(calibration) }
             models.append(result.model)
             let report = correctiveReport(
                 runID: runID,
+                benchmarkScope: benchmarkScope,
                 gitCommit: gitCommit,
                 sourceTreeSHA256: environment["WHISPERASR_BENCHMARK_SOURCE_TREE_SHA256"]
                     ?? "unknown",
@@ -1252,7 +1483,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 recipeSHA: recipeSHA,
                 replayCount: replayCount,
                 expectedEngines: requestedEngines,
-                windowCount: selectedWindows.count,
+                expectedWindowIDs: selectedWindows.map(\.id),
+                expectedRecipeIDs: requestedEngines.map {
+                    correctiveRecipeID(engine: $0, environment: environment)
+                },
                 corpora: corpora,
                 models: models,
                 calibrations: calibrations,
@@ -1263,33 +1497,35 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         }
         await modelManager.shutdown()
         await whisper.unloadModel()
+        await previewService?.cancel()
+        await finalService?.cancel()
 
         let expected = requestedEngines.count * selectedWindows.count * replayCount
         XCTAssertEqual(sessions.count, expected)
         XCTAssertTrue(sessions.allSatisfy { $0.expectedSampleCount > 0 })
-        if requestedEngines == JapaneseBakeoffEngine.allCases,
-           replayCount == 3,
-           selectedWindows.count == JapaneseBenchmarkSupport.correctiveStressWindows.count {
-            let finalReport = correctiveReport(
-                runID: runID,
-                gitCommit: gitCommit,
-                sourceTreeSHA256: environment["WHISPERASR_BENCHMARK_SOURCE_TREE_SHA256"]
-                    ?? "unknown",
-                runtimeSHA256: environment["WHISPERASR_BENCHMARK_RUNTIME_SHA256"]
-                    ?? "unknown",
-                worktreeDirty: environment["WHISPERASR_BENCHMARK_DIRTY"] == "1",
-                networkDenied: environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1",
-                recipeSHA: recipeSHA,
-                replayCount: replayCount,
-                expectedEngines: requestedEngines,
-                windowCount: selectedWindows.count,
-                corpora: corpora,
-                models: models,
-                calibrations: calibrations,
-                sessions: sessions
-            )
-            XCTAssertTrue(finalReport.matrixAttempted, "The native L7B matrix was not fully attempted.")
-        }
+        let finalReport = correctiveReport(
+            runID: runID,
+            benchmarkScope: benchmarkScope,
+            gitCommit: gitCommit,
+            sourceTreeSHA256: environment["WHISPERASR_BENCHMARK_SOURCE_TREE_SHA256"]
+                ?? "unknown",
+            runtimeSHA256: environment["WHISPERASR_BENCHMARK_RUNTIME_SHA256"]
+                ?? "unknown",
+            worktreeDirty: environment["WHISPERASR_BENCHMARK_DIRTY"] == "1",
+            networkDenied: environment["WHISPERASR_EXTERNAL_NETWORK_DENIED"] == "1",
+            recipeSHA: recipeSHA,
+            replayCount: replayCount,
+            expectedEngines: requestedEngines,
+            expectedWindowIDs: selectedWindows.map(\.id),
+            expectedRecipeIDs: requestedEngines.map {
+                correctiveRecipeID(engine: $0, environment: environment)
+            },
+            corpora: corpora,
+            models: models,
+            calibrations: calibrations,
+            sessions: sessions
+        )
+        XCTAssertTrue(finalReport.matrixAttempted, "The replay matrix was not fully attempted.")
     }
 
     func testPrepareEasyJapaneseCorpusWhenOptedIn() async throws {
@@ -1505,6 +1741,20 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         return engines
     }
 
+    private func correctiveRecipeID(
+        engine: JapaneseBakeoffEngine,
+        environment: [String: String]
+    ) -> String {
+        guard engine == .whisperMLXBatch else { return engine.rawValue }
+        if environment["WHISPERASR_WHISPERMLX_MODE"] == "vad-finals" {
+            return "\(engine.rawValue)-vad-finals"
+        }
+        if environment["WHISPERASR_L7C_REPLAY"] == "1" {
+            return "\(engine.rawValue)-long-form"
+        }
+        return engine.rawValue
+    }
+
     @MainActor
     private func runEngine(
         _ engine: JapaneseBakeoffEngine,
@@ -1700,6 +1950,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         return (provenance, nemotron)
     }
 
+    @available(macOS 26.4, *)
     @MainActor
     private func runCorrectiveEngine(
         _ engine: JapaneseBakeoffEngine,
@@ -1710,7 +1961,12 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         whisper: TranscriptionService,
         root: URL,
         environment: [String: String],
-        runID: String
+        runID: String,
+        benchmarkScope: String,
+        previewService: AppleTranslationService?,
+        previewServiceError: String?,
+        finalService: AppleTranslationService?,
+        finalServiceError: String?
     ) async -> JapaneseCorrectiveEngineResult {
         if engine == .mlxWhisperTurbo || engine == .whisperMLXBatch {
             return await runCorrectiveExternalEngine(
@@ -1720,12 +1976,16 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 replayCount: replayCount,
                 root: root,
                 environment: environment,
-                runID: runID
+                runID: runID,
+                benchmarkScope: benchmarkScope,
+                finalService: finalService,
+                finalServiceError: finalServiceError
             )
         }
 
         var provenance = unresolvedProvenance(engine)
         var nemotron: StreamingNemotronMultilingualAsrManager?
+        let setupStarted = DispatchTime.now().uptimeNanoseconds
         do {
             let prepared = try await prepareNativeEngine(
                 engine,
@@ -1735,6 +1995,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 environment: environment
             )
             provenance = prepared.model
+            provenance.setupMilliseconds = elapsedMilliseconds(since: setupStarted)
+            provenance.startupMeasurementScope = "model-load-or-runtime-prepare"
             nemotron = prepared.nemotron
         } catch {
             return JapaneseCorrectiveEngineResult(
@@ -1744,7 +2006,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     engine: engine,
                     windows: windows,
                     replayCount: replayCount,
-                    message: error.localizedDescription
+                    message: error.localizedDescription,
+                    recipeID: correctiveRecipeID(engine: engine, environment: environment)
                 )
             )
         }
@@ -1777,7 +2040,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                         whisper: whisper,
                         nemotron: nemotron,
                         root: root,
-                        environment: environment
+                        environment: environment,
+                        recipeID: correctiveRecipeID(engine: engine, environment: environment),
+                        benchmarkScope: benchmarkScope,
+                        previewService: previewService,
+                        previewServiceError: previewServiceError,
+                        finalService: finalService,
+                        finalServiceError: finalServiceError
                     ))
                 } catch {
                     if engine == .voxtralContinuous {
@@ -1786,6 +2055,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     if let nemotron { await nemotron.reset() }
                     sessions.append(correctiveSession(
                         engine: engine,
+                        recipeID: correctiveRecipeID(engine: engine, environment: environment),
                         input: window,
                         replay: replay,
                         asrFedSampleCount: 0,
@@ -1811,6 +2081,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         )
     }
 
+    @available(macOS 26.4, *)
     @MainActor
     private func runCorrectiveNativeSession(
         _ engine: JapaneseBakeoffEngine,
@@ -1821,7 +2092,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         whisper: TranscriptionService,
         nemotron: StreamingNemotronMultilingualAsrManager?,
         root: URL,
-        environment: [String: String]
+        environment: [String: String],
+        recipeID: String,
+        benchmarkScope: String,
+        previewService: AppleTranslationService?,
+        previewServiceError: String?,
+        finalService: AppleTranslationService?,
+        finalServiceError: String?
     ) async throws -> JapaneseCorrectiveSession {
         var started = DispatchTime.now().uptimeNanoseconds
         var fragments: [JapaneseCorrectiveFragment] = []
@@ -1833,10 +2110,44 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         var maximumBacklog = 0.0
         var endingBacklog = 0.0
         var maximumResident = modelManager.currentMemoryBytes()
+        var sessionErrors: [String] = []
+        var confirmedPrefixRewrites = 0
+        var watchdog = BenchmarkBacklogWatchdog()
+        let supportsOwnPreview = engine == .voxtralContinuous
+            || engine == .nemotron1120
+            || engine == .nemotron560
+        let previewTranslator = benchmarkScope == "full-video"
+            && supportsOwnPreview
+            && previewService != nil
+            ? BenchmarkPreviewTranslator(service: previewService!, highFidelity: false)
+            : nil
+        let finalTranslator = benchmarkScope == "full-video"
+            ? BenchmarkFinalTranslator(
+                service: finalService,
+                unavailableReason: finalServiceError
+            ) : nil
+        let voxtralEvents: AsyncStream<VoxtralHelperEvent>?
+        let sampledPIDs: [Int32]
+        if engine == .voxtralContinuous {
+            voxtralEvents = try await modelManager.startContinuousVoxtral()
+            let progress = await modelManager.continuousVoxtralProgress()
+            guard let helperPID = progress.helperProcessIdentifier else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Voxtral helper PID is unavailable for resource measurement."
+                )
+            }
+            sampledPIDs = [getpid(), helperPID]
+            started = DispatchTime.now().uptimeNanoseconds
+        } else {
+            voxtralEvents = nil
+            sampledPIDs = [getpid()]
+        }
+        let resourceSampler = startBenchmarkResourceSampler { sampledPIDs }
+        defer { resourceSampler.cancel() }
 
         switch engine {
         case .whisperTurbo, .kotobaQ5, .qwen17:
-            for decision in input.decisions {
+            for (decisionIndex, decision) in input.decisions.enumerated() {
                 try await sleepCorrectiveReplay(
                     started: started,
                     through: decision.audioEnd
@@ -1857,23 +2168,32 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 timings.append(decodeMilliseconds)
                 fedSamples += result.asrFedSampleCount
                 var text = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !text.isEmpty else {
-                    throw JapaneseBenchmarkCSV.ParseError.malformed(
-                        "\(engine.rawValue) returned an empty product VAD final."
-                    )
-                }
                 let acceptedStart = max(finalizedThrough, decision.audioStart)
                 if let previous = fragments.last,
                    input.window.startSample + acceptedStart < previous.endSample {
                     text = AppState.trimOverlap(previous: previous.text, current: text)
                 }
                 if !text.isEmpty {
-                    fragments.append(JapaneseCorrectiveFragment(
+                    let fragment = JapaneseCorrectiveFragment(
                         startSample: input.window.startSample + acceptedStart,
                         endSample: input.window.startSample + decision.speechEnd,
                         text: text,
                         asrMilliseconds: decodeMilliseconds
-                    ))
+                    )
+                    fragments.append(fragment)
+                    let endpoint = started
+                        + UInt64(max(0, decision.speechEnd)) * 1_000_000_000 / 16_000
+                    await finalTranslator?.submit(
+                        finalID: "\(recipeID):\(decisionIndex)",
+                        source: text,
+                        sourceStartSample: fragment.startSample,
+                        sourceEndSample: input.window.startSample + decision.stableThrough,
+                        endpointUptimeNanoseconds: endpoint
+                    )
+                } else {
+                    sessionErrors.append(
+                        "\(engine.rawValue) returned an empty product VAD final at decision \(decisionIndex)."
+                    )
                 }
                 finalizedThrough = max(finalizedThrough, decision.stableThrough)
                 let completion = elapsedMilliseconds(since: started)
@@ -1881,10 +2201,15 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     0,
                     completion - Double(decision.speechEnd) / 16
                 ))
-                maximumBacklog = max(
-                    maximumBacklog,
+                let currentBacklog = max(
+                    0,
                     completion - Double(decision.audioEnd) / 16
                 )
+                maximumBacklog = max(maximumBacklog, currentBacklog)
+                if watchdog.observe(milliseconds: currentBacklog) {
+                    sessionErrors.append("Backlog exceeded 30 seconds continuously for one minute.")
+                    break
+                }
                 maximumResident = max(maximumResident, modelManager.currentMemoryBytes())
             }
 
@@ -1896,7 +2221,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             started = DispatchTime.now().uptimeNanoseconds
             var cursor = input.decisions.first?.audioStart ?? 0
             var utteranceStart = cursor
-            for decision in input.decisions {
+            var lastPartial = ""
+            var previewGeneration: UInt64 = 0
+            for (decisionIndex, decision) in input.decisions.enumerated() {
                 if decision.audioStart > cursor {
                     cursor = decision.audioStart
                     utteranceStart = cursor
@@ -1909,12 +2236,38 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     timings.append(elapsedMilliseconds(since: callStarted))
                     fedSamples += end - cursor
                     cursor = end
+                    let partial = await nemotron.getPartialTranscript()
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !partial.isEmpty, partial != lastPartial {
+                        if !lastPartial.isEmpty, !partial.hasPrefix(lastPartial) {
+                            confirmedPrefixRewrites += 1
+                        }
+                        lastPartial = partial
+                        await previewTranslator?.submit(
+                            source: partial,
+                            phraseKey: previewGeneration,
+                            phraseStartUptimeNanoseconds: started
+                                + UInt64(max(0, utteranceStart)) * 1_000_000_000 / 16_000,
+                            sourceStartSample: input.window.startSample + utteranceStart,
+                            sourceEndSample: input.window.startSample + cursor
+                        )
+                    }
                     maximumResident = max(maximumResident, modelManager.currentMemoryBytes())
-                    maximumBacklog = max(
-                        maximumBacklog,
+                    let currentBacklog = max(
+                        0,
                         elapsedMilliseconds(since: started) - Double(cursor) / 16
                     )
+                    maximumBacklog = max(maximumBacklog, currentBacklog)
+                    if watchdog.observe(milliseconds: currentBacklog) {
+                        sessionErrors.append(
+                            "Backlog exceeded 30 seconds continuously for one minute."
+                        )
+                        break
+                    }
                 }
+                if sessionErrors.last?.contains("Backlog exceeded") == true { break }
+                // A forced planner cut is not a safe speech end. Keep the
+                // streaming state and finish/reset only at a VAD endpoint.
                 guard decision.kind != .forced else { continue }
                 let finalStarted = DispatchTime.now().uptimeNanoseconds
                 let text = try await nemotron.finish()
@@ -1926,27 +2279,52 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     elapsedMilliseconds(since: started) - Double(decision.speechEnd) / 16
                 ))
                 if !text.isEmpty {
-                    fragments.append(JapaneseCorrectiveFragment(
+                    let fragment = JapaneseCorrectiveFragment(
                         startSample: input.window.startSample + utteranceStart,
                         endSample: input.window.startSample + decision.speechEnd,
                         text: text,
                         asrMilliseconds: finalMilliseconds
-                    ))
+                    )
+                    fragments.append(fragment)
+                    let endpoint = started
+                        + UInt64(max(0, decision.speechEnd)) * 1_000_000_000 / 16_000
+                    await finalTranslator?.submit(
+                        finalID: "\(recipeID):\(decisionIndex)",
+                        source: text,
+                        sourceStartSample: fragment.startSample,
+                        sourceEndSample: input.window.startSample + decision.stableThrough,
+                        endpointUptimeNanoseconds: endpoint
+                    )
+                } else {
+                    sessionErrors.append(
+                        "\(engine.rawValue) returned an empty safe VAD final at decision \(decisionIndex)."
+                    )
                 }
                 finalizedThrough = max(finalizedThrough, decision.stableThrough)
                 utteranceStart = cursor
+                lastPartial = ""
+                previewGeneration += 1
                 await nemotron.reset()
             }
 
         case .voxtralContinuous:
-            let events = try await modelManager.startContinuousVoxtral()
-            let collector = JapaneseCorrectiveVoxtralCollector()
+            guard let events = voxtralEvents else {
+                preconditionFailure("Voxtral events must be prepared before sampling.")
+            }
+            let collector = JapaneseCorrectiveVoxtralCollector(
+                windowStartSample: input.window.startSample,
+                sessionStart: started,
+                stabilityGuardSamples: modelManager.continuousVoxtralConfiguration
+                    .stabilityGuardSamples,
+                preview: previewTranslator,
+                final: finalTranslator
+            )
             let receiver = Task {
                 for await event in events { await collector.accept(event) }
             }
-            started = DispatchTime.now().uptimeNanoseconds
             do {
                 let blockSamples = 2_560
+                var observationIndex = 0
                 for start in stride(from: 0, to: input.samples.count, by: blockSamples) {
                     let end = min(input.samples.count, start + blockSamples)
                     try await sleepCorrectiveReplay(started: started, through: end)
@@ -1958,17 +2336,39 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     timings.append(elapsedMilliseconds(since: feedStarted))
                     fedSamples = end
                     let progress = await modelManager.continuousVoxtralProgress()
+                    while observationIndex < input.speechObservations.count,
+                          input.speechObservations[observationIndex].observedThrough <= end {
+                        let observation = input.speechObservations[observationIndex]
+                        await collector.observeSpeech(
+                            observation.ranges,
+                            observedThrough: max(
+                                0,
+                                (progress.acknowledgedThrough
+                                    ?? input.window.startSample) - input.window.startSample
+                            )
+                        )
+                        observationIndex += 1
+                    }
                     maximumResident = max(
                         maximumResident,
                         modelManager.currentMemoryBytes() + (progress.helperRSSBytes ?? 0)
                     )
+                    let currentBacklog = max(
+                        max(0, elapsedMilliseconds(since: started) - Double(end) / 16),
+                        Double(progress.backlogSamples) / 16
+                    )
                     maximumBacklog = max(
                         maximumBacklog,
                         max(
-                            elapsedMilliseconds(since: started) - Double(end) / 16,
+                            currentBacklog,
                             Double(progress.maximumBacklogSamples) / 16
                         )
                     )
+                    if watchdog.observe(milliseconds: currentBacklog) {
+                        throw JapaneseBenchmarkCSV.ParseError.malformed(
+                            "Backlog exceeded 30 seconds continuously for one minute."
+                        )
+                    }
                 }
                 let finalStarted = DispatchTime.now().uptimeNanoseconds
                 let final = try await modelManager.finishContinuousVoxtral()
@@ -1993,12 +2393,32 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                         "Voxtral did not prove full acknowledged PCM coverage and a zero final backlog."
                     )
                 }
-                fragments = correctiveVoxtralFragments(
-                    deltas: snapshot.deltas,
-                    final: final,
-                    input: input,
-                    asrMilliseconds: timings.reduce(0, +)
-                )
+                fragments = snapshot.fragments.isEmpty
+                    ? correctiveVoxtralFragments(
+                        deltas: snapshot.deltas,
+                        final: final,
+                        input: input,
+                        asrMilliseconds: timings.reduce(0, +)
+                    ) : snapshot.fragments
+                if snapshot.fragments.isEmpty {
+                    for (index, fragment) in fragments.enumerated() {
+                        await finalTranslator?.submit(
+                            finalID: "\(recipeID):fallback:\(index)",
+                            source: fragment.text,
+                            sourceStartSample: fragment.startSample,
+                            sourceEndSample: input.window.endSample,
+                            endpointUptimeNanoseconds: started
+                                + UInt64(input.samples.count) * 1_000_000_000 / 16_000
+                        )
+                    }
+                }
+                if JapaneseCER.normalized(fragments.map(\.text).joined())
+                    != JapaneseCER.normalized(final) {
+                    sessionErrors.append(
+                        "Voxtral clause text did not reconstruct its append-only final."
+                    )
+                }
+                confirmedPrefixRewrites = snapshot.confirmedPrefixRewrites
                 finalizedThrough = input.samples.count
                 finalLatencyScope = "capture-eos-final-after-last-speech"
                 finalLatencies = [max(
@@ -2026,9 +2446,42 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             preconditionFailure("External candidates use the Python adapter.")
         }
 
+        if benchmarkScope == "full-video" {
+            try await sleepCorrectiveReplay(
+                started: started,
+                through: input.analyzedThrough
+            )
+        }
+        let asrWallMilliseconds = elapsedMilliseconds(since: started)
+        let previewSummary = await previewTranslator?.finish() ?? .empty
+        let finalSummary = await finalTranslator?.finish() ?? .empty
         let wallMilliseconds = elapsedMilliseconds(since: started)
+        if benchmarkScope == "full-video", supportsOwnPreview, previewTranslator == nil {
+            sessionErrors.append(
+                "Apple lowLatency preview unavailable: \(previewServiceError ?? "unknown error")"
+            )
+        }
+        sessionErrors += previewSummary.events.compactMap(\.error).map {
+            "Apple lowLatency preview: \($0)"
+        }
+        sessionErrors += finalSummary.events.compactMap(\.error).map {
+            "Apple highFidelity final: \($0)"
+        }
+        if benchmarkScope == "full-video" {
+            finalLatencies = finalSummary.events.map(\.endpointToAcceptedMilliseconds)
+            finalLatencyScope = engine == .voxtralContinuous
+                ? "voxtral-clause-detected-to-accepted-apple-high-fidelity"
+                : "speech-end-to-accepted-apple-high-fidelity"
+        }
+        resourceSampler.cancel()
+        let resources = await resourceSampler.value
+        maximumResident = max(
+            maximumResident,
+            resources.maximumResidentBytes ?? 0
+        )
         return correctiveSession(
             engine: engine,
+            recipeID: recipeID,
             input: input,
             replay: replay,
             asrFedSampleCount: fedSamples,
@@ -2036,12 +2489,22 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             fragments: fragments,
             asrMilliseconds: timings,
             wallMilliseconds: wallMilliseconds,
+            asrWallMilliseconds: asrWallMilliseconds,
             maximumBacklogMilliseconds: max(0, maximumBacklog),
             endingBacklogMilliseconds: endingBacklog,
             maximumResidentBytes: maximumResident,
-            errors: [],
+            errors: sessionErrors,
             finalLatencyMilliseconds: finalLatencies,
             finalLatencyScope: finalLatencyScope,
+            previewRole: supportsOwnPreview ? "candidate-native" : "apple-speech-common",
+            previewLatencyScope: supportsOwnPreview
+                ? "source-phrase-start-to-accepted-apple-low-latency"
+                : "shared-apple-speech-control",
+            previewSummary: previewSummary,
+            confirmedPrefixRewriteCount: confirmedPrefixRewrites,
+            finalSummary: finalSummary,
+            resourceSummary: resources,
+            backlogApplicable: true,
             effectiveDecoder: (engine == .whisperTurbo || engine == .kotobaQ5)
                 ? decoding.rawValue : "native-fixed"
         )
@@ -2177,6 +2640,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
 
     private func correctiveSession(
         engine: JapaneseBakeoffEngine,
+        recipeID: String? = nil,
         input: JapaneseCorrectiveWindowInput,
         replay: Int,
         asrFedSampleCount: Int,
@@ -2184,14 +2648,24 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         fragments: [JapaneseCorrectiveFragment],
         asrMilliseconds: [Double],
         wallMilliseconds: Double,
+        asrWallMilliseconds: Double? = nil,
         maximumBacklogMilliseconds: Double,
         endingBacklogMilliseconds: Double,
         maximumResidentBytes: UInt64?,
         errors: [String],
         finalLatencyMilliseconds: [Double] = [],
         finalLatencyScope: String = "unavailable",
+        previewRole: String = "not-measured",
+        previewLatencyScope: String = "not-measured",
+        previewSummary: BenchmarkPreviewTranslationSummary = .empty,
+        confirmedPrefixRewriteCount: Int = 0,
+        finalSummary: BenchmarkFinalTranslationSummary = .empty,
+        englishValidationThroughOverride: Int? = nil,
+        resourceSummary: BenchmarkResourceSummary? = nil,
+        backlogApplicable: Bool = true,
         effectiveDecoder: String = "not-executed"
     ) -> JapaneseCorrectiveSession {
+        let effectiveRecipeID = recipeID ?? engine.rawValue
         let endpoints = input.decisions.map { decision in
             JapaneseCorrectiveEndpoint(
                 kind: decision.kind.rawValue,
@@ -2228,11 +2702,38 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             JapaneseBenchmarkSupport.lastSpeechEvidence(turn: $0, fragments: scorerFragments)
         }
         let audioMilliseconds = Double(input.samples.count) / 16
+        let analyzedThrough = min(max(0, input.analyzedThrough), input.samples.count)
+        let processedThrough = min(
+            analyzedThrough,
+            max(0, input.decisions.last?.stableThrough ?? 0)
+        )
+        let terminalSilenceStart = processedThrough < analyzedThrough
+            ? input.window.startSample + processedThrough : nil
+        let finalTranslationsMatchFragments = finalSummary.events.count == fragments.count
+            && zip(finalSummary.events, fragments).allSatisfy { event, fragment in
+                event.sourceStartSample == fragment.startSample
+                    && JapaneseCER.normalized(event.source)
+                        == JapaneseCER.normalized(fragment.text)
+            }
+        var englishValidatedThrough = input.window.startSample
+        for event in finalSummary.events {
+            guard event.error == nil,
+                  !event.english.isEmpty,
+                  event.sourceStartSample <= event.sourceEndSample,
+                  event.sourceEndSample >= englishValidatedThrough else { break }
+            englishValidatedThrough = event.sourceEndSample
+        }
+        if !finalSummary.events.isEmpty,
+           finalTranslationsMatchFragments,
+           finalSummary.events.allSatisfy({ $0.error == nil && !$0.english.isEmpty }),
+           let englishValidationThroughOverride {
+            englishValidatedThrough = englishValidationThroughOverride
+        }
         return JapaneseCorrectiveSession(
-            recipeID: engine.rawValue,
+            recipeID: effectiveRecipeID,
             effectiveDecoder: effectiveDecoder,
             effectiveRecipeSHA256: digest(Data(
-                "\(Self.modelRecipesSHA256)\u{0}\(engine.rawValue)\u{0}\(effectiveDecoder)".utf8
+                "\(Self.modelRecipesSHA256)\u{0}\(effectiveRecipeID)\u{0}\(effectiveDecoder)".utf8
             )),
             corpusID: input.window.corpusID,
             windowID: input.window.id,
@@ -2241,7 +2742,14 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             windowEndSample: input.window.endSample,
             expectedSampleCount: input.samples.count,
             asrFedSampleCount: asrFedSampleCount,
+            pcmAnalyzedThrough: input.window.startSample + analyzedThrough,
             asrFinalizedThrough: input.window.startSample + finalizedThrough,
+            englishValidatedThrough: englishValidatedThrough,
+            terminalSilenceStartSample: terminalSilenceStart,
+            terminalSilenceEndSample: terminalSilenceStart.map {
+                _ in input.window.startSample + analyzedThrough
+            },
+            unaccountedSampleCount: input.samples.count - analyzedThrough,
             endpointDecisionsSHA256: digest(endpointData),
             endpoints: endpoints,
             fragments: fragments,
@@ -2261,7 +2769,19 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             asrMilliseconds: asrMilliseconds,
             finalLatencyMilliseconds: finalLatencyMilliseconds,
             finalLatencyScope: finalLatencyScope,
+            previewRole: previewRole,
+            previewLatencyScope: previewLatencyScope,
+            previewEvents: previewSummary.events,
+            previewSourceFirstLatencyMilliseconds: previewSummary.sourceLatencies,
+            previewFirstLatencyMilliseconds: previewSummary.firstLatencies,
+            previewRevisionCount: previewSummary.revisions.reduce(0, +),
+            confirmedPrefixRewriteCount: confirmedPrefixRewriteCount,
+            finalTranslationEvents: finalSummary.events,
+            finalTranslationsAppendOnly:
+                finalSummary.appendOnly && finalTranslationsMatchFragments,
             audioMilliseconds: audioMilliseconds,
+            asrWallMilliseconds: asrWallMilliseconds ?? wallMilliseconds,
+            pipelineWallMilliseconds: wallMilliseconds,
             completionAfterAudioEndMilliseconds: max(0, wallMilliseconds - audioMilliseconds),
             computeRTF: audioMilliseconds > 0
                 ? asrMilliseconds.reduce(0, +) / audioMilliseconds : 0,
@@ -2269,6 +2789,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             maximumBacklogMilliseconds: maximumBacklogMilliseconds,
             endingBacklogMilliseconds: endingBacklogMilliseconds,
             maximumResidentBytes: maximumResidentBytes,
+            averageCPUPercent: resourceSummary?.averageCPUPercent,
+            thermalStateBefore: resourceSummary?.thermalStateBefore ?? "not-measured",
+            thermalStateAfter: resourceSummary?.thermalStateAfter ?? "not-measured",
+            backlogApplicable: backlogApplicable,
             errors: errors
         )
     }
@@ -2277,12 +2801,14 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         engine: JapaneseBakeoffEngine,
         windows: [JapaneseCorrectiveWindowInput],
         replayCount: Int,
-        message: String
+        message: String,
+        recipeID: String? = nil
     ) -> [JapaneseCorrectiveSession] {
         (1...replayCount).flatMap { replay in
             windows.map { input in
                 correctiveSession(
                     engine: engine,
+                    recipeID: recipeID,
                     input: input,
                     replay: replay,
                     asrFedSampleCount: 0,
@@ -2309,6 +2835,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         Double(DispatchTime.now().uptimeNanoseconds - started) / 1_000_000
     }
 
+    @available(macOS 26.4, *)
     private func runCorrectiveExternalEngine(
         _ engine: JapaneseBakeoffEngine,
         windows: [JapaneseCorrectiveWindowInput],
@@ -2316,7 +2843,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         replayCount: Int,
         root: URL,
         environment: [String: String],
-        runID: String
+        runID: String,
+        benchmarkScope: String,
+        finalService: AppleTranslationService?,
+        finalServiceError: String?
     ) async -> JapaneseCorrectiveEngineResult {
         var provenance = unresolvedProvenance(engine)
         do {
@@ -2340,7 +2870,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     engine: engine,
                     windows: windows,
                     replayCount: replayCount,
-                    message: error.localizedDescription
+                    message: error.localizedDescription,
+                    recipeID: correctiveRecipeID(engine: engine, environment: environment)
                 )
             )
         }
@@ -2348,7 +2879,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         var chosenDecoder = "greedy"
         var calibration: JapaneseCorrectiveCalibration?
         if engine == .mlxWhisperTurbo {
-            let greedy = executeCorrectiveExternal(
+            let greedy = await executeCorrectiveExternal(
                 engine,
                 windows: calibrationWindows,
                 replayCount: 1,
@@ -2357,9 +2888,12 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 root: root,
                 environment: environment,
                 runID: runID,
-                suffix: "calibration-greedy"
+                suffix: "calibration-greedy",
+                benchmarkScope: "calibration",
+                finalService: nil,
+                finalServiceError: nil
             )
-            let beam = executeCorrectiveExternal(
+            let beam = await executeCorrectiveExternal(
                 engine,
                 windows: calibrationWindows,
                 replayCount: 1,
@@ -2368,7 +2902,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 root: root,
                 environment: environment,
                 runID: runID,
-                suffix: "calibration-beam5"
+                suffix: "calibration-beam5",
+                benchmarkScope: "calibration",
+                finalService: nil,
+                finalServiceError: nil
             )
             let greedySessions = correctiveExternalSessions(
                 engine: engine,
@@ -2414,17 +2951,27 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             )
         }
 
-        let execution = executeCorrectiveExternal(
+        let whisperMLXMode = environment["WHISPERASR_WHISPERMLX_MODE"] ?? "long-form"
+        let batchAfterCapture = engine == .whisperMLXBatch
+            && whisperMLXMode == "long-form"
+        let execution = await executeCorrectiveExternal(
             engine,
             windows: windows,
             replayCount: replayCount,
             decoder: chosenDecoder,
-            realtime: engine == .mlxWhisperTurbo,
+            realtime: benchmarkScope == "full-video"
+                || engine == .mlxWhisperTurbo,
             root: root,
             environment: environment,
             runID: runID,
-            suffix: "replay"
+            suffix: "replay",
+            benchmarkScope: benchmarkScope,
+            finalService: finalService,
+            finalServiceError: finalServiceError
         )
+        provenance.setupMilliseconds = execution.response?.setupMilliseconds
+        provenance.warmupMilliseconds = execution.response?.warmupMilliseconds
+        provenance.startupMeasurementScope = "fresh-process-model-load-and-pinned-warmup"
         if let error = execution.error {
             return JapaneseCorrectiveEngineResult(
                 model: provenance,
@@ -2432,8 +2979,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 sessions: correctiveFailureSessions(
                     engine: engine,
                     windows: windows,
-                    replayCount: replayCount,
-                    message: error
+                replayCount: replayCount,
+                    message: error,
+                    recipeID: correctiveRecipeID(engine: engine, environment: environment)
                 )
             )
         }
@@ -2444,13 +2992,37 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 engine: engine,
                 windows: windows,
                 response: execution.response,
-                batchAfterCapture: engine == .whisperMLXBatch,
+                batchAfterCapture: batchAfterCapture,
                 decoder: engine == .whisperMLXBatch
-                    ? "native-long-form-silero" : chosenDecoder
+                    ? (batchAfterCapture
+                        ? "native-long-form-silero" : "product-vad-plus-native-silero")
+                    : chosenDecoder,
+                recipeID: correctiveRecipeID(engine: engine, environment: environment),
+                finalTranslations: execution.finalTranslations,
+                pipelineWallMilliseconds: execution.pipelineWallMilliseconds,
+                resourceSummaries: execution.resources
             )
         )
     }
 
+    private func stopCorrectiveExternalProcess(_ process: Process) async -> Bool {
+        guard process.isRunning else { return true }
+        process.terminate()
+        for _ in 0..<100 {
+            guard process.isRunning else { return true }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        if process.isRunning {
+            _ = Darwin.kill(process.processIdentifier, SIGKILL)
+        }
+        for _ in 0..<100 {
+            guard process.isRunning else { return true }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        return !process.isRunning
+    }
+
+    @available(macOS 26.4, *)
     private func executeCorrectiveExternal(
         _ engine: JapaneseBakeoffEngine,
         windows: [JapaneseCorrectiveWindowInput],
@@ -2460,8 +3032,11 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         root: URL,
         environment: [String: String],
         runID: String,
-        suffix: String
-    ) -> (response: JapaneseExternalASRResponse?, error: String?) {
+        suffix: String,
+        benchmarkScope: String,
+        finalService: AppleTranslationService?,
+        finalServiceError: String?
+    ) async -> JapaneseCorrectiveExternalExecution {
         do {
             let python = externalPythonURL(engine: engine, root: root, environment: environment)
             guard FileManager.default.isExecutableFile(atPath: python.path) else {
@@ -2524,18 +3099,18 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 corpora: corpora
             )
             request.decoder = decoder
+            request.mode = engine == .whisperMLXBatch
+                ? environment["WHISPERASR_WHISPERMLX_MODE"] ?? "long-form"
+                : "vad-finals"
+            request.emitEvents = benchmarkScope == "full-video"
+            request.waitForSessionAck = benchmarkScope == "full-video"
             request.windows = requestedWindows
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             try encoder.encode(request).write(to: requestURL, options: .atomic)
-            FileManager.default.createFile(atPath: stdoutURL.path, contents: nil)
             FileManager.default.createFile(atPath: stderrURL.path, contents: nil)
-            let stdout = try FileHandle(forWritingTo: stdoutURL)
             let stderr = try FileHandle(forWritingTo: stderrURL)
-            defer {
-                try? stdout.close()
-                try? stderr.close()
-            }
+            defer { try? stderr.close() }
             let adapterArguments = [
                 root.appendingPathComponent("Scripts/japanese_external_asr.py").path,
                 requestURL.path,
@@ -2556,21 +3131,246 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             }
             process.currentDirectoryURL = root
             process.environment = environment
-            process.standardOutput = stdout
+            let stdoutPipe = Pipe()
+            let stdinPipe = Pipe()
+            process.standardOutput = stdoutPipe
+            process.standardInput = stdinPipe
             process.standardError = stderr
             try process.run()
-            process.waitUntilExit()
+            let childPID = process.processIdentifier
+            let maximumRunSeconds = Int(ceil(
+                Double(requestedWindows.reduce(0) {
+                    $0 + max(0, $1.endSample - $1.startSample)
+                }) / 16_000
+            )) + 1_800
+            let deadline = Task.detached(priority: .utility) { () -> Bool in
+                do {
+                    try await Task.sleep(for: .seconds(maximumRunSeconds))
+                } catch {
+                    return false
+                }
+                _ = Darwin.kill(childPID, SIGTERM)
+                try? await Task.sleep(for: .seconds(5))
+                if Darwin.kill(childPID, 0) == 0 {
+                    _ = Darwin.kill(childPID, SIGKILL)
+                }
+                return true
+            }
+            var sessionStarts: [String: UInt64] = [:]
+            var resourceSamplers: [String: Task<BenchmarkResourceSummary, Never>] = [:]
+            var resources: [String: BenchmarkResourceSummary] = [:]
+            var finalTranslators: [String: BenchmarkFinalTranslator] = [:]
+            var finalTranslations: [String: BenchmarkFinalTranslationSummary] = [:]
+            var pipelineWallMilliseconds: [String: Double] = [:]
+            var translatedFinalizedThrough: [String: Int] = [:]
+            var lastTranslatedFragment: [String: (text: String, endSample: Int)] = [:]
+            var watchdog = BenchmarkBacklogWatchdog()
+            var watchdogFailure: String?
+            let sessionsRequiringACK = Set(requestedWindows.dropLast().map(\.sessionID))
+            let inputBySession = Dictionary(uniqueKeysWithValues: requestedWindows.compactMap {
+                window -> (String, JapaneseCorrectiveWindowInput)? in
+                guard let input = windows.first(where: {
+                    $0.window.id == window.windowID
+                }) else { return nil }
+                return (window.sessionID, input)
+            })
+            FileManager.default.createFile(atPath: stdoutURL.path, contents: nil)
+            let stdoutLog = try FileHandle(forWritingTo: stdoutURL)
+            defer { try? stdoutLog.close() }
+            do {
+                for try await line in stdoutPipe.fileHandleForReading.bytes.lines {
+                    try stdoutLog.write(contentsOf: Data("\(line)\n".utf8))
+                    guard let data = line.data(using: .utf8),
+                          let event = try? JSONDecoder().decode(
+                            JapaneseExternalASREvent.self,
+                            from: data
+                          ) else { continue }
+                    switch event.type {
+                    case "session-start":
+                        sessionStarts[event.sessionID] = DispatchTime.now().uptimeNanoseconds
+                        resourceSamplers[event.sessionID] = await MainActor.run {
+                            startBenchmarkResourceSampler {
+                                [parentPID = getpid(), childPID] in
+                                [parentPID, childPID]
+                            }
+                        }
+                        if benchmarkScope == "full-video" {
+                            finalTranslators[event.sessionID] = BenchmarkFinalTranslator(
+                                service: finalService,
+                                unavailableReason: finalServiceError
+                            )
+                        }
+                    case "final":
+                        guard benchmarkScope == "full-video",
+                              var source = event.hypothesisJapanese,
+                              let startSample = event.startSample,
+                              let endSample = event.endSample,
+                              let sessionStart = sessionStarts[event.sessionID],
+                              let input = inputBySession[event.sessionID],
+                              let translator = finalTranslators[event.sessionID] else { continue }
+                        let longForm = engine == .whisperMLXBatch
+                            && request.mode == "long-form"
+                        var translationStart = startSample
+                        var translationFragmentEnd = endSample
+                        let endpoint: UInt64
+                        if longForm {
+                            endpoint = sessionStart
+                                + UInt64(input.samples.count) * 1_000_000_000 / 16_000
+                        } else if let index = event.rangeIndex,
+                                  index < input.decisions.count {
+                            endpoint = sessionStart
+                                + UInt64(max(0, input.decisions[index].speechEnd))
+                                    * 1_000_000_000 / 16_000
+                        } else {
+                            endpoint = sessionStart
+                                + UInt64(max(0, endSample - input.window.startSample))
+                                    * 1_000_000_000 / 16_000
+                        }
+                        let validationEnd: Int
+                        if !longForm,
+                           let index = event.rangeIndex,
+                           index < input.decisions.count {
+                            let decision = input.decisions[index]
+                            let acceptedStart = max(
+                                translatedFinalizedThrough[event.sessionID] ?? 0,
+                                decision.audioStart
+                            )
+                            translationStart = input.window.startSample + acceptedStart
+                            if let previous = lastTranslatedFragment[event.sessionID],
+                               translationStart < previous.endSample {
+                                source = AppState.trimOverlap(
+                                    previous: previous.text,
+                                    current: source
+                                )
+                            }
+                            validationEnd = input.window.startSample
+                                + decision.stableThrough
+                            translationFragmentEnd = input.window.startSample
+                                + decision.speechEnd
+                            translatedFinalizedThrough[event.sessionID] = max(
+                                translatedFinalizedThrough[event.sessionID] ?? 0,
+                                decision.stableThrough
+                            )
+                        } else if longForm {
+                            validationEnd = endSample
+                        } else {
+                            continue
+                        }
+                        source = source.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !source.isEmpty else { continue }
+                        lastTranslatedFragment[event.sessionID] = (
+                            source,
+                            translationFragmentEnd
+                        )
+                        await translator.submit(
+                            finalID: "\(event.sessionID):\(event.rangeIndex ?? 0)",
+                            source: source,
+                            sourceStartSample: translationStart,
+                            sourceEndSample: validationEnd,
+                            endpointUptimeNanoseconds: endpoint
+                        )
+                    case "session-end":
+                        if let translator = finalTranslators[event.sessionID] {
+                            finalTranslations[event.sessionID] = await translator.finish()
+                        }
+                        if let sessionStart = sessionStarts[event.sessionID] {
+                            pipelineWallMilliseconds[event.sessionID] =
+                                elapsedMilliseconds(since: sessionStart)
+                        }
+                        if let sampler = resourceSamplers.removeValue(
+                            forKey: event.sessionID
+                        ) {
+                            sampler.cancel()
+                            resources[event.sessionID] = await sampler.value
+                        }
+                        if sessionsRequiringACK.contains(event.sessionID) {
+                            try stdinPipe.fileHandleForWriting.write(
+                                contentsOf: Data("\n".utf8)
+                            )
+                        }
+                    default:
+                        break
+                    }
+                    if let backlog = event.backlogMilliseconds,
+                       watchdog.observe(milliseconds: backlog) {
+                        watchdogFailure = "Backlog exceeded 30 seconds continuously for one minute."
+                        process.terminate()
+                        break
+                    }
+                }
+            } catch {
+                watchdogFailure = "External ASR event stream failed: \(error.localizedDescription)"
+                if process.isRunning { process.terminate() }
+            }
+            deadline.cancel()
+            let deadlineFired = await deadline.value
+            if deadlineFired {
+                watchdogFailure = "External ASR exceeded its bounded execution deadline."
+            }
+            let processStopped = await stopCorrectiveExternalProcess(process)
+            if !processStopped, watchdogFailure == nil {
+                watchdogFailure = "External ASR could not be stopped after SIGKILL."
+            }
+            for (sessionID, translator) in finalTranslators {
+                if finalTranslations[sessionID] == nil {
+                    finalTranslations[sessionID] = await translator.finish()
+                    if let sessionStart = sessionStarts[sessionID] {
+                        pipelineWallMilliseconds[sessionID] =
+                            elapsedMilliseconds(since: sessionStart)
+                    }
+                }
+            }
+            for (sessionID, sampler) in resourceSamplers {
+                sampler.cancel()
+                resources[sessionID] = await sampler.value
+            }
+            try? stdinPipe.fileHandleForWriting.close()
             let response = try JSONDecoder().decode(
                 JapaneseExternalASRResponse.self,
                 from: Data(contentsOf: responseURL)
             )
-            if let setupError = response.setupError { return (response, setupError) }
-            if process.terminationStatus != 0 {
-                return (response, "External ASR exited with status \(process.terminationStatus).")
+            if let setupError = response.setupError {
+                return JapaneseCorrectiveExternalExecution(
+                    response: response,
+                    error: setupError,
+                    finalTranslations: finalTranslations,
+                    pipelineWallMilliseconds: pipelineWallMilliseconds,
+                    resources: resources
+                )
             }
-            return (response, nil)
+            if let watchdogFailure {
+                return JapaneseCorrectiveExternalExecution(
+                    response: response,
+                    error: watchdogFailure,
+                    finalTranslations: finalTranslations,
+                    pipelineWallMilliseconds: pipelineWallMilliseconds,
+                    resources: resources
+                )
+            }
+            if process.terminationStatus != 0 {
+                return JapaneseCorrectiveExternalExecution(
+                    response: response,
+                    error: "External ASR exited with status \(process.terminationStatus).",
+                    finalTranslations: finalTranslations,
+                    pipelineWallMilliseconds: pipelineWallMilliseconds,
+                    resources: resources
+                )
+            }
+            return JapaneseCorrectiveExternalExecution(
+                response: response,
+                error: nil,
+                finalTranslations: finalTranslations,
+                pipelineWallMilliseconds: pipelineWallMilliseconds,
+                resources: resources
+            )
         } catch {
-            return (nil, error.localizedDescription)
+            return JapaneseCorrectiveExternalExecution(
+                response: nil,
+                error: error.localizedDescription,
+                finalTranslations: [:],
+                pipelineWallMilliseconds: [:],
+                resources: [:]
+            )
         }
     }
 
@@ -2579,14 +3379,44 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         windows: [JapaneseCorrectiveWindowInput],
         response: JapaneseExternalASRResponse?,
         batchAfterCapture: Bool,
-        decoder: String
+        decoder: String,
+        recipeID: String? = nil,
+        finalTranslations: [String: BenchmarkFinalTranslationSummary] = [:],
+        pipelineWallMilliseconds: [String: Double] = [:],
+        resourceSummaries: [String: BenchmarkResourceSummary] = [:]
     ) -> [JapaneseCorrectiveSession] {
         guard let response else { return [] }
         let inputs = Dictionary(uniqueKeysWithValues: windows.map { ($0.window.id, $0) })
         return (response.windows ?? []).compactMap { result in
             guard let input = inputs[result.windowID] else { return nil }
+            let expectedRanges: [(Int, Int)] = batchAfterCapture
+                ? [(input.window.startSample, input.window.endSample)]
+                : input.decisions.map {
+                    (
+                        input.window.startSample + $0.audioStart,
+                        input.window.startSample + $0.audioEnd
+                    )
+                }
+            let rangeFeedsComplete = result.fedSampleCount
+                    == result.ranges.reduce(0) { $0 + $1.fedSampleCount }
+                && result.ranges.allSatisfy { range in
+                    if engine == .mlxWhisperTurbo {
+                        return range.fedSampleCount == range.endSample - range.startSample
+                    }
+                    // whispermlx's native Silero VAD intentionally removes
+                    // silence before MLX, but every speech-bearing product
+                    // range must still reach the decoder.
+                    return range.fedSampleCount > 0
+                }
+            let rangesComplete = result.inputSampleCount == input.samples.count
+                && result.ranges.count == expectedRanges.count
+                && zip(result.ranges, expectedRanges).allSatisfy { range, expected in
+                    range.startSample == expected.0
+                        && range.endSample == expected.1
+                }
             var fragments: [JapaneseCorrectiveFragment] = []
-            if engine == .whisperMLXBatch, !result.segments.isEmpty {
+            var emptyProductFinalIndices: [Int] = []
+            if batchAfterCapture, !result.segments.isEmpty {
                 fragments = result.segments.compactMap { segment in
                     let start = input.window.startSample
                         + Int((segment.start * 16_000).rounded())
@@ -2619,11 +3449,15 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                             text: text,
                             asrMilliseconds: range.asrMilliseconds
                         ))
+                    } else {
+                        emptyProductFinalIndices.append(index)
                     }
                     finalized = max(finalized, decision.stableThrough)
                 }
             }
-            if fragments.isEmpty, !result.hypothesisJapanese.isEmpty {
+            if batchAfterCapture,
+               fragments.isEmpty,
+               !result.hypothesisJapanese.isEmpty {
                 fragments = [JapaneseCorrectiveFragment(
                     startSample: input.window.startSample,
                     endSample: input.window.endSample,
@@ -2634,11 +3468,17 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             let asrTimings = result.ranges.isEmpty
                 ? [result.asrMilliseconds] : result.ranges.map(\.asrMilliseconds)
             let rawWall = result.wallMilliseconds
-            let audioMilliseconds = Double(input.samples.count) / 16
-            let wall = batchAfterCapture ? audioMilliseconds + rawWall : rawWall
+            let wall = max(rawWall, pipelineWallMilliseconds[result.sessionID] ?? rawWall)
+            let finalSummary = finalTranslations[result.sessionID] ?? .empty
+            let resourceSummary = resourceSummaries[result.sessionID]
             let finalLatencies: [Double]
             let finalLatencyScope: String
-            if batchAfterCapture {
+            if !finalSummary.events.isEmpty {
+                finalLatencies = finalSummary.events.map(\.endpointToAcceptedMilliseconds)
+                finalLatencyScope = batchAfterCapture
+                    ? "capture-eos-to-accepted-apple-high-fidelity"
+                    : "speech-end-to-accepted-apple-high-fidelity"
+            } else if batchAfterCapture {
                 finalLatencies = [rawWall]
                 finalLatencyScope = "batch-after-capture"
             } else {
@@ -2650,22 +3490,57 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 }
                 finalLatencyScope = "product-vad-final-after-speech-end"
             }
+            var errors = result.error.map { [$0] } ?? []
+            if !rangesComplete {
+                errors.append("External ASR returned incomplete or reordered PCM ranges.")
+            }
+            if !rangeFeedsComplete {
+                errors.append(
+                    "External ASR did not forward every speech-bearing range to its decoder."
+                )
+            }
+            if !emptyProductFinalIndices.isEmpty {
+                errors.append(
+                    "External ASR returned empty product VAD finals at indices "
+                        + emptyProductFinalIndices.map(String.init).joined(separator: ",")
+                        + "."
+                )
+            }
+            errors += finalSummary.events.compactMap(\.error).map {
+                "Apple highFidelity final: \($0)"
+            }
             return correctiveSession(
                 engine: engine,
+                recipeID: recipeID,
                 input: input,
                 replay: result.replay,
                 asrFedSampleCount: result.fedSampleCount,
-                finalizedThrough: result.error == nil ? input.samples.count : 0,
+                finalizedThrough: result.error == nil && rangesComplete
+                    ? (batchAfterCapture
+                        ? input.samples.count
+                        : input.decisions.last?.stableThrough ?? 0)
+                    : 0,
                 fragments: fragments,
                 asrMilliseconds: asrTimings,
                 wallMilliseconds: wall,
+                asrWallMilliseconds: rawWall,
                 maximumBacklogMilliseconds: batchAfterCapture
-                    ? rawWall : (result.ranges.map(\.backlogMilliseconds).max() ?? 0),
+                    ? 0 : (result.ranges.map(\.backlogMilliseconds).max() ?? 0),
                 endingBacklogMilliseconds: 0,
-                maximumResidentBytes: result.residentBytes,
-                errors: result.error.map { [$0] } ?? [],
+                maximumResidentBytes: max(
+                    result.residentBytes,
+                    resourceSummary?.maximumResidentBytes ?? 0
+                ),
+                errors: errors,
                 finalLatencyMilliseconds: finalLatencies,
                 finalLatencyScope: finalLatencyScope,
+                previewRole: "apple-speech-common",
+                previewLatencyScope: "shared-apple-speech-control",
+                finalSummary: finalSummary,
+                englishValidationThroughOverride: batchAfterCapture
+                    ? input.window.endSample : nil,
+                resourceSummary: resourceSummary,
+                backlogApplicable: !batchAfterCapture,
                 effectiveDecoder: decoder
             )
         }
@@ -2680,6 +3555,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
 
     private func correctiveReport(
         runID: String,
+        benchmarkScope: String,
         gitCommit: String,
         sourceTreeSHA256: String,
         runtimeSHA256: String,
@@ -2688,35 +3564,46 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         recipeSHA: String,
         replayCount: Int,
         expectedEngines: [JapaneseBakeoffEngine],
-        windowCount: Int,
+        expectedWindowIDs: [String],
+        expectedRecipeIDs: [String],
         corpora: [JapaneseCorrectiveCorpus],
         models: [JapaneseBakeoffModelProvenance],
         calibrations: [JapaneseCorrectiveCalibration],
         sessions: [JapaneseCorrectiveSession]
     ) -> JapaneseCorrectiveReport {
-        let fullShape = expectedEngines == JapaneseBakeoffEngine.allCases
-            && replayCount == 3
-            && windowCount == JapaneseBenchmarkSupport.correctiveStressWindows.count
-        let expectedCount = JapaneseBakeoffEngine.allCases.count
-            * JapaneseBenchmarkSupport.correctiveStressWindows.count * 3
-        let expectedAttemptKeys = Set(JapaneseBakeoffEngine.allCases.flatMap { engine in
-            JapaneseBenchmarkSupport.correctiveStressWindows.flatMap { window in
-                (1...3).map { "\(engine.rawValue):\(window.id):\($0)" }
+        let expectedCount = expectedRecipeIDs.count * expectedWindowIDs.count * replayCount
+        let expectedAttemptKeys = Set(expectedRecipeIDs.flatMap { recipeID in
+            expectedWindowIDs.flatMap { windowID in
+                (1...replayCount).map { "\(recipeID):\(windowID):\($0)" }
             }
         })
         let actualAttemptKeys = sessions.map {
             "\($0.recipeID):\($0.windowID):\($0.replay)"
         }
-        let matrixAttempted = fullShape
+        let matrixAttempted = !expectedEngines.isEmpty
+            && expectedRecipeIDs.count == expectedEngines.count
             && sessions.count == expectedCount
             && Set(actualAttemptKeys) == expectedAttemptKeys
             && Set(actualAttemptKeys).count == actualAttemptKeys.count
         let matrixComplete = matrixAttempted
-            && sessions.allSatisfy {
-                $0.errors.isEmpty
-                    && !$0.japaneseFinal.isEmpty
-                    && $0.continuousCER != nil
-                    && $0.asrFinalizedThrough == $0.windowEndSample
+            && sessions.allSatisfy { session in
+                let requiredThrough = session.terminalSilenceStartSample
+                    ?? session.windowEndSample
+                let terminalSilenceValid = session.terminalSilenceStartSample == nil
+                    ? session.terminalSilenceEndSample == nil
+                    : session.terminalSilenceEndSample == session.windowEndSample
+                return session.errors.isEmpty
+                    && !session.japaneseFinal.isEmpty
+                    && session.continuousCER != nil
+                    && session.pcmAnalyzedThrough == session.windowEndSample
+                    && session.unaccountedSampleCount == 0
+                    && terminalSilenceValid
+                    && session.asrFinalizedThrough >= requiredThrough
+                    && session.asrFinalizedThrough <= session.windowEndSample
+                    && (benchmarkScope != "full-video"
+                        || (session.englishValidatedThrough >= requiredThrough
+                            && session.englishValidatedThrough <= session.windowEndSample
+                            && session.finalTranslationsAppendOnly))
             }
         let qualityAndResourceGates = sessions.allSatisfy {
             $0.lastSpeech?.heuristicPresent == true
@@ -2725,12 +3612,35 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 && $0.endingBacklogMilliseconds == 0
         }
         let deterministic = correctiveStability(sessions).allSatisfy {
-            $0.replayCount == 3 && $0.normalizedFinalsIdentical && $0.errorCount == 0
+            $0.replayCount == replayCount
+                && (replayCount == 1 || $0.normalizedFinalsIdentical)
+                && $0.errorCount == 0
         }
-        let finalP95 = percentile(sessions.flatMap(\.finalLatencyMilliseconds), fraction: 0.95)
+        let comparableFinalScope = "speech-end-to-accepted-apple-high-fidelity"
+        let finalLatencyGate = !sessions.isEmpty
+            && sessions.allSatisfy {
+                $0.finalLatencyScope == comparableFinalScope
+                    && !$0.finalLatencyMilliseconds.isEmpty
+                    && (percentile(
+                        $0.finalLatencyMilliseconds,
+                        fraction: 0.95
+                    ).map { $0 <= 1_500 } ?? false)
+            }
+        let previewLatencyGate = !sessions.isEmpty
+            && sessions.allSatisfy {
+                $0.previewRole == "candidate-native"
+                    && $0.previewLatencyScope
+                        == "source-phrase-start-to-accepted-apple-low-latency"
+                    && !$0.previewFirstLatencyMilliseconds.isEmpty
+                    && (percentile(
+                        $0.previewFirstLatencyMilliseconds,
+                        fraction: 0.95
+                    ).map { $0 <= 1_800 } ?? false)
+            }
         return JapaneseCorrectiveReport(
-            schemaVersion: 2,
+            schemaVersion: benchmarkScope == "full-video" ? 4 : 2,
             runID: runID,
+            benchmarkScope: benchmarkScope,
             gitCommit: gitCommit,
             sourceTreeSHA256: sourceTreeSHA256,
             runtimeSHA256: runtimeSHA256,
@@ -2740,7 +3650,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             generatedAt: ISO8601DateFormatter().string(from: Date()),
             sampleRate: 16_000,
             replayCount: replayCount,
-            expectedRecipeIDs: expectedEngines.map(\.rawValue),
+            expectedRecipeIDs: expectedRecipeIDs,
             matrixAttempted: matrixAttempted,
             matrixComplete: matrixComplete,
             promotionEligible: matrixComplete
@@ -2748,7 +3658,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 && networkDenied
                 && qualityAndResourceGates
                 && deterministic
-                && (finalP95.map { $0 <= 1_500 } ?? false)
+                && previewLatencyGate
+                && finalLatencyGate
                 && corpora.allSatisfy { $0.annotationStatus == "complete" },
             corpora: corpora,
             models: models,

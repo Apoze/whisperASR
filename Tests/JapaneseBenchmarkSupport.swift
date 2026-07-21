@@ -141,6 +141,16 @@ enum JapaneseBenchmarkSupport {
         let heuristicPresent: Bool
     }
 
+    struct EndpointSpeechObservation: Equatable, Sendable {
+        let observedThrough: Int
+        let ranges: [SpeechSampleRange]
+    }
+
+    struct ProductEndpointTrace: Sendable {
+        let decisions: [LocalEndpointDecision]
+        let speechObservations: [EndpointSpeechObservation]
+    }
+
     static let correctiveStressWindows = [
         StressWindow(
             id: "qudu-fast-1",
@@ -167,6 +177,15 @@ enum JapaneseBenchmarkSupport {
             endSample: 14_041_920
         ),
     ]
+
+    static func fullWindow(for manifest: Manifest) -> StressWindow {
+        StressWindow(
+            id: "\(manifest.corpusID)-full",
+            corpusID: manifest.corpusID,
+            startSample: 0,
+            endSample: manifest.fixture.sampleCount
+        )
+    }
 
     static func referenceTurns(
         manifest: Manifest,
@@ -598,8 +617,17 @@ enum JapaneseBenchmarkSupport {
         samples: [Float],
         manager: LocalEnglishModelManager
     ) async throws -> [LocalEndpointDecision] {
+        try await productEndpointTrace(samples: samples, manager: manager).decisions
+    }
+
+    @MainActor
+    static func productEndpointTrace(
+        samples: [Float],
+        manager: LocalEnglishModelManager
+    ) async throws -> ProductEndpointTrace {
         var planner = LocalEndpointPlanner()
         var decisions: [LocalEndpointDecision] = []
+        var observations: [EndpointSpeechObservation] = []
         let frameSamples = 1_600
         let vadWindowSamples = 48_000
         var totalSamples = 0
@@ -611,6 +639,10 @@ enum JapaneseBenchmarkSupport {
                 audio: Array(samples[windowStart..<totalSamples]),
                 windowStart: windowStart
             )
+            observations.append(EndpointSpeechObservation(
+                observedThrough: totalSamples,
+                ranges: speech
+            ))
             if let decision = planner.observe(totalSample: totalSamples, speech: speech) {
                 decisions.append(decision)
                 planner.stage(decision)
@@ -623,6 +655,12 @@ enum JapaneseBenchmarkSupport {
             audio: Array(samples[tailStart..<samples.count]),
             windowStart: tailStart
         )
+        if observations.last?.observedThrough != samples.count {
+            observations.append(EndpointSpeechObservation(
+                observedThrough: samples.count,
+                ranges: tailSpeech
+            ))
+        }
         if let decision = planner.observe(
             totalSample: samples.count,
             speech: tailSpeech,
@@ -630,7 +668,10 @@ enum JapaneseBenchmarkSupport {
         ) {
             decisions.append(decision)
         }
-        return decisions
+        return ProductEndpointTrace(
+            decisions: decisions,
+            speechObservations: observations
+        )
     }
 
     private static func mergeShortEndpointRanges(_ ranges: [Range<Int>]) -> [Range<Int>] {

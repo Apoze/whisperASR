@@ -36,11 +36,11 @@ Rejouer trois fois les quatre fenêtres difficiles continues avec chaque recette
 
 ## Preuves
 
-Les smoke tests corrigés prouvent déjà la couverture PCM complète de Voxtral et des deux politiques WhisperLiveKit. La preuve de clôture sera `l7b-aggregate-<stamp>/comparison.json`, qui exige les 120 clés uniques, les mêmes SHA corpus/recette/sources et le réseau bloqué.
+La preuve de clôture `l7b-aggregate-20260720T040910Z/comparison.json` exige et contient les 120 clés uniques, les mêmes SHA corpus/recette/sources et le réseau bloqué.
 
 ## Décision
 
-En validation. Aucun candidat ne passe à L7C avant une matrice `matrixAttempted=true`; `matrixComplete` reste séparé pour ne pas masquer les échecs réels des moteurs.
+Terminé au commit `4c30c4b`. La preuve `l7b-aggregate-20260720T040910Z/comparison.json` contient `matrixAttempted=true` avec 120/120 clés. `matrixComplete=false` conserve les vrais échecs; les médianes ne suffisent pas à classer les moteurs, notamment pour MLX direct et Voxtral sur `qudu-fast-1`.
 
 ## Rollback
 
