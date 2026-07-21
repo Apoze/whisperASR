@@ -25,9 +25,9 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L7 — Firefox et décision](lots/L07-firefox-decision.md) | L5, L6 | terminé, aucune promotion | quatre replays Firefox; aucun gagnant produit |
 | [L7A — Recettes natives](lots/L07A-recettes-natives.md) | L7 | terminé | dix recettes corrigées et épinglées |
 | [L7B — Replays corrigés](lots/L07B-replays-corriges.md) | L7A | terminé | 120 sessions tentées sur quatre fenêtres difficiles |
-| [L7C — Deux vidéos complètes](lots/L07C-deux-videos-completes.md) | L7B | en cours | tous les candidats comparés sur les mêmes captures |
-| L7D — Comparaison et décision | L7C | non créé | japonais, anglais, latence et ressources séparés |
-| L8 — Intégration gagnante | L7D | non créé, gate non atteint | un seul moteur produit |
+| [L7C — Deux vidéos complètes](lots/L07C-deux-videos-completes.md) | L7B | terminé | 22/22 sessions moteur, 2/2 previews et 470/470 contrôles tentés |
+| [L7D — Comparaison et décision](lots/L07D-comparaison-decision.md) | L7C | terminé, aucune promotion | Kotoba meilleur final observé; aucun pipeline ne passe tous les gates |
+| L8 — Intégration gagnante | L7D | bloqué, gate non atteint | un seul moteur produit |
 | L9 — Changements de voix | L8 | non démarré | frontières fiables, sans identité persistante |
 | L10 — Nettoyage et endurance | lots retenus | non démarré | application minimale, stable et hors ligne |
 

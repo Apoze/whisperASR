@@ -51,7 +51,9 @@ Les suites ciblées Release passent. La suite globale rencontre toujours le cras
 
 ## Décision
 
-En cours. Les erreurs qualité ne stoppent pas la matrice. Seuls PCM corrompu, pression système critique, boucle de crash, gel borné par le watchdog ou backlog >30 s pendant une minute peuvent interrompre une session.
+Terminé au run `20260721T173540Z` : 22/22 sessions moteur, 2/2 previews Apple et 470/470 traductions humaines ont été tentées. Les erreurs qualité ont été conservées sans arrêter la matrice. SimulStreaming et LocalAgreement ont été interrompus uniquement après un backlog supérieur à 30 secondes pendant une minute, conformément au protocole.
+
+Preuves de clôture : `.build/benchmarks/japanese-live/runs/l7c-aggregate-20260721T173540Z/`. La matrice est tentée intégralement mais non promotable : plusieurs moteurs perdent de la parole, dépassent les SLO ou échouent à traduire. Le classement appartient à L7D.
 
 ## Rollback
 
