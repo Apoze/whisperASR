@@ -7,7 +7,10 @@ Ce dossier pilote les expériences sans mélanger mesures, décisions et code pr
 ```text
 L0 ─▶ L1 ─▶ L2 ─▶ L3 ─▶ L4 ─▶ L5 ─▶ L6 ─▶ L7
                                       └── L6A conditionnel
-L7 ─▶ L7A ─▶ L7B ─▶ L7C ─▶ L7D ─▶ L8 ─▶ L9 ─▶ L10
+L7 ─▶ L7A ─▶ L7B ─▶ L7C ─▶ L7D
+                              └─▶ L8A ─▶ L8B ─▶ L8C ─▶ L8D
+                                                       ├─▶ L8E conditionnel
+                                                       └─▶ L8F ─▶ L9 ─▶ L10
 ```
 
 L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournies; L5 repart de ce PCM identique pour tous les candidats. Les sous-lots conditionnels ne sont créés qu'après échec mesuré de leur gate.
@@ -27,8 +30,13 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L7B — Replays corrigés](lots/L07B-replays-corriges.md) | L7A | terminé | 120 sessions tentées sur quatre fenêtres difficiles |
 | [L7C — Deux vidéos complètes](lots/L07C-deux-videos-completes.md) | L7B | terminé | 22/22 sessions moteur, 2/2 previews et 470/470 contrôles tentés |
 | [L7D — Comparaison et décision](lots/L07D-comparaison-decision.md) | L7C | terminé, aucune promotion | Kotoba meilleur final observé; aucun pipeline ne passe tous les gates |
-| L8 — Intégration gagnante | L7D | bloqué, gate non atteint | un seul moteur produit |
-| L9 — Changements de voix | L8 | non démarré | frontières fiables, sans identité persistante |
+| [L8A — Diagnostic Voxtral fiable](lots/L08A-diagnostic-voxtral.md) | L7D, décision utilisateur Voxtral | terminé | origine ASR/frontières/Apple et intégrité de fin mesurées |
+| L8B — Récupération de fin | L8A | non démarré | dernière parole conservée sans doublon |
+| L8C — Frontières japonaises | L8B | non démarré | clauses sûres pour Apple Translation |
+| L8D — Latence et ressources | L8C | non démarré | Q4/480 ou Q4/960 et cadence preview décidés |
+| L8E — Profils lexicaux | gate L8D | conditionnel | corrections exactes seulement si utiles |
+| L8F — Simplification Voxtral | L8D, L8E si retenu | non démarré | un seul moteur produit |
+| L9 — Changements de voix | L8F | non démarré | frontières fiables, sans identité persistante |
 | L10 — Nettoyage et endurance | lots retenus | non démarré | application minimale, stable et hors ligne |
 
 ## SLO et gates communs

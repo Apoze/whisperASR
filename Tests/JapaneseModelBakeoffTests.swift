@@ -487,6 +487,24 @@ private struct JapaneseCorrectiveEndpoint: Codable, Sendable {
     let detectedAtSample: Int
 }
 
+private struct JapaneseCorrectiveVoxtralBoundary: Codable, Sendable {
+    let kind: String
+    let degradation: String?
+    let startSample: Int
+    let endSample: Int
+    let detectedAtSample: Int
+    let stagedAtSample: Int
+}
+
+private struct JapaneseCorrectiveVoxtralEvidence: Codable, Sendable {
+    let lastVADSpeechEndSample: Int?
+    let lastStreamTextObservedAtSample: Int?
+    let lastUsefulTextObservedAtSample: Int?
+    let helperAcknowledgedThroughSample: Int?
+    let sourceStagedThroughSample: Int
+    let boundaries: [JapaneseCorrectiveVoxtralBoundary]
+}
+
 private struct JapaneseCorrectiveFragment: Codable, Sendable {
     let startSample: Int
     let endSample: Int
@@ -516,6 +534,7 @@ private struct JapaneseCorrectiveSession: Codable, Sendable {
     let englishValidatedThrough: Int
     let terminalSilenceStartSample: Int?
     let terminalSilenceEndSample: Int?
+    let voxtralEvidence: JapaneseCorrectiveVoxtralEvidence?
     let unaccountedSampleCount: Int
     let endpointDecisionsSHA256: String
     let endpoints: [JapaneseCorrectiveEndpoint]
@@ -526,6 +545,7 @@ private struct JapaneseCorrectiveSession: Codable, Sendable {
     let lastSpeech: JapaneseBenchmarkSupport.LastSpeechEvidence?
     let criticalTerms: JapaneseCorrectiveCriticalTerms
     let asrMilliseconds: [Double]
+    let finalSourceLatencyMilliseconds: [Double]
     let finalLatencyMilliseconds: [Double]
     let finalLatencyScope: String
     let previewRole: String
@@ -647,8 +667,13 @@ private actor JapaneseCorrectiveVoxtralCollector {
     private let final: BenchmarkFinalTranslator?
     private var transcript = ""
     private var fragments: [JapaneseCorrectiveFragment] = []
+    private var boundaries: [JapaneseCorrectiveVoxtralBoundary] = []
     private var lastPreview: (generation: Int, text: String)?
     private var confirmedPrefixRewrites = 0
+    private var lastVADSpeechEnd: Int?
+    private var lastStreamTextObservedAt: Int?
+    private var lastUsefulTextObservedAt: Int?
+    private var sourcePreviewFirstLatencyByGeneration: [Int: Double] = [:]
 
     init(
         windowStartSample: Int,
@@ -670,6 +695,12 @@ private actor JapaneseCorrectiveVoxtralCollector {
         case .delta(let text, let sentThrough):
             deltas.append((text, sentThrough))
             transcript += text
+            if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let observedAt = sentThrough.map(local)
+                    ?? acknowledgedThrough.map(local)
+                lastStreamTextObservedAt = observedAt
+                lastUsefulTextObservedAt = observedAt
+            }
             boundary = planner.observe(
                 delta: text,
                 fedThrough: local(sentThrough ?? acknowledgedThrough ?? windowStartSample),
@@ -690,6 +721,10 @@ private actor JapaneseCorrectiveVoxtralCollector {
                 return
             }
             self.transcript = transcript
+            if !finalDelta.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                lastUsefulTextObservedAt = sentThrough.map(local)
+                    ?? acknowledgedThrough.map(local)
+            }
             boundary = planner.finish(
                 delta: finalDelta,
                 fedThrough: local(sentThrough ?? acknowledgedThrough ?? windowStartSample)
@@ -720,6 +755,9 @@ private actor JapaneseCorrectiveVoxtralCollector {
         _ ranges: [SpeechSampleRange],
         observedThrough: Int
     ) async {
+        if let speechEnd = ranges.map(\.end).max() {
+            lastVADSpeechEnd = max(lastVADSpeechEnd ?? speechEnd, speechEnd)
+        }
         if let boundary = planner.observe(
             fedThrough: max(planner.fedThrough, observedThrough),
             speech: ranges
@@ -735,7 +773,9 @@ private actor JapaneseCorrectiveVoxtralCollector {
         completed: (transcript: String, sentThrough: Int?)?,
         failures: [String],
         fragments: [JapaneseCorrectiveFragment],
-        confirmedPrefixRewrites: Int
+        confirmedPrefixRewrites: Int,
+        sourcePreviewFirstLatencies: [Double],
+        evidence: JapaneseCorrectiveVoxtralEvidence
     ) {
         (
             deltas,
@@ -743,7 +783,25 @@ private actor JapaneseCorrectiveVoxtralCollector {
             completed,
             failures,
             fragments,
-            confirmedPrefixRewrites
+            confirmedPrefixRewrites,
+            sourcePreviewFirstLatencyByGeneration.keys.sorted().compactMap {
+                sourcePreviewFirstLatencyByGeneration[$0]
+            },
+            JapaneseCorrectiveVoxtralEvidence(
+                lastVADSpeechEndSample: lastVADSpeechEnd.map {
+                    windowStartSample + $0
+                },
+                lastStreamTextObservedAtSample: lastStreamTextObservedAt.map {
+                    windowStartSample + $0
+                },
+                lastUsefulTextObservedAtSample: lastUsefulTextObservedAt.map {
+                    windowStartSample + $0
+                },
+                helperAcknowledgedThroughSample: acknowledgedThrough,
+                sourceStagedThroughSample:
+                    windowStartSample + planner.sourceStagedThrough,
+                boundaries: boundaries
+            )
         )
     }
 
@@ -754,6 +812,14 @@ private actor JapaneseCorrectiveVoxtralCollector {
     private func stage(_ boundary: VoxtralClauseBoundary) async {
         let text = boundary.sourceText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
+        boundaries.append(JapaneseCorrectiveVoxtralBoundary(
+            kind: boundary.kind.rawValue,
+            degradation: boundary.degradation?.rawValue,
+            startSample: windowStartSample + boundary.sampleRange.lowerBound,
+            endSample: windowStartSample + boundary.sampleRange.upperBound,
+            detectedAtSample: windowStartSample + boundary.endpointDetectedAt,
+            stagedAtSample: windowStartSample + boundary.stagedAt
+        ))
         fragments.append(JapaneseCorrectiveFragment(
             startSample: windowStartSample + boundary.sampleRange.lowerBound,
             endSample: windowStartSample + boundary.sampleRange.upperBound,
@@ -785,6 +851,11 @@ private actor JapaneseCorrectiveVoxtralCollector {
         lastPreview = (current.generation, text)
         let phraseStart = sessionStart
             + UInt64(max(0, current.sampleRange.lowerBound)) * 1_000_000_000 / 16_000
+        if sourcePreviewFirstLatencyByGeneration[current.generation] == nil {
+            let received = DispatchTime.now().uptimeNanoseconds
+            sourcePreviewFirstLatencyByGeneration[current.generation] = received > phraseStart
+                ? Double(received - phraseStart) / 1_000_000 : 0
+        }
         await preview?.submit(
             source: text,
             phraseKey: UInt64(current.generation),
@@ -871,6 +942,25 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         XCTAssertEqual(score.rate, 0.6)
         XCTAssertTrue(lastSpeechPresent(reference: "私でも重いのかな", hypothesis: "私でも重いかな"))
         XCTAssertFalse(lastSpeechPresent(reference: "私でも重いのかな", hypothesis: "ありがとうございました"))
+    }
+
+    @available(macOS 26.4, *)
+    func testVoxtralDiagnosticCountsUsefulTextAddedAtCompletion() async {
+        let collector = JapaneseCorrectiveVoxtralCollector(
+            windowStartSample: 0,
+            sessionStart: DispatchTime.now().uptimeNanoseconds,
+            stabilityGuardSamples: 0,
+            preview: nil,
+            final: nil
+        )
+        await collector.observeSpeech([], observedThrough: 0)
+        await collector.accept(.delta(text: "前", sentThrough: 16_000))
+        await collector.accept(.completed(transcript: "前後", sentThrough: 32_000))
+
+        let evidence = await collector.snapshot().evidence
+        XCTAssertNil(evidence.lastVADSpeechEndSample)
+        XCTAssertEqual(evidence.lastStreamTextObservedAtSample, 16_000)
+        XCTAssertEqual(evidence.lastUsefulTextObservedAtSample, 32_000)
     }
 
     func testBakeoffScoringSeparatesPrimaryAndDiagnosticTurns() {
@@ -2112,6 +2202,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         var maximumResident = modelManager.currentMemoryBytes()
         var sessionErrors: [String] = []
         var confirmedPrefixRewrites = 0
+        var voxtralEvidence: JapaneseCorrectiveVoxtralEvidence?
+        var nativePreviewSourceLatencies: [Double]?
         var watchdog = BenchmarkBacklogWatchdog()
         let supportsOwnPreview = engine == .voxtralContinuous
             || engine == .nemotron1120
@@ -2419,6 +2511,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     )
                 }
                 confirmedPrefixRewrites = snapshot.confirmedPrefixRewrites
+                voxtralEvidence = snapshot.evidence
+                nativePreviewSourceLatencies = snapshot.sourcePreviewFirstLatencies
                 finalizedThrough = input.samples.count
                 finalLatencyScope = "capture-eos-final-after-last-speech"
                 finalLatencies = [max(
@@ -2455,6 +2549,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         let asrWallMilliseconds = elapsedMilliseconds(since: started)
         let previewSummary = await previewTranslator?.finish() ?? .empty
         let finalSummary = await finalTranslator?.finish() ?? .empty
+        let finalSourceLatencies = finalLatencies
         let wallMilliseconds = elapsedMilliseconds(since: started)
         if benchmarkScope == "full-video", supportsOwnPreview, previewTranslator == nil {
             sessionErrors.append(
@@ -2468,7 +2563,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             "Apple highFidelity final: \($0)"
         }
         if benchmarkScope == "full-video" {
-            finalLatencies = finalSummary.events.map(\.endpointToAcceptedMilliseconds)
+            finalLatencies = finalSummary.events.compactMap {
+                $0.error == nil ? $0.endpointToAcceptedMilliseconds : nil
+            }
             finalLatencyScope = engine == .voxtralContinuous
                 ? "voxtral-clause-detected-to-accepted-apple-high-fidelity"
                 : "speech-end-to-accepted-apple-high-fidelity"
@@ -2494,6 +2591,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             endingBacklogMilliseconds: endingBacklog,
             maximumResidentBytes: maximumResident,
             errors: sessionErrors,
+            finalSourceLatencyMilliseconds: finalSourceLatencies,
             finalLatencyMilliseconds: finalLatencies,
             finalLatencyScope: finalLatencyScope,
             previewRole: supportsOwnPreview ? "candidate-native" : "apple-speech-common",
@@ -2501,7 +2599,9 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 ? "source-phrase-start-to-accepted-apple-low-latency"
                 : "shared-apple-speech-control",
             previewSummary: previewSummary,
+            previewSourceLatenciesOverride: nativePreviewSourceLatencies,
             confirmedPrefixRewriteCount: confirmedPrefixRewrites,
+            voxtralEvidence: voxtralEvidence,
             finalSummary: finalSummary,
             resourceSummary: resources,
             backlogApplicable: true,
@@ -2653,12 +2753,15 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         endingBacklogMilliseconds: Double,
         maximumResidentBytes: UInt64?,
         errors: [String],
+        finalSourceLatencyMilliseconds: [Double] = [],
         finalLatencyMilliseconds: [Double] = [],
         finalLatencyScope: String = "unavailable",
         previewRole: String = "not-measured",
         previewLatencyScope: String = "not-measured",
         previewSummary: BenchmarkPreviewTranslationSummary = .empty,
+        previewSourceLatenciesOverride: [Double]? = nil,
         confirmedPrefixRewriteCount: Int = 0,
+        voxtralEvidence: JapaneseCorrectiveVoxtralEvidence? = nil,
         finalSummary: BenchmarkFinalTranslationSummary = .empty,
         englishValidationThroughOverride: Int? = nil,
         resourceSummary: BenchmarkResourceSummary? = nil,
@@ -2749,6 +2852,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             terminalSilenceEndSample: terminalSilenceStart.map {
                 _ in input.window.startSample + analyzedThrough
             },
+            voxtralEvidence: voxtralEvidence,
             unaccountedSampleCount: input.samples.count - analyzedThrough,
             endpointDecisionsSHA256: digest(endpointData),
             endpoints: endpoints,
@@ -2767,12 +2871,14 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 missing: missing
             ),
             asrMilliseconds: asrMilliseconds,
+            finalSourceLatencyMilliseconds: finalSourceLatencyMilliseconds,
             finalLatencyMilliseconds: finalLatencyMilliseconds,
             finalLatencyScope: finalLatencyScope,
             previewRole: previewRole,
             previewLatencyScope: previewLatencyScope,
             previewEvents: previewSummary.events,
-            previewSourceFirstLatencyMilliseconds: previewSummary.sourceLatencies,
+            previewSourceFirstLatencyMilliseconds:
+                previewSourceLatenciesOverride ?? previewSummary.sourceLatencies,
             previewFirstLatencyMilliseconds: previewSummary.firstLatencies,
             previewRevisionCount: previewSummary.revisions.reduce(0, +),
             confirmedPrefixRewriteCount: confirmedPrefixRewriteCount,
