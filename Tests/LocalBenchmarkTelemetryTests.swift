@@ -45,6 +45,20 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
             helperProcessIdentifier: 42,
             endpointFIFOCount: 2
         )
+        await recorder.appendVoxtralSession(LocalVoxtralSessionMetric(
+            startSample: 0,
+            targetSample: 16_000,
+            endSample: 16_000,
+            lastSpeechEndSample: 15_000,
+            helperProcessIdentifier: 42,
+            acknowledgedThroughSample: 16_000,
+            endingBacklogSamples: 0,
+            captureBacklogAfterFlushSamples: 0,
+            flushMilliseconds: 12,
+            captureEnded: false,
+            transcriptCharacterCount: 6
+        ))
+        await recorder.markLastVoxtralSessionCaptureEnded()
 
         let sessionID = UUID()
         let stem = LocalBenchmarkOutput.stem(
@@ -127,6 +141,16 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         XCTAssertEqual(json["maximumCombinedResidentBytes"] as? Int, 4_000)
         XCTAssertEqual(json["maximumHelperBacklogSamples"] as? Int, 320)
         XCTAssertEqual(json["maximumEndpointFIFOCount"] as? Int, 2)
+        let voxtralSessions = try XCTUnwrap(
+            json["voxtralSessions"] as? [[String: Any]]
+        )
+        XCTAssertEqual(voxtralSessions.first?["endSample"] as? Int, 16_000)
+        XCTAssertEqual(voxtralSessions.first?["captureEnded"] as? Bool, true)
+        XCTAssertNil(voxtralSessions.first?["targetSample"])
+        XCTAssertEqual(
+            voxtralSessions.first?["lastSpeechEndSample"] as? Int,
+            15_000
+        )
         XCTAssertEqual(json["whisperCandidate"] as? String, "turbo")
         XCTAssertEqual(json["whisperModelSHA256"] as? String, "model-sha")
         XCTAssertEqual(json["voxtralModelID"] as? String, VoxtralModelVariant.q6.modelID)

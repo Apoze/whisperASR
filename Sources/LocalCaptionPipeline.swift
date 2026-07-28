@@ -471,6 +471,20 @@ struct LocalCaptionMetric: Codable, Sendable {
     var finalSegmentIndex: Int? = nil
 }
 
+struct LocalVoxtralSessionMetric: Codable, Sendable {
+    let startSample: Int
+    var targetSample: Int?
+    let endSample: Int
+    let lastSpeechEndSample: Int?
+    let helperProcessIdentifier: Int32?
+    let acknowledgedThroughSample: Int?
+    let endingBacklogSamples: Int
+    let captureBacklogAfterFlushSamples: Int
+    let flushMilliseconds: Double
+    var captureEnded: Bool
+    let transcriptCharacterCount: Int
+}
+
 actor LocalCaptionMetricRecorder {
     private let enabled: Bool
     private var records: [LocalCaptionMetric] = []
@@ -478,6 +492,7 @@ actor LocalCaptionMetricRecorder {
     private var maximumHelperBacklogSamples = 0
     private var maximumEndpointFIFOCount = 0
     private var helperProcessIdentifier: Int32?
+    private var voxtralSessions: [LocalVoxtralSessionMetric] = []
 
     init(
         enabled: Bool = ProcessInfo.processInfo.environment["WHISPERASR_BENCHMARK"] == "1"
@@ -492,10 +507,21 @@ actor LocalCaptionMetricRecorder {
         maximumHelperBacklogSamples = 0
         maximumEndpointFIFOCount = 0
         helperProcessIdentifier = nil
+        voxtralSessions.removeAll(keepingCapacity: true)
     }
 
     func append(_ metric: LocalCaptionMetric) {
         if enabled { records.append(metric) }
+    }
+
+    func appendVoxtralSession(_ session: LocalVoxtralSessionMetric) {
+        if enabled { voxtralSessions.append(session) }
+    }
+
+    func markLastVoxtralSessionCaptureEnded() {
+        guard enabled, !voxtralSessions.isEmpty else { return }
+        voxtralSessions[voxtralSessions.count - 1].targetSample = nil
+        voxtralSessions[voxtralSessions.count - 1].captureEnded = true
     }
 
     func observe(
@@ -564,6 +590,7 @@ actor LocalCaptionMetricRecorder {
             maximumCombinedResidentBytes: maximumCombinedResidentBytes,
             maximumHelperBacklogSamples: maximumHelperBacklogSamples,
             maximumEndpointFIFOCount: maximumEndpointFIFOCount,
+            voxtralSessions: voxtralSessions,
             metricsFile: file.lastPathComponent,
             metricsSHA256: try LocalBenchmarkOutput.sha256(file),
             metricsCSVFile: csv.lastPathComponent,
@@ -690,6 +717,7 @@ private struct LocalCaptionBenchmarkSessionReport: Codable {
     let maximumCombinedResidentBytes: UInt64
     let maximumHelperBacklogSamples: Int
     let maximumEndpointFIFOCount: Int
+    let voxtralSessions: [LocalVoxtralSessionMetric]
     let metricsFile: String
     let metricsSHA256: String
     let metricsCSVFile: String

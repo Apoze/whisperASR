@@ -618,6 +618,9 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             let finalSampleCount: Int
             let pcmComplete: Bool
             let m4aDroppedSampleCount: Int
+            let helperSentThrough: Int?
+            let helperAcknowledgedThrough: Int?
+            let endingHelperBacklogSamples: Int?
             let sourceStagedThrough: Int
             let englishValidatedThrough: Int
             let committedSampleCount: Int
@@ -633,6 +636,17 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             let capturedApplicationProcessIdentifier: Int32?
             let microphoneIncluded: Bool?
         }
+        struct VoxtralSession: Decodable {
+            let startSample: Int
+            let targetSample: Int?
+            let endSample: Int
+            let lastSpeechEndSample: Int?
+            let helperProcessIdentifier: Int32?
+            let acknowledgedThroughSample: Int?
+            let endingBacklogSamples: Int
+            let captureEnded: Bool
+            let transcriptCharacterCount: Int
+        }
         let summary: Summary
         let maximumCombinedResidentBytes: UInt64
         let maximumEndpointFIFOCount: Int?
@@ -645,6 +659,12 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let whisperModelRevision: String?
         let whisperModelFile: String?
         let whisperModelSHA256: String?
+        let voxtralModelID: String?
+        let voxtralModelRevision: String?
+        let voxtralRuntimePatchSHA256: String?
+        let voxtralDelayMilliseconds: Int?
+        let transportBlockMilliseconds: Int?
+        let voxtralSessions: [VoxtralSession]?
     }
 
     private struct Identity: Codable {
@@ -658,6 +678,7 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let canonicalAudio: Identity
         let firefoxAudio: Identity
         let metrics: Identity
+        let oracle: Identity
     }
 
     private struct Coverage: Codable, Equatable {
@@ -1099,7 +1120,8 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                 manifest: identity,
                 canonicalAudio: identity,
                 firefoxAudio: identity,
-                metrics: identity
+                metrics: identity,
+                oracle: identity
             ),
             coverage: coverage,
             groups: groups
@@ -1140,7 +1162,8 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                 manifest: identity,
                 canonicalAudio: identity,
                 firefoxAudio: identity,
-                metrics: identity
+                metrics: identity,
+                oracle: identity
             ),
             coverage: coverage(groups: groups),
             groups: groups
@@ -1208,7 +1231,9 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         )
         if ["qudu2fx3ncc", "md62mmdz0m"].contains(manifest.corpusID) {
             guard session.summary.pcmComplete,
-                  session.summary.engine == "whisperTurboApple",
+                  ["whisperTurboApple", "voxtralApple"].contains(
+                    session.summary.engine
+                  ),
                   session.summary.translationMode == "adaptive",
                   session.summary.finalSampleCount == firefox.count,
                   session.summary.endingEndpointFIFOCount == 0,
@@ -1239,34 +1264,92 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                   session.maximumCombinedResidentBytes <= baselinePlusTwentyPercent else {
                 throw inputError("Observed resident memory exceeds the L7 gate.")
             }
-            guard let candidate = session.whisperCandidate,
-                  let modelID = session.whisperModelID,
-                  let revision = session.whisperModelRevision,
-                  let modelSHA256 = session.whisperModelSHA256,
-                  session.whisperModelFile?.isEmpty == false else {
-                throw inputError("The final Whisper model is not pinned in the L7 sidecar.")
-            }
-            let expectedModel: (id: String, revision: String, sha256: String)
-            switch candidate {
-            case "turbo":
-                expectedModel = (
-                    "large-v3-turbo",
-                    "5359861c739e955e79d9a303bcbc70fb988958b1",
-                    "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
-                )
-            case "kotoba-q5":
-                expectedModel = (
-                    LocalWhisperModelSelection.kotobaModelID,
-                    LocalWhisperModelSelection.kotobaRevision,
-                    LocalWhisperModelSelection.kotobaSHA256
-                )
-            default:
-                throw inputError("Unexpected L7 Whisper candidate: \(candidate).")
-            }
-            guard modelID == expectedModel.id,
-                  revision == expectedModel.revision,
-                  modelSHA256 == expectedModel.sha256 else {
-                throw inputError("The L7 model identity differs from its pinned candidate.")
+            if session.summary.engine == "voxtralApple" {
+                guard session.voxtralModelID == VoxtralHelperManifest.modelID,
+                      session.voxtralModelRevision
+                        == VoxtralHelperManifest.modelRevision,
+                      session.voxtralRuntimePatchSHA256
+                        == VoxtralHelperManifest.runtimePatchSHA256,
+                      session.voxtralDelayMilliseconds
+                        == VoxtralHelperManifest.transcriptionDelayMilliseconds,
+                      session.transportBlockMilliseconds
+                        == VoxtralHelperManifest.transportBlockMilliseconds,
+                      session.summary.helperSentThrough
+                        == session.summary.finalSampleCount,
+                      session.summary.helperAcknowledgedThrough
+                        == session.summary.finalSampleCount,
+                      session.summary.endingHelperBacklogSamples == 0,
+                      let sessions = session.voxtralSessions,
+                      sessions.count >= 2,
+                      sessions.first?.startSample == 0,
+                      sessions.last?.endSample == session.summary.finalSampleCount,
+                      sessions.last?.captureEnded == true,
+                      sessions.last?.targetSample == nil,
+                      sessions.allSatisfy({
+                          $0.helperProcessIdentifier != nil
+                              && $0.endSample > $0.startSample
+                              && $0.transcriptCharacterCount > 0
+                      }),
+                      Set(sessions.compactMap(\.helperProcessIdentifier)).count == 1,
+                      zip(sessions, sessions.dropFirst()).allSatisfy({
+                          $0.endSample == $1.startSample
+                      }),
+                      sessions.dropLast().allSatisfy({ item in
+                          guard let target = item.targetSample,
+                                let lastSpeechEnd = item.lastSpeechEndSample else {
+                              return false
+                          }
+                          return item.captureEnded == false
+                              && target == item.startSample
+                                  + AppState.continuousVoxtralRotationTargetSamples
+                              && item.endSample >= target
+                              && item.endSample - lastSpeechEnd
+                                  >= LocalEndpointPlanner.postRoll
+                      }),
+                      sessions.allSatisfy({
+                          $0.acknowledgedThroughSample == $0.endSample
+                              && $0.endingBacklogSamples == 0
+                      }) else {
+                    throw inputError(
+                        "The Voxtral model or rotated PCM sessions are not pinned and complete."
+                    )
+                }
+            } else {
+                guard let candidate = session.whisperCandidate,
+                      let modelID = session.whisperModelID,
+                      let revision = session.whisperModelRevision,
+                      let modelSHA256 = session.whisperModelSHA256,
+                      session.whisperModelFile?.isEmpty == false else {
+                    throw inputError(
+                        "The final Whisper model is not pinned in the L7 sidecar."
+                    )
+                }
+                let expectedModel: (id: String, revision: String, sha256: String)
+                switch candidate {
+                case "turbo":
+                    expectedModel = (
+                        "large-v3-turbo",
+                        "5359861c739e955e79d9a303bcbc70fb988958b1",
+                        "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
+                    )
+                case "kotoba-q5":
+                    expectedModel = (
+                        LocalWhisperModelSelection.kotobaModelID,
+                        LocalWhisperModelSelection.kotobaRevision,
+                        LocalWhisperModelSelection.kotobaSHA256
+                    )
+                default:
+                    throw inputError(
+                        "Unexpected L7 Whisper candidate: \(candidate)."
+                    )
+                }
+                guard modelID == expectedModel.id,
+                      revision == expectedModel.revision,
+                      modelSHA256 == expectedModel.sha256 else {
+                    throw inputError(
+                        "The L7 model identity differs from its pinned candidate."
+                    )
+                }
             }
             guard let finalizedThrough = session.summary.sourceFinalizedThrough,
                   let lastAnnotatedSample = manifest.annotations.turns.map(\.endSample).max(),
@@ -1414,7 +1497,8 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             manifest: try identity(manifestURL),
             canonicalAudio: try identity(canonicalURL),
             firefoxAudio: try identity(firefoxURL),
-            metrics: try identity(metricsURL)
+            metrics: try identity(metricsURL),
+            oracle: try identity(URL(fileURLWithPath: #filePath))
         )
         let firstPreviewMetrics = previews.first
         let previewLatency = latencyEvidence(

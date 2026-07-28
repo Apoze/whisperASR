@@ -33,7 +33,7 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L8A — Diagnostic Voxtral fiable](lots/L08A-diagnostic-voxtral.md) | L7D, décision utilisateur Voxtral | terminé | origine ASR/frontières/Apple et intégrité de fin mesurées |
 | [L8B — Récupération de fin](lots/L08B-recuperation-fin.md) | L8A | terminé, bloqué | reprises rejetées; chemin produit restauré |
 | [L8B2 — Rotation expérimentale](lots/L08B2-rotation-experimentale.md) | L8B | terminé | rotation 720 s stable sur 1 screening et 2 confirmations |
-| L8B3 — Rotation produit | L8B2 | non démarré | session normale renouvelée à une pause VAD sûre |
+| [L8B3 — Rotation produit](lots/L08B3-rotation-produit.md) | L8B2 | terminé | rotation sûre sur les deux vidéos, même helper et PCM intégral |
 | L8C — Frontières japonaises | L8B3 | non démarré | clauses sûres pour Apple Translation |
 | L8D — Latence et ressources | L8C | non démarré | Q4/480 ou Q4/960 et cadence preview décidés |
 | L8E — Profils lexicaux | gate L8D | conditionnel | corrections exactes seulement si utiles |

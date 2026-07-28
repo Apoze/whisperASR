@@ -99,9 +99,11 @@
         "acceleration": "MLX"
       },
       "execution": {
-        "sessionScope": "one-session-per-capture",
+        "sessionScope": "continuous-capture-with-safe-rotation",
         "boundarySource": "continuous-transcript-plus-product-vad",
-        "resetPolicy": "finish-only",
+        "resetPolicy": "vad-pause-at-720s-or-finish",
+        "rotationTargetSeconds": 720,
+        "rotationPostRollMilliseconds": 500,
         "language": "ja",
         "task": "transcribe",
         "transportBlockMilliseconds": 160,

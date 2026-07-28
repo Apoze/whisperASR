@@ -219,6 +219,12 @@ private enum LiveSessionClosureOperation {
     case cancel
 }
 
+private enum ContinuousVoxtralProducerOutcome {
+    case captureEnded(LocalVoxtralSessionMetric?)
+    case rotate(LocalVoxtralSessionMetric)
+    case failed(Error)
+}
+
 private struct LocalPreparationKey: Equatable {
     let engine: LocalEnglishEngine
     let translationMode: AppleTranslationMode
@@ -337,6 +343,10 @@ class AppState {
     private var localContinuousVoxtralTranscript = ""
     private var localContinuousVoxtralFailure: String?
     private var localContinuousVoxtralCatchUpThrough: Int?
+    private var localContinuousVoxtralSessionStartSample = 0
+    private var localContinuousVoxtralLastSpeechEndSample: Int?
+    private var localContinuousVoxtralCaptureEndsOnCompletion = true
+    private var localContinuousVoxtralRotationPlanner = LocalEndpointPlanner()
     private var localContinuousVoxtralBoundaryQueue: [VoxtralClauseBoundary] = []
     private var localContinuousVoxtralBoundaryDrainActive = false
     private var localContinuousVoxtralLastStagedGeneration = -1
@@ -456,6 +466,22 @@ class AppState {
     /// the live tail rather than waiting longer. Kept well under `maxChunkSamples` so the live tail
     /// is always transcribed and no audio is silently dropped.
     private static let forceChunkSamples = 16000 * 12
+    static let continuousVoxtralRotationTargetSamples =
+        720 * VoxtralClausePlanner.sampleRate
+
+    static func continuousVoxtralRotationEndSample(
+        sessionStart: Int,
+        sentThrough: Int,
+        decision: LocalEndpointDecision?,
+        captureEnded: Bool
+    ) -> Int? {
+        guard !captureEnded,
+              let decision,
+              decision.kind == .pause else { return nil }
+        let end = max(sentThrough, decision.audioEnd)
+        return end - sessionStart >= continuousVoxtralRotationTargetSamples
+            ? end : nil
+    }
 
     init() {
         let defaults = UserDefaults.standard
@@ -1801,6 +1827,9 @@ class AppState {
         localContinuousVoxtralTranscript = ""
         localContinuousVoxtralFailure = nil
         localContinuousVoxtralCatchUpThrough = nil
+        localContinuousVoxtralSessionStartSample = 0
+        localContinuousVoxtralLastSpeechEndSample = nil
+        localContinuousVoxtralRotationPlanner = LocalEndpointPlanner()
         localContinuousVoxtralBoundaryQueue = []
         localContinuousVoxtralBoundaryDrainActive = false
         localContinuousVoxtralLastStagedGeneration = -1
@@ -2211,9 +2240,9 @@ class AppState {
         }
     }
 
-    /// The production Voxtral path owns one helper session for the complete
-    /// recording. Logical subtitle boundaries only stage text for Apple; they
-    /// never finish, reset, or replay the ASR stream.
+    /// The production Voxtral path owns one helper process for the complete
+    /// recording. Long sessions rotate only on safe VAD silence; logical
+    /// subtitle boundaries never reset or replay the ASR stream.
     @available(macOS 26.4, *)
     @MainActor
     private func runContinuousVoxtralAppleCaptions(
@@ -2244,6 +2273,9 @@ class AppState {
         localContinuousVoxtralTranscript = ""
         localContinuousVoxtralFailure = nil
         localContinuousVoxtralCatchUpThrough = nil
+        localContinuousVoxtralSessionStartSample = 0
+        localContinuousVoxtralLastSpeechEndSample = nil
+        localContinuousVoxtralRotationPlanner = LocalEndpointPlanner()
         localContinuousVoxtralBoundaryQueue = []
         localContinuousVoxtralBoundaryDrainActive = false
         localContinuousVoxtralLastStagedGeneration = -1
@@ -2283,20 +2315,50 @@ class AppState {
             sourceLocale: sourceLocale,
             fifo: fifo
         )
-        var restartCount = 0
+        var recoveryUsed = false
+        var recoverNextSession = false
+        var helperProcessIdentifier: Int32?
 
-        while !Task.isCancelled {
+        sessionLoop: while !Task.isCancelled {
+            if recorder.sealedFinalSampleCount == localPreviewSentSampleCount {
+                await localMetricRecorder.markLastVoxtralSessionCaptureEnded()
+                await finishContinuousVoxtralClauses(fifo: fifo)
+                break
+            }
             let voxtralEvents: AsyncStream<VoxtralHelperEvent>
             do {
-                if restartCount == 0 {
-                    voxtralEvents = try await localModelManager.startContinuousVoxtral()
-                } else {
+                let recovering = recoverNextSession
+                if recovering {
                     voxtralEvents = try await localModelManager.recoverContinuousVoxtral()
+                    recoverNextSession = false
+                } else {
+                    voxtralEvents = try await localModelManager.startContinuousVoxtral()
                 }
+                let process = await localModelManager.continuousVoxtralProgress()
+                    .helperProcessIdentifier
+                guard let process else {
+                    throw VoxtralHelperError.serverUnavailable(
+                        "Voxtral helper has no live process."
+                    )
+                }
+                if !recovering, let helperProcessIdentifier,
+                          process != helperProcessIdentifier {
+                    throw VoxtralHelperError.serverUnavailable(
+                        "Normal Voxtral rotation replaced the helper process."
+                    )
+                }
+                helperProcessIdentifier = process
             } catch {
+                await localModelManager.cancelContinuousVoxtral()
                 localContinuousVoxtralFailure = "Voxtral helper could not start: \(error.localizedDescription)"
                 localSourcePipelineFailure = localContinuousVoxtralFailure
                 liveError = localContinuousVoxtralFailure
+                break
+            }
+            if recorder.sealedFinalSampleCount == localPreviewSentSampleCount {
+                await localModelManager.cancelContinuousVoxtral()
+                await localMetricRecorder.markLastVoxtralSessionCaptureEnded()
+                await finishContinuousVoxtralClauses(fifo: fifo)
                 break
             }
 
@@ -2309,33 +2371,73 @@ class AppState {
                     }
                 }
             }
-            let producerError = await produceContinuousVoxtralAudio(
+            let outcome = await produceContinuousVoxtralAudio(
                 recorder: recorder,
                 fifo: fifo
             )
 
-            if producerError == nil {
+            var producerError: Error?
+            switch outcome {
+            case .captureEnded(let metric):
                 await eventTask.value
-                break
+                if let failure = localContinuousVoxtralFailure {
+                    producerError = VoxtralHelperError.protocolFailure(failure)
+                } else {
+                    if let metric {
+                        await localMetricRecorder.appendVoxtralSession(metric)
+                    } else {
+                        await localMetricRecorder.markLastVoxtralSessionCaptureEnded()
+                        await finishContinuousVoxtralClauses(fifo: fifo)
+                    }
+                    break sessionLoop
+                }
+            case .rotate(var metric):
+                await eventTask.value
+                if let failure = localContinuousVoxtralFailure {
+                    producerError = VoxtralHelperError.protocolFailure(failure)
+                } else if recorder.sealedFinalSampleCount
+                            == localPreviewSentSampleCount {
+                    metric.captureEnded = true
+                    metric.targetSample = nil
+                    await localMetricRecorder.appendVoxtralSession(metric)
+                    await finishContinuousVoxtralClauses(fifo: fifo)
+                    break sessionLoop
+                } else {
+                    await localMetricRecorder.appendVoxtralSession(metric)
+                    let capturedThrough = recorder.accumulatedSampleCount
+                    if capturedThrough > localPreviewSentSampleCount {
+                        localContinuousVoxtralCatchUpThrough = capturedThrough
+                    }
+                    localContinuousVoxtralSessionStartSample =
+                        localPreviewSentSampleCount
+                    localContinuousVoxtralLastSpeechEndSample = nil
+                    localContinuousVoxtralRotationPlanner = LocalEndpointPlanner()
+                    localContinuousVoxtralTranscript = ""
+                    localVoxtralReplayDeduplicator = nil
+                }
+            case .failed(let error):
+                eventTask.cancel()
+                await eventTask.value
+                producerError = error
             }
 
-            eventTask.cancel()
-            await eventTask.value
+            guard let producerError else { continue }
             await localModelManager.cancelContinuousVoxtral()
-            guard restartCount == 0,
+            guard !recoveryUsed,
                   recorder.state == .recording || recorder.state == .saving,
                   !Task.isCancelled else {
-                localContinuousVoxtralFailure = producerError?.localizedDescription
+                localContinuousVoxtralFailure = producerError.localizedDescription
                 localSourcePipelineFailure = localContinuousVoxtralFailure
                 liveError = localContinuousVoxtralFailure
-                break
+                break sessionLoop
             }
 
-            restartCount += 1
+            recoveryUsed = true
+            recoverNextSession = true
             let previousTranscript = localContinuousVoxtralTranscript
             let previousLiveCursor = localPreviewSentSampleCount
             let replayStart = max(
-                0,
+                localContinuousVoxtralSessionStartSample,
                 localVoxtralClausePlanner.sourceStagedThrough
                     - activeContinuousVoxtralConfiguration.stabilityGuardSamples
             )
@@ -2352,6 +2454,9 @@ class AppState {
             localVoxtralClausePlanner.discardSpeakerEvidence()
             localPreviewSentSampleCount = replayStart
             localContinuousVoxtralAcknowledgedSampleCount = replayStart
+            localContinuousVoxtralSessionStartSample = replayStart
+            localContinuousVoxtralLastSpeechEndSample = nil
+            localContinuousVoxtralRotationPlanner = LocalEndpointPlanner()
             localContinuousVoxtralTranscript = ""
             localContinuousVoxtralFailure = nil
             localContinuousVoxtralCatchUpThrough = previousLiveCursor
@@ -2518,19 +2623,23 @@ class AppState {
     private func produceContinuousVoxtralAudio(
         recorder: AudioRecorder,
         fifo: LocalEndpointFIFO
-    ) async -> Error? {
-        var vadAnalyzedEnd = 0
+    ) async -> ContinuousVoxtralProducerOutcome {
+        var vadAnalyzedEnd = localContinuousVoxtralSessionStartSample
         let catchUpDeadline = DispatchTime.now().uptimeNanoseconds
             + 30_000_000_000
 
         do {
+            if recorder.sealedFinalSampleCount == localPreviewSentSampleCount {
+                await localModelManager.cancelContinuousVoxtral()
+                return .captureEnded(nil)
+            }
             while !Task.isCancelled {
                 if let failure = localContinuousVoxtralFailure {
                     throw VoxtralHelperError.protocolFailure(failure)
                 }
                 let sealedThrough = recorder.sealedFinalSampleCount
                 let total = sealedThrough ?? recorder.accumulatedSampleCount
-                guard total - vadAnalyzedEnd >= 1_600 else {
+                guard total > vadAnalyzedEnd else {
                     if sealedThrough != nil {
                         try await feedContinuousVoxtralSamples(
                             recorder: recorder,
@@ -2542,11 +2651,13 @@ class AppState {
                     try await Task.sleep(for: .milliseconds(40))
                     continue
                 }
-
-                try await feedContinuousVoxtralSamples(
-                    recorder: recorder,
-                    through: total,
-                    completeBlocksOnly: true
+                if total - vadAnalyzedEnd < 1_600, sealedThrough == nil {
+                    try await Task.sleep(for: .milliseconds(40))
+                    continue
+                }
+                let analyzedThrough = min(
+                    total,
+                    vadAnalyzedEnd + 2 * VoxtralClausePlanner.sampleRate
                 )
 
                 let earliestRetained = max(
@@ -2554,14 +2665,57 @@ class AppState {
                     localCommittedSampleCount
                         - activeContinuousVoxtralConfiguration.stabilityGuardSamples
                 )
-                let windowStart = max(earliestRetained, total - 16_000 * 3)
-                let window = recorder.getSamples(from: windowStart, upTo: total)
-                if !window.isEmpty {
-                    let speech = try await localModelManager.detectSpeech(
+                let windowStart = max(
+                    earliestRetained,
+                    analyzedThrough - 3 * VoxtralClausePlanner.sampleRate
+                )
+                let window = recorder.getSamples(
+                    from: windowStart,
+                    upTo: analyzedThrough
+                )
+                let analyzedVAD = !window.isEmpty
+                var speech: [SpeechSampleRange] = []
+                var rotationDecision: LocalEndpointDecision?
+                if analyzedVAD {
+                    speech = try await localModelManager.detectSpeech(
                         audio: window,
                         windowStart: windowStart
                     )
                     noteContinuousVoxtralSpeech(speech)
+                    let rotationSpeech = speech.compactMap {
+                        range -> SpeechSampleRange? in
+                        guard range.end > localContinuousVoxtralSessionStartSample else {
+                            return nil
+                        }
+                        return SpeechSampleRange(
+                            start: max(
+                                localContinuousVoxtralSessionStartSample,
+                                range.start
+                            ),
+                            end: range.end
+                        )
+                    }
+                    rotationDecision = localContinuousVoxtralRotationPlanner.observe(
+                        totalSample: analyzedThrough,
+                        speech: rotationSpeech
+                    )
+                    if let rotationDecision {
+                        localContinuousVoxtralRotationPlanner.stage(rotationDecision)
+                    }
+                }
+                let rotationEnd = Self.continuousVoxtralRotationEndSample(
+                    sessionStart: localContinuousVoxtralSessionStartSample,
+                    sentThrough: localPreviewSentSampleCount,
+                    decision: rotationDecision,
+                    captureEnded: sealedThrough != nil
+                )
+                let feedThrough = rotationEnd ?? analyzedThrough
+                try await feedContinuousVoxtralSamples(
+                    recorder: recorder,
+                    through: feedThrough,
+                    completeBlocksOnly: rotationEnd == nil
+                )
+                if analyzedVAD {
                     if let boundary = localVoxtralClausePlanner.observe(
                         fedThrough: localContinuousVoxtralAcknowledgedSampleCount,
                         speech: speech
@@ -2570,7 +2724,16 @@ class AppState {
                     }
                     publishContinuousVoxtralPreview()
                 }
-                vadAnalyzedEnd = total
+                vadAnalyzedEnd = analyzedThrough
+
+                if rotationEnd != nil, let rotationDecision {
+                    let metric = try await finishContinuousVoxtralSession(
+                        captureEnds: false,
+                        recorder: recorder,
+                        rotationDecision: rotationDecision
+                    )
+                    return .rotate(metric)
+                }
 
                 let progress = await localModelManager.continuousVoxtralProgress()
                 if let catchUpThrough = localContinuousVoxtralCatchUpThrough {
@@ -2611,14 +2774,79 @@ class AppState {
                 through: finalTotal,
                 completeBlocksOnly: false
             )
-            _ = try await localModelManager.finishContinuousVoxtral()
-            return nil
+            let metric = try await finishContinuousVoxtralSession(
+                captureEnds: true,
+                recorder: recorder,
+                rotationDecision: nil
+            )
+            return .captureEnded(metric)
         } catch {
             localContinuousVoxtralFailure = error.localizedDescription
             localSourcePipelineFailure = localContinuousVoxtralFailure
             liveError = localContinuousVoxtralFailure
-            await localModelManager.cancelContinuousVoxtral()
-            return error
+            return .failed(error)
+        }
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func finishContinuousVoxtralSession(
+        captureEnds: Bool,
+        recorder: AudioRecorder,
+        rotationDecision: LocalEndpointDecision?
+    ) async throws -> LocalVoxtralSessionMetric {
+        localContinuousVoxtralCaptureEndsOnCompletion = captureEnds
+        let started = DispatchTime.now().uptimeNanoseconds
+        let transcript = try await localModelManager.finishContinuousVoxtral()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let flushMilliseconds = Self.elapsedMilliseconds(since: started)
+        let progress = await localModelManager.continuousVoxtralProgress()
+        let end = localPreviewSentSampleCount
+        let progressTranscript = progress.transcript.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let observedSpeech = (localContinuousVoxtralLastSpeechEndSample ?? 0)
+            > localContinuousVoxtralSessionStartSample
+        guard progress.sentThrough == end,
+              progress.acknowledgedThrough == end,
+              progress.backlogSamples == 0,
+              progressTranscript == transcript,
+              !observedSpeech || !transcript.isEmpty else {
+            throw VoxtralHelperError.protocolFailure(
+                "Voxtral session did not finish with complete acknowledged PCM."
+            )
+        }
+        let target = captureEnds ? nil
+            : localContinuousVoxtralSessionStartSample
+                + Self.continuousVoxtralRotationTargetSamples
+        return LocalVoxtralSessionMetric(
+            startSample: localContinuousVoxtralSessionStartSample,
+            targetSample: target,
+            endSample: end,
+            lastSpeechEndSample: rotationDecision?.speechEnd
+                ?? localContinuousVoxtralLastSpeechEndSample,
+            helperProcessIdentifier: progress.helperProcessIdentifier,
+            acknowledgedThroughSample: progress.acknowledgedThrough,
+            endingBacklogSamples: progress.backlogSamples,
+            captureBacklogAfterFlushSamples: max(
+                0,
+                recorder.accumulatedSampleCount - end
+            ),
+            flushMilliseconds: flushMilliseconds,
+            captureEnded: captureEnds,
+            transcriptCharacterCount: transcript.count
+        )
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func finishContinuousVoxtralClauses(
+        fifo: LocalEndpointFIFO
+    ) async {
+        if let tail = localVoxtralClausePlanner.finish(
+            fedThrough: localPreviewSentSampleCount
+        ) {
+            await stageContinuousVoxtralBoundary(tail, fifo: fifo)
         }
     }
 
@@ -2744,10 +2972,17 @@ class AppState {
                 localContinuousVoxtralAcknowledgedSampleCount,
                 sentThrough ?? localPreviewSentSampleCount
             )
-            if let tail = localVoxtralClausePlanner.finish(
-                delta: finalDelta,
-                fedThrough: finalThrough
-            ) {
+            let tail = localContinuousVoxtralCaptureEndsOnCompletion
+                ? localVoxtralClausePlanner.finish(
+                    delta: finalDelta,
+                    fedThrough: finalThrough
+                )
+                : localVoxtralClausePlanner.observe(
+                    delta: finalDelta,
+                    fedThrough: finalThrough,
+                    sourceUpdateThrough: sentThrough
+                )
+            if let tail {
                 await stageContinuousVoxtralBoundary(tail, fifo: fifo)
             }
             return true
@@ -2761,6 +2996,13 @@ class AppState {
 
     @MainActor
     private func noteContinuousVoxtralSpeech(_ speech: [SpeechSampleRange]) {
+        for range in speech
+        where range.end > localContinuousVoxtralSessionStartSample {
+            localContinuousVoxtralLastSpeechEndSample = max(
+                localContinuousVoxtralLastSpeechEndSample ?? range.end,
+                range.end
+            )
+        }
         guard let first = speech.first(where: {
             $0.end > localVoxtralClausePlanner.sourceStagedThrough
         }) else { return }
@@ -3566,6 +3808,9 @@ class AppState {
         localContinuousVoxtralTranscript = ""
         localContinuousVoxtralFailure = nil
         localContinuousVoxtralCatchUpThrough = nil
+        localContinuousVoxtralSessionStartSample = 0
+        localContinuousVoxtralLastSpeechEndSample = nil
+        localContinuousVoxtralRotationPlanner = LocalEndpointPlanner()
         localDiarizationAssistActive = false
         localVoxtralSpeakerMarkersAreAuthoritative = false
         localVoxtralMarkerCalibration = nil

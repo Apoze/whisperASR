@@ -43,8 +43,13 @@ final class JapaneseModelRecipeTests: XCTestCase {
             try XCTUnwrap(byID[id]?["execution"] as? [String: Any])
         }
         let voxtral = try execution("voxtral-q4-960")
-        XCTAssertEqual(voxtral["sessionScope"] as? String, "one-session-per-capture")
-        XCTAssertEqual(voxtral["resetPolicy"] as? String, "finish-only")
+        XCTAssertEqual(
+            voxtral["sessionScope"] as? String,
+            "continuous-capture-with-safe-rotation"
+        )
+        XCTAssertEqual(voxtral["resetPolicy"] as? String, "vad-pause-at-720s-or-finish")
+        XCTAssertEqual(voxtral["rotationTargetSeconds"] as? Int, 720)
+        XCTAssertEqual(voxtral["rotationPostRollMilliseconds"] as? Int, 500)
         XCTAssertEqual(voxtral["transportBlockMilliseconds"] as? Int, 160)
         XCTAssertEqual(voxtral["transcriptionDelayMilliseconds"] as? Int, 960)
 

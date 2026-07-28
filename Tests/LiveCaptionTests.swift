@@ -3,6 +3,56 @@ import XCTest
 @testable import WhisperASRApp
 
 final class LiveCaptionTests: XCTestCase {
+    func testContinuousVoxtralRotatesOnlyAfterTargetAndSafeSilence() {
+        let target = AppState.continuousVoxtralRotationTargetSamples
+        func decision(
+            kind: LocalEndpointDecision.Kind,
+            end: Int
+        ) -> LocalEndpointDecision {
+            LocalEndpointDecision(
+                kind: kind,
+                audioStart: end - LocalEndpointPlanner.minimumBatch,
+                audioEnd: end,
+                speechEnd: end - LocalEndpointPlanner.postRoll,
+                endpointDetectedAt: end - 2_400,
+                vadOnlyEndpointAt: end - 2_400,
+                stableThrough: end,
+                cleanBreak: kind == .pause
+            )
+        }
+
+        XCTAssertEqual(AppState.continuousVoxtralRotationEndSample(
+            sessionStart: 0,
+            sentThrough: target,
+            decision: decision(kind: .pause, end: target),
+            captureEnded: false
+        ), target)
+        XCTAssertNil(AppState.continuousVoxtralRotationEndSample(
+            sessionStart: 0,
+            sentThrough: target - 1,
+            decision: decision(kind: .pause, end: target - 1),
+            captureEnded: false
+        ))
+        XCTAssertEqual(AppState.continuousVoxtralRotationEndSample(
+            sessionStart: 0,
+            sentThrough: target + 1_600,
+            decision: decision(kind: .pause, end: target - 1),
+            captureEnded: false
+        ), target + 1_600)
+        XCTAssertNil(AppState.continuousVoxtralRotationEndSample(
+            sessionStart: 0,
+            sentThrough: target,
+            decision: decision(kind: .forced, end: target),
+            captureEnded: false
+        ))
+        XCTAssertNil(AppState.continuousVoxtralRotationEndSample(
+            sessionStart: 0,
+            sentThrough: target,
+            decision: decision(kind: .pause, end: target),
+            captureEnded: true
+        ))
+    }
+
     func testAsyncDeadlineReturnsCompletedWork() async throws {
         let value = try await withAsyncDeadline(
             .seconds(1),
