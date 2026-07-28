@@ -8,9 +8,9 @@ Ce dossier pilote les expériences sans mélanger mesures, décisions et code pr
 L0 ─▶ L1 ─▶ L2 ─▶ L3 ─▶ L4 ─▶ L5 ─▶ L6 ─▶ L7
                                       └── L6A conditionnel
 L7 ─▶ L7A ─▶ L7B ─▶ L7C ─▶ L7D
-                              └─▶ L8A ─▶ L8B ─▶ L8C ─▶ L8D
-                                                       ├─▶ L8E conditionnel
-                                                       └─▶ L8F ─▶ L9 ─▶ L10
+                              └─▶ L8A ─▶ L8B ─▶ L8B2 ─▶ L8B3 ─▶ L8C ─▶ L8D
+                                                                           ├─▶ L8E conditionnel
+                                                                           └─▶ L8F ─▶ L9 ─▶ L10
 ```
 
 L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournies; L5 repart de ce PCM identique pour tous les candidats. Les sous-lots conditionnels ne sont créés qu'après échec mesuré de leur gate.
@@ -32,7 +32,9 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L7D — Comparaison et décision](lots/L07D-comparaison-decision.md) | L7C | terminé, aucune promotion | Kotoba meilleur final observé; aucun pipeline ne passe tous les gates |
 | [L8A — Diagnostic Voxtral fiable](lots/L08A-diagnostic-voxtral.md) | L7D, décision utilisateur Voxtral | terminé | origine ASR/frontières/Apple et intégrité de fin mesurées |
 | [L8B — Récupération de fin](lots/L08B-recuperation-fin.md) | L8A | terminé, bloqué | reprises rejetées; chemin produit restauré |
-| L8C — Frontières japonaises | L8B | bloqué par L8B | clauses sûres pour Apple Translation |
+| [L8B2 — Rotation expérimentale](lots/L08B2-rotation-experimentale.md) | L8B | terminé | rotation 720 s stable sur 1 screening et 2 confirmations |
+| L8B3 — Rotation produit | L8B2 | non démarré | session normale renouvelée à une pause VAD sûre |
+| L8C — Frontières japonaises | L8B3 | non démarré | clauses sûres pour Apple Translation |
 | L8D — Latence et ressources | L8C | non démarré | Q4/480 ou Q4/960 et cadence preview décidés |
 | L8E — Profils lexicaux | gate L8D | conditionnel | corrections exactes seulement si utiles |
 | L8F — Simplification Voxtral | L8D, L8E si retenu | non démarré | un seul moteur produit |

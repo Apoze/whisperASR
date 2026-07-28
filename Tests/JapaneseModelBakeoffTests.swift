@@ -496,6 +496,23 @@ private struct JapaneseCorrectiveVoxtralBoundary: Codable, Sendable {
     let stagedAtSample: Int
 }
 
+private struct JapaneseCorrectiveVoxtralSessionEvidence: Codable, Sendable {
+    let index: Int
+    let startSample: Int
+    let targetSample: Int?
+    let endSample: Int
+    let deferralSamples: Int?
+    let helperProcessIdentifier: Int32?
+    let acknowledgedThroughSample: Int?
+    let flushMilliseconds: Double
+    let captureEnded: Bool
+    let speechObserved: Bool
+    let normalizedTranscriptCharacterCount: Int
+    let normalizedTranscriptSHA256: String
+    let transcriptPrefix: String
+    let transcriptSuffix: String
+}
+
 private struct JapaneseCorrectiveVoxtralEvidence: Codable, Sendable {
     let lastVADSpeechEndSample: Int?
     let lastStreamTextObservedAtSample: Int?
@@ -503,6 +520,7 @@ private struct JapaneseCorrectiveVoxtralEvidence: Codable, Sendable {
     let helperAcknowledgedThroughSample: Int?
     let sourceStagedThroughSample: Int
     let boundaries: [JapaneseCorrectiveVoxtralBoundary]
+    let sessions: [JapaneseCorrectiveVoxtralSessionEvidence]
 }
 
 private struct JapaneseCorrectiveFragment: Codable, Sendable {
@@ -666,8 +684,11 @@ private actor JapaneseCorrectiveVoxtralCollector {
     private let preview: BenchmarkPreviewTranslator?
     private let final: BenchmarkFinalTranslator?
     private var transcript = ""
+    private var aggregateTranscript = ""
+    private var captureEndsOnCompletion = true
     private var fragments: [JapaneseCorrectiveFragment] = []
     private var boundaries: [JapaneseCorrectiveVoxtralBoundary] = []
+    private var sessions: [JapaneseCorrectiveVoxtralSessionEvidence] = []
     private var lastPreview: (generation: Int, text: String)?
     private var confirmedPrefixRewrites = 0
     private var lastVADSpeechEnd: Int?
@@ -710,7 +731,6 @@ private actor JapaneseCorrectiveVoxtralCollector {
             acknowledgedThrough = through
             boundary = planner.observe(fedThrough: local(through))
         case .completed(let transcript, let sentThrough):
-            completed = (transcript, sentThrough)
             let finalDelta: String
             if transcript.hasPrefix(self.transcript) {
                 finalDelta = String(transcript.dropFirst(self.transcript.count))
@@ -720,15 +740,23 @@ private actor JapaneseCorrectiveVoxtralCollector {
                 failures.append("Voxtral final source differed from its append-only stream.")
                 return
             }
-            self.transcript = transcript
             if !finalDelta.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 lastUsefulTextObservedAt = sentThrough.map(local)
                     ?? acknowledgedThrough.map(local)
             }
-            boundary = planner.finish(
-                delta: finalDelta,
-                fedThrough: local(sentThrough ?? acknowledgedThrough ?? windowStartSample)
+            aggregateTranscript += transcript
+            completed = (aggregateTranscript, sentThrough)
+            let fedThrough = local(
+                sentThrough ?? acknowledgedThrough ?? windowStartSample
             )
+            boundary = captureEndsOnCompletion
+                ? planner.finish(delta: finalDelta, fedThrough: fedThrough)
+                : planner.observe(
+                    delta: finalDelta,
+                    fedThrough: fedThrough,
+                    sourceUpdateThrough: sentThrough.map(local)
+                )
+            self.transcript = ""
         case .failed(let message):
             failures.append(message)
         case .emissionMarker(let marker):
@@ -749,6 +777,14 @@ private actor JapaneseCorrectiveVoxtralCollector {
         }
         if let boundary { await stage(boundary) }
         await publishPreview()
+    }
+
+    func prepareSessionCompletion(captureEnds: Bool) {
+        captureEndsOnCompletion = captureEnds
+    }
+
+    func recordSession(_ session: JapaneseCorrectiveVoxtralSessionEvidence) {
+        sessions.append(session)
     }
 
     func observeSpeech(
@@ -800,7 +836,8 @@ private actor JapaneseCorrectiveVoxtralCollector {
                 helperAcknowledgedThroughSample: acknowledgedThrough,
                 sourceStagedThroughSample:
                     windowStartSample + planner.sourceStagedThrough,
-                boundaries: boundaries
+                boundaries: boundaries,
+                sessions: sessions
             )
         )
     }
@@ -1435,6 +1472,16 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 JapaneseBenchmarkSupport.correctiveStressWindows.prefix(windowLimit)
             )
         }
+        if let raw = environment["WHISPERASR_VOXTRAL_ROTATION_SECONDS"] {
+            guard fullReplay,
+                  requestedEngines == [.voxtralContinuous],
+                  let seconds = Int(raw),
+                  [240, 480, 720].contains(seconds) else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "Voxtral rotation requires a full replay, Voxtral only, and 240, 480 or 720 seconds."
+                )
+            }
+        }
 
         let modelManager = LocalEnglishModelManager()
         try await modelManager.prepare(.whisperTurboApple)
@@ -1616,6 +1663,71 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             sessions: sessions
         )
         XCTAssertTrue(finalReport.matrixAttempted, "The replay matrix was not fully attempted.")
+    }
+
+    func testVoxtralRotationWindowsUseOnlySafeContiguousPauses() throws {
+        let base = JapaneseBenchmarkSupport.StressWindow(
+            id: "fixture-full",
+            corpusID: "fixture",
+            startSample: 0,
+            endSample: 600 * VoxtralClausePlanner.sampleRate
+        )
+        func pause(at second: Int) -> LocalEndpointDecision {
+            let sample = second * VoxtralClausePlanner.sampleRate
+            return LocalEndpointDecision(
+                kind: .pause,
+                audioStart: max(0, sample - 16_000),
+                audioEnd: sample,
+                speechEnd: sample - 8_000,
+                endpointDetectedAt: sample - 2_400,
+                vadOnlyEndpointAt: sample - 2_400,
+                stableThrough: sample,
+                cleanBreak: true
+            )
+        }
+
+        let windows = try voxtralRotationWindows(
+            baseWindow: base,
+            decisions: [pause(at: 250), pause(at: 500)],
+            targetSeconds: 240
+        )
+
+        XCTAssertEqual(windows.map(\.startSample), [
+            0,
+            250 * VoxtralClausePlanner.sampleRate,
+            500 * VoxtralClausePlanner.sampleRate,
+        ])
+        XCTAssertEqual(windows.map(\.endSample), [
+            250 * VoxtralClausePlanner.sampleRate,
+            500 * VoxtralClausePlanner.sampleRate,
+            600 * VoxtralClausePlanner.sampleRate,
+        ])
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    func testVoxtralRotationCollectorKeepsOneAppendOnlyTranscript() async {
+        let collector = JapaneseCorrectiveVoxtralCollector(
+            windowStartSample: 0,
+            sessionStart: DispatchTime.now().uptimeNanoseconds,
+            stabilityGuardSamples: 0,
+            preview: nil,
+            final: nil
+        )
+        await collector.accept(.delta(text: "前", sentThrough: 100))
+        await collector.accept(.acknowledged(through: 100))
+        await collector.prepareSessionCompletion(captureEnds: false)
+        await collector.accept(.completed(transcript: "前半", sentThrough: 100))
+        await collector.accept(.delta(text: "後", sentThrough: 200))
+        await collector.accept(.acknowledged(through: 200))
+        await collector.prepareSessionCompletion(captureEnds: true)
+        await collector.accept(.completed(transcript: "後半", sentThrough: 200))
+
+        let snapshot = await collector.snapshot()
+        XCTAssertTrue(snapshot.failures.isEmpty)
+        XCTAssertEqual(snapshot.completed?.transcript, "前半後半")
+        XCTAssertEqual(snapshot.fragments.map(\.text), ["前半後半"])
+        XCTAssertEqual(snapshot.evidence.sourceStagedThroughSample, 200)
     }
 
     func testPrepareEasyJapaneseCorpusWhenOptedIn() async throws {
@@ -1835,6 +1947,10 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         engine: JapaneseBakeoffEngine,
         environment: [String: String]
     ) -> String {
+        if engine == .voxtralContinuous,
+           let seconds = environment["WHISPERASR_VOXTRAL_ROTATION_SECONDS"] {
+            return "\(engine.rawValue)-rotation-\(seconds)s"
+        }
         guard engine == .whisperMLXBatch else { return engine.rawValue }
         if environment["WHISPERASR_WHISPERMLX_MODE"] == "vad-finals" {
             return "\(engine.rawValue)-vad-finals"
@@ -1843,6 +1959,57 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             return "\(engine.rawValue)-long-form"
         }
         return engine.rawValue
+    }
+
+    private func voxtralRotationWindows(
+        baseWindow: JapaneseBenchmarkSupport.StressWindow,
+        decisions: [LocalEndpointDecision],
+        targetSeconds: Int
+    ) throws -> [JapaneseBenchmarkSupport.StressWindow] {
+        let target = targetSeconds * VoxtralClausePlanner.sampleRate
+        let maximumDeferral = 60 * VoxtralClausePlanner.sampleRate
+        var result: [JapaneseBenchmarkSupport.StressWindow] = []
+        var start = 0
+        var index = 1
+
+        while baseWindow.sampleCount - start > target {
+            let earliest = start + target
+            let latest = min(baseWindow.sampleCount, earliest + maximumDeferral)
+            guard let end = decisions.first(where: {
+                $0.kind == .pause
+                    && $0.audioEnd >= earliest
+                    && $0.audioEnd <= latest
+            })?.audioEnd else {
+                throw JapaneseBenchmarkCSV.ParseError.malformed(
+                    "No safe VAD pause within 60 seconds after the \(targetSeconds)-second rotation target in \(baseWindow.id)."
+                )
+            }
+            result.append(JapaneseBenchmarkSupport.StressWindow(
+                id: "\(baseWindow.corpusID)-rotation-\(targetSeconds)s-\(index)",
+                corpusID: baseWindow.corpusID,
+                startSample: baseWindow.startSample + start,
+                endSample: baseWindow.startSample + end
+            ))
+            start = end
+            index += 1
+        }
+        result.append(JapaneseBenchmarkSupport.StressWindow(
+            id: "\(baseWindow.corpusID)-rotation-\(targetSeconds)s-\(index)",
+            corpusID: baseWindow.corpusID,
+            startSample: baseWindow.startSample + start,
+            endSample: baseWindow.endSample
+        ))
+
+        guard result.first?.startSample == baseWindow.startSample,
+              result.last?.endSample == baseWindow.endSample,
+              zip(result, result.dropFirst()).allSatisfy({
+                  $0.endSample == $1.startSample
+              }) else {
+            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                "Voxtral rotation windows did not partition \(baseWindow.id)."
+            )
+        }
+        return result
     }
 
     @MainActor
@@ -2400,7 +2567,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             }
 
         case .voxtralContinuous:
-            guard let events = voxtralEvents else {
+            guard let initialEvents = voxtralEvents else {
                 preconditionFailure("Voxtral events must be prepared before sampling.")
             }
             let collector = JapaneseCorrectiveVoxtralCollector(
@@ -2411,62 +2578,157 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 preview: previewTranslator,
                 final: finalTranslator
             )
-            let receiver = Task {
-                for await event in events { await collector.accept(event) }
-            }
+            let rotationSeconds = environment["WHISPERASR_VOXTRAL_ROTATION_SECONDS"]
+                .flatMap(Int.init)
+            let sessionWindows = try rotationSeconds.map {
+                try voxtralRotationWindows(
+                    baseWindow: input.window,
+                    decisions: input.decisions,
+                    targetSeconds: $0
+                )
+            } ?? [input.window]
+            let initialHelperPID = await modelManager.continuousVoxtralProgress()
+                .helperProcessIdentifier
+            var activeReceiver: Task<Void, Never>?
             do {
                 let blockSamples = 2_560
                 var observationIndex = 0
-                for start in stride(from: 0, to: input.samples.count, by: blockSamples) {
-                    let end = min(input.samples.count, start + blockSamples)
-                    try await sleepCorrectiveReplay(started: started, through: end)
-                    let feedStarted = DispatchTime.now().uptimeNanoseconds
-                    try await modelManager.feedContinuousVoxtral(
-                        samples: Array(input.samples[start..<end]),
-                        range: (input.window.startSample + start)..<(input.window.startSample + end)
-                    )
-                    timings.append(elapsedMilliseconds(since: feedStarted))
-                    fedSamples = end
-                    let progress = await modelManager.continuousVoxtralProgress()
-                    while observationIndex < input.speechObservations.count,
-                          input.speechObservations[observationIndex].observedThrough <= end {
-                        let observation = input.speechObservations[observationIndex]
-                        await collector.observeSpeech(
-                            observation.ranges,
-                            observedThrough: max(
-                                0,
-                                (progress.acknowledgedThrough
-                                    ?? input.window.startSample) - input.window.startSample
+                var cursor = 0
+                var events = initialEvents
+                for (sessionIndex, sessionWindow) in sessionWindows.enumerated() {
+                    if sessionIndex > 0 {
+                        events = try await modelManager.startContinuousVoxtral()
+                    }
+                    let helperPID = await modelManager.continuousVoxtralProgress()
+                        .helperProcessIdentifier
+                    guard helperPID == initialHelperPID else {
+                        throw JapaneseBenchmarkCSV.ParseError.malformed(
+                            "A normal Voxtral rotation replaced the helper process."
+                        )
+                    }
+                    let receiver = Task {
+                        for await event in events { await collector.accept(event) }
+                    }
+                    activeReceiver = receiver
+                    let sessionEnd = sessionWindow.endSample - input.window.startSample
+                    while cursor < sessionEnd {
+                        let end = min(sessionEnd, cursor + blockSamples)
+                        try await sleepCorrectiveReplay(started: started, through: end)
+                        let feedStarted = DispatchTime.now().uptimeNanoseconds
+                        try await modelManager.feedContinuousVoxtral(
+                            samples: Array(input.samples[cursor..<end]),
+                            range: (input.window.startSample + cursor)..<(input.window.startSample + end)
+                        )
+                        timings.append(elapsedMilliseconds(since: feedStarted))
+                        fedSamples = end
+                        let progress = await modelManager.continuousVoxtralProgress()
+                        while observationIndex < input.speechObservations.count,
+                              input.speechObservations[observationIndex].observedThrough <= end {
+                            let observation = input.speechObservations[observationIndex]
+                            await collector.observeSpeech(
+                                observation.ranges,
+                                observedThrough: max(
+                                    0,
+                                    (progress.acknowledgedThrough
+                                        ?? input.window.startSample) - input.window.startSample
+                                )
+                            )
+                            observationIndex += 1
+                        }
+                        maximumResident = max(
+                            maximumResident,
+                            modelManager.currentMemoryBytes() + (progress.helperRSSBytes ?? 0)
+                        )
+                        let currentBacklog = max(
+                            max(0, elapsedMilliseconds(since: started) - Double(end) / 16),
+                            Double(progress.backlogSamples) / 16
+                        )
+                        maximumBacklog = max(
+                            maximumBacklog,
+                            max(
+                                currentBacklog,
+                                Double(progress.maximumBacklogSamples) / 16
                             )
                         )
-                        observationIndex += 1
+                        if watchdog.observe(milliseconds: currentBacklog) {
+                            throw JapaneseBenchmarkCSV.ParseError.malformed(
+                                "Backlog exceeded 30 seconds continuously for one minute."
+                            )
+                        }
+                        cursor = end
                     }
+
+                    let captureEnds = sessionIndex == sessionWindows.count - 1
+                    await collector.prepareSessionCompletion(captureEnds: captureEnds)
+                    let finalStarted = DispatchTime.now().uptimeNanoseconds
+                    let sessionFinal = try await modelManager.finishContinuousVoxtral()
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    let flushMilliseconds = elapsedMilliseconds(since: finalStarted)
+                    timings.append(flushMilliseconds)
+                    _ = await receiver.result
+                    activeReceiver = nil
+                    let progress = await modelManager.continuousVoxtralProgress()
+                    let absoluteEnd = input.window.startSample + sessionEnd
+                    let sessionStart = sessionWindow.startSample
+                        - input.window.startSample
+                    let speechObserved = input.speechObservations.contains { observation in
+                        observation.ranges.contains {
+                            $0.end > sessionStart && $0.start < sessionEnd
+                        }
+                    }
+                    let normalizedSessionFinal = String(
+                        JapaneseCER.normalized(sessionFinal)
+                    )
+                    guard progress.sentThrough == absoluteEnd,
+                          progress.acknowledgedThrough == absoluteEnd,
+                          progress.backlogSamples == 0,
+                          String(JapaneseCER.normalized(progress.transcript))
+                            == normalizedSessionFinal,
+                          !speechObserved || !normalizedSessionFinal.isEmpty else {
+                        throw JapaneseBenchmarkCSV.ParseError.malformed(
+                            "A Voxtral rotation did not finish with exact PCM coverage and zero backlog."
+                        )
+                    }
+                    let target = sessionIndex < sessionWindows.count - 1
+                        ? sessionWindow.startSample
+                            + (rotationSeconds ?? 0) * VoxtralClausePlanner.sampleRate
+                        : nil
+                    await collector.recordSession(
+                        JapaneseCorrectiveVoxtralSessionEvidence(
+                            index: sessionIndex,
+                            startSample: sessionWindow.startSample,
+                            targetSample: target,
+                            endSample: sessionWindow.endSample,
+                            deferralSamples: target.map { sessionWindow.endSample - $0 },
+                            helperProcessIdentifier: helperPID,
+                            acknowledgedThroughSample: progress.acknowledgedThrough,
+                            flushMilliseconds: flushMilliseconds,
+                            captureEnded: captureEnds,
+                            speechObserved: speechObserved,
+                            normalizedTranscriptCharacterCount:
+                                normalizedSessionFinal.count,
+                            normalizedTranscriptSHA256: digest(
+                                Data(normalizedSessionFinal.utf8)
+                            ),
+                            transcriptPrefix: String(sessionFinal.prefix(40)),
+                            transcriptSuffix: String(sessionFinal.suffix(40))
+                        )
+                    )
                     maximumResident = max(
                         maximumResident,
                         modelManager.currentMemoryBytes() + (progress.helperRSSBytes ?? 0)
                     )
-                    let currentBacklog = max(
-                        max(0, elapsedMilliseconds(since: started) - Double(end) / 16),
-                        Double(progress.backlogSamples) / 16
+                    let rotationBacklog = max(
+                        0,
+                        elapsedMilliseconds(since: started) - Double(sessionEnd) / 16
                     )
-                    maximumBacklog = max(
-                        maximumBacklog,
-                        max(
-                            currentBacklog,
-                            Double(progress.maximumBacklogSamples) / 16
-                        )
-                    )
-                    if watchdog.observe(milliseconds: currentBacklog) {
+                    maximumBacklog = max(maximumBacklog, rotationBacklog)
+                    if watchdog.observe(milliseconds: rotationBacklog) {
                         throw JapaneseBenchmarkCSV.ParseError.malformed(
                             "Backlog exceeded 30 seconds continuously for one minute."
                         )
                     }
                 }
-                let finalStarted = DispatchTime.now().uptimeNanoseconds
-                let final = try await modelManager.finishContinuousVoxtral()
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                timings.append(elapsedMilliseconds(since: finalStarted))
-                _ = await receiver.result
                 let snapshot = await collector.snapshot()
                 guard snapshot.failures.isEmpty else {
                     throw JapaneseBenchmarkCSV.ParseError.malformed(
@@ -2474,13 +2736,13 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                     )
                 }
                 let progress = await modelManager.continuousVoxtralProgress()
+                let final = snapshot.completed?.transcript ?? ""
                 guard progress.sentThrough == input.window.endSample,
                       progress.acknowledgedThrough == input.window.endSample,
                       progress.backlogSamples == 0,
                       snapshot.acknowledgedThrough == input.window.endSample,
                       snapshot.completed?.sentThrough == input.window.endSample,
-                      JapaneseCER.normalized(snapshot.completed?.transcript ?? "")
-                        == JapaneseCER.normalized(final) else {
+                      !JapaneseCER.normalized(final).isEmpty else {
                     throw JapaneseBenchmarkCSV.ParseError.malformed(
                         "Voxtral did not prove full acknowledged PCM coverage and a zero final backlog."
                     )
@@ -2531,8 +2793,8 @@ final class JapaneseModelBakeoffTests: XCTestCase {
                 )
             } catch {
                 await modelManager.cancelContinuousVoxtral()
-                receiver.cancel()
-                _ = await receiver.result
+                activeReceiver?.cancel()
+                _ = await activeReceiver?.result
                 throw error
             }
 
