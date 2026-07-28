@@ -899,6 +899,7 @@ final class VoxtralClausePlannerTests: XCTestCase {
     }
 
     func testMarkerCalibrationRoundsBiasToVoxtralFramesAndGatesP95() {
+        XCTAssertEqual(VoxtralMarkerCalibration.maximumP95ErrorSamples, 3_200)
         let accepted = VoxtralMarkerCalibration(
             biasSamples: 1_900,
             p95AbsoluteErrorSamples: VoxtralMarkerCalibration.maximumP95ErrorSamples

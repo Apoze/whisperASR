@@ -42,7 +42,8 @@ struct VoxtralMarkerCalibrationProofDataset: Codable, Equatable, Sendable {
 
 struct VoxtralMarkerCalibrationProofResult: Codable, Equatable, Sendable {
     static let minimumAnnotationsPerSplit = 20
-    static let maximumValidationP95Samples = 3_840 // 240 ms at 16 kHz
+    static let maximumValidationP95Samples =
+        VoxtralMarkerCalibration.maximumP95ErrorSamples
     static let maximumMedianDriftSamples = 1_280 // 80 ms at 16 kHz
 
     let schemaVersion: Int

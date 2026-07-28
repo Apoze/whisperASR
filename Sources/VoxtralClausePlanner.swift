@@ -91,7 +91,7 @@ struct VoxtralClauseBoundary: Equatable, Sendable {
 /// Speaker evidence stays observational until its error is demonstrably small.
 struct VoxtralMarkerCalibration: Equatable, Sendable {
     static let frameSamples = 1_280
-    static let maximumP95ErrorSamples = 3_840
+    static let maximumP95ErrorSamples = 3_200
 
     let biasSamples: Int
     let p95AbsoluteErrorSamples: Int

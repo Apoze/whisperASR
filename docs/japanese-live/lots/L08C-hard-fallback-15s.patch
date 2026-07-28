@@ -1,0 +1,175 @@
+diff --git a/Sources/VoxtralClausePlanner.swift b/Sources/VoxtralClausePlanner.swift
+--- a/Sources/VoxtralClausePlanner.swift
++++ b/Sources/VoxtralClausePlanner.swift
+@@ -91,7 +91,7 @@ struct VoxtralClauseBoundary: Equatable, Sendable {
+ /// Speaker evidence stays observational until its error is demonstrably small.
+ struct VoxtralMarkerCalibration: Equatable, Sendable {
+     static let frameSamples = 1_280
+-    static let maximumP95ErrorSamples = 3_840
++    static let maximumP95ErrorSamples = 3_200
+ 
+     let biasSamples: Int
+     let p95AbsoluteErrorSamples: Int
+@@ -123,7 +123,7 @@ struct VoxtralClausePlanner: Sendable {
+     static let softClauseTarget = sampleRate * 5
+     /// Ten stable seconds is a checkpoint, not an arbitrary text cut.
+     static let hardClauseTarget = sampleRate * 10
+-    static let hardClauseLimit = hardClauseTarget + stabilityGuard
++    static let hardClauseLimit = sampleRate * 15
+     static let speakerMarkerEarlyTolerance = sampleRate * 160 / 1_000
+     /// A marker candidate remains useful for 1.5 s. Speaker evidence may
+     /// advance a boundary, but it never delays punctuation, pause, or timeout.
+@@ -259,8 +259,6 @@ struct VoxtralClausePlanner: Sendable {
+             && lastSourceUpdateThrough.map {
+                 fedThrough - $0 >= stabilityGuardSamples
+             } == true
+-        let forcedCheckpointReached = stableDuration >= Self.hardClauseTarget
+-
+         let fallbackDecision: VoxtralClauseBoundary.SpeakerDecision?
+         if let unresolvedTransition {
+             fallbackDecision = .diarizationLagFallback(unresolvedTransition)
+@@ -297,10 +295,10 @@ struct VoxtralClausePlanner: Sendable {
+             )
+         }
+ 
+-        guard forcedCheckpointReached else { return nil }
++        guard stableDuration >= Self.hardClauseLimit else { return nil }
+         if let markerCut = forcedMarkerCut(
+             checkpoint: start + Self.hardClauseTarget,
+-            limit: start + Self.hardClauseTarget + stabilityGuardSamples,
++            limit: start + Self.hardClauseLimit,
+             stableThrough: stableThrough
+         ) {
+             return stage(
+@@ -313,7 +311,6 @@ struct VoxtralClausePlanner: Sendable {
+             )
+         }
+ 
+-        guard stableDuration >= Self.hardClauseTarget + stabilityGuardSamples else { return nil }
+         return stageAll(
+             kind: .forced,
+             // Without a trustworthy marker there is no safe text offset.
+@@ -550,7 +547,7 @@ struct VoxtralClausePlanner: Sendable {
+               markerCalibration.permitsSpeakerBoundaries,
+               emissionMarkers.count >= 2 else { return nil }
+ 
+-        for index in 0..<(emissionMarkers.count - 1) {
++        for index in stride(from: emissionMarkers.count - 2, through: 0, by: -1) {
+             let current = emissionMarkers[index]
+             let next = emissionMarkers[index + 1]
+             let sample = markerCalibration.calibratedEndSample(for: current)
+diff --git a/Sources/VoxtralMarkerCalibrationProof.swift b/Sources/VoxtralMarkerCalibrationProof.swift
+--- a/Sources/VoxtralMarkerCalibrationProof.swift
++++ b/Sources/VoxtralMarkerCalibrationProof.swift
+@@ -42,7 +42,7 @@ struct VoxtralMarkerCalibrationProofDataset: Codable, Equatable, Sendable {
+ 
+ struct VoxtralMarkerCalibrationProofResult: Codable, Equatable, Sendable {
+     static let minimumAnnotationsPerSplit = 20
+-    static let maximumValidationP95Samples = 3_840 // 240 ms at 16 kHz
++    static let maximumValidationP95Samples = 3_200 // 200 ms at 16 kHz
+     static let maximumMedianDriftSamples = 1_280 // 80 ms at 16 kHz
+ 
+     let schemaVersion: Int
+diff --git a/Tests/VoxtralClausePlannerTests.swift b/Tests/VoxtralClausePlannerTests.swift
+--- a/Tests/VoxtralClausePlannerTests.swift
++++ b/Tests/VoxtralClausePlannerTests.swift
+@@ -298,11 +298,11 @@ final class VoxtralClausePlannerTests: XCTestCase {
+         let nextGroup = "について話します"
+         let groupEnd = VoxtralClausePlanner.hardClauseTarget
+             + VoxtralClausePlanner.sampleRate / 5
+-        let fedThrough = groupEnd + VoxtralClausePlanner.stabilityGuard
+ 
+         let boundary = planner.observe(
+             delta: firstGroup + nextGroup,
+-            fedThrough: fedThrough,
++            fedThrough: VoxtralClausePlanner.hardClauseLimit
++                + VoxtralClausePlanner.stabilityGuard,
+             emissionMarkers: [
+                 emissionMarker(groupStartUTF8: 0, proxyEndSample: groupEnd),
+                 emissionMarker(
+@@ -323,7 +323,7 @@ final class VoxtralClausePlannerTests: XCTestCase {
+     func testCheckpointWaitsForFollowingMarkerThenUsesTheCompletePair() {
+         var planner = speakerPlanner()
+         let firstGroup = "一番好きな食べ物"
+-        let nextGroup = "はお米です"
++        let nextGroup = "について"
+         let groupEnd = VoxtralClausePlanner.hardClauseTarget
+             + VoxtralClausePlanner.sampleRate / 4
+         let checkpointFeed = VoxtralClausePlanner.hardClauseTarget
+@@ -337,7 +337,7 @@ final class VoxtralClausePlannerTests: XCTestCase {
+             ]
+         ))
+ 
+-        let boundary = planner.observe(
++        XCTAssertNil(planner.observe(
+             fedThrough: groupEnd + VoxtralClausePlanner.stabilityGuard,
+             emissionMarkers: [
+                 emissionMarker(
+@@ -345,11 +345,47 @@ final class VoxtralClausePlannerTests: XCTestCase {
+                     proxyEndSample: groupEnd + VoxtralClausePlanner.sampleRate
+                 ),
+             ]
++        ))
++        let boundary = planner.observe(
++            fedThrough: VoxtralClausePlanner.hardClauseLimit
++                + VoxtralClausePlanner.stabilityGuard
+         )
+ 
+         XCTAssertEqual(boundary?.sourceText, firstGroup)
+         XCTAssertEqual(boundary?.sampleRange.upperBound, groupEnd)
+         XCTAssertEqual(planner.pendingSourceText, nextGroup)
++    }
++
++    func testHardLimitUsesTheLastValidatedMarkerBeforeFallingBack() {
++        var planner = speakerPlanner()
++        let first = "最初"
++        let second = "次"
++        let tail = "最後"
++        let firstEnd = VoxtralClausePlanner.hardClauseTarget
++        let secondEnd = VoxtralClausePlanner.hardClauseLimit
++            - VoxtralClausePlanner.sampleRate / 2
++
++        let boundary = planner.observe(
++            delta: first + second + tail,
++            fedThrough: VoxtralClausePlanner.hardClauseLimit
++                + VoxtralClausePlanner.stabilityGuard,
++            emissionMarkers: [
++                emissionMarker(groupStartUTF8: 0, proxyEndSample: firstEnd),
++                emissionMarker(
++                    groupStartUTF8: first.utf8.count,
++                    proxyEndSample: secondEnd
++                ),
++                emissionMarker(
++                    groupStartUTF8: (first + second).utf8.count,
++                    proxyEndSample: VoxtralClausePlanner.hardClauseLimit
++                        + VoxtralClausePlanner.sampleRate
++                ),
++            ]
++        )
++
++        XCTAssertEqual(boundary?.sourceText, first + second)
++        XCTAssertEqual(boundary?.sampleRange.upperBound, secondEnd)
++        XCTAssertEqual(planner.pendingSourceText, tail)
+     }
+ 
+     func testFollowingMarkerIsRetainedAsTheNextClauseAnchor() {
+@@ -362,7 +398,8 @@ final class VoxtralClausePlannerTests: XCTestCase {
+ 
+         let firstBoundary = planner.observe(
+             delta: first + second + tail,
+-            fedThrough: firstEnd + VoxtralClausePlanner.stabilityGuard,
++            fedThrough: VoxtralClausePlanner.hardClauseLimit
++                + VoxtralClausePlanner.stabilityGuard,
+             emissionMarkers: [
+                 emissionMarker(groupStartUTF8: 0, proxyEndSample: firstEnd),
+                 emissionMarker(
+@@ -373,7 +410,8 @@ final class VoxtralClausePlannerTests: XCTestCase {
+         )!
+ 
+         let secondBoundary = planner.observe(
+-            fedThrough: secondEnd + VoxtralClausePlanner.stabilityGuard,
++            fedThrough: firstEnd + VoxtralClausePlanner.hardClauseLimit
++                + VoxtralClausePlanner.stabilityGuard,
+             emissionMarkers: [
+                 emissionMarker(
+                     groupStartUTF8: (first + second).utf8.count,
