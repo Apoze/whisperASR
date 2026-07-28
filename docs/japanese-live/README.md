@@ -31,8 +31,8 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 | [L7C — Deux vidéos complètes](lots/L07C-deux-videos-completes.md) | L7B | terminé | 22/22 sessions moteur, 2/2 previews et 470/470 contrôles tentés |
 | [L7D — Comparaison et décision](lots/L07D-comparaison-decision.md) | L7C | terminé, aucune promotion | Kotoba meilleur final observé; aucun pipeline ne passe tous les gates |
 | [L8A — Diagnostic Voxtral fiable](lots/L08A-diagnostic-voxtral.md) | L7D, décision utilisateur Voxtral | terminé | origine ASR/frontières/Apple et intégrité de fin mesurées |
-| L8B — Récupération de fin | L8A | non démarré | dernière parole conservée sans doublon |
-| L8C — Frontières japonaises | L8B | non démarré | clauses sûres pour Apple Translation |
+| [L8B — Récupération de fin](lots/L08B-recuperation-fin.md) | L8A | terminé, bloqué | reprises rejetées; chemin produit restauré |
+| L8C — Frontières japonaises | L8B | bloqué par L8B | clauses sûres pour Apple Translation |
 | L8D — Latence et ressources | L8C | non démarré | Q4/480 ou Q4/960 et cadence preview décidés |
 | L8E — Profils lexicaux | gate L8D | conditionnel | corrections exactes seulement si utiles |
 | L8F — Simplification Voxtral | L8D, L8E si retenu | non démarré | un seul moteur produit |
