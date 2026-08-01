@@ -150,6 +150,52 @@ final class QwenPseudoLiveCoordinatorTests: XCTestCase {
         XCTAssertEqual(QwenPseudoLiveCadence.stored(in: defaults), .seconds2)
     }
 
+    func testAllCadencesUseFakeClockAndCoalesceToLatestFullPhrase() {
+        let phraseStart = 4_000
+        var now: UInt64 = 100
+
+        for cadence in QwenPseudoLiveCadence.allCases {
+            var coordinator = QwenPseudoLiveCoordinator(cadence: cadence)
+            let interval = cadence.sampleCount
+
+            XCTAssertNil(coordinator.observe(
+                speechStart: phraseStart,
+                availableThrough: phraseStart + interval - 1,
+                requestedUptimeNanoseconds: now
+            ))
+            now += 1
+            let first = coordinator.observe(
+                speechStart: phraseStart,
+                availableThrough: phraseStart + interval,
+                requestedUptimeNanoseconds: now
+            )!
+            XCTAssertEqual(first.range, phraseStart..<(phraseStart + interval))
+            XCTAssertEqual(first.requestedUptimeNanoseconds, now)
+
+            now += 1
+            XCTAssertNil(coordinator.observe(
+                speechStart: phraseStart,
+                availableThrough: phraseStart + interval * 2,
+                requestedUptimeNanoseconds: now
+            ))
+            now += 1
+            XCTAssertNil(coordinator.observe(
+                speechStart: phraseStart,
+                availableThrough: phraseStart + interval * 3,
+                requestedUptimeNanoseconds: now
+            ))
+
+            let completion = coordinator.completePreview(first, source: "古い")
+            XCTAssertNil(completion.accepted)
+            XCTAssertEqual(
+                completion.next?.range,
+                phraseStart..<(phraseStart + interval * 3)
+            )
+            XCTAssertEqual(completion.next?.requestedUptimeNanoseconds, now)
+            XCTAssertEqual(coordinator.coalescedTickCount, 2)
+        }
+    }
+
     func testPseudoLiveEngineNeverRequestsAppleSpeech() async throws {
         let appleSpeech = AppleSpeechCallRecorder()
         try await LocalEnglishEngine.qwenPseudoLiveApple.runAppleSpeechPreviewOperation {
