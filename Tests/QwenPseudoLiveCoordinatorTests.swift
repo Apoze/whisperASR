@@ -31,7 +31,10 @@ final class QwenPseudoLiveCoordinatorTests: XCTestCase {
         let revision = firstCompletion.next!
         XCTAssertEqual(revision.range, 4_000..<68_000)
 
-        let final = coordinator.stageFinal(range: 4_000..<72_000)
+        let final = coordinator.stageFinal(
+            range: 4_000..<72_000,
+            stableThrough: 72_000
+        )
         let lateCompletion = coordinator.completePreview(
             revision,
             source: "古い"
@@ -43,6 +46,30 @@ final class QwenPseudoLiveCoordinatorTests: XCTestCase {
         XCTAssertNil(coordinator.observe(speechStart: 72_000, availableThrough: 104_000))
         XCTAssertEqual(coordinator.completeFinal(final)?.range, 72_000..<104_000)
         XCTAssertEqual(final.range, 4_000..<72_000)
+    }
+
+    func testBoundaryRejectsTheEndedPhraseButKeepsForcedOverlapForTheNextOne() {
+        var coordinator = QwenPseudoLiveCoordinator(cadence: .seconds1)
+        let oldPreview = coordinator.observe(
+            speechStart: 0,
+            availableThrough: 16_000
+        )!
+        let final = coordinator.stageFinal(
+            range: 0..<LocalEndpointPlanner.maxPhrase,
+            stableThrough: LocalEndpointPlanner.maxPhrase
+                - LocalEndpointPlanner.forcedOverlap
+        )
+
+        XCTAssertNil(coordinator.completePreview(oldPreview, source: "late").accepted)
+        XCTAssertNil(coordinator.observe(speechStart: 0, availableThrough: 32_000))
+        XCTAssertNil(coordinator.observe(
+            speechStart: final.stableThrough,
+            availableThrough: final.stableThrough + 16_000
+        ))
+        XCTAssertEqual(
+            coordinator.completeFinal(final)?.range,
+            final.stableThrough..<(final.stableThrough + 16_000)
+        )
     }
 
     func testFakeServicesPublishRevisionsButPersistOnlyTheBoundaryFinal() async {
@@ -70,7 +97,10 @@ final class QwenPseudoLiveCoordinatorTests: XCTestCase {
 
         let late = coordinator.observe(speechStart: 0, availableThrough: 128_000)!
         let lateSource = await services.qwen(range: late.range, context: nil)
-        let final = coordinator.stageFinal(range: 0..<136_000)
+        let final = coordinator.stageFinal(
+            range: 0..<136_000,
+            stableThrough: 136_000
+        )
         XCTAssertNil(coordinator.completePreview(late, source: lateSource).accepted)
         let finalSource = await services.qwen(range: final.range, context: nil)
         let finalEnglish = await services.translateHighFidelity(finalSource)
@@ -134,6 +164,52 @@ final class QwenPseudoLiveCoordinatorTests: XCTestCase {
         let work = cancelled.observe(speechStart: 0, availableThrough: 16_000)!
         cancelled.cancel()
         XCTAssertNil(cancelled.completePreview(work, source: "遅い").accepted)
+    }
+
+    func testFailuresKeepTheStoppedPhraseAndPCMCursorAuthoritativeUntilRetry() async {
+        var coordinator = QwenPseudoLiveCoordinator(cadence: .seconds1)
+        let failedPreview = coordinator.observe(
+            speechStart: 0,
+            availableThrough: 16_000
+        )!
+        XCTAssertNil(coordinator.failPreview(failedPreview))
+
+        var shortPhraseCoordinator = QwenPseudoLiveCoordinator(cadence: .seconds1)
+        XCTAssertNil(shortPhraseCoordinator.observe(
+            speechStart: 0,
+            availableThrough: 8_000
+        ))
+
+        let fifo = LocalEndpointFIFO()
+        let decision = await fifo.observe(
+            totalSample: 20_000,
+            speech: [SpeechSampleRange(start: 0, end: 8_000)],
+            finishing: true
+        )!
+        let final = shortPhraseCoordinator.stageFinal(
+            range: decision.audioStart..<decision.audioEnd,
+            stableThrough: decision.stableThrough
+        )
+        XCTAssertNil(shortPhraseCoordinator.observe(
+            speechStart: decision.stableThrough,
+            availableThrough: decision.stableThrough + 16_000
+        ))
+
+        let retained = await fifo.next()
+        var cursors = await fifo.cursors()
+        XCTAssertEqual(retained?.decision, decision)
+        XCTAssertEqual(cursors.finalized, 0)
+
+        let retried = await fifo.next()
+        XCTAssertEqual(retried, retained)
+
+        XCTAssertEqual(
+            shortPhraseCoordinator.completeFinal(final)?.range,
+            decision.stableThrough..<(decision.stableThrough + 16_000)
+        )
+        await fifo.accept(retried!)
+        cursors = await fifo.cursors()
+        XCTAssertEqual(cursors.finalized, decision.stableThrough)
     }
 
     func testCadencePersistsOnlySupportedValues() {

@@ -25,6 +25,7 @@ struct QwenPseudoLivePreviewWork: Equatable, Sendable {
 struct QwenPseudoLiveFinalWork: Equatable, Sendable {
     let generation: Int
     let range: Range<Int>
+    let stableThrough: Int
 }
 
 struct QwenPseudoLivePreviewResult: Equatable, Sendable {
@@ -53,6 +54,7 @@ struct QwenPseudoLiveCoordinator: Sendable {
     private var inFlight: QwenPseudoLivePreviewWork?
     private var pending: QwenPseudoLivePreviewWork?
     private var pendingFinals: [QwenPseudoLiveFinalWork] = []
+    private var previewNotBefore = 0
     private var isCancelled = false
 
     var isCatchingUp: Bool { pending != nil }
@@ -71,7 +73,10 @@ struct QwenPseudoLiveCoordinator: Sendable {
         availableThrough: Int,
         requestedUptimeNanoseconds: UInt64 = DispatchTime.now().uptimeNanoseconds
     ) -> QwenPseudoLivePreviewWork? {
-        guard previewsEnabled, !isCancelled, availableThrough > speechStart else { return nil }
+        guard previewsEnabled,
+              !isCancelled,
+              speechStart >= previewNotBefore,
+              availableThrough > speechStart else { return nil }
         if phraseStart == nil {
             phraseStart = speechStart
             lastRequestedEnd = speechStart
@@ -118,13 +123,32 @@ struct QwenPseudoLiveCoordinator: Sendable {
         )
     }
 
-    mutating func stageFinal(range: Range<Int>) -> QwenPseudoLiveFinalWork {
+    mutating func failPreview(
+        _ work: QwenPseudoLivePreviewWork
+    ) -> QwenPseudoLivePreviewWork? {
+        guard inFlight == work else {
+            staleResultCount += 1
+            return nil
+        }
+        inFlight = nil
+        return takePendingIfReady()
+    }
+
+    mutating func stageFinal(
+        range: Range<Int>,
+        stableThrough: Int
+    ) -> QwenPseudoLiveFinalWork {
         generation += 1
         phraseStart = nil
         lastRequestedEnd = nil
         latestRequestedRange = nil
         pending = nil
-        let work = QwenPseudoLiveFinalWork(generation: generation, range: range)
+        previewNotBefore = max(previewNotBefore, stableThrough)
+        let work = QwenPseudoLiveFinalWork(
+            generation: generation,
+            range: range,
+            stableThrough: stableThrough
+        )
         pendingFinals.append(work)
         return work
     }

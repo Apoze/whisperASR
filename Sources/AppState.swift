@@ -2040,13 +2040,10 @@ class AppState {
                 )
             } catch {
                 guard !Task.isCancelled else { return }
-                let completion = self.localQwenPseudoLiveCoordinator.completePreview(
-                    work,
-                    source: ""
-                )
+                let next = self.localQwenPseudoLiveCoordinator.failPreview(work)
                 self.localQwenPseudoLiveTask = nil
                 self.livePreviewError = "Qwen preview unavailable: \(error.localizedDescription) Stable subtitles will continue."
-                if let next = completion.next {
+                if let next {
                     self.startQwenPseudoLivePreview(
                         next,
                         recorder: recorder,
@@ -2217,7 +2214,8 @@ class AppState {
         guard activeLocalTranslationMode.showsPreview else { return }
         if activeLocalEnglishEngine.usesQwenPseudoLivePreview {
             _ = localQwenPseudoLiveCoordinator.stageFinal(
-                range: decision.audioStart..<decision.audioEnd
+                range: decision.audioStart..<decision.audioEnd,
+                stableThrough: decision.stableThrough
             )
         }
         localPreviewPlanner.advanceBoundary(through: decision.stableThrough)
