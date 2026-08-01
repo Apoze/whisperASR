@@ -476,6 +476,11 @@ struct LocalCaptionMetric: Codable, Sendable {
     var stableThrough: Int? = nil
     var committedThrough: Int? = nil
     var finalSegmentIndex: Int? = nil
+    var qwenPreviewASRMilliseconds: Double? = nil
+    var qwenPreviewTranslationMilliseconds: Double? = nil
+    var qwenPreviewAgeMilliseconds: Double? = nil
+    var qwenFinalASRMilliseconds: Double? = nil
+    var qwenFinalTranslationMilliseconds: Double? = nil
 }
 
 struct LocalVoxtralSessionMetric: Codable, Sendable {
@@ -518,7 +523,22 @@ actor LocalCaptionMetricRecorder {
     }
 
     func append(_ metric: LocalCaptionMetric) {
-        if enabled { records.append(metric) }
+        guard enabled else { return }
+        var metric = metric
+        if metric.engine == LocalEnglishEngine.qwenPseudoLiveApple.rawValue {
+            switch metric.kind {
+            case .preview:
+                metric.qwenPreviewASRMilliseconds = metric.asrMilliseconds
+                metric.qwenPreviewTranslationMilliseconds = metric.translationMilliseconds
+                metric.qwenPreviewAgeMilliseconds = metric.speechEndToRenderedMilliseconds
+            case .final:
+                metric.qwenFinalASRMilliseconds = metric.asrMilliseconds
+                metric.qwenFinalTranslationMilliseconds = metric.translationMilliseconds
+            case .finalAttempt:
+                break
+            }
+        }
+        records.append(metric)
     }
 
     func appendVoxtralSession(_ session: LocalVoxtralSessionMetric) {
@@ -627,7 +647,7 @@ actor LocalCaptionMetricRecorder {
     }
 
     static func csvData(for records: [LocalCaptionMetric]) -> Data {
-        var csv = "kind,engine,boundary_kind,boundary_degradation,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,speech_end_to_rendered_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,preview_generation,is_first_eligible,coalesced_preview_ticks,stale_preview_results,accepted_start,stable_through,committed_through,final_segment_index,source,english\n"
+        var csv = "kind,engine,boundary_kind,boundary_degradation,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,speech_end_to_rendered_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,preview_generation,is_first_eligible,coalesced_preview_ticks,stale_preview_results,accepted_start,stable_through,committed_through,final_segment_index,qwen_preview_asr_ms,qwen_preview_translation_ms,qwen_preview_age_ms,qwen_final_asr_ms,qwen_final_translation_ms,source,english\n"
         for record in records {
             let revision = record.revision.map(String.init) ?? ""
             let previewLatency = record.previewLatencyMilliseconds.map {
@@ -676,6 +696,11 @@ actor LocalCaptionMetricRecorder {
                 record.stableThrough.map(String.init) ?? "",
                 record.committedThrough.map(String.init) ?? "",
                 record.finalSegmentIndex.map(String.init) ?? "",
+                record.qwenPreviewASRMilliseconds.map { String(format: "%.3f", $0) } ?? "",
+                record.qwenPreviewTranslationMilliseconds.map { String(format: "%.3f", $0) } ?? "",
+                record.qwenPreviewAgeMilliseconds.map { String(format: "%.3f", $0) } ?? "",
+                record.qwenFinalASRMilliseconds.map { String(format: "%.3f", $0) } ?? "",
+                record.qwenFinalTranslationMilliseconds.map { String(format: "%.3f", $0) } ?? "",
                 Self.csv(record.sourceText ?? ""), Self.csv(record.englishText),
             ]
             csv += fields.joined(separator: ",") + "\n"
@@ -712,6 +737,7 @@ struct LocalCaptionBenchmarkSummary: Codable, Equatable, Sendable {
     var capturedApplicationBundleIdentifier: String? = nil
     var capturedApplicationProcessIdentifier: Int32? = nil
     var microphoneIncluded: Bool = false
+    var qwenPseudoLiveCadenceSeconds: Int? = nil
 }
 
 private struct LocalCaptionBenchmarkSessionReport: Codable {

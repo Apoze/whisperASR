@@ -2,6 +2,30 @@ import XCTest
 @testable import WhisperASRApp
 
 final class QwenPseudoLiveCoordinatorTests: XCTestCase {
+    func testPreviewStatusTracksCatchUpDegradationRecoveryAndCancellation() {
+        var coordinator = QwenPseudoLiveCoordinator(cadence: .seconds1)
+        XCTAssertEqual(coordinator.previewStatus, .available)
+
+        let first = coordinator.observe(speechStart: 0, availableThrough: 16_000)!
+        XCTAssertNil(coordinator.observe(speechStart: 0, availableThrough: 32_000))
+        XCTAssertEqual(coordinator.previewStatus, .catchingUp)
+
+        let second = coordinator.completePreview(first, source: "old").next!
+        XCTAssertNil(coordinator.failPreview(second))
+        XCTAssertEqual(coordinator.previewStatus, .degraded)
+
+        _ = coordinator.stageFinal(range: 0..<40_000, stableThrough: 40_000)
+        XCTAssertEqual(coordinator.previewStatus, .degraded)
+        _ = coordinator.completeFinal(range: 0..<40_000)
+
+        let recovered = coordinator.observe(speechStart: 40_000, availableThrough: 56_000)!
+        XCTAssertNotNil(coordinator.completePreview(recovered, source: "current").accepted)
+        XCTAssertEqual(coordinator.previewStatus, .available)
+
+        coordinator.cancel()
+        XCTAssertEqual(coordinator.previewStatus, .unavailable)
+    }
+
     func testPreviewStartIncludesPreRollWithoutCrossingTheLastBoundary() {
         XCTAssertEqual(
             QwenPseudoLiveCoordinator.previewStart(speechStart: 20_000, notBefore: 0),

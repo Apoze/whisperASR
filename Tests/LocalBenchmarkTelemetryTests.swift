@@ -3,6 +3,82 @@ import XCTest
 @testable import WhisperASRApp
 
 final class LocalBenchmarkTelemetryTests: XCTestCase {
+    func testQwenMetricsClassifyPreviewAndFinalWork() async throws {
+        var metric = LocalCaptionMetric(
+            kind: .preview,
+            engine: LocalEnglishEngine.qwenPseudoLiveApple.rawValue,
+            boundaryKind: nil,
+            rangeStart: 4_000,
+            rangeEnd: 36_000,
+            speechEnd: 36_000,
+            endpointDetectedAt: -1,
+            vadOnlyEndpointAt: -1,
+            queueMilliseconds: 10,
+            asrMilliseconds: 120,
+            translationMilliseconds: 45,
+            renderedUptimeNanoseconds: 1_000,
+            sourceText: "こんにちは。",
+            englishText: "Hello.",
+            revision: 2,
+            previewLatencyMilliseconds: 2_000,
+            speechEndToRenderedMilliseconds: 300,
+            firstLexicalUptimeNanoseconds: nil,
+            sourceEligibleUptimeNanoseconds: 100,
+            translationStartedUptimeNanoseconds: 200,
+            translationCompletedUptimeNanoseconds: 300
+        )
+        metric.previewGeneration = 7
+        metric.coalescedPreviewTicks = 2
+        metric.stalePreviewResults = 1
+
+        let final = LocalCaptionMetric(
+            kind: .final,
+            engine: LocalEnglishEngine.qwenPseudoLiveApple.rawValue,
+            boundaryKind: "pause",
+            rangeStart: 4_000,
+            rangeEnd: 40_000,
+            speechEnd: 39_000,
+            endpointDetectedAt: 40_000,
+            vadOnlyEndpointAt: 40_000,
+            queueMilliseconds: 5,
+            asrMilliseconds: 200,
+            translationMilliseconds: 80,
+            renderedUptimeNanoseconds: 2_000,
+            sourceText: "こんにちは。",
+            englishText: "Hello.",
+            revision: nil,
+            previewLatencyMilliseconds: nil,
+            firstLexicalUptimeNanoseconds: nil,
+            sourceEligibleUptimeNanoseconds: nil,
+            translationStartedUptimeNanoseconds: 400,
+            translationCompletedUptimeNanoseconds: 480
+        )
+        let recorder = LocalCaptionMetricRecorder(enabled: true)
+        await recorder.append(metric)
+        await recorder.append(final)
+        let classified = await recorder.snapshot()
+
+        let json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(classified[0]))
+                as? [String: Any]
+        )
+        XCTAssertEqual(json["kind"] as? String, "preview")
+        XCTAssertEqual(json["asrMilliseconds"] as? Double, 120)
+        XCTAssertEqual(json["translationMilliseconds"] as? Double, 45)
+        XCTAssertEqual(json["speechEndToRenderedMilliseconds"] as? Double, 300)
+        XCTAssertEqual(json["previewGeneration"] as? Int, 7)
+        XCTAssertEqual(json["rangeStart"] as? Int, 4_000)
+        XCTAssertEqual(json["rangeEnd"] as? Int, 36_000)
+        XCTAssertEqual(json["coalescedPreviewTicks"] as? Int, 2)
+        XCTAssertEqual(json["stalePreviewResults"] as? Int, 1)
+        XCTAssertEqual(json["qwenPreviewASRMilliseconds"] as? Double, 120)
+        XCTAssertEqual(json["qwenPreviewTranslationMilliseconds"] as? Double, 45)
+        XCTAssertEqual(json["qwenPreviewAgeMilliseconds"] as? Double, 300)
+        XCTAssertEqual(classified[1].qwenFinalASRMilliseconds, 200)
+        XCTAssertEqual(classified[1].qwenFinalTranslationMilliseconds, 80)
+        XCTAssertNil(classified[1].qwenPreviewASRMilliseconds)
+    }
+
     func testOptInReportKeepsMetricsAudioAndSessionProvenanceTogether() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -94,7 +170,8 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
                     overlapCount: 0,
                     overlapSampleCount48k: 0,
                     restartCount: 0
-                )
+                ),
+                qwenPseudoLiveCadenceSeconds: 2
             ),
             whisperModelSelection: LocalWhisperModelSelection(
                 candidate: "turbo",
@@ -131,6 +208,8 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         )
         XCTAssertTrue(csv.contains("boundary_degradation"))
         XCTAssertTrue(csv.contains("final_segment_index"))
+        XCTAssertTrue(csv.contains("qwen_preview_asr_ms"))
+        XCTAssertTrue(csv.contains("qwen_final_translation_ms"))
         XCTAssertTrue(csv.contains("degradedForcedBoundary"))
         let sessionURL = root.appendingPathComponent("\(stem)-session.json")
         let json = try XCTUnwrap(
@@ -174,5 +253,6 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         XCTAssertEqual(summary["finalSampleCount"] as? Int, 16_000)
         XCTAssertEqual(summary["pcmComplete"] as? Bool, true)
         XCTAssertEqual(summary["helperAcknowledgedThrough"] as? Int, 16_000)
+        XCTAssertEqual(summary["qwenPseudoLiveCadenceSeconds"] as? Int, 2)
     }
 }

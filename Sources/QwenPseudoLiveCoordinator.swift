@@ -38,6 +38,13 @@ struct QwenPseudoLivePreviewCompletion: Equatable, Sendable {
     let next: QwenPseudoLivePreviewWork?
 }
 
+enum QwenPseudoLivePreviewStatus: Equatable, Sendable {
+    case available
+    case catchingUp
+    case degraded
+    case unavailable
+}
+
 /// Schedules cumulative Qwen snapshots without granting them stable-PCM authority.
 /// The endpoint FIFO remains the sole owner of final ranges and reclamation.
 struct QwenPseudoLiveCoordinator: Sendable {
@@ -47,6 +54,7 @@ struct QwenPseudoLiveCoordinator: Sendable {
     private(set) var coalescedTickCount = 0
     private(set) var staleResultCount = 0
     private(set) var generation = 0
+    private(set) var previewStatus: QwenPseudoLivePreviewStatus = .available
 
     private var phraseStart: Int?
     private var lastRequestedEnd: Int?
@@ -96,6 +104,7 @@ struct QwenPseudoLiveCoordinator: Sendable {
         guard inFlight == nil, pendingFinals.isEmpty else {
             if pending != nil || inFlight != nil { coalescedTickCount += 1 }
             pending = work
+            previewStatus = .catchingUp
             return nil
         }
         inFlight = work
@@ -117,6 +126,7 @@ struct QwenPseudoLiveCoordinator: Sendable {
             ? QwenPseudoLivePreviewResult(work: work, source: source)
             : nil
         if accepted == nil { staleResultCount += 1 }
+        if accepted != nil { previewStatus = .available }
         return QwenPseudoLivePreviewCompletion(
             accepted: accepted,
             next: takePendingIfReady()
@@ -131,6 +141,7 @@ struct QwenPseudoLiveCoordinator: Sendable {
             return nil
         }
         inFlight = nil
+        previewStatus = .degraded
         return takePendingIfReady()
     }
 
@@ -143,6 +154,7 @@ struct QwenPseudoLiveCoordinator: Sendable {
         lastRequestedEnd = nil
         latestRequestedRange = nil
         pending = nil
+        if previewStatus == .catchingUp { previewStatus = .available }
         previewNotBefore = max(previewNotBefore, stableThrough)
         let work = QwenPseudoLiveFinalWork(
             generation: generation,
@@ -174,6 +186,7 @@ struct QwenPseudoLiveCoordinator: Sendable {
         latestRequestedRange = nil
         pending = nil
         pendingFinals.removeAll()
+        previewStatus = .unavailable
     }
 
     private mutating func takePendingIfReady() -> QwenPseudoLivePreviewWork? {

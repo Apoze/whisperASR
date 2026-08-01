@@ -876,7 +876,10 @@ class AppState {
                             stopResult.capturedApplicationBundleIdentifier,
                         capturedApplicationProcessIdentifier:
                             stopResult.capturedApplicationProcessIdentifier,
-                        microphoneIncluded: stopResult.microphoneIncluded
+                        microphoneIncluded: stopResult.microphoneIncluded,
+                        qwenPseudoLiveCadenceSeconds:
+                            activeLocalEnglishEngine.usesQwenPseudoLivePreview
+                                ? activeQwenPseudoLiveCadence.rawValue : nil
                     ),
                     whisperModelSelection: whisperSelection,
                     voxtralConfiguration: activeLocalEnglishEngine.usesContinuousVoxtral
@@ -2042,7 +2045,7 @@ class AppState {
                 guard !Task.isCancelled else { return }
                 let next = self.localQwenPseudoLiveCoordinator.failPreview(work)
                 self.localQwenPseudoLiveTask = nil
-                self.livePreviewError = "Qwen preview unavailable: \(error.localizedDescription) Stable subtitles will continue."
+                self.livePreviewError = "\(Self.qwenPreviewStatusText(self.localQwenPseudoLiveCoordinator.previewStatus)): \(error.localizedDescription) Stable subtitles will continue."
                 if let next {
                     self.startQwenPseudoLivePreview(
                         next,
@@ -3370,7 +3373,9 @@ class AppState {
                     )
                 } else if engine.usesQwenPseudoLivePreview,
                           localQwenPseudoLiveCoordinator.isCatchingUp {
-                    setLocalStatus("Catching up — Qwen preview…")
+                    setLocalStatus(Self.qwenPreviewStatusText(
+                        localQwenPseudoLiveCoordinator.previewStatus
+                    ))
                 }
                 let feedThrough = decision?.audioEnd ?? total
                 if engine.usesVoxtralStreaming {
@@ -4355,6 +4360,15 @@ class AppState {
         guard activeLocalEnglishEngine.usesQwenPseudoLivePreview else { return }
         metric.coalescedPreviewTicks = localQwenPseudoLiveCoordinator.coalescedTickCount
         metric.stalePreviewResults = localQwenPseudoLiveCoordinator.staleResultCount
+    }
+
+    private static func qwenPreviewStatusText(_ status: QwenPseudoLivePreviewStatus) -> String {
+        switch status {
+        case .available: "Qwen preview available"
+        case .catchingUp: "Catching up — Qwen preview…"
+        case .degraded: "Qwen preview degraded"
+        case .unavailable: "Qwen preview unavailable"
+        }
     }
 
     @available(macOS 26.4, *)
