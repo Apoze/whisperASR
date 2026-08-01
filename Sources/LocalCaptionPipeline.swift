@@ -37,6 +37,7 @@ struct LocalPreviewWork: Equatable, Sendable {
     let receivedUptimeNanoseconds: UInt64
     let isFirstEligibleInGeneration: Bool
     let bypassesThrottle: Bool
+    let asrMilliseconds: Double?
 }
 
 /// Latest-only preview state. Its sample boundary is deliberately separate
@@ -54,7 +55,8 @@ struct LocalPreviewPlanner: Sendable {
 
     mutating func submit(
         _ update: LiveSourceUpdate,
-        receivedUptimeNanoseconds: UInt64 = DispatchTime.now().uptimeNanoseconds
+        receivedUptimeNanoseconds: UInt64 = DispatchTime.now().uptimeNanoseconds,
+        asrMilliseconds: Double? = nil
     ) {
         guard !isSuspended,
               let update = update.clipped(afterSample: suppressedThrough)
@@ -92,7 +94,8 @@ struct LocalPreviewPlanner: Sendable {
                 ?? receivedUptimeNanoseconds,
             receivedUptimeNanoseconds: receivedUptimeNanoseconds,
             isFirstEligibleInGeneration: isFirst,
-            bypassesThrottle: isFirst || Self.hasTerminalPunctuation(combined.segment.text)
+            bypassesThrottle: isFirst || Self.hasTerminalPunctuation(combined.segment.text),
+            asrMilliseconds: asrMilliseconds
         )
     }
 
@@ -135,6 +138,8 @@ struct LocalPreviewPlanner: Sendable {
         return !isSuspended
             && work.generation == generation
             && start >= suppressedThrough
+            && (pending?.receivedUptimeNanoseconds ?? work.receivedUptimeNanoseconds)
+                <= work.receivedUptimeNanoseconds
     }
 
     static func isEligibleSource(_ text: String) -> Bool {
@@ -465,6 +470,8 @@ struct LocalCaptionMetric: Codable, Sendable {
     var finalEnqueuedUptimeNanoseconds: UInt64? = nil
     var previewGeneration: Int? = nil
     var isFirstEligibleInGeneration: Bool? = nil
+    var coalescedPreviewTicks: Int? = nil
+    var stalePreviewResults: Int? = nil
     var acceptedStart: Int? = nil
     var stableThrough: Int? = nil
     var committedThrough: Int? = nil
@@ -620,7 +627,7 @@ actor LocalCaptionMetricRecorder {
     }
 
     static func csvData(for records: [LocalCaptionMetric]) -> Data {
-        var csv = "kind,engine,boundary_kind,boundary_degradation,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,speech_end_to_rendered_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,preview_generation,is_first_eligible,accepted_start,stable_through,committed_through,final_segment_index,source,english\n"
+        var csv = "kind,engine,boundary_kind,boundary_degradation,range_start,range_end,speech_end,endpoint,vad_only_endpoint,queue_ms,asr_ms,translation_ms,revision,preview_latency_ms,speech_end_to_rendered_ms,first_lexical_ns,source_eligible_ns,translation_started_ns,translation_completed_ns,published_ns,final_attempt,final_attempt_outcome,final_error_classification,retry_backoff_ms,final_enqueued_ns,preview_generation,is_first_eligible,coalesced_preview_ticks,stale_preview_results,accepted_start,stable_through,committed_through,final_segment_index,source,english\n"
         for record in records {
             let revision = record.revision.map(String.init) ?? ""
             let previewLatency = record.previewLatencyMilliseconds.map {
@@ -663,6 +670,8 @@ actor LocalCaptionMetricRecorder {
                 finalEnqueued,
                 record.previewGeneration.map(String.init) ?? "",
                 record.isFirstEligibleInGeneration.map(String.init) ?? "",
+                record.coalescedPreviewTicks.map(String.init) ?? "",
+                record.stalePreviewResults.map(String.init) ?? "",
                 record.acceptedStart.map(String.init) ?? "",
                 record.stableThrough.map(String.init) ?? "",
                 record.committedThrough.map(String.init) ?? "",

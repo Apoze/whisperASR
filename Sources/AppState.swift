@@ -324,10 +324,14 @@ class AppState {
     private var activeLocalEnglishEngine: LocalEnglishEngine = .whisperTurboApple
     private var activeLocalSourceLocale = ""
     private var activeContinuousVoxtralConfiguration: VoxtralContinuousConfiguration = .default
+    private var activeQwenPseudoLiveCadence: QwenPseudoLiveCadence = .seconds2
     private var activeJapaneseGlossary = JapaneseGlossary.empty
     private var localPreviewPlanner = LocalPreviewPlanner()
+    private var localSourcePreviewSegment: TranscriptionSegment?
     private var localPreviewSegment: TranscriptionSegment?
     private var localPreviewTranslationTask: Task<Void, Never>?
+    private var localQwenPseudoLiveTask: Task<Void, Never>?
+    private var localQwenPseudoLiveCoordinator = QwenPseudoLiveCoordinator(cadence: .seconds2)
     private var localPreviewSpeechFinalizeTask: Task<Void, Never>?
     private var localPreviewWorkerRunning = false
     private var localPreviewWaitingForThrottle = false
@@ -1421,6 +1425,7 @@ class AppState {
         localDiarizationPreparationFinished = false
         localPreviewTranslationTask?.cancel()
         localPreviewTranslationTask = nil
+        cancelQwenPseudoLivePreview()
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
         localModelPreparationTask = Task { [weak self] in
@@ -1537,22 +1542,29 @@ class AppState {
             await previousPreparation?.value
             guard self.localPreparationIsCurrent(key, generation: generation) else { return }
             do {
-                if mode.showsPreview, engine.usesAppleSpeechPreview {
-                    try await self.appleSpeechService().prepare(
-                        localeIdentifier: locale
-                    ) { progress in
-                        Task { @MainActor [weak self] in
-                            guard let self,
-                                  self.localPreparationIsCurrent(
-                                    key,
-                                    generation: generation
-                                  ) else { return }
-                            self.localResourceProgress = progress
+                if mode.showsPreview {
+                    try await engine.runAppleSpeechPreviewOperation {
+                        try await self.appleSpeechService().prepare(
+                            localeIdentifier: locale
+                        ) { progress in
+                            Task { @MainActor [weak self] in
+                                guard let self,
+                                      self.localPreparationIsCurrent(
+                                        key,
+                                        generation: generation
+                                      ) else { return }
+                                self.localResourceProgress = progress
+                            }
                         }
                     }
-                    guard self.localPreparationIsCurrent(key, generation: generation) else { return }
-                    self.appleSpeechReady = true
-                    self.appleSpeechReadyKey = key
+                    if engine.usesAppleSpeechPreview {
+                        guard self.localPreparationIsCurrent(
+                            key,
+                            generation: generation
+                        ) else { return }
+                        self.appleSpeechReady = true
+                        self.appleSpeechReadyKey = key
+                    }
                 }
                 if !engine.usesWhisperFinal {
                     let previousWhisperPreparation = self.liveModelPreparationTask
@@ -1786,13 +1798,16 @@ class AppState {
         let localEngine = LocalEnglishEngine.stored(in: defaults)
         let sourceLocale = defaults.string(forKey: LocalSpeechEngine.sourceLocaleKey) ?? ""
         let continuousVoxtralConfiguration = VoxtralContinuousConfiguration.stored(in: defaults)
+        let qwenPseudoLiveCadence = QwenPseudoLiveCadence.stored(in: defaults)
         activeLiveCaptionMode = captionMode
         activeKeepOriginalTranscript = defaults.bool(forKey: LiveCaptionMode.keepOriginalKey)
         activeLocalTranslationMode = localMode
         activeLocalEnglishEngine = localEngine
         activeLocalSourceLocale = sourceLocale
         activeContinuousVoxtralConfiguration = continuousVoxtralConfiguration
+        activeQwenPseudoLiveCadence = qwenPseudoLiveCadence
         activeJapaneseGlossary = localEngine.usesContinuousVoxtral
+            || localEngine.usesQwenPseudoLivePreview
             ? JapaneseGlossary.stored(in: defaults) : .empty
         if localBenchmarkEnabled { localBenchmarkSessionID = UUID() }
         activeLocalRecorder = recorder
@@ -1806,9 +1821,15 @@ class AppState {
         localFinalTranslationInFlight = false
         localFinalTranslationState = .idle
         localPreviewPlanner = LocalPreviewPlanner()
+        localSourcePreviewSegment = nil
         localPreviewSegment = nil
         localPreviewTranslationTask?.cancel()
         localPreviewTranslationTask = nil
+        cancelQwenPseudoLivePreview()
+        localQwenPseudoLiveCoordinator = QwenPseudoLiveCoordinator(
+            cadence: qwenPseudoLiveCadence,
+            previewsEnabled: localMode.showsPreview
+        )
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
         localPreviewWorkerRunning = false
@@ -1923,7 +1944,7 @@ class AppState {
                     try await applePreviewTranslationService().warmup(
                         highFidelity: false
                     )
-                    if engine.usesAppleSpeechPreview {
+                    try await engine.runAppleSpeechPreviewOperation {
                         try await appleSpeechService().start(
                             localeIdentifier: sourceLocale,
                             priority: engine.usesVoxtralStreaming ? .utility : .userInitiated,
@@ -1966,17 +1987,104 @@ class AppState {
 
     @available(macOS 26.4, *)
     @MainActor
-    private func receiveLocalPreviewSource(_ update: LiveSourceUpdate) {
+    private func receiveLocalPreviewSource(
+        _ update: LiveSourceUpdate,
+        asrMilliseconds: Double? = nil
+    ) {
         guard localPreviewRuntimeEnabled,
               activeLocalTranslationMode.showsPreview,
               !update.segment.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         else { return }
-        localPreviewPlanner.submit(update)
+        localPreviewPlanner.submit(update, asrMilliseconds: asrMilliseconds)
+        if activeLocalEnglishEngine.usesQwenPseudoLivePreview {
+            localSourcePreviewSegment = update.segment
+            localPreviewSegment = nil
+            publishLocalCaptions()
+        }
         if localPreviewWaitingForThrottle,
            localPreviewPlanner.pending?.bypassesThrottle == true {
             localPreviewTranslationTask?.cancel()
         }
         startLocalPreviewWorkerIfNeeded()
+    }
+
+    @available(macOS 26.4, *)
+    @MainActor
+    private func startQwenPseudoLivePreview(
+        _ work: QwenPseudoLivePreviewWork,
+        recorder: AudioRecorder,
+        sourceLocale: String
+    ) {
+        guard localPreviewRuntimeEnabled,
+              activeLocalEnglishEngine.usesQwenPseudoLivePreview,
+              localQwenPseudoLiveTask == nil else { return }
+        let audio = recorder.getSamples(
+            from: work.range.lowerBound,
+            upTo: work.range.upperBound
+        )
+        guard audio.count == work.range.count else {
+            disableLocalPreview(LocalPrototypeError.invalidResponse)
+            return
+        }
+
+        localQwenPseudoLiveTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            let started = DispatchTime.now().uptimeNanoseconds
+            let source: String
+            do {
+                // Never pass glossary/context into Qwen. Alias correction stays
+                // in the shared translation path after recognition.
+                source = try await self.localModelManager.transcribeQwen(
+                    audio: audio,
+                    language: Self.languageName(for: sourceLocale)
+                )
+            } catch {
+                guard !Task.isCancelled else { return }
+                let completion = self.localQwenPseudoLiveCoordinator.completePreview(
+                    work,
+                    source: ""
+                )
+                self.localQwenPseudoLiveTask = nil
+                self.livePreviewError = "Qwen preview unavailable: \(error.localizedDescription) Stable subtitles will continue."
+                if let next = completion.next {
+                    self.startQwenPseudoLivePreview(
+                        next,
+                        recorder: recorder,
+                        sourceLocale: sourceLocale
+                    )
+                }
+                return
+            }
+            guard !Task.isCancelled else { return }
+            let asrMilliseconds = Self.elapsedMilliseconds(since: started)
+            let completion = self.localQwenPseudoLiveCoordinator.completePreview(
+                work,
+                source: source
+            )
+            self.localQwenPseudoLiveTask = nil
+            if let accepted = completion.accepted,
+               !accepted.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                self.receiveLocalPreviewSource(
+                    LiveSourceUpdate(
+                        segment: TranscriptionSegment(
+                            start: Double(accepted.work.range.lowerBound) / 16_000,
+                            end: Double(accepted.work.range.upperBound) / 16_000,
+                            text: accepted.source
+                        ),
+                        isFinal: false,
+                        finalizedThroughSample: self.localSourceFinalizedSampleCount
+                    ),
+                    asrMilliseconds: asrMilliseconds
+                )
+            }
+            if let next = completion.next {
+                self.startQwenPseudoLivePreview(
+                    next,
+                    recorder: recorder,
+                    sourceLocale: sourceLocale
+                )
+            }
+        }
     }
 
     @available(macOS 26.4, *)
@@ -2023,6 +2131,7 @@ class AppState {
                 in: .whitespacesAndNewlines
             )
             let source = activeLocalEnglishEngine.usesContinuousVoxtral
+                || activeLocalEnglishEngine.usesQwenPseudoLivePreview
                 ? activeJapaneseGlossary.applying(to: rawSource) : rawSource
             guard !source.isEmpty else { continue }
 
@@ -2070,8 +2179,9 @@ class AppState {
                     vadOnlyEndpointAt: -1,
                     queueMilliseconds: translationStarted > work.receivedUptimeNanoseconds
                         ? Double(translationStarted - work.receivedUptimeNanoseconds) / 1_000_000 : 0,
-                    asrMilliseconds: work.receivedUptimeNanoseconds > sourceEndUptime
-                        ? Double(work.receivedUptimeNanoseconds - sourceEndUptime) / 1_000_000 : 0,
+                    asrMilliseconds: work.asrMilliseconds
+                        ?? (work.receivedUptimeNanoseconds > sourceEndUptime
+                            ? Double(work.receivedUptimeNanoseconds - sourceEndUptime) / 1_000_000 : 0),
                     translationMilliseconds: translationCompleted > translationStarted
                         ? Double(translationCompleted - translationStarted) / 1_000_000 : 0,
                     renderedUptimeNanoseconds: rendered,
@@ -2089,6 +2199,7 @@ class AppState {
                 )
                 metric.previewGeneration = work.generation
                 metric.isFirstEligibleInGeneration = work.isFirstEligibleInGeneration
+                applyQwenPseudoLiveTelemetry(to: &metric)
                 await localMetricRecorder.append(metric)
             } catch {
                 guard !Task.isCancelled else { return }
@@ -2104,6 +2215,11 @@ class AppState {
     @MainActor
     private func suspendLocalPreview(for decision: LocalEndpointDecision) {
         guard activeLocalTranslationMode.showsPreview else { return }
+        if activeLocalEnglishEngine.usesQwenPseudoLivePreview {
+            _ = localQwenPseudoLiveCoordinator.stageFinal(
+                range: decision.audioStart..<decision.audioEnd
+            )
+        }
         localPreviewPlanner.advanceBoundary(through: decision.stableThrough)
         if localPreviewWaitingForThrottle {
             localPreviewTranslationTask?.cancel()
@@ -2120,8 +2236,23 @@ class AppState {
         ) {
             localPreviewSegment = nil
         }
+        if LocalPreviewRangePolicy.shouldClear(
+            preview: localSourcePreviewSegment,
+            finalizedThrough: sample
+        ) {
+            localSourcePreviewSegment = nil
+        }
         guard localPreviewRuntimeEnabled else { return }
         startLocalPreviewWorkerIfNeeded()
+    }
+
+    @discardableResult
+    private func cancelQwenPseudoLivePreview() -> Task<Void, Never>? {
+        let task = localQwenPseudoLiveTask
+        task?.cancel()
+        localQwenPseudoLiveTask = nil
+        localQwenPseudoLiveCoordinator.cancel()
+        return task
     }
 
     @MainActor
@@ -2133,15 +2264,19 @@ class AppState {
     private func disableLocalPreview(_ error: Error) {
         localPreviewRuntimeEnabled = false
         localPreviewPlanner.suspend(through: localCommittedSampleCount)
+        localSourcePreviewSegment = nil
         localPreviewSegment = nil
         localPreviewTranslationTask?.cancel()
+        cancelQwenPseudoLivePreview()
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
         livePreviewError = "Live preview unavailable: \(error.localizedDescription) Stable subtitles will continue."
         publishLocalCaptions()
         Task { [weak self] in
             guard let self else { return }
-            if #available(macOS 26.0, *) { await self.appleSpeechService().cancel() }
+            if #available(macOS 26.0, *), self.activeLocalEnglishEngine.usesAppleSpeechPreview {
+                await self.appleSpeechService().cancel()
+            }
             if #available(macOS 26.4, *) { await self.applePreviewTranslationService().cancel() }
         }
     }
@@ -2151,12 +2286,17 @@ class AppState {
     private func stopLocalPreviewRuntime() async {
         localPreviewRuntimeEnabled = false
         localPreviewPlanner.suspend(through: localCommittedSampleCount)
+        localSourcePreviewSegment = nil
         localPreviewSegment = nil
         localPreviewTranslationTask?.cancel()
+        let qwenPreviewTask = cancelQwenPseudoLivePreview()
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
-        await appleSpeechService().cancel()
+        if activeLocalEnglishEngine.usesAppleSpeechPreview {
+            await appleSpeechService().cancel()
+        }
         await applePreviewTranslationService().cancel()
+        await qwenPreviewTask?.value
         await localPreviewTranslationTask?.value
         localPreviewTranslationTask = nil
         localPreviewWorkerRunning = false
@@ -2219,6 +2359,7 @@ class AppState {
         async let producerError: Error? = producePrototypeEndpoints(
             recorder: recorder,
             engine: engine,
+            sourceLocale: sourceLocale,
             fifo: fifo
         )
         async let consumer: Void = consumePrototypeEndpoints(
@@ -3152,6 +3293,7 @@ class AppState {
     private func producePrototypeEndpoints(
         recorder: AudioRecorder,
         engine: LocalEnglishEngine,
+        sourceLocale: String,
         fifo: LocalEndpointFIFO
     ) async -> Error? {
         var vadAnalyzedEnd = 0
@@ -3195,22 +3337,43 @@ class AppState {
                             localPreviewSentSampleCount,
                             firstSpeech.start - LocalEndpointPlanner.preRoll
                         )
-                        localPreviewLastForcedSample = max(
-                            localPreviewLastForcedSample,
-                            firstSpeech.start
-                        )
+                        if !engine.usesQwenPseudoLivePreview {
+                            localPreviewLastForcedSample = max(
+                                localPreviewLastForcedSample,
+                                firstSpeech.start
+                            )
+                        }
                     }
                     if localPreviewSpeechStartSample == nil {
-                        localPreviewSpeechStartSample = max(
-                            localPreviewLastForcedSample,
-                            firstSpeech.start
-                        )
+                        localPreviewSpeechStartSample = engine.usesQwenPseudoLivePreview
+                            ? QwenPseudoLiveCoordinator.previewStart(
+                                speechStart: firstSpeech.start,
+                                notBefore: localPreviewLastForcedSample
+                            )
+                            : max(localPreviewLastForcedSample, firstSpeech.start)
                     }
                 }
                 let decision = await fifo.propose(
                     totalSample: total,
                     speech: speech
                 )
+                if decision == nil,
+                   engine.usesQwenPseudoLivePreview,
+                   localPreviewRuntimeEnabled,
+                   let speechStart = localPreviewSpeechStartSample,
+                   let work = localQwenPseudoLiveCoordinator.observe(
+                    speechStart: speechStart,
+                    availableThrough: total
+                   ) {
+                    startQwenPseudoLivePreview(
+                        work,
+                        recorder: recorder,
+                        sourceLocale: sourceLocale
+                    )
+                } else if engine.usesQwenPseudoLivePreview,
+                          localQwenPseudoLiveCoordinator.isCatchingUp {
+                    setLocalStatus("Catching up — Qwen preview…")
+                }
                 let feedThrough = decision?.audioEnd ?? total
                 if engine.usesVoxtralStreaming {
                     try await feedVoxtralSamples(
@@ -3488,7 +3651,7 @@ class AppState {
                 modelPath: try Self.whisperModelPath(for: engine)
             )
             finalText = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .qwenApple, .voxtralQwenApple:
+        case .qwenApple, .qwenPseudoLiveApple, .voxtralQwenApple:
             finalText = try await localModelManager.transcribeQwen(
                 audio: audio,
                 language: Self.languageName(for: sourceLocale)
@@ -3524,6 +3687,16 @@ class AppState {
             )
         }
         guard !finalText.isEmpty else { throw LocalPrototypeError.invalidResponse }
+        if engine.usesQwenPseudoLivePreview,
+           let next = localQwenPseudoLiveCoordinator.completeFinal(
+            range: decision.audioStart..<decision.audioEnd
+           ) {
+            startQwenPseudoLivePreview(
+                next,
+                recorder: recorder,
+                sourceLocale: sourceLocale
+            )
+        }
         let segment = TranscriptionSegment(
             start: Double(max(localSourceFinalizedSampleCount, decision.audioStart)) / 16_000,
             end: Double(decision.speechEnd) / 16_000,
@@ -3736,6 +3909,7 @@ class AppState {
         localPreviewRuntimeEnabled = false
         let previewTask = localPreviewTranslationTask
         previewTask?.cancel()
+        let qwenPreviewTask = cancelQwenPseudoLivePreview()
         let speechFinalizeTask = localPreviewSpeechFinalizeTask
         speechFinalizeTask?.cancel()
         let transcriptionTask = liveTranscriptionTask
@@ -3745,7 +3919,9 @@ class AppState {
         if #available(macOS 26.4, *) {
             // Close providers before awaiting their callers so an in-flight
             // framework request cannot keep Cancel alive indefinitely.
-            await appleSpeechService().cancel()
+            if activeLocalEnglishEngine.usesAppleSpeechPreview {
+                await appleSpeechService().cancel()
+            }
             await applePreviewTranslationService().cancel()
             if let translation = appleTranslationRuntime as? AppleTranslationService {
                 await translation.cancel()
@@ -3753,10 +3929,12 @@ class AppState {
             await localModelManager.cancelContinuousVoxtral()
         }
         await previewTask?.value
+        await qwenPreviewTask?.value
         await speechFinalizeTask?.value
         await transcriptionTask?.value
         await translationTask?.value
         localPreviewTranslationTask = nil
+        localQwenPseudoLiveTask = nil
         localPreviewSpeechFinalizeTask = nil
         liveTranscriptionTask = nil
         liveTranslationTask = nil
@@ -3789,9 +3967,11 @@ class AppState {
         localFinalTranslationInFlight = false
         localFinalTranslationState = .idle
         localPreviewPlanner = LocalPreviewPlanner()
+        localSourcePreviewSegment = nil
         localPreviewSegment = nil
         localPreviewTranslationTask?.cancel()
         localPreviewTranslationTask = nil
+        cancelQwenPseudoLivePreview()
         localPreviewSpeechFinalizeTask?.cancel()
         localPreviewSpeechFinalizeTask = nil
         localPreviewWorkerRunning = false
@@ -3969,6 +4149,7 @@ class AppState {
                 switch job.input {
                 case .japaneseSource(let source):
                     let translationSource = activeLocalEnglishEngine.usesContinuousVoxtral
+                        || activeLocalEnglishEngine.usesQwenPseudoLivePreview
                         ? activeJapaneseGlossary.applying(to: source.text) : source.text
                     text = try await translateStableSource(
                         translationSource,
@@ -4065,6 +4246,7 @@ class AppState {
                     metric.stableThrough = decision.stableThrough
                     metric.committedThrough = localCommittedSampleCount
                     metric.finalSegmentIndex = job.index
+                    applyQwenPseudoLiveTelemetry(to: &metric)
                     await localMetricRecorder.append(metric)
                 }
             } catch {
@@ -4166,7 +4348,15 @@ class AppState {
         metric.finalErrorClassification = classification?.rawValue
         metric.retryBackoffMilliseconds = backoffMilliseconds
         metric.finalEnqueuedUptimeNanoseconds = job.enqueuedUptimeNanoseconds
+        applyQwenPseudoLiveTelemetry(to: &metric)
         await localMetricRecorder.append(metric)
+    }
+
+    @MainActor
+    private func applyQwenPseudoLiveTelemetry(to metric: inout LocalCaptionMetric) {
+        guard activeLocalEnglishEngine.usesQwenPseudoLivePreview else { return }
+        metric.coalescedPreviewTicks = localQwenPseudoLiveCoordinator.coalescedTickCount
+        metric.stalePreviewResults = localQwenPseudoLiveCoordinator.staleResultCount
     }
 
     @available(macOS 26.4, *)
@@ -4183,9 +4373,25 @@ class AppState {
 
     @MainActor
     private func publishLocalCaptions() {
-        liveStableSegmentCount = localCommittedSegments.count
-        liveSegments = localCommittedSegments
-        if let localPreviewSegment { liveSegments.append(localPreviewSegment) }
+        if activeLocalEnglishEngine.usesQwenPseudoLivePreview {
+            liveStableSegmentCount = localSourceSegments.count
+            liveSegments = localSourceSegments
+            liveTranslatedSegments = localCommittedSegments.map(\.text)
+            if liveTranslatedSegments.count < liveSegments.count {
+                liveTranslatedSegments += Array(
+                    repeating: "",
+                    count: liveSegments.count - liveTranslatedSegments.count
+                )
+            }
+            if let localSourcePreviewSegment {
+                liveSegments.append(localSourcePreviewSegment)
+                liveTranslatedSegments.append(localPreviewSegment?.text ?? "")
+            }
+        } else {
+            liveStableSegmentCount = localCommittedSegments.count
+            liveSegments = localCommittedSegments
+            if let localPreviewSegment { liveSegments.append(localPreviewSegment) }
+        }
         setLocalStatus("Listening...")
         throttledAutoSave()
     }
@@ -4323,6 +4529,7 @@ class AppState {
         let localTranslationMode: AppleTranslationMode?
         let localEnglishEngine: LocalEnglishEngine?
         let voxtralConfiguration: VoxtralContinuousConfiguration?
+        let qwenPseudoLiveCadence: QwenPseudoLiveCadence?
         let japaneseGlossary: JapaneseGlossary?
         let discardOriginalAfterRetry: Bool?
         let savedAt: Date
@@ -4375,6 +4582,9 @@ class AppState {
         let localEngine = isLocalEnglish ? activeLocalEnglishEngine : nil
         let voxtralConfiguration = isLocalEnglish && activeLocalEnglishEngine.usesContinuousVoxtral
             ? activeContinuousVoxtralConfiguration : nil
+        let qwenPseudoLiveCadence = isLocalEnglish
+            && activeLocalEnglishEngine.usesQwenPseudoLivePreview
+            ? activeQwenPseudoLiveCadence : nil
         let discardOriginal = isLocalEnglish && !isDirectEnglish
             ? !activeKeepOriginalTranscript : nil
         let audioPath = activeLocalRecorder?.recordingFileURL?.path
@@ -4401,7 +4611,10 @@ class AppState {
             localTranslationMode: translationMode,
             localEnglishEngine: localEngine,
             voxtralConfiguration: voxtralConfiguration,
-            japaneseGlossary: isLocalEnglish && activeLocalEnglishEngine.usesContinuousVoxtral
+            qwenPseudoLiveCadence: qwenPseudoLiveCadence,
+            japaneseGlossary: isLocalEnglish && (
+                activeLocalEnglishEngine.usesContinuousVoxtral
+                    || activeLocalEnglishEngine.usesQwenPseudoLivePreview)
                 ? activeJapaneseGlossary : nil,
             discardOriginalAfterRetry: discardOriginal,
             savedAt: Date()

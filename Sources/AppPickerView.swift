@@ -15,6 +15,8 @@ struct AppPickerView: View {
     @AppStorage(AppleTranslationMode.storageKey) private var appleTranslationModeRaw = AppleTranslationMode.adaptive.rawValue
     @AppStorage(VoxtralContinuousConfiguration.storageKey) private var voxtralConfigurationRaw =
         VoxtralContinuousConfiguration.default.storageValue
+    @AppStorage(QwenPseudoLiveCadence.storageKey) private var qwenPseudoLiveCadenceSeconds =
+        QwenPseudoLiveCadence.seconds2.rawValue
     @AppStorage("targetLanguage") private var targetLanguage = ""
 
     private var captionMode: LiveCaptionMode {
@@ -79,6 +81,7 @@ struct AppPickerView: View {
             captionModeRaw = LiveCaptionMode.stored().rawValue
             localEnglishEngineRaw = LocalEnglishEngine.stored().rawValue
             appleTranslationModeRaw = AppleTranslationMode.stored().rawValue
+            qwenPseudoLiveCadenceSeconds = QwenPseudoLiveCadence.stored().rawValue
             if localEnglishEngine.producesDirectEnglish,
                appleTranslationMode == .lowLatencyOnly {
                 appleTranslationModeRaw = AppleTranslationMode.adaptive.rawValue
@@ -244,6 +247,19 @@ struct AppPickerView: View {
                             }
                         }
 
+                        if localEnglishEngine.usesQwenPseudoLivePreview,
+                           appleTranslationMode.showsPreview {
+                            Picker(
+                                "Pseudo-live cadence",
+                                selection: $qwenPseudoLiveCadenceSeconds
+                            ) {
+                                ForEach(QwenPseudoLiveCadence.allCases) { cadence in
+                                    Text(cadence.label).tag(cadence.rawValue)
+                                }
+                            }
+                            .accessibilityLabel("Qwen pseudo-live preview cadence")
+                        }
+
                         if let modelID = localEnglishEngine.whisperModelID,
                            let model = ModelCatalog.model(id: modelID) {
                             LabeledContent("Whisper model", value: model.displayName)
@@ -365,6 +381,10 @@ struct AppPickerView: View {
                 }
             }
             if appleTranslationMode.showsPreview {
+                if localEnglishEngine.usesQwenPseudoLivePreview {
+                    return localEnglishEngine.detail
+                        + " Each full unfinished phrase replaces the prior Japanese and English preview; only a fresh boundary final is saved. Everything stays on this Mac."
+                }
                 let previewSource = localEnglishEngine.usesAppleSpeechPreview
                     ? "Apple Speech supplies source text for one revisable Apple-translated preview"
                     : "Voxtral supplies source text for one revisable Apple-translated preview"

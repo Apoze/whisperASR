@@ -384,7 +384,7 @@ final class LocalPrototypeBenchmarkTests: XCTestCase {
                         audio: audio,
                         language: "ja"
                     )
-                case .qwenApple:
+                case .qwenApple, .qwenPseudoLiveApple:
                     XCTFail("Qwen is intentionally outside this three-candidate bakeoff.")
                     return
                 case .voxtralQwenApple, .voxtralTurboApple:

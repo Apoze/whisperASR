@@ -58,6 +58,7 @@ enum LocalSpeechEngine: String, CaseIterable, Identifiable {
 enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
     case whisperTurboApple
     case qwenApple
+    case qwenPseudoLiveApple
     case voxtralApple
     case voxtralQwenApple
     case voxtralTurboApple
@@ -75,6 +76,8 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Whisper Turbo → Apple"
         case .qwenApple:
             return "Qwen → Apple"
+        case .qwenPseudoLiveApple:
+            return "Qwen JA pseudo-live → Apple"
         case .voxtralApple:
             return "Voxtral live → Apple"
         case .voxtralQwenApple:
@@ -96,6 +99,8 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
             return "Reference: Whisper Large v3 Turbo transcribes, then Apple high-fidelity translates."
         case .qwenApple:
             return "Experimental: Qwen transcribes each FireRedVAD phrase, then Apple translates."
+        case .qwenPseudoLiveApple:
+            return "Experimental, quality-first: Qwen repeatedly retranscribes the unfinished phrase. This is pseudo-live, not true streaming."
         case .voxtralApple:
             return "Experimental: one continuous Voxtral session supplies live source text and each stable clause for Apple Translation."
         case .voxtralQwenApple:
@@ -115,7 +120,7 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .whisperTurboApple:
             return [.fireRedVAD, .whisperTurbo, .appleTranslation]
-        case .qwenApple:
+        case .qwenApple, .qwenPseudoLiveApple:
             return [.fireRedVAD, .qwen, .appleTranslation]
         case .voxtralApple:
             return [.fireRedVAD, .voxtral, .appleTranslation]
@@ -140,7 +145,18 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
         self == .voxtralApple || self == .voxtralQwenApple || self == .voxtralTurboApple
     }
 
-    var usesAppleSpeechPreview: Bool { !usesVoxtralStreaming }
+    var usesAppleSpeechPreview: Bool {
+        self != .qwenPseudoLiveApple && !usesVoxtralStreaming
+    }
+
+    func runAppleSpeechPreviewOperation(
+        _ operation: () async throws -> Void
+    ) async rethrows {
+        guard usesAppleSpeechPreview else { return }
+        try await operation()
+    }
+
+    var usesQwenPseudoLivePreview: Bool { self == .qwenPseudoLiveApple }
 
     var usesVoxtralSourcePreview: Bool { usesVoxtralStreaming }
 

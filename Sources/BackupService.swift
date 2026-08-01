@@ -45,6 +45,7 @@ enum BackupService {
         var localSourceLocale: String?
         var appleTranslationMode: String?
         var voxtralContinuousConfiguration: String?
+        var qwenPseudoLiveCadenceSeconds: Int?
         var japaneseGlossaryEnabled: Bool?
         var japaneseGlossaryRules: String?
         var recentRecordingApps: [String]?
@@ -77,6 +78,9 @@ enum BackupService {
             voxtralContinuousConfiguration: d.string(
                 forKey: VoxtralContinuousConfiguration.storageKey
             ),
+            qwenPseudoLiveCadenceSeconds: d.object(
+                forKey: QwenPseudoLiveCadence.storageKey
+            ) == nil ? nil : d.integer(forKey: QwenPseudoLiveCadence.storageKey),
             japaneseGlossaryEnabled: d.object(forKey: JapaneseGlossary.enabledKey) == nil
                 ? nil : d.bool(forKey: JapaneseGlossary.enabledKey),
             japaneseGlossaryRules: d.string(forKey: JapaneseGlossary.rulesKey),
@@ -159,6 +163,10 @@ enum BackupService {
             c.voxtralContinuousConfiguration,
             VoxtralContinuousConfiguration.storageKey
         )
+        if let cadence = c.qwenPseudoLiveCadenceSeconds,
+           QwenPseudoLiveCadence(rawValue: cadence) != nil {
+            d.set(cadence, forKey: QwenPseudoLiveCadence.storageKey)
+        }
         if let enabled = c.japaneseGlossaryEnabled {
             d.set(enabled, forKey: JapaneseGlossary.enabledKey)
         }

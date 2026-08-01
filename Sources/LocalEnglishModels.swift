@@ -375,7 +375,7 @@ final class LocalEnglishModelManager {
             switch engine {
             case .whisperTurboApple, .whisperLargeV3Direct:
                 break
-            case .qwenApple:
+            case .qwenApple, .qwenPseudoLiveApple:
                 phases[engine] = .loading(message: "Loading Qwen3-ASR…")
                 try await qwen.prepare { fraction, message in
                     update(fraction, "Qwen: \(message)")
