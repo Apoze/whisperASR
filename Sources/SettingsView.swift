@@ -8,8 +8,9 @@ struct SettingsView: View {
     @AppStorage("translationEndpoint") private var translationEndpoint = ""
     @AppStorage("translationAPIKey") private var translationAPIKey = ""
     @AppStorage("translationModel") private var translationModel = ""
-    @AppStorage(JapaneseGlossary.enabledKey) private var japaneseGlossaryEnabled = false
-    @AppStorage(JapaneseGlossary.rulesKey) private var japaneseGlossaryRules = ""
+    @State private var japaneseContextLibrary = JapaneseContextLibrary.stored()
+    @State private var editedJapaneseContextProfileID = JapaneseContextLibrary.generalID
+    @State private var pendingContextProfileDeletion: JapaneseContextProfile?
 
     // Local OpenAI-compatible API server
     @AppStorage(APIServer.enabledKey) private var apiServerEnabled = false
@@ -115,13 +116,50 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Japanese caption glossary") {
-                Toggle("Apply exact corrections before Apple Translation", isOn: $japaneseGlossaryEnabled)
-                TextEditor(text: $japaneseGlossaryRules)
-                    .font(.system(.body, design: .monospaced))
-                    .frame(minHeight: 72)
-                    .disabled(!japaneseGlossaryEnabled)
-                Text("One exact rule per line: recognized=canonical. Example: 配給=ハイキュー. The raw Voxtral transcript is never changed.")
+            Section("Japanese context profiles") {
+                Picker("Profile to edit", selection: $editedJapaneseContextProfileID) {
+                    ForEach(japaneseContextLibrary.profiles) { profile in
+                        Text(profile.name).tag(profile.id)
+                    }
+                }
+                .accessibilityIdentifier("japanese-context-profile-editor-picker")
+
+                HStack {
+                    Button {
+                        let profile = JapaneseContextProfile(
+                            id: UUID().uuidString,
+                            name: "New profile",
+                            terms: [JapaneseContextTerm()]
+                        )
+                        japaneseContextLibrary.profiles.append(profile)
+                        editedJapaneseContextProfileID = profile.id
+                    } label: {
+                        Label("New Profile", systemImage: "plus")
+                    }
+
+                    Button(role: .destructive) {
+                        pendingContextProfileDeletion = japaneseContextLibrary.profiles.first {
+                            $0.id == editedJapaneseContextProfileID
+                        }
+                    } label: {
+                        Label("Delete Profile", systemImage: "trash")
+                    }
+                    .disabled(editedJapaneseContextProfileID == JapaneseContextLibrary.generalID)
+                    Spacer()
+                }
+
+                if let index = japaneseContextLibrary.profiles.firstIndex(where: {
+                    $0.id == editedJapaneseContextProfileID
+                }) {
+                    JapaneseContextProfileEditor(
+                        profile: $japaneseContextLibrary.profiles[index],
+                        activeTermCount: activeTermCount(
+                            for: japaneseContextLibrary.profiles[index]
+                        )
+                    )
+                }
+
+                Text("Canonical terms bias Apple Speech. Variants are corrected only on the Japanese copy sent to Apple Translation; the raw transcript is preserved.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -222,7 +260,35 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 480)
         .padding()
-        .onAppear { ModelManager.shared.refresh() }
+        .onAppear {
+            ModelManager.shared.refresh()
+            japaneseContextLibrary = JapaneseContextLibrary.stored()
+            if !japaneseContextLibrary.profiles.contains(where: {
+                $0.id == editedJapaneseContextProfileID
+            }) {
+                editedJapaneseContextProfileID = JapaneseContextLibrary.generalID
+            }
+        }
+        .onChange(of: japaneseContextLibrary) { _, library in
+            library.store()
+        }
+        .confirmationDialog(
+            "Delete \(pendingContextProfileDeletion?.name ?? "profile")?",
+            isPresented: Binding(
+                get: { pendingContextProfileDeletion != nil },
+                set: { if !$0 { pendingContextProfileDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete Profile", role: .destructive) {
+                guard let profile = pendingContextProfileDeletion,
+                      profile.id != JapaneseContextLibrary.generalID else { return }
+                japaneseContextLibrary.profiles.removeAll { $0.id == profile.id }
+                editedJapaneseContextProfileID = JapaneseContextLibrary.generalID
+                pendingContextProfileDeletion = nil
+            }
+            Button("Cancel", role: .cancel) { pendingContextProfileDeletion = nil }
+        }
         .confirmationDialog(
             "Restore from backup?",
             isPresented: $showRestoreConfirm,
@@ -325,8 +391,89 @@ struct SettingsView: View {
     private func performRestore() {
         guard let backup = pendingRestore else { return }
         BackupService.restore(backup)
+        japaneseContextLibrary = JapaneseContextLibrary.stored()
+        editedJapaneseContextProfileID = JapaneseContextLibrary.generalID
         backupStatus = .success("Settings restored.")
         pendingRestore = nil
+    }
+
+    private func activeTermCount(for profile: JapaneseContextProfile) -> Int {
+        let generalCount = japaneseContextLibrary.generalProfile?.terms
+            .filter { !$0.canonical.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .count ?? 0
+        let profileCount = profile.terms
+            .filter { !$0.canonical.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .count
+        return profile.id == JapaneseContextLibrary.generalID
+            ? generalCount : generalCount + profileCount
+    }
+}
+
+private struct JapaneseContextProfileEditor: View {
+    @Binding var profile: JapaneseContextProfile
+    let activeTermCount: Int
+
+    var body: some View {
+        if profile.id != JapaneseContextLibrary.generalID {
+            TextField("Profile name", text: $profile.name)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("japanese-context-profile-name")
+        }
+
+        HStack {
+            Text("Canonical").frame(maxWidth: .infinity, alignment: .leading)
+            Text("Reading").frame(maxWidth: .infinity, alignment: .leading)
+            Text("Variants (comma-separated)")
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Color.clear.frame(width: 24, height: 1)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+
+        ForEach(Array(profile.terms.enumerated()), id: \.element.id) { index, term in
+            HStack {
+                TextField("甘結もか", text: $profile.terms[index].canonical)
+                    .accessibilityIdentifier("japanese-context-canonical-\(index)")
+                TextField("あまゆい もか", text: $profile.terms[index].reading)
+                TextField("甘いモカ", text: aliasesBinding(at: index))
+                Button(role: .destructive) {
+                    profile.terms.removeAll { $0.id == term.id }
+                } label: {
+                    Image(systemName: "minus.circle")
+                }
+                .buttonStyle(.borderless)
+                .help("Remove term")
+            }
+        }
+
+        HStack {
+            Button {
+                profile.terms.append(JapaneseContextTerm())
+            } label: {
+                Label("Add Term", systemImage: "plus")
+            }
+            Spacer()
+            Text("\(activeTermCount) active term\(activeTermCount == 1 ? "" : "s")")
+                .font(.caption)
+                .foregroundStyle(activeTermCount > 100 ? .orange : .secondary)
+        }
+        if activeTermCount > 100 {
+            Text("Apple Speech uses the first 100 active terms.")
+                .font(.caption)
+                .foregroundStyle(.orange)
+        }
+    }
+
+    private func aliasesBinding(at index: Int) -> Binding<String> {
+        Binding(
+            get: { profile.terms[index].aliases.joined(separator: ", ") },
+            set: { value in
+                profile.terms[index].aliases = value
+                    .split(separator: ",")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+            }
+        )
     }
 }
 

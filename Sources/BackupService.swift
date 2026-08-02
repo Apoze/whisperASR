@@ -48,6 +48,8 @@ enum BackupService {
         var qwenPseudoLiveCadenceSeconds: Int?
         var japaneseGlossaryEnabled: Bool?
         var japaneseGlossaryRules: String?
+        var japaneseContextProfiles: String?
+        var japaneseContextSelection: String?
         var recentRecordingApps: [String]?
     }
 
@@ -84,6 +86,8 @@ enum BackupService {
             japaneseGlossaryEnabled: d.object(forKey: JapaneseGlossary.enabledKey) == nil
                 ? nil : d.bool(forKey: JapaneseGlossary.enabledKey),
             japaneseGlossaryRules: d.string(forKey: JapaneseGlossary.rulesKey),
+            japaneseContextProfiles: d.string(forKey: JapaneseContextLibrary.profilesKey),
+            japaneseContextSelection: d.string(forKey: JapaneseContextLibrary.selectionKey),
             recentRecordingApps: d.stringArray(forKey: "recentRecordingApps")
         )
 
@@ -171,6 +175,19 @@ enum BackupService {
             d.set(enabled, forKey: JapaneseGlossary.enabledKey)
         }
         set(c.japaneseGlossaryRules, JapaneseGlossary.rulesKey)
+        if c.japaneseContextProfiles != nil {
+            set(c.japaneseContextProfiles, JapaneseContextLibrary.profilesKey)
+            set(c.japaneseContextSelection, JapaneseContextLibrary.selectionKey)
+            d.set(
+                JapaneseContextLibrary.schemaVersion,
+                forKey: JapaneseContextLibrary.schemaVersionKey
+            )
+        } else if c.japaneseGlossaryEnabled != nil || c.japaneseGlossaryRules != nil {
+            // Let a pre-profile backup rebuild General from its legacy exact rules.
+            d.removeObject(forKey: JapaneseContextLibrary.profilesKey)
+            d.removeObject(forKey: JapaneseContextLibrary.selectionKey)
+            _ = JapaneseContextLibrary.stored(in: d)
+        }
         if let apps = c.recentRecordingApps { d.set(apps, forKey: "recentRecordingApps") }
 
         // ModelManager caches the selection in a stored property; nudge it so the

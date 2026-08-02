@@ -828,6 +828,9 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertNil(backup.configuration.localSpeechEngine)
         XCTAssertNil(backup.configuration.localSourceLocale)
         XCTAssertNil(backup.configuration.appleTranslationMode)
+        XCTAssertNil(backup.configuration.qwenPseudoLiveCadenceSeconds)
+        XCTAssertNil(backup.configuration.japaneseContextProfiles)
+        XCTAssertNil(backup.configuration.japaneseContextSelection)
     }
 
     func testRetrySourceCompletenessRoundTripsWithoutTouchingUserStorage() throws {

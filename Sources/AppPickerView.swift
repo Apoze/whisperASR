@@ -18,7 +18,10 @@ struct AppPickerView: View {
         VoxtralContinuousConfiguration.default.storageValue
     @AppStorage(QwenPseudoLiveCadence.storageKey) private var qwenPseudoLiveCadenceSeconds =
         QwenPseudoLiveCadence.seconds2.rawValue
+    @AppStorage(JapaneseContextLibrary.selectionKey) private var japaneseContextSelection =
+        JapaneseContextLibrary.generalID
     @AppStorage("targetLanguage") private var targetLanguage = ""
+    @State private var japaneseContextLibrary = JapaneseContextLibrary.stored()
 
     private var captionMode: LiveCaptionMode {
         LiveCaptionMode(rawValue: captionModeRaw) ?? .original
@@ -89,6 +92,14 @@ struct AppPickerView: View {
             }
             if captionMode == .api, targetLanguage.isEmpty { targetLanguage = "en" }
             if captionMode == .localEnglish { appState.loadLocalEnglishCapabilities() }
+            japaneseContextLibrary = JapaneseContextLibrary.stored()
+            if japaneseContextSelection != JapaneseContextLibrary.offSelection,
+               japaneseContextSelection != JapaneseContextLibrary.generalID,
+               !japaneseContextLibrary.profiles.contains(where: {
+                   $0.id == japaneseContextSelection
+               }) {
+                japaneseContextSelection = JapaneseContextLibrary.generalID
+            }
         }
         .onChange(of: captionModeRaw) { _, _ in
             if captionMode == .localEnglish {
@@ -229,6 +240,19 @@ struct AppPickerView: View {
                             ForEach(appState.localSourceLocales) { locale in
                                 Text(locale.label).tag(locale.id)
                             }
+                        }
+
+                        if isJapaneseSource {
+                            Picker("Context", selection: $japaneseContextSelection) {
+                                Text("Off").tag(JapaneseContextLibrary.offSelection)
+                                Text("General only").tag(JapaneseContextLibrary.generalID)
+                                ForEach(japaneseContextLibrary.profiles.filter {
+                                    $0.id != JapaneseContextLibrary.generalID
+                                }) { profile in
+                                    Text("General + \(profile.name)").tag(profile.id)
+                                }
+                            }
+                            .accessibilityIdentifier("japanese-context-profile-picker")
                         }
 
                         Picker("Subtitle timing", selection: $appleTranslationModeRaw) {
@@ -395,6 +419,10 @@ struct AppPickerView: View {
         case .api:
             return "Whisper transcribes locally, then the configured OpenAI-compatible API translates to the selected language."
         }
+    }
+
+    private var isJapaneseSource: Bool {
+        localSourceLocale.lowercased().hasPrefix("ja")
     }
 
     @ViewBuilder

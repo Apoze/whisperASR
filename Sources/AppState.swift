@@ -884,8 +884,7 @@ class AppState {
                     whisperModelSelection: whisperSelection,
                     voxtralConfiguration: activeLocalEnglishEngine.usesContinuousVoxtral
                         ? activeContinuousVoxtralConfiguration : nil,
-                    japaneseGlossary: activeLocalEnglishEngine.usesContinuousVoxtral
-                        ? activeJapaneseGlossary : .empty
+                    japaneseGlossary: activeJapaneseGlossary
                 )
             } catch {
                 showToast("Couldn't save the benchmark report: \(error.localizedDescription)")
@@ -998,9 +997,9 @@ class AppState {
                 item.localTranslationMode = activeLocalTranslationMode
                 if activeLocalEnglishEngine.usesContinuousVoxtral {
                     item.localVoxtralConfiguration = activeContinuousVoxtralConfiguration
-                    item.localJapaneseGlossary = activeJapaneseGlossary.isEmpty
-                        ? nil : activeJapaneseGlossary
                 }
+                item.localJapaneseGlossary = activeJapaneseGlossary.isEmpty
+                    ? nil : activeJapaneseGlossary
                 item.discardOriginalAfterRetry = !keepOriginal
                 item.localSourceTranscriptComplete = localSourceTranscriptComplete
             }
@@ -1809,8 +1808,7 @@ class AppState {
         activeLocalSourceLocale = sourceLocale
         activeContinuousVoxtralConfiguration = continuousVoxtralConfiguration
         activeQwenPseudoLiveCadence = qwenPseudoLiveCadence
-        activeJapaneseGlossary = localEngine.usesContinuousVoxtral
-            || localEngine.usesQwenPseudoLivePreview
+        activeJapaneseGlossary = Self.languageCode(for: sourceLocale) == "ja"
             ? JapaneseGlossary.stored(in: defaults) : .empty
         if localBenchmarkEnabled { localBenchmarkSessionID = UUID() }
         activeLocalRecorder = recorder
@@ -1951,6 +1949,7 @@ class AppState {
                         try await appleSpeechService().start(
                             localeIdentifier: sourceLocale,
                             priority: engine.usesVoxtralStreaming ? .utility : .userInitiated,
+                            contextualStrings: activeJapaneseGlossary.appleContextualStrings,
                             onUpdate: { [weak self] update in
                                 self?.receiveLocalPreviewSource(update)
                             },
@@ -2130,9 +2129,7 @@ class AppState {
             let rawSource = work.update.segment.text.trimmingCharacters(
                 in: .whitespacesAndNewlines
             )
-            let source = activeLocalEnglishEngine.usesContinuousVoxtral
-                || activeLocalEnglishEngine.usesQwenPseudoLivePreview
-                ? activeJapaneseGlossary.applying(to: rawSource) : rawSource
+            let source = activeJapaneseGlossary.applying(to: rawSource)
             guard !source.isEmpty else { continue }
 
             localPreviewLastStartedUptimeNanoseconds = DispatchTime.now().uptimeNanoseconds
@@ -3655,6 +3652,8 @@ class AppState {
             )
             finalText = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
         case .qwenApple, .qwenPseudoLiveApple, .voxtralQwenApple:
+            // Qwen can echo system context on short phrases. Keep glossary use
+            // in Apple Speech and deterministic post-ASR corrections instead.
             finalText = try await localModelManager.transcribeQwen(
                 audio: audio,
                 language: Self.languageName(for: sourceLocale)
@@ -4151,9 +4150,7 @@ class AppState {
                 let text: String
                 switch job.input {
                 case .japaneseSource(let source):
-                    let translationSource = activeLocalEnglishEngine.usesContinuousVoxtral
-                        || activeLocalEnglishEngine.usesQwenPseudoLivePreview
-                        ? activeJapaneseGlossary.applying(to: source.text) : source.text
+                    let translationSource = activeJapaneseGlossary.applying(to: source.text)
                     text = try await translateStableSource(
                         translationSource,
                         mode: activeLocalTranslationMode
@@ -4624,10 +4621,8 @@ class AppState {
             localEnglishEngine: localEngine,
             voxtralConfiguration: voxtralConfiguration,
             qwenPseudoLiveCadence: qwenPseudoLiveCadence,
-            japaneseGlossary: isLocalEnglish && (
-                activeLocalEnglishEngine.usesContinuousVoxtral
-                    || activeLocalEnglishEngine.usesQwenPseudoLivePreview)
-                ? activeJapaneseGlossary : nil,
+            japaneseGlossary: isLocalEnglish && !isDirectEnglish
+                && !activeJapaneseGlossary.isEmpty ? activeJapaneseGlossary : nil,
             discardOriginalAfterRetry: discardOriginal,
             savedAt: Date()
         )

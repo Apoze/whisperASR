@@ -168,6 +168,7 @@ actor AppleSpeechService {
     func start(
         localeIdentifier: String,
         priority: TaskPriority = .userInitiated,
+        contextualStrings: [String] = [],
         onUpdate: @escaping @MainActor @Sendable (LiveSourceUpdate) -> Void,
         onFailure: @escaping @MainActor @Sendable (Error) -> Void
     ) async throws {
@@ -186,6 +187,11 @@ actor AppleSpeechService {
             modelRetention: .lingering
         )
         let analyzer = SpeechAnalyzer(modules: [transcriber], options: options)
+        if !contextualStrings.isEmpty {
+            let context = AnalysisContext()
+            context.contextualStrings[.general] = Array(contextualStrings.prefix(100))
+            try await analyzer.setContext(context)
+        }
         guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(
             compatibleWith: [transcriber],
             considering: Self.inputFormat
