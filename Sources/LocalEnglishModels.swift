@@ -7,8 +7,8 @@ import Qwen3ASR
 import SpeechVAD
 
 private enum PrototypeModelID {
-    static let qwen = "aufklarer/Qwen3-ASR-1.7B-MLX-8bit"
-    static let qwenRevision = "e5450a26d1fd417c45fc9c405651ddc3180a27a6"
+    static let qwen = "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    static let qwenRevision = "7c70d18cb650655d32eafb952a74a49c6a3caad0"
     static let fireRed = "aufklarer/FireRedVAD-CoreML"
     static let fireRedRevision = "1cb0565191fbdc630c2fe8f111ba31c392d05706"
     static let voxtral = "mlx-community/Voxtral-Mini-4B-Realtime-2602-4bit"
@@ -153,8 +153,11 @@ private actor QwenRuntime {
         return model.transcribe(
             audio: audio,
             sampleRate: 16_000,
-            language: language,
-            maxTokens: 448
+            options: Qwen3DecodingOptions(
+                maxTokens: 448,
+                language: language,
+                longInputThresholdSeconds: 20
+            )
         ).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 

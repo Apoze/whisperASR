@@ -168,47 +168,47 @@ final class JapaneseModelRecipeTests: XCTestCase {
                 "b34fc29e4e11e0a25e812775dd67f4dd16fc2c8eb43d28ae25ff7d660ecb6379"
             ),
             (
-                "Qwen 1.7B",
+                "Qwen 1.7B JA",
                 cache.appendingPathComponent(
-                    "qwen3-speech/models/aufklarer/"
-                        + "Qwen3-ASR-1.7B-MLX-8bit/model.safetensors"
+                    "qwen3-speech/models/ph0ryn/"
+                        + "Qwen3-ASR-1.7B-JA-MLX-8bit/model.safetensors"
                 ),
-                "bf304b009cc7eca79283056f787b44c952d24ac22cec787b39732bba3c23c13c"
+                "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
             ),
             (
                 "Qwen config",
                 cache.appendingPathComponent(
-                    "qwen3-speech/models/aufklarer/Qwen3-ASR-1.7B-MLX-8bit/config.json"
+                    "qwen3-speech/models/ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit/config.json"
                 ),
-                "1b76b3b6c655fc54595da025f7a96474ad9fa86363303fbdd61a7d8483ccfaf7"
+                "3c61906f643f4b44188a87c42767b9e091b47192f66f1e596b343f56e46ba808"
             ),
             (
                 "Qwen tokenizer config",
                 cache.appendingPathComponent(
-                    "qwen3-speech/models/aufklarer/"
-                        + "Qwen3-ASR-1.7B-MLX-8bit/tokenizer_config.json"
+                    "qwen3-speech/models/ph0ryn/"
+                        + "Qwen3-ASR-1.7B-JA-MLX-8bit/tokenizer_config.json"
                 ),
-                "4942d005604266809309cabc9f4e9cb89ce855d59b14681fdc0e1cc62ea26c4c"
+                "7f335cbd3b6f1036808e23613c1c1919f8d5570c11cb55420e5094e036f45669"
             ),
             (
                 "Qwen vocabulary",
                 cache.appendingPathComponent(
-                    "qwen3-speech/models/aufklarer/Qwen3-ASR-1.7B-MLX-8bit/vocab.json"
+                    "qwen3-speech/models/ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit/vocab.json"
                 ),
                 "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
             ),
             (
                 "Qwen merges",
                 cache.appendingPathComponent(
-                    "qwen3-speech/models/aufklarer/Qwen3-ASR-1.7B-MLX-8bit/merges.txt"
+                    "qwen3-speech/models/ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit/merges.txt"
                 ),
                 "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5"
             ),
             (
                 "Qwen weights index",
                 cache.appendingPathComponent(
-                    "qwen3-speech/models/aufklarer/"
-                        + "Qwen3-ASR-1.7B-MLX-8bit/model.safetensors.index.json"
+                    "qwen3-speech/models/ph0ryn/"
+                        + "Qwen3-ASR-1.7B-JA-MLX-8bit/model.safetensors.index.json"
                 ),
                 "0a5d0ec11188602242ff81a9969883d0fdeb98cd5d85cd1413089d897c201af5"
             ),

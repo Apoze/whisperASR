@@ -905,7 +905,7 @@ private actor JapaneseCorrectiveVoxtralCollector {
 
 final class JapaneseModelBakeoffTests: XCTestCase {
     private static let modelRecipesSHA256 =
-        "d4ed138de85c40fee4ae0340ceca39149fbc6e5331845377b4931dc5043f000a"
+        "1bd685bc6c7749f307cf7a26355fde1689252095d3a88d94093fce2fb8229473"
     private static let fluidAudioVersion = "0.15.5"
     private static let fluidAudioRevision = "19600a485baa4998812e4654b70d2bab8f2c9949"
     private static let nemotronModelID =
@@ -928,11 +928,11 @@ final class JapaneseModelBakeoffTests: XCTestCase {
     private static let kotobaQ5SHA256 =
         "4a3b92192b5d3578ff854a5876213e2e27af0c2d357492c2d14271e82c303658"
     private static let qwenRevision =
-        "e5450a26d1fd417c45fc9c405651ddc3180a27a6"
+        "7c70d18cb650655d32eafb952a74a49c6a3caad0"
     private static let qwenRuntimeRevision =
         "9c4bff5a8f0287a179b9a039da25ff9fa02553a3"
     private static let qwenWeightsSHA256 =
-        "bf304b009cc7eca79283056f787b44c952d24ac22cec787b39732bba3c23c13c"
+        "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
     private static let whisperMLXVersion = "3.12.2"
     private static let whisperMLXWheelSHA256 =
         "60845ff695168aeb3b8d8b1887481ffe02f5e11ec0426c706a9f7cd0a37917a4"
@@ -4873,7 +4873,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
             )
         case .qwen17:
             return JapaneseBakeoffModelProvenance(
-                modelID: "aufklarer/Qwen3-ASR-1.7B-MLX-8bit",
+                modelID: "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
                 revision: Self.qwenRevision,
                 revisionEnforced: true,
                 artifactSHA256: nil,
@@ -5027,7 +5027,7 @@ final class JapaneseModelBakeoffTests: XCTestCase {
         }
         return FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent(
-                "qwen3-speech/models/aufklarer/Qwen3-ASR-1.7B-MLX-8bit/model.safetensors"
+                "qwen3-speech/models/ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit/model.safetensors"
             )
     }
 

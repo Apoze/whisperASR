@@ -7,7 +7,7 @@ benchmark-only models remain under ignored build storage.
 | Component | Pinned revision / artifact | Declared license | Integrity control |
 |---|---|---|---|
 | `soniqo/speech-swift` | source snapshot `9c4bff5a8f0287a179b9a039da25ff9fa02553a3` | Apache-2.0 | Only Qwen, FireRedVAD and their shared support modules are vendored; provenance is recorded in `Vendor/SpeechSwiftPrototype/PROVENANCE.md` and transitives remain frozen in `Package.resolved` |
-| Qwen3-ASR 1.7B MLX 8-bit | `e5450a26d1fd417c45fc9c405651ddc3180a27a6` | Apache-2.0 | Runtime refuses a changed Hugging Face revision |
+| Qwen3-ASR 1.7B JA MLX 8-bit (`ph0ryn`) | `7c70d18cb650655d32eafb952a74a49c6a3caad0` | Apache-2.0 | Runtime refuses a changed Hugging Face revision |
 | Qwen3-ASR JA↔EN speech translation (`voiceping-ai`) | `1251c2a9066981cc303df075b18bd3bbde1d25d6` | Apache-2.0 | Benchmark-only test target; the snapshot is pinned and is not embedded in the app after failing the quality gate |
 | FireRedVAD Core ML | `1cb0565191fbdc630c2fe8f111ba31c392d05706` | MIT | Runtime refuses a changed Hugging Face revision |
 | Whisper Large v3 Turbo GGML | `5359861c739e955e79d9a303bcbc70fb988958b1`, SHA-256 `1fc70f…e2bc69` | MIT | Catalog URL uses the exact revision and verifies the complete model file |
