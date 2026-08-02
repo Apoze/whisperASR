@@ -243,7 +243,7 @@ struct AppPickerView: View {
                         }
 
                         if isJapaneseSource {
-                            Picker("Context", selection: $japaneseContextSelection) {
+                            Picker("Glossary", selection: $japaneseContextSelection) {
                                 Text("Off").tag(JapaneseContextLibrary.offSelection)
                                 Text("General only").tag(JapaneseContextLibrary.generalID)
                                 ForEach(japaneseContextLibrary.profiles.filter {
