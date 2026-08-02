@@ -10,7 +10,8 @@ struct AppPickerView: View {
     @State private var modelManager = ModelManager.shared
     @AppStorage(LiveCaptionMode.storageKey) private var captionModeRaw = LiveCaptionMode.original.rawValue
     @AppStorage(LiveCaptionMode.keepOriginalKey) private var keepOriginalTranscript = false
-    @AppStorage(LocalEnglishEngine.storageKey) private var localEnglishEngineRaw = LocalEnglishEngine.whisperTurboApple.rawValue
+    @AppStorage(LocalEnglishEngine.storageKey) private var localEnglishEngineRaw =
+        LocalEnglishEngine.defaultEngine.rawValue
     @AppStorage(LocalSpeechEngine.sourceLocaleKey) private var localSourceLocale = ""
     @AppStorage(AppleTranslationMode.storageKey) private var appleTranslationModeRaw = AppleTranslationMode.adaptive.rawValue
     @AppStorage(VoxtralContinuousConfiguration.storageKey) private var voxtralConfigurationRaw =
@@ -34,7 +35,7 @@ struct AppPickerView: View {
     }
 
     private var localEnglishEngine: LocalEnglishEngine {
-        LocalEnglishEngine(rawValue: localEnglishEngineRaw) ?? .whisperTurboApple
+        LocalEnglishEngine(rawValue: localEnglishEngineRaw) ?? .defaultEngine
     }
 
     private var appleTranslationMode: AppleTranslationMode {

@@ -305,10 +305,15 @@ final class LiveCaptionTests: XCTestCase {
         )
     }
 
-    func testLocalEnglishEnginePersistsAndDefaultsToReference() {
+    func testLocalEnglishEnginePersistsAndDefaultsToQwenJA() {
         let (defaults, name) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: name) }
-        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperTurboApple)
+        XCTAssertEqual(LocalEnglishEngine.defaultEngine, .qwenApple)
+        XCTAssertEqual(
+            Array(LocalEnglishEngine.allCases.prefix(3)),
+            [.qwenApple, .qwenPseudoLiveApple, .voxtralApple]
+        )
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
         defaults.set(LocalEnglishEngine.qwenApple.rawValue, forKey: LocalEnglishEngine.storageKey)
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
         defaults.set(LocalEnglishEngine.voxtralApple.rawValue, forKey: LocalEnglishEngine.storageKey)
@@ -324,7 +329,7 @@ final class LiveCaptionTests: XCTestCase {
         defaults.set(LocalEnglishEngine.cohereApple.rawValue, forKey: LocalEnglishEngine.storageKey)
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .cohereApple)
         defaults.set("qwenJaEnDirect", forKey: LocalEnglishEngine.storageKey)
-        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperTurboApple)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
     }
 
     func testOldNemotronPipelinePreferenceMigratesToQwenOnly() {
@@ -334,11 +339,11 @@ final class LiveCaptionTests: XCTestCase {
         XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
     }
 
-    func testEliminatedGranitePreferenceFallsBackToReference() {
+    func testEliminatedGranitePreferenceFallsBackToQwenJA() {
         let (defaults, name) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: name) }
         defaults.set("graniteDirect", forKey: LocalEnglishEngine.storageKey)
-        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .whisperTurboApple)
+        XCTAssertEqual(LocalEnglishEngine.stored(in: defaults), .qwenApple)
     }
 
     func testEachPrototypeLoadsOnlyItsRequiredModels() {

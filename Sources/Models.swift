@@ -56,10 +56,10 @@ enum LocalSpeechEngine: String, CaseIterable, Identifiable {
 /// from the Whisper model catalog: each case describes a complete pipeline, not
 /// a generally interchangeable model.
 enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
-    case whisperTurboApple
     case qwenApple
     case qwenPseudoLiveApple
     case voxtralApple
+    case whisperTurboApple
     case voxtralQwenApple
     case voxtralTurboApple
     case voxtralCohereApple
@@ -67,6 +67,7 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
     case cohereApple
 
     static let storageKey = "localEnglishEngine"
+    static let defaultEngine: Self = .qwenApple
 
     var id: String { rawValue }
 
@@ -75,7 +76,7 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
         case .whisperTurboApple:
             return "Whisper Turbo → Apple"
         case .qwenApple:
-            return "Qwen → Apple"
+            return "Qwen JA → Apple"
         case .qwenPseudoLiveApple:
             return "Qwen JA pseudo-live → Apple"
         case .voxtralApple:
@@ -190,9 +191,8 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
         usesAppleFinalTranslation && mode.requiresHighFidelity
     }
 
-    /// Preserve existing installations: the old Whisper choice maps to the
-    /// corrected reference pipeline; Apple Speech is no longer a benchmark
-    /// candidate and maps to the same safe default.
+    /// Preserve valid explicit choices while retired pipelines fall back to
+    /// the current product default.
     static func stored(in defaults: UserDefaults = .standard) -> Self {
         if defaults.string(forKey: storageKey) == "nemotronQwenApple" {
             return .qwenApple
@@ -200,7 +200,7 @@ enum LocalEnglishEngine: String, CaseIterable, Identifiable, Codable {
         if let raw = defaults.string(forKey: storageKey), let engine = Self(rawValue: raw) {
             return engine
         }
-        return .whisperTurboApple
+        return defaultEngine
     }
 }
 

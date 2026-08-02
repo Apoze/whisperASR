@@ -321,7 +321,7 @@ class AppState {
     private var localFinalTranslationInFlight = false
     private var localFinalTranslationState: LocalFinalTranslationState = .idle
     private var activeLocalTranslationMode: AppleTranslationMode = .adaptive
-    private var activeLocalEnglishEngine: LocalEnglishEngine = .whisperTurboApple
+    private var activeLocalEnglishEngine: LocalEnglishEngine = .defaultEngine
     private var activeLocalSourceLocale = ""
     private var activeContinuousVoxtralConfiguration: VoxtralContinuousConfiguration = .default
     private var activeQwenPseudoLiveCadence: QwenPseudoLiveCadence = .seconds2
