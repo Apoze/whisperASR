@@ -395,28 +395,40 @@ enum LocalFinalSourceSelector {
     }
 }
 
-enum EnglishSubtitleValidator {
-    static func normalizedEnglish(_ text: String) -> String? {
-        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !normalized.isEmpty, !containsSourceScript(normalized) else { return nil }
-        let words = normalized.lowercased()
-            .split { !$0.isLetter && !$0.isNumber }
-        guard !hasRepeatedPhraseTail(words) else { return nil }
-        return normalized
+enum SubtitleRepetitionDetector {
+    static func hasRepeatedTail(_ text: String) -> Bool {
+        let normalized = text.lowercased()
+        let words = normalized.split { !$0.isLetter && !$0.isNumber }
+        if hasRepeatedTail(words) { return true }
+        let characters = normalized.filter {
+            $0.unicodeScalars.contains(where: CharacterSet.alphanumerics.contains)
+        }
+        return hasRepeatedTail(Array(characters))
     }
 
-    private static func hasRepeatedPhraseTail(_ words: [Substring]) -> Bool {
+    private static func hasRepeatedTail<T: Equatable>(_ units: [T]) -> Bool {
         let repetitions = 8
-        guard words.count >= repetitions else { return false }
+        guard units.count >= repetitions else { return false }
         // ponytail: subtitles are short; use linear period detection if long outputs become common.
-        for width in 1...(words.count / repetitions) {
-            let start = words.count - width * repetitions
-            let repeats = (start..<words.count).allSatisfy { index in
-                words[index] == words[start + (index - start) % width]
+        for width in 1...(units.count / repetitions) {
+            let start = units.count - width * repetitions
+            let repeats = (start..<units.count).allSatisfy { index in
+                units[index] == units[start + (index - start) % width]
             }
             if repeats { return true }
         }
         return false
+    }
+}
+
+enum EnglishSubtitleValidator {
+    static func normalizedEnglish(_ text: String) -> String? {
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty,
+              !containsSourceScript(normalized),
+              !SubtitleRepetitionDetector.hasRepeatedTail(normalized)
+        else { return nil }
+        return normalized
     }
 
     static func requireEnglish(_ text: String) throws -> String {
@@ -514,6 +526,44 @@ struct LocalVoxtralSessionMetric: Codable, Sendable {
     let transcriptCharacterCount: Int
 }
 
+struct LocalBenchmarkResourceSample: Codable, Sendable {
+    let uptimeNanoseconds: UInt64
+    let combinedResidentBytes: UInt64
+    let processEnergyNanojoules: UInt64?
+    let thermalState: String
+    let helperBacklogSamples: Int
+    let endpointFIFOCount: Int
+
+    static func current(
+        combinedResidentBytes: UInt64,
+        helperBacklogSamples: Int,
+        endpointFIFOCount: Int
+    ) -> Self {
+        var usage = rusage_info_v6()
+        let status = withUnsafeMutablePointer(to: &usage) { pointer in
+            UnsafeMutableRawPointer(pointer).withMemoryRebound(
+                to: rusage_info_t?.self,
+                capacity: 1
+            ) { proc_pid_rusage(getpid(), RUSAGE_INFO_V6, $0) }
+        }
+        let thermalState = switch ProcessInfo.processInfo.thermalState {
+        case .nominal: "nominal"
+        case .fair: "fair"
+        case .serious: "serious"
+        case .critical: "critical"
+        @unknown default: "unknown"
+        }
+        return Self(
+            uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds,
+            combinedResidentBytes: combinedResidentBytes,
+            processEnergyNanojoules: status == 0 ? usage.ri_energy_nj : nil,
+            thermalState: thermalState,
+            helperBacklogSamples: helperBacklogSamples,
+            endpointFIFOCount: endpointFIFOCount
+        )
+    }
+}
+
 actor LocalCaptionMetricRecorder {
     private let enabled: Bool
     private var records: [LocalCaptionMetric] = []
@@ -522,6 +572,7 @@ actor LocalCaptionMetricRecorder {
     private var maximumEndpointFIFOCount = 0
     private var helperProcessIdentifier: Int32?
     private var voxtralSessions: [LocalVoxtralSessionMetric] = []
+    private var resourceSamples: [LocalBenchmarkResourceSample] = []
 
     init(
         enabled: Bool = ProcessInfo.processInfo.environment["WHISPERASR_BENCHMARK"] == "1"
@@ -537,6 +588,7 @@ actor LocalCaptionMetricRecorder {
         maximumEndpointFIFOCount = 0
         helperProcessIdentifier = nil
         voxtralSessions.removeAll(keepingCapacity: true)
+        resourceSamples.removeAll(keepingCapacity: true)
     }
 
     func append(_ metric: LocalCaptionMetric) {
@@ -587,6 +639,11 @@ actor LocalCaptionMetricRecorder {
         if let helperProcessIdentifier {
             self.helperProcessIdentifier = helperProcessIdentifier
         }
+        resourceSamples.append(.current(
+            combinedResidentBytes: combinedResidentBytes,
+            helperBacklogSamples: helperBacklogSamples,
+            endpointFIFOCount: endpointFIFOCount
+        ))
     }
 
     func snapshot() -> [LocalCaptionMetric] { records }
@@ -634,6 +691,7 @@ actor LocalCaptionMetricRecorder {
             maximumCombinedResidentBytes: maximumCombinedResidentBytes,
             maximumHelperBacklogSamples: maximumHelperBacklogSamples,
             maximumEndpointFIFOCount: maximumEndpointFIFOCount,
+            resourceSamples: resourceSamples,
             voxtralSessions: voxtralSessions,
             metricsFile: file.lastPathComponent,
             metricsSHA256: try LocalBenchmarkOutput.sha256(file),
@@ -645,6 +703,12 @@ actor LocalCaptionMetricRecorder {
             whisperModelRevision: whisperModelSelection?.revision,
             whisperModelFile: whisperModelSelection?.fileURL.lastPathComponent,
             whisperModelSHA256: whisperModelSelection?.expectedSHA256,
+            qwenModelID: summary.engine == LocalEnglishEngine.qwenApple.rawValue
+                ? LocalPrototypeModelID.qwen : nil,
+            qwenModelRevision: summary.engine == LocalEnglishEngine.qwenApple.rawValue
+                ? LocalPrototypeModelID.qwenRevision : nil,
+            fireRedModelID: LocalPrototypeModelID.fireRed,
+            fireRedModelRevision: LocalPrototypeModelID.fireRedRevision,
             voxtralModelID: voxtralConfiguration?.model.modelID,
             voxtralModelRevision: voxtralConfiguration?.model.modelRevision,
             voxtralLocalSnapshotID: voxtralConfiguration?.model.localSnapshotID,
@@ -769,6 +833,7 @@ private struct LocalCaptionBenchmarkSessionReport: Codable {
     let maximumCombinedResidentBytes: UInt64
     let maximumHelperBacklogSamples: Int
     let maximumEndpointFIFOCount: Int
+    let resourceSamples: [LocalBenchmarkResourceSample]
     let voxtralSessions: [LocalVoxtralSessionMetric]
     let metricsFile: String
     let metricsSHA256: String
@@ -780,6 +845,10 @@ private struct LocalCaptionBenchmarkSessionReport: Codable {
     let whisperModelRevision: String?
     let whisperModelFile: String?
     let whisperModelSHA256: String?
+    let qwenModelID: String?
+    let qwenModelRevision: String?
+    let fireRedModelID: String
+    let fireRedModelRevision: String
     let voxtralModelID: String?
     let voxtralModelRevision: String?
     let voxtralLocalSnapshotID: String?

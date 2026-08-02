@@ -146,7 +146,7 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
             canonicalPCMURL: pcm,
             summary: LocalCaptionBenchmarkSummary(
                 sessionID: sessionID,
-                engine: "voxtralApple",
+                engine: LocalEnglishEngine.qwenApple.rawValue,
                 translationMode: "adaptive",
                 finalSampleCount: 16_000,
                 pcmComplete: true,
@@ -220,6 +220,12 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         XCTAssertEqual(json["maximumCombinedResidentBytes"] as? Int, 4_000)
         XCTAssertEqual(json["maximumHelperBacklogSamples"] as? Int, 320)
         XCTAssertEqual(json["maximumEndpointFIFOCount"] as? Int, 2)
+        let resourceSamples = try XCTUnwrap(
+            json["resourceSamples"] as? [[String: Any]]
+        )
+        XCTAssertEqual(resourceSamples.count, 1)
+        XCTAssertEqual(resourceSamples.first?["combinedResidentBytes"] as? Int, 4_000)
+        XCTAssertFalse((resourceSamples.first?["thermalState"] as? String ?? "").isEmpty)
         let voxtralSessions = try XCTUnwrap(
             json["voxtralSessions"] as? [[String: Any]]
         )
@@ -232,6 +238,13 @@ final class LocalBenchmarkTelemetryTests: XCTestCase {
         )
         XCTAssertEqual(json["whisperCandidate"] as? String, "turbo")
         XCTAssertEqual(json["whisperModelSHA256"] as? String, "model-sha")
+        XCTAssertEqual(json["qwenModelID"] as? String, LocalPrototypeModelID.qwen)
+        XCTAssertEqual(json["qwenModelRevision"] as? String, LocalPrototypeModelID.qwenRevision)
+        XCTAssertEqual(json["fireRedModelID"] as? String, LocalPrototypeModelID.fireRed)
+        XCTAssertEqual(
+            json["fireRedModelRevision"] as? String,
+            LocalPrototypeModelID.fireRedRevision
+        )
         XCTAssertEqual(json["voxtralModelID"] as? String, VoxtralModelVariant.q6.modelID)
         XCTAssertEqual(json["voxtralDelayMilliseconds"] as? Int, 1_200)
         XCTAssertFalse((json["japaneseGlossarySHA256"] as? String ?? "").isEmpty)

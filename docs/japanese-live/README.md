@@ -45,11 +45,11 @@ L0 à L3 conservent leurs résultats. L4 ajoute les deux vidéos longues fournie
 
 - Preview anglaise : couverture ≥ 95 %, p50 ≤ 1 s, p95 ≤ 1,8 s, pire ≤ 3 s.
 - Final anglais : p95 ≤ 1,5 s après la fin de parole, puis aucune révision prouvée par des indices append-only.
-- Intégrité : PCM entièrement couvert, dernière parole validée humainement, aucun terme critique nouvellement omis et backlog final nul. Le rapprochement automatique de la dernière phrase reste une heuristique.
+- Intégrité : PCM entièrement couvert, dernière parole du transcrit de référence présente, aucune omission par rapport à ce transcrit et backlog final nul. Le rapprochement automatique de la dernière phrase reste une heuristique.
 - Mémoire : moins de 10 Gio et au plus 20 % au-dessus du baseline L0.
 - Promotion qualité : CER relatif amélioré d'au moins 10 % avec bootstrap apparié à 95 %, ou p95 preview gagné d'au moins 200 ms avec une dégradation CER ≤ 2 points; aucun holdout dégradé de plus de 2 points.
 
-Les lignes `high` des deux vidéos fournies sont l'autorité du benchmark de développement. Leur statut reste `pending-human-review`, car les packs déclarent eux-mêmes une consolidation ASR/captions et des timings de caractères interpolés; `medium`, `low`, overlap et non-parole restent séparés dans les rapports.
+Les deux transcrits bilingues vidéo fournis forment seuls le corpus de décision et sont autoritaires tels que livrés. Les lignes `high` restent le score primaire; `medium`, `low`, overlap et non-parole restent séparés dans les rapports. Les autres corpus versionnés sont diagnostiques et ne peuvent pas promouvoir une pipeline.
 
 La référence anglaise n'influence jamais le CER japonais. Un cas anglais réellement ambigu est exporté aveugle pour revue GPT Pro; il n'est pas transformé en score automatique local.
 

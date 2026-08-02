@@ -5,6 +5,7 @@ import Observation
 
 enum LocalFinalTranslationFailureDisposition: Equatable, Sendable {
     case retry(after: Duration)
+    case commitUnavailable
     case retain
 }
 
@@ -116,7 +117,9 @@ enum LocalFinalTranslationRetryPolicy {
         for error: Error,
         afterAttempt attempt: Int
     ) -> LocalFinalTranslationFailureDisposition {
-        guard classification(for: error).isRetryable,
+        let classification = classification(for: error)
+        if classification == .invalidResponse { return .commitUnavailable }
+        guard classification.isRetryable,
               let backoff = backoffMilliseconds(afterAttempt: attempt)
         else { return .retain }
         return .retry(after: .milliseconds(backoff))
@@ -320,6 +323,7 @@ class AppState {
     private var localTranslationWorkerRunning = false
     private var localFinalTranslationInFlight = false
     private var localFinalTranslationState: LocalFinalTranslationState = .idle
+    private var localEnglishFinalFailure: String?
     private var activeLocalTranslationMode: AppleTranslationMode = .adaptive
     private var activeLocalEnglishEngine: LocalEnglishEngine = .defaultEngine
     private var activeLocalSourceLocale = ""
@@ -785,7 +789,9 @@ class AppState {
                 ?? (pendingVoxtralSource ? "The final Voxtral source suffix was not drained." : nil)
 
             let englishFailure: String?
-            if localFinalTranslationInFlight {
+            if let localEnglishFinalFailure {
+                englishFailure = localEnglishFinalFailure
+            } else if localFinalTranslationInFlight {
                 englishFailure = "An English final is still being translated."
             } else if let failedJob = localTranslationQueue.first,
                       failedJob.attempts.exhausted {
@@ -1821,6 +1827,7 @@ class AppState {
         localTranslationWorkerRunning = false
         localFinalTranslationInFlight = false
         localFinalTranslationState = .idle
+        localEnglishFinalFailure = nil
         localPreviewPlanner = LocalPreviewPlanner()
         localSourcePreviewSegment = nil
         localPreviewSegment = nil
@@ -1918,6 +1925,13 @@ class AppState {
         sourceLocale: String
     ) async {
         do {
+            if localBenchmarkEnabled {
+                await localMetricRecorder.observe(
+                    combinedResidentBytes: localModelManager.currentMemoryBytes(),
+                    helperBacklogSamples: 0,
+                    helperProcessIdentifier: nil
+                )
+            }
             guard localModelManager.loadedEngine == engine,
                   localModelManager.phase(for: engine).isReady,
                   !engine.usesContinuousVoxtral
@@ -3968,6 +3982,7 @@ class AppState {
         localTranslationWorkerRunning = false
         localFinalTranslationInFlight = false
         localFinalTranslationState = .idle
+        localEnglishFinalFailure = nil
         localPreviewPlanner = LocalPreviewPlanner()
         localSourcePreviewSegment = nil
         localPreviewSegment = nil
@@ -4143,9 +4158,6 @@ class AppState {
             liveStatusText = localFinalTranslationState.statusText ?? liveStatusText
             localFinalTranslationInFlight = true
             let translationStart = DispatchTime.now().uptimeNanoseconds
-            let finalQueueMilliseconds = translationStart > job.enqueuedUptimeNanoseconds
-                ? Double(translationStart - job.enqueuedUptimeNanoseconds) / 1_000_000
-                : 0
             do {
                 let text: String
                 switch job.input {
@@ -4210,45 +4222,13 @@ class AppState {
                     backoffMilliseconds: nil,
                     englishText: normalized
                 )
-                if let decision = job.decision {
-                    let speechEndUptime = localCaptureUptime(
-                        atSample: decision.speechEnd
-                    )
-                    var metric = LocalCaptionMetric(
-                        kind: .final,
-                        engine: activeLocalEnglishEngine.rawValue,
-                        boundaryKind: decision.kind.rawValue,
-                        boundaryDegradation: decision.boundaryDegradation,
-                        rangeStart: decision.audioStart,
-                        rangeEnd: decision.audioEnd,
-                        speechEnd: decision.speechEnd,
-                        endpointDetectedAt: decision.endpointDetectedAt,
-                        vadOnlyEndpointAt: decision.vadOnlyEndpointAt,
-                        queueMilliseconds: job.queueMilliseconds + finalQueueMilliseconds,
-                        asrMilliseconds: job.asrMilliseconds,
-                        translationMilliseconds: translationCompleted > translationStart
-                            ? Double(translationCompleted - translationStart) / 1_000_000 : 0,
-                        renderedUptimeNanoseconds: rendered,
-                        sourceText: job.source.text,
-                        englishText: normalized,
-                        revision: nil,
-                        previewLatencyMilliseconds: nil,
-                        speechEndToRenderedMilliseconds: speechEndUptime.map {
-                            rendered > $0 ? Double(rendered - $0) / 1_000_000 : 0
-                        },
-                        firstLexicalUptimeNanoseconds: nil,
-                        sourceEligibleUptimeNanoseconds: nil,
-                        translationStartedUptimeNanoseconds: translationStart,
-                        translationCompletedUptimeNanoseconds: translationCompleted
-                    )
-                    metric.acceptedStart = job.acceptedStart
-                        ?? max(0, Int((job.source.start * 16_000).rounded()))
-                    metric.stableThrough = decision.stableThrough
-                    metric.committedThrough = localCommittedSampleCount
-                    metric.finalSegmentIndex = job.index
-                    applyQwenPseudoLiveTelemetry(to: &metric)
-                    await localMetricRecorder.append(metric)
-                }
+                await recordLocalFinalMetric(
+                    job: job,
+                    englishText: normalized,
+                    started: translationStart,
+                    completed: translationCompleted,
+                    rendered: rendered
+                )
             } catch {
                 let translationCompleted = DispatchTime.now().uptimeNanoseconds
                 localFinalTranslationInFlight = false
@@ -4281,6 +4261,51 @@ class AppState {
                     } catch {
                         return
                     }
+                case .commitUnavailable:
+                    let unavailable = "[Translation unavailable]"
+                    guard job.index == localCommittedSegments.count else { return }
+                    localTranslationQueue.removeFirst()
+                    localCommittedSegments.append(TranscriptionSegment(
+                        start: job.source.start,
+                        end: job.source.end,
+                        text: unavailable
+                    ))
+                    if let decision = job.decision {
+                        localCommittedSampleCount = max(
+                            localCommittedSampleCount,
+                            decision.stableThrough
+                        )
+                        let retainedOverlap = activeLocalEnglishEngine.usesContinuousVoxtral
+                            ? activeContinuousVoxtralConfiguration.stabilityGuardSamples
+                            : LocalEndpointPlanner.forcedOverlap
+                        let requestedTrim = max(
+                            0, localCommittedSampleCount - retainedOverlap
+                        )
+                        activeLocalRecorder?.trimSamples(upTo: requestedTrim)
+                        completeLocalFinalWork(through: decision.stableThrough)
+                    }
+                    localEnglishFinalFailure = localEnglishFinalFailure
+                        ?? "At least one English final was unavailable; its source and audio were kept."
+                    localFinalTranslationState = localTranslationQueue.isEmpty ? .idle : .queued
+                    liveTranslationError = "Final unavailable — source and audio retained."
+                    await recordLocalFinalTranslationAttempt(
+                        job: job,
+                        attempt: attempt,
+                        outcome: "unavailable",
+                        classification: failure.classification,
+                        started: translationStart,
+                        completed: translationCompleted,
+                        backoffMilliseconds: nil,
+                        englishText: unavailable
+                    )
+                    publishLocalCaptions()
+                    await recordLocalFinalMetric(
+                        job: job,
+                        englishText: unavailable,
+                        started: translationStart,
+                        completed: translationCompleted,
+                        rendered: DispatchTime.now().uptimeNanoseconds
+                    )
                 case .retain:
                     localFinalTranslationState = .failedRetained
                     liveTranslationError = "Final failed — audio retained: \(error.localizedDescription)"
@@ -4300,6 +4325,53 @@ class AppState {
             }
         }
         publishLocalCaptions()
+    }
+
+    @MainActor
+    private func recordLocalFinalMetric(
+        job: LocalTranslationJob,
+        englishText: String,
+        started: UInt64,
+        completed: UInt64,
+        rendered: UInt64
+    ) async {
+        guard let decision = job.decision else { return }
+        let speechEndUptime = localCaptureUptime(atSample: decision.speechEnd)
+        var metric = LocalCaptionMetric(
+            kind: .final,
+            engine: activeLocalEnglishEngine.rawValue,
+            boundaryKind: decision.kind.rawValue,
+            boundaryDegradation: decision.boundaryDegradation,
+            rangeStart: decision.audioStart,
+            rangeEnd: decision.audioEnd,
+            speechEnd: decision.speechEnd,
+            endpointDetectedAt: decision.endpointDetectedAt,
+            vadOnlyEndpointAt: decision.vadOnlyEndpointAt,
+            queueMilliseconds: job.queueMilliseconds + (started > job.enqueuedUptimeNanoseconds
+                ? Double(started - job.enqueuedUptimeNanoseconds) / 1_000_000 : 0),
+            asrMilliseconds: job.asrMilliseconds,
+            translationMilliseconds: completed > started
+                ? Double(completed - started) / 1_000_000 : 0,
+            renderedUptimeNanoseconds: rendered,
+            sourceText: job.source.text,
+            englishText: englishText,
+            revision: nil,
+            previewLatencyMilliseconds: nil,
+            speechEndToRenderedMilliseconds: speechEndUptime.map {
+                rendered > $0 ? Double(rendered - $0) / 1_000_000 : 0
+            },
+            firstLexicalUptimeNanoseconds: nil,
+            sourceEligibleUptimeNanoseconds: nil,
+            translationStartedUptimeNanoseconds: started,
+            translationCompletedUptimeNanoseconds: completed
+        )
+        metric.acceptedStart = job.acceptedStart
+            ?? max(0, Int((job.source.start * 16_000).rounded()))
+        metric.stableThrough = decision.stableThrough
+        metric.committedThrough = localCommittedSampleCount
+        metric.finalSegmentIndex = job.index
+        applyQwenPseudoLiveTelemetry(to: &metric)
+        await localMetricRecorder.append(metric)
     }
 
     @MainActor

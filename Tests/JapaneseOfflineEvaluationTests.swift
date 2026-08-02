@@ -659,6 +659,10 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         let whisperModelRevision: String?
         let whisperModelFile: String?
         let whisperModelSHA256: String?
+        let qwenModelID: String?
+        let qwenModelRevision: String?
+        let fireRedModelID: String?
+        let fireRedModelRevision: String?
         let voxtralModelID: String?
         let voxtralModelRevision: String?
         let voxtralRuntimePatchSHA256: String?
@@ -1231,8 +1235,8 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
         )
         if ["qudu2fx3ncc", "md62mmdz0m"].contains(manifest.corpusID) {
             guard session.summary.pcmComplete,
-                  ["whisperTurboApple", "voxtralApple"].contains(
-                    session.summary.engine
+                  ["whisperTurboApple", "voxtralApple", "qwenApple"].contains(
+                      session.summary.engine
                   ),
                   session.summary.translationMode == "adaptive",
                   session.summary.finalSampleCount == firefox.count,
@@ -1242,7 +1246,10 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
                   session.summary.sourcePipelineFailure == nil,
                   session.summary.completionFailure == nil,
                   session.summary.sourceLocale?.hasPrefix("ja") == true,
-                  session.summary.capturedApplicationBundleIdentifier == "org.mozilla.firefox",
+                  (session.summary.capturedApplicationBundleIdentifier.map {
+                    ["com.google.Chrome", "org.mozilla.nightly", "org.mozilla.nightlyunofficial"]
+                        .contains($0)
+                  }) == true,
                   (session.summary.capturedApplicationProcessIdentifier ?? 0) > 0,
                   session.summary.microphoneIncluded == false else {
                 throw inputError("The L7 session did not finish with a complete, drained Firefox pipeline.")
@@ -1261,10 +1268,18 @@ final class JapaneseOfflineEvaluationTests: XCTestCase {
             }
             let baselinePlusTwentyPercent: UInt64 = 5_022_375_945
             guard session.maximumCombinedResidentBytes < 10 * 1_024 * 1_024 * 1_024,
-                  session.maximumCombinedResidentBytes <= baselinePlusTwentyPercent else {
+                  session.summary.engine == "qwenApple"
+                    || session.maximumCombinedResidentBytes <= baselinePlusTwentyPercent else {
                 throw inputError("Observed resident memory exceeds the L7 gate.")
             }
-            if session.summary.engine == "voxtralApple" {
+            if session.summary.engine == "qwenApple" {
+                guard session.qwenModelID == LocalPrototypeModelID.qwen,
+                      session.qwenModelRevision == LocalPrototypeModelID.qwenRevision,
+                      session.fireRedModelID == LocalPrototypeModelID.fireRed,
+                      session.fireRedModelRevision == LocalPrototypeModelID.fireRedRevision else {
+                    throw inputError("The Qwen or FireRed revision is not pinned in the E1 sidecar.")
+                }
+            } else if session.summary.engine == "voxtralApple" {
                 guard session.voxtralModelID == VoxtralHelperManifest.modelID,
                       session.voxtralModelRevision
                         == VoxtralHelperManifest.modelRevision,

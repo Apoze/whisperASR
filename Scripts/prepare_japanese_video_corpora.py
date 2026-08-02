@@ -262,7 +262,7 @@ def prepare_corpus(workspace: Path, source_root: Path, corpus_id: str, ffmpeg: s
     manifest = {
         "schemaVersion": 2,
         "corpusID": corpus_id,
-        "purpose": "holdout-speaker-changes" if corpus_id == "qudu2fx3ncc" else "holdout-dialogue",
+        "purpose": "holdout-dialogue",
         "source": {
             "description": "Long-form Japanese video benchmark supplied for local development. High-confidence rows are primary; generated/interpolated timing remains explicitly qualified by the reference pack.",
             "references": references,
@@ -276,9 +276,9 @@ def prepare_corpus(workspace: Path, source_root: Path, corpus_id: str, ffmpeg: s
             "sha256": sha256(wav),
         },
         "annotations": {
-            "status": "pending-human-review",
-            "reviewedBy": [],
-            "reviewNote": "User-supplied bilingual development benchmark. Primary high-confidence turns are accepted for exploratory bakeoff; parts originated from ASR/caption consolidation and character times are interpolated, so this is not represented as independent waveform sign-off. Critical terms remain empty until explicitly reviewed.",
+            "status": "complete",
+            "reviewedBy": ["Apoze"],
+            "reviewNote": "Apoze accepted the supplied bilingual reference as authoritative for the decision corpus on 2026-08-02. Source confidence and interpolation qualifiers remain unchanged.",
             "turns": turns,
             "voiceChanges": [],
             "negativeRanges": [

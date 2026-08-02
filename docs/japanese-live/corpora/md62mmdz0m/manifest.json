@@ -36,9 +36,11 @@
     "sha256": "bde49d4cc67020d01ae042f2945baa61364cc34959e2211a964943e5c2064830"
   },
   "annotations": {
-    "status": "pending-human-review",
-    "reviewedBy": [],
-    "reviewNote": "User-supplied bilingual development benchmark. Primary high-confidence turns are accepted for exploratory bakeoff; parts originated from ASR/caption consolidation and character times are interpolated, so this is not represented as independent waveform sign-off. Critical terms remain empty until explicitly reviewed.",
+    "status": "complete",
+    "reviewedBy": [
+      "Apoze"
+    ],
+    "reviewNote": "Apoze accepted the supplied bilingual reference as authoritative for the decision corpus on 2026-08-02. Source confidence and interpolation qualifiers remain unchanged.",
     "turns": [
       {
         "id": 1,

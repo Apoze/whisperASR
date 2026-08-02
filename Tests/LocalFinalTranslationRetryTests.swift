@@ -78,6 +78,15 @@ final class LocalFinalTranslationRetryTests: XCTestCase {
         XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish(repeated))
     }
 
+    func testRepetitionDetectorCatchesJapaneseCharacterLoops() {
+        XCTAssertTrue(SubtitleRepetitionDetector.hasRepeatedTail(
+            "配信のレイド。隣に隣に隣に隣に隣に隣に隣に隣に"
+        ))
+        XCTAssertFalse(SubtitleRepetitionDetector.hasRepeatedTail(
+            "配信のレイドを誰かにしようみたいな感じ。"
+        ))
+    }
+
     func testRecoveryUsesAudioWhenRealAndSavedClausesWhenItIsMissing() {
         XCTAssertEqual(
             LocalEnglishRetrySourceStrategy.resolve(
@@ -192,9 +201,9 @@ final class LocalFinalTranslationRetryTests: XCTestCase {
         XCTAssertEqual(state.begin(), 3)
         XCTAssertEqual(
             state.record(LocalPrototypeError.invalidResponse).disposition,
-            .retain
+            .commitUnavailable
         )
-        XCTAssertTrue(state.exhausted)
+        XCTAssertFalse(state.exhausted)
         XCTAssertEqual(state.count, 3)
     }
 
@@ -213,23 +222,19 @@ final class LocalFinalTranslationRetryTests: XCTestCase {
             ),
             .retry(after: .seconds(1))
         )
-        XCTAssertEqual(
-            LocalFinalTranslationRetryPolicy.disposition(
-                for: LocalPrototypeError.invalidResponse,
-                afterAttempt: 3
-            ),
-            .retain
-        )
     }
 
-    func testPermanentFailuresAreRetainedWithoutRetry() {
+    func testInvalidFinalCommitsAnExplicitGapInsteadOfBlockingTheQueue() {
         XCTAssertEqual(
             LocalFinalTranslationRetryPolicy.disposition(
                 for: LocalPrototypeError.invalidResponse,
                 afterAttempt: 1
             ),
-            .retain
+            .commitUnavailable
         )
+    }
+
+    func testPermanentFailuresAreRetainedWithoutRetry() {
         XCTAssertEqual(
             LocalFinalTranslationRetryPolicy.disposition(
                 for: AppleLiveError.translationAssetsUnavailable,

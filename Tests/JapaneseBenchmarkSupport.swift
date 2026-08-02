@@ -930,7 +930,7 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
         XCTAssertEqual(Set(first), Set(values))
     }
 
-    func testVersionedCorporaRemainBlockedUntilHumanReview() throws {
+    func testOnlyProvidedVideoReferencesArePromotionEligible() throws {
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let directory = root.appendingPathComponent("docs/japanese-live/corpora")
         let expected: [String: JapaneseBenchmarkSupport.Manifest.Annotations.Status] = [
@@ -938,8 +938,8 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
             "kikusasaizu-l1-1": .pendingHumanReview,
             "okkei-shun-1541-1711": .incomplete,
             "interview-speakers-0245-0325": .incomplete,
-            "qudu2fx3ncc": .pendingHumanReview,
-            "md62mmdz0m": .pendingHumanReview,
+            "qudu2fx3ncc": .complete,
+            "md62mmdz0m": .complete,
         ]
 
         let manifests = try expected.map { corpusID, status in
@@ -952,7 +952,10 @@ final class JapaneseBenchmarkSupportTests: XCTestCase {
             return manifest
         }
 
-        XCTAssertFalse(manifests.contains { $0.annotations.status == .complete })
+        XCTAssertEqual(
+            Set(manifests.filter { $0.annotations.status == .complete }.map(\.corpusID)),
+            ["qudu2fx3ncc", "md62mmdz0m"]
+        )
         XCTAssertEqual(
             manifests.first(where: { $0.corpusID == "easy-japanese-1" })?
                 .annotations.turns.count,

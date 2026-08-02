@@ -6,7 +6,7 @@ import MLXAudioSTT
 import Qwen3ASR
 import SpeechVAD
 
-private enum PrototypeModelID {
+enum LocalPrototypeModelID {
     static let qwen = "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
     static let qwenRevision = "7c70d18cb650655d32eafb952a74a49c6a3caad0"
     static let fireRed = "aufklarer/FireRedVAD-CoreML"
@@ -24,11 +24,11 @@ enum CoherePrototypeQuantization: String, Sendable {
     case q6
 
     fileprivate var modelID: String {
-        self == .q8 ? PrototypeModelID.cohere : PrototypeModelID.cohereQ6
+        self == .q8 ? LocalPrototypeModelID.cohere : LocalPrototypeModelID.cohereQ6
     }
 
     fileprivate var revision: String {
-        self == .q8 ? PrototypeModelID.cohereRevision : PrototypeModelID.cohereQ6Revision
+        self == .q8 ? LocalPrototypeModelID.cohereRevision : LocalPrototypeModelID.cohereQ6Revision
     }
 }
 
@@ -86,14 +86,14 @@ private actor FireRedVADRuntime {
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
         guard model == nil else { return }
         try await PrototypeRevisionGate.verify(
-            modelID: PrototypeModelID.fireRed,
-            expectedRevision: PrototypeModelID.fireRedRevision
+            modelID: LocalPrototypeModelID.fireRed,
+            expectedRevision: LocalPrototypeModelID.fireRedRevision
         )
         let cache = try HuggingFaceDownloader.getCacheDirectory(
-            for: PrototypeModelID.fireRed
+            for: LocalPrototypeModelID.fireRed
         )
         let loaded = try await FireRedVADModel.fromPretrained(
-            modelId: PrototypeModelID.fireRed,
+            modelId: LocalPrototypeModelID.fireRed,
             cacheDir: cache,
             // A complete local bundle must never trigger a metadata request.
             // Missing assets still follow the normal first-install download.
@@ -127,14 +127,14 @@ private actor QwenRuntime {
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
         guard model == nil else { return }
         try await PrototypeRevisionGate.verify(
-            modelID: PrototypeModelID.qwen,
-            expectedRevision: PrototypeModelID.qwenRevision
+            modelID: LocalPrototypeModelID.qwen,
+            expectedRevision: LocalPrototypeModelID.qwenRevision
         )
         let cache = try HuggingFaceDownloader.getCacheDirectory(
-            for: PrototypeModelID.qwen
+            for: LocalPrototypeModelID.qwen
         )
         let loaded = try await Qwen3ASR.Qwen3ASRModel.fromPretrained(
-            modelId: PrototypeModelID.qwen,
+            modelId: LocalPrototypeModelID.qwen,
             cacheDir: cache,
             offlineMode: HuggingFaceDownloader.weightsExist(in: cache),
             progressHandler: progress
@@ -150,14 +150,22 @@ private actor QwenRuntime {
 
     func transcribe(audio: [Float], language: String) throws -> String {
         guard let model else { throw LocalPrototypeError.modelNotLoaded("Qwen3-ASR") }
+        var options = Qwen3DecodingOptions(
+            maxTokens: 448,
+            language: language,
+            longInputThresholdSeconds: 20
+        )
+        let transcript = model.transcribe(
+            audio: audio,
+            sampleRate: 16_000,
+            options: options
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard SubtitleRepetitionDetector.hasRepeatedTail(transcript) else { return transcript }
+        options.noRepeatNgramSize = 3
         return model.transcribe(
             audio: audio,
             sampleRate: 16_000,
-            options: Qwen3DecodingOptions(
-                maxTokens: 448,
-                language: language,
-                longInputThresholdSeconds: 20
-            )
+            options: options
         ).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -184,10 +192,10 @@ private actor VoxtralRuntime {
     func prepare() async throws {
         guard model == nil else { return }
         try await PrototypeRevisionGate.verify(
-            modelID: PrototypeModelID.voxtral,
-            expectedRevision: PrototypeModelID.voxtralRevision
+            modelID: LocalPrototypeModelID.voxtral,
+            expectedRevision: LocalPrototypeModelID.voxtralRevision
         )
-        let loaded = try await VoxtralRealtimeModel.fromPretrained(PrototypeModelID.voxtral)
+        let loaded = try await VoxtralRealtimeModel.fromPretrained(LocalPrototypeModelID.voxtral)
 
         // Exercise the exact online path before enabling Record.
         let warmup = loaded.makeStreamSession(
