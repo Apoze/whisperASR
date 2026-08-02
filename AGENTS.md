@@ -1,16 +1,15 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex when working with code in this repository.
 
 ## Build & Run
 
 ```bash
 swift build          # Build the project
+swift test           # Run the test suite
 swift run            # Build and launch the app
 open Package.swift   # Open in Xcode (Cmd+R to run)
 ```
-
-There are no tests in this project.
 
 **After making code changes, always run `swift run &` in the background to launch the app so the user can verify the changes immediately.**
 
@@ -40,7 +39,7 @@ Examples:
 - `feat: add JSON persistence for transcriptions`
 - `fix: restore pending items on app relaunch`
 - `refactor: extract audio loading into AudioLoader`
-- `docs: add CLAUDE.md`
+- `docs: add AGENTS.md`
 
 For breaking changes, add `!` after the type: `feat!: change transcription storage format`
 
@@ -73,3 +72,17 @@ Native macOS SwiftUI app (macOS 14+, arm64) that transcribes audio using whisper
 `ModelCatalog` defines the downloadable models (Breeze-ASR-25 plus official whisper.cpp tiny/base/small/medium/large-v3-turbo); `ModelManager` (shared `@Observable`) tracks downloaded files in `~/Library/Application Support/WhisperASR/Models/`, per-model `ModelDownloader` instances, and the active selection (UserDefaults `"selectedModelFile"`, settable from `SettingsView` or the toolbar `ModelPickerMenu`).
 
 `TranscriptionService.resolveModelPath()` checks `"selectedModelFile"` first, then the custom `"modelPath"` (set via `SettingsView`), then the App Support default `ggml-model.bin`, then falls back to `{projectRoot}/Models/ggml-model.bin` using `#filePath` to locate the project root. The model is lazily (re)loaded whenever the resolved path changes, so switching models takes effect on the next transcription.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for `Apoze/whisperASR`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the default canonical triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.
