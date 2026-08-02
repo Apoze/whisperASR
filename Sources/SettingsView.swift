@@ -116,7 +116,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Japanese context profiles") {
+            Section("Japanese glossary profiles") {
                 Picker("Profile to edit", selection: $editedJapaneseContextProfileID) {
                     ForEach(japaneseContextLibrary.profiles) { profile in
                         Text(profile.name).tag(profile.id)
@@ -159,7 +159,7 @@ struct SettingsView: View {
                     )
                 }
 
-                Text("Canonical terms bias Apple Speech. Variants are corrected only on the Japanese copy sent to Apple Translation; the raw transcript is preserved.")
+                Text("Variants are corrected only on the Japanese copy sent to Apple Translation; the raw transcript is preserved.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -455,12 +455,7 @@ private struct JapaneseContextProfileEditor: View {
             Spacer()
             Text("\(activeTermCount) active term\(activeTermCount == 1 ? "" : "s")")
                 .font(.caption)
-                .foregroundStyle(activeTermCount > 100 ? .orange : .secondary)
-        }
-        if activeTermCount > 100 {
-            Text("Apple Speech uses the first 100 active terms.")
-                .font(.caption)
-                .foregroundStyle(.orange)
+                .foregroundStyle(.secondary)
         }
     }
 

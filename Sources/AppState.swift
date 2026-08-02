@@ -1917,6 +1917,13 @@ class AppState {
         }
     }
 
+    @MainActor
+    static func startProductAppleSpeech(
+        _ start: ([String]) async throws -> Void
+    ) async rethrows {
+        try await start([])
+    }
+
     @available(macOS 26.4, *)
     @MainActor
     private func runLocalEnglishCaptions(
@@ -1960,17 +1967,20 @@ class AppState {
                         highFidelity: false
                     )
                     try await engine.runAppleSpeechPreviewOperation {
-                        try await appleSpeechService().start(
-                            localeIdentifier: sourceLocale,
-                            priority: engine.usesVoxtralStreaming ? .utility : .userInitiated,
-                            contextualStrings: activeJapaneseGlossary.appleContextualStrings,
-                            onUpdate: { [weak self] update in
-                                self?.receiveLocalPreviewSource(update)
-                            },
-                            onFailure: { [weak self] error in
-                                self?.disableLocalPreview(error)
-                            }
-                        )
+                        try await Self.startProductAppleSpeech { contextualStrings in
+                            try await appleSpeechService().start(
+                                localeIdentifier: sourceLocale,
+                                priority: engine.usesVoxtralStreaming
+                                    ? .utility : .userInitiated,
+                                contextualStrings: contextualStrings,
+                                onUpdate: { [weak self] update in
+                                    self?.receiveLocalPreviewSource(update)
+                                },
+                                onFailure: { [weak self] error in
+                                    self?.disableLocalPreview(error)
+                                }
+                            )
+                        }
                     }
                     localPreviewRuntimeEnabled = true
                 } catch {

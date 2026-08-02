@@ -203,8 +203,8 @@ struct JapaneseContextLibrary: Codable, Equatable, Sendable {
     }
 }
 
-/// Immutable session snapshot shared by Apple Speech, translation,
-/// benchmark provenance and crash recovery.
+/// Immutable session snapshot shared by translation, benchmark provenance
+/// and crash recovery.
 struct JapaneseGlossary: Codable, Equatable, Sendable {
     struct Entry: Codable, Equatable, Sendable {
         let recognized: String

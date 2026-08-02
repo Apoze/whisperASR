@@ -86,18 +86,19 @@ final class JapaneseGlossaryTests: XCTestCase {
         XCTAssertEqual(glossary.applying(to: "配給です。"), "ハイキューです。")
     }
 
-    func testVSPOProfileBuildsAppleAndTranslationInputs() {
+    @MainActor
+    func testVSPOProfileCorrectsAliasesWithoutProductAppleSpeechHints() async {
         let glossary = JapaneseContextLibrary.defaultLibrary.activeGlossary(
             selection: JapaneseContextLibrary.vspoID
         )
+        let raw = "続いて甘いモカ、そして立川。"
+        var receivedHints: [String]?
 
         XCTAssertEqual(glossary.contextualTermCount, 49)
-        XCTAssertTrue(glossary.appleContextualStrings.contains("甘結もか"))
-        XCTAssertTrue(glossary.appleContextualStrings.contains("梅園ジュノ"))
-        XCTAssertEqual(
-            glossary.applying(to: "続いて甘いモカ、そして立川。"),
-            "続いて甘結もか、そして立川。"
-        )
+        await AppState.startProductAppleSpeech { receivedHints = $0 }
+        XCTAssertEqual(receivedHints, [])
+        XCTAssertEqual(glossary.applying(to: raw), "続いて甘結もか、そして立川。")
+        XCTAssertEqual(raw, "続いて甘いモカ、そして立川。")
     }
 
     func testOffSelectionDisablesAllContextAndCorrections() {
