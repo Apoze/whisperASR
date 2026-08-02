@@ -399,7 +399,24 @@ enum EnglishSubtitleValidator {
     static func normalizedEnglish(_ text: String) -> String? {
         let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalized.isEmpty, !containsSourceScript(normalized) else { return nil }
+        let words = normalized.lowercased()
+            .split { !$0.isLetter && !$0.isNumber }
+        guard !hasRepeatedPhraseTail(words) else { return nil }
         return normalized
+    }
+
+    private static func hasRepeatedPhraseTail(_ words: [Substring]) -> Bool {
+        let repetitions = 8
+        guard words.count >= repetitions else { return false }
+        // ponytail: subtitles are short; use linear period detection if long outputs become common.
+        for width in 1...(words.count / repetitions) {
+            let start = words.count - width * repetitions
+            let repeats = (start..<words.count).allSatisfy { index in
+                words[index] == words[start + (index - start) % width]
+            }
+            if repeats { return true }
+        }
+        return false
     }
 
     static func requireEnglish(_ text: String) throws -> String {

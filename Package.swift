@@ -69,6 +69,7 @@ let package = Package(
                 .product(name: "HuggingFace", package: "swift-huggingface"),
                 .product(name: "MLX", package: "mlx-swift"),
                 .product(name: "MLXAudioSTT", package: "mlx-audio-swift"),
+                .product(name: "Qwen3ASR", package: "SpeechSwiftPrototype"),
             ],
             path: "Tests"
         ),

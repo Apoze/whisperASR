@@ -64,6 +64,20 @@ final class LocalFinalTranslationRetryTests: XCTestCase {
         }
     }
 
+    func testSharedEnglishValidationRejectsPathologicalRepetition() {
+        let repeated = Array(repeating: "good morning", count: 12)
+            .joined(separator: ", ")
+
+        XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish(repeated))
+    }
+
+    func testSharedEnglishValidationRejectsARepeatedPhrase() {
+        let repeated = Array(repeating: "this is very good", count: 8)
+            .joined(separator: ". ")
+
+        XCTAssertNil(EnglishSubtitleValidator.normalizedEnglish(repeated))
+    }
+
     func testRecoveryUsesAudioWhenRealAndSavedClausesWhenItIsMissing() {
         XCTAssertEqual(
             LocalEnglishRetrySourceStrategy.resolve(

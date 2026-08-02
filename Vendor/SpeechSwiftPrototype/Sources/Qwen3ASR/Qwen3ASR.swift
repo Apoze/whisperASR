@@ -603,6 +603,7 @@ public class Qwen3ASRModel {
             // pick, so greedy stays bit-identical.
             generatedTokens.append(nextToken)
             if nextToken == eosToken { break }
+            if Self.hasCollapsedGreedyTail(generatedTokens) { break }
 
             guard let advancedCache = cacheN1, let advancedToken = nextTokenArrN1 else {
                 // Final iteration without speculative work — nothing to
@@ -613,6 +614,11 @@ public class Qwen3ASRModel {
             nextTokenArr = advancedToken
         }
         return generatedTokens
+    }
+
+    static func hasCollapsedGreedyTail(_ tokens: [Int32]) -> Bool {
+        guard tokens.count >= 24 else { return false }
+        return Set(tokens.suffix(24)).count <= 3
     }
 
     // MARK: - Batched Greedy Decode

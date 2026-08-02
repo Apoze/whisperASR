@@ -4382,25 +4382,10 @@ class AppState {
 
     @MainActor
     private func publishLocalCaptions() {
-        if activeLocalEnglishEngine.usesQwenPseudoLivePreview {
-            liveStableSegmentCount = localSourceSegments.count
-            liveSegments = localSourceSegments
-            liveTranslatedSegments = localCommittedSegments.map(\.text)
-            if liveTranslatedSegments.count < liveSegments.count {
-                liveTranslatedSegments += Array(
-                    repeating: "",
-                    count: liveSegments.count - liveTranslatedSegments.count
-                )
-            }
-            if let localSourcePreviewSegment {
-                liveSegments.append(localSourcePreviewSegment)
-                liveTranslatedSegments.append(localPreviewSegment?.text ?? "")
-            }
-        } else {
-            liveStableSegmentCount = localCommittedSegments.count
-            liveSegments = localCommittedSegments
-            if let localPreviewSegment { liveSegments.append(localPreviewSegment) }
-        }
+        liveStableSegmentCount = localCommittedSegments.count
+        liveSegments = localCommittedSegments
+        liveTranslatedSegments = []
+        if let localPreviewSegment { liveSegments.append(localPreviewSegment) }
         setLocalStatus("Listening...")
         throttledAutoSave()
     }
