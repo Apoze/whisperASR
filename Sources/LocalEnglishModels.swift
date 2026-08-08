@@ -371,6 +371,9 @@ final class LocalEnglishModelManager {
     @ObservationIgnored private let voxtral = VoxtralRuntime()
     @ObservationIgnored private let voxtralHelper = VoxtralHelperRuntime()
     @ObservationIgnored private let cohere = CohereRuntime()
+    @ObservationIgnored private let heavyweightGate = HeavyweightModelGate.shared
+    @ObservationIgnored private var heavyweightWorkflowLease: HeavyweightWorkflowLease?
+    @ObservationIgnored private var heavyweightModelLease: HeavyweightModelLease?
     nonisolated init() {}
 
     func phase(for engine: LocalEnglishEngine) -> LocalModelPhase {
@@ -392,6 +395,13 @@ final class LocalEnglishModelManager {
             }
         }
         do {
+            let workflow = try await heavyweightGate.beginWorkflow(.live)
+            heavyweightWorkflowLease = workflow
+            heavyweightModelLease = try await heavyweightGate.acquireModel(
+                workflow: workflow,
+                modelID: "live:\(engine.rawValue)",
+                declaredPeakBytes: 10 * 1_024 * 1_024 * 1_024
+            )
             try await vad.prepare(progress: update)
             switch engine {
             case .whisperTurboApple, .whisperLargeV3Direct:
@@ -442,12 +452,15 @@ final class LocalEnglishModelManager {
             memoryWarning = resident > 8 * 1_024 * 1_024 * 1_024
                 ? "Process memory is above the 8 GB live-caption target."
                 : nil
+            if let heavyweightModelLease {
+                try await heavyweightGate.markLoaded(heavyweightModelLease)
+            }
             loadedEngine = engine
             phases[engine] = .ready(residentBytes: resident)
         } catch {
-            await unloadRuntimes()
+            await releaseHeavyweightLease()
             loadedEngine = nil
-            memoryWarning = nil
+            if heavyweightModelLease == nil { memoryWarning = nil }
             phases[engine] = .failed(error.localizedDescription)
             throw error
         }
@@ -550,15 +563,39 @@ final class LocalEnglishModelManager {
     }
 
     func unload() async {
-        await unloadRuntimes()
+        await releaseHeavyweightLease()
         if let loadedEngine { phases[loadedEngine] = .absent }
         loadedEngine = nil
-        memoryWarning = nil
+        if heavyweightModelLease == nil { memoryWarning = nil }
     }
 
     func shutdown() async {
-        await unloadRuntimes()
+        await releaseHeavyweightLease()
         loadedEngine = nil
+    }
+
+    private func releaseHeavyweightLease() async {
+        if let lease = heavyweightModelLease {
+            do {
+                _ = try await heavyweightGate.releaseModel(lease) { [weak self] in
+                    await self?.unloadRuntimes()
+                }
+                heavyweightModelLease = nil
+            } catch {
+                memoryWarning = error.localizedDescription
+                return
+            }
+        } else {
+            await unloadRuntimes()
+        }
+        if let workflow = heavyweightWorkflowLease {
+            do {
+                try await heavyweightGate.endWorkflow(workflow)
+                heavyweightWorkflowLease = nil
+            } catch {
+                memoryWarning = error.localizedDescription
+            }
+        }
     }
 
     private func unloadRuntimes() async {

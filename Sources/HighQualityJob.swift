@@ -44,6 +44,14 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
             )
         }
     }
+
+    var declaredPeakMemoryBytes: UInt64 {
+        switch self {
+        case .qwenJA: 7 * 1_024 * 1_024 * 1_024
+        case .parakeetJA: 4 * 1_024 * 1_024 * 1_024
+        case .whisperKit: 8 * 1_024 * 1_024 * 1_024
+        }
+    }
 }
 
 enum HighQualityJobDependency: String, Codable, Sendable {
@@ -204,13 +212,66 @@ struct HighQualityTranslationExchange: Equatable, Sendable {
     let model: String
     let response: String
     let attempts: [HighQualityTranslationAttempt]
+    let revision: String?
+    let runtimeVersion: String?
+    let batches: [HighQualityLocalTranslationBatch]
+    let peakMemoryBytes: UInt64
+
+    init(
+        model: String,
+        response: String,
+        attempts: [HighQualityTranslationAttempt],
+        revision: String? = nil,
+        runtimeVersion: String? = nil,
+        batches: [HighQualityLocalTranslationBatch] = [],
+        peakMemoryBytes: UInt64 = 0
+    ) {
+        self.model = model
+        self.response = response
+        self.attempts = attempts
+        self.revision = revision
+        self.runtimeVersion = runtimeVersion
+        self.batches = batches
+        self.peakMemoryBytes = peakMemoryBytes
+    }
+}
+
+struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
+    let cueIDs: [String]
+    let sanitizedPrompt: String
+    let sanitizedOutput: String
+    let inputTokens: Int
 }
 
 struct HighQualityTranslationServiceError: LocalizedError, Sendable {
     let model: String
     let attempts: [HighQualityTranslationAttempt]
     let response: String?
+    let revision: String?
+    let runtimeVersion: String?
+    let batches: [HighQualityLocalTranslationBatch]
+    let peakMemoryBytes: UInt64
     let message: String
+
+    init(
+        model: String,
+        attempts: [HighQualityTranslationAttempt],
+        response: String?,
+        revision: String? = nil,
+        runtimeVersion: String? = nil,
+        batches: [HighQualityLocalTranslationBatch] = [],
+        peakMemoryBytes: UInt64 = 0,
+        message: String
+    ) {
+        self.model = model
+        self.attempts = attempts
+        self.response = response
+        self.revision = revision
+        self.runtimeVersion = runtimeVersion
+        self.batches = batches
+        self.peakMemoryBytes = peakMemoryBytes
+        self.message = message
+    }
 
     var errorDescription: String? { message }
 }
@@ -225,7 +286,60 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
     let response: String?
     let model: String
     let attempts: [HighQualityTranslationAttempt]
+    let revision: String?
+    let runtimeVersion: String?
+    let batches: [HighQualityLocalTranslationBatch]
+    let peakMemoryBytes: UInt64
     var validationFailures: [String]
+
+    private enum CodingKeys: String, CodingKey {
+        case request, response, model, attempts, revision, runtimeVersion, batches
+        case peakMemoryBytes, validationFailures
+    }
+
+    init(
+        request: HighQualityTranslationBatch,
+        response: String?,
+        model: String,
+        attempts: [HighQualityTranslationAttempt],
+        revision: String?,
+        runtimeVersion: String?,
+        batches: [HighQualityLocalTranslationBatch],
+        peakMemoryBytes: UInt64,
+        validationFailures: [String]
+    ) {
+        self.request = request
+        self.response = response
+        self.model = model
+        self.attempts = attempts
+        self.revision = revision
+        self.runtimeVersion = runtimeVersion
+        self.batches = batches
+        self.peakMemoryBytes = peakMemoryBytes
+        self.validationFailures = validationFailures
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        request = try values.decode(HighQualityTranslationBatch.self, forKey: .request)
+        response = try values.decodeIfPresent(String.self, forKey: .response)
+        model = try values.decode(String.self, forKey: .model)
+        attempts = try values.decode([HighQualityTranslationAttempt].self, forKey: .attempts)
+        revision = try values.decodeIfPresent(String.self, forKey: .revision)
+        runtimeVersion = try values.decodeIfPresent(String.self, forKey: .runtimeVersion)
+        batches = try values.decodeIfPresent(
+            [HighQualityLocalTranslationBatch].self,
+            forKey: .batches
+        ) ?? []
+        peakMemoryBytes = try values.decodeIfPresent(
+            UInt64.self,
+            forKey: .peakMemoryBytes
+        ) ?? 0
+        validationFailures = try values.decode(
+            [String].self,
+            forKey: .validationFailures
+        )
+    }
 }
 
 struct HighQualityAlignedCue: Codable, Equatable, Sendable {
@@ -397,11 +511,52 @@ struct HighQualityModelEvent: Codable, Equatable, Sendable {
         case loadStarted = "load-started"
         case loadCompleted = "load-completed"
         case unloadCompleted = "unload-completed"
+        case reserveChecked = "reserve-checked"
+        case memoryReleaseChecked = "memory-release-checked"
+        case guardFailed = "guard-failed"
     }
 
     let kind: Kind
-    let backend: HighQualityASRBackend
+    let backend: HighQualityASRBackend?
+    let modelID: String
+    let message: String?
     let at: Date
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, backend, modelID, message, at
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try values.decode(Kind.self, forKey: .kind)
+        backend = try values.decodeIfPresent(HighQualityASRBackend.self, forKey: .backend)
+        modelID = try values.decodeIfPresent(String.self, forKey: .modelID)
+            ?? backend?.model.modelID
+            ?? "unknown"
+        message = try values.decodeIfPresent(String.self, forKey: .message)
+        at = try values.decode(Date.self, forKey: .at)
+    }
+
+    init(
+        kind: Kind,
+        backend: HighQualityASRBackend,
+        at: Date,
+        message: String? = nil
+    ) {
+        self.kind = kind
+        self.backend = backend
+        self.modelID = backend.model.modelID
+        self.message = message
+        self.at = at
+    }
+
+    init(kind: Kind, modelID: String, at: Date, message: String? = nil) {
+        self.kind = kind
+        self.backend = nil
+        self.modelID = modelID
+        self.message = message
+        self.at = at
+    }
 }
 
 struct HighQualityGeneratedFile: Codable, Equatable, Sendable {
@@ -499,9 +654,14 @@ struct HighQualityJob: Sendable {
         let diarizeSpeakers: @Sendable ([Float]) async throws -> HighQualityDiarizationExchange
         let unloadDiarization: @Sendable () async -> Void
         let currentMemoryBytes: @Sendable () async -> UInt64
+        let prepareTranslation: @Sendable (
+            @escaping @Sendable (Double, String) -> Void
+        ) async throws -> Void
         let translateEnglish: @Sendable (
             HighQualityTranslationBatch
         ) async throws -> HighQualityTranslationExchange
+        let unloadTranslation: @Sendable () async -> Void
+        let heavyweightGate: HeavyweightModelGate?
 
         init(
             loadSource: @escaping @Sendable (URL) async throws -> [Float],
@@ -561,11 +721,20 @@ struct HighQualityJob: Sendable {
             },
             unloadDiarization: @escaping @Sendable () async -> Void = {},
             currentMemoryBytes: @escaping @Sendable () async -> UInt64 = { 0 },
+            prepareTranslation: @escaping @Sendable (
+                @escaping @Sendable (Double, String) -> Void
+            ) async throws -> Void = { _ in },
             translateEnglish: @escaping @Sendable (
                 HighQualityTranslationBatch
-            ) async throws -> HighQualityTranslationExchange = {
-                try await TranslationService.translateHighQuality($0)
-            }
+            ) async throws -> HighQualityTranslationExchange = { _ in
+                throw HighQualityJobError(
+                    stage: .translation,
+                    message: "Local translation is not configured.",
+                    resultDirectory: nil
+                )
+            },
+            unloadTranslation: @escaping @Sendable () async -> Void = {},
+            heavyweightGate: HeavyweightModelGate? = nil
         ) {
             self.loadSource = loadSource
             self.acquireYouTube = acquireYouTube
@@ -591,12 +760,16 @@ struct HighQualityJob: Sendable {
             self.diarizeSpeakers = diarizeSpeakers
             self.unloadDiarization = unloadDiarization
             self.currentMemoryBytes = currentMemoryBytes
+            self.prepareTranslation = prepareTranslation
             self.translateEnglish = translateEnglish
+            self.unloadTranslation = unloadTranslation
+            self.heavyweightGate = heavyweightGate
         }
 
         static func production(for backend: HighQualityASRBackend) -> Self {
             let aligner = HighQualityForcedAlignerRuntime()
             let diarizer = HighQualitySpeakerKitRuntime()
+            let translator = LocalMLXTranslator()
             let loadSource: @Sendable (URL) async throws -> [Float] = {
                 try await AudioLoader.loadSamples(url: $0)
             }
@@ -630,7 +803,11 @@ struct HighQualityJob: Sendable {
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
                     diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
                     unloadDiarization: { await diarizer.unload() },
-                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
+                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
+                    prepareTranslation: { try await translator.prepare(progress: $0) },
+                    translateEnglish: { try await translator.translate($0) },
+                    unloadTranslation: { await translator.unload() },
+                    heavyweightGate: .shared
                 )
             case .parakeetJA:
                 let runtime = ParakeetRuntime()
@@ -654,7 +831,11 @@ struct HighQualityJob: Sendable {
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
                     diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
                     unloadDiarization: { await diarizer.unload() },
-                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
+                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
+                    prepareTranslation: { try await translator.prepare(progress: $0) },
+                    translateEnglish: { try await translator.translate($0) },
+                    unloadTranslation: { await translator.unload() },
+                    heavyweightGate: .shared
                 )
             case .whisperKit:
                 let runtime = WhisperKitRuntime()
@@ -674,7 +855,11 @@ struct HighQualityJob: Sendable {
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
                     diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
                     unloadDiarization: { await diarizer.unload() },
-                    currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() }
+                    currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() },
+                    prepareTranslation: { try await translator.prepare(progress: $0) },
+                    translateEnglish: { try await translator.translate($0) },
+                    unloadTranslation: { await translator.unload() },
+                    heavyweightGate: .shared
                 )
             }
         }
@@ -824,6 +1009,13 @@ struct HighQualityJob: Sendable {
         var alignmentUnloaded = false
         var diarizationLoadStarted = false
         var diarizationUnloaded = false
+        var translationLoadStarted = false
+        var translationUnloaded = false
+        var workflowLease: HeavyweightWorkflowLease?
+        var asrLease: HeavyweightModelLease?
+        var alignmentLease: HeavyweightModelLease?
+        var diarizationLease: HeavyweightModelLease?
+        var translationLease: HeavyweightModelLease?
         var memorySampler: Task<UInt64, Never>?
         var manifest = HighQualityJobManifest(
             schemaVersion: 1,
@@ -860,7 +1052,77 @@ struct HighQualityJob: Sendable {
             progress(.init(stage: stage, fraction: fraction, message: message))
         }
 
+        func acquireModel(_ modelID: String, peak: UInt64) async throws -> HeavyweightModelLease? {
+            guard let gate = services.heavyweightGate, let workflowLease else { return nil }
+            return try await gate.acquireModel(
+                workflow: workflowLease,
+                modelID: modelID,
+                declaredPeakBytes: peak
+            )
+        }
+
+        func markLoaded(_ lease: HeavyweightModelLease?) async throws {
+            guard let gate = services.heavyweightGate, let lease else { return }
+            try await gate.markLoaded(lease)
+        }
+
+        func releaseModel(
+            _ lease: HeavyweightModelLease?,
+            unload: @escaping @Sendable () async -> Void
+        ) async throws -> UInt64? {
+            guard let gate = services.heavyweightGate, let lease else {
+                await unload()
+                return nil
+            }
+            return try await gate.releaseModel(lease, unload: unload)
+        }
+
+        func cleanupModel(
+            _ lease: HeavyweightModelLease?,
+            modelID: String,
+            unload: @escaping @Sendable () async -> Void
+        ) async {
+            do {
+                let releasedMemory = try await releaseModel(lease, unload: unload)
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    modelID: modelID,
+                    at: Date()
+                ))
+                if let releasedMemory {
+                    manifest.modelEvents.append(.init(
+                        kind: .memoryReleaseChecked,
+                        modelID: modelID,
+                        at: Date(),
+                        message: "memory=\(releasedMemory)"
+                    ))
+                }
+            } catch let gateError as HeavyweightModelGateError {
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    modelID: modelID,
+                    at: Date()
+                ))
+                manifest.modelEvents.append(.init(
+                    kind: .guardFailed,
+                    modelID: modelID,
+                    at: Date(),
+                    message: gateError.localizedDescription
+                ))
+            } catch {
+                manifest.modelEvents.append(.init(
+                    kind: .guardFailed,
+                    modelID: modelID,
+                    at: Date(),
+                    message: error.localizedDescription
+                ))
+            }
+        }
+
         do {
+            if let gate = services.heavyweightGate {
+                workflowLease = try await gate.beginWorkflow(.offline(request.id))
+            }
             var normalizedSourceURL = request.sourceURL
             if isYouTubeSource {
                 begin(.acquiringSource, fraction: 0.02, message: "Acquiring YouTube audio…")
@@ -923,6 +1185,18 @@ struct HighQualityJob: Sendable {
                 return max(peak, await services.currentMemoryBytes())
             }
             asrLoadStarted = true
+            asrLease = try await acquireModel(
+                request.backend.model.modelID,
+                peak: request.backend.declaredPeakMemoryBytes
+            )
+            if let asrLease {
+                manifest.modelEvents.append(.init(
+                    kind: .reserveChecked,
+                    backend: request.backend,
+                    at: Date(),
+                    message: "peak=\(asrLease.declaredPeakBytes) reserve=\(asrLease.reserveBytes) total=\(asrLease.totalMemoryBytes)"
+                ))
+            }
             manifest.modelEvents.append(.init(
                 kind: .loadStarted,
                 backend: request.backend,
@@ -935,6 +1209,7 @@ struct HighQualityJob: Sendable {
                     message: message
                 ))
             }
+            try await markLoaded(asrLease)
             manifest.modelEvents.append(.init(
                 kind: .loadCompleted,
                 backend: request.backend,
@@ -961,13 +1236,22 @@ struct HighQualityJob: Sendable {
                 manifest.peakMemoryBytes = await memorySampler.value
             }
             memorySampler = nil
-            await services.unloadASR()
             asrUnloaded = true
+            let asrReleasedMemory = try await releaseModel(asrLease, unload: services.unloadASR)
+            asrLease = nil
             manifest.modelEvents.append(.init(
                 kind: .unloadCompleted,
                 backend: request.backend,
                 at: Date()
             ))
+            if let asrReleasedMemory {
+                manifest.modelEvents.append(.init(
+                    kind: .memoryReleaseChecked,
+                    backend: request.backend,
+                    at: Date(),
+                    message: "memory=\(asrReleasedMemory)"
+                ))
+            }
             let baseTurns = Self.translationTurns(
                 from: transcript,
                 asrChunks: asrExchange.chunks,
@@ -976,6 +1260,23 @@ struct HighQualityJob: Sendable {
             if needsAlignment {
                 begin(.preparingAlignment, fraction: 0.62, message: "Preparing forced alignment…")
                 alignmentLoadStarted = true
+                alignmentLease = try await acquireModel(
+                    HighQualityForcedAlignerRuntime.modelID,
+                    peak: HighQualityForcedAlignerRuntime.declaredPeakMemoryBytes
+                )
+                if let alignmentLease {
+                    manifest.modelEvents.append(.init(
+                        kind: .reserveChecked,
+                        modelID: HighQualityForcedAlignerRuntime.modelID,
+                        at: Date(),
+                        message: "peak=\(alignmentLease.declaredPeakBytes) reserve=\(alignmentLease.reserveBytes) total=\(alignmentLease.totalMemoryBytes)"
+                    ))
+                }
+                manifest.modelEvents.append(.init(
+                    kind: .loadStarted,
+                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    at: Date()
+                ))
                 try await services.prepareAlignment { fraction, message in
                     progress(.init(
                         stage: .preparingAlignment,
@@ -983,6 +1284,12 @@ struct HighQualityJob: Sendable {
                         message: message
                     ))
                 }
+                try await markLoaded(alignmentLease)
+                manifest.modelEvents.append(.init(
+                    kind: .loadCompleted,
+                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    at: Date()
+                ))
                 try Task.checkCancellation()
                 begin(.aligning, fraction: 0.7, message: "Aligning Japanese transcript…")
                 let exchange = try await services.alignJapanese(samples, baseTurns)
@@ -1016,13 +1323,47 @@ struct HighQualityJob: Sendable {
                     throw error
                 }
                 manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, exchange.peakMemoryBytes)
-                await services.unloadAlignment()
                 alignmentUnloaded = true
+                let releasedMemory = try await releaseModel(
+                    alignmentLease,
+                    unload: services.unloadAlignment
+                )
+                alignmentLease = nil
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    at: Date()
+                ))
+                if let releasedMemory {
+                    manifest.modelEvents.append(.init(
+                        kind: .memoryReleaseChecked,
+                        modelID: HighQualityForcedAlignerRuntime.modelID,
+                        at: Date(),
+                        message: "memory=\(releasedMemory)"
+                    ))
+                }
                 try Task.checkCancellation()
             }
             if request.speakerLabels {
                 begin(.preparingDiarization, fraction: 0.74, message: "Preparing SpeakerKit…")
                 diarizationLoadStarted = true
+                diarizationLease = try await acquireModel(
+                    HighQualitySpeakerKitRuntime.modelID,
+                    peak: HighQualitySpeakerKitRuntime.declaredPeakMemoryBytes
+                )
+                if let diarizationLease {
+                    manifest.modelEvents.append(.init(
+                        kind: .reserveChecked,
+                        modelID: HighQualitySpeakerKitRuntime.modelID,
+                        at: Date(),
+                        message: "peak=\(diarizationLease.declaredPeakBytes) reserve=\(diarizationLease.reserveBytes) total=\(diarizationLease.totalMemoryBytes)"
+                    ))
+                }
+                manifest.modelEvents.append(.init(
+                    kind: .loadStarted,
+                    modelID: HighQualitySpeakerKitRuntime.modelID,
+                    at: Date()
+                ))
                 try await services.prepareDiarization { fraction, message in
                     progress(.init(
                         stage: .preparingDiarization,
@@ -1030,6 +1371,12 @@ struct HighQualityJob: Sendable {
                         message: message
                     ))
                 }
+                try await markLoaded(diarizationLease)
+                manifest.modelEvents.append(.init(
+                    kind: .loadCompleted,
+                    modelID: HighQualitySpeakerKitRuntime.modelID,
+                    at: Date()
+                ))
                 try Task.checkCancellation()
                 begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
                 let exchange = try await services.diarizeSpeakers(samples)
@@ -1054,8 +1401,25 @@ struct HighQualityJob: Sendable {
                     throw error
                 }
                 manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, exchange.peakMemoryBytes)
-                await services.unloadDiarization()
                 diarizationUnloaded = true
+                let releasedMemory = try await releaseModel(
+                    diarizationLease,
+                    unload: services.unloadDiarization
+                )
+                diarizationLease = nil
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    modelID: HighQualitySpeakerKitRuntime.modelID,
+                    at: Date()
+                ))
+                if let releasedMemory {
+                    manifest.modelEvents.append(.init(
+                        kind: .memoryReleaseChecked,
+                        modelID: HighQualitySpeakerKitRuntime.modelID,
+                        at: Date(),
+                        message: "memory=\(releasedMemory)"
+                    ))
+                }
                 try Task.checkCancellation()
             }
             let turns = Self.speakerTurns(
@@ -1068,19 +1432,66 @@ struct HighQualityJob: Sendable {
             )
             var translationsByID: [String: String] = [:]
             if request.deliverables.contains(.englishTranslationTranscript) || needsSubtitles {
-                begin(.translating, fraction: 0.8, message: "Translating to English…")
+                begin(.translating, fraction: 0.8, message: "Preparing local TranslateGemma…")
                 let translationRequest = HighQualityTranslationBatch(
                     source: manifest.source,
                     turns: turns,
                     glossary: glossary.promptTerms
                 )
+                translationEvidence = .init(
+                    request: translationRequest,
+                    response: nil,
+                    model: LocalMLXTranslator.modelID,
+                    attempts: [],
+                    revision: LocalMLXTranslator.revision,
+                    runtimeVersion: LocalMLXTranslator.runtimeVersion,
+                    batches: [],
+                    peakMemoryBytes: 0,
+                    validationFailures: []
+                )
+                translationLoadStarted = true
+                translationLease = try await acquireModel(
+                    LocalMLXTranslator.modelID,
+                    peak: LocalMLXTranslator.declaredPeakMemoryBytes
+                )
+                if let translationLease {
+                    manifest.modelEvents.append(.init(
+                        kind: .reserveChecked,
+                        modelID: LocalMLXTranslator.modelID,
+                        at: Date(),
+                        message: "peak=\(translationLease.declaredPeakBytes) reserve=\(translationLease.reserveBytes) total=\(translationLease.totalMemoryBytes)"
+                    ))
+                }
+                manifest.modelEvents.append(.init(
+                    kind: .loadStarted,
+                    modelID: LocalMLXTranslator.modelID,
+                    at: Date()
+                ))
                 do {
+                    try await services.prepareTranslation { fraction, message in
+                        progress(.init(
+                            stage: .translating,
+                            fraction: 0.8 + min(max(fraction, 0), 1) * 0.04,
+                            message: message
+                        ))
+                    }
+                    try await markLoaded(translationLease)
+                    manifest.modelEvents.append(.init(
+                        kind: .loadCompleted,
+                        modelID: LocalMLXTranslator.modelID,
+                        at: Date()
+                    ))
+                    progress(.init(stage: .translating, fraction: 0.84, message: "Translating to English locally…"))
                     let exchange = try await services.translateEnglish(translationRequest)
                     translationEvidence = .init(
                         request: translationRequest,
                         response: exchange.response,
                         model: exchange.model,
                         attempts: exchange.attempts,
+                        revision: exchange.revision,
+                        runtimeVersion: exchange.runtimeVersion,
+                        batches: exchange.batches,
+                        peakMemoryBytes: exchange.peakMemoryBytes,
                         validationFailures: []
                     )
                     do {
@@ -1098,11 +1509,39 @@ struct HighQualityJob: Sendable {
                         response: error.response,
                         model: error.model,
                         attempts: error.attempts,
+                        revision: error.revision,
+                        runtimeVersion: error.runtimeVersion,
+                        batches: error.batches,
+                        peakMemoryBytes: error.peakMemoryBytes,
                         validationFailures: []
                     )
                     throw error
                 }
+                translationUnloaded = true
+                let releasedMemory = try await releaseModel(
+                    translationLease,
+                    unload: services.unloadTranslation
+                )
+                translationLease = nil
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    modelID: LocalMLXTranslator.modelID,
+                    at: Date()
+                ))
+                if let releasedMemory {
+                    manifest.modelEvents.append(.init(
+                        kind: .memoryReleaseChecked,
+                        modelID: LocalMLXTranslator.modelID,
+                        at: Date(),
+                        message: "memory=\(releasedMemory)"
+                    ))
+                }
                 try Task.checkCancellation()
+            }
+
+            if let gate = services.heavyweightGate, let lease = workflowLease {
+                try await gate.endWorkflow(lease)
+                workflowLease = nil
             }
 
             let resultTurns = Self.resultTurns(
@@ -1184,6 +1623,18 @@ struct HighQualityJob: Sendable {
                 evidence: evidence
             )
         } catch {
+            if let gateError = error as? HeavyweightModelGateError {
+                manifest.modelEvents.append(.init(
+                    kind: .guardFailed,
+                    modelID: asrLease?.modelID
+                        ?? alignmentLease?.modelID
+                        ?? diarizationLease?.modelID
+                        ?? translationLease?.modelID
+                        ?? "heavyweight-workflow",
+                    at: Date(),
+                    message: gateError.localizedDescription
+                ))
+            }
             memorySampler?.cancel()
             if let memorySampler {
                 manifest.peakMemoryBytes = await memorySampler.value
@@ -1195,18 +1646,39 @@ struct HighQualityJob: Sendable {
             }
             memorySampler = nil
             if asrLoadStarted, !asrUnloaded {
-                await services.unloadASR()
-                manifest.modelEvents.append(.init(
-                    kind: .unloadCompleted,
-                    backend: request.backend,
-                    at: Date()
-                ))
+                asrUnloaded = true
+                await cleanupModel(
+                    asrLease,
+                    modelID: request.backend.model.modelID,
+                    unload: services.unloadASR
+                )
             }
             if alignmentLoadStarted, !alignmentUnloaded {
-                await services.unloadAlignment()
+                alignmentUnloaded = true
+                await cleanupModel(
+                    alignmentLease,
+                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    unload: services.unloadAlignment
+                )
             }
             if diarizationLoadStarted, !diarizationUnloaded {
-                await services.unloadDiarization()
+                diarizationUnloaded = true
+                await cleanupModel(
+                    diarizationLease,
+                    modelID: HighQualitySpeakerKitRuntime.modelID,
+                    unload: services.unloadDiarization
+                )
+            }
+            if translationLoadStarted, !translationUnloaded {
+                translationUnloaded = true
+                await cleanupModel(
+                    translationLease,
+                    modelID: LocalMLXTranslator.modelID,
+                    unload: services.unloadTranslation
+                )
+            }
+            if let gate = services.heavyweightGate, let workflowLease {
+                try? await gate.endWorkflow(workflowLease)
             }
             let failureStage: HighQualityJobFailureStage
             let status: HighQualityJobManifest.Status

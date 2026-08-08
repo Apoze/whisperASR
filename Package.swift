@@ -20,6 +20,14 @@ let package = Package(
             exact: "0.31.6"
         ),
         .package(
+            url: "https://github.com/ml-explore/mlx-swift-lm.git",
+            exact: "3.31.4"
+        ),
+        .package(
+            url: "https://github.com/huggingface/swift-transformers",
+            exact: "1.3.3"
+        ),
+        .package(
             url: "https://github.com/huggingface/swift-huggingface.git",
             exact: "0.9.0"
         ),
@@ -48,10 +56,14 @@ let package = Package(
                 .product(name: "SpeechVAD", package: "SpeechSwiftPrototype"),
                 .product(name: "MLXAudioSTT", package: "mlx-audio-swift"),
                 .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXLLM", package: "mlx-swift-lm"),
+                .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
+                .product(name: "MLXHuggingFace", package: "mlx-swift-lm"),
                 .product(name: "FluidAudio", package: "FluidAudio"),
                 .product(name: "WhisperKit", package: "WhisperKit"),
                 .product(name: "SpeakerKit", package: "WhisperKit"),
                 .product(name: "HuggingFace", package: "swift-huggingface"),
+                .product(name: "Tokenizers", package: "swift-transformers"),
             ],
             path: "Sources",
             resources: [

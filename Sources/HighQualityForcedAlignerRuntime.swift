@@ -6,6 +6,7 @@ import MLXAudioSTT
 actor HighQualityForcedAlignerRuntime {
     static let modelID = "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
     static let revision = "2f652af86ae0c73fe189b9429225c908ce4bf020"
+    static let declaredPeakMemoryBytes: UInt64 = 4 * 1_024 * 1_024 * 1_024
     private static let sampleRate = 16_000
 
     private var model: Qwen3ForcedAlignerModel?

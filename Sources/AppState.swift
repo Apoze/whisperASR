@@ -1223,8 +1223,8 @@ class AppState {
     }
 
     func shutdown() {
-        service.shutdown()
         Task {
+            await service.unloadModel()
             await localModelManager.shutdown()
             await localDiarizationShadow.shutdown()
         }
@@ -1445,9 +1445,9 @@ class AppState {
             if #available(macOS 26.4, *), let preview = self.applePreviewTranslationRuntime as? AppleTranslationService {
                 await preview.cancel()
             }
+            await self.service.unloadModel()
             await self.localModelManager.unload()
             await self.localDiarizationShadow.shutdown()
-            await self.service.unloadModel()
         }
     }
 
@@ -1595,6 +1595,7 @@ class AppState {
                     )
                     guard self.localPreparationIsCurrent(key, generation: generation) else { return }
                 }
+                await self.service.unloadModel()
                 try await self.localModelManager.prepare(engine)
                 guard self.localPreparationIsCurrent(key, generation: generation) else { return }
                 if engine.usesContinuousVoxtral {
@@ -1992,7 +1993,8 @@ class AppState {
             if engine.usesWhisperFinal {
                 try await service.beginRealtimeSession(
                     modelPath: try Self.whisperModelPath(for: engine),
-                    requireEnglishTranslation: engine.producesDirectEnglish
+                    requireEnglishTranslation: engine.producesDirectEnglish,
+                    gateHeavyweightModel: false
                 )
             }
             await runEndpointedPrototypeCaptions(

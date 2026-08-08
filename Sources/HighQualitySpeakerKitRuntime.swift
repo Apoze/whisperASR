@@ -4,6 +4,7 @@ import SpeakerKit
 actor HighQualitySpeakerKitRuntime {
     static let modelID = "argmaxinc/speakerkit-coreml"
     static let revision = "86ec9c929b52208b6656eb6a6361ed0d822a1f78"
+    static let declaredPeakMemoryBytes: UInt64 = 4 * 1_024 * 1_024 * 1_024
 
     private var speakerKit: SpeakerKit?
 
