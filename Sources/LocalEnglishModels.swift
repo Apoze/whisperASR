@@ -121,7 +121,7 @@ private actor FireRedVADRuntime {
     func unload() { model = nil }
 }
 
-private actor QwenRuntime {
+actor QwenRuntime {
     private var model: Qwen3ASR.Qwen3ASRModel?
 
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
@@ -148,25 +148,35 @@ private actor QwenRuntime {
         model = loaded
     }
 
-    func transcribe(audio: [Float], language: String) throws -> String {
+    func transcribe(
+        audio: [Float],
+        language: String,
+        preserveRawOutput: Bool = false,
+        cancellable: Bool = false
+    ) throws -> String {
         guard let model else { throw LocalPrototypeError.modelNotLoaded("Qwen3-ASR") }
         var options = Qwen3DecodingOptions(
             maxTokens: 448,
             language: language,
+            cancellationCheck: { cancellable && Task.isCancelled },
             longInputThresholdSeconds: 20
         )
-        let transcript = model.transcribe(
+        let rawTranscript = model.transcribe(
             audio: audio,
             sampleRate: 16_000,
             options: options
-        ).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard SubtitleRepetitionDetector.hasRepeatedTail(transcript) else { return transcript }
+        )
+        let transcript = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard SubtitleRepetitionDetector.hasRepeatedTail(transcript) else {
+            return preserveRawOutput ? rawTranscript : transcript
+        }
         options.noRepeatNgramSize = 3
-        return model.transcribe(
+        let retry = model.transcribe(
             audio: audio,
             sampleRate: 16_000,
             options: options
-        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        return preserveRawOutput ? retry : retry.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func unload() {
@@ -559,7 +569,7 @@ final class LocalEnglishModelManager {
         await cohere.unload()
     }
 
-    private static func measuredMemoryBytes() -> UInt64 {
+    nonisolated static func measuredMemoryBytes() -> UInt64 {
         let mlx = Memory.snapshot()
         let mlxCurrent = UInt64(max(0, mlx.activeMemory + mlx.cacheMemory))
         let mlxPeak = UInt64(max(0, mlx.peakMemory))

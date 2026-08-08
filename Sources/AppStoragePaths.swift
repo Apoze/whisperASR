@@ -21,6 +21,10 @@ enum AppStoragePaths {
         root.appendingPathComponent("Transcriptions", isDirectory: true)
     }
 
+    static var highQualityJobs: URL {
+        root.appendingPathComponent("HighQualityJobs", isDirectory: true)
+    }
+
     static var liveRecovery: URL {
         root.appendingPathComponent("live_recovery.json")
     }

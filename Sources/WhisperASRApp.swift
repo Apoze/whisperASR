@@ -53,6 +53,11 @@ struct WhisperASRApp: App {
         .windowResizability(.contentSize)
         .windowStyle(.hiddenTitleBar)
 
+        Window("High-quality Japanese Transcript", id: "high-quality-job") {
+            HighQualityJobView()
+        }
+        .defaultSize(width: 680, height: 600)
+
         Settings {
             SettingsView()
         }
