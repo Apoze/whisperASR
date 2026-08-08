@@ -7,6 +7,7 @@ enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
 enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendable {
     case qwenJA = "qwen-ja"
     case parakeetJA = "parakeet-ja"
+    case whisperKit = "whisperkit"
 
     var id: Self { self }
 
@@ -14,6 +15,7 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
         switch self {
         case .qwenJA: "Qwen JA"
         case .parakeetJA: "Parakeet JA"
+        case .whisperKit: "WhisperKit large-v3"
         }
     }
 
@@ -30,6 +32,13 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
                 backend: self,
                 modelID: LocalPrototypeModelID.parakeet,
                 revision: LocalPrototypeModelID.parakeetRevision
+            )
+        case .whisperKit:
+            .init(
+                backend: self,
+                modelID: LocalPrototypeModelID.whisperKitEvidenceModelID,
+                revision: LocalPrototypeModelID.whisperKitModelRevision,
+                runtimeVersion: LocalPrototypeModelID.whisperKitRuntimeVersion
             )
         }
     }
@@ -127,6 +136,19 @@ struct HighQualityModelEvidence: Codable, Equatable, Sendable {
     let backend: HighQualityASRBackend
     let modelID: String
     let revision: String
+    let runtimeVersion: String?
+
+    init(
+        backend: HighQualityASRBackend,
+        modelID: String,
+        revision: String,
+        runtimeVersion: String? = nil
+    ) {
+        self.backend = backend
+        self.modelID = modelID
+        self.revision = revision
+        self.runtimeVersion = runtimeVersion
+    }
 }
 
 struct HighQualityModelEvent: Codable, Equatable, Sendable {
@@ -287,6 +309,16 @@ struct HighQualityJob: Sendable {
                     unloadASR: { await runtime.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
                 )
+            case .whisperKit:
+                let runtime = WhisperKitRuntime()
+                return Self(
+                    loadSource: loadSource,
+                    acquireYouTube: acquireYouTube,
+                    prepareASR: { try await runtime.prepare(progress: $0) },
+                    transcribeJapanese: { try await runtime.transcribe(audio: $0) },
+                    unloadASR: { await runtime.unload() },
+                    currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() }
+                )
             }
         }
     }
@@ -355,6 +387,7 @@ struct HighQualityJob: Sendable {
         var acquiredAudioURL: URL?
         var asrLoadStarted = false
         var asrUnloaded = false
+        var memorySampler: Task<UInt64, Never>?
         var manifest = HighQualityJobManifest(
             schemaVersion: 1,
             jobID: request.id,
@@ -440,6 +473,14 @@ struct HighQualityJob: Sendable {
                 fraction: 0.2,
                 message: "Preparing \(request.backend.displayName)…"
             )
+            memorySampler = Task {
+                var peak = await services.currentMemoryBytes()
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .milliseconds(100))
+                    peak = max(peak, await services.currentMemoryBytes())
+                }
+                return max(peak, await services.currentMemoryBytes())
+            }
             asrLoadStarted = true
             manifest.modelEvents.append(.init(
                 kind: .loadStarted,
@@ -467,7 +508,11 @@ struct HighQualityJob: Sendable {
             guard !transcript.isEmpty else { throw LocalPrototypeError.invalidResponse }
             try Task.checkCancellation()
 
-            manifest.peakMemoryBytes = await services.currentMemoryBytes()
+            memorySampler?.cancel()
+            if let memorySampler {
+                manifest.peakMemoryBytes = await memorySampler.value
+            }
+            memorySampler = nil
             await services.unloadASR()
             asrUnloaded = true
             manifest.modelEvents.append(.init(
@@ -509,7 +554,13 @@ struct HighQualityJob: Sendable {
                 evidence: evidence
             )
         } catch {
-            manifest.peakMemoryBytes = await services.currentMemoryBytes()
+            memorySampler?.cancel()
+            if let memorySampler {
+                manifest.peakMemoryBytes = await memorySampler.value
+            } else {
+                manifest.peakMemoryBytes = await services.currentMemoryBytes()
+            }
+            memorySampler = nil
             if asrLoadStarted, !asrUnloaded {
                 await services.unloadASR()
                 manifest.modelEvents.append(.init(
@@ -520,7 +571,7 @@ struct HighQualityJob: Sendable {
             }
             let failureStage: HighQualityJobFailureStage
             let status: HighQualityJobManifest.Status
-            if error is CancellationError {
+            if error is CancellationError || Task.isCancelled {
                 failureStage = .cancelled
                 status = .cancelled
             } else {

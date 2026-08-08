@@ -421,18 +421,20 @@ final class HighQualityJobTests: XCTestCase {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         try Data("video".utf8).write(to: source)
         defer { try? FileManager.default.removeItem(at: root) }
-        XCTAssertEqual(HighQualityASRBackend.allCases, [.qwenJA, .parakeetJA])
+        XCTAssertEqual(HighQualityASRBackend.allCases, [.qwenJA, .parakeetJA, .whisperKit])
 
         for backend in HighQualityASRBackend.allCases {
             let progress = ProgressLog()
-            let expectedRawASR = backend == .qwenJA ? " こんにちは \n" : " 日本語 \n"
-            let job = HighQualityJob(servicesForBackend: { selectedBackend in
+            let expectedRawASR = switch backend {
+            case .qwenJA: " こんにちは \n"
+            case .parakeetJA: " 日本語 \n"
+            case .whisperKit: " 音声認識 \n"
+            }
+            let job = HighQualityJob(servicesForBackend: { _ in
                 .init(
                     loadSource: { _ in [0.1, 0.2] },
                     prepareASR: { $0(1, "ready") },
-                    transcribeJapanese: { _ in
-                        selectedBackend == .qwenJA ? " こんにちは \n" : " 日本語 \n"
-                    },
+                    transcribeJapanese: { _ in expectedRawASR },
                     unloadASR: {},
                     currentMemoryBytes: { 123 }
                 )
@@ -455,6 +457,20 @@ final class HighQualityJobTests: XCTestCase {
             XCTAssertEqual(result.manifest.selectedBackend, backend)
             XCTAssertEqual(result.manifest.model.backend, backend)
             XCTAssertFalse(result.manifest.model.revision.isEmpty)
+            if backend == .whisperKit {
+                XCTAssertEqual(
+                    result.manifest.model.modelID,
+                    LocalPrototypeModelID.whisperKitEvidenceModelID
+                )
+                XCTAssertEqual(
+                    result.manifest.model.revision,
+                    LocalPrototypeModelID.whisperKitModelRevision
+                )
+                XCTAssertEqual(
+                    result.manifest.model.runtimeVersion,
+                    LocalPrototypeModelID.whisperKitRuntimeVersion
+                )
+            }
             XCTAssertFalse(result.manifest.speakerLabels)
             XCTAssertEqual(result.evidence.rawASR, expectedRawASR)
             XCTAssertEqual(result.evidence.peakMemoryBytes, 123)
@@ -586,7 +602,7 @@ final class HighQualityJobTests: XCTestCase {
             try await preparationFailure.run(.init(
                 sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
                 deliverables: [.japaneseTranscript],
-                backend: .parakeetJA,
+                backend: .whisperKit,
                 outputRoot: root
             ))
         }
@@ -601,7 +617,7 @@ final class HighQualityJobTests: XCTestCase {
             try await asrFailure.run(.init(
                 sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
                 deliverables: [.japaneseTranscript],
-                backend: .qwenJA,
+                backend: .whisperKit,
                 outputRoot: root
             ))
         }
@@ -706,6 +722,74 @@ final class HighQualityJobTests: XCTestCase {
         }
     }
 
+    func testCancellationDuringModelPreparationIsClassifiedAsCancellation() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let started = expectation(description: "model preparation started")
+        let id = UUID()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in
+                started.fulfill()
+                while !Task.isCancelled { await Task.yield() }
+                throw URLError(.cancelled)
+            },
+            transcribeJapanese: { _ in "unused" },
+            unloadASR: {}
+        ))
+        let task = Task {
+            try await job.run(.init(
+                id: id,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .whisperKit,
+                outputRoot: root
+            ))
+        }
+        await fulfillment(of: [started], timeout: 1)
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("Cancelling model preparation must stop the job.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .cancelled)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: root.appendingPathComponent(id.uuidString)
+                .appendingPathComponent("manifest.json"))
+        )
+        XCTAssertEqual(manifest.status, .cancelled)
+    }
+
+    func testPeakMemoryIsSampledDuringASRStages() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let readings = MemoryReadings([100, 500, 200])
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in try await Task.sleep(for: .milliseconds(250)) },
+            transcribeJapanese: { _ in "日本語" },
+            unloadASR: {},
+            currentMemoryBytes: { await readings.next() }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .whisperKit,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.manifest.peakMemoryBytes, 500)
+    }
+
     private func assertFailure(
         _ expected: HighQualityJobFailureStage,
         operation: () async throws -> HighQualityJobResult
@@ -734,6 +818,18 @@ private actor URLBox {
 
     func set(_ value: URL) {
         self.value = value
+    }
+}
+
+private actor MemoryReadings {
+    private var values: [UInt64]
+
+    init(_ values: [UInt64]) {
+        self.values = values
+    }
+
+    func next() -> UInt64 {
+        values.count > 1 ? values.removeFirst() : values[0]
     }
 }
 

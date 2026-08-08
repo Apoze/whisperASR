@@ -27,6 +27,10 @@ let package = Package(
             url: "https://github.com/FluidInference/FluidAudio.git",
             exact: "0.15.5"
         ),
+        .package(
+            url: "https://github.com/argmaxinc/WhisperKit.git",
+            exact: "1.1.0"
+        ),
         .package(path: "Vendor/SpeechSwiftPrototype"),
     ],
     targets: [
@@ -45,6 +49,7 @@ let package = Package(
                 .product(name: "MLXAudioSTT", package: "mlx-audio-swift"),
                 .product(name: "MLX", package: "mlx-swift"),
                 .product(name: "FluidAudio", package: "FluidAudio"),
+                .product(name: "WhisperKit", package: "WhisperKit"),
             ],
             path: "Sources",
             resources: [
