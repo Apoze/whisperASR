@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct HighQualityJobView: View {
     @State private var sourceURL: URL?
+    @State private var youtubeURL = ""
     @State private var includeJapaneseTranscript = true
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
@@ -17,7 +18,9 @@ struct HighQualityJobView: View {
 
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
-        sourceURL != nil && includeJapaneseTranscript && !isRunning
+        (sourceURL != nil || !youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            && includeJapaneseTranscript
+            && !isRunning
     }
 
     var body: some View {
@@ -26,6 +29,16 @@ struct HighQualityJobView: View {
                 .font(.title2.bold())
 
             sourcePicker
+
+            TextField("Public YouTube video URL", text: $youtubeURL)
+                .textFieldStyle(.roundedBorder)
+                .disabled(isRunning)
+                .onChange(of: youtubeURL) { _, value in
+                    guard !value.isEmpty else { return }
+                    sourceURL = nil
+                    result = nil
+                    errorMessage = nil
+                }
 
             Toggle("Japanese transcript", isOn: $includeJapaneseTranscript)
                 .toggleStyle(.checkbox)
@@ -110,9 +123,7 @@ struct HighQualityJobView: View {
         panel.allowedContentTypes = [.audio, .movie]
         panel.begin { response in
             guard response == .OK else { return }
-            sourceURL = panel.url
-            result = nil
-            errorMessage = nil
+            selectLocalSource(panel.url)
         }
     }
 
@@ -125,16 +136,23 @@ struct HighQualityJobView: View {
             guard let data = item as? Data,
                   let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
             DispatchQueue.main.async {
-                sourceURL = url
-                result = nil
-                errorMessage = nil
+                selectLocalSource(url)
             }
         }
         return true
     }
 
+    private func selectLocalSource(_ url: URL?) {
+        sourceURL = url
+        youtubeURL = ""
+        result = nil
+        errorMessage = nil
+    }
+
     private func start() {
-        guard let sourceURL, includeJapaneseTranscript else {
+        let value = youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        let selectedSource = value.isEmpty ? sourceURL : URL(string: value)
+        guard let selectedSource, includeJapaneseTranscript else {
             errorMessage = "Select a source and at least one Deliverable."
             return
         }
@@ -145,7 +163,7 @@ struct HighQualityJobView: View {
         task = Task {
             do {
                 let completed = try await job.run(.init(
-                    sourceURL: sourceURL,
+                    sourceURL: selectedSource,
                     deliverables: [.japaneseTranscript],
                     backend: .qwenJA,
                     speakerLabels: false

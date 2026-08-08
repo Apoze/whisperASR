@@ -3,6 +3,371 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testYouTubeSourceUsesAcquiredAudioAndRetainsAcquisitionEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let sourceURL = try XCTUnwrap(URL(string: "https://www.youtube.com/watch?v=abc123"))
+        let loadedURL = URLBox()
+        let job = HighQualityJob(services: .init(
+            loadSource: {
+                await loadedURL.set($0)
+                return [0.1]
+            },
+            acquireYouTube: { url, directory in
+                let audioURL = directory.appendingPathComponent("source.m4a")
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
+                try Data("audio".utf8).write(to: audioURL)
+                return HighQualityYouTubeAcquisition(
+                    audioURL: audioURL,
+                    evidence: .init(
+                        sourceURL: url.absoluteString,
+                        title: "Fixture title",
+                        channel: "Fixture channel",
+                        description: "Fixture description",
+                        ytDLPVersion: "2026.08.08",
+                        diagnostics: "fixture format=m4a"
+                    )
+                )
+            },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "日本語" },
+            unloadASR: {}
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: sourceURL,
+            deliverables: [.japaneseTranscript],
+            outputRoot: root
+        ))
+
+        let normalizedURL = await loadedURL.value
+        XCTAssertEqual(normalizedURL?.lastPathComponent, "source.m4a")
+        XCTAssertEqual(result.manifest.source.youtube?.title, "Fixture title")
+        XCTAssertEqual(result.manifest.source.youtube?.channel, "Fixture channel")
+        XCTAssertEqual(result.manifest.source.youtube?.description, "Fixture description")
+        XCTAssertEqual(result.manifest.source.youtube?.sourceURL, sourceURL.absoluteString)
+        XCTAssertEqual(result.manifest.source.youtube?.ytDLPVersion, "2026.08.08")
+        XCTAssertEqual(result.manifest.source.youtube?.diagnostics, "fixture format=m4a")
+        XCTAssertEqual(result.evidence.source.youtube, result.manifest.source.youtube)
+        XCTAssertTrue(result.manifest.generatedFiles.contains {
+            $0.path == "acquisition/source.m4a" && $0.kind == .evidence
+        })
+        XCTAssertEqual(
+            result.manifest.dependencies,
+            [.sourceAcquisition, .sourceNormalization, .japaneseASR, .export]
+        )
+    }
+
+    func testYouTubeValidationAndAcquisitionFailuresStopBeforeModels() async throws {
+        struct FixtureError: Error {}
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = CallLog()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in await calls.append("source"); return [] },
+            acquireYouTube: { _, directory in
+                await calls.append("acquire")
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
+                try Data("partial".utf8).write(
+                    to: directory.appendingPathComponent("source.webm.part")
+                )
+                throw FixtureError()
+            },
+            prepareASR: { _ in await calls.append("prepare") },
+            transcribeJapanese: { _ in await calls.append("asr"); return "unused" },
+            unloadASR: {}
+        ))
+
+        for url in [
+            "https://example.com/watch?v=abc123",
+            "https://www.youtube.com/watch?v=abc123&list=playlist",
+            "https://user:password@www.youtube.com/watch?v=abc123",
+        ] {
+            await assertFailure(.acquisition) {
+                try await job.run(.init(
+                    sourceURL: try XCTUnwrap(URL(string: url)),
+                    deliverables: [.japaneseTranscript],
+                    outputRoot: root
+                ))
+            }
+        }
+        let callsAfterValidation = await calls.values
+        XCTAssertEqual(callsAfterValidation, [])
+
+        let id = UUID()
+        await assertFailure(.acquisition) {
+            try await job.run(.init(
+                id: id,
+                sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
+                deliverables: [.japaneseTranscript],
+                outputRoot: root
+            ))
+        }
+        let callsAfterAcquisition = await calls.values
+        XCTAssertEqual(callsAfterAcquisition, ["acquire"])
+        let directory = root.appendingPathComponent(id.uuidString)
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("acquisition").path
+        ))
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: directory.path).sorted(),
+            ["manifest.json", "raw-asr.json"]
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+        )
+        XCTAssertEqual(manifest.source.sourceURL, "https://youtu.be/abc123")
+    }
+
+    func testCancellingYouTubeAcquisitionRemovesIncompleteDownload() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = UUID()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in XCTFail("Incomplete acquisition must not be normalized."); return [] },
+            acquireYouTube: { _, directory in
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
+                try Data("partial".utf8).write(
+                    to: directory.appendingPathComponent("source.webm.part")
+                )
+                try await Task.sleep(for: .seconds(10))
+                throw CancellationError()
+            },
+            prepareASR: { _ in XCTFail("Incomplete acquisition must not reach ASR.") },
+            transcribeJapanese: { _ in "unused" },
+            unloadASR: {}
+        ))
+        let task = Task {
+            try await job.run(.init(
+                id: id,
+                sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
+                deliverables: [.japaneseTranscript],
+                outputRoot: root
+            ))
+        }
+        try await Task.sleep(for: .milliseconds(20))
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("Cancellation must stop YouTube acquisition.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .cancelled)
+        }
+
+        let directory = root.appendingPathComponent(id.uuidString)
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("acquisition").path
+        ))
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: directory.path).sorted(),
+            ["manifest.json", "raw-asr.json"]
+        )
+    }
+
+    func testCancellationAfterYouTubeAcquisitionPreservesCompletedSourceEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = UUID()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            acquireYouTube: { url, directory in
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
+                let audioURL = directory.appendingPathComponent("source.m4a")
+                try Data("complete".utf8).write(to: audioURL)
+                let acquisition = HighQualityYouTubeAcquisition(
+                    audioURL: audioURL,
+                    evidence: .init(
+                        sourceURL: url.absoluteString,
+                        title: "Completed source",
+                        channel: "Channel",
+                        description: "Description",
+                        ytDLPVersion: "fixture",
+                        diagnostics: "complete"
+                    )
+                )
+                withUnsafeCurrentTask { $0?.cancel() }
+                return acquisition
+            },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in
+                try await Task.sleep(for: .seconds(10))
+                return "unused"
+            },
+            unloadASR: {}
+        ))
+        let task = Task {
+            try await job.run(.init(
+                id: id,
+                sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
+                deliverables: [.japaneseTranscript],
+                outputRoot: root
+            ))
+        }
+        do {
+            _ = try await task.value
+            XCTFail("Cancellation immediately after acquisition must stop the job.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .cancelled)
+        }
+
+        let directory = root.appendingPathComponent(id.uuidString)
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("acquisition/source.m4a").path
+        ))
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+        )
+        XCTAssertEqual(manifest.status, .cancelled)
+        XCTAssertEqual(manifest.source.youtube?.title, "Completed source")
+        XCTAssertTrue(manifest.generatedFiles.contains {
+            $0.path == "acquisition/source.m4a" && $0.kind == .evidence
+        })
+    }
+
+    func testYouTubeAcquirerUsesDeterministicExecutable() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let directory = root.appendingPathComponent("acquisition", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let executable = try makeFakeYTDLP(in: root, script: """
+            #!/bin/sh
+            case " $* " in *" --ignore-config "*) ;; *) exit 2 ;; esac
+            case " $* " in *" --version "*) printf 'fixture-version\\n'; exit 0 ;; esac
+            case " $* " in *" --no-playlist "*) ;; *) exit 3 ;; esac
+            case " $* " in *" --no-simulate "*) ;; *) exit 4 ;; esac
+            printf 'audio' > '\(directory.appendingPathComponent("source.m4a").path)'
+            printf '%s\\n' '{"title":"Fixture title","channel":"Fixture channel","description":"Fixture description","format_id":"140","ext":"m4a"}'
+            printf 'fixture diagnostics\\n' >&2
+            """)
+        let sourceURL = try XCTUnwrap(URL(string: "https://youtu.be/abc123"))
+
+        let acquisition = try await YouTubeAcquirer.acquire(
+            sourceURL,
+            to: directory,
+            using: executable
+        )
+
+        XCTAssertEqual(acquisition.audioURL.lastPathComponent, "source.m4a")
+        XCTAssertEqual(acquisition.evidence.title, "Fixture title")
+        XCTAssertEqual(acquisition.evidence.channel, "Fixture channel")
+        XCTAssertEqual(acquisition.evidence.description, "Fixture description")
+        XCTAssertEqual(acquisition.evidence.ytDLPVersion, "fixture-version")
+        XCTAssertEqual(acquisition.evidence.diagnostics, "format=140/m4a\nfixture diagnostics")
+    }
+
+    func testYouTubeAcquirerTerminatesItsProcessWhenCancelled() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let directory = root.appendingPathComponent("acquisition", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let executable = try makeFakeYTDLP(in: root, script: """
+            #!/bin/sh
+            case " $* " in *" --version "*) printf 'fixture-version\\n'; exit 0 ;; esac
+            while :; do :; done
+            """)
+        let task = Task {
+            try await YouTubeAcquirer.acquire(
+                XCTUnwrap(URL(string: "https://youtu.be/abc123")),
+                to: directory,
+                using: executable
+            )
+        }
+        try await Task.sleep(for: .milliseconds(20))
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("Cancellation must terminate yt-dlp.")
+        } catch is CancellationError {
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testYouTubeDownloadFailureRetainsVersionAndDiagnostics() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let executable = try makeFakeYTDLP(in: root, script: """
+            #!/bin/sh
+            case " $* " in *" --version "*) printf 'fixture-version\\n'; exit 0 ;; esac
+            printf 'private or unsupported source\\n' >&2
+            exit 5
+            """)
+        let id = UUID()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in XCTFail("Failed acquisition must not be normalized."); return [] },
+            acquireYouTube: {
+                try await YouTubeAcquirer.acquire($0, to: $1, using: executable)
+            },
+            prepareASR: { _ in XCTFail("Failed acquisition must not reach ASR.") },
+            transcribeJapanese: { _ in "unused" },
+            unloadASR: {}
+        ))
+
+        await assertFailure(.acquisition) {
+            try await job.run(.init(
+                id: id,
+                sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
+                deliverables: [.japaneseTranscript],
+                outputRoot: root
+            ))
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: root.appendingPathComponent(id.uuidString)
+                .appendingPathComponent("manifest.json"))
+        )
+        XCTAssertEqual(manifest.source.youtube?.ytDLPVersion, "fixture-version")
+        XCTAssertEqual(
+            manifest.source.youtube?.diagnostics,
+            "private or unsupported source"
+        )
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: root.appendingPathComponent(id.uuidString)
+                .appendingPathComponent("acquisition").path
+        ))
+    }
+
+    private func makeFakeYTDLP(in directory: URL, script: String) throws -> URL {
+        let executable = directory.appendingPathComponent("yt-dlp")
+        try Data(script.utf8).write(to: executable)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: executable.path
+        )
+        return executable
+    }
+
     func testRejectsJobWithoutDeliverableBeforeProcessing() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -218,5 +583,13 @@ private actor CallLog {
 
     func append(_ value: String) {
         values.append(value)
+    }
+}
+
+private actor URLBox {
+    private(set) var value: URL?
+
+    func set(_ value: URL) {
+        self.value = value
     }
 }

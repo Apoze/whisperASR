@@ -9,6 +9,7 @@ enum HighQualityASRBackend: String, Codable, Sendable {
 }
 
 enum HighQualityJobDependency: String, Codable, Sendable {
+    case sourceAcquisition = "source-acquisition"
     case sourceNormalization = "source-normalization"
     case japaneseASR = "japanese-asr"
     case export
@@ -16,6 +17,7 @@ enum HighQualityJobDependency: String, Codable, Sendable {
 
 enum HighQualityJobStage: String, Codable, Sendable {
     case validating
+    case acquiringSource = "acquiring-source"
     case normalizingSource = "normalizing-source"
     case preparingASR = "preparing-asr"
     case transcribing
@@ -26,6 +28,7 @@ enum HighQualityJobStage: String, Codable, Sendable {
 }
 
 enum HighQualityJobFailureStage: String, Codable, Sendable {
+    case acquisition
     case source
     case application
     case asr
@@ -74,6 +77,22 @@ struct HighQualitySourceProvenance: Codable, Equatable, Sendable {
     let fileName: String
     let byteCount: UInt64?
     let modifiedAt: Date?
+    let sourceURL: String?
+    let youtube: HighQualityYouTubeEvidence?
+}
+
+struct HighQualityYouTubeEvidence: Codable, Equatable, Sendable {
+    let sourceURL: String
+    let title: String
+    let channel: String
+    let description: String
+    let ytDLPVersion: String
+    let diagnostics: String
+}
+
+struct HighQualityYouTubeAcquisition: Sendable {
+    let audioURL: URL
+    let evidence: HighQualityYouTubeEvidence
 }
 
 struct HighQualityModelEvidence: Codable, Equatable, Sendable {
@@ -103,7 +122,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     let schemaVersion: Int
     let jobID: UUID
     var status: Status
-    let source: HighQualitySourceProvenance
+    var source: HighQualitySourceProvenance
     let deliverables: [HighQualityDeliverable]
     let selectedBackend: HighQualityASRBackend
     let speakerLabels: Bool
@@ -146,6 +165,7 @@ struct HighQualityJobError: LocalizedError, Equatable, Sendable {
 struct HighQualityJob: Sendable {
     struct Services: Sendable {
         let loadSource: @Sendable (URL) async throws -> [Float]
+        let acquireYouTube: @Sendable (URL, URL) async throws -> HighQualityYouTubeAcquisition
         let prepareASR: @Sendable (
             @escaping @Sendable (Double, String) -> Void
         ) async throws -> Void
@@ -155,6 +175,16 @@ struct HighQualityJob: Sendable {
 
         init(
             loadSource: @escaping @Sendable (URL) async throws -> [Float],
+            acquireYouTube: @escaping @Sendable (
+                URL,
+                URL
+            ) async throws -> HighQualityYouTubeAcquisition = { _, _ in
+                throw HighQualityJobError(
+                    stage: .acquisition,
+                    message: "YouTube acquisition is not configured.",
+                    resultDirectory: nil
+                )
+            },
             prepareASR: @escaping @Sendable (
                 @escaping @Sendable (Double, String) -> Void
             ) async throws -> Void,
@@ -163,6 +193,7 @@ struct HighQualityJob: Sendable {
             currentMemoryBytes: @escaping @Sendable () async -> UInt64 = { 0 }
         ) {
             self.loadSource = loadSource
+            self.acquireYouTube = acquireYouTube
             self.prepareASR = prepareASR
             self.transcribeJapanese = transcribeJapanese
             self.unloadASR = unloadASR
@@ -173,6 +204,7 @@ struct HighQualityJob: Sendable {
             let runtime = QwenRuntime()
             return Self(
                 loadSource: { try await AudioLoader.loadSamples(url: $0) },
+                acquireYouTube: { try await YouTubeAcquirer.acquire($0, to: $1) },
                 prepareASR: { try await runtime.prepare(progress: $0) },
                 transcribeJapanese: {
                     try await runtime.transcribe(
@@ -204,6 +236,7 @@ struct HighQualityJob: Sendable {
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        let isYouTubeSource = !request.sourceURL.isFileURL
         guard !request.deliverables.isEmpty else {
             throw HighQualityJobError(
                 stage: .application,
@@ -218,12 +251,8 @@ struct HighQualityJob: Sendable {
                 resultDirectory: nil
             )
         }
-        guard request.sourceURL.isFileURL else {
-            throw HighQualityJobError(
-                stage: .source,
-                message: "Select a local audio or video file.",
-                resultDirectory: nil
-            )
+        if isYouTubeSource {
+            try Self.validateYouTubeURL(request.sourceURL)
         }
 
         let directory = request.outputRoot.appendingPathComponent(
@@ -249,6 +278,7 @@ struct HighQualityJob: Sendable {
         var sampleCount = 0
         var rawASR: String?
         var transcriptWritten = false
+        var acquiredAudioURL: URL?
         var manifest = HighQualityJobManifest(
             schemaVersion: 1,
             jobID: request.id,
@@ -257,7 +287,9 @@ struct HighQualityJob: Sendable {
             deliverables: request.deliverables.sorted { $0.rawValue < $1.rawValue },
             selectedBackend: request.backend,
             speakerLabels: request.speakerLabels,
-            dependencies: [.sourceNormalization, .japaneseASR, .export],
+            dependencies: isYouTubeSource
+                ? [.sourceAcquisition, .sourceNormalization, .japaneseASR, .export]
+                : [.sourceNormalization, .japaneseASR, .export],
             model: Self.model,
             startedAt: startedAt,
             finishedAt: nil,
@@ -278,8 +310,51 @@ struct HighQualityJob: Sendable {
         }
 
         do {
+            var normalizedSourceURL = request.sourceURL
+            if isYouTubeSource {
+                begin(.acquiringSource, fraction: 0.02, message: "Acquiring YouTube audio…")
+                let acquisitionDirectory = directory.appendingPathComponent(
+                    "acquisition",
+                    isDirectory: true
+                )
+                do {
+                    let acquisition = try await services.acquireYouTube(
+                        request.sourceURL,
+                        acquisitionDirectory
+                    )
+                    normalizedSourceURL = acquisition.audioURL
+                    acquiredAudioURL = acquisition.audioURL
+                    manifest.source = Self.provenance(
+                        for: acquisition.audioURL,
+                        youtube: acquisition.evidence
+                    )
+                    try Task.checkCancellation()
+                } catch let error as YouTubeAcquisitionError {
+                    manifest.source = Self.provenance(
+                        for: request.sourceURL,
+                        youtube: .init(
+                            sourceURL: request.sourceURL.absoluteString,
+                            title: "",
+                            channel: "",
+                            description: "",
+                            ytDLPVersion: error.ytDLPVersion ?? "",
+                            diagnostics: error.diagnostics
+                        )
+                    )
+                    if acquiredAudioURL == nil {
+                        try? FileManager.default.removeItem(at: acquisitionDirectory)
+                    }
+                    throw error
+                } catch {
+                    if acquiredAudioURL == nil {
+                        try? FileManager.default.removeItem(at: acquisitionDirectory)
+                    }
+                    throw error
+                }
+            }
+
             begin(.normalizingSource, fraction: 0.05, message: "Normalizing source audio…")
-            let samples = try await services.loadSource(request.sourceURL)
+            let samples = try await services.loadSource(normalizedSourceURL)
             sampleCount = samples.count
             try Task.checkCancellation()
 
@@ -303,7 +378,10 @@ struct HighQualityJob: Sendable {
             manifest.peakMemoryBytes = await services.currentMemoryBytes()
             await services.unloadASR()
             begin(.exporting, fraction: 0.9, message: "Writing results…")
-            manifest.generatedFiles = Self.generatedFiles(includeTranscript: true)
+            manifest.generatedFiles = Self.generatedFiles(
+                includeTranscript: true,
+                acquiredAudioURL: acquiredAudioURL
+            )
             try (transcript + "\n").write(
                 to: directory.appendingPathComponent("japanese-transcript.txt"),
                 atomically: true,
@@ -342,6 +420,7 @@ struct HighQualityJob: Sendable {
                 status = .cancelled
             } else {
                 switch currentStage {
+                case .acquiringSource: failureStage = .acquisition
                 case .normalizingSource: failureStage = .source
                 case .preparingASR, .transcribing: failureStage = .asr
                 case .exporting: failureStage = .export
@@ -357,7 +436,10 @@ struct HighQualityJob: Sendable {
                 message: error is CancellationError ? "Job cancelled." : error.localizedDescription
             )
             manifest.failures = [failure]
-            manifest.generatedFiles = Self.generatedFiles(includeTranscript: transcriptWritten)
+            manifest.generatedFiles = Self.generatedFiles(
+                includeTranscript: transcriptWritten,
+                acquiredAudioURL: acquiredAudioURL
+            )
             do {
                 try FileManager.default.createDirectory(
                     at: directory,
@@ -390,24 +472,68 @@ struct HighQualityJob: Sendable {
         }
     }
 
-    private static func provenance(for url: URL) -> HighQualitySourceProvenance {
+    private static func provenance(
+        for url: URL,
+        youtube: HighQualityYouTubeEvidence? = nil
+    ) -> HighQualitySourceProvenance {
         let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
         return HighQualitySourceProvenance(
             path: url.path,
             fileName: url.lastPathComponent,
             byteCount: values?.fileSize.map(UInt64.init),
-            modifiedAt: values?.contentModificationDate
+            modifiedAt: values?.contentModificationDate,
+            sourceURL: youtube?.sourceURL ?? (url.isFileURL ? nil : url.absoluteString),
+            youtube: youtube
         )
     }
 
-    private static func generatedFiles(includeTranscript: Bool) -> [HighQualityGeneratedFile] {
+    private static func generatedFiles(
+        includeTranscript: Bool,
+        acquiredAudioURL: URL? = nil
+    ) -> [HighQualityGeneratedFile] {
         var files: [HighQualityGeneratedFile] = []
         if includeTranscript {
             files.append(.init(path: "japanese-transcript.txt", kind: .deliverable))
         }
+        if let acquiredAudioURL {
+            files.append(.init(
+                path: "acquisition/\(acquiredAudioURL.lastPathComponent)",
+                kind: .evidence
+            ))
+        }
         files.append(.init(path: "raw-asr.json", kind: .evidence))
         files.append(.init(path: "manifest.json", kind: .manifest))
         return files
+    }
+
+    private static func validateYouTubeURL(_ url: URL) throws {
+        let host = url.host?.lowercased()
+        let youtubeHosts = ["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"]
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let hasPlaylist = url.path == "/playlist" || query.contains { $0.name == "list" }
+        let pathParts = url.path.split(separator: "/")
+        let isVideoPath: Bool
+        if host == "youtu.be" {
+            isVideoPath = pathParts.count == 1
+        } else {
+            isVideoPath = (url.path == "/watch" && query.contains {
+                $0.name == "v" && !($0.value ?? "").isEmpty
+            }) || (pathParts.count == 2 && ["shorts", "live"].contains(String(pathParts[0])))
+        }
+        guard url.scheme?.lowercased() == "https",
+              youtubeHosts.contains(host ?? ""),
+              url.user == nil,
+              url.password == nil,
+              !hasPlaylist,
+              isVideoPath else {
+            throw HighQualityJobError(
+                stage: .acquisition,
+                message: hasPlaylist
+                    ? "YouTube playlists are not supported. Paste one public video URL."
+                    : "Enter a valid public YouTube video URL.",
+                resultDirectory: nil
+            )
+        }
     }
 
     private static func evidence(

@@ -2,6 +2,8 @@ import Foundation
 import AVFoundation
 
 enum AudioLoader {
+    static var hasFFmpeg: Bool { findFFmpeg() != nil }
+
     /// Load any audio/video file as 16 kHz mono PCM Float32 samples.
     ///
     /// Tries AVFoundation first (native, fast, no external process). If that can't
@@ -142,21 +144,10 @@ enum AudioLoader {
     /// Locate an ffmpeg binary. GUI apps launched from Finder have a minimal PATH, so
     /// check the usual Homebrew/system locations first, then any PATH entry.
     private static func findFFmpeg() -> String? {
-        let candidates = [
+        ExecutableLocator.find(named: "ffmpeg", preferredPaths: [
             "/opt/homebrew/bin/ffmpeg",   // Apple Silicon Homebrew
             "/usr/local/bin/ffmpeg",      // Intel Homebrew
             "/usr/bin/ffmpeg",
-        ]
-        let fm = FileManager.default
-        for path in candidates where fm.isExecutableFile(atPath: path) {
-            return path
-        }
-        if let pathEnv = ProcessInfo.processInfo.environment["PATH"] {
-            for dir in pathEnv.split(separator: ":") {
-                let path = String(dir) + "/ffmpeg"
-                if fm.isExecutableFile(atPath: path) { return path }
-            }
-        }
-        return nil
+        ])?.path
     }
 }
