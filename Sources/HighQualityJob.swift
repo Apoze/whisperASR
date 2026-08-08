@@ -150,6 +150,7 @@ struct HighQualityTranslationTurn: Codable, Equatable, Sendable {
 struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let turns: [HighQualityTranslationTurn]
+    let glossary: [HighQualityGlossaryPromptTerm]
 }
 
 struct HighQualityTranslationAttempt: Codable, Equatable, Sendable {
@@ -263,6 +264,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
     let rawASR: String?
+    let glossary: HighQualityGlossarySelection
     let translation: HighQualityTranslationEvidence?
     let sampleRate: Int
     let sampleCount: Int
@@ -455,6 +457,7 @@ struct HighQualityJob: Sendable {
         var stageStartedAt = startedAt
         var sampleCount = 0
         var rawASR: String?
+        var glossary = HighQualityGlossarySelection.empty
         var japaneseTranscriptWritten = false
         var englishTranscriptWritten = false
         var translationEvidence: HighQualityTranslationEvidence?
@@ -600,12 +603,17 @@ struct HighQualityJob: Sendable {
                 from: transcript,
                 speakerLabelsByCueID: request.speakerLabelsByCueID
             )
+            glossary = HighQualityGlossarySelector.select(
+                source: manifest.source,
+                turns: turns
+            )
             var translationsByID: [String: String] = [:]
             if request.deliverables.contains(.englishTranslationTranscript) {
                 begin(.translating, fraction: 0.8, message: "Translating to English…")
                 let translationRequest = HighQualityTranslationBatch(
                     source: manifest.source,
-                    turns: turns
+                    turns: turns,
+                    glossary: glossary.promptTerms
                 )
                 do {
                     let exchange = try await services.translateEnglish(translationRequest)
@@ -665,6 +673,7 @@ struct HighQualityJob: Sendable {
             manifest.status = .completed
             var evidence = try Self.writeEvidenceAndManifest(
                 rawASR: rawTranscript,
+                glossary: glossary,
                 translation: translationEvidence,
                 sampleCount: sampleCount,
                 manifest: manifest,
@@ -674,6 +683,7 @@ struct HighQualityJob: Sendable {
             manifest.finishedAt = Date()
             evidence = try Self.writeEvidenceAndManifest(
                 rawASR: rawTranscript,
+                glossary: glossary,
                 translation: translationEvidence,
                 sampleCount: sampleCount,
                 manifest: manifest,
@@ -745,6 +755,7 @@ struct HighQualityJob: Sendable {
                 )
                 _ = try Self.writeEvidenceAndManifest(
                     rawASR: rawASR,
+                    glossary: glossary,
                     translation: translationEvidence,
                     sampleCount: sampleCount,
                     manifest: manifest,
@@ -911,6 +922,7 @@ struct HighQualityJob: Sendable {
 
     private static func evidence(
         rawASR: String?,
+        glossary: HighQualityGlossarySelection,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
         manifest: HighQualityJobManifest
@@ -919,6 +931,7 @@ struct HighQualityJob: Sendable {
             source: manifest.source,
             model: manifest.model,
             rawASR: rawASR,
+            glossary: glossary,
             translation: translation,
             sampleRate: 16_000,
             sampleCount: sampleCount,
@@ -943,6 +956,7 @@ struct HighQualityJob: Sendable {
     @discardableResult
     private static func writeEvidenceAndManifest(
         rawASR: String?,
+        glossary: HighQualityGlossarySelection,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
         manifest: HighQualityJobManifest,
@@ -950,6 +964,7 @@ struct HighQualityJob: Sendable {
     ) throws -> HighQualityRawEvidence {
         let evidence = evidence(
             rawASR: rawASR,
+            glossary: glossary,
             translation: translation,
             sampleCount: sampleCount,
             manifest: manifest

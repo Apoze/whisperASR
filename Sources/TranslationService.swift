@@ -173,7 +173,7 @@ enum TranslationService {
             "messages": [
                 [
                     "role": "system",
-                    "content": "Translate every requested Japanese cue into contextual English. Use surrounding turns, source metadata, and speaker labels when present. Return JSON only as {\"translations\":[{\"id\":\"cue-0001\",\"text\":\"...\"}]}. Return every requested id exactly once and no other ids.",
+                    "content": "Translate every requested Japanese cue into contextual English. Use surrounding turns, source metadata, speaker labels, and the selected glossary when present. Return JSON only as {\"translations\":[{\"id\":\"cue-0001\",\"text\":\"...\"}]}. Return every requested id exactly once and no other ids.",
                 ],
                 ["role": "user", "content": contextualCues],
             ],

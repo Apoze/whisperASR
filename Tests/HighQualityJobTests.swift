@@ -3,6 +3,63 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testJobSelectsSourceRelevantGlossaryAndPreservesRawASR() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let rawASR = "  甘結もかがエーペックスレジェンズをプレイ。お疲れさま。\n"
+        let sourceURL = try XCTUnwrap(URL(string: "https://youtu.be/abc123"))
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0.1] },
+            acquireYouTube: { url, directory in
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
+                let audioURL = directory.appendingPathComponent("source.m4a")
+                try Data().write(to: audioURL)
+                return .init(
+                    audioURL: audioURL,
+                    evidence: .init(
+                        sourceURL: url.absoluteString,
+                        title: "甘結もか Apex Legends",
+                        channel: "Fixture channel",
+                        description: "VTuber gaming conversation",
+                        ytDLPVersion: "fixture",
+                        diagnostics: "fixture"
+                    )
+                )
+            },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in rawASR },
+            unloadASR: {},
+            translateEnglish: { request in
+                XCTAssertEqual(
+                    Set(request.glossary.map(\.id)),
+                    ["amayui-moka", "apex-legends", "otsukaresama"]
+                )
+                return .init(
+                    model: "fixture",
+                    response: #"{"translations":[{"id":"cue-0001","text":"Amayui Moka plays Apex Legends."},{"id":"cue-0002","text":"Thanks for your hard work."}]}"#,
+                    attempts: []
+                )
+            }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: sourceURL,
+            deliverables: [.englishTranslationTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.evidence.rawASR, rawASR)
+        XCTAssertEqual(
+            Set(result.evidence.glossary.decisions.filter(\.selected).map(\.term.id)),
+            ["amayui-moka", "apex-legends", "otsukaresama"]
+        )
+    }
+
     func testEnglishOnlyJobTranslatesContextualStableCuesAndExportsOnlyEnglish() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
