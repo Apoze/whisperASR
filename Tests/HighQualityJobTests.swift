@@ -41,6 +41,7 @@ final class HighQualityJobTests: XCTestCase {
         let result = try await job.run(.init(
             sourceURL: sourceURL,
             deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
             outputRoot: root
         ))
 
@@ -95,6 +96,7 @@ final class HighQualityJobTests: XCTestCase {
                 try await job.run(.init(
                     sourceURL: try XCTUnwrap(URL(string: url)),
                     deliverables: [.japaneseTranscript],
+                    backend: .qwenJA,
                     outputRoot: root
                 ))
             }
@@ -108,6 +110,7 @@ final class HighQualityJobTests: XCTestCase {
                 id: id,
                 sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }
@@ -157,6 +160,7 @@ final class HighQualityJobTests: XCTestCase {
                 id: id,
                 sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }
@@ -220,6 +224,7 @@ final class HighQualityJobTests: XCTestCase {
                 id: id,
                 sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }
@@ -336,6 +341,7 @@ final class HighQualityJobTests: XCTestCase {
                 id: id,
                 sourceURL: try XCTUnwrap(URL(string: "https://youtu.be/abc123")),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }
@@ -383,6 +389,7 @@ final class HighQualityJobTests: XCTestCase {
             _ = try await job.run(.init(
                 sourceURL: URL(fileURLWithPath: "/tmp/input.wav"),
                 deliverables: [],
+                backend: .qwenJA,
                 outputRoot: root
             ))
             XCTFail("A job without a Deliverable must fail.")
@@ -485,18 +492,22 @@ final class HighQualityJobTests: XCTestCase {
     func testRealOfflineBackendFunctionalGateWhenOptedIn() async throws {
         guard let path = ProcessInfo.processInfo.environment[
             "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE"
+        ], let expectedSHA256 = ProcessInfo.processInfo.environment[
+            "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE_SHA256"
         ] else {
             throw XCTSkip(
-                "Set WHISPERASR_HIGH_QUALITY_ASR_FIXTURE to a Japanese audio fixture."
+                "Set WHISPERASR_HIGH_QUALITY_ASR_FIXTURE and its SHA-256 to a long Japanese fixture."
             )
         }
+        let sourceURL = URL(fileURLWithPath: path)
+        XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: sourceURL), expectedSHA256)
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
         for backend in HighQualityASRBackend.allCases {
             let result = try await HighQualityJob().run(.init(
-                sourceURL: URL(fileURLWithPath: path),
+                sourceURL: sourceURL,
                 deliverables: [.japaneseTranscript],
                 backend: backend,
                 outputRoot: root
@@ -508,6 +519,39 @@ final class HighQualityJobTests: XCTestCase {
                 try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
                 ["japanese-transcript.txt", "manifest.json", "raw-asr.json"]
             )
+
+            let startedTranscribing = expectation(
+                description: "\(backend.displayName) started transcribing"
+            )
+            let cancellationID = UUID()
+            let task = Task {
+                try await HighQualityJob().run(.init(
+                    id: cancellationID,
+                    sourceURL: sourceURL,
+                    deliverables: [.japaneseTranscript],
+                    backend: backend,
+                    outputRoot: root
+                )) { progress in
+                    if progress.stage == .transcribing { startedTranscribing.fulfill() }
+                }
+            }
+            await fulfillment(of: [startedTranscribing], timeout: 600)
+            task.cancel()
+            do {
+                _ = try await task.value
+                XCTFail("Cancelling \(backend.displayName) must stop the job.")
+            } catch let error as HighQualityJobError {
+                XCTAssertEqual(error.stage, .cancelled)
+            }
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let cancelledManifest = try decoder.decode(
+                HighQualityJobManifest.self,
+                from: Data(contentsOf: root.appendingPathComponent(cancellationID.uuidString)
+                    .appendingPathComponent("manifest.json"))
+            )
+            XCTAssertEqual(cancelledManifest.status, .cancelled)
+            XCTAssertEqual(cancelledManifest.selectedBackend, backend)
         }
     }
 
@@ -527,6 +571,7 @@ final class HighQualityJobTests: XCTestCase {
             try await sourceFailure.run(.init(
                 sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }
@@ -556,6 +601,7 @@ final class HighQualityJobTests: XCTestCase {
             try await asrFailure.run(.init(
                 sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }
@@ -572,6 +618,7 @@ final class HighQualityJobTests: XCTestCase {
                 id: emptyOutputID,
                 sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }
@@ -600,6 +647,7 @@ final class HighQualityJobTests: XCTestCase {
                 id: exportID,
                 sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
                 deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
                 outputRoot: root
             ))
         }

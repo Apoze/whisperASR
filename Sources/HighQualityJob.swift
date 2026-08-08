@@ -82,7 +82,7 @@ struct HighQualityJobRequest: Sendable {
         id: UUID = UUID(),
         sourceURL: URL,
         deliverables: Set<HighQualityDeliverable>,
-        backend: HighQualityASRBackend = .qwenJA,
+        backend: HighQualityASRBackend,
         speakerLabels: Bool = false,
         outputRoot: URL = AppStoragePaths.highQualityJobs
     ) {
