@@ -3,6 +3,287 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testChunkedASRMovesCutsToSilenceAndCoversTheSourceExactlyOnce() async throws {
+        let sampleRate = 16_000
+        var samples = [Float](repeating: 0.5, count: 121 * sampleRate)
+        samples.replaceSubrange((58 * sampleRate)..<(59 * sampleRate), with: [Float](
+            repeating: 0,
+            count: sampleRate
+        ))
+        let counts = SampleCounts()
+
+        let result = try await HighQualityJob.Services.chunkedASR(samples) { chunk in
+            let index = await counts.append(chunk.count)
+            return index == 1 ? "一。" : "二。"
+        }
+
+        XCTAssertEqual(result.rawTranscript, "一。\n二。")
+        XCTAssertEqual(result.chunks.count, 2)
+        XCTAssertTrue((58..<59).contains(result.chunks[0].sourceEnd))
+        XCTAssertEqual(result.chunks[0].sourceEnd, result.chunks[1].sourceStart)
+        XCTAssertEqual(result.chunks[1].sourceEnd, 121)
+        let processedSampleCount = await counts.values.reduce(0, +)
+        XCTAssertEqual(processedSampleCount, samples.count)
+    }
+
+    func testChunkedASROverlapsAndReconcilesWhenNoSilenceExists() async throws {
+        let sampleRate = 16_000
+        let samples = [Float](repeating: 0.5, count: 121 * sampleRate)
+        let counts = SampleCounts()
+
+        let result = try await HighQualityJob.Services.chunkedASR(samples) { chunk in
+            let index = await counts.append(chunk.count)
+            return index == 1 ? "一。共通。" : "共通。二。"
+        }
+
+        XCTAssertEqual(result.rawTranscript, "一。共通。\n二。")
+        XCTAssertEqual(result.chunks.count, 2)
+        XCTAssertEqual(result.chunks[0].sourceEnd, 61)
+        XCTAssertEqual(result.chunks[1].sourceStart, 59)
+        XCTAssertEqual(result.chunks[1].sourceEnd, 121)
+        let processedSampleCount = await counts.values.reduce(0, +)
+        XCTAssertEqual(processedSampleCount, samples.count + 2 * sampleRate)
+    }
+
+    func testEnglishSubtitlesAlignTranslateMergeAndExportBothFormats() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = CallLog()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 160_000) },
+            prepareASR: { _ in await calls.append("prepare-asr") },
+            transcribeJapanese: { _ in "unused" },
+            transcribeJapaneseAnchored: { _ in
+                .init(
+                    rawTranscript: "一。\n二。",
+                    chunks: [
+                        .init(index: 0, sourceStart: 0, sourceEnd: 5, transcript: "一。"),
+                        .init(index: 1, sourceStart: 5, sourceEnd: 10, transcript: "二。"),
+                    ]
+                )
+            },
+            unloadASR: { await calls.append("unload-asr") },
+            prepareAlignment: { _ in await calls.append("prepare-alignment") },
+            alignJapanese: { _, turns in
+                XCTAssertEqual(turns.map(\.id), ["cue-0001", "cue-0002"])
+                XCTAssertEqual(turns.map(\.sourceStart), [0, 5])
+                XCTAssertEqual(turns.map(\.sourceEnd), [5, 10])
+                return .init(
+                    chunks: [
+                        .init(
+                            index: 1,
+                            sourceStart: 5,
+                            sourceEnd: 10,
+                            cues: [.init(id: "cue-0002", text: "二。", start: 6.25, end: 8)]
+                        ),
+                        .init(
+                            index: 0,
+                            sourceStart: 0,
+                            sourceEnd: 5,
+                            cues: [.init(id: "cue-0001", text: "一。", start: 1.5, end: 2.75)]
+                        ),
+                    ],
+                    modelID: "fixture-aligner",
+                    revision: "fixture-revision",
+                    peakMemoryBytes: 456
+                )
+            },
+            unloadAlignment: { await calls.append("unload-alignment") },
+            translateEnglish: { _ in
+                .init(
+                    model: "fixture-translator",
+                    response: #"{"translations":[{"id":"cue-0001","text":"One"},{"id":"cue-0002","text":"Two"}]}"#,
+                    attempts: []
+                )
+            }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishSubtitles],
+            backend: .parakeetJA,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(
+            result.manifest.dependencies,
+            [.sourceNormalization, .japaneseASR, .forcedAlignment, .llmTranslation, .export]
+        )
+        let recordedCalls = await calls.values
+        XCTAssertEqual(recordedCalls, [
+            "prepare-asr", "unload-asr", "prepare-alignment", "unload-alignment",
+        ])
+        XCTAssertEqual(result.subtitleCues.map(\.id), ["cue-0001", "cue-0002"])
+        XCTAssertEqual(result.subtitleCues.map(\.start), [1.5, 6.25])
+        XCTAssertEqual(result.subtitleCues.map(\.end), [2.75, 8])
+        XCTAssertEqual(result.subtitleCues.map(\.text), ["One", "Two"])
+        XCTAssertNil(result.englishTranscript)
+        XCTAssertEqual(result.evidence.alignment?.modelID, "fixture-aligner")
+        XCTAssertEqual(result.evidence.alignment?.revision, "fixture-revision")
+        XCTAssertEqual(result.evidence.alignment?.chunks.map(\.index), [0, 1])
+        XCTAssertEqual(result.evidence.alignment?.peakMemoryBytes, 456)
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
+            ["english-subtitles.srt", "english-subtitles.vtt", "manifest.json", "raw-asr.json"]
+        )
+        XCTAssertEqual(
+            try String(
+                contentsOf: result.directory.appendingPathComponent("english-subtitles.vtt"),
+                encoding: .utf8
+            ),
+            "WEBVTT\n\ncue-0001\n00:00:01.500 --> 00:00:02.750\nOne\n\n"
+                + "cue-0002\n00:00:06.250 --> 00:00:08.000\nTwo\n\n"
+        )
+        XCTAssertEqual(
+            try String(
+                contentsOf: result.directory.appendingPathComponent("english-subtitles.srt"),
+                encoding: .utf8
+            ),
+            "1\n00:00:01,500 --> 00:00:02,750\nOne\n\n"
+                + "2\n00:00:06,250 --> 00:00:08,000\nTwo\n\n"
+        )
+    }
+
+    func testEnglishSubtitlesRejectInvalidCuesAndRetainAlignmentDiagnostics() async throws {
+        let invalidCues: [HighQualityAlignedCue] = [
+            .init(id: "cue-0001", text: "一。", start: -1, end: 1),
+            .init(id: "cue-0001", text: "一。", start: 2, end: 1),
+            .init(id: "cue-0001", text: "一。", start: .nan, end: 1),
+            .init(id: "cue-0001", text: "一。", start: 0, end: 11),
+            .init(id: "cue-0001", text: "", start: 0, end: 1),
+        ]
+        for cue in invalidCues {
+            let root = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let id = UUID()
+            let job = subtitleFixtureJob(cues: [cue])
+
+            await assertFailure(.alignment) {
+                try await job.run(.init(
+                    id: id,
+                    sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                    deliverables: [.englishSubtitles],
+                    backend: .qwenJA,
+                    outputRoot: root
+                ))
+            }
+
+            let evidence = try String(
+                contentsOf: root.appendingPathComponent(id.uuidString)
+                    .appendingPathComponent("raw-asr.json"),
+                encoding: .utf8
+            )
+            XCTAssertTrue(evidence.contains("fixture-aligner"))
+            XCTAssertTrue(evidence.contains("validationDiagnostics"))
+        }
+
+        let duplicate = subtitleFixtureJob(cues: [
+            .init(id: "cue-0001", text: "一。", start: 0, end: 1),
+            .init(id: "cue-0001", text: "一。", start: 1, end: 2),
+        ])
+        let duplicateRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: duplicateRoot) }
+        await assertFailure(.alignment) {
+            try await duplicate.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishSubtitles],
+                backend: .qwenJA,
+                outputRoot: duplicateRoot
+            ))
+        }
+    }
+
+    func testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend() async throws {
+        for backend in HighQualityASRBackend.allCases {
+            let root = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+
+            let result = try await subtitleFixtureJob(cues: [
+                .init(id: "cue-0001", text: "一。", start: 0.25, end: 1),
+            ]).run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishSubtitles],
+                backend: backend,
+                outputRoot: root
+            ))
+
+            XCTAssertEqual(result.manifest.selectedBackend, backend)
+            XCTAssertEqual(result.subtitleCues.map(\.text), ["One"])
+        }
+    }
+
+    func testEnglishSubtitlesRejectInvalidRawAlignmentTiming() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 160_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [.init(
+                        index: 0,
+                        sourceStart: 0,
+                        sourceEnd: 10,
+                        cues: [.init(id: "cue-0001", text: "一。", start: 0, end: 1)],
+                        rawItems: [.init(
+                            cueID: "cue-0001",
+                            text: "一",
+                            start: .nan,
+                            end: 1
+                        )]
+                    )],
+                    modelID: "fixture-aligner",
+                    revision: "fixture-revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {}
+        ))
+
+        await assertFailure(.alignment) {
+            try await job.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishSubtitles],
+                backend: .qwenJA,
+                outputRoot: root
+            ))
+        }
+    }
+
+    private func subtitleFixtureJob(cues: [HighQualityAlignedCue]) -> HighQualityJob {
+        HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 160_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [.init(index: 0, sourceStart: 0, sourceEnd: 10, cues: cues)],
+                    modelID: "fixture-aligner",
+                    revision: "fixture-revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {},
+            translateEnglish: { _ in
+                .init(
+                    model: "fixture-translator",
+                    response: #"{"translations":[{"id":"cue-0001","text":"One"}]}"#,
+                    attempts: []
+                )
+            }
+        ))
+    }
+
     func testJobSelectsSourceRelevantGlossaryAndPreservesRawASR() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -996,6 +1277,15 @@ private actor CallLog {
 
     func append(_ value: String) {
         values.append(value)
+    }
+}
+
+private actor SampleCounts {
+    private(set) var values: [Int] = []
+
+    func append(_ value: Int) -> Int {
+        values.append(value)
+        return values.count
     }
 }
 

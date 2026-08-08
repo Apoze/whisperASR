@@ -7,6 +7,7 @@ struct HighQualityJobView: View {
     @State private var youtubeURL = ""
     @State private var includeJapaneseTranscript = true
     @State private var includeEnglishTranscript = false
+    @State private var includeEnglishSubtitles = false
     @State private var backend: HighQualityASRBackend?
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
@@ -21,7 +22,7 @@ struct HighQualityJobView: View {
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
         (sourceURL != nil || !youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            && (includeJapaneseTranscript || includeEnglishTranscript)
+            && (includeJapaneseTranscript || includeEnglishTranscript || includeEnglishSubtitles)
             && backend != nil
             && !isRunning
     }
@@ -47,6 +48,9 @@ struct HighQualityJobView: View {
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
             Toggle("English translation transcript", isOn: $includeEnglishTranscript)
+                .toggleStyle(.checkbox)
+                .disabled(isRunning)
+            Toggle("English WebVTT and SRT subtitles", isOn: $includeEnglishSubtitles)
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
 
@@ -163,6 +167,7 @@ struct HighQualityJobView: View {
         var deliverables: Set<HighQualityDeliverable> = []
         if includeJapaneseTranscript { deliverables.insert(.japaneseTranscript) }
         if includeEnglishTranscript { deliverables.insert(.englishTranslationTranscript) }
+        if includeEnglishSubtitles { deliverables.insert(.englishSubtitles) }
         guard let selectedSource, let backend, !deliverables.isEmpty else {
             errorMessage = "Select a source and at least one Deliverable."
             return
