@@ -50,6 +50,7 @@ let package = Package(
                 .product(name: "MLX", package: "mlx-swift"),
                 .product(name: "FluidAudio", package: "FluidAudio"),
                 .product(name: "WhisperKit", package: "WhisperKit"),
+                .product(name: "SpeakerKit", package: "WhisperKit"),
                 .product(name: "HuggingFace", package: "swift-huggingface"),
             ],
             path: "Sources",

@@ -3,6 +3,199 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testSpeakerLabelsInferStagesPreserveOverlapAndUseStableAnonymousNames() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = CallLog()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 160_000) },
+            prepareASR: { _ in await calls.append("prepare-asr") },
+            transcribeJapanese: { _ in "unused" },
+            transcribeJapaneseAnchored: { _ in
+                .init(
+                    rawTranscript: "一。\n二。",
+                    chunks: [
+                        .init(index: 0, sourceStart: 0, sourceEnd: 5, transcript: "一。"),
+                        .init(index: 1, sourceStart: 5, sourceEnd: 10, transcript: "二。"),
+                    ]
+                )
+            },
+            unloadASR: { await calls.append("unload-asr") },
+            prepareAlignment: { _ in await calls.append("prepare-alignment") },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [.init(
+                        index: 0,
+                        sourceStart: 0,
+                        sourceEnd: 10,
+                        cues: [
+                            .init(id: "cue-0001", text: "一。", start: 1, end: 4),
+                            .init(id: "cue-0002", text: "二。", start: 6, end: 9),
+                        ],
+                        rawItems: [
+                            .init(cueID: "cue-0001", text: "一", start: 1, end: 2),
+                            .init(cueID: "cue-0001", text: "。", start: 2, end: 4),
+                            .init(cueID: "cue-0002", text: "二。", start: 6, end: 9),
+                        ]
+                    )],
+                    modelID: "fixture-aligner",
+                    revision: "aligner-revision",
+                    peakMemoryBytes: 100
+                )
+            },
+            unloadAlignment: { await calls.append("unload-alignment") },
+            prepareDiarization: { _ in await calls.append("prepare-speakerkit") },
+            diarizeSpeakers: { _ in
+                .init(
+                    spans: [
+                        .init(speakerID: 7, start: 2, end: 7),
+                        .init(speakerID: 2, start: 0, end: 8),
+                    ],
+                    modelID: "argmaxinc/speakerkit-coreml",
+                    revision: "speakerkit-revision",
+                    peakMemoryBytes: 200
+                )
+            },
+            unloadDiarization: { await calls.append("unload-speakerkit") }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.manifest.dependencies, [
+            .sourceNormalization, .japaneseASR, .forcedAlignment, .speakerDiarization, .export,
+        ])
+        let recordedCalls = await calls.values
+        XCTAssertEqual(recordedCalls, [
+            "prepare-asr", "unload-asr", "prepare-alignment", "unload-alignment",
+            "prepare-speakerkit", "unload-speakerkit",
+        ])
+        XCTAssertEqual(result.evidence.diarization?.modelID, "argmaxinc/speakerkit-coreml")
+        XCTAssertEqual(result.evidence.diarization?.revision, "speakerkit-revision")
+        XCTAssertEqual(result.evidence.diarization?.rawSpans.count, 2)
+        XCTAssertEqual(result.evidence.diarization?.overlapRanges.count, 1)
+        XCTAssertEqual(Set(result.turns.compactMap(\.speakerLabel)), ["SPEAKER_00", "SPEAKER_01"])
+        XCTAssertTrue(result.turns.contains {
+            $0.speakerLabel == "SPEAKER_00" && $0.start == 1 && $0.end == 4
+        })
+        XCTAssertTrue(result.turns.contains {
+            $0.speakerLabel == "SPEAKER_01" && $0.start == 2 && $0.end == 4
+        })
+        XCTAssertTrue(result.turns.contains {
+            $0.speakerLabel == "SPEAKER_01" && $0.japanese == "。"
+        })
+        XCTAssertEqual(result.manifest.peakMemoryBytes, 200)
+    }
+
+    func testSpeakerRenameRegeneratesTranscriptsAndOverlappingSubtitles() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let job = speakerSubtitleFixtureJob()
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript, .englishTranslationTranscript, .englishSubtitles],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        let renamed = try HighQualityJob.renameSpeakers(
+            in: result,
+            names: ["SPEAKER_00": "Alice", "SPEAKER_01": "Bob"]
+        )
+
+        XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerLabel)), ["SPEAKER_00", "SPEAKER_01"])
+        XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerName)), ["Alice", "Bob"])
+        let japanese = try String(
+            contentsOf: result.directory.appendingPathComponent("japanese-transcript.txt"),
+            encoding: .utf8
+        )
+        let english = try String(
+            contentsOf: result.directory.appendingPathComponent("english-translation-transcript.txt"),
+            encoding: .utf8
+        )
+        let webVTT = try String(
+            contentsOf: result.directory.appendingPathComponent("english-subtitles.vtt"),
+            encoding: .utf8
+        )
+        let srt = try String(
+            contentsOf: result.directory.appendingPathComponent("english-subtitles.srt"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(japanese.contains("Alice: 一。"))
+        XCTAssertTrue(japanese.contains("Bob: 一。"))
+        XCTAssertTrue(english.contains("Alice: One"))
+        XCTAssertTrue(webVTT.contains("<v Alice>One"))
+        XCTAssertTrue(webVTT.contains("<v Bob>One"))
+        XCTAssertTrue(srt.contains("[Alice] One"))
+        XCTAssertEqual(renamed.japaneseTranscript, japanese.trimmingCharacters(in: .newlines))
+        XCTAssertEqual(renamed.subtitleCues.map(\.start), [1, 2])
+        XCTAssertEqual(renamed.subtitleCues.map(\.end), [4, 4])
+    }
+
+    func testCancellationDuringSpeakerKitReleasesDiarizationRuntime() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = CallLog()
+        let started = expectation(description: "SpeakerKit started")
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 16_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [.init(
+                        index: 0,
+                        sourceStart: 0,
+                        sourceEnd: 1,
+                        cues: [.init(id: "cue-0001", text: "一。", start: 0, end: 1)]
+                    )],
+                    modelID: "aligner",
+                    revision: "revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _ in },
+            diarizeSpeakers: { _ in
+                started.fulfill()
+                try await Task.sleep(for: .seconds(10))
+                return .init(spans: [], modelID: "speakerkit", revision: "revision", peakMemoryBytes: 0)
+            },
+            unloadDiarization: { await calls.append("unload-speakerkit") }
+        ))
+        let task = Task {
+            try await job.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                speakerLabels: true,
+                outputRoot: root
+            ))
+        }
+        await fulfillment(of: [started], timeout: 1)
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("Cancellation must stop SpeakerKit.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .cancelled)
+        }
+        let recordedCalls = await calls.values
+        XCTAssertEqual(recordedCalls, ["unload-speakerkit"])
+    }
+
     func testChunkedASRMovesCutsToSilenceAndCoversTheSourceExactlyOnce() async throws {
         let sampleRate = 16_000
         var samples = [Float](repeating: 0.5, count: 121 * sampleRate)
@@ -278,6 +471,62 @@ final class HighQualityJobTests: XCTestCase {
                 .init(
                     model: "fixture-translator",
                     response: #"{"translations":[{"id":"cue-0001","text":"One"}]}"#,
+                    attempts: []
+                )
+            }
+        ))
+    }
+
+    private func speakerSubtitleFixtureJob() -> HighQualityJob {
+        HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 160_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            transcribeJapaneseAnchored: { _ in
+                .init(
+                    rawTranscript: "一。",
+                    chunks: [.init(index: 0, sourceStart: 0, sourceEnd: 10, transcript: "一。")]
+                )
+            },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [.init(
+                        index: 0,
+                        sourceStart: 0,
+                        sourceEnd: 10,
+                        cues: [.init(id: "cue-0001", text: "一。", start: 1, end: 4)]
+                    )],
+                    modelID: "aligner",
+                    revision: "revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _ in },
+            diarizeSpeakers: { _ in
+                .init(
+                    spans: [
+                        .init(speakerID: 0, start: 1, end: 4),
+                        .init(speakerID: 1, start: 2, end: 5),
+                    ],
+                    modelID: "speakerkit",
+                    revision: "revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadDiarization: {},
+            translateEnglish: { request in
+                XCTAssertEqual(Set(request.turns.compactMap(\.speakerLabel)), [
+                    "SPEAKER_00", "SPEAKER_01",
+                ])
+                let translations = request.turns.map {
+                    #"{"id":"\#($0.id)","text":"One"}"#
+                }.joined(separator: ",")
+                return .init(
+                    model: "translator",
+                    response: #"{"translations":[\#(translations)]}"#,
                     attempts: []
                 )
             }
@@ -868,17 +1117,6 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(recordedCalls, [])
         XCTAssertFalse(FileManager.default.fileExists(atPath: root.path))
 
-        await assertFailure(.application) {
-            try await job.run(.init(
-                sourceURL: URL(fileURLWithPath: "/tmp/input.wav"),
-                deliverables: [.japaneseTranscript],
-                backend: .qwenJA,
-                speakerLabels: true,
-                outputRoot: root
-            ))
-        }
-        let callsAfterSpeakerRequest = await calls.values
-        XCTAssertEqual(callsAfterSpeakerRequest, [])
     }
 
     func testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts() async throws {

@@ -8,6 +8,7 @@ struct HighQualityJobView: View {
     @State private var includeJapaneseTranscript = true
     @State private var includeEnglishTranscript = false
     @State private var includeEnglishSubtitles = false
+    @State private var includeSpeakerLabels = false
     @State private var backend: HighQualityASRBackend?
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
@@ -18,6 +19,7 @@ struct HighQualityJobView: View {
     @State private var errorMessage: String?
     @State private var task: Task<Void, Never>?
     @State private var isDropTargeted = false
+    @State private var speakerNames: [String: String] = [:]
 
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
@@ -51,6 +53,9 @@ struct HighQualityJobView: View {
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
             Toggle("English WebVTT and SRT subtitles", isOn: $includeEnglishSubtitles)
+                .toggleStyle(.checkbox)
+                .disabled(isRunning)
+            Toggle("Speaker labels", isOn: $includeSpeakerLabels)
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
 
@@ -182,11 +187,14 @@ struct HighQualityJobView: View {
                     sourceURL: selectedSource,
                     deliverables: deliverables,
                     backend: backend,
-                    speakerLabels: false
+                    speakerLabels: includeSpeakerLabels
                 )) { update in
                     Task { @MainActor in progress = update }
                 }
                 result = completed
+                speakerNames = Dictionary(uniqueKeysWithValues: Set(
+                    completed.turns.compactMap(\.speakerLabel)
+                ).sorted().map { ($0, $0) })
             } catch let error as HighQualityJobError {
                 errorMessage = error.localizedDescription
             } catch {
@@ -199,7 +207,9 @@ struct HighQualityJobView: View {
     @ViewBuilder
     private func resultView(_ result: HighQualityJobResult) -> some View {
         let deliverables = Set(result.manifest.deliverables)
-        if deliverables == [.japaneseTranscript] {
+        if result.manifest.speakerLabels {
+            speakerResultView(result, deliverables: deliverables)
+        } else if deliverables == [.japaneseTranscript] {
             Text("Japanese result").font(.headline)
             ScrollView {
                 Text(result.japaneseTranscript)
@@ -232,5 +242,64 @@ struct HighQualityJobView: View {
                 .textSelection(.enabled)
             }
         }
+    }
+
+    @ViewBuilder
+    private func speakerResultView(
+        _ result: HighQualityJobResult,
+        deliverables: Set<HighQualityDeliverable>
+    ) -> some View {
+        Text("Results").font(.headline)
+        ScrollView {
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
+                GridRow {
+                    Text("Time").bold()
+                    Text("Speaker").bold()
+                    Text("Japanese").bold()
+                    if deliverables.contains(.englishTranslationTranscript)
+                        || deliverables.contains(.englishSubtitles) {
+                        Text("English").bold()
+                    }
+                }
+                ForEach(result.turns, id: \.id) { turn in
+                    GridRow(alignment: .top) {
+                        Text(time(turn.start, turn.end))
+                        Text(turn.speakerName ?? turn.speakerLabel ?? "—")
+                        Text(turn.japanese)
+                        if deliverables.contains(.englishTranslationTranscript)
+                            || deliverables.contains(.englishSubtitles) {
+                            Text(turn.english ?? "")
+                        }
+                    }
+                }
+            }
+            .textSelection(.enabled)
+        }
+        if !speakerNames.isEmpty {
+            HStack {
+                ForEach(speakerNames.keys.sorted(), id: \.self) { label in
+                    TextField(label, text: Binding(
+                        get: { speakerNames[label] ?? label },
+                        set: { speakerNames[label] = $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                }
+                Button("Apply Names") {
+                    do {
+                        self.result = try HighQualityJob.renameSpeakers(
+                            in: result,
+                            names: speakerNames
+                        )
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                }
+            }
+        }
+    }
+
+    private func time(_ start: TimeInterval?, _ end: TimeInterval?) -> String {
+        guard let start, let end else { return "—" }
+        return "\(SubtitleTimecode.webVTT(start))–\(SubtitleTimecode.webVTT(end))"
     }
 }

@@ -51,6 +51,7 @@ enum HighQualityJobDependency: String, Codable, Sendable {
     case sourceNormalization = "source-normalization"
     case japaneseASR = "japanese-asr"
     case forcedAlignment = "forced-alignment"
+    case speakerDiarization = "speaker-diarization"
     case llmTranslation = "llm-translation"
     case export
 }
@@ -63,6 +64,8 @@ enum HighQualityJobStage: String, Codable, Sendable {
     case transcribing
     case preparingAlignment = "preparing-alignment"
     case aligning
+    case preparingDiarization = "preparing-diarization"
+    case diarizing
     case translating
     case exporting
     case completed
@@ -77,6 +80,7 @@ enum HighQualityJobFailureStage: String, Codable, Sendable {
     case modelPreparation = "model-preparation"
     case asr
     case alignment
+    case diarization
     case translation
     case export
     case cancelled
@@ -277,17 +281,96 @@ struct HighQualityAlignmentEvidence: Codable, Equatable, Sendable {
     var validationDiagnostics: [String]
 }
 
+struct HighQualityDiarizationSpan: Codable, Equatable, Sendable {
+    let speakerID: Int
+    let start: TimeInterval
+    let end: TimeInterval
+}
+
+struct HighQualityDiarizationExchange: Equatable, Sendable {
+    let spans: [HighQualityDiarizationSpan]
+    let modelID: String
+    let revision: String
+    let peakMemoryBytes: UInt64
+}
+
+struct HighQualitySpeakerMapping: Codable, Equatable, Sendable {
+    let cueID: String
+    let alignmentItemIndex: Int
+    let spanIndex: Int
+    let alignedText: String
+    let speakerLabel: String
+    let overlapStart: TimeInterval
+    let overlapEnd: TimeInterval
+}
+
+struct HighQualityOverlapRange: Codable, Equatable, Sendable {
+    let start: TimeInterval
+    let end: TimeInterval
+    let speakerLabels: [String]
+}
+
+struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
+    let modelID: String
+    let revision: String
+    let rawSpans: [HighQualityDiarizationSpan]
+    let mappings: [HighQualitySpeakerMapping]
+    let overlapRanges: [HighQualityOverlapRange]
+    let peakMemoryBytes: UInt64
+    var validationDiagnostics: [String]
+}
+
 struct HighQualitySubtitleCue: Codable, Equatable, Sendable {
     let id: String
     let start: TimeInterval
     let end: TimeInterval
     let text: String
+    let speakerLabel: String?
+    let speakerName: String?
+
+    init(
+        id: String,
+        start: TimeInterval,
+        end: TimeInterval,
+        text: String,
+        speakerLabel: String? = nil,
+        speakerName: String? = nil
+    ) {
+        self.id = id
+        self.start = start
+        self.end = end
+        self.text = text
+        self.speakerLabel = speakerLabel
+        self.speakerName = speakerName
+    }
 }
 
 struct HighQualityTranscriptTurn: Equatable, Sendable {
     let id: String
     let japanese: String
     let english: String?
+    let speakerLabel: String?
+    let speakerName: String?
+    let start: TimeInterval?
+    let end: TimeInterval?
+
+    init(
+        id: String,
+        japanese: String,
+        english: String?,
+        speakerLabel: String? = nil,
+        speakerName: String? = nil,
+        start: TimeInterval? = nil,
+        end: TimeInterval? = nil
+    ) {
+        self.id = id
+        self.japanese = japanese
+        self.english = english
+        self.speakerLabel = speakerLabel
+        self.speakerName = speakerName
+        self.start = start
+        self.end = end
+    }
 }
 
 struct HighQualityModelEvidence: Codable, Equatable, Sendable {
@@ -363,6 +446,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let rawASR: String?
     let glossary: HighQualityGlossarySelection
     let alignment: HighQualityAlignmentEvidence?
+    let diarization: HighQualityDiarizationEvidence?
     let translation: HighQualityTranslationEvidence?
     let sampleRate: Int
     let sampleCount: Int
@@ -409,6 +493,11 @@ struct HighQualityJob: Sendable {
             [HighQualityTranslationTurn]
         ) async throws -> HighQualityAlignmentExchange
         let unloadAlignment: @Sendable () async -> Void
+        let prepareDiarization: @Sendable (
+            @escaping @Sendable (Double, String) -> Void
+        ) async throws -> Void
+        let diarizeSpeakers: @Sendable ([Float]) async throws -> HighQualityDiarizationExchange
+        let unloadDiarization: @Sendable () async -> Void
         let currentMemoryBytes: @Sendable () async -> UInt64
         let translateEnglish: @Sendable (
             HighQualityTranslationBatch
@@ -452,6 +541,25 @@ struct HighQualityJob: Sendable {
                 )
             },
             unloadAlignment: @escaping @Sendable () async -> Void = {},
+            prepareDiarization: @escaping @Sendable (
+                @escaping @Sendable (Double, String) -> Void
+            ) async throws -> Void = { _ in
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit is not configured.",
+                    resultDirectory: nil
+                )
+            },
+            diarizeSpeakers: @escaping @Sendable (
+                [Float]
+            ) async throws -> HighQualityDiarizationExchange = { _ in
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit is not configured.",
+                    resultDirectory: nil
+                )
+            },
+            unloadDiarization: @escaping @Sendable () async -> Void = {},
             currentMemoryBytes: @escaping @Sendable () async -> UInt64 = { 0 },
             translateEnglish: @escaping @Sendable (
                 HighQualityTranslationBatch
@@ -479,12 +587,16 @@ struct HighQualityJob: Sendable {
             self.prepareAlignment = prepareAlignment
             self.alignJapanese = alignJapanese
             self.unloadAlignment = unloadAlignment
+            self.prepareDiarization = prepareDiarization
+            self.diarizeSpeakers = diarizeSpeakers
+            self.unloadDiarization = unloadDiarization
             self.currentMemoryBytes = currentMemoryBytes
             self.translateEnglish = translateEnglish
         }
 
         static func production(for backend: HighQualityASRBackend) -> Self {
             let aligner = HighQualityForcedAlignerRuntime()
+            let diarizer = HighQualitySpeakerKitRuntime()
             let loadSource: @Sendable (URL) async throws -> [Float] = {
                 try await AudioLoader.loadSamples(url: $0)
             }
@@ -515,6 +627,9 @@ struct HighQualityJob: Sendable {
                     prepareAlignment: { try await aligner.prepare(progress: $0) },
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
+                    prepareDiarization: { try await diarizer.prepare(progress: $0) },
+                    diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
+                    unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
                 )
             case .parakeetJA:
@@ -536,6 +651,9 @@ struct HighQualityJob: Sendable {
                     prepareAlignment: { try await aligner.prepare(progress: $0) },
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
+                    prepareDiarization: { try await diarizer.prepare(progress: $0) },
+                    diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
+                    unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
                 )
             case .whisperKit:
@@ -553,6 +671,9 @@ struct HighQualityJob: Sendable {
                     prepareAlignment: { try await aligner.prepare(progress: $0) },
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
+                    prepareDiarization: { try await diarizer.prepare(progress: $0) },
+                    diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
+                    unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() }
                 )
             }
@@ -655,17 +776,11 @@ struct HighQualityJob: Sendable {
         let services = servicesForBackend(request.backend)
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
+        let needsAlignment = needsSubtitles || request.speakerLabels
         guard !request.deliverables.isEmpty else {
             throw HighQualityJobError(
                 stage: .application,
                 message: "Select at least one Deliverable before starting.",
-                resultDirectory: nil
-            )
-        }
-        guard !request.speakerLabels || !request.speakerLabelsByCueID.isEmpty else {
-            throw HighQualityJobError(
-                stage: .application,
-                message: "Speaker labels are not available for this Japanese transcript job yet.",
                 resultDirectory: nil
             )
         }
@@ -700,12 +815,15 @@ struct HighQualityJob: Sendable {
         var englishTranscriptWritten = false
         var subtitlesWritten = false
         var alignmentEvidence: HighQualityAlignmentEvidence?
+        var diarizationEvidence: HighQualityDiarizationEvidence?
         var translationEvidence: HighQualityTranslationEvidence?
         var acquiredAudioURL: URL?
         var asrLoadStarted = false
         var asrUnloaded = false
         var alignmentLoadStarted = false
         var alignmentUnloaded = false
+        var diarizationLoadStarted = false
+        var diarizationUnloaded = false
         var memorySampler: Task<UInt64, Never>?
         var manifest = HighQualityJobManifest(
             schemaVersion: 1,
@@ -717,7 +835,8 @@ struct HighQualityJob: Sendable {
             speakerLabels: request.speakerLabels || !request.speakerLabelsByCueID.isEmpty,
             dependencies: (isYouTubeSource ? [.sourceAcquisition] : [])
                 + [.sourceNormalization, .japaneseASR]
-                + (needsSubtitles ? [.forcedAlignment] : [])
+                + (needsAlignment ? [.forcedAlignment] : [])
+                + (request.speakerLabels ? [.speakerDiarization] : [])
                 + (request.deliverables.contains(.englishTranslationTranscript) || needsSubtitles
                     ? [.llmTranslation] : [])
                 + [.export],
@@ -825,7 +944,7 @@ struct HighQualityJob: Sendable {
 
             begin(.transcribing, fraction: 0.5, message: "Transcribing Japanese…")
             let asrExchange: HighQualityASRExchange
-            if needsSubtitles {
+            if needsAlignment {
                 asrExchange = try await services.transcribeJapaneseAnchored(samples)
             } else {
                 let transcript = try await services.transcribeJapanese(samples)
@@ -849,12 +968,12 @@ struct HighQualityJob: Sendable {
                 backend: request.backend,
                 at: Date()
             ))
-            let turns = Self.translationTurns(
+            let baseTurns = Self.translationTurns(
                 from: transcript,
                 asrChunks: asrExchange.chunks,
                 speakerLabelsByCueID: request.speakerLabelsByCueID
             )
-            if needsSubtitles {
+            if needsAlignment {
                 begin(.preparingAlignment, fraction: 0.62, message: "Preparing forced alignment…")
                 alignmentLoadStarted = true
                 try await services.prepareAlignment { fraction, message in
@@ -866,7 +985,7 @@ struct HighQualityJob: Sendable {
                 }
                 try Task.checkCancellation()
                 begin(.aligning, fraction: 0.7, message: "Aligning Japanese transcript…")
-                let exchange = try await services.alignJapanese(samples, turns)
+                let exchange = try await services.alignJapanese(samples, baseTurns)
                 let duration = Double(samples.count) / 16_000
                 alignmentEvidence = .init(
                     modelID: exchange.modelID,
@@ -880,7 +999,7 @@ struct HighQualityJob: Sendable {
                 do {
                     let merged = try Self.validatedAlignment(
                         exchange.chunks,
-                        turns: turns,
+                        turns: baseTurns,
                         duration: duration
                     )
                     alignmentEvidence = .init(
@@ -901,6 +1020,48 @@ struct HighQualityJob: Sendable {
                 alignmentUnloaded = true
                 try Task.checkCancellation()
             }
+            if request.speakerLabels {
+                begin(.preparingDiarization, fraction: 0.74, message: "Preparing SpeakerKit…")
+                diarizationLoadStarted = true
+                try await services.prepareDiarization { fraction, message in
+                    progress(.init(
+                        stage: .preparingDiarization,
+                        fraction: 0.74 + min(max(fraction, 0), 1) * 0.04,
+                        message: message
+                    ))
+                }
+                try Task.checkCancellation()
+                begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
+                let exchange = try await services.diarizeSpeakers(samples)
+                diarizationEvidence = .init(
+                    modelID: exchange.modelID,
+                    revision: exchange.revision,
+                    rawSpans: exchange.spans,
+                    mappings: [],
+                    overlapRanges: [],
+                    peakMemoryBytes: exchange.peakMemoryBytes,
+                    validationDiagnostics: []
+                )
+                do {
+                    diarizationEvidence = try Self.diarizationEvidence(
+                        exchange,
+                        cues: alignmentEvidence?.mergedCues ?? [],
+                        items: alignmentEvidence?.chunks.flatMap(\.rawItems) ?? [],
+                        duration: Double(samples.count) / 16_000
+                    )
+                } catch {
+                    diarizationEvidence?.validationDiagnostics = [error.localizedDescription]
+                    throw error
+                }
+                manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, exchange.peakMemoryBytes)
+                await services.unloadDiarization()
+                diarizationUnloaded = true
+                try Task.checkCancellation()
+            }
+            let turns = Self.speakerTurns(
+                to: baseTurns,
+                mappings: diarizationEvidence?.mappings ?? []
+            )
             glossary = HighQualityGlossarySelector.select(
                 source: manifest.source,
                 turns: turns
@@ -944,62 +1105,57 @@ struct HighQualityJob: Sendable {
                 try Task.checkCancellation()
             }
 
+            let resultTurns = Self.resultTurns(
+                turns: turns,
+                alignedCues: alignmentEvidence?.mergedCues ?? [],
+                mappings: diarizationEvidence?.mappings ?? [],
+                translationsByID: translationsByID
+            )
             let englishTranscript = request.deliverables.contains(.englishTranslationTranscript)
-                ? turns.compactMap { translationsByID[$0.id] }.joined(separator: "\n")
+                ? Self.transcript(resultTurns, text: \.english)
                 : nil
-            let subtitleCues = alignmentEvidence?.mergedCues.map {
-                HighQualitySubtitleCue(
-                    id: $0.id,
-                    start: $0.start,
-                    end: $0.end,
-                    text: translationsByID[$0.id] ?? ""
-                )
-            } ?? []
+            let subtitleCues: [HighQualitySubtitleCue]
+            if needsSubtitles {
+                subtitleCues = resultTurns.compactMap { turn in
+                    guard let start = turn.start,
+                          let end = turn.end,
+                          let english = turn.english else { return nil }
+                    return .init(
+                        id: turn.id,
+                        start: start,
+                        end: end,
+                        text: english,
+                        speakerLabel: turn.speakerLabel
+                    )
+                }
+            } else {
+                subtitleCues = []
+            }
             begin(.exporting, fraction: 0.9, message: "Writing results…")
             manifest.generatedFiles = Self.generatedFiles(
                 deliverables: request.deliverables,
                 acquiredAudioURL: acquiredAudioURL
             )
-            if request.deliverables.contains(.japaneseTranscript) {
-                try (transcript + "\n").write(
-                    to: directory.appendingPathComponent("japanese-transcript.txt"),
-                    atomically: true,
-                    encoding: .utf8
-                )
-                japaneseTranscriptWritten = true
-            }
-            if let englishTranscript {
-                try (englishTranscript + "\n").write(
-                    to: directory.appendingPathComponent("english-translation-transcript.txt"),
-                    atomically: true,
-                    encoding: .utf8
-                )
-                englishTranscriptWritten = true
-            }
-            if needsSubtitles {
-                let webVTTURL = directory.appendingPathComponent("english-subtitles.vtt")
-                do {
-                    try Self.webVTT(subtitleCues).write(
-                        to: webVTTURL,
-                        atomically: true,
-                        encoding: .utf8
-                    )
-                    try Self.srt(subtitleCues).write(
-                        to: directory.appendingPathComponent("english-subtitles.srt"),
-                        atomically: true,
-                        encoding: .utf8
-                    )
-                    subtitlesWritten = true
-                } catch {
-                    try? FileManager.default.removeItem(at: webVTTURL)
-                    throw error
-                }
-            }
+            let japaneseOutput = request.deliverables.contains(.japaneseTranscript)
+                ? (request.speakerLabels
+                    ? Self.transcript(resultTurns, text: \.japanese)
+                    : transcript)
+                : nil
+            try Self.writeDeliverables(
+                japaneseTranscript: japaneseOutput,
+                englishTranscript: englishTranscript,
+                subtitleCues: needsSubtitles ? subtitleCues : nil,
+                to: directory
+            )
+            japaneseTranscriptWritten = japaneseOutput != nil
+            englishTranscriptWritten = englishTranscript != nil
+            subtitlesWritten = needsSubtitles
             manifest.status = .completed
             var evidence = try Self.writeEvidenceAndManifest(
                 rawASR: rawTranscript,
                 glossary: glossary,
                 alignment: alignmentEvidence,
+                diarization: diarizationEvidence,
                 translation: translationEvidence,
                 sampleCount: sampleCount,
                 manifest: manifest,
@@ -1011,6 +1167,7 @@ struct HighQualityJob: Sendable {
                 rawASR: rawTranscript,
                 glossary: glossary,
                 alignment: alignmentEvidence,
+                diarization: diarizationEvidence,
                 translation: translationEvidence,
                 sampleCount: sampleCount,
                 manifest: manifest,
@@ -1019,11 +1176,9 @@ struct HighQualityJob: Sendable {
             progress(.init(stage: .completed, fraction: 1, message: "Completed"))
             return HighQualityJobResult(
                 directory: directory,
-                japaneseTranscript: transcript,
+                japaneseTranscript: japaneseOutput ?? transcript,
                 englishTranscript: englishTranscript,
-                turns: turns.map {
-                    .init(id: $0.id, japanese: $0.japanese, english: translationsByID[$0.id])
-                },
+                turns: resultTurns,
                 subtitleCues: subtitleCues,
                 manifest: manifest,
                 evidence: evidence
@@ -1050,6 +1205,9 @@ struct HighQualityJob: Sendable {
             if alignmentLoadStarted, !alignmentUnloaded {
                 await services.unloadAlignment()
             }
+            if diarizationLoadStarted, !diarizationUnloaded {
+                await services.unloadDiarization()
+            }
             let failureStage: HighQualityJobFailureStage
             let status: HighQualityJobManifest.Status
             if error is CancellationError || Task.isCancelled {
@@ -1062,6 +1220,7 @@ struct HighQualityJob: Sendable {
                 case .preparingASR: failureStage = .modelPreparation
                 case .transcribing: failureStage = .asr
                 case .preparingAlignment, .aligning: failureStage = .alignment
+                case .preparingDiarization, .diarizing: failureStage = .diarization
                 case .translating: failureStage = .translation
                 case .exporting: failureStage = .export
                 default: failureStage = .application
@@ -1093,6 +1252,7 @@ struct HighQualityJob: Sendable {
                     rawASR: rawASR,
                     glossary: glossary,
                     alignment: alignmentEvidence,
+                    diarization: diarizationEvidence,
                     translation: translationEvidence,
                     sampleCount: sampleCount,
                     manifest: manifest,
@@ -1117,6 +1277,66 @@ struct HighQualityJob: Sendable {
                 resultDirectory: directory
             )
         }
+    }
+
+    static func renameSpeakers(
+        in result: HighQualityJobResult,
+        names: [String: String]
+    ) throws -> HighQualityJobResult {
+        let normalized = try Dictionary(uniqueKeysWithValues: names.map { label, name in
+            let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else {
+                throw HighQualityJobError(
+                    stage: .export,
+                    message: "Speaker names cannot be empty.",
+                    resultDirectory: result.directory
+                )
+            }
+            return (label, value)
+        })
+        let turns = result.turns.map { turn in
+            HighQualityTranscriptTurn(
+                id: turn.id,
+                japanese: turn.japanese,
+                english: turn.english,
+                speakerLabel: turn.speakerLabel,
+                speakerName: turn.speakerLabel.flatMap { normalized[$0] } ?? turn.speakerName,
+                start: turn.start,
+                end: turn.end
+            )
+        }
+        let subtitleCues = result.subtitleCues.map { cue in
+            HighQualitySubtitleCue(
+                id: cue.id,
+                start: cue.start,
+                end: cue.end,
+                text: cue.text,
+                speakerLabel: cue.speakerLabel,
+                speakerName: cue.speakerLabel.flatMap { normalized[$0] } ?? cue.speakerName
+            )
+        }
+        let deliverables = Set(result.manifest.deliverables)
+        let japaneseTranscript = deliverables.contains(.japaneseTranscript)
+            ? transcript(turns, text: \.japanese)
+            : nil
+        let englishTranscript = deliverables.contains(.englishTranslationTranscript)
+            ? transcript(turns, text: \.english)
+            : nil
+        try writeDeliverables(
+            japaneseTranscript: japaneseTranscript,
+            englishTranscript: englishTranscript,
+            subtitleCues: deliverables.contains(.englishSubtitles) ? subtitleCues : nil,
+            to: result.directory
+        )
+        return .init(
+            directory: result.directory,
+            japaneseTranscript: japaneseTranscript ?? result.japaneseTranscript,
+            englishTranscript: englishTranscript,
+            turns: turns,
+            subtitleCues: subtitleCues,
+            manifest: result.manifest,
+            evidence: result.evidence
+        )
     }
 
     private static func provenance(
@@ -1166,6 +1386,180 @@ struct HighQualityJob: Sendable {
                 sourceEnd: turn.end
             )
         }
+    }
+
+    private static func speakerTurns(
+        to turns: [HighQualityTranslationTurn],
+        mappings: [HighQualitySpeakerMapping]
+    ) -> [HighQualityTranslationTurn] {
+        guard !mappings.isEmpty else { return turns }
+        let turnsByID = Dictionary(uniqueKeysWithValues: turns.map { ($0.id, $0) })
+        let groups = Dictionary(grouping: mappings, by: \.spanIndex).values.flatMap {
+            Dictionary(grouping: $0, by: \.cueID).values
+        }
+        return groups.compactMap { mappings in
+            guard let first = mappings.first, let turn = turnsByID[first.cueID] else { return nil }
+            let ordered = mappings.sorted { $0.alignmentItemIndex < $1.alignmentItemIndex }
+            return .init(
+                id: "\(first.cueID)-\(first.speakerLabel)-\(first.spanIndex + 1)",
+                japanese: ordered.map(\.alignedText).joined(),
+                precedingJapanese: turn.precedingJapanese,
+                followingJapanese: turn.followingJapanese,
+                speakerLabel: first.speakerLabel,
+                sourceStart: ordered.map(\.overlapStart).min(),
+                sourceEnd: ordered.map(\.overlapEnd).max()
+            )
+        }.sorted {
+            ($0.sourceStart ?? 0, $0.sourceEnd ?? 0, $0.id)
+                < ($1.sourceStart ?? 0, $1.sourceEnd ?? 0, $1.id)
+        }
+    }
+
+    private static func diarizationEvidence(
+        _ exchange: HighQualityDiarizationExchange,
+        cues: [HighQualityAlignedCue],
+        items: [HighQualityAlignmentItem],
+        duration: TimeInterval
+    ) throws -> HighQualityDiarizationEvidence {
+        let spans = exchange.spans.sorted {
+            ($0.start, $0.end, $0.speakerID) < ($1.start, $1.end, $1.speakerID)
+        }
+        guard duration.isFinite, duration >= 0, spans.allSatisfy({
+            $0.speakerID >= 0 && $0.start.isFinite && $0.end.isFinite
+                && $0.start >= 0 && $0.end > $0.start && $0.end <= duration
+        }) else {
+            throw HighQualityJobError(
+                stage: .diarization,
+                message: "SpeakerKit returned an invalid diarization span.",
+                resultDirectory: nil
+            )
+        }
+        let labels = Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
+            .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
+        let alignedItems = items.isEmpty
+            ? cues.map {
+                HighQualityAlignmentItem(
+                    cueID: $0.id,
+                    text: $0.text,
+                    start: $0.start,
+                    end: $0.end
+                )
+            }
+            : items
+        var mappings: [HighQualitySpeakerMapping] = []
+        for (itemIndex, item) in alignedItems.enumerated() {
+            for (spanIndex, span) in spans.enumerated() {
+                let start = max(item.start, span.start)
+                let end = min(item.end, span.end)
+                guard start < end, let label = labels[span.speakerID] else { continue }
+                mappings.append(.init(
+                    cueID: item.cueID,
+                    alignmentItemIndex: itemIndex,
+                    spanIndex: spanIndex,
+                    alignedText: item.text,
+                    speakerLabel: label,
+                    overlapStart: start,
+                    overlapEnd: end
+                ))
+            }
+        }
+        var overlapsByKey: [String: HighQualityOverlapRange] = [:]
+        for leftIndex in spans.indices {
+            for rightIndex in spans.indices where rightIndex > leftIndex {
+                let left = spans[leftIndex]
+                let right = spans[rightIndex]
+                guard left.speakerID != right.speakerID else { continue }
+                let start = max(left.start, right.start)
+                let end = min(left.end, right.end)
+                guard start < end,
+                      let leftLabel = labels[left.speakerID],
+                      let rightLabel = labels[right.speakerID] else { continue }
+                let speakerLabels = [leftLabel, rightLabel].sorted()
+                let key = "\(start)\0\(end)\0\(speakerLabels.joined(separator: "+"))"
+                overlapsByKey[key] = .init(
+                    start: start,
+                    end: end,
+                    speakerLabels: speakerLabels
+                )
+            }
+        }
+        return .init(
+            modelID: exchange.modelID,
+            revision: exchange.revision,
+            rawSpans: spans,
+            mappings: mappings.sorted {
+                ($0.overlapStart, $0.spanIndex) < ($1.overlapStart, $1.spanIndex)
+            },
+            overlapRanges: overlapsByKey.values.sorted {
+                ($0.start, $0.end) < ($1.start, $1.end)
+            },
+            peakMemoryBytes: exchange.peakMemoryBytes,
+            validationDiagnostics: []
+        )
+    }
+
+    private static func resultTurns(
+        turns: [HighQualityTranslationTurn],
+        alignedCues: [HighQualityAlignedCue],
+        mappings: [HighQualitySpeakerMapping],
+        translationsByID: [String: String]
+    ) -> [HighQualityTranscriptTurn] {
+        if !mappings.isEmpty {
+            return turns.map {
+                .init(
+                    id: $0.id,
+                    japanese: $0.japanese,
+                    english: translationsByID[$0.id],
+                    speakerLabel: $0.speakerLabel,
+                    start: $0.sourceStart,
+                    end: $0.sourceEnd
+                )
+            }
+        }
+        guard !alignedCues.isEmpty else {
+            return turns.map {
+                .init(
+                    id: $0.id,
+                    japanese: $0.japanese,
+                    english: translationsByID[$0.id],
+                    start: $0.sourceStart,
+                    end: $0.sourceEnd
+                )
+            }
+        }
+        let turnsByID = Dictionary(uniqueKeysWithValues: turns.map { ($0.id, $0) })
+        return alignedCues.compactMap { cue in
+            guard let turn = turnsByID[cue.id] else { return nil }
+            return .init(
+                id: cue.id,
+                japanese: turn.japanese,
+                english: translationsByID[cue.id],
+                start: cue.start,
+                end: cue.end
+            )
+        }
+    }
+
+    private static func transcript(
+        _ turns: [HighQualityTranscriptTurn],
+        text: KeyPath<HighQualityTranscriptTurn, String>
+    ) -> String {
+        turns.map {
+            line($0[keyPath: text], speaker: $0.speakerName ?? $0.speakerLabel)
+        }.joined(separator: "\n")
+    }
+
+    private static func transcript(
+        _ turns: [HighQualityTranscriptTurn],
+        text: KeyPath<HighQualityTranscriptTurn, String?>
+    ) -> String {
+        turns.compactMap { turn in
+            turn[keyPath: text].map { line($0, speaker: turn.speakerName ?? turn.speakerLabel) }
+        }.joined(separator: "\n")
+    }
+
+    private static func line(_ text: String, speaker: String?) -> String {
+        speaker.map { "\($0): \(text)" } ?? text
     }
 
     private static func validatedTranslations(
@@ -1308,16 +1702,67 @@ struct HighQualityJob: Sendable {
         return merged
     }
 
+    private static func writeDeliverables(
+        japaneseTranscript: String?,
+        englishTranscript: String?,
+        subtitleCues: [HighQualitySubtitleCue]?,
+        to directory: URL
+    ) throws {
+        if let japaneseTranscript {
+            try (japaneseTranscript + "\n").write(
+                to: directory.appendingPathComponent("japanese-transcript.txt"),
+                atomically: true,
+                encoding: .utf8
+            )
+        }
+        if let englishTranscript {
+            try (englishTranscript + "\n").write(
+                to: directory.appendingPathComponent("english-translation-transcript.txt"),
+                atomically: true,
+                encoding: .utf8
+            )
+        }
+        if let subtitleCues {
+            let webVTTURL = directory.appendingPathComponent("english-subtitles.vtt")
+            do {
+                try webVTT(subtitleCues).write(
+                    to: webVTTURL,
+                    atomically: true,
+                    encoding: .utf8
+                )
+                try srt(subtitleCues).write(
+                    to: directory.appendingPathComponent("english-subtitles.srt"),
+                    atomically: true,
+                    encoding: .utf8
+                )
+            } catch {
+                try? FileManager.default.removeItem(at: webVTTURL)
+                throw error
+            }
+        }
+    }
+
     private static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
-        "WEBVTT\n\n" + cues.map {
-            "\($0.id)\n\(SubtitleTimecode.webVTT($0.start)) --> \(SubtitleTimecode.webVTT($0.end))\n\($0.text)\n"
+        "WEBVTT\n\n" + cues.map { cue in
+            let text = (cue.speakerName ?? cue.speakerLabel).map {
+                "<v \(webVTTSpeaker($0))>\(cue.text)"
+            }
+                ?? cue.text
+            return "\(cue.id)\n\(SubtitleTimecode.webVTT(cue.start)) --> \(SubtitleTimecode.webVTT(cue.end))\n\(text)\n"
         }.joined(separator: "\n") + (cues.isEmpty ? "" : "\n")
     }
 
     private static func srt(_ cues: [HighQualitySubtitleCue]) -> String {
         cues.enumerated().map { index, cue in
-            "\(index + 1)\n\(SubtitleTimecode.srt(cue.start)) --> \(SubtitleTimecode.srt(cue.end))\n\(cue.text)\n"
+            let text = (cue.speakerName ?? cue.speakerLabel).map { "[\($0)] \(cue.text)" }
+                ?? cue.text
+            return "\(index + 1)\n\(SubtitleTimecode.srt(cue.start)) --> \(SubtitleTimecode.srt(cue.end))\n\(text)\n"
         }.joined(separator: "\n") + (cues.isEmpty ? "" : "\n")
+    }
+
+    private static func webVTTSpeaker(_ value: String) -> String {
+        value.replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: ">", with: "&gt;")
     }
 
     private static func generatedFiles(
@@ -1380,6 +1825,7 @@ struct HighQualityJob: Sendable {
         rawASR: String?,
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
+        diarization: HighQualityDiarizationEvidence?,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
         manifest: HighQualityJobManifest
@@ -1390,6 +1836,7 @@ struct HighQualityJob: Sendable {
             rawASR: rawASR,
             glossary: glossary,
             alignment: alignment,
+            diarization: diarization,
             translation: translation,
             sampleRate: 16_000,
             sampleCount: sampleCount,
@@ -1416,6 +1863,7 @@ struct HighQualityJob: Sendable {
         rawASR: String?,
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
+        diarization: HighQualityDiarizationEvidence?,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
         manifest: HighQualityJobManifest,
@@ -1425,6 +1873,7 @@ struct HighQualityJob: Sendable {
             rawASR: rawASR,
             glossary: glossary,
             alignment: alignment,
+            diarization: diarization,
             translation: translation,
             sampleCount: sampleCount,
             manifest: manifest
