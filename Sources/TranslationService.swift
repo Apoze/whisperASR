@@ -1,4 +1,72 @@
 import Foundation
+import Security
+
+struct TranslationCredentialStoreError: LocalizedError {
+    let status: OSStatus
+    var errorDescription: String? {
+        SecCopyErrorMessageString(status, nil) as String?
+            ?? "Could not access the translation API credential."
+    }
+}
+
+enum TranslationCredentialStore {
+    private static let service = "com.apoze.WhisperASR.translation"
+    private static let account = "api-key"
+
+    static func apiKey() throws -> String {
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching([
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ] as CFDictionary, &item)
+        if status == errSecItemNotFound {
+            let defaults = UserDefaults.standard
+            let legacy = defaults.string(forKey: "translationAPIKey") ?? ""
+            guard !legacy.isEmpty else { return "" }
+            try setAPIKey(legacy)
+            return legacy
+        }
+        guard status == errSecSuccess,
+              let data = item as? Data,
+              let value = String(data: data, encoding: .utf8) else {
+            throw TranslationCredentialStoreError(status: status)
+        }
+        return value
+    }
+
+    static func setAPIKey(_ value: String) throws {
+        let query = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+        ] as CFDictionary
+        guard !value.isEmpty else {
+            let status = SecItemDelete(query)
+            guard status == errSecSuccess || status == errSecItemNotFound else {
+                throw TranslationCredentialStoreError(status: status)
+            }
+            UserDefaults.standard.removeObject(forKey: "translationAPIKey")
+            return
+        }
+
+        let data = Data(value.utf8)
+        var status = SecItemUpdate(query, [kSecValueData as String: data] as CFDictionary)
+        if status == errSecItemNotFound {
+            status = SecItemAdd([
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: account,
+                kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+                kSecValueData as String: data,
+            ] as CFDictionary, nil)
+        }
+        guard status == errSecSuccess else { throw TranslationCredentialStoreError(status: status) }
+        UserDefaults.standard.removeObject(forKey: "translationAPIKey")
+    }
+}
 
 struct TargetLanguage: Identifiable, Hashable {
     let id: String        // locale identifier (e.g. "en", "zh-Hans")
@@ -62,6 +130,102 @@ enum TranslationError: LocalizedError {
 }
 
 enum TranslationService {
+    private struct Configuration {
+        let url: URL
+        let apiKey: String
+        let model: String
+    }
+
+    private static func configuration() throws -> Configuration {
+        let endpoint = (UserDefaults.standard.string(forKey: "translationEndpoint") ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var baseURL = endpoint.isEmpty ? "https://api.openai.com/v1" : endpoint
+        if !baseURL.hasSuffix("/chat/completions") {
+            if !baseURL.hasSuffix("/") { baseURL += "/" }
+            baseURL += "chat/completions"
+        }
+        guard let url = URL(string: baseURL) else { throw TranslationError.invalidEndpoint }
+        let configuredModel = (UserDefaults.standard.string(forKey: "translationModel") ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return .init(
+            url: url,
+            apiKey: try TranslationCredentialStore.apiKey(),
+            model: configuredModel.isEmpty ? "gpt-4o-mini" : configuredModel
+        )
+    }
+
+    static func translateHighQuality(
+        _ translationRequest: HighQualityTranslationBatch
+    ) async throws -> HighQualityTranslationExchange {
+        let configuration = try configuration()
+        guard !configuration.apiKey.isEmpty else { throw TranslationError.unavailable }
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let contextualCues = String(decoding: try encoder.encode(translationRequest), as: UTF8.self)
+        var request = URLRequest(url: configuration.url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(configuration.apiKey)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 30
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "model": configuration.model,
+            "messages": [
+                [
+                    "role": "system",
+                    "content": "Translate every requested Japanese cue into contextual English. Use surrounding turns, source metadata, and speaker labels when present. Return JSON only as {\"translations\":[{\"id\":\"cue-0001\",\"text\":\"...\"}]}. Return every requested id exactly once and no other ids.",
+                ],
+                ["role": "user", "content": contextualCues],
+            ],
+            "response_format": ["type": "json_object"],
+            "temperature": 0.2,
+        ])
+
+        do {
+            let result = try await performRequestWithEvidence(request)
+            guard let json = try JSONSerialization.jsonObject(with: result.data) as? [String: Any],
+                  let choices = json["choices"] as? [[String: Any]],
+                  let message = choices.first?["message"] as? [String: Any],
+                  let content = message["content"] as? String else {
+                throw HighQualityTranslationServiceError(
+                    model: configuration.model,
+                    attempts: result.attempts,
+                    response: sanitizedEvidenceText(
+                        String(data: result.data, encoding: .utf8),
+                        credential: configuration.apiKey
+                    ),
+                    message: TranslationError.parseError.localizedDescription
+                )
+            }
+            return .init(
+                model: configuration.model,
+                response: sanitizedEvidenceText(
+                    content,
+                    credential: configuration.apiKey
+                ) ?? "",
+                attempts: result.attempts
+            )
+        } catch let error as RetryFailure {
+            throw HighQualityTranslationServiceError(
+                model: configuration.model,
+                attempts: error.attempts,
+                response: nil,
+                message: sanitizedEvidenceText(
+                    error.underlying.localizedDescription,
+                    credential: configuration.apiKey
+                ) ?? TranslationError.parseError.localizedDescription
+            )
+        }
+    }
+
+    private static func sanitizedEvidenceText(
+        _ text: String?,
+        credential: String
+    ) -> String? {
+        guard !credential.isEmpty else { return text }
+        return text?.replacingOccurrences(of: credential, with: "[REDACTED]")
+    }
+
     static func translateSegmentsWithOpenAI(
         segmentTexts: [String],
         targetLanguage: String,
@@ -69,20 +233,7 @@ enum TranslationService {
     ) async throws -> [String] {
         guard !segmentTexts.isEmpty else { return [] }
 
-        let endpoint = (UserDefaults.standard.string(forKey: "translationEndpoint") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let apiKey = UserDefaults.standard.string(forKey: "translationAPIKey") ?? ""
-        let model = (UserDefaults.standard.string(forKey: "translationModel") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-
-        var baseURL = endpoint.isEmpty ? "https://api.openai.com/v1" : endpoint
-        if !baseURL.hasSuffix("/chat/completions") {
-            if !baseURL.hasSuffix("/") { baseURL += "/" }
-            baseURL += "chat/completions"
-        }
-        let effectiveModel = model.isEmpty ? "gpt-4o-mini" : model
-
-        guard let url = URL(string: baseURL) else {
-            throw TranslationError.invalidEndpoint
-        }
+        let configuration = try configuration()
 
         let languageName = TargetLanguage.available.first { $0.id == targetLanguage }?.name ?? targetLanguage
 
@@ -99,14 +250,14 @@ enum TranslationService {
             contextSection = "\n\nPreviously translated segments from this conversation (use as reference for consistent terminology and style):\n\(pairs)"
         }
 
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: configuration.url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(configuration.apiKey)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 30
 
         let body: [String: Any] = [
-            "model": effectiveModel,
+            "model": configuration.model,
             "messages": [
                 ["role": "system", "content": "You are a translator for a live transcription. Translate each numbered line to \(languageName). If a line is already in \(languageName), output it unchanged. Output ONLY the translations in the same numbered format (e.g. \"1. ...\"). Keep exactly \(segmentTexts.count) lines.\(contextSection)"],
                 ["role": "user", "content": numberedInput]
@@ -148,17 +299,69 @@ enum TranslationService {
     /// Send the request with up to 2 retries (3 attempts total) for transient failures
     /// (URLSession transport errors and 5xx). Auth/client errors are never retried.
     private static func performRequestWithRetry(_ request: URLRequest) async throws -> Data {
+        do {
+            return try await performRequestWithEvidence(request).data
+        } catch let error as RetryFailure {
+            throw error.underlying
+        }
+    }
+
+    private struct RetryFailure: Error {
+        let underlying: Error
+        let attempts: [HighQualityTranslationAttempt]
+    }
+
+    private static func performRequestWithEvidence(
+        _ request: URLRequest
+    ) async throws -> (data: Data, attempts: [HighQualityTranslationAttempt]) {
         let backoffs: [Duration] = [.milliseconds(500), .milliseconds(1500)]
         var attempt = 0
+        var attempts: [HighQualityTranslationAttempt] = []
         while true {
             try Task.checkCancellation()
+            let startedAt = Date()
             do {
-                return try await performRequest(request)
+                let data = try await performRequest(request)
+                attempts.append(.init(
+                    number: attempt + 1,
+                    duration: Date().timeIntervalSince(startedAt),
+                    outcome: "success"
+                ))
+                return (data, attempts)
             } catch let err as TranslationError where err.isRetriable && attempt < backoffs.count {
-                try? await Task.sleep(for: backoffs[attempt])
+                attempts.append(.init(
+                    number: attempt + 1,
+                    duration: Date().timeIntervalSince(startedAt),
+                    outcome: attemptOutcome(err)
+                ))
+                do {
+                    try await Task.sleep(for: backoffs[attempt])
+                } catch {
+                    throw RetryFailure(underlying: error, attempts: attempts)
+                }
                 attempt += 1
                 continue
+            } catch {
+                attempts.append(.init(
+                    number: attempt + 1,
+                    duration: Date().timeIntervalSince(startedAt),
+                    outcome: (error as? TranslationError).map(attemptOutcome) ?? "error"
+                ))
+                throw RetryFailure(underlying: error, attempts: attempts)
             }
+        }
+    }
+
+    private static func attemptOutcome(_ error: TranslationError) -> String {
+        switch error {
+        case .invalidEndpoint: "invalid-endpoint"
+        case .apiFailed: "api-error"
+        case .authFailed: "auth-error"
+        case .rateLimited: "rate-limited"
+        case .serverError(let status, _): "server-error-\(status)"
+        case .transport: "transport-error"
+        case .parseError: "parse-error"
+        case .unavailable: "unavailable"
         }
     }
 

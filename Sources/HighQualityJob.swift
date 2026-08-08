@@ -2,6 +2,7 @@ import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
     case japaneseTranscript = "japanese-transcript"
+    case englishTranslationTranscript = "english-translation-transcript"
 }
 
 enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -48,6 +49,7 @@ enum HighQualityJobDependency: String, Codable, Sendable {
     case sourceAcquisition = "source-acquisition"
     case sourceNormalization = "source-normalization"
     case japaneseASR = "japanese-asr"
+    case llmTranslation = "llm-translation"
     case export
 }
 
@@ -57,6 +59,7 @@ enum HighQualityJobStage: String, Codable, Sendable {
     case normalizingSource = "normalizing-source"
     case preparingASR = "preparing-asr"
     case transcribing
+    case translating
     case exporting
     case completed
     case cancelled
@@ -69,6 +72,7 @@ enum HighQualityJobFailureStage: String, Codable, Sendable {
     case application
     case modelPreparation = "model-preparation"
     case asr
+    case translation
     case export
     case cancelled
 }
@@ -85,6 +89,7 @@ struct HighQualityJobRequest: Sendable {
     let deliverables: Set<HighQualityDeliverable>
     let backend: HighQualityASRBackend
     let speakerLabels: Bool
+    let speakerLabelsByCueID: [String: String]
     let outputRoot: URL
 
     init(
@@ -93,6 +98,7 @@ struct HighQualityJobRequest: Sendable {
         deliverables: Set<HighQualityDeliverable>,
         backend: HighQualityASRBackend,
         speakerLabels: Bool = false,
+        speakerLabelsByCueID: [String: String] = [:],
         outputRoot: URL = AppStoragePaths.highQualityJobs
     ) {
         self.id = id
@@ -100,6 +106,7 @@ struct HighQualityJobRequest: Sendable {
         self.deliverables = deliverables
         self.backend = backend
         self.speakerLabels = speakerLabels
+        self.speakerLabelsByCueID = speakerLabelsByCueID
         self.outputRoot = outputRoot
     }
 }
@@ -130,6 +137,59 @@ struct HighQualityYouTubeEvidence: Codable, Equatable, Sendable {
 struct HighQualityYouTubeAcquisition: Sendable {
     let audioURL: URL
     let evidence: HighQualityYouTubeEvidence
+}
+
+struct HighQualityTranslationTurn: Codable, Equatable, Sendable {
+    let id: String
+    let japanese: String
+    let precedingJapanese: [String]
+    let followingJapanese: [String]
+    let speakerLabel: String?
+}
+
+struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
+    let source: HighQualitySourceProvenance
+    let turns: [HighQualityTranslationTurn]
+}
+
+struct HighQualityTranslationAttempt: Codable, Equatable, Sendable {
+    let number: Int
+    let duration: TimeInterval
+    let outcome: String
+}
+
+struct HighQualityTranslationExchange: Equatable, Sendable {
+    let model: String
+    let response: String
+    let attempts: [HighQualityTranslationAttempt]
+}
+
+struct HighQualityTranslationServiceError: LocalizedError, Sendable {
+    let model: String
+    let attempts: [HighQualityTranslationAttempt]
+    let response: String?
+    let message: String
+
+    var errorDescription: String? { message }
+}
+
+private struct HighQualityTranslationValidationError: LocalizedError {
+    let message: String
+    var errorDescription: String? { message }
+}
+
+struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
+    let request: HighQualityTranslationBatch
+    let response: String?
+    let model: String
+    let attempts: [HighQualityTranslationAttempt]
+    var validationFailures: [String]
+}
+
+struct HighQualityTranscriptTurn: Equatable, Sendable {
+    let id: String
+    let japanese: String
+    let english: String?
 }
 
 struct HighQualityModelEvidence: Codable, Equatable, Sendable {
@@ -203,6 +263,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
     let rawASR: String?
+    let translation: HighQualityTranslationEvidence?
     let sampleRate: Int
     let sampleCount: Int
     let stageDurations: [HighQualityJobStage: TimeInterval]
@@ -215,6 +276,8 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
 struct HighQualityJobResult: Sendable {
     let directory: URL
     let japaneseTranscript: String
+    let englishTranscript: String?
+    let turns: [HighQualityTranscriptTurn]
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
 }
@@ -237,6 +300,9 @@ struct HighQualityJob: Sendable {
         let transcribeJapanese: @Sendable ([Float]) async throws -> String
         let unloadASR: @Sendable () async -> Void
         let currentMemoryBytes: @Sendable () async -> UInt64
+        let translateEnglish: @Sendable (
+            HighQualityTranslationBatch
+        ) async throws -> HighQualityTranslationExchange
 
         init(
             loadSource: @escaping @Sendable (URL) async throws -> [Float],
@@ -255,7 +321,12 @@ struct HighQualityJob: Sendable {
             ) async throws -> Void,
             transcribeJapanese: @escaping @Sendable ([Float]) async throws -> String,
             unloadASR: @escaping @Sendable () async -> Void,
-            currentMemoryBytes: @escaping @Sendable () async -> UInt64 = { 0 }
+            currentMemoryBytes: @escaping @Sendable () async -> UInt64 = { 0 },
+            translateEnglish: @escaping @Sendable (
+                HighQualityTranslationBatch
+            ) async throws -> HighQualityTranslationExchange = {
+                try await TranslationService.translateHighQuality($0)
+            }
         ) {
             self.loadSource = loadSource
             self.acquireYouTube = acquireYouTube
@@ -263,6 +334,7 @@ struct HighQualityJob: Sendable {
             self.transcribeJapanese = transcribeJapanese
             self.unloadASR = unloadASR
             self.currentMemoryBytes = currentMemoryBytes
+            self.translateEnglish = translateEnglish
         }
 
         static func production(for backend: HighQualityASRBackend) -> Self {
@@ -350,7 +422,7 @@ struct HighQualityJob: Sendable {
                 resultDirectory: nil
             )
         }
-        guard !request.speakerLabels else {
+        guard !request.speakerLabels || !request.speakerLabelsByCueID.isEmpty else {
             throw HighQualityJobError(
                 stage: .application,
                 message: "Speaker labels are not available for this Japanese transcript job yet.",
@@ -383,7 +455,9 @@ struct HighQualityJob: Sendable {
         var stageStartedAt = startedAt
         var sampleCount = 0
         var rawASR: String?
-        var transcriptWritten = false
+        var japaneseTranscriptWritten = false
+        var englishTranscriptWritten = false
+        var translationEvidence: HighQualityTranslationEvidence?
         var acquiredAudioURL: URL?
         var asrLoadStarted = false
         var asrUnloaded = false
@@ -395,10 +469,12 @@ struct HighQualityJob: Sendable {
             source: Self.provenance(for: request.sourceURL),
             deliverables: request.deliverables.sorted { $0.rawValue < $1.rawValue },
             selectedBackend: request.backend,
-            speakerLabels: request.speakerLabels,
-            dependencies: isYouTubeSource
-                ? [.sourceAcquisition, .sourceNormalization, .japaneseASR, .export]
-                : [.sourceNormalization, .japaneseASR, .export],
+            speakerLabels: request.speakerLabels || !request.speakerLabelsByCueID.isEmpty,
+            dependencies: (isYouTubeSource ? [.sourceAcquisition] : [])
+                + [.sourceNormalization, .japaneseASR]
+                + (request.deliverables.contains(.englishTranslationTranscript)
+                    ? [.llmTranslation] : [])
+                + [.export],
             model: request.backend.model,
             startedAt: startedAt,
             finishedAt: nil,
@@ -520,20 +596,76 @@ struct HighQualityJob: Sendable {
                 backend: request.backend,
                 at: Date()
             ))
+            let turns = Self.translationTurns(
+                from: transcript,
+                speakerLabelsByCueID: request.speakerLabelsByCueID
+            )
+            var translationsByID: [String: String] = [:]
+            if request.deliverables.contains(.englishTranslationTranscript) {
+                begin(.translating, fraction: 0.8, message: "Translating to English…")
+                let translationRequest = HighQualityTranslationBatch(
+                    source: manifest.source,
+                    turns: turns
+                )
+                do {
+                    let exchange = try await services.translateEnglish(translationRequest)
+                    translationEvidence = .init(
+                        request: translationRequest,
+                        response: exchange.response,
+                        model: exchange.model,
+                        attempts: exchange.attempts,
+                        validationFailures: []
+                    )
+                    do {
+                        translationsByID = try Self.validatedTranslations(
+                            exchange.response,
+                            for: turns
+                        )
+                    } catch {
+                        translationEvidence?.validationFailures = [error.localizedDescription]
+                        throw error
+                    }
+                } catch let error as HighQualityTranslationServiceError {
+                    translationEvidence = .init(
+                        request: translationRequest,
+                        response: error.response,
+                        model: error.model,
+                        attempts: error.attempts,
+                        validationFailures: []
+                    )
+                    throw error
+                }
+                try Task.checkCancellation()
+            }
+
+            let englishTranscript = request.deliverables.contains(.englishTranslationTranscript)
+                ? turns.compactMap { translationsByID[$0.id] }.joined(separator: "\n")
+                : nil
             begin(.exporting, fraction: 0.9, message: "Writing results…")
             manifest.generatedFiles = Self.generatedFiles(
-                includeTranscript: true,
+                deliverables: request.deliverables,
                 acquiredAudioURL: acquiredAudioURL
             )
-            try (transcript + "\n").write(
-                to: directory.appendingPathComponent("japanese-transcript.txt"),
-                atomically: true,
-                encoding: .utf8
-            )
-            transcriptWritten = true
+            if request.deliverables.contains(.japaneseTranscript) {
+                try (transcript + "\n").write(
+                    to: directory.appendingPathComponent("japanese-transcript.txt"),
+                    atomically: true,
+                    encoding: .utf8
+                )
+                japaneseTranscriptWritten = true
+            }
+            if let englishTranscript {
+                try (englishTranscript + "\n").write(
+                    to: directory.appendingPathComponent("english-translation-transcript.txt"),
+                    atomically: true,
+                    encoding: .utf8
+                )
+                englishTranscriptWritten = true
+            }
             manifest.status = .completed
             var evidence = try Self.writeEvidenceAndManifest(
                 rawASR: rawTranscript,
+                translation: translationEvidence,
                 sampleCount: sampleCount,
                 manifest: manifest,
                 to: directory
@@ -542,6 +674,7 @@ struct HighQualityJob: Sendable {
             manifest.finishedAt = Date()
             evidence = try Self.writeEvidenceAndManifest(
                 rawASR: rawTranscript,
+                translation: translationEvidence,
                 sampleCount: sampleCount,
                 manifest: manifest,
                 to: directory
@@ -550,6 +683,10 @@ struct HighQualityJob: Sendable {
             return HighQualityJobResult(
                 directory: directory,
                 japaneseTranscript: transcript,
+                englishTranscript: englishTranscript,
+                turns: turns.map {
+                    .init(id: $0.id, japanese: $0.japanese, english: translationsByID[$0.id])
+                },
                 manifest: manifest,
                 evidence: evidence
             )
@@ -580,6 +717,7 @@ struct HighQualityJob: Sendable {
                 case .normalizingSource: failureStage = .source
                 case .preparingASR: failureStage = .modelPreparation
                 case .transcribing: failureStage = .asr
+                case .translating: failureStage = .translation
                 case .exporting: failureStage = .export
                 default: failureStage = .application
                 }
@@ -594,7 +732,10 @@ struct HighQualityJob: Sendable {
             )
             manifest.failures = [failure]
             manifest.generatedFiles = Self.generatedFiles(
-                includeTranscript: transcriptWritten,
+                deliverables: Set([
+                    japaneseTranscriptWritten ? .japaneseTranscript : nil,
+                    englishTranscriptWritten ? .englishTranslationTranscript : nil,
+                ].compactMap { $0 }),
                 acquiredAudioURL: acquiredAudioURL
             )
             do {
@@ -604,6 +745,7 @@ struct HighQualityJob: Sendable {
                 )
                 _ = try Self.writeEvidenceAndManifest(
                     rawASR: rawASR,
+                    translation: translationEvidence,
                     sampleCount: sampleCount,
                     manifest: manifest,
                     to: directory
@@ -644,13 +786,87 @@ struct HighQualityJob: Sendable {
         )
     }
 
+    private static func translationTurns(
+        from transcript: String,
+        speakerLabelsByCueID: [String: String]
+    ) -> [HighQualityTranslationTurn] {
+        var turns: [String] = []
+        transcript.enumerateSubstrings(
+            in: transcript.startIndex..<transcript.endIndex,
+            options: .bySentences
+        ) { sentence, _, _, _ in
+            let sentence = sentence?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !sentence.isEmpty { turns.append(sentence) }
+        }
+        return turns.enumerated().map { index, japanese in
+            let id = String(format: "cue-%04d", index + 1)
+            return HighQualityTranslationTurn(
+                id: id,
+                japanese: japanese,
+                precedingJapanese: index == 0 ? [] : [turns[index - 1]],
+                followingJapanese: index + 1 == turns.count ? [] : [turns[index + 1]],
+                speakerLabel: speakerLabelsByCueID[id]
+            )
+        }
+    }
+
+    private static func validatedTranslations(
+        _ response: String,
+        for turns: [HighQualityTranslationTurn]
+    ) throws -> [String: String] {
+        struct Envelope: Decodable {
+            struct Translation: Decodable {
+                let id: String
+                let text: String
+            }
+            let translations: [Translation]
+        }
+
+        guard let data = response.data(using: .utf8),
+              let envelope = try? JSONDecoder().decode(Envelope.self, from: data) else {
+            throw HighQualityTranslationValidationError(
+                message: "Translation response is not valid structured JSON."
+            )
+        }
+        let expectedIDs = Set(turns.map(\.id))
+        var translations: [String: String] = [:]
+        for translation in envelope.translations {
+            guard expectedIDs.contains(translation.id) else {
+                throw HighQualityTranslationValidationError(
+                    message: "Translation response contains unknown cue \(translation.id)."
+                )
+            }
+            guard translations[translation.id] == nil else {
+                throw HighQualityTranslationValidationError(
+                    message: "Translation response duplicates cue \(translation.id)."
+                )
+            }
+            let text = translation.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else {
+                throw HighQualityTranslationValidationError(
+                    message: "Translation response leaves cue \(translation.id) empty."
+                )
+            }
+            translations[translation.id] = text
+        }
+        guard Set(translations.keys) == expectedIDs else {
+            throw HighQualityTranslationValidationError(
+                message: "Translation response is missing one or more requested cues."
+            )
+        }
+        return translations
+    }
+
     private static func generatedFiles(
-        includeTranscript: Bool,
+        deliverables: Set<HighQualityDeliverable>,
         acquiredAudioURL: URL? = nil
     ) -> [HighQualityGeneratedFile] {
         var files: [HighQualityGeneratedFile] = []
-        if includeTranscript {
+        if deliverables.contains(.japaneseTranscript) {
             files.append(.init(path: "japanese-transcript.txt", kind: .deliverable))
+        }
+        if deliverables.contains(.englishTranslationTranscript) {
+            files.append(.init(path: "english-translation-transcript.txt", kind: .deliverable))
         }
         if let acquiredAudioURL {
             files.append(.init(
@@ -695,6 +911,7 @@ struct HighQualityJob: Sendable {
 
     private static func evidence(
         rawASR: String?,
+        translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
         manifest: HighQualityJobManifest
     ) -> HighQualityRawEvidence {
@@ -702,6 +919,7 @@ struct HighQualityJob: Sendable {
             source: manifest.source,
             model: manifest.model,
             rawASR: rawASR,
+            translation: translation,
             sampleRate: 16_000,
             sampleCount: sampleCount,
             stageDurations: manifest.stageDurations,
@@ -725,12 +943,14 @@ struct HighQualityJob: Sendable {
     @discardableResult
     private static func writeEvidenceAndManifest(
         rawASR: String?,
+        translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
         manifest: HighQualityJobManifest,
         to directory: URL
     ) throws -> HighQualityRawEvidence {
         let evidence = evidence(
             rawASR: rawASR,
+            translation: translation,
             sampleCount: sampleCount,
             manifest: manifest
         )

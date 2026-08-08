@@ -6,6 +6,7 @@ struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
     @State private var includeJapaneseTranscript = true
+    @State private var includeEnglishTranscript = false
     @State private var backend: HighQualityASRBackend?
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
@@ -20,14 +21,14 @@ struct HighQualityJobView: View {
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
         (sourceURL != nil || !youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            && includeJapaneseTranscript
+            && (includeJapaneseTranscript || includeEnglishTranscript)
             && backend != nil
             && !isRunning
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("High-quality Japanese transcript")
+            Text("High-quality transcript")
                 .font(.title2.bold())
 
             sourcePicker
@@ -43,6 +44,9 @@ struct HighQualityJobView: View {
                 }
 
             Toggle("Japanese transcript", isOn: $includeJapaneseTranscript)
+                .toggleStyle(.checkbox)
+                .disabled(isRunning)
+            Toggle("English translation transcript", isOn: $includeEnglishTranscript)
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
 
@@ -83,13 +87,7 @@ struct HighQualityJobView: View {
 
             if let result {
                 Divider()
-                Text("Japanese result")
-                    .font(.headline)
-                ScrollView {
-                    Text(result.japaneseTranscript)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
-                }
+                resultView(result)
             }
         }
         .padding(20)
@@ -162,7 +160,10 @@ struct HighQualityJobView: View {
     private func start() {
         let value = youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines)
         let selectedSource = value.isEmpty ? sourceURL : URL(string: value)
-        guard let selectedSource, let backend, includeJapaneseTranscript else {
+        var deliverables: Set<HighQualityDeliverable> = []
+        if includeJapaneseTranscript { deliverables.insert(.japaneseTranscript) }
+        if includeEnglishTranscript { deliverables.insert(.englishTranslationTranscript) }
+        guard let selectedSource, let backend, !deliverables.isEmpty else {
             errorMessage = "Select a source and at least one Deliverable."
             return
         }
@@ -174,7 +175,7 @@ struct HighQualityJobView: View {
             do {
                 let completed = try await job.run(.init(
                     sourceURL: selectedSource,
-                    deliverables: [.japaneseTranscript],
+                    deliverables: deliverables,
                     backend: backend,
                     speakerLabels: false
                 )) { update in
@@ -187,6 +188,44 @@ struct HighQualityJobView: View {
                 errorMessage = error.localizedDescription
             }
             task = nil
+        }
+    }
+
+    @ViewBuilder
+    private func resultView(_ result: HighQualityJobResult) -> some View {
+        let deliverables = Set(result.manifest.deliverables)
+        if deliverables == [.japaneseTranscript] {
+            Text("Japanese result").font(.headline)
+            ScrollView {
+                Text(result.japaneseTranscript)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+            }
+        } else if deliverables == [.englishTranslationTranscript] {
+            Text("English result").font(.headline)
+            ScrollView {
+                Text(result.englishTranscript ?? "")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+            }
+        } else {
+            Text("Japanese / English result").font(.headline)
+            ScrollView {
+                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
+                    GridRow {
+                        Text("Japanese").bold()
+                        Text("English").bold()
+                    }
+                    Divider().gridCellColumns(2)
+                    ForEach(result.turns, id: \.id) { turn in
+                        GridRow(alignment: .top) {
+                            Text(turn.japanese)
+                            Text(turn.english ?? "")
+                        }
+                    }
+                }
+                .textSelection(.enabled)
+            }
         }
     }
 }

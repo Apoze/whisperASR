@@ -64,6 +64,7 @@ let package = Package(
                 .linkedFramework("ScreenCaptureKit"),
                 .linkedFramework("Speech"),
                 .linkedFramework("Translation"),
+                .linkedFramework("Security"),
             ]
         ),
         .testTarget(

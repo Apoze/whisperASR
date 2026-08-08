@@ -3,6 +3,135 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testEnglishOnlyJobTranslatesContextualStableCuesAndExportsOnlyEnglish() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let source = root.appendingPathComponent("conversation.wav")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data().write(to: source)
+
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0.1] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "おはよう。今日は元気ですか？" },
+            unloadASR: {},
+            translateEnglish: { request in
+                XCTAssertEqual(request.source.fileName, "conversation.wav")
+                XCTAssertEqual(request.turns.map(\.id), ["cue-0001", "cue-0002"])
+                XCTAssertEqual(request.turns[0].followingJapanese, ["今日は元気ですか？"])
+                XCTAssertEqual(request.turns[1].precedingJapanese, ["おはよう。"])
+                XCTAssertEqual(request.turns[1].speakerLabel, "Speaker 2")
+                return .init(
+                    model: "fixture-model",
+                    response: #"{"translations":[{"id":"cue-0001","text":"Good morning"},{"id":"cue-0002","text":"How are you today?"}]}"#,
+                    attempts: [.init(number: 1, duration: 0.25, outcome: "success")]
+                )
+            }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: source,
+            deliverables: [.englishTranslationTranscript],
+            backend: .qwenJA,
+            speakerLabelsByCueID: ["cue-0002": "Speaker 2"],
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.englishTranscript, "Good morning\nHow are you today?")
+        XCTAssertEqual(
+            result.manifest.dependencies,
+            [.sourceNormalization, .japaneseASR, .llmTranslation, .export]
+        )
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
+            ["english-translation-transcript.txt", "manifest.json", "raw-asr.json"]
+        )
+        XCTAssertEqual(result.evidence.translation?.model, "fixture-model")
+        XCTAssertEqual(result.evidence.translation?.attempts.count, 1)
+        XCTAssertEqual(result.evidence.translation?.validationFailures, [])
+
+        let combined = try await job.run(.init(
+            sourceURL: source,
+            deliverables: [.japaneseTranscript, .englishTranslationTranscript],
+            backend: .qwenJA,
+            speakerLabelsByCueID: ["cue-0002": "Speaker 2"],
+            outputRoot: root
+        ))
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: combined.directory.path).sorted(),
+            [
+                "english-translation-transcript.txt",
+                "japanese-transcript.txt",
+                "manifest.json",
+                "raw-asr.json",
+            ]
+        )
+    }
+
+    func testMalformedTranslationIdentifiersFailAndRetainSanitizedEvidence() async throws {
+        let responses = [
+            #"{"translations":[{"id":"cue-0001","text":"One"}]}"#,
+            #"{"translations":[{"id":"cue-0001","text":"One"},{"id":"cue-0001","text":"Again"}]}"#,
+            #"{"translations":[{"id":"cue-0001","text":"One"},{"id":"cue-9999","text":"Unknown"}]}"#,
+        ]
+        for response in responses {
+            let root = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let id = UUID()
+            let job = HighQualityJob(services: .init(
+                loadSource: { _ in [0.1] },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in "一\n二" },
+                unloadASR: {},
+                translateEnglish: { _ in
+                    .init(
+                        model: "fixture-model",
+                        response: response,
+                        attempts: [.init(number: 1, duration: 0.1, outcome: "success")]
+                    )
+                }
+            ))
+
+            do {
+                _ = try await job.run(.init(
+                    id: id,
+                    sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                    deliverables: [.englishTranslationTranscript],
+                    backend: .qwenJA,
+                    outputRoot: root
+                ))
+                XCTFail("Malformed cue identifiers must fail.")
+            } catch let error as HighQualityJobError {
+                XCTAssertEqual(error.stage, .translation)
+            }
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let evidence = try decoder.decode(
+                HighQualityRawEvidence.self,
+                from: Data(contentsOf: root.appendingPathComponent(id.uuidString)
+                    .appendingPathComponent("raw-asr.json"))
+            )
+            XCTAssertEqual(evidence.translation?.response, response)
+            XCTAssertEqual(evidence.translation?.model, "fixture-model")
+            XCTAssertEqual(evidence.translation?.validationFailures.count, 1)
+        }
+    }
+
+    func testBackupNeverContainsTranslationAPIKey() throws {
+        let defaults = UserDefaults.standard
+        let key = "ticket-40-secret-\(UUID().uuidString)"
+        defaults.set(key, forKey: "translationAPIKey")
+        defer { defaults.removeObject(forKey: "translationAPIKey") }
+
+        let json = String(decoding: try BackupService.encode(BackupService.makeBackup()), as: UTF8.self)
+
+        XCTAssertFalse(json.contains(key))
+        XCTAssertFalse(json.contains("translationAPIKey"))
+    }
+
     func testYouTubeSourceUsesAcquiredAudioAndRetainsAcquisitionEvidence() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
