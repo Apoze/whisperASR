@@ -418,13 +418,18 @@ final class HighQualityJobTests: XCTestCase {
 
         for backend in HighQualityASRBackend.allCases {
             let progress = ProgressLog()
-            let job = HighQualityJob(services: .init(
-                loadSource: { _ in [0.1, 0.2] },
-                prepareASR: { $0(1, "ready") },
-                transcribeJapanese: { _ in " こんにちは \n" },
-                unloadASR: {},
-                currentMemoryBytes: { 123 }
-            ))
+            let expectedRawASR = backend == .qwenJA ? " こんにちは \n" : " 日本語 \n"
+            let job = HighQualityJob(servicesForBackend: { selectedBackend in
+                .init(
+                    loadSource: { _ in [0.1, 0.2] },
+                    prepareASR: { $0(1, "ready") },
+                    transcribeJapanese: { _ in
+                        selectedBackend == .qwenJA ? " こんにちは \n" : " 日本語 \n"
+                    },
+                    unloadASR: {},
+                    currentMemoryBytes: { 123 }
+                )
+            })
             let result = try await job.run(.init(
                 sourceURL: source,
                 deliverables: [.japaneseTranscript],
@@ -432,7 +437,8 @@ final class HighQualityJobTests: XCTestCase {
                 outputRoot: root
             )) { progress.append($0) }
 
-            XCTAssertEqual(result.japaneseTranscript, "こんにちは")
+            XCTAssertEqual(result.japaneseTranscript, expectedRawASR
+                .trimmingCharacters(in: .whitespacesAndNewlines))
             XCTAssertEqual(result.manifest.status, .completed)
             XCTAssertEqual(
                 result.manifest.dependencies,
@@ -443,7 +449,7 @@ final class HighQualityJobTests: XCTestCase {
             XCTAssertEqual(result.manifest.model.backend, backend)
             XCTAssertFalse(result.manifest.model.revision.isEmpty)
             XCTAssertFalse(result.manifest.speakerLabels)
-            XCTAssertEqual(result.evidence.rawASR, " こんにちは \n")
+            XCTAssertEqual(result.evidence.rawASR, expectedRawASR)
             XCTAssertEqual(result.evidence.peakMemoryBytes, 123)
             XCTAssertEqual(result.evidence.modelEvents.map(\.kind), [
                 .loadStarted, .loadCompleted, .unloadCompleted,
@@ -460,19 +466,48 @@ final class HighQualityJobTests: XCTestCase {
                     contentsOf: result.directory.appendingPathComponent("japanese-transcript.txt"),
                     encoding: .utf8
                 ),
-                "こんにちは\n"
+                expectedRawASR.trimmingCharacters(in: .whitespacesAndNewlines) + "\n"
             )
             let evidence = try XCTUnwrap(
                 JSONSerialization.jsonObject(with: Data(contentsOf: result.directory
                     .appendingPathComponent("raw-asr.json"))) as? [String: Any]
             )
-            XCTAssertEqual(evidence["rawASR"] as? String, " こんにちは \n")
+            XCTAssertEqual(evidence["rawASR"] as? String, expectedRawASR)
             XCTAssertEqual(evidence["sampleCount"] as? Int, 2)
             XCTAssertEqual((evidence["source"] as? [String: Any])?["fileName"] as? String, "source.mp4")
             XCTAssertEqual((evidence["generatedFiles"] as? [[String: Any]])?.count, 3)
             XCTAssertTrue(progress.values.contains {
                 $0.stage == .preparingASR && $0.message == "ready"
             })
+        }
+    }
+
+    func testRealOfflineBackendFunctionalGateWhenOptedIn() async throws {
+        guard let path = ProcessInfo.processInfo.environment[
+            "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE"
+        ] else {
+            throw XCTSkip(
+                "Set WHISPERASR_HIGH_QUALITY_ASR_FIXTURE to a Japanese audio fixture."
+            )
+        }
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        for backend in HighQualityASRBackend.allCases {
+            let result = try await HighQualityJob().run(.init(
+                sourceURL: URL(fileURLWithPath: path),
+                deliverables: [.japaneseTranscript],
+                backend: backend,
+                outputRoot: root
+            ))
+            XCTAssertFalse(result.japaneseTranscript.isEmpty)
+            XCTAssertEqual(result.manifest.selectedBackend, backend)
+            XCTAssertEqual(result.manifest.status, .completed)
+            XCTAssertEqual(
+                try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
+                ["japanese-transcript.txt", "manifest.json", "raw-asr.json"]
+            )
         }
     }
 
@@ -524,6 +559,30 @@ final class HighQualityJobTests: XCTestCase {
                 outputRoot: root
             ))
         }
+
+        let emptyOutputID = UUID()
+        let emptyOutput = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in " \n" },
+            unloadASR: {}
+        ))
+        await assertFailure(.asr) {
+            try await emptyOutput.run(.init(
+                id: emptyOutputID,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                outputRoot: root
+            ))
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let emptyEvidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: root.appendingPathComponent(emptyOutputID.uuidString)
+                .appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(emptyEvidence.rawASR, " \n")
 
         let exportID = UUID()
         let exportDirectory = root.appendingPathComponent(exportID.uuidString)

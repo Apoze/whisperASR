@@ -6,7 +6,7 @@ struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
     @State private var includeJapaneseTranscript = true
-    @State private var backend = HighQualityASRBackend.qwenJA
+    @State private var backend: HighQualityASRBackend?
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
         fraction: 0,
@@ -21,6 +21,7 @@ struct HighQualityJobView: View {
     private var canStart: Bool {
         (sourceURL != nil || !youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             && includeJapaneseTranscript
+            && backend != nil
             && !isRunning
     }
 
@@ -46,8 +47,9 @@ struct HighQualityJobView: View {
                 .disabled(isRunning)
 
             Picker("Japanese ASR", selection: $backend) {
+                Text("Choose a backend…").tag(nil as HighQualityASRBackend?)
                 ForEach(HighQualityASRBackend.allCases) {
-                    Text($0.displayName).tag($0)
+                    Text($0.displayName).tag(Optional($0))
                 }
             }
             .disabled(isRunning)
@@ -160,7 +162,7 @@ struct HighQualityJobView: View {
     private func start() {
         let value = youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines)
         let selectedSource = value.isEmpty ? sourceURL : URL(string: value)
-        guard let selectedSource, includeJapaneseTranscript else {
+        guard let selectedSource, let backend, includeJapaneseTranscript else {
             errorMessage = "Select a source and at least one Deliverable."
             return
         }

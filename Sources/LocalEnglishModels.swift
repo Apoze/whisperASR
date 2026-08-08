@@ -32,7 +32,7 @@ enum CoherePrototypeQuantization: String, Sendable {
     }
 }
 
-private enum PrototypeRevisionGate {
+enum PrototypeRevisionGate {
     static func verify(modelID: String, expectedRevision: String) async throws {
         let key = "verifiedPrototypeRevision.\(modelID)"
         let data: Data

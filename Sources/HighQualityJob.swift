@@ -1,5 +1,4 @@
 import Foundation
-import FluidAudio
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
     case japaneseTranscript = "japanese-transcript"
@@ -29,8 +28,8 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
         case .parakeetJA:
             .init(
                 backend: self,
-                modelID: "FluidInference/parakeet-0.6b-ja-coreml",
-                revision: "2952296ff1da4a6d6a7aec545e226367db80c612"
+                modelID: LocalPrototypeModelID.parakeet,
+                revision: LocalPrototypeModelID.parakeetRevision
             )
         }
     }
@@ -206,32 +205,6 @@ struct HighQualityJobError: LocalizedError, Equatable, Sendable {
     var errorDescription: String? { message }
 }
 
-private actor HighQualityParakeetRuntime {
-    private var manager: AsrManager?
-
-    func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
-        guard manager == nil else { return }
-        let models = try await AsrModels.downloadAndLoad(version: .tdtJa) {
-            progress($0.fractionCompleted, "Parakeet JA")
-        }
-        manager = AsrManager(models: models)
-    }
-
-    func transcribe(audio: [Float]) async throws -> String {
-        guard let manager else { throw LocalPrototypeError.modelNotLoaded("Parakeet JA") }
-        try Task.checkCancellation()
-        var state = try TdtDecoderState(decoderLayers: 2)
-        let text = try await manager.transcribe(audio, decoderState: &state).text
-        try Task.checkCancellation()
-        return text
-    }
-
-    func unload() async {
-        await manager?.cleanup()
-        manager = nil
-    }
-}
-
 struct HighQualityJob: Sendable {
     struct Services: Sendable {
         let loadSource: @Sendable (URL) async throws -> [Float]
@@ -299,12 +272,18 @@ struct HighQualityJob: Sendable {
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
                 )
             case .parakeetJA:
-                let runtime = HighQualityParakeetRuntime()
+                let runtime = ParakeetRuntime()
                 return Self(
                     loadSource: loadSource,
                     acquireYouTube: acquireYouTube,
                     prepareASR: { try await runtime.prepare(progress: $0) },
-                    transcribeJapanese: { try await runtime.transcribe(audio: $0) },
+                    transcribeJapanese: {
+                        try await runtime.transcribe(
+                            audio: $0,
+                            preserveRawOutput: true,
+                            cancellable: true
+                        )
+                    },
                     unloadASR: { await runtime.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
                 )
@@ -320,6 +299,10 @@ struct HighQualityJob: Sendable {
 
     init(services: Services) {
         servicesForBackend = { _ in services }
+    }
+
+    init(servicesForBackend: @escaping @Sendable (HighQualityASRBackend) -> Services) {
+        self.servicesForBackend = servicesForBackend
     }
 
     func run(
@@ -479,9 +462,9 @@ struct HighQualityJob: Sendable {
 
             begin(.transcribing, fraction: 0.5, message: "Transcribing Japanese…")
             let rawTranscript = try await services.transcribeJapanese(samples)
+            rawASR = rawTranscript
             let transcript = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !transcript.isEmpty else { throw LocalPrototypeError.invalidResponse }
-            rawASR = rawTranscript
             try Task.checkCancellation()
 
             manifest.peakMemoryBytes = await services.currentMemoryBytes()
