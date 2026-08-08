@@ -6,6 +6,7 @@ struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
     @State private var includeJapaneseTranscript = true
+    @State private var backend = HighQualityASRBackend.qwenJA
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
         fraction: 0,
@@ -43,6 +44,13 @@ struct HighQualityJobView: View {
             Toggle("Japanese transcript", isOn: $includeJapaneseTranscript)
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
+
+            Picker("Japanese ASR", selection: $backend) {
+                ForEach(HighQualityASRBackend.allCases) {
+                    Text($0.displayName).tag($0)
+                }
+            }
+            .disabled(isRunning)
 
             HStack {
                 if isRunning {
@@ -165,7 +173,7 @@ struct HighQualityJobView: View {
                 let completed = try await job.run(.init(
                     sourceURL: selectedSource,
                     deliverables: [.japaneseTranscript],
-                    backend: .qwenJA,
+                    backend: backend,
                     speakerLabels: false
                 )) { update in
                     Task { @MainActor in progress = update }

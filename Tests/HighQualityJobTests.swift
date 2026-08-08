@@ -407,60 +407,76 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(callsAfterSpeakerRequest, [])
     }
 
-    func testJapaneseTranscriptJobUsesOnlyASRAndWritesCompleteArtifacts() async throws {
+    func testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let source = root.appendingPathComponent("source.mp4")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         try Data("video".utf8).write(to: source)
         defer { try? FileManager.default.removeItem(at: root) }
-        let job = HighQualityJob(services: .init(
-            loadSource: { _ in [0.1, 0.2] },
-            prepareASR: { $0(1, "ready") },
-            transcribeJapanese: { _ in " こんにちは \n" },
-            unloadASR: {},
-            currentMemoryBytes: { 123 }
-        ))
+        XCTAssertEqual(HighQualityASRBackend.allCases, [.qwenJA, .parakeetJA])
 
-        let result = try await job.run(.init(
-            sourceURL: source,
-            deliverables: [.japaneseTranscript],
-            outputRoot: root
-        ))
+        for backend in HighQualityASRBackend.allCases {
+            let progress = ProgressLog()
+            let job = HighQualityJob(services: .init(
+                loadSource: { _ in [0.1, 0.2] },
+                prepareASR: { $0(1, "ready") },
+                transcribeJapanese: { _ in " こんにちは \n" },
+                unloadASR: {},
+                currentMemoryBytes: { 123 }
+            ))
+            let result = try await job.run(.init(
+                sourceURL: source,
+                deliverables: [.japaneseTranscript],
+                backend: backend,
+                outputRoot: root
+            )) { progress.append($0) }
 
-        XCTAssertEqual(result.japaneseTranscript, "こんにちは")
-        XCTAssertEqual(result.manifest.status, .completed)
-        XCTAssertEqual(
-            result.manifest.dependencies,
-            [.sourceNormalization, .japaneseASR, .export]
-        )
-        XCTAssertEqual(result.manifest.peakMemoryBytes, 123)
-        XCTAssertEqual(result.manifest.selectedBackend, .qwenJA)
-        XCTAssertFalse(result.manifest.speakerLabels)
-        XCTAssertEqual(result.manifest.model.revision, LocalPrototypeModelID.qwenRevision)
-        XCTAssertEqual(result.evidence.rawASR, " こんにちは \n")
-        XCTAssertEqual(
-            try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
-            ["japanese-transcript.txt", "manifest.json", "raw-asr.json"]
-        )
-        XCTAssertEqual(
-            try String(
-                contentsOf: result.directory.appendingPathComponent("japanese-transcript.txt"),
-                encoding: .utf8
-            ),
-            "こんにちは\n"
-        )
-        let evidence = try XCTUnwrap(
-            JSONSerialization.jsonObject(with: Data(contentsOf: result.directory
-                .appendingPathComponent("raw-asr.json"))) as? [String: Any]
-        )
-        XCTAssertEqual(evidence["rawASR"] as? String, " こんにちは \n")
-        XCTAssertEqual(evidence["sampleCount"] as? Int, 2)
-        XCTAssertEqual((evidence["source"] as? [String: Any])?["fileName"] as? String, "source.mp4")
-        XCTAssertEqual((evidence["generatedFiles"] as? [[String: Any]])?.count, 3)
+            XCTAssertEqual(result.japaneseTranscript, "こんにちは")
+            XCTAssertEqual(result.manifest.status, .completed)
+            XCTAssertEqual(
+                result.manifest.dependencies,
+                [.sourceNormalization, .japaneseASR, .export]
+            )
+            XCTAssertEqual(result.manifest.peakMemoryBytes, 123)
+            XCTAssertEqual(result.manifest.selectedBackend, backend)
+            XCTAssertEqual(result.manifest.model.backend, backend)
+            XCTAssertFalse(result.manifest.model.revision.isEmpty)
+            XCTAssertFalse(result.manifest.speakerLabels)
+            XCTAssertEqual(result.evidence.rawASR, " こんにちは \n")
+            XCTAssertEqual(result.evidence.peakMemoryBytes, 123)
+            XCTAssertEqual(result.evidence.modelEvents.map(\.kind), [
+                .loadStarted, .loadCompleted, .unloadCompleted,
+            ])
+            XCTAssertEqual(result.manifest.modelEvents, result.evidence.modelEvents)
+            XCTAssertTrue(result.manifest.stageDurations.keys.contains(.preparingASR))
+            XCTAssertTrue(result.manifest.stageDurations.keys.contains(.transcribing))
+            XCTAssertEqual(
+                try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
+                ["japanese-transcript.txt", "manifest.json", "raw-asr.json"]
+            )
+            XCTAssertEqual(
+                try String(
+                    contentsOf: result.directory.appendingPathComponent("japanese-transcript.txt"),
+                    encoding: .utf8
+                ),
+                "こんにちは\n"
+            )
+            let evidence = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: result.directory
+                    .appendingPathComponent("raw-asr.json"))) as? [String: Any]
+            )
+            XCTAssertEqual(evidence["rawASR"] as? String, " こんにちは \n")
+            XCTAssertEqual(evidence["sampleCount"] as? Int, 2)
+            XCTAssertEqual((evidence["source"] as? [String: Any])?["fileName"] as? String, "source.mp4")
+            XCTAssertEqual((evidence["generatedFiles"] as? [[String: Any]])?.count, 3)
+            XCTAssertTrue(progress.values.contains {
+                $0.stage == .preparingASR && $0.message == "ready"
+            })
+        }
     }
 
-    func testClassifiesSourceASRAndExportFailuresAtThePrincipalInterface() async throws {
+    func testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface() async throws {
         struct FixtureError: Error {}
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -476,6 +492,21 @@ final class HighQualityJobTests: XCTestCase {
             try await sourceFailure.run(.init(
                 sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
                 deliverables: [.japaneseTranscript],
+                outputRoot: root
+            ))
+        }
+
+        let preparationFailure = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in throw FixtureError() },
+            transcribeJapanese: { _ in "unused" },
+            unloadASR: {}
+        ))
+        await assertFailure(.modelPreparation) {
+            try await preparationFailure.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .parakeetJA,
                 outputRoot: root
             ))
         }
@@ -519,48 +550,53 @@ final class HighQualityJobTests: XCTestCase {
         )
     }
 
-    func testCancellationFinalizesAJobWithoutDeliverables() async throws {
+    func testCancellationIsSafeForEveryOfflineBackend() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let id = UUID()
-        let job = HighQualityJob(services: .init(
-            loadSource: { _ in [0] },
-            prepareASR: { _ in },
-            transcribeJapanese: { _ in
-                try await Task.sleep(for: .seconds(10))
-                return "unused"
-            },
-            unloadASR: {}
-        ))
-        let task = Task {
-            try await job.run(.init(
-                id: id,
-                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
-                deliverables: [.japaneseTranscript],
-                outputRoot: root
+        for backend in HighQualityASRBackend.allCases {
+            let id = UUID()
+            let job = HighQualityJob(services: .init(
+                loadSource: { _ in [0] },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in
+                    try await Task.sleep(for: .seconds(10))
+                    return "unused"
+                },
+                unloadASR: {}
             ))
-        }
-        try await Task.sleep(for: .milliseconds(20))
-        task.cancel()
+            let task = Task {
+                try await job.run(.init(
+                    id: id,
+                    sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                    deliverables: [.japaneseTranscript],
+                    backend: backend,
+                    outputRoot: root
+                ))
+            }
+            try await Task.sleep(for: .milliseconds(20))
+            task.cancel()
 
-        do {
-            _ = try await task.value
-            XCTFail("Cancellation must stop the job.")
-        } catch let error as HighQualityJobError {
-            XCTAssertEqual(error.stage, .cancelled)
-        }
+            do {
+                _ = try await task.value
+                XCTFail("Cancellation must stop the job.")
+            } catch let error as HighQualityJobError {
+                XCTAssertEqual(error.stage, .cancelled)
+            }
 
-        let directory = root.appendingPathComponent(id.uuidString)
-        let files = try FileManager.default.contentsOfDirectory(atPath: directory.path).sorted()
-        XCTAssertEqual(files, ["manifest.json", "raw-asr.json"])
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let manifest = try decoder.decode(
-            HighQualityJobManifest.self,
-            from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
-        )
-        XCTAssertEqual(manifest.status, .cancelled)
+            let directory = root.appendingPathComponent(id.uuidString)
+            let files = try FileManager.default.contentsOfDirectory(atPath: directory.path).sorted()
+            XCTAssertEqual(files, ["manifest.json", "raw-asr.json"])
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let manifest = try decoder.decode(
+                HighQualityJobManifest.self,
+                from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+            )
+            XCTAssertEqual(manifest.status, .cancelled)
+            XCTAssertEqual(manifest.selectedBackend, backend)
+            XCTAssertEqual(manifest.modelEvents.last?.kind, .unloadCompleted)
+        }
     }
 
     private func assertFailure(
@@ -591,5 +627,18 @@ private actor URLBox {
 
     func set(_ value: URL) {
         self.value = value
+    }
+}
+
+private final class ProgressLog: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [HighQualityJobProgress] = []
+
+    var values: [HighQualityJobProgress] {
+        lock.withLock { storage }
+    }
+
+    func append(_ value: HighQualityJobProgress) {
+        lock.withLock { storage.append(value) }
     }
 }

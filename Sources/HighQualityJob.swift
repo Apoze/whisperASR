@@ -1,11 +1,39 @@
 import Foundation
+import FluidAudio
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
     case japaneseTranscript = "japanese-transcript"
 }
 
-enum HighQualityASRBackend: String, Codable, Sendable {
+enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendable {
     case qwenJA = "qwen-ja"
+    case parakeetJA = "parakeet-ja"
+
+    var id: Self { self }
+
+    var displayName: String {
+        switch self {
+        case .qwenJA: "Qwen JA"
+        case .parakeetJA: "Parakeet JA"
+        }
+    }
+
+    var model: HighQualityModelEvidence {
+        switch self {
+        case .qwenJA:
+            .init(
+                backend: self,
+                modelID: LocalPrototypeModelID.qwen,
+                revision: LocalPrototypeModelID.qwenRevision
+            )
+        case .parakeetJA:
+            .init(
+                backend: self,
+                modelID: "FluidInference/parakeet-0.6b-ja-coreml",
+                revision: "2952296ff1da4a6d6a7aec545e226367db80c612"
+            )
+        }
+    }
 }
 
 enum HighQualityJobDependency: String, Codable, Sendable {
@@ -31,6 +59,7 @@ enum HighQualityJobFailureStage: String, Codable, Sendable {
     case acquisition
     case source
     case application
+    case modelPreparation = "model-preparation"
     case asr
     case export
     case cancelled
@@ -101,6 +130,18 @@ struct HighQualityModelEvidence: Codable, Equatable, Sendable {
     let revision: String
 }
 
+struct HighQualityModelEvent: Codable, Equatable, Sendable {
+    enum Kind: String, Codable, Sendable {
+        case loadStarted = "load-started"
+        case loadCompleted = "load-completed"
+        case unloadCompleted = "unload-completed"
+    }
+
+    let kind: Kind
+    let backend: HighQualityASRBackend
+    let at: Date
+}
+
 struct HighQualityGeneratedFile: Codable, Equatable, Sendable {
     enum Kind: String, Codable, Sendable {
         case deliverable
@@ -132,6 +173,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var finishedAt: Date?
     var stageDurations: [HighQualityJobStage: TimeInterval]
     var peakMemoryBytes: UInt64
+    var modelEvents: [HighQualityModelEvent]
     var failures: [HighQualityJobFailure]
     var generatedFiles: [HighQualityGeneratedFile]
 }
@@ -143,6 +185,8 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let sampleRate: Int
     let sampleCount: Int
     let stageDurations: [HighQualityJobStage: TimeInterval]
+    let peakMemoryBytes: UInt64
+    let modelEvents: [HighQualityModelEvent]
     let failures: [HighQualityJobFailure]
     let generatedFiles: [HighQualityGeneratedFile]
 }
@@ -160,6 +204,32 @@ struct HighQualityJobError: LocalizedError, Equatable, Sendable {
     let resultDirectory: URL?
 
     var errorDescription: String? { message }
+}
+
+private actor HighQualityParakeetRuntime {
+    private var manager: AsrManager?
+
+    func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
+        guard manager == nil else { return }
+        let models = try await AsrModels.downloadAndLoad(version: .tdtJa) {
+            progress($0.fractionCompleted, "Parakeet JA")
+        }
+        manager = AsrManager(models: models)
+    }
+
+    func transcribe(audio: [Float]) async throws -> String {
+        guard let manager else { throw LocalPrototypeError.modelNotLoaded("Parakeet JA") }
+        try Task.checkCancellation()
+        var state = try TdtDecoderState(decoderLayers: 2)
+        let text = try await manager.transcribe(audio, decoderState: &state).text
+        try Task.checkCancellation()
+        return text
+    }
+
+    func unload() async {
+        await manager?.cleanup()
+        manager = nil
+    }
 }
 
 struct HighQualityJob: Sendable {
@@ -200,42 +270,63 @@ struct HighQualityJob: Sendable {
             self.currentMemoryBytes = currentMemoryBytes
         }
 
-        static func production() -> Self {
-            let runtime = QwenRuntime()
-            return Self(
-                loadSource: { try await AudioLoader.loadSamples(url: $0) },
-                acquireYouTube: { try await YouTubeAcquirer.acquire($0, to: $1) },
-                prepareASR: { try await runtime.prepare(progress: $0) },
-                transcribeJapanese: {
-                    try await runtime.transcribe(
-                        audio: $0,
-                        language: "Japanese",
-                        preserveRawOutput: true,
-                        cancellable: true
-                    )
-                },
-                unloadASR: { await runtime.unload() },
-                currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
-            )
+        static func production(for backend: HighQualityASRBackend) -> Self {
+            let loadSource: @Sendable (URL) async throws -> [Float] = {
+                try await AudioLoader.loadSamples(url: $0)
+            }
+            let acquireYouTube: @Sendable (
+                URL,
+                URL
+            ) async throws -> HighQualityYouTubeAcquisition = {
+                try await YouTubeAcquirer.acquire($0, to: $1)
+            }
+            switch backend {
+            case .qwenJA:
+                let runtime = QwenRuntime()
+                return Self(
+                    loadSource: loadSource,
+                    acquireYouTube: acquireYouTube,
+                    prepareASR: { try await runtime.prepare(progress: $0) },
+                    transcribeJapanese: {
+                        try await runtime.transcribe(
+                            audio: $0,
+                            language: "Japanese",
+                            preserveRawOutput: true,
+                            cancellable: true
+                        )
+                    },
+                    unloadASR: { await runtime.unload() },
+                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
+                )
+            case .parakeetJA:
+                let runtime = HighQualityParakeetRuntime()
+                return Self(
+                    loadSource: loadSource,
+                    acquireYouTube: acquireYouTube,
+                    prepareASR: { try await runtime.prepare(progress: $0) },
+                    transcribeJapanese: { try await runtime.transcribe(audio: $0) },
+                    unloadASR: { await runtime.unload() },
+                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() }
+                )
+            }
         }
     }
 
-    private static let model = HighQualityModelEvidence(
-        backend: .qwenJA,
-        modelID: LocalPrototypeModelID.qwen,
-        revision: LocalPrototypeModelID.qwenRevision
-    )
+    private let servicesForBackend: @Sendable (HighQualityASRBackend) -> Services
 
-    private let services: Services
+    init() {
+        servicesForBackend = { Services.production(for: $0) }
+    }
 
-    init(services: Services = .production()) {
-        self.services = services
+    init(services: Services) {
+        servicesForBackend = { _ in services }
     }
 
     func run(
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        let services = servicesForBackend(request.backend)
         let isYouTubeSource = !request.sourceURL.isFileURL
         guard !request.deliverables.isEmpty else {
             throw HighQualityJobError(
@@ -279,6 +370,8 @@ struct HighQualityJob: Sendable {
         var rawASR: String?
         var transcriptWritten = false
         var acquiredAudioURL: URL?
+        var asrLoadStarted = false
+        var asrUnloaded = false
         var manifest = HighQualityJobManifest(
             schemaVersion: 1,
             jobID: request.id,
@@ -290,11 +383,12 @@ struct HighQualityJob: Sendable {
             dependencies: isYouTubeSource
                 ? [.sourceAcquisition, .sourceNormalization, .japaneseASR, .export]
                 : [.sourceNormalization, .japaneseASR, .export],
-            model: Self.model,
+            model: request.backend.model,
             startedAt: startedAt,
             finishedAt: nil,
             stageDurations: [:],
             peakMemoryBytes: 0,
+            modelEvents: [],
             failures: [],
             generatedFiles: []
         )
@@ -358,7 +452,17 @@ struct HighQualityJob: Sendable {
             sampleCount = samples.count
             try Task.checkCancellation()
 
-            begin(.preparingASR, fraction: 0.2, message: "Preparing Qwen JA…")
+            begin(
+                .preparingASR,
+                fraction: 0.2,
+                message: "Preparing \(request.backend.displayName)…"
+            )
+            asrLoadStarted = true
+            manifest.modelEvents.append(.init(
+                kind: .loadStarted,
+                backend: request.backend,
+                at: Date()
+            ))
             try await services.prepareASR { fraction, message in
                 progress(.init(
                     stage: .preparingASR,
@@ -366,6 +470,11 @@ struct HighQualityJob: Sendable {
                     message: message
                 ))
             }
+            manifest.modelEvents.append(.init(
+                kind: .loadCompleted,
+                backend: request.backend,
+                at: Date()
+            ))
             try Task.checkCancellation()
 
             begin(.transcribing, fraction: 0.5, message: "Transcribing Japanese…")
@@ -377,6 +486,12 @@ struct HighQualityJob: Sendable {
 
             manifest.peakMemoryBytes = await services.currentMemoryBytes()
             await services.unloadASR()
+            asrUnloaded = true
+            manifest.modelEvents.append(.init(
+                kind: .unloadCompleted,
+                backend: request.backend,
+                at: Date()
+            ))
             begin(.exporting, fraction: 0.9, message: "Writing results…")
             manifest.generatedFiles = Self.generatedFiles(
                 includeTranscript: true,
@@ -412,7 +527,14 @@ struct HighQualityJob: Sendable {
             )
         } catch {
             manifest.peakMemoryBytes = await services.currentMemoryBytes()
-            await services.unloadASR()
+            if asrLoadStarted, !asrUnloaded {
+                await services.unloadASR()
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    backend: request.backend,
+                    at: Date()
+                ))
+            }
             let failureStage: HighQualityJobFailureStage
             let status: HighQualityJobManifest.Status
             if error is CancellationError {
@@ -422,7 +544,8 @@ struct HighQualityJob: Sendable {
                 switch currentStage {
                 case .acquiringSource: failureStage = .acquisition
                 case .normalizingSource: failureStage = .source
-                case .preparingASR, .transcribing: failureStage = .asr
+                case .preparingASR: failureStage = .modelPreparation
+                case .transcribing: failureStage = .asr
                 case .exporting: failureStage = .export
                 default: failureStage = .application
                 }
@@ -548,6 +671,8 @@ struct HighQualityJob: Sendable {
             sampleRate: 16_000,
             sampleCount: sampleCount,
             stageDurations: manifest.stageDurations,
+            peakMemoryBytes: manifest.peakMemoryBytes,
+            modelEvents: manifest.modelEvents,
             failures: manifest.failures,
             generatedFiles: manifest.generatedFiles
         )
