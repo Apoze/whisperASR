@@ -239,8 +239,26 @@ struct HighQualityTranslationExchange: Equatable, Sendable {
 struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
     let cueIDs: [String]
     let sanitizedPrompt: String
+    let nativePrompt: String?
+    let nativeOutput: String?
     let sanitizedOutput: String
     let inputTokens: Int
+
+    init(
+        cueIDs: [String],
+        sanitizedPrompt: String,
+        nativePrompt: String? = nil,
+        nativeOutput: String? = nil,
+        sanitizedOutput: String,
+        inputTokens: Int
+    ) {
+        self.cueIDs = cueIDs
+        self.sanitizedPrompt = sanitizedPrompt
+        self.nativePrompt = nativePrompt
+        self.nativeOutput = nativeOutput
+        self.sanitizedOutput = sanitizedOutput
+        self.inputTokens = inputTokens
+    }
 }
 
 struct HighQualityTranslationServiceError: LocalizedError, Sendable {

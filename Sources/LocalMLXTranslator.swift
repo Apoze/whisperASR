@@ -9,22 +9,83 @@ import Tokenizers
 private typealias PromptMessage = [String: any Sendable]
 
 actor LocalMLXTranslator {
-    static let modelID = "mlx-community/translategemma-12b-it-4bit"
-    static let revision = "f3dcfd54df14672fbcf0731086fb47a797a943ae"
-    static let runtimeVersion = "3.31.4"
-    static let declaredPeakMemoryBytes: UInt64 = 8 * 1_024 * 1_024 * 1_024
-    static let inputTokenLimit = 2_048
+    enum Candidate: String, CaseIterable, Codable, Sendable {
+        case translateGemma12B = "translategemma-12b-it-4bit"
+        case qwen3_14B = "qwen3-14b-4bit"
 
+        static let productDefault = Candidate.translateGemma12B
+
+        var modelID: String {
+            switch self {
+            case .translateGemma12B: "mlx-community/translategemma-12b-it-4bit"
+            case .qwen3_14B: "mlx-community/Qwen3-14B-4bit"
+            }
+        }
+
+        var revision: String {
+            switch self {
+            case .translateGemma12B: "f3dcfd54df14672fbcf0731086fb47a797a943ae"
+            case .qwen3_14B: "a4d9b2df59d2c150bef02fcbe0d91046b7ca33a4"
+            }
+        }
+
+        var weightSHA256: [String] {
+            switch self {
+            case .translateGemma12B:
+                [
+                    "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+                    "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89",
+                ]
+            case .qwen3_14B:
+                [
+                    "5795efcfc7c96fd273e600562e8b111bfcc427415de9001d0a07e70cd99cff19",
+                    "2814562d654fe2d541fd4682804a0ccaa400e79701872c8e9f5998cf9481fdf8",
+                ]
+            }
+        }
+
+        var declaredPeakMemoryBytes: UInt64 {
+            switch self {
+            case .translateGemma12B: 8 * 1_024 * 1_024 * 1_024
+            case .qwen3_14B: 10 * 1_024 * 1_024 * 1_024
+            }
+        }
+
+        var extraEOSTokens: Set<String> {
+            switch self {
+            case .translateGemma12B: ["<end_of_turn>"]
+            case .qwen3_14B: ["<|im_end|>"]
+            }
+        }
+    }
+
+    static let modelID = Candidate.productDefault.modelID
+    static let revision = Candidate.productDefault.revision
+    static let runtimeVersion = "3.31.4"
+    static let declaredPeakMemoryBytes = Candidate.productDefault.declaredPeakMemoryBytes
+    static let inputTokenLimit = 2_048
+    static let generationParameters = GenerateParameters(maxTokens: 256, temperature: 0)
+
+    let candidate: Candidate
     private var container: ModelContainer?
+
+    init(candidate: Candidate = .productDefault) {
+        self.candidate = candidate
+    }
 
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
         guard container == nil else { return }
-        progress(0, "TranslateGemma: preparing download…")
+        let candidate = self.candidate
+        progress(0, "\(candidate.rawValue): preparing download…")
         Memory.peakMemory = 0
         let loaded = try await #huggingFaceLoadModelContainer(
-            configuration: ModelConfiguration(id: Self.modelID, revision: Self.revision),
+            configuration: ModelConfiguration(
+                id: candidate.modelID,
+                revision: candidate.revision,
+                extraEOSTokens: candidate.extraEOSTokens
+            ),
             progressHandler: {
-                progress($0.fractionCompleted * 0.9, "TranslateGemma: downloading…")
+                progress($0.fractionCompleted * 0.9, "\(candidate.rawValue): downloading…")
             }
         )
         do {
@@ -34,16 +95,16 @@ actor LocalMLXTranslator {
             throw error
         }
         container = loaded
-        progress(1, "TranslateGemma ready")
+        progress(1, "\(candidate.rawValue) ready")
     }
 
     func translate(_ batch: HighQualityTranslationBatch) async throws -> HighQualityTranslationExchange {
         guard let container else {
             throw HighQualityTranslationServiceError(
-                model: Self.modelID,
+                model: candidate.modelID,
                 attempts: [],
                 response: nil,
-                message: "TranslateGemma is not loaded."
+                message: "\(candidate.rawValue) is not loaded."
             )
         }
 
@@ -54,36 +115,34 @@ actor LocalMLXTranslator {
         do {
             for turn in batch.turns {
                 try Task.checkCancellation()
-                var messages = Self.messages(
-                    for: turn,
-                    glossary: batch.glossary,
-                    previous: translations.last
-                )
-                var tokenCount = try await Self.tokenCount(messages, using: container)
-                while tokenCount > Self.inputTokenLimit, messages.count > 1 {
-                    messages.removeFirst(2)
-                    tokenCount = try await Self.tokenCount(messages, using: container)
-                }
+                let prompt = try Self.frozenPrompt(for: turn, in: batch)
+                let messages = messages(for: turn, in: batch)
+                let nativePrompt = try Self.nativePrompt(messages)
+                let tokenCount = try await Self.tokenCount(messages, using: container)
                 guard tokenCount <= Self.inputTokenLimit else {
                     throw HighQualityTranslationServiceError(
-                        model: Self.modelID,
+                        model: candidate.modelID,
                         attempts: [],
                         response: nil,
-                        message: "Cue \(turn.id) exceeds TranslateGemma's 2K input limit."
+                        message: "Cue \(turn.id) exceeds the frozen 2K input limit."
                     )
                 }
 
-                let prompt = try Self.sanitizedPrompt(messages)
                 inFlightTrace = .init(
                     cueIDs: [turn.id],
                     sanitizedPrompt: prompt,
+                    nativePrompt: nativePrompt,
+                    nativeOutput: "",
                     sanitizedOutput: "",
                     inputTokens: tokenCount
                 )
-                let input = try await container.prepare(input: UserInput(messages: messages))
+                let input = try await container.prepare(input: UserInput(
+                    prompt: .messages(messages),
+                    additionalContext: ["enable_thinking": false]
+                ))
                 let stream = try await container.generate(
                     input: input,
-                    parameters: .init(maxTokens: 512, temperature: 0)
+                    parameters: Self.generationParameters
                 )
                 var output = ""
                 for await generation in stream {
@@ -92,23 +151,28 @@ actor LocalMLXTranslator {
                     inFlightTrace = .init(
                         cueIDs: [turn.id],
                         sanitizedPrompt: prompt,
-                        sanitizedOutput: output,
+                        nativePrompt: nativePrompt,
+                        nativeOutput: output,
+                        sanitizedOutput: "",
                         inputTokens: tokenCount
                     )
                 }
-                output = output.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !output.isEmpty else {
+                try Task.checkCancellation()
+                let nativeOutput = output
+                guard let output = Self.translationText(nativeOutput, for: turn), !output.isEmpty else {
                     throw HighQualityTranslationServiceError(
-                        model: Self.modelID,
+                        model: candidate.modelID,
                         attempts: [],
                         response: nil,
-                        message: "TranslateGemma returned an empty translation for \(turn.id)."
+                        message: "\(candidate.rawValue) returned an empty translation for \(turn.id)."
                     )
                 }
                 translations.append(.init(id: turn.id, source: turn.japanese, text: output))
                 traces.append(.init(
                     cueIDs: [turn.id],
                     sanitizedPrompt: prompt,
+                    nativePrompt: nativePrompt,
+                    nativeOutput: nativeOutput,
                     sanitizedOutput: output,
                     inputTokens: tokenCount
                 ))
@@ -119,14 +183,14 @@ actor LocalMLXTranslator {
                 Envelope(translations: translations.map { .init(id: $0.id, text: $0.text) })
             ), as: UTF8.self)
             return .init(
-                model: Self.modelID,
+                model: candidate.modelID,
                 response: response,
                 attempts: [.init(
                     number: 1,
                     duration: Date().timeIntervalSince(started),
                     outcome: "success"
                 )],
-                revision: Self.revision,
+                revision: candidate.revision,
                 runtimeVersion: Self.runtimeVersion,
                 batches: traces + [inFlightTrace].compactMap { $0 },
                 peakMemoryBytes: UInt64(max(0, Memory.peakMemory))
@@ -136,7 +200,7 @@ actor LocalMLXTranslator {
                 model: error.model,
                 attempts: error.attempts,
                 response: error.response,
-                revision: Self.revision,
+                revision: candidate.revision,
                 runtimeVersion: Self.runtimeVersion,
                 batches: traces + [inFlightTrace].compactMap { $0 },
                 peakMemoryBytes: UInt64(max(0, Memory.peakMemory)),
@@ -144,14 +208,14 @@ actor LocalMLXTranslator {
             )
         } catch {
             throw HighQualityTranslationServiceError(
-                model: Self.modelID,
+                model: candidate.modelID,
                 attempts: [.init(
                     number: 1,
                     duration: Date().timeIntervalSince(started),
                     outcome: error.localizedDescription
                 )],
                 response: nil,
-                revision: Self.revision,
+                revision: candidate.revision,
                 runtimeVersion: Self.runtimeVersion,
                 batches: traces + [inFlightTrace].compactMap { $0 },
                 peakMemoryBytes: UInt64(max(0, Memory.peakMemory)),
@@ -165,41 +229,105 @@ actor LocalMLXTranslator {
         Memory.clearCache()
     }
 
-    private static func messages(
+    static func frozenPrompt(
         for turn: HighQualityTranslationTurn,
-        glossary: [HighQualityGlossaryPromptTerm],
-        previous: Translation?
+        in batch: HighQualityTranslationBatch
+    ) throws -> String {
+        let payload = FrozenInput(
+            schemaVersion: 1,
+            task: "Translate the current Japanese subtitle cue to natural English.",
+            contextBudgetTokens: inputTokenLimit,
+            source: batch.source,
+            glossary: batch.glossary,
+            cue: turn,
+            outputRule: "Return only the English translation for the current cue."
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return String(decoding: try encoder.encode(payload), as: UTF8.self)
+    }
+
+    private func messages(
+        for turn: HighQualityTranslationTurn,
+        in batch: HighQualityTranslationBatch
     ) -> [PromptMessage] {
-        var messages: [PromptMessage] = []
-        for term in glossary {
+        var pairs: [(String, String)] = []
+        for term in batch.glossary {
             for japanese in term.japanese {
                 for english in [term.english] + term.englishAliases {
-                    messages.append(userMessage(japanese))
-                    messages.append(["role": "assistant", "content": english])
+                    pairs.append((japanese, english))
                 }
             }
         }
-        if let previous {
-            messages.append(userMessage(previous.source))
-            messages.append(["role": "assistant", "content": previous.text])
+        if let metadata = batch.source.youtube {
+            pairs += [metadata.title, metadata.channel, metadata.description]
+                .filter { !$0.isEmpty }
+                .map { ($0, $0) }
         }
-        if let speaker = turn.speakerLabel {
-            messages.append(userMessage("話者ラベル: \(speaker)"))
-            messages.append(["role": "assistant", "content": "Speaker label: \(speaker)"])
+        var messages = pairs.flatMap { source, target in
+            [userMessage(source), ["role": "assistant", "content": target]]
         }
-        messages.append(userMessage(turn.japanese))
+        messages.append(userMessage(Self.contextText(for: turn), currentCue: true))
         return messages
     }
 
-    private static func userMessage(_ text: String) -> PromptMessage {
-        let content: [String: any Sendable] = [
-            "type": "text",
-            "source_lang_code": "ja",
-            "target_lang_code": "en",
-            "text": text,
-        ]
-        let items: [[String: any Sendable]] = [content]
-        return ["role": "user", "content": items]
+    private func userMessage(_ text: String, currentCue: Bool = false) -> PromptMessage {
+        switch candidate {
+        case .translateGemma12B:
+            [
+                "role": "user",
+                "content": [[
+                    "type": "text",
+                    "source_lang_code": "ja",
+                    "target_lang_code": "en",
+                    "text": text,
+                ] as [String: any Sendable]],
+            ]
+        case .qwen3_14B:
+            [
+                "role": "user",
+                "content": currentCue
+                    ? "Use the surrounding Japanese only as context. Translate only the text between the CURRENT markers. Return those exact markers around the English translation, without explanations:\n\n\(text)"
+                    : text,
+            ]
+        }
+    }
+
+    private static func contextText(for turn: HighQualityTranslationTurn) -> String {
+        let start = "<<<CURRENT:\(turn.id)>>>"
+        let end = "<<<END_CURRENT:\(turn.id)>>>"
+        return """
+        SPEAKER_ID:
+        \(turn.speakerLabel ?? "")
+        CONTEXT_BEFORE:
+        \(turn.precedingJapanese.joined(separator: "\n"))
+        \(start)
+        \(turn.japanese)
+        \(end)
+        CONTEXT_AFTER:
+        \(turn.followingJapanese.joined(separator: "\n"))
+        """
+    }
+
+    private static func translationText(
+        _ output: String,
+        for turn: HighQualityTranslationTurn
+    ) -> String? {
+        let start = "<<<CURRENT:\(turn.id)>>>"
+        let end = "<<<END_CURRENT:\(turn.id)>>>"
+        guard let startRange = output.range(of: start),
+              let endRange = output.range(of: end, range: startRange.upperBound..<output.endIndex) else {
+            return output.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return output[startRange.upperBound..<endRange.lowerBound]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func nativePrompt(_ messages: [PromptMessage]) throws -> String {
+        String(decoding: try JSONSerialization.data(
+            withJSONObject: messages,
+            options: [.sortedKeys, .withoutEscapingSlashes]
+        ), as: UTF8.self)
     }
 
     private static func tokenCount(
@@ -210,22 +338,25 @@ actor LocalMLXTranslator {
             try context.tokenizer.applyChatTemplate(
                 messages: messages,
                 tools: nil,
-                additionalContext: ["add_generation_prompt": true]
+                additionalContext: ["add_generation_prompt": true, "enable_thinking": false]
             ).count
         }
-    }
-
-    private static func sanitizedPrompt(_ messages: [PromptMessage]) throws -> String {
-        String(decoding: try JSONSerialization.data(
-            withJSONObject: messages,
-            options: [.sortedKeys]
-        ), as: UTF8.self)
     }
 
     private struct Translation: Sendable {
         let id: String
         let source: String
         let text: String
+    }
+
+    private struct FrozenInput: Encodable {
+        let schemaVersion: Int
+        let task: String
+        let contextBudgetTokens: Int
+        let source: HighQualitySourceProvenance
+        let glossary: [HighQualityGlossaryPromptTerm]
+        let cue: HighQualityTranslationTurn
+        let outputRule: String
     }
 
     private struct Envelope: Encodable {

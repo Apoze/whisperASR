@@ -2,6 +2,77 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityLocalTranslationTests: XCTestCase {
+    func testTranslatorCandidatesArePinnedAndShareOneFrozenPrompt() throws {
+        XCTAssertEqual(LocalMLXTranslator.Candidate.productDefault, .translateGemma12B)
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.translateGemma12B.revision,
+            "f3dcfd54df14672fbcf0731086fb47a797a943ae"
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.qwen3_14B.revision,
+            "a4d9b2df59d2c150bef02fcbe0d91046b7ca33a4"
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.translateGemma12B.weightSHA256,
+            [
+                "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+                "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89",
+            ]
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.qwen3_14B.weightSHA256,
+            [
+                "5795efcfc7c96fd273e600562e8b111bfcc427415de9001d0a07e70cd99cff19",
+                "2814562d654fe2d541fd4682804a0ccaa400e79701872c8e9f5998cf9481fdf8",
+            ]
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.translateGemma12B.extraEOSTokens,
+            ["<end_of_turn>"]
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.qwen3_14B.extraEOSTokens,
+            ["<|im_end|>"]
+        )
+
+        let batch = HighQualityTranslationBatch(
+            source: .init(
+                path: "frozen/qudu2fx3ncc",
+                fileName: "qudu2fx3ncc",
+                byteCount: nil,
+                modifiedAt: nil,
+                sourceURL: nil,
+                youtube: .init(
+                    sourceURL: "https://www.youtube.com/watch?v=QUdu2fx3NCc",
+                    title: "Frozen development reference",
+                    channel: "Frozen reference channel",
+                    description: "Frozen metadata",
+                    ytDLPVersion: "reference-only",
+                    diagnostics: ""
+                )
+            ),
+            turns: [.init(
+                id: "cue-0001",
+                japanese: "続いての大将戦ですが、甘結もか、そして立川。",
+                precedingJapanese: ["前の発話"],
+                followingJapanese: ["次の発話"],
+                speakerLabel: "SPEAKER_01"
+            )],
+            glossary: [.init(
+                id: "amayui-moka",
+                japanese: ["甘結もか"],
+                english: "Amayui Moka",
+                englishAliases: []
+            )]
+        )
+        let prompt = try LocalMLXTranslator.frozenPrompt(for: batch.turns[0], in: batch)
+        XCTAssertTrue(prompt.contains("cue-0001"))
+        XCTAssertTrue(prompt.contains("Frozen metadata"))
+        XCTAssertTrue(prompt.contains("Amayui Moka"))
+        XCTAssertEqual(LocalMLXTranslator.inputTokenLimit, 2_048)
+        XCTAssertEqual(LocalMLXTranslator.generationParameters.temperature, 0)
+    }
+
     func testLocalTranslationRunsOnlyAfterASRUnloadWithoutHostedCredentials() async throws {
         let sequence = TranslationSequence()
         let gate = testGate()
@@ -264,8 +335,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                 turns: [.init(
                     id: "cue-0001",
                     japanese: "続いての大将戦ですが、甘結もか、そして立川。",
-                    precedingJapanese: [],
-                    followingJapanese: [],
+                    precedingJapanese: ["前の発話です。"],
+                    followingJapanese: ["次の発話です。"],
                     speakerLabel: "SPEAKER_01"
                 )],
                 glossary: [.init(
@@ -277,6 +348,10 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             ))
             XCTAssertEqual(exchange.revision, LocalMLXTranslator.revision)
             XCTAssertFalse(exchange.response.isEmpty)
+            let output = try XCTUnwrap(exchange.batches.first?.sanitizedOutput)
+            XCTAssertFalse(output.contains("SPEAKER_01"))
+            XCTAssertFalse(output.localizedCaseInsensitiveContains("previous utterance"))
+            XCTAssertFalse(output.localizedCaseInsensitiveContains("next utterance"))
             XCTAssertTrue(exchange.batches.allSatisfy {
                 $0.inputTokens <= LocalMLXTranslator.inputTokenLimit
             })
