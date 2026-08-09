@@ -3,6 +3,93 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityAcceptanceTests: XCTestCase {
+    func testFrozenPrincipalSpeakerAttributionWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_PRINCIPAL_SPEAKER_EXPERIMENT"] == "1",
+              let evidencePath = environment["WHISPERASR_PRINCIPAL_SPEAKER_EVIDENCE"],
+              let outputPath = environment["WHISPERASR_PRINCIPAL_SPEAKER_OUTPUT"] else {
+            throw XCTSkip("Set the principal-Speaker experiment evidence and output paths.")
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let baseline = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: evidencePath))
+        )
+        let alignment = try XCTUnwrap(baseline.alignment)
+        let diarization = try XCTUnwrap(baseline.diarization)
+        let asrChunks = alignment.chunks.map { chunk in
+            HighQualityASRChunk(
+                index: chunk.index,
+                sourceStart: chunk.sourceStart,
+                sourceEnd: chunk.sourceEnd,
+                transcript: chunk.cues.map(\.text).joined()
+            )
+        }
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: baseline.sampleCount) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in baseline.rawASR ?? "" },
+            transcribeJapaneseAnchored: { _ in
+                .init(rawTranscript: baseline.rawASR ?? "", chunks: asrChunks)
+            },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: alignment.chunks,
+                    modelID: alignment.modelID,
+                    revision: alignment.revision,
+                    peakMemoryBytes: alignment.peakMemoryBytes
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _ in },
+            diarizeSpeakers: { _ in
+                .init(
+                    spans: diarization.rawSpans,
+                    modelID: diarization.modelID,
+                    revision: diarization.revision,
+                    peakMemoryBytes: diarization.peakMemoryBytes
+                )
+            },
+            unloadDiarization: {},
+            translateEnglish: { request in
+                let translations = request.turns.map {
+                    ["id": $0.id, "text": "translation-\($0.id)"]
+                }
+                let data = try JSONSerialization.data(withJSONObject: [
+                    "translations": translations,
+                ])
+                return .init(
+                    model: baseline.translation?.model ?? "frozen-translation-fixture",
+                    response: String(decoding: data, as: UTF8.self),
+                    attempts: []
+                )
+            }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: evidencePath),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: baseline.model.backend,
+            speakerLabels: true,
+            outputRoot: URL(fileURLWithPath: outputPath)
+        ))
+
+        let candidate = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(candidate.rawSpans, diarization.rawSpans)
+        XCTAssertEqual(candidate.overlapRanges.count, diarization.overlapRanges.count)
+        XCTAssertEqual(
+            Set(candidate.mappings.map(\.alignmentItemIndex)).count,
+            candidate.mappings.count
+        )
+        XCTAssertEqual(
+            result.turns.map(\.japanese).joined(),
+            alignment.chunks.flatMap(\.rawItems).map(\.text).joined()
+        )
+    }
+
     func testFrozenSourceDecodesThroughTheProductLoaderWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_HIGH_QUALITY_SOURCE_CHECK"] == "1" else {

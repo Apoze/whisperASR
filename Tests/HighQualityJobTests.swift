@@ -15,7 +15,7 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(interval.end, 612.88)
     }
 
-    func testSpeakerLabelsInferStagesPreserveOverlapAndUseStableAnonymousNames() async throws {
+    func testSpeakerLabelsAssignEachAlignedUnitOnceByDominantOverlap() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -61,8 +61,8 @@ final class HighQualityJobTests: XCTestCase {
             diarizeSpeakers: { _ in
                 .init(
                     spans: [
-                        .init(speakerID: 7, start: 2, end: 7),
-                        .init(speakerID: 2, start: 0, end: 8),
+                        .init(speakerID: 7, start: 1, end: 4),
+                        .init(speakerID: 2, start: 0, end: 3),
                     ],
                     modelID: "argmaxinc/speakerkit-coreml",
                     revision: "speakerkit-revision",
@@ -92,20 +92,25 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.evidence.diarization?.revision, "speakerkit-revision")
         XCTAssertEqual(result.evidence.diarization?.rawSpans.count, 2)
         XCTAssertEqual(result.evidence.diarization?.overlapRanges.count, 1)
+        XCTAssertEqual(result.evidence.diarization?.mappings.count, 2)
+        XCTAssertEqual(
+            result.evidence.diarization?.mappings.map(\.alignmentItemIndex),
+            [0, 1]
+        )
+        XCTAssertEqual(
+            result.evidence.diarization?.mappings.map(\.speakerLabel),
+            ["SPEAKER_00", "SPEAKER_01"]
+        )
         XCTAssertEqual(Set(result.turns.compactMap(\.speakerLabel)), ["SPEAKER_00", "SPEAKER_01"])
-        XCTAssertTrue(result.turns.contains {
-            $0.speakerLabel == "SPEAKER_00" && $0.start == 1 && $0.end == 4
-        })
-        XCTAssertTrue(result.turns.contains {
-            $0.speakerLabel == "SPEAKER_01" && $0.start == 2 && $0.end == 4
-        })
-        XCTAssertTrue(result.turns.contains {
-            $0.speakerLabel == "SPEAKER_01" && $0.japanese == "。"
-        })
+        XCTAssertEqual(result.turns.map(\.japanese), ["一", "。", "二。"])
+        XCTAssertEqual(result.turns.map(\.speakerLabel), ["SPEAKER_00", "SPEAKER_01", nil])
+        XCTAssertEqual(result.turns.map(\.start), [1, 2, 6])
+        XCTAssertEqual(result.turns.map(\.end), [2, 4, 9])
+        XCTAssertEqual(result.japaneseTranscript, "SPEAKER_00: 一\nSPEAKER_01: 。\n二。")
         XCTAssertEqual(result.manifest.peakMemoryBytes, 200)
     }
 
-    func testSpeakerRenameRegeneratesTranscriptsAndOverlappingSubtitles() async throws {
+    func testSpeakerRenameRegeneratesAllDeliverablesWithoutChangingRawIdentity() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -123,8 +128,9 @@ final class HighQualityJobTests: XCTestCase {
             names: ["SPEAKER_00": "Alice", "SPEAKER_01": "Bob"]
         )
 
-        XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerLabel)), ["SPEAKER_00", "SPEAKER_01"])
-        XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerName)), ["Alice", "Bob"])
+        XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerLabel)), ["SPEAKER_00"])
+        XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerName)), ["Alice"])
+        XCTAssertEqual(renamed.evidence.diarization, result.evidence.diarization)
         let japanese = try String(
             contentsOf: result.directory.appendingPathComponent("japanese-transcript.txt"),
             encoding: .utf8
@@ -142,14 +148,12 @@ final class HighQualityJobTests: XCTestCase {
             encoding: .utf8
         )
         XCTAssertTrue(japanese.contains("Alice: 一。"))
-        XCTAssertTrue(japanese.contains("Bob: 一。"))
         XCTAssertTrue(english.contains("Alice: One"))
         XCTAssertTrue(webVTT.contains("<v Alice>One"))
-        XCTAssertTrue(webVTT.contains("<v Bob>One"))
         XCTAssertTrue(srt.contains("[Alice] One"))
         XCTAssertEqual(renamed.japaneseTranscript, japanese.trimmingCharacters(in: .newlines))
-        XCTAssertEqual(renamed.subtitleCues.map(\.start), [1, 2])
-        XCTAssertEqual(renamed.subtitleCues.map(\.end), [4, 4])
+        XCTAssertEqual(renamed.subtitleCues.map(\.start), [1])
+        XCTAssertEqual(renamed.subtitleCues.map(\.end), [4])
     }
 
     func testCancellationDuringSpeakerKitReleasesDiarizationRuntime() async throws {
@@ -530,9 +534,7 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadDiarization: {},
             translateEnglish: { request in
-                XCTAssertEqual(Set(request.turns.compactMap(\.speakerLabel)), [
-                    "SPEAKER_00", "SPEAKER_01",
-                ])
+                XCTAssertEqual(Set(request.turns.compactMap(\.speakerLabel)), ["SPEAKER_00"])
                 let translations = request.turns.map {
                     #"{"id":"\#($0.id)","text":"One"}"#
                 }.joined(separator: ",")

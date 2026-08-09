@@ -1021,6 +1021,7 @@ struct HighQualityJob: Sendable {
         var subtitlesWritten = false
         var alignmentEvidence: HighQualityAlignmentEvidence?
         var diarizationEvidence: HighQualityDiarizationEvidence?
+        var alignedItems: [HighQualityAlignmentItem] = []
         var translationEvidence: HighQualityTranslationEvidence?
         var acquiredAudioURL: URL?
         var asrLoadStarted = false
@@ -1400,6 +1401,17 @@ struct HighQualityJob: Sendable {
                 try Task.checkCancellation()
                 begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
                 let exchange = try await services.diarizeSpeakers(samples)
+                alignedItems = alignmentEvidence?.chunks.flatMap(\.rawItems) ?? []
+                if alignedItems.isEmpty {
+                    alignedItems = alignmentEvidence?.mergedCues.map {
+                        HighQualityAlignmentItem(
+                            cueID: $0.id,
+                            text: $0.text,
+                            start: $0.start,
+                            end: $0.end
+                        )
+                    } ?? []
+                }
                 diarizationEvidence = .init(
                     modelID: exchange.modelID,
                     revision: exchange.revision,
@@ -1412,8 +1424,7 @@ struct HighQualityJob: Sendable {
                 do {
                     diarizationEvidence = try Self.diarizationEvidence(
                         exchange,
-                        cues: alignmentEvidence?.mergedCues ?? [],
-                        items: alignmentEvidence?.chunks.flatMap(\.rawItems) ?? [],
+                        items: alignedItems,
                         duration: Double(samples.count) / 16_000
                     )
                 } catch {
@@ -1444,6 +1455,7 @@ struct HighQualityJob: Sendable {
             }
             let turns = Self.speakerTurns(
                 to: baseTurns,
+                alignedItems: alignedItems,
                 mappings: diarizationEvidence?.mappings ?? []
             )
             glossary = HighQualityGlossarySelector.select(
@@ -1882,24 +1894,38 @@ struct HighQualityJob: Sendable {
 
     private static func speakerTurns(
         to turns: [HighQualityTranslationTurn],
+        alignedItems: [HighQualityAlignmentItem],
         mappings: [HighQualitySpeakerMapping]
     ) -> [HighQualityTranslationTurn] {
         guard !mappings.isEmpty else { return turns }
         let turnsByID = Dictionary(uniqueKeysWithValues: turns.map { ($0.id, $0) })
-        let groups = Dictionary(grouping: mappings, by: \.spanIndex).values.flatMap {
-            Dictionary(grouping: $0, by: \.cueID).values
+        let mappingsByItem = Dictionary(uniqueKeysWithValues: mappings.map {
+            ($0.alignmentItemIndex, $0)
+        })
+        var groups: [(turn: HighQualityTranslationTurn, mapping: HighQualitySpeakerMapping?, firstItemIndex: Int, items: [HighQualityAlignmentItem])] = []
+        for (itemIndex, item) in alignedItems.enumerated() {
+            guard let turn = turnsByID[item.cueID] else { continue }
+            let mapping = mappingsByItem[itemIndex]
+            if let lastIndex = groups.indices.last,
+               groups[lastIndex].turn.id == turn.id,
+               groups[lastIndex].mapping?.spanIndex == mapping?.spanIndex {
+                groups[lastIndex].items.append(item)
+            } else {
+                groups.append((turn, mapping, itemIndex, [item]))
+            }
         }
-        return groups.compactMap { mappings in
-            guard let first = mappings.first, let turn = turnsByID[first.cueID] else { return nil }
-            let ordered = mappings.sorted { $0.alignmentItemIndex < $1.alignmentItemIndex }
+        return groups.map { group in
+            let suffix = group.mapping.map {
+                "\($0.speakerLabel)-\($0.spanIndex + 1)"
+            } ?? "unattributed"
             return .init(
-                id: "\(first.cueID)-\(first.speakerLabel)-\(first.spanIndex + 1)",
-                japanese: ordered.map(\.alignedText).joined(),
-                precedingJapanese: turn.precedingJapanese,
-                followingJapanese: turn.followingJapanese,
-                speakerLabel: first.speakerLabel,
-                sourceStart: ordered.map(\.overlapStart).min(),
-                sourceEnd: ordered.map(\.overlapEnd).max()
+                id: "\(group.turn.id)-\(suffix)-\(group.firstItemIndex + 1)",
+                japanese: group.items.map(\.text).joined(),
+                precedingJapanese: group.turn.precedingJapanese,
+                followingJapanese: group.turn.followingJapanese,
+                speakerLabel: group.mapping?.speakerLabel,
+                sourceStart: group.items.map(\.start).min(),
+                sourceEnd: group.items.map(\.end).max()
             )
         }.sorted {
             ($0.sourceStart ?? 0, $0.sourceEnd ?? 0, $0.id)
@@ -1909,7 +1935,6 @@ struct HighQualityJob: Sendable {
 
     private static func diarizationEvidence(
         _ exchange: HighQualityDiarizationExchange,
-        cues: [HighQualityAlignedCue],
         items: [HighQualityAlignmentItem],
         duration: TimeInterval
     ) throws -> HighQualityDiarizationEvidence {
@@ -1928,23 +1953,13 @@ struct HighQualityJob: Sendable {
         }
         let labels = Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
             .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
-        let alignedItems = items.isEmpty
-            ? cues.map {
-                HighQualityAlignmentItem(
-                    cueID: $0.id,
-                    text: $0.text,
-                    start: $0.start,
-                    end: $0.end
-                )
-            }
-            : items
         var mappings: [HighQualitySpeakerMapping] = []
-        for (itemIndex, item) in alignedItems.enumerated() {
-            for (spanIndex, span) in spans.enumerated() {
+        for (itemIndex, item) in items.enumerated() {
+            let candidates = spans.enumerated().compactMap { spanIndex, span -> HighQualitySpeakerMapping? in
                 let start = max(item.start, span.start)
                 let end = min(item.end, span.end)
-                guard start < end, let label = labels[span.speakerID] else { continue }
-                mappings.append(.init(
+                guard start < end, let label = labels[span.speakerID] else { return nil }
+                return .init(
                     cueID: item.cueID,
                     alignmentItemIndex: itemIndex,
                     spanIndex: spanIndex,
@@ -1952,7 +1967,16 @@ struct HighQualityJob: Sendable {
                     speakerLabel: label,
                     overlapStart: start,
                     overlapEnd: end
-                ))
+                )
+            }
+            if let principal = candidates.min(by: {
+                let leftDuration = $0.overlapEnd - $0.overlapStart
+                let rightDuration = $1.overlapEnd - $1.overlapStart
+                return leftDuration == rightDuration
+                    ? ($0.speakerLabel, $0.spanIndex) < ($1.speakerLabel, $1.spanIndex)
+                    : leftDuration > rightDuration
+            }) {
+                mappings.append(principal)
             }
         }
         var overlapsByKey: [String: HighQualityOverlapRange] = [:]
@@ -1980,10 +2004,11 @@ struct HighQualityJob: Sendable {
             revision: exchange.revision,
             rawSpans: spans,
             mappings: mappings.sorted {
-                ($0.overlapStart, $0.spanIndex) < ($1.overlapStart, $1.spanIndex)
+                $0.alignmentItemIndex < $1.alignmentItemIndex
             },
             overlapRanges: overlapsByKey.values.sorted {
-                ($0.start, $0.end) < ($1.start, $1.end)
+                ($0.start, $0.end, $0.speakerLabels.joined(separator: "+"))
+                    < ($1.start, $1.end, $1.speakerLabels.joined(separator: "+"))
             },
             peakMemoryBytes: exchange.peakMemoryBytes,
             validationDiagnostics: []

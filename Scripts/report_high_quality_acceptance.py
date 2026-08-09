@@ -275,6 +275,36 @@ def best_speaker_mapping(reference: dict[str, list[tuple[float, float]]], candid
     return {hyp: ref for ref, hyp in inverse.items()}
 
 
+def speaker_attributed_japanese_error(manifest: dict, raw: dict, mapping: dict[int, str]) -> dict:
+    items = [item for chunk in raw["alignment"]["chunks"] for item in chunk["rawItems"]]
+    speaker_ids = sorted({span["speakerID"] for span in raw["diarization"]["rawSpans"]})
+    labels = {speaker_id: f"SPEAKER_{index:02d}" for index, speaker_id in enumerate(speaker_ids)}
+    candidate: dict[str, str] = {}
+    mapped_items = set()
+    for item in sorted(raw["diarization"]["mappings"],
+            key=lambda value: (value["alignmentItemIndex"], value["spanIndex"])):
+        mapped_items.add(item["alignmentItemIndex"])
+        candidate[item["speakerLabel"]] = candidate.get(item["speakerLabel"], "") + item["alignedText"]
+    reference = {}
+    for turn in manifest["annotations"]["turns"]:
+        reference[turn["speaker"]] = reference.get(turn["speaker"], "") + turn["japanese"]
+    edits = sum(edit_distance(normalize_ja(reference[reference_id]), normalize_ja(candidate.get(labels[speaker_id], "")))
+        for speaker_id, reference_id in mapping.items())
+    edits += sum(len(normalize_ja(text)) for speaker, text in reference.items()
+        if speaker not in mapping.values())
+    edits += sum(len(normalize_ja(text)) for label, text in candidate.items()
+        if label not in {labels[speaker_id] for speaker_id in mapping})
+    unattributed = sum(len(normalize_ja(item["text"])) for index, item in enumerate(items)
+        if index not in mapped_items)
+    reference_count = sum(len(normalize_ja(text)) for text in reference.values())
+    return {
+        "editDistance": edits,
+        "referenceCharacterCount": reference_count,
+        "ratePercent": 100 * edits / reference_count if reference_count else None,
+        "unattributedCharacterCount": unattributed,
+    }
+
+
 def diarization_metrics(manifest: dict, raw: dict) -> dict:
     sample_rate = manifest["fixture"]["sampleRate"]
     reference: dict[str, list[tuple[float, float]]] = {}
@@ -325,6 +355,9 @@ def diarization_metrics(manifest: dict, raw: dict) -> dict:
         "referenceSpeakerCount": len(reference),
         "candidateSpeakerCount": len(candidate),
         "speakerCountAbsoluteError": abs(len(reference) - len(candidate)),
+        "duplicationCount": len(raw["diarization"]["mappings"])
+            - len({item["alignmentItemIndex"] for item in raw["diarization"]["mappings"]}),
+        "speakerAttributedJapaneseError": speaker_attributed_japanese_error(manifest, raw, mapping),
         "overlap": {
             "precisionPercent": 100 * precision,
             "recallPercent": 100 * recall,
@@ -392,6 +425,27 @@ def main() -> None:
         assert edit_distance("abc", "adc") == 1
         assert merge_spans([(0, 1), (0.5, 2), (3, 4)]) == [(0, 2), (3, 4)]
         assert best_speaker_mapping({"A": [(0, 2)]}, {7: [(0, 2)]}) == {7: "A"}
+        fixture = {
+            "alignment": {"chunks": [{"rawItems": [
+                {"text": "一"}, {"text": "二"},
+            ]}]},
+            "diarization": {
+                "rawSpans": [{"speakerID": 7}],
+                "mappings": [{
+                    "alignmentItemIndex": 0, "spanIndex": 0,
+                    "speakerLabel": "SPEAKER_00", "alignedText": "一",
+                }],
+            },
+        }
+        attributed = speaker_attributed_japanese_error(
+            {"annotations": {"turns": [{"speaker": "A", "japanese": "一二"}]}},
+            fixture,
+            {7: "A"},
+        )
+        assert attributed == {
+            "editDistance": 1, "referenceCharacterCount": 2,
+            "ratePercent": 50.0, "unattributedCharacterCount": 1,
+        }
         assert structured_cues_are_valid({
             "missingCueIDs": [], "duplicateCueIDs": [], "reordered": False,
             "unknownCueIDs": [], "nativeMarkerFailures": ["cue-0001"],
