@@ -243,23 +243,32 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
     let sanitizedPrompt: String
     let nativePrompt: String?
     let nativeOutput: String?
+    let model: String?
+    let revision: String?
     let sanitizedOutput: String
     let inputTokens: Int
+    let duration: TimeInterval?
 
     init(
         cueIDs: [String],
         sanitizedPrompt: String,
         nativePrompt: String? = nil,
         nativeOutput: String? = nil,
+        model: String? = nil,
+        revision: String? = nil,
         sanitizedOutput: String,
-        inputTokens: Int
+        inputTokens: Int,
+        duration: TimeInterval? = nil
     ) {
         self.cueIDs = cueIDs
         self.sanitizedPrompt = sanitizedPrompt
         self.nativePrompt = nativePrompt
         self.nativeOutput = nativeOutput
+        self.model = model
+        self.revision = revision
         self.sanitizedOutput = sanitizedOutput
         self.inputTokens = inputTokens
+        self.duration = duration
     }
 }
 
@@ -2338,6 +2347,11 @@ struct HighQualityJob: Sendable {
                     message: "Translation response leaves cue \(translation.id) empty."
                 )
             }
+            guard !containsTranslationScaffolding(text) else {
+                throw HighQualityTranslationValidationError(
+                    message: "Translation response contains explanatory scaffolding for cue \(translation.id)."
+                )
+            }
             translations[translation.id] = text
         }
         guard Set(translations.keys) == expectedIDs else {
@@ -2346,6 +2360,16 @@ struct HighQualityJob: Sendable {
             )
         }
         return translations
+    }
+
+    private static func containsTranslationScaffolding(_ text: String) -> Bool {
+        let lowercased = text.lowercased()
+        return [
+            "here is the translation", "here's the translation",
+            "translation:", "english translation:",
+        ].contains { lowercased.hasPrefix($0) }
+            || ["```", "speaker_id:", "context_before:", "context_after:", "<<<current:", "<<<end_current:"]
+                .contains { lowercased.contains($0) }
     }
 
     private static func validatedAlignment(

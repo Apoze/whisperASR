@@ -798,10 +798,24 @@ final class HighQualityJobTests: XCTestCase {
                 XCTAssertEqual(request.turns[0].followingJapanese, ["今日は元気ですか？"])
                 XCTAssertEqual(request.turns[1].precedingJapanese, ["おはよう。"])
                 XCTAssertNil(request.turns[1].speakerLabel)
+                let outputs = ["Good morning", "How are you today?"]
                 return .init(
                     model: "fixture-model",
                     response: #"{"translations":[{"id":"unit-0001","text":"Good morning"},{"id":"unit-0002","text":"How are you today?"}]}"#,
-                    attempts: [.init(number: 1, duration: 0.25, outcome: "success")]
+                    attempts: [.init(number: 1, duration: 0.25, outcome: "success")],
+                    batches: zip(request.turns, outputs).map { turn, output in
+                        .init(
+                            cueIDs: [turn.id],
+                            sanitizedPrompt: turn.japanese,
+                            nativePrompt: "official-direct-prompt",
+                            nativeOutput: output,
+                            model: "fixture-model",
+                            revision: "fixture-revision",
+                            sanitizedOutput: output,
+                            inputTokens: 8,
+                            duration: 0.1
+                        )
+                    }
                 )
             }
         ))
@@ -826,6 +840,15 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.evidence.translation?.model, "fixture-model")
         XCTAssertEqual(result.evidence.translation?.attempts.count, 1)
         XCTAssertEqual(result.evidence.translation?.validationFailures, [])
+        XCTAssertEqual(result.turns.map(\.id), ["unit-0001", "unit-0002"])
+        XCTAssertEqual(result.turns.compactMap(\.english), ["Good morning", "How are you today?"])
+        XCTAssertEqual(
+            result.evidence.translation?.batches.compactMap(\.nativeOutput),
+            ["Good morning", "How are you today?"]
+        )
+        XCTAssertTrue(result.evidence.translation?.batches.allSatisfy {
+            !($0.nativeOutput ?? "").contains($0.cueIDs[0])
+        } == true)
 
         let combined = try await job.run(.init(
             sourceURL: source,
@@ -845,11 +868,13 @@ final class HighQualityJobTests: XCTestCase {
         )
     }
 
-    func testMalformedTranslationIdentifiersFailAndRetainSanitizedEvidence() async throws {
+    func testMalformedTranslationsFailAndRetainSanitizedEvidence() async throws {
         let responses = [
             #"{"translations":[]}"#,
             #"{"translations":[{"id":"unit-0001","text":"One"},{"id":"unit-0001","text":"Again"}]}"#,
             #"{"translations":[{"id":"unit-9999","text":"Unknown"}]}"#,
+            #"{"translations":[{"id":"unit-0001","text":"Here's the translation: One"}]}"#,
+            #"{"translations":[{"id":"unit-0001","text":"speaker_id: One"}]}"#,
         ]
         for response in responses {
             let root = FileManager.default.temporaryDirectory
@@ -880,7 +905,7 @@ final class HighQualityJobTests: XCTestCase {
                     backend: .qwenJA,
                     outputRoot: root
                 ))
-                XCTFail("Malformed cue identifiers must fail.")
+                XCTFail("Malformed translations must fail.")
             } catch let error as HighQualityJobError {
                 XCTAssertEqual(error.stage, .translation)
             }

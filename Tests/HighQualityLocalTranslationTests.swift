@@ -2,7 +2,7 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityLocalTranslationTests: XCTestCase {
-    func testTranslatorCandidatesArePinnedAndShareOneFrozenPrompt() throws {
+    func testTranslateGemmaIsPinnedAndUsesOnlyTheCurrentJapaneseAsItsPrompt() throws {
         XCTAssertEqual(LocalMLXTranslator.Candidate.productDefault, .translateGemma12B)
         XCTAssertEqual(
             LocalMLXTranslator.Candidate.translateGemma12B.revision,
@@ -65,10 +65,20 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                 englishAliases: []
             )]
         )
-        let prompt = try LocalMLXTranslator.frozenPrompt(for: batch.turns[0], in: batch)
-        XCTAssertTrue(prompt.contains("cue-0001"))
-        XCTAssertTrue(prompt.contains("Frozen metadata"))
-        XCTAssertTrue(prompt.contains("Amayui Moka"))
+        let prompt = LocalMLXTranslator.frozenPrompt(for: batch.turns[0])
+        XCTAssertEqual(prompt, "続いての大将戦ですが、甘結もか、そして立川。")
+        XCTAssertFalse(prompt.contains("cue-0001"))
+        XCTAssertFalse(prompt.contains("Frozen metadata"))
+        XCTAssertFalse(prompt.contains("Amayui Moka"))
+        XCTAssertFalse(prompt.contains("SPEAKER_01"))
+        XCTAssertFalse(prompt.contains("前の発話"))
+        XCTAssertFalse(prompt.contains("次の発話"))
+        XCTAssertEqual(
+            try LocalMLXTranslator.directNativePrompt(
+                for: "続いての大将戦ですが、甘結もか、そして立川。"
+            ),
+            #"[{"content":[{"source_lang_code":"ja","target_lang_code":"en","text":"続いての大将戦ですが、甘結もか、そして立川。","type":"text"}],"role":"user"}]"#
+        )
         XCTAssertEqual(LocalMLXTranslator.inputTokenLimit, 2_048)
         XCTAssertEqual(LocalMLXTranslator.generationParameters.temperature, 0)
     }
@@ -103,8 +113,11 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                     batches: [.init(
                         cueIDs: request.turns.map(\.id),
                         sanitizedPrompt: "cue=cue-0001 text=おはよう。",
+                        model: LocalMLXTranslator.modelID,
+                        revision: LocalMLXTranslator.revision,
                         sanitizedOutput: "Good morning.",
-                        inputTokens: 32
+                        inputTokens: 32,
+                        duration: 0.02
                     )],
                     peakMemoryBytes: 123
                 )
@@ -127,9 +140,50 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         XCTAssertEqual(result.evidence.translation?.model, LocalMLXTranslator.modelID)
         XCTAssertEqual(result.evidence.translation?.revision, LocalMLXTranslator.revision)
         XCTAssertEqual(result.evidence.translation?.batches.first?.inputTokens, 32)
+        XCTAssertEqual(
+            result.evidence.translation?.batches.first?.model,
+            LocalMLXTranslator.modelID
+        )
+        XCTAssertEqual(
+            result.evidence.translation?.batches.first?.revision,
+            LocalMLXTranslator.revision
+        )
+        XCTAssertEqual(result.evidence.translation?.batches.first?.duration, 0.02)
         XCTAssertLessThanOrEqual(
             result.evidence.translation?.batches.first?.inputTokens ?? .max,
             LocalMLXTranslator.inputTokenLimit
+        )
+    }
+
+    func testMissingLegacyMarkersNeverAcceptTheWholeModelResponse() {
+        let turn = HighQualityTranslationTurn(
+            id: "unit-0001",
+            japanese: "おはよう。",
+            precedingJapanese: [],
+            followingJapanese: [],
+            speakerLabel: nil
+        )
+
+        XCTAssertNil(LocalMLXTranslator.translationText(
+            "Here is the translation: Good morning.",
+            for: turn,
+            candidate: .qwen3_14B
+        ))
+        XCTAssertEqual(
+            LocalMLXTranslator.translationText(
+                "<<<CURRENT:unit-0001>>>Good morning.<<<END_CURRENT:unit-0001>>>",
+                for: turn,
+                candidate: .qwen3_14B
+            ),
+            "Good morning."
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.translationText(
+                "  Good morning.\n",
+                for: turn,
+                candidate: .translateGemma12B
+            ),
+            "Good morning."
         )
     }
 
@@ -366,6 +420,63 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             await runtime.unload()
         } catch {
             await runtime.unload()
+            throw error
+        }
+    }
+
+    func testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_DIRECT_TRANSLATION_EXPERIMENT"] == "1",
+              let evidencePath = environment["WHISPERASR_DIRECT_TRANSLATION_EVIDENCE"],
+              let outputPath = environment["WHISPERASR_DIRECT_TRANSLATION_OUTPUT"] else {
+            throw XCTSkip("Set the direct-translation experiment evidence and output paths.")
+        }
+        if evidencePath.contains("holdout") {
+            XCTAssertEqual(environment["WHISPERASR_DIRECT_TRANSLATION_ALLOW_HOLDOUT"], "1")
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let baseline = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: evidencePath))
+        )
+        let request = try XCTUnwrap(baseline.translation?.request)
+        let translator = LocalMLXTranslator()
+        do {
+            try await translator.prepare(progress: { _, _ in })
+            let exchange = try await translator.translate(request)
+            await translator.unload()
+            let evidence = HighQualityTranslationEvidence(
+                request: request,
+                response: exchange.response,
+                model: exchange.model,
+                attempts: exchange.attempts,
+                revision: exchange.revision,
+                runtimeVersion: exchange.runtimeVersion,
+                batches: exchange.batches,
+                peakMemoryBytes: exchange.peakMemoryBytes,
+                validationFailures: []
+            )
+            let outputURL = URL(fileURLWithPath: outputPath)
+            try FileManager.default.createDirectory(
+                at: outputURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            try encoder.encode(evidence).write(to: outputURL, options: .atomic)
+
+            XCTAssertEqual(evidence.batches.count, request.turns.count)
+            XCTAssertTrue(evidence.batches.allSatisfy {
+                $0.cueIDs.count == 1
+                    && $0.model == LocalMLXTranslator.modelID
+                    && $0.revision == LocalMLXTranslator.revision
+                    && $0.duration != nil
+                    && !$0.sanitizedOutput.isEmpty
+            })
+        } catch {
+            await translator.unload()
             throw error
         }
     }

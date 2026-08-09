@@ -115,7 +115,8 @@ actor LocalMLXTranslator {
         do {
             for turn in batch.turns {
                 try Task.checkCancellation()
-                let prompt = try Self.frozenPrompt(for: turn, in: batch)
+                let unitStarted = Date()
+                let prompt = Self.frozenPrompt(for: turn)
                 let messages = messages(for: turn, in: batch)
                 let nativePrompt = try Self.nativePrompt(messages)
                 let tokenCount = try await Self.tokenCount(messages, using: container)
@@ -133,8 +134,11 @@ actor LocalMLXTranslator {
                     sanitizedPrompt: prompt,
                     nativePrompt: nativePrompt,
                     nativeOutput: "",
+                    model: candidate.modelID,
+                    revision: candidate.revision,
                     sanitizedOutput: "",
-                    inputTokens: tokenCount
+                    inputTokens: tokenCount,
+                    duration: 0
                 )
                 let input = try await container.prepare(input: UserInput(
                     prompt: .messages(messages),
@@ -153,13 +157,20 @@ actor LocalMLXTranslator {
                         sanitizedPrompt: prompt,
                         nativePrompt: nativePrompt,
                         nativeOutput: output,
+                        model: candidate.modelID,
+                        revision: candidate.revision,
                         sanitizedOutput: "",
-                        inputTokens: tokenCount
+                        inputTokens: tokenCount,
+                        duration: Date().timeIntervalSince(unitStarted)
                     )
                 }
                 try Task.checkCancellation()
                 let nativeOutput = output
-                guard let output = Self.translationText(nativeOutput, for: turn), !output.isEmpty else {
+                guard let output = Self.translationText(
+                    nativeOutput,
+                    for: turn,
+                    candidate: candidate
+                ), !output.isEmpty else {
                     throw HighQualityTranslationServiceError(
                         model: candidate.modelID,
                         attempts: [],
@@ -173,8 +184,11 @@ actor LocalMLXTranslator {
                     sanitizedPrompt: prompt,
                     nativePrompt: nativePrompt,
                     nativeOutput: nativeOutput,
+                    model: candidate.modelID,
+                    revision: candidate.revision,
                     sanitizedOutput: output,
-                    inputTokens: tokenCount
+                    inputTokens: tokenCount,
+                    duration: Date().timeIntervalSince(unitStarted)
                 ))
                 inFlightTrace = nil
             }
@@ -229,28 +243,17 @@ actor LocalMLXTranslator {
         Memory.clearCache()
     }
 
-    static func frozenPrompt(
-        for turn: HighQualityTranslationTurn,
-        in batch: HighQualityTranslationBatch
-    ) throws -> String {
-        let payload = FrozenInput(
-            schemaVersion: 1,
-            task: "Translate the current Japanese subtitle cue to natural English.",
-            contextBudgetTokens: inputTokenLimit,
-            source: batch.source,
-            glossary: batch.glossary,
-            cue: turn,
-            outputRule: "Return only the English translation for the current cue."
-        )
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-        return String(decoding: try encoder.encode(payload), as: UTF8.self)
+    static func frozenPrompt(for turn: HighQualityTranslationTurn) -> String {
+        turn.japanese
     }
 
     private func messages(
         for turn: HighQualityTranslationTurn,
         in batch: HighQualityTranslationBatch
     ) -> [PromptMessage] {
+        if candidate == .translateGemma12B {
+            return [Self.directUserMessage(turn.japanese)]
+        }
         var pairs: [(String, String)] = []
         for term in batch.glossary {
             for japanese in term.japanese {
@@ -265,32 +268,35 @@ actor LocalMLXTranslator {
                 .map { ($0, $0) }
         }
         var messages = pairs.flatMap { source, target in
-            [userMessage(source), ["role": "assistant", "content": target]]
+            [qwenUserMessage(source), ["role": "assistant", "content": target]]
         }
-        messages.append(userMessage(Self.contextText(for: turn), currentCue: true))
+        messages.append(qwenUserMessage(Self.contextText(for: turn), currentCue: true))
         return messages
     }
 
-    private func userMessage(_ text: String, currentCue: Bool = false) -> PromptMessage {
-        switch candidate {
-        case .translateGemma12B:
-            [
-                "role": "user",
-                "content": [[
-                    "type": "text",
-                    "source_lang_code": "ja",
-                    "target_lang_code": "en",
-                    "text": text,
-                ] as [String: any Sendable]],
-            ]
-        case .qwen3_14B:
-            [
-                "role": "user",
-                "content": currentCue
-                    ? "Use the surrounding Japanese only as context. Translate only the text between the CURRENT markers. Return those exact markers around the English translation, without explanations:\n\n\(text)"
-                    : text,
-            ]
-        }
+    private func qwenUserMessage(_ text: String, currentCue: Bool = false) -> PromptMessage {
+        [
+            "role": "user",
+            "content": currentCue
+                ? "Use the surrounding Japanese only as context. Translate only the text between the CURRENT markers. Return those exact markers around the English translation, without explanations:\n\n\(text)"
+                : text,
+        ]
+    }
+
+    static func directNativePrompt(for japanese: String) throws -> String {
+        try nativePrompt([directUserMessage(japanese)])
+    }
+
+    private static func directUserMessage(_ text: String) -> PromptMessage {
+        [
+            "role": "user",
+            "content": [[
+                "type": "text",
+                "source_lang_code": "ja",
+                "target_lang_code": "en",
+                "text": text,
+            ] as [String: any Sendable]],
+        ]
     }
 
     private static func contextText(for turn: HighQualityTranslationTurn) -> String {
@@ -309,15 +315,19 @@ actor LocalMLXTranslator {
         """
     }
 
-    private static func translationText(
+    static func translationText(
         _ output: String,
-        for turn: HighQualityTranslationTurn
+        for turn: HighQualityTranslationTurn,
+        candidate: Candidate
     ) -> String? {
+        if candidate == .translateGemma12B {
+            return output.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         let start = "<<<CURRENT:\(turn.id)>>>"
         let end = "<<<END_CURRENT:\(turn.id)>>>"
         guard let startRange = output.range(of: start),
               let endRange = output.range(of: end, range: startRange.upperBound..<output.endIndex) else {
-            return output.trimmingCharacters(in: .whitespacesAndNewlines)
+            return nil
         }
         return output[startRange.upperBound..<endRange.lowerBound]
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -347,16 +357,6 @@ actor LocalMLXTranslator {
         let id: String
         let source: String
         let text: String
-    }
-
-    private struct FrozenInput: Encodable {
-        let schemaVersion: Int
-        let task: String
-        let contextBudgetTokens: Int
-        let source: HighQualitySourceProvenance
-        let glossary: [HighQualityGlossaryPromptTerm]
-        let cue: HighQualityTranslationTurn
-        let outputRule: String
     }
 
     private struct Envelope: Encodable {
