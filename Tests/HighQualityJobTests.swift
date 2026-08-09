@@ -3,6 +3,18 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testForcedAlignmentTimesStayInsideTheirAudioWindow() {
+        let interval = HighQualityForcedAlignerRuntime.boundedInterval(
+            start: 612.5,
+            end: 613.3,
+            sourceStart: 553.62,
+            sourceEnd: 612.88
+        )
+
+        XCTAssertEqual(interval.start, 612.5)
+        XCTAssertEqual(interval.end, 612.88)
+    }
+
     func testSpeakerLabelsInferStagesPreserveOverlapAndUseStableAnonymousNames() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -1127,6 +1139,7 @@ final class HighQualityJobTests: XCTestCase {
         try Data("video".utf8).write(to: source)
         defer { try? FileManager.default.removeItem(at: root) }
         XCTAssertEqual(HighQualityASRBackend.allCases, [.qwenJA, .parakeetJA, .whisperKit])
+        XCTAssertEqual(HighQualityASRBackend.productDefault, .qwenJA)
 
         for backend in HighQualityASRBackend.allCases {
             let progress = ProgressLog()

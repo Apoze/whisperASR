@@ -67,22 +67,29 @@ actor HighQualityForcedAlignerRuntime {
             for (turn, tokens) in zip(group, tokenGroups) {
                 let items = output.items[itemCursor..<(itemCursor + tokens.count)]
                 itemCursor += tokens.count
-                guard let first = items.first, let last = items.last else {
-                    throw jobError("Qwen3 ForcedAligner returned no timing for cue \(turn.id).")
-                }
-                rawItems += items.map {
-                    .init(
+                let boundedItems = items.map {
+                    let interval = Self.boundedInterval(
+                        start: sourceStart + $0.startTime,
+                        end: sourceStart + $0.endTime,
+                        sourceStart: sourceStart,
+                        sourceEnd: sourceEnd
+                    )
+                    return HighQualityAlignmentItem(
                         cueID: turn.id,
                         text: $0.text,
-                        start: sourceStart + $0.startTime,
-                        end: sourceStart + $0.endTime
+                        start: interval.start,
+                        end: interval.end
                     )
                 }
+                guard let first = boundedItems.first, let last = boundedItems.last else {
+                    throw jobError("Qwen3 ForcedAligner returned no timing for cue \(turn.id).")
+                }
+                rawItems += boundedItems
                 cues.append(.init(
                     id: turn.id,
                     text: turn.japanese,
-                    start: sourceStart + first.startTime,
-                    end: sourceStart + last.endTime
+                    start: first.start,
+                    end: last.end
                 ))
             }
             chunks.append(.init(
@@ -98,6 +105,18 @@ actor HighQualityForcedAlignerRuntime {
             modelID: Self.modelID,
             revision: Self.revision,
             peakMemoryBytes: UInt64(max(0, Memory.peakMemory))
+        )
+    }
+
+    static func boundedInterval(
+        start: TimeInterval,
+        end: TimeInterval,
+        sourceStart: TimeInterval,
+        sourceEnd: TimeInterval
+    ) -> (start: TimeInterval, end: TimeInterval) {
+        (
+            min(max(start, sourceStart), sourceEnd),
+            min(max(end, sourceStart), sourceEnd)
         )
     }
 

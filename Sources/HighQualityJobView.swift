@@ -9,7 +9,7 @@ struct HighQualityJobView: View {
     @State private var includeEnglishTranscript = false
     @State private var includeEnglishSubtitles = false
     @State private var includeSpeakerLabels = false
-    @State private var backend: HighQualityASRBackend?
+    @State private var backend: HighQualityASRBackend? = .productDefault
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
         fraction: 0,

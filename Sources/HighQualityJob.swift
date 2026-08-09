@@ -11,6 +11,8 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
     case parakeetJA = "parakeet-ja"
     case whisperKit = "whisperkit"
 
+    static let productDefault: Self = .qwenJA
+
     var id: Self { self }
 
     var displayName: String {
