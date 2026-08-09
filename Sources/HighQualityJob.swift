@@ -247,6 +247,8 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
     let revision: String?
     let sanitizedOutput: String
     let inputTokens: Int
+    let outputTokens: Int?
+    let finishReason: String?
     let duration: TimeInterval?
 
     init(
@@ -258,6 +260,8 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
         revision: String? = nil,
         sanitizedOutput: String,
         inputTokens: Int,
+        outputTokens: Int? = nil,
+        finishReason: String? = nil,
         duration: TimeInterval? = nil
     ) {
         self.cueIDs = cueIDs
@@ -268,6 +272,8 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
         self.revision = revision
         self.sanitizedOutput = sanitizedOutput
         self.inputTokens = inputTokens
+        self.outputTokens = outputTokens
+        self.finishReason = finishReason
         self.duration = duration
     }
 }
@@ -327,10 +333,11 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
     let batches: [HighQualityLocalTranslationBatch]
     let peakMemoryBytes: UInt64
     var validationFailures: [String]
+    var integrityVerdicts: [HighQualityTranslationIntegrityVerdict]
 
     private enum CodingKeys: String, CodingKey {
         case request, response, model, attempts, revision, runtimeVersion, batches
-        case peakMemoryBytes, validationFailures
+        case peakMemoryBytes, validationFailures, integrityVerdicts
     }
 
     init(
@@ -342,7 +349,8 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
         runtimeVersion: String?,
         batches: [HighQualityLocalTranslationBatch],
         peakMemoryBytes: UInt64,
-        validationFailures: [String]
+        validationFailures: [String],
+        integrityVerdicts: [HighQualityTranslationIntegrityVerdict] = []
     ) {
         self.request = request
         self.response = response
@@ -353,6 +361,7 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
         self.batches = batches
         self.peakMemoryBytes = peakMemoryBytes
         self.validationFailures = validationFailures
+        self.integrityVerdicts = integrityVerdicts
     }
 
     init(from decoder: Decoder) throws {
@@ -375,6 +384,10 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
             [String].self,
             forKey: .validationFailures
         )
+        integrityVerdicts = try values.decodeIfPresent(
+            [HighQualityTranslationIntegrityVerdict].self,
+            forKey: .integrityVerdicts
+        ) ?? []
     }
 }
 
@@ -1530,6 +1543,9 @@ struct HighQualityJob: Sendable {
                     turns: turns,
                     glossary: glossary.promptTerms
                 )
+                let integrityGlossary = glossary.decisions
+                    .filter(\.selected)
+                    .map { HighQualityTranslationIntegrityGlossaryTerm($0.term) }
                 translationEvidence = .init(
                     request: translationRequest,
                     response: nil,
@@ -1584,13 +1600,25 @@ struct HighQualityJob: Sendable {
                         runtimeVersion: exchange.runtimeVersion,
                         batches: exchange.batches,
                         peakMemoryBytes: exchange.peakMemoryBytes,
-                        validationFailures: []
+                        validationFailures: [],
+                        integrityVerdicts: HighQualityTranslationIntegrityValidator.validate(
+                            turns: turns,
+                            batches: exchange.batches,
+                            glossary: integrityGlossary
+                        )
                     )
                     do {
                         translationsByID = try Self.validatedTranslations(
                             exchange.response,
                             for: turns
                         )
+                        translationEvidence?.integrityVerdicts =
+                            HighQualityTranslationIntegrityValidator.validate(
+                                turns: turns,
+                                translations: translationsByID,
+                                batches: exchange.batches,
+                                glossary: integrityGlossary
+                            )
                     } catch {
                         translationEvidence?.validationFailures = [error.localizedDescription]
                         throw error
@@ -1605,7 +1633,12 @@ struct HighQualityJob: Sendable {
                         runtimeVersion: error.runtimeVersion,
                         batches: error.batches,
                         peakMemoryBytes: error.peakMemoryBytes,
-                        validationFailures: []
+                        validationFailures: [],
+                        integrityVerdicts: HighQualityTranslationIntegrityValidator.validate(
+                            turns: turns,
+                            batches: error.batches,
+                            glossary: integrityGlossary
+                        )
                     )
                     throw error
                 }

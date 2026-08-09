@@ -149,9 +149,19 @@ actor LocalMLXTranslator {
                     parameters: Self.generationParameters
                 )
                 var output = ""
+                var outputTokens: Int?
+                var finishReason: String?
                 for await generation in stream {
                     try Task.checkCancellation()
                     output += generation.chunk ?? ""
+                    if let info = generation.info {
+                        outputTokens = info.generationTokenCount
+                        finishReason = switch info.stopReason {
+                        case .stop: "stop"
+                        case .length: "length"
+                        case .cancelled: "cancelled"
+                        }
+                    }
                     inFlightTrace = .init(
                         cueIDs: [turn.id],
                         sanitizedPrompt: prompt,
@@ -161,6 +171,8 @@ actor LocalMLXTranslator {
                         revision: candidate.revision,
                         sanitizedOutput: "",
                         inputTokens: tokenCount,
+                        outputTokens: outputTokens,
+                        finishReason: finishReason,
                         duration: Date().timeIntervalSince(unitStarted)
                     )
                 }
@@ -188,6 +200,8 @@ actor LocalMLXTranslator {
                     revision: candidate.revision,
                     sanitizedOutput: output,
                     inputTokens: tokenCount,
+                    outputTokens: outputTokens,
+                    finishReason: finishReason,
                     duration: Date().timeIntervalSince(unitStarted)
                 ))
                 inFlightTrace = nil
