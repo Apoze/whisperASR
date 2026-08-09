@@ -15,6 +15,154 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(interval.end, 612.88)
     }
 
+    func testSemanticTranslationUnitsIgnoreDiarizationAndPreserveAlignedJapanese() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let transcript = "これは 続きです。え。次です。" + String(repeating: "あ", count: 60) + "。"
+
+        func run(spans: [HighQualityDiarizationSpan]) async throws -> HighQualityJobResult {
+            let job = HighQualityJob(services: .init(
+                loadSource: { _ in Array(repeating: 0, count: 320_000) },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in transcript },
+                transcribeJapaneseAnchored: { _ in
+                    .init(
+                        rawTranscript: transcript,
+                        chunks: [.init(
+                            index: 0,
+                            sourceStart: 0,
+                            sourceEnd: 20,
+                            transcript: transcript
+                        )]
+                    )
+                },
+                unloadASR: {},
+                prepareAlignment: { _ in },
+                alignJapanese: { _, turns in
+                    var time = 0.0
+                    var items: [HighQualityAlignmentItem] = []
+                    var cues: [HighQualityAlignedCue] = []
+                    for turn in turns {
+                        let start = time
+                        if turn.japanese.count > 48 {
+                            items.append(.init(
+                                cueID: turn.id,
+                                text: turn.japanese,
+                                start: time,
+                                end: time + 6.1
+                            ))
+                            time += 6.1
+                        } else {
+                            for character in turn.japanese where character.isLetter || character.isNumber {
+                                items.append(.init(
+                                    cueID: turn.id,
+                                    text: String(character),
+                                    start: time,
+                                    end: time + 0.1
+                                ))
+                                time += character == "は" ? 1.1 : 0.1
+                            }
+                        }
+                        cues.append(.init(id: turn.id, text: turn.japanese, start: start, end: time))
+                    }
+                    return .init(
+                        chunks: [.init(
+                            index: 0,
+                            sourceStart: 0,
+                            sourceEnd: 20,
+                            cues: cues,
+                            rawItems: items
+                        )],
+                        modelID: "fixture-aligner",
+                        revision: "frozen-revision",
+                        peakMemoryBytes: 0
+                    )
+                },
+                unloadAlignment: {},
+                prepareDiarization: { _ in },
+                diarizeSpeakers: { _ in
+                    .init(
+                        spans: spans,
+                        modelID: "fixture-speakerkit",
+                        revision: "frozen-revision",
+                        peakMemoryBytes: 0
+                    )
+                },
+                unloadDiarization: {},
+                translateEnglish: { request in
+                    XCTAssertTrue(request.turns.allSatisfy { $0.speakerLabel == nil })
+                    let translations = request.turns.enumerated().map {
+                        ["id": $0.element.id, "text": "English \($0.offset + 1)"]
+                    }
+                    let response = try JSONSerialization.data(withJSONObject: [
+                        "translations": translations,
+                    ])
+                    return .init(
+                        model: "fixture-translator",
+                        response: String(decoding: response, as: UTF8.self),
+                        attempts: []
+                    )
+                }
+            ))
+            return try await job.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: Set(HighQualityDeliverable.allCases),
+                backend: .qwenJA,
+                speakerLabels: true,
+                outputRoot: root
+            ))
+        }
+
+        let first = try await run(spans: [
+            .init(speakerID: 2, start: 0, end: 20),
+            .init(speakerID: 7, start: 2, end: 6),
+        ])
+        let second = try await run(spans: [
+            .init(speakerID: 9, start: 0, end: 1),
+            .init(speakerID: 3, start: 1, end: 20),
+        ])
+
+        let expectedJapanese = [
+            "これは 続きです。",
+            "え。",
+            "次です。",
+            String(repeating: "あ", count: 48),
+            String(repeating: "あ", count: 12) + "。",
+        ]
+        XCTAssertEqual(first.turns.map(\.id), second.turns.map(\.id))
+        XCTAssertEqual(first.turns.map(\.japanese), expectedJapanese)
+        XCTAssertEqual(second.turns.map(\.japanese), expectedJapanese)
+        XCTAssertEqual(first.evidence.translation?.request, second.evidence.translation?.request)
+        XCTAssertEqual(first.evidence.glossary.promptTerms, second.evidence.glossary.promptTerms)
+        XCTAssertEqual(first.turns.map(\.japanese).joined(), transcript)
+        XCTAssertEqual(first.subtitleCues.map(\.id), first.turns.map(\.id))
+        XCTAssertEqual(first.subtitleCues.map(\.start), first.turns.compactMap(\.start))
+        XCTAssertEqual(first.subtitleCues.map(\.end), first.turns.compactMap(\.end))
+
+        let semanticUnits = try XCTUnwrap(first.evidence.alignment?.semanticUnits)
+        XCTAssertEqual(semanticUnits.map(\.id), first.turns.map(\.id))
+        XCTAssertEqual(semanticUnits.map(\.japanese), expectedJapanese)
+        XCTAssertTrue(semanticUnits[0].decisions.contains("merge:short-fragment-into-next"))
+        XCTAssertTrue(semanticUnits[1].decisions.contains("keep:standalone-interjection"))
+        XCTAssertTrue(semanticUnits[3].decisions.contains("boundary:maximum-size"))
+        XCTAssertEqual(
+            Set(semanticUnits.flatMap(\.sourceFragmentIndices)).count,
+            first.evidence.alignment?.semanticFragments?.count
+        )
+        XCTAssertTrue(first.subtitleCues.allSatisfy { $0.speakerLabel != nil })
+        let webVTT = try String(
+            contentsOf: first.directory.appendingPathComponent("english-subtitles.vtt"),
+            encoding: .utf8
+        )
+        let srt = try String(
+            contentsOf: first.directory.appendingPathComponent("english-subtitles.srt"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(webVTT.contains(first.turns[0].id))
+        XCTAssertTrue(srt.contains("[SPEAKER_"))
+    }
+
     func testSpeakerLabelsAssignEachAlignedUnitOnceByDominantOverlap() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -101,12 +249,12 @@ final class HighQualityJobTests: XCTestCase {
             result.evidence.diarization?.mappings.map(\.speakerLabel),
             ["SPEAKER_00", "SPEAKER_01"]
         )
-        XCTAssertEqual(Set(result.turns.compactMap(\.speakerLabel)), ["SPEAKER_00", "SPEAKER_01"])
-        XCTAssertEqual(result.turns.map(\.japanese), ["一", "。", "二。"])
-        XCTAssertEqual(result.turns.map(\.speakerLabel), ["SPEAKER_00", "SPEAKER_01", nil])
-        XCTAssertEqual(result.turns.map(\.start), [1, 2, 6])
-        XCTAssertEqual(result.turns.map(\.end), [2, 4, 9])
-        XCTAssertEqual(result.japaneseTranscript, "SPEAKER_00: 一\nSPEAKER_01: 。\n二。")
+        XCTAssertEqual(Set(result.turns.compactMap(\.speakerLabel)), ["SPEAKER_01"])
+        XCTAssertEqual(result.turns.map(\.japanese), ["一。", "二。"])
+        XCTAssertEqual(result.turns.map(\.speakerLabel), ["SPEAKER_01", nil])
+        XCTAssertEqual(result.turns.map(\.start), [1, 6])
+        XCTAssertEqual(result.turns.map(\.end), [4, 9])
+        XCTAssertEqual(result.japaneseTranscript, "SPEAKER_01: 一。\n二。")
         XCTAssertEqual(result.manifest.peakMemoryBytes, 200)
     }
 
@@ -299,10 +447,16 @@ final class HighQualityJobTests: XCTestCase {
                 )
             },
             unloadAlignment: { await calls.append("unload-alignment") },
-            translateEnglish: { _ in
-                .init(
+            translateEnglish: { request in
+                let translations = request.turns.enumerated().map {
+                    ["id": $0.element.id, "text": $0.offset == 0 ? "One" : "Two"]
+                }
+                let response = try JSONSerialization.data(withJSONObject: [
+                    "translations": translations,
+                ])
+                return .init(
                     model: "fixture-translator",
-                    response: #"{"translations":[{"id":"cue-0001","text":"One"},{"id":"cue-0002","text":"Two"}]}"#,
+                    response: String(decoding: response, as: UTF8.self),
                     attempts: []
                 )
             }
@@ -323,7 +477,7 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(recordedCalls, [
             "prepare-asr", "unload-asr", "prepare-alignment", "unload-alignment",
         ])
-        XCTAssertEqual(result.subtitleCues.map(\.id), ["cue-0001", "cue-0002"])
+        XCTAssertEqual(result.subtitleCues.map(\.id), ["unit-0001", "unit-0002"])
         XCTAssertEqual(result.subtitleCues.map(\.start), [1.5, 6.25])
         XCTAssertEqual(result.subtitleCues.map(\.end), [2.75, 8])
         XCTAssertEqual(result.subtitleCues.map(\.text), ["One", "Two"])
@@ -341,8 +495,8 @@ final class HighQualityJobTests: XCTestCase {
                 contentsOf: result.directory.appendingPathComponent("english-subtitles.vtt"),
                 encoding: .utf8
             ),
-            "WEBVTT\n\ncue-0001\n00:00:01.500 --> 00:00:02.750\nOne\n\n"
-                + "cue-0002\n00:00:06.250 --> 00:00:08.000\nTwo\n\n"
+            "WEBVTT\n\nunit-0001\n00:00:01.500 --> 00:00:02.750\nOne\n\n"
+                + "unit-0002\n00:00:06.250 --> 00:00:08.000\nTwo\n\n"
         )
         XCTAssertEqual(
             try String(
@@ -483,10 +637,16 @@ final class HighQualityJobTests: XCTestCase {
                 )
             },
             unloadAlignment: {},
-            translateEnglish: { _ in
-                .init(
+            translateEnglish: { request in
+                let translations = request.turns.map {
+                    ["id": $0.id, "text": "One"]
+                }
+                let response = try JSONSerialization.data(withJSONObject: [
+                    "translations": translations,
+                ])
+                return .init(
                     model: "fixture-translator",
-                    response: #"{"translations":[{"id":"cue-0001","text":"One"}]}"#,
+                    response: String(decoding: response, as: UTF8.self),
                     attempts: []
                 )
             }
@@ -534,7 +694,7 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadDiarization: {},
             translateEnglish: { request in
-                XCTAssertEqual(Set(request.turns.compactMap(\.speakerLabel)), ["SPEAKER_00"])
+                XCTAssertTrue(request.turns.allSatisfy { $0.speakerLabel == nil })
                 let translations = request.turns.map {
                     #"{"id":"\#($0.id)","text":"One"}"#
                 }.joined(separator: ",")
@@ -577,14 +737,27 @@ final class HighQualityJobTests: XCTestCase {
             prepareASR: { _ in },
             transcribeJapanese: { _ in rawASR },
             unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
             translateEnglish: { request in
                 XCTAssertEqual(
                     Set(request.glossary.map(\.id)),
                     ["amayui-moka", "apex-legends", "otsukaresama"]
                 )
+                let translations = request.turns.enumerated().map {
+                    [
+                        "id": $0.element.id,
+                        "text": $0.offset == 0
+                            ? "Amayui Moka plays Apex Legends."
+                            : "Thanks for your hard work.",
+                    ]
+                }
+                let response = try JSONSerialization.data(withJSONObject: [
+                    "translations": translations,
+                ])
                 return .init(
                     model: "fixture",
-                    response: #"{"translations":[{"id":"cue-0001","text":"Amayui Moka plays Apex Legends."},{"id":"cue-0002","text":"Thanks for your hard work."}]}"#,
+                    response: String(decoding: response, as: UTF8.self),
                     attempts: []
                 )
             }
@@ -617,15 +790,17 @@ final class HighQualityJobTests: XCTestCase {
             prepareASR: { _ in },
             transcribeJapanese: { _ in "おはよう。今日は元気ですか？" },
             unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
             translateEnglish: { request in
                 XCTAssertEqual(request.source.fileName, "conversation.wav")
-                XCTAssertEqual(request.turns.map(\.id), ["cue-0001", "cue-0002"])
+                XCTAssertEqual(request.turns.map(\.id), ["unit-0001", "unit-0002"])
                 XCTAssertEqual(request.turns[0].followingJapanese, ["今日は元気ですか？"])
                 XCTAssertEqual(request.turns[1].precedingJapanese, ["おはよう。"])
-                XCTAssertEqual(request.turns[1].speakerLabel, "Speaker 2")
+                XCTAssertNil(request.turns[1].speakerLabel)
                 return .init(
                     model: "fixture-model",
-                    response: #"{"translations":[{"id":"cue-0001","text":"Good morning"},{"id":"cue-0002","text":"How are you today?"}]}"#,
+                    response: #"{"translations":[{"id":"unit-0001","text":"Good morning"},{"id":"unit-0002","text":"How are you today?"}]}"#,
                     attempts: [.init(number: 1, duration: 0.25, outcome: "success")]
                 )
             }
@@ -639,10 +814,10 @@ final class HighQualityJobTests: XCTestCase {
             outputRoot: root
         ))
 
-        XCTAssertEqual(result.englishTranscript, "Good morning\nHow are you today?")
+        XCTAssertEqual(result.englishTranscript, "Good morning\nSpeaker 2: How are you today?")
         XCTAssertEqual(
             result.manifest.dependencies,
-            [.sourceNormalization, .japaneseASR, .llmTranslation, .export]
+            [.sourceNormalization, .japaneseASR, .forcedAlignment, .llmTranslation, .export]
         )
         XCTAssertEqual(
             try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
@@ -672,9 +847,9 @@ final class HighQualityJobTests: XCTestCase {
 
     func testMalformedTranslationIdentifiersFailAndRetainSanitizedEvidence() async throws {
         let responses = [
-            #"{"translations":[{"id":"cue-0001","text":"One"}]}"#,
-            #"{"translations":[{"id":"cue-0001","text":"One"},{"id":"cue-0001","text":"Again"}]}"#,
-            #"{"translations":[{"id":"cue-0001","text":"One"},{"id":"cue-9999","text":"Unknown"}]}"#,
+            #"{"translations":[]}"#,
+            #"{"translations":[{"id":"unit-0001","text":"One"},{"id":"unit-0001","text":"Again"}]}"#,
+            #"{"translations":[{"id":"unit-9999","text":"Unknown"}]}"#,
         ]
         for response in responses {
             let root = FileManager.default.temporaryDirectory
@@ -686,6 +861,8 @@ final class HighQualityJobTests: XCTestCase {
                 prepareASR: { _ in },
                 transcribeJapanese: { _ in "一\n二" },
                 unloadASR: {},
+                prepareAlignment: { _ in },
+                alignJapanese: highQualityFixtureAlignment,
                 translateEnglish: { _ in
                     .init(
                         model: "fixture-model",
@@ -1560,6 +1737,32 @@ private actor MemoryReadings {
     func next() -> UInt64 {
         values.count > 1 ? values.removeFirst() : values[0]
     }
+}
+
+let highQualityFixtureAlignment: @Sendable (
+    [Float],
+    [HighQualityTranslationTurn]
+) async throws -> HighQualityAlignmentExchange = { samples, turns in
+    let duration = Double(samples.count) / 16_000
+    let cueDuration = duration / Double(max(turns.count, 1))
+    return .init(
+        chunks: [.init(
+            index: 0,
+            sourceStart: 0,
+            sourceEnd: duration,
+            cues: turns.enumerated().map { index, turn in
+                .init(
+                    id: turn.id,
+                    text: turn.japanese,
+                    start: Double(index) * cueDuration,
+                    end: Double(index + 1) * cueDuration
+                )
+            }
+        )],
+        modelID: "fixture-aligner",
+        revision: "fixture-revision",
+        peakMemoryBytes: 0
+    )
 }
 
 private final class ProgressLog: @unchecked Sendable {

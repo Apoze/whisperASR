@@ -89,12 +89,14 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                 return "おはよう。"
             },
             unloadASR: { await sequence.append("unload-asr") },
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
             prepareTranslation: { _ in await sequence.append("prepare-translation") },
             translateEnglish: { request in
                 await sequence.append("translate")
                 return .init(
                     model: LocalMLXTranslator.modelID,
-                    response: #"{"translations":[{"id":"cue-0001","text":"Good morning."}]}"#,
+                    response: #"{"translations":[{"id":"unit-0001","text":"Good morning."}]}"#,
                     attempts: [.init(number: 1, duration: 0.1, outcome: "success")],
                     revision: LocalMLXTranslator.revision,
                     runtimeVersion: LocalMLXTranslator.runtimeVersion,
@@ -148,6 +150,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             prepareASR: { _ in },
             transcribeJapanese: { _ in "一。" },
             unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
             prepareTranslation: { _ in throw TranslationTestError.failedLoad },
             unloadTranslation: { await unloads.increment() },
             heavyweightGate: gate
@@ -188,6 +192,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             prepareASR: { _ in },
             transcribeJapanese: { _ in "一。" },
             unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
             translateEnglish: { _ in
                 started.fulfill()
                 try await Task.sleep(for: .seconds(10))
@@ -290,6 +296,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             prepareASR: { _ in },
             transcribeJapanese: { _ in "一。" },
             unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
             translateEnglish: { _ in
                 await memory.set(2_000)
                 throw TranslationTestError.unreachable

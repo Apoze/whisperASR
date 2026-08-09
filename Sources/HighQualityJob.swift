@@ -301,6 +301,13 @@ private struct HighQualityTranslationValidationError: LocalizedError {
     var errorDescription: String? { message }
 }
 
+private struct HighQualitySemanticUnitDraft {
+    var fragments: [HighQualitySemanticFragmentEvidence]
+    var decisions: [String]
+
+    var japanese: String { fragments.map(\.text).joined() }
+}
+
 struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
     let request: HighQualityTranslationBatch
     let response: String?
@@ -398,6 +405,34 @@ struct HighQualityAlignmentChunk: Codable, Equatable, Sendable {
     }
 }
 
+struct HighQualitySemanticUnitPolicyEvidence: Codable, Equatable, Sendable {
+    let version: String
+    let pauseSeconds: TimeInterval
+    let maximumCharacters: Int
+    let shortFragmentCharacters: Int
+}
+
+struct HighQualitySemanticFragmentEvidence: Codable, Equatable, Sendable {
+    let index: Int
+    let alignmentItemIndex: Int?
+    let sourceCueID: String
+    let text: String
+    let start: TimeInterval
+    let end: TimeInterval
+}
+
+struct HighQualitySemanticUnitEvidence: Codable, Equatable, Sendable {
+    let id: String
+    let japanese: String
+    let sourceFragmentIndices: [Int]
+    let sourceCueIDs: [String]
+    let start: TimeInterval
+    let end: TimeInterval
+    let decisions: [String]
+    var speakerLabel: String?
+    var speakerMappingIndices: [Int]
+}
+
 struct HighQualityAlignmentExchange: Equatable, Sendable {
     let chunks: [HighQualityAlignmentChunk]
     let modelID: String
@@ -413,6 +448,9 @@ struct HighQualityAlignmentEvidence: Codable, Equatable, Sendable {
     let sourceDuration: TimeInterval
     let peakMemoryBytes: UInt64
     var validationDiagnostics: [String]
+    var semanticUnitPolicy: HighQualitySemanticUnitPolicyEvidence? = nil
+    var semanticFragments: [HighQualitySemanticFragmentEvidence]? = nil
+    var semanticUnits: [HighQualitySemanticUnitEvidence]? = nil
 }
 
 struct HighQualityDiarizationSpan: Codable, Equatable, Sendable {
@@ -981,7 +1019,9 @@ struct HighQualityJob: Sendable {
         let services = servicesForBackend(request.backend)
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
-        let needsAlignment = needsSubtitles || request.speakerLabels
+        let needsTranslation = request.deliverables.contains(.englishTranslationTranscript)
+            || needsSubtitles
+        let needsAlignment = needsTranslation || request.speakerLabels
         guard !request.deliverables.isEmpty else {
             throw HighQualityJobError(
                 stage: .application,
@@ -1050,8 +1090,7 @@ struct HighQualityJob: Sendable {
                 + [.sourceNormalization, .japaneseASR]
                 + (needsAlignment ? [.forcedAlignment] : [])
                 + (request.speakerLabels ? [.speakerDiarization] : [])
-                + (request.deliverables.contains(.englishTranslationTranscript) || needsSubtitles
-                    ? [.llmTranslation] : [])
+                + (needsTranslation ? [.llmTranslation] : [])
                 + [.export],
             model: request.backend.model,
             startedAt: startedAt,
@@ -1278,6 +1317,7 @@ struct HighQualityJob: Sendable {
                 asrChunks: asrExchange.chunks,
                 speakerLabelsByCueID: request.speakerLabelsByCueID
             )
+            var turns = baseTurns
             if needsAlignment {
                 begin(.preparingAlignment, fraction: 0.62, message: "Preparing forced alignment…")
                 alignmentLoadStarted = true
@@ -1330,7 +1370,7 @@ struct HighQualityJob: Sendable {
                         turns: baseTurns,
                         duration: duration
                     )
-                    alignmentEvidence = .init(
+                    var validatedEvidence = HighQualityAlignmentEvidence(
                         modelID: exchange.modelID,
                         revision: exchange.revision,
                         chunks: exchange.chunks.sorted { $0.index < $1.index },
@@ -1339,6 +1379,15 @@ struct HighQualityJob: Sendable {
                         peakMemoryBytes: exchange.peakMemoryBytes,
                         validationDiagnostics: []
                     )
+                    let semantic = try Self.semanticTranslationUnits(
+                        alignment: validatedEvidence,
+                        sourceTurns: baseTurns
+                    )
+                    turns = semantic.turns
+                    validatedEvidence.semanticUnitPolicy = semantic.policy
+                    validatedEvidence.semanticFragments = semantic.fragments
+                    validatedEvidence.semanticUnits = semantic.units
+                    alignmentEvidence = validatedEvidence
                 } catch {
                     alignmentEvidence?.validationDiagnostics = [error.localizedDescription]
                     throw error
@@ -1364,6 +1413,17 @@ struct HighQualityJob: Sendable {
                     ))
                 }
                 try Task.checkCancellation()
+                alignedItems = alignmentEvidence?.chunks.flatMap(\.rawItems) ?? []
+                if alignedItems.isEmpty {
+                    alignedItems = alignmentEvidence?.mergedCues.map {
+                        HighQualityAlignmentItem(
+                            cueID: $0.id,
+                            text: $0.text,
+                            start: $0.start,
+                            end: $0.end
+                        )
+                    } ?? []
+                }
             }
             if request.speakerLabels {
                 begin(.preparingDiarization, fraction: 0.74, message: "Preparing SpeakerKit…")
@@ -1401,17 +1461,6 @@ struct HighQualityJob: Sendable {
                 try Task.checkCancellation()
                 begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
                 let exchange = try await services.diarizeSpeakers(samples)
-                alignedItems = alignmentEvidence?.chunks.flatMap(\.rawItems) ?? []
-                if alignedItems.isEmpty {
-                    alignedItems = alignmentEvidence?.mergedCues.map {
-                        HighQualityAlignmentItem(
-                            cueID: $0.id,
-                            text: $0.text,
-                            start: $0.start,
-                            end: $0.end
-                        )
-                    } ?? []
-                }
                 diarizationEvidence = .init(
                     modelID: exchange.modelID,
                     revision: exchange.revision,
@@ -1453,17 +1502,19 @@ struct HighQualityJob: Sendable {
                 }
                 try Task.checkCancellation()
             }
-            let turns = Self.speakerTurns(
-                to: baseTurns,
-                alignedItems: alignedItems,
-                mappings: diarizationEvidence?.mappings ?? []
+            let speakerAttachment = Self.speakerAttachment(
+                units: alignmentEvidence?.semanticUnits ?? [],
+                fragments: alignmentEvidence?.semanticFragments ?? [],
+                mappings: diarizationEvidence?.mappings ?? [],
+                explicitLabelsByCueID: request.speakerLabelsByCueID
             )
+            alignmentEvidence?.semanticUnits = speakerAttachment.units
             glossary = HighQualityGlossarySelector.select(
                 source: manifest.source,
-                turns: turns
+                turns: baseTurns
             )
             var translationsByID: [String: String] = [:]
-            if request.deliverables.contains(.englishTranslationTranscript) || needsSubtitles {
+            if needsTranslation {
                 begin(.translating, fraction: 0.8, message: "Preparing local TranslateGemma…")
                 let translationRequest = HighQualityTranslationBatch(
                     source: manifest.source,
@@ -1578,8 +1629,7 @@ struct HighQualityJob: Sendable {
 
             let resultTurns = Self.resultTurns(
                 turns: turns,
-                alignedCues: alignmentEvidence?.mergedCues ?? [],
-                mappings: diarizationEvidence?.mappings ?? [],
+                speakerLabelsByID: speakerAttachment.labelsByUnitID,
                 translationsByID: translationsByID
             )
             let englishTranscript = request.deliverables.contains(.englishTranslationTranscript)
@@ -1892,45 +1942,242 @@ struct HighQualityJob: Sendable {
         }
     }
 
-    private static func speakerTurns(
-        to turns: [HighQualityTranslationTurn],
-        alignedItems: [HighQualityAlignmentItem],
-        mappings: [HighQualitySpeakerMapping]
-    ) -> [HighQualityTranslationTurn] {
-        guard !mappings.isEmpty else { return turns }
-        let turnsByID = Dictionary(uniqueKeysWithValues: turns.map { ($0.id, $0) })
-        let mappingsByItem = Dictionary(uniqueKeysWithValues: mappings.map {
-            ($0.alignmentItemIndex, $0)
-        })
-        var groups: [(turn: HighQualityTranslationTurn, mapping: HighQualitySpeakerMapping?, firstItemIndex: Int, items: [HighQualityAlignmentItem])] = []
-        for (itemIndex, item) in alignedItems.enumerated() {
-            guard let turn = turnsByID[item.cueID] else { continue }
-            let mapping = mappingsByItem[itemIndex]
-            if let lastIndex = groups.indices.last,
-               groups[lastIndex].turn.id == turn.id,
-               groups[lastIndex].mapping?.spanIndex == mapping?.spanIndex {
-                groups[lastIndex].items.append(item)
-            } else {
-                groups.append((turn, mapping, itemIndex, [item]))
+    private static func semanticTranslationUnits(
+        alignment: HighQualityAlignmentEvidence,
+        sourceTurns: [HighQualityTranslationTurn]
+    ) throws -> (
+        policy: HighQualitySemanticUnitPolicyEvidence,
+        fragments: [HighQualitySemanticFragmentEvidence],
+        units: [HighQualitySemanticUnitEvidence],
+        turns: [HighQualityTranslationTurn]
+    ) {
+        let policy = HighQualitySemanticUnitPolicyEvidence(
+            version: "ja-semantic-v1",
+            pauseSeconds: 0.75,
+            maximumCharacters: 48,
+            shortFragmentCharacters: 6
+        )
+        let rawItems = alignment.chunks.sorted { $0.index < $1.index }.flatMap(\.rawItems)
+        let indexedItems = rawItems.enumerated().map { ($0.offset, $0.element) }
+        let itemsByCue = Dictionary(grouping: indexedItems, by: { $0.1.cueID })
+        var fragments: [HighQualitySemanticFragmentEvidence] = []
+
+        for cue in alignment.mergedCues {
+            let items = itemsByCue[cue.id] ?? []
+            if rawItems.isEmpty {
+                let characters = Array(cue.text)
+                let duration = (cue.end - cue.start) / Double(max(characters.count, 1))
+                for (offset, character) in characters.enumerated() {
+                    fragments.append(.init(
+                        index: fragments.count,
+                        alignmentItemIndex: nil,
+                        sourceCueID: cue.id,
+                        text: String(character),
+                        start: cue.start + Double(offset) * duration,
+                        end: cue.start + Double(offset + 1) * duration
+                    ))
+                }
+                continue
+            }
+            let timedItems = items.flatMap { indexedItem in
+                let characters = Array(indexedItem.1.text)
+                let duration = (indexedItem.1.end - indexedItem.1.start)
+                    / Double(max(characters.count, 1))
+                return characters.enumerated().map { offset, character in
+                    (
+                        alignmentItemIndex: indexedItem.0,
+                        text: String(character),
+                        start: indexedItem.1.start + Double(offset) * duration,
+                        end: indexedItem.1.start + Double(offset + 1) * duration
+                    )
+                }
+            }
+            if timedItems.map(\.text).joined() == cue.text {
+                for item in timedItems {
+                    fragments.append(.init(
+                        index: fragments.count,
+                        alignmentItemIndex: item.alignmentItemIndex,
+                        sourceCueID: cue.id,
+                        text: item.text,
+                        start: item.start,
+                        end: item.end
+                    ))
+                }
+                continue
+            }
+            let alignableCharacters = cue.text.filter {
+                $0.isLetter || $0.isNumber || $0 == "'"
+            }
+            let alignableItems = timedItems.filter {
+                $0.text.first?.isLetter == true || $0.text.first?.isNumber == true
+                    || $0.text == "'"
+            }
+            guard alignableCharacters.count == alignableItems.count else {
+                throw HighQualityTranslationValidationError(
+                    message: "Alignment fragments do not preserve cue \(cue.id)."
+                )
+            }
+            var itemIndex = 0
+            for character in cue.text {
+                if character.isLetter || character.isNumber || character == "'" {
+                    let item = alignableItems[itemIndex]
+                    itemIndex += 1
+                    fragments.append(.init(
+                        index: fragments.count,
+                        alignmentItemIndex: item.alignmentItemIndex,
+                        sourceCueID: cue.id,
+                        text: String(character),
+                        start: item.start,
+                        end: item.end
+                    ))
+                } else {
+                    let previous = fragments.last?.sourceCueID == cue.id
+                        ? fragments.last : nil
+                    let next = itemIndex < alignableItems.count
+                        ? alignableItems[itemIndex] : nil
+                    fragments.append(.init(
+                        index: fragments.count,
+                        alignmentItemIndex: previous?.alignmentItemIndex
+                            ?? next?.alignmentItemIndex,
+                        sourceCueID: cue.id,
+                        text: String(character),
+                        start: previous?.start ?? next?.start ?? cue.start,
+                        end: previous?.end ?? next?.end ?? cue.end
+                    ))
+                }
             }
         }
-        return groups.map { group in
-            let suffix = group.mapping.map {
-                "\($0.speakerLabel)-\($0.spanIndex + 1)"
-            } ?? "unattributed"
-            return .init(
-                id: "\(group.turn.id)-\(suffix)-\(group.firstItemIndex + 1)",
-                japanese: group.items.map(\.text).joined(),
-                precedingJapanese: group.turn.precedingJapanese,
-                followingJapanese: group.turn.followingJapanese,
-                speakerLabel: group.mapping?.speakerLabel,
-                sourceStart: group.items.map(\.start).min(),
-                sourceEnd: group.items.map(\.end).max()
-            )
-        }.sorted {
-            ($0.sourceStart ?? 0, $0.sourceEnd ?? 0, $0.id)
-                < ($1.sourceStart ?? 0, $1.sourceEnd ?? 0, $1.id)
+
+        var drafts: [HighQualitySemanticUnitDraft] = []
+        var current: [HighQualitySemanticFragmentEvidence] = []
+        func finish(_ decision: String) {
+            guard !current.isEmpty else { return }
+            drafts.append(.init(fragments: current, decisions: [decision]))
+            current = []
         }
+        for (index, fragment) in fragments.enumerated() {
+            if !current.isEmpty,
+               current.map(\.text).joined().count + fragment.text.count
+                    > policy.maximumCharacters {
+                finish("boundary:maximum-size")
+            }
+            current.append(fragment)
+            let next = fragments.indices.contains(index + 1) ? fragments[index + 1] : nil
+            if hasTerminalJapanesePunctuation(current.map(\.text).joined()) {
+                finish("boundary:punctuation")
+            } else if let next, next.start - fragment.end >= policy.pauseSeconds {
+                finish("boundary:pause")
+            }
+        }
+        finish("boundary:end-of-input")
+
+        var mergedDrafts: [HighQualitySemanticUnitDraft] = []
+        for index in drafts.indices {
+            let text = drafts[index].japanese
+            if isStandaloneJapaneseInterjection(text) {
+                drafts[index].decisions.append("keep:standalone-interjection")
+                mergedDrafts.append(drafts[index])
+            } else if text.count <= policy.shortFragmentCharacters,
+                      !hasTerminalJapanesePunctuation(text),
+                      index + 1 < drafts.count,
+                      text.count + drafts[index + 1].japanese.count
+                        <= policy.maximumCharacters {
+                drafts[index + 1].fragments = drafts[index].fragments
+                    + drafts[index + 1].fragments
+                drafts[index + 1].decisions = drafts[index].decisions
+                    + ["merge:short-fragment-into-next"] + drafts[index + 1].decisions
+            } else {
+                mergedDrafts.append(drafts[index])
+            }
+        }
+        drafts = mergedDrafts
+
+        let units = drafts.enumerated().map { offset, draft in
+            HighQualitySemanticUnitEvidence(
+                id: String(format: "unit-%04d", offset + 1),
+                japanese: draft.japanese,
+                sourceFragmentIndices: draft.fragments.map(\.index),
+                sourceCueIDs: draft.fragments.map(\.sourceCueID).reduce(into: []) {
+                    if !$0.contains($1) { $0.append($1) }
+                },
+                start: draft.fragments.map(\.start).min() ?? 0,
+                end: draft.fragments.map(\.end).max() ?? 0,
+                decisions: draft.decisions,
+                speakerLabel: nil,
+                speakerMappingIndices: []
+            )
+        }
+        guard units.map(\.japanese).joined() == sourceTurns.map(\.japanese).joined(),
+              Set(units.flatMap(\.sourceFragmentIndices)).count == fragments.count else {
+            throw HighQualityTranslationValidationError(
+                message: "Semantic translation units do not preserve all aligned Japanese."
+            )
+        }
+        let sourceTurnsByID = Dictionary(uniqueKeysWithValues: sourceTurns.map {
+            ($0.id, $0)
+        })
+        let turns = units.map { unit in
+            let firstSource = unit.sourceCueIDs.first.flatMap { sourceTurnsByID[$0] }
+            let lastSource = unit.sourceCueIDs.last.flatMap { sourceTurnsByID[$0] }
+            return HighQualityTranslationTurn(
+                id: unit.id,
+                japanese: unit.japanese,
+                precedingJapanese: firstSource?.precedingJapanese ?? [],
+                followingJapanese: lastSource?.followingJapanese ?? [],
+                speakerLabel: nil,
+                sourceStart: unit.start,
+                sourceEnd: unit.end
+            )
+        }
+        return (policy, fragments, units, turns)
+    }
+
+    private static func hasTerminalJapanesePunctuation(_ text: String) -> Bool {
+        let closers = CharacterSet(charactersIn: "\"’”」』】〕〗〙〛〞）)]〉》『")
+        let trimmed = text.trimmingCharacters(in: closers.union(.whitespacesAndNewlines))
+        return trimmed.last.map { "。！？!?｡".contains($0) } ?? false
+    }
+
+    private static func isStandaloneJapaneseInterjection(_ text: String) -> Bool {
+        let punctuation = CharacterSet.punctuationCharacters
+            .union(.whitespacesAndNewlines)
+        let value = text.trimmingCharacters(in: punctuation)
+        return ["あ", "あっ", "うん", "え", "えっ", "お", "おお", "おっ", "はい", "へえ", "ほう", "わあ", "うわ", "うわあ"]
+            .contains(value)
+    }
+
+    private static func speakerAttachment(
+        units: [HighQualitySemanticUnitEvidence],
+        fragments: [HighQualitySemanticFragmentEvidence],
+        mappings: [HighQualitySpeakerMapping],
+        explicitLabelsByCueID: [String: String]
+    ) -> (units: [HighQualitySemanticUnitEvidence], labelsByUnitID: [String: String]) {
+        var labelsByUnitID: [String: String] = [:]
+        let updated = units.map { unit in
+            let alignmentItems = Set(unit.sourceFragmentIndices.compactMap {
+                fragments.indices.contains($0) ? fragments[$0].alignmentItemIndex : nil
+            })
+            let matching = mappings.enumerated().filter {
+                alignmentItems.isEmpty
+                    ? unit.sourceCueIDs.contains($0.element.cueID)
+                    : alignmentItems.contains($0.element.alignmentItemIndex)
+            }
+            var durations: [String: TimeInterval] = [:]
+            for mapping in matching.map(\.element) {
+                durations[mapping.speakerLabel, default: 0] += mapping.overlapEnd
+                    - mapping.overlapStart
+            }
+            let explicit = unit.sourceCueIDs.compactMap { explicitLabelsByCueID[$0] }
+            let label = durations.max {
+                $0.value == $1.value ? $0.key > $1.key : $0.value < $1.value
+            }?.key ?? explicit.sorted().first
+            labelsByUnitID[unit.id] = label
+            var attached = unit
+            attached.speakerLabel = label
+            attached.speakerMappingIndices = matching.map(\.offset)
+            return attached
+        }
+        return (updated, labelsByUnitID)
     }
 
     private static func diarizationEvidence(
@@ -2017,42 +2264,17 @@ struct HighQualityJob: Sendable {
 
     private static func resultTurns(
         turns: [HighQualityTranslationTurn],
-        alignedCues: [HighQualityAlignedCue],
-        mappings: [HighQualitySpeakerMapping],
+        speakerLabelsByID: [String: String],
         translationsByID: [String: String]
     ) -> [HighQualityTranscriptTurn] {
-        if !mappings.isEmpty {
-            return turns.map {
-                .init(
-                    id: $0.id,
-                    japanese: $0.japanese,
-                    english: translationsByID[$0.id],
-                    speakerLabel: $0.speakerLabel,
-                    start: $0.sourceStart,
-                    end: $0.sourceEnd
-                )
-            }
-        }
-        guard !alignedCues.isEmpty else {
-            return turns.map {
-                .init(
-                    id: $0.id,
-                    japanese: $0.japanese,
-                    english: translationsByID[$0.id],
-                    start: $0.sourceStart,
-                    end: $0.sourceEnd
-                )
-            }
-        }
-        let turnsByID = Dictionary(uniqueKeysWithValues: turns.map { ($0.id, $0) })
-        return alignedCues.compactMap { cue in
-            guard let turn = turnsByID[cue.id] else { return nil }
+        turns.map { turn in
             return .init(
-                id: cue.id,
+                id: turn.id,
                 japanese: turn.japanese,
-                english: translationsByID[cue.id],
-                start: cue.start,
-                end: cue.end
+                english: translationsByID[turn.id],
+                speakerLabel: speakerLabelsByID[turn.id] ?? turn.speakerLabel,
+                start: turn.sourceStart,
+                end: turn.sourceEnd
             )
         }
     }

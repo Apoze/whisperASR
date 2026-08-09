@@ -90,6 +90,86 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
     }
 
+    func testFrozenSemanticTranslationExperimentWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_SEMANTIC_TRANSLATION_EXPERIMENT"] == "1",
+              let evidencePath = environment["WHISPERASR_SEMANTIC_TRANSLATION_EVIDENCE"],
+              let outputPath = environment["WHISPERASR_SEMANTIC_TRANSLATION_OUTPUT"] else {
+            throw XCTSkip("Set the semantic-translation experiment evidence and output paths.")
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let baseline = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: evidencePath))
+        )
+        let alignment = try XCTUnwrap(baseline.alignment)
+        let diarization = try XCTUnwrap(baseline.diarization)
+        let translator = LocalMLXTranslator()
+        let asrChunks = alignment.chunks.map { chunk in
+            HighQualityASRChunk(
+                index: chunk.index,
+                sourceStart: chunk.sourceStart,
+                sourceEnd: chunk.sourceEnd,
+                transcript: chunk.cues.map(\.text).joined()
+            )
+        }
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: baseline.sampleCount) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in baseline.rawASR ?? "" },
+            transcribeJapaneseAnchored: { _ in
+                .init(rawTranscript: baseline.rawASR ?? "", chunks: asrChunks)
+            },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: alignment.chunks,
+                    modelID: alignment.modelID,
+                    revision: alignment.revision,
+                    peakMemoryBytes: alignment.peakMemoryBytes
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _ in },
+            diarizeSpeakers: { _ in
+                .init(
+                    spans: diarization.rawSpans,
+                    modelID: diarization.modelID,
+                    revision: diarization.revision,
+                    peakMemoryBytes: diarization.peakMemoryBytes
+                )
+            },
+            unloadDiarization: {},
+            prepareTranslation: { try await translator.prepare(progress: $0) },
+            translateEnglish: { try await translator.translate($0) },
+            unloadTranslation: { await translator.unload() }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: evidencePath),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: baseline.model.backend,
+            speakerLabels: true,
+            outputRoot: URL(fileURLWithPath: outputPath)
+        ))
+
+        let units = try XCTUnwrap(result.evidence.alignment?.semanticUnits)
+        XCTAssertFalse(units.isEmpty)
+        XCTAssertTrue(units.allSatisfy { $0.japanese.count <= 48 })
+        XCTAssertEqual(units.map(\.japanese).joined(), alignment.mergedCues.map(\.text).joined())
+        XCTAssertTrue(result.evidence.translation?.request.turns.allSatisfy {
+            $0.speakerLabel == nil
+        } == true)
+        XCTAssertEqual(result.evidence.translation?.model, LocalMLXTranslator.modelID)
+        XCTAssertEqual(result.evidence.translation?.revision, LocalMLXTranslator.revision)
+        XCTAssertEqual(result.evidence.translation?.runtimeVersion, LocalMLXTranslator.runtimeVersion)
+        XCTAssertEqual(result.evidence.glossary.budget, baseline.glossary.budget)
+        XCTAssertEqual(result.evidence.glossary.coverageLimit, baseline.glossary.coverageLimit)
+        XCTAssertEqual(result.evidence.diarization?.rawSpans, diarization.rawSpans)
+    }
+
     func testFrozenSourceDecodesThroughTheProductLoaderWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_HIGH_QUALITY_SOURCE_CHECK"] == "1" else {
