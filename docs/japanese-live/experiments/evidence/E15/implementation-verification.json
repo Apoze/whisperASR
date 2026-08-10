@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ticket": 56,
+  "fixedPoint": "6dcbfdb017ffc55b3fc376994ac00e39cd025155",
+  "toolchain": {
+    "defaultDeveloperDirectory": "/Library/Developer/CommandLineTools",
+    "defaultFailure": "no such module 'XCTest'",
+    "selectedDeveloperDirectory": "/Applications/Xcode.app/Contents/Developer",
+    "diagnosis": "The first failure came from selecting Command Line Tools rather than the full Xcode developer directory; it was not a MetricX or product failure."
+  },
+  "completeSwiftSuite": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test",
+    "outcome": "failed-pre-existing-e13-evidence-control",
+    "executedTests": 359,
+    "skippedTests": 40,
+    "failures": 2,
+    "failingTest": "HighQualityGlossaryTests.testCheckedInE13EvidenceAndCoverageMatchExpandedCatalog",
+    "failureCountExplanation": "One test records separate development and holdout evidence mismatches.",
+    "attributionCommand": "git diff 6dcbfdb017ffc55b3fc376994ac00e39cd025155...HEAD -- Tests Sources docs/japanese-live/experiments/evidence/E13 docs/high-quality-glossary-e13.json",
+    "attributionDiffEmpty": true,
+    "log": "swift-test-full.log.gz"
+  },
+  "isolatedControl": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --skip-build --filter HighQualityGlossaryTests/testCheckedInE13EvidenceAndCoverageMatchExpandedCatalog",
+    "outcome": "reproduced",
+    "executedTests": 1,
+    "failures": 2,
+    "ticket56ChangedTestsSourcesOrE13Evidence": false,
+    "diagnosis": "The mismatch reproduces in the unchanged test, source, and E13 evidence paths inherited from the fixed point.",
+    "log": "swift-test-e13-control.log.gz"
+  },
+  "suiteExcludingKnownControl": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --skip-build --skip 'HighQualityGlossaryTests/testCheckedInE13EvidenceAndCoverageMatchExpandedCatalog'",
+    "outcome": "pass",
+    "executedTests": 358,
+    "skippedTests": 40,
+    "failures": 0,
+    "log": "swift-test-excluding-known-base-failure.log.gz"
+  },
+  "applicationLaunch": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift run",
+    "buildOutcome": "pass",
+    "runningAtCapture": true,
+    "processIDAtCapture": 9481,
+    "log": "app-launch.log.gz"
+  }
+}
