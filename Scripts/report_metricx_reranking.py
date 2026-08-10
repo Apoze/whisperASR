@@ -116,12 +116,15 @@ def injected_pairs(artifact: dict) -> list[dict]:
         bad = corrupt(clean, turn["japanese"], outputs[turns[index + 1]["id"]], kind)
         clean_id = f"development:injected-{index:03d}:clean"
         bad_id = f"development:injected-{index:03d}:corrupt"
+        control_candidate_id = clean_id if index % 2 == 0 else bad_id
         result.append({
             "pairID": f"development:injected-{index:03d}",
             "kind": "injected-corruption",
             "corruption": kind,
             "source": turn["japanese"],
-            "baselineCandidateID": clean_id if index % 2 == 0 else bad_id,
+            "baselineCandidateID": control_candidate_id,
+            "baselinePolicy": "counterbalanced-original-vs-corrupt-control",
+            "controlAssignment": "original" if control_candidate_id == clean_id else "corrupt",
             "expectedCandidateID": clean_id,
             "suspectReasonCodes": [f"injected-{kind}"],
             "candidates": [
@@ -239,8 +242,8 @@ def calibrate(development: Path, provenance_path: Path, policy_path: Path) -> No
         raise SystemExit("Development scoring rows do not exactly match the frozen candidates")
     calibration = calibrate_margin(pairs, values, MARGINS)
     injected = [pair for pair in pairs if pair["kind"] == "injected-corruption"]
-    baseline_correct = sum(pair["baselineCandidateID"] == pair["expectedCandidateID"]
-                           for pair in injected)
+    control_correct = sum(pair["baselineCandidateID"] == pair["expectedCandidateID"]
+                          for pair in injected)
     provenance = read(provenance_path)
     write(policy_path, {
         "schemaVersion": 1,
@@ -255,7 +258,8 @@ def calibrate(development: Path, provenance_path: Path, policy_path: Path) -> No
         "margin": calibration["selectedMargin"],
         "calibration": {
             **calibration,
-            "baselineInjectedAccuracy": baseline_correct / len(injected),
+            "counterbalancedControlAccuracy": control_correct / len(injected),
+            "counterbalancedControlDesign": "Equal original/corrupt assignments provide a frozen selection control; this is not the product baseline policy.",
             "humanEnglishReferencesUsed": False,
         },
         "promotionGates": {
@@ -299,13 +303,17 @@ def apply_selection(
     turns = {turn["id"]: turn for turn in evidence["request"]["turns"]}
     choices = []
     external = []
+    baseline_reasons = Counter()
     selected_reasons = Counter()
     for pair in pair_artifact["pairs"]:
         selected_id = select_candidate(pair, values, policy["margin"])
         selected = next(candidate for candidate in pair["candidates"]
                         if candidate["candidateID"] == selected_id)
+        baseline = next(candidate for candidate in pair["candidates"]
+                        if candidate["candidateID"] == pair["baselineCandidateID"])
         if pair["kind"] == "real-suspect":
             outputs[pair["cueID"]] = selected["text"]
+            baseline_reasons.update(baseline["reasonCodes"])
             selected_reasons.update(selected["reasonCodes"])
             reference = unit_reference(turns[pair["cueID"]], manifest)
             external.append({
@@ -326,6 +334,7 @@ def apply_selection(
             "overridden": selected_id != pair["baselineCandidateID"],
             "scores": {candidate["candidateID"]: values[candidate["candidateID"]]
                        for candidate in pair["candidates"]},
+            "baselineReasonCodes": baseline["reasonCodes"],
             "selectedReasonCodes": selected["reasonCodes"],
         })
     ordered = [
@@ -346,7 +355,8 @@ def apply_selection(
         "policySHA256": sha256(policy_path),
         "humanEnglishReferencesIncluded": False,
         "choices": choices,
-        "selectedIntegrityReasonCounts": dict(sorted(selected_reasons.items())),
+        "baselineIntegrityReasonCounts": dict(sorted(baseline_reasons.items())),
+        "metricxIntegrityReasonCounts": dict(sorted(selected_reasons.items())),
     })
     write(directory / "external-evaluation.json", {
         "schemaVersion": 1,
@@ -391,7 +401,11 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
         candidate_comet = comet(directory / "metrics/comet-score.json", "metricx.en.txt")
         real_choices = [choice for choice in selection["choices"]
                         if choice["kind"] == "real-suspect"]
-        hard_selected = sum(
+        baseline_hard_selected = sum(
+            bool(HARD_REASONS.intersection(choice["baselineReasonCodes"]))
+            for choice in real_choices
+        )
+        metricx_hard_selected = sum(
             bool(HARD_REASONS.intersection(choice["selectedReasonCodes"]))
             for choice in real_choices
         )
@@ -403,11 +417,19 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
             "overrides": sum(choice["overridden"] for choice in real_choices),
             "baseline": {"COMET": baseline_comet, "chrFPlusPlus": baseline_chrf},
             "metricx": {"COMET": candidate_comet, "chrFPlusPlus": candidate_chrf},
-            "selectedIntegrityReasonCounts": selection["selectedIntegrityReasonCounts"],
-            "hardFailedSelections": hard_selected,
+            "integrityReasonCounts": {
+                "baseline": selection["baselineIntegrityReasonCounts"],
+                "metricx": selection["metricxIntegrityReasonCounts"],
+            },
+            "hardFailedSelections": {
+                "baseline": baseline_hard_selected,
+                "metricx": metricx_hard_selected,
+            },
             "runtimeSeconds": runtime["runtimeSeconds"],
             "runtime": runtime["workerRuntime"],
             "peakMemoryBytes": runtime["peakWorkerRSSBytes"],
+            "minimumSystemAvailableBytes": runtime["systemMemory"]["minimumAvailableBytes"],
+            "systemReserveBytes": runtime["systemReserveBytes"],
             "weightBytes": provenance["model"]["weight"]["bytes"],
             "rawScores": {candidate_id: score_values[candidate_id]
                           for candidate_id in sorted(score_values)},
@@ -417,8 +439,10 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
             "referenceFreeIsolation": all("reference" not in item for item in score_data),
             "scoresOnlySuspectUnits": set(score_values) == expected_ids
                 and all(item["suspectReasonCodes"] for item in score_data),
-            "noHardFailedSelection": hard_selected == 0,
+            "noHardFailedSelection": metricx_hard_selected == 0,
             "sequentialModelHandoff": runtime["handoff"]["frozenProducerProcessExited"]
+                and runtime["handoff"]["producerArtifactFrozenBeforeLoad"]
+                and runtime["handoff"]["producerMemoryReleasedBeforeLoad"]
                 and not runtime["handoff"]["translateGemmaProcessesBeforeLoad"]
                 and runtime["handoff"]["workerExitedAfterScoring"],
             "memoryReserve": runtime["memoryReserveIntact"],
@@ -429,8 +453,8 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
                 **common,
                 "injectedChoiceAccuracy": calibration["accuracy"]
                     >= policy["promotionGates"]["minimumInjectedChoiceAccuracy"],
-                "beatsBaselineOnCorruptions": calibration["accuracy"]
-                    > calibration["baselineInjectedAccuracy"],
+                "beatsCounterbalancedControl": calibration["accuracy"]
+                    > calibration["counterbalancedControlAccuracy"],
                 "developmentCOMETNonRegression": candidate_comet is not None
                     and baseline_comet is not None and candidate_comet >= baseline_comet,
             }
@@ -482,10 +506,11 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
         "Ticket #56 changes only selection between frozen candidates. MetricX runs reference-free after the TranslateGemma producer process has exited; it never rewrites text.", "",
         f'Checkpoint `{provenance["model"]["id"]}` @ `{provenance["model"]["revision"]}` '
         f'({provenance["model"]["license"]}, {provenance["model"]["weight"]["bytes"] / 1_073_741_824:.2f} GiB).', "",
-        f'Frozen margin: `{policy["margin"]}`; injected choice accuracy: '
-        f'{policy["calibration"]["baselineInjectedAccuracy"]:.1%}→{policy["calibration"]["accuracy"]:.1%}.', "",
-        "| Split | Suspect units | Overrides | COMET baseline→MetricX | chrF++ baseline→MetricX | Runtime | Peak RSS |",
-        "|---|---:|---:|---:|---:|---:|---:|",
+        f'Frozen margin: `{policy["margin"]}`; counterbalanced control→MetricX '
+        f'injected choice accuracy: {policy["calibration"]["counterbalancedControlAccuracy"]:.1%}'
+        f'→{policy["calibration"]["accuracy"]:.1%}.', "",
+        "| Split | Suspect units | Overrides | COMET baseline→MetricX | chrF++ baseline→MetricX | Runtime | Peak RSS | Min system available |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         baseline, candidate = row["baseline"], row["metricx"]
@@ -495,7 +520,8 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
             f'| {row["split"]} | {row["suspectUnits"]} | {row["overrides"]} | '
             f'{baseline_comet}→{candidate_comet} | {baseline["chrFPlusPlus"]:.2f}→'
             f'{candidate["chrFPlusPlus"]:.2f} | {row["runtimeSeconds"]:.1f} s | '
-            f'{row["peakMemoryBytes"] / 1_073_741_824:.2f} GiB |'
+            f'{row["peakMemoryBytes"] / 1_073_741_824:.2f} GiB | '
+            f'{row["minimumSystemAvailableBytes"] / 1_073_741_824:.2f} GiB |'
         )
     lines += ["", f"Decision: **{decision}**.", "",
               "Two videos and the small number of real suspect units limit this conclusion."]

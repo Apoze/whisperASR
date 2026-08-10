@@ -70,7 +70,8 @@
         "realDevelopmentPairs": 2
       }
     ],
-    "baselineInjectedAccuracy": 0.5,
+    "counterbalancedControlAccuracy": 0.5,
+    "counterbalancedControlDesign": "Equal original/corrupt assignments provide a frozen selection control; this is not the product baseline policy.",
     "humanEnglishReferencesUsed": false
   },
   "promotionGates": {

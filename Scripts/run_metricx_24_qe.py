@@ -10,6 +10,7 @@ import importlib.metadata
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -24,6 +25,8 @@ SOURCE_REVISION = "fc4978eb064670f7cc33e93ea4f52d38396b8ae6"
 WEIGHT_SHA256 = "b1f2c03ab5ec5318a55b90b42eefa22431daa7b1a8e28a97a6aef23d18a24278"
 RESERVE_BYTES = 8 * 1_024**3
 DECLARED_PEAK_BYTES = 8 * 1_024**3
+MEMORY_PRESSURE_COMMAND = "/usr/bin/memory_pressure"
+MEMORY_SAMPLE_INTERVAL_SECONDS = 0.5
 
 
 def read_rows(path: Path) -> list[dict]:
@@ -70,6 +73,39 @@ def rss_bytes(pid: int) -> int:
 
 def physical_memory() -> int:
     return int(subprocess.check_output(["/usr/sbin/sysctl", "-n", "hw.memsize"], text=True))
+
+
+def parse_memory_pressure(output: str) -> dict:
+    total_match = re.search(r"The system has (\d+)", output)
+    percent_match = re.search(r"System-wide memory free percentage: (\d+)%", output)
+    if total_match is None or percent_match is None:
+        raise ValueError("Could not parse memory_pressure -Q output")
+    total = int(total_match.group(1))
+    percent = int(percent_match.group(1))
+    if total <= 0 or not 0 <= percent <= 100:
+        raise ValueError("memory_pressure -Q returned invalid capacity values")
+    return {
+        "totalMemoryBytes": total,
+        "availablePercent": percent,
+        "availableBytes": total * percent // 100,
+    }
+
+
+def system_memory_sample() -> dict:
+    environment = dict(os.environ)
+    environment["LC_ALL"] = "C"
+    result = subprocess.run(
+        [MEMORY_PRESSURE_COMMAND, "-Q"],
+        text=True,
+        capture_output=True,
+        check=False,
+        env=environment,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"memory_pressure -Q failed ({result.returncode}): {result.stderr.strip()}"
+        )
+    return {**parse_memory_pressure(result.stdout), "rawOutput": result.stdout.strip()}
 
 
 def translate_gemma_processes() -> list[dict]:
@@ -177,16 +213,31 @@ def controller(args: argparse.Namespace) -> None:
         raise SystemExit("Frozen TranslateGemma producer artifact is missing")
     if git_revision(args.source_root) != SOURCE_REVISION:
         raise SystemExit("MetricX source checkout does not match the frozen revision")
+    started = time.monotonic()
+    controller_wall_time_ns = time.time_ns()
     existing = translate_gemma_processes()
     total = physical_memory()
     baseline = rss_bytes(os.getpid())
-    preflight_capacity = baseline + DECLARED_PEAK_BYTES <= total - RESERVE_BYTES
+    producer_modified_ns = args.producer_artifact.stat().st_mtime_ns
+    producer_frozen = producer_modified_ns < controller_wall_time_ns
+    memory_sampling_error = None
+    try:
+        memory_before = system_memory_sample()
+    except (OSError, RuntimeError, ValueError) as error:
+        memory_before = None
+        memory_sampling_error = str(error)
+    budget_capacity = baseline + DECLARED_PEAK_BYTES <= total - RESERVE_BYTES
+    available_capacity = memory_before is not None \
+        and memory_before["availableBytes"] >= DECLARED_PEAK_BYTES + RESERVE_BYTES
+    producer_absent = producer_frozen and not existing
+    preflight_capacity = budget_capacity and available_capacity
     args.output.unlink(missing_ok=True)
     args.worker_metadata.unlink(missing_ok=True)
-    started = time.monotonic()
     runtime = {
         "schemaVersion": 1,
-        "outcome": "preflight-failure" if existing or not preflight_capacity else "running",
+        "outcome": "preflight-failure"
+        if not producer_absent or not preflight_capacity or memory_sampling_error
+        else "running",
         "modelID": MODEL_ID,
         "modelRevision": MODEL_REVISION,
         "producerArtifact": str(args.producer_artifact),
@@ -195,14 +246,28 @@ def controller(args: argparse.Namespace) -> None:
         "systemReserveBytes": RESERVE_BYTES,
         "declaredPeakBytes": DECLARED_PEAK_BYTES,
         "controllerBaselineRSSBytes": baseline,
+        "budgetCapacity": budget_capacity,
+        "availableCapacity": available_capacity,
         "preflightCapacity": preflight_capacity,
         "handoff": {
-            "frozenProducerProcessExited": True,
+            "producerArtifactFrozenBeforeLoad": producer_frozen,
+            "producerArtifactModifiedAtNanoseconds": producer_modified_ns,
+            "controllerStartedAtNanoseconds": controller_wall_time_ns,
+            "frozenProducerProcessExited": producer_absent,
             "translateGemmaProcessesBeforeLoad": existing,
+            "producerMemoryReleasedBeforeLoad": available_capacity,
+            "proofBasis": "The frozen artifact predates this controller, the TranslateGemma process scan is empty, and system-available memory can absorb the declared MetricX peak while preserving 8 GiB.",
             "workerExitedAfterScoring": False,
         },
+        "systemMemory": {
+            "command": f"{MEMORY_PRESSURE_COMMAND} -Q",
+            "availableResolution": "one percentage point; available bytes are rounded down",
+            "beforeLoad": memory_before,
+            "samples": [],
+            "samplingError": memory_sampling_error,
+        },
     }
-    if existing or not preflight_capacity:
+    if not producer_absent or not preflight_capacity or memory_sampling_error:
         write_json(args.runtime, runtime)
         raise SystemExit("Heavyweight preflight failed before MetricX load")
     command = [
@@ -214,17 +279,50 @@ def controller(args: argparse.Namespace) -> None:
     ]
     process = subprocess.Popen(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     peak = 0
+    memory_samples = []
+    minimum_available = memory_before["availableBytes"]
+    next_memory_sample = 0.0
     while process.poll() is None:
         peak = max(peak, rss_bytes(process.pid))
+        elapsed = time.monotonic() - started
+        if elapsed >= next_memory_sample:
+            try:
+                sample = system_memory_sample()
+                minimum_available = min(minimum_available, sample["availableBytes"])
+                memory_samples.append({
+                    "elapsedSeconds": elapsed,
+                    "availablePercent": sample["availablePercent"],
+                    "availableBytes": sample["availableBytes"],
+                })
+            except (OSError, RuntimeError, ValueError) as error:
+                memory_sampling_error = str(error)
+                process.terminate()
+            next_memory_sample = elapsed + MEMORY_SAMPLE_INTERVAL_SECONDS
         time.sleep(0.05)
     stdout, stderr = process.communicate()
     peak = max(peak, rss_bytes(process.pid))
     worker_after_exit = rss_bytes(process.pid)
+    try:
+        memory_after = system_memory_sample()
+        minimum_available = min(minimum_available, memory_after["availableBytes"])
+    except (OSError, RuntimeError, ValueError) as error:
+        memory_after = None
+        memory_sampling_error = memory_sampling_error or str(error)
+    worker_peak_budget_intact = peak <= total - RESERVE_BYTES
+    memory_reserve_intact = memory_sampling_error is None \
+        and minimum_available >= RESERVE_BYTES and worker_peak_budget_intact
+    runtime["systemMemory"].update({
+        "samples": memory_samples,
+        "minimumAvailableBytes": minimum_available,
+        "afterExit": memory_after,
+        "samplingError": memory_sampling_error,
+    })
     runtime.update({
         "runtimeSeconds": time.monotonic() - started,
         "peakWorkerRSSBytes": peak,
         "workerRSSAfterExitBytes": worker_after_exit,
-        "memoryReserveIntact": peak <= total - RESERVE_BYTES,
+        "workerPeakBudgetIntact": worker_peak_budget_intact,
+        "memoryReserveIntact": memory_reserve_intact,
         "workerReturnCode": process.returncode,
         "workerStdout": stdout,
         "workerStderr": stderr,
@@ -251,6 +349,21 @@ def read(path: Path) -> dict:
 
 
 def self_test() -> None:
+    parsed = parse_memory_pressure(
+        "The system has 25769803776 (1572864 pages with a page size of 16384).\n"
+        "System-wide memory free percentage: 42%\n"
+    )
+    assert parsed == {
+        "totalMemoryBytes": 25_769_803_776,
+        "availablePercent": 42,
+        "availableBytes": 10_823_317_585,
+    }
+    try:
+        parse_memory_pressure("unsupported output")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("memory pressure parsing must fail closed")
     validate_rows([{
         "candidateID": "candidate-a", "pairID": "pair-a", "source": "日本語",
         "hypothesis": "English", "suspectReasonCodes": ["injected-undertranslation"],

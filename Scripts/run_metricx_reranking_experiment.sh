@@ -91,6 +91,18 @@ package_evidence() {
   package_split development
   if [[ -d "$ARTIFACTS/holdout" ]]; then package_split holdout; fi
   if [[ -f "$LIVE_LOG" ]]; then cp "$LIVE_LOG" "$EVIDENCE/live-tests.log"; fi
+  if [[ -d "$ARTIFACTS/verification" ]]; then
+    if [[ -f "$ARTIFACTS/verification/implementation-verification.json" ]]; then
+      cp "$ARTIFACTS/verification/implementation-verification.json" \
+        "$EVIDENCE/implementation-verification.json"
+    fi
+    for file in swift-test-full.log swift-test-excluding-known-base-failure.log \
+        swift-test-e13-control.log app-launch.log; do
+      if [[ -f "$ARTIFACTS/verification/$file" ]]; then
+        gzip -n -c "$ARTIFACTS/verification/$file" >"$EVIDENCE/$file.gz"
+      fi
+    done
+  fi
 }
 
 run_split development

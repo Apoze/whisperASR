@@ -100,7 +100,8 @@
           "realDevelopmentPairs": 2
         }
       ],
-      "baselineInjectedAccuracy": 0.5,
+      "counterbalancedControlAccuracy": 0.5,
+      "counterbalancedControlDesign": "Equal original/corrupt assignments provide a frozen selection control; this is not the product baseline policy.",
       "humanEnglishReferencesUsed": false
     },
     "promotionGates": {
@@ -128,9 +129,15 @@
         "COMET": 0.48690228486180903,
         "chrFPlusPlus": 45.56749914498826
       },
-      "selectedIntegrityReasonCounts": {},
-      "hardFailedSelections": 0,
-      "runtimeSeconds": 18.440250042127445,
+      "integrityReasonCounts": {
+        "baseline": {},
+        "metricx": {}
+      },
+      "hardFailedSelections": {
+        "baseline": 0,
+        "metricx": 0
+      },
+      "runtimeSeconds": 19.31844549998641,
       "runtime": {
         "python": "3.11.15 (main, Jun 23 2026, 15:46:51) [Clang 22.1.3 ]",
         "platform": "macOS-26.5.2-arm64-arm-64bit",
@@ -149,12 +156,14 @@
         "weightPath": "/Users/maz/.cache/huggingface/hub/models--google--metricx-24-hybrid-large-v2p6-bfloat16/snapshots/febb720e29a059df2e8af3ffd71dcdc9e0a24910/pytorch_model.bin",
         "weightSHA256": "b1f2c03ab5ec5318a55b90b42eefa22431daa7b1a8e28a97a6aef23d18a24278",
         "modelDtype": "torch.bfloat16",
-        "modelLoadSeconds": 5.420009957859293,
-        "workerSeconds": 17.254341959021986,
-        "scoringSeconds": 9.125036037527025,
+        "modelLoadSeconds": 5.679255499970168,
+        "workerSeconds": 17.9867111670319,
+        "scoringSeconds": 9.488723581889644,
         "scoredCandidates": 36
       },
-      "peakMemoryBytes": 5409177600,
+      "peakMemoryBytes": 5409701888,
+      "minimumSystemAvailableBytes": 20100446945,
+      "systemReserveBytes": 8589934592,
       "weightBytes": 2459348101,
       "rawScores": {
         "development:injected-000:clean": 9.5625,
@@ -204,7 +213,7 @@
       "sequentialModelHandoff": true,
       "memoryReserve": true,
       "injectedChoiceAccuracy": false,
-      "beatsBaselineOnCorruptions": true,
+      "beatsCounterbalancedControl": true,
       "developmentCOMETNonRegression": true
     }
   },
@@ -214,12 +223,16 @@
   "decision": "no-go-development",
   "rawArtifacts": [
     {
+      "path": "docs/japanese-live/experiments/evidence/E15/app-launch.log.gz",
+      "sha256": "5335ff4546b4c7ad9f997e8ed911613dcd0bec935b5d2b23b893019a083f55fa"
+    },
+    {
       "path": "docs/japanese-live/experiments/evidence/E15/development-comet-score.json.gz",
       "sha256": "34729ead23b5b092acc1040cccf2693ee65634e405a4508aa8ff8c2771367b82"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-comet-score.raw.txt.gz",
-      "sha256": "f2b0d3813a1698468e66aa6cf16ec5f8963ed5277e888032653b0ee0caeff2b6"
+      "sha256": "91ce3524edb8b28334ecba936b37a7936c737d7d0181eef212869a6e5689e064"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-external-evaluation.json.gz",
@@ -247,11 +260,11 @@
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-runtime.json.gz",
-      "sha256": "c84cb16dee896fb452939afe716612dafe5db9c279bfc5fa2d6040eafaf8e058"
+      "sha256": "01ecdef7d8ed47edb996ee18407719acbc14a4cc79b5d25a8988d1d464e446f9"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-scores.jsonl.gz",
-      "sha256": "5f20bc890e7af257211a96a370e24985ea4a276f05223b5b0f956943ad407f81"
+      "sha256": "99f4ba7cdc0865fac8872bb704da69f1d07a67e50d6b5301e791a2940b312870"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-smoke-input.jsonl.gz",
@@ -271,11 +284,11 @@
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-worker.json.gz",
-      "sha256": "7fb90e445e1f0f21a05c0841dc5bc159ff67491e9d489013044f7f00b9ef0985"
+      "sha256": "c39dbef419e62fdff995e4cf822b876d6e4c0d5b58117628e3879a42ab6f072b"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-pairs.json.gz",
-      "sha256": "7ac29ad2807d78e676853a5faabd61962180cdd0616e7c8e70964207eb7b8f0e"
+      "sha256": "8259c86c65431c7d3bf5f22e25072237bd80e80425f2c1a56f34728a5284f94a"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-selected-translation.json.gz",
@@ -283,11 +296,15 @@
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/development-selection.json.gz",
-      "sha256": "8815ae8723da814d0c463291769051bed6cc0c5b5f32da44ca62230647773c7f"
+      "sha256": "3c8772da3b1f67693470030f2c179233fae21786a15e9013592eb609097d60dc"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/implementation-verification.json",
+      "sha256": "c1768eb0124b251a99c76ff1129db99aea2c798dc7762f04c28ec8683a30659d"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/policy.json",
-      "sha256": "de3e78e1e15705168784609793af007e1ed4d5cce6f59e7db59eed20d0ea37f9"
+      "sha256": "927bb8f35fce9bb9baece2b447ddb86be894e963c3df5b659a26fafd6eb05522"
     },
     {
       "path": "docs/japanese-live/experiments/evidence/E15/provenance.json",
@@ -296,6 +313,18 @@
     {
       "path": "docs/japanese-live/experiments/evidence/E15/runtime-lock.txt",
       "sha256": "80e94dec0b28bdf27f81dcf85b1578e03e72380c1695a9718d229dbd55641f63"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/swift-test-e13-control.log.gz",
+      "sha256": "523f756ee425406a461d9c3bf5069c285a768ff9e5cc06af4dc59666fa9a0ddc"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/swift-test-excluding-known-base-failure.log.gz",
+      "sha256": "8074f78b7b8d26b58cbbd3dbc3ba9b67b34d9abddc1f2e8592dd58a782c08ae6"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/swift-test-full.log.gz",
+      "sha256": "ed649f369858c9dfeabf704e83ed0eedb129fdffe8e912c5e01661e0a1d40cfa"
     }
   ],
   "evidenceLimitation": "Two complete reference videos and few real suspect units do not establish universal QE quality."

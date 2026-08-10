@@ -4,11 +4,11 @@ Ticket #56 changes only selection between frozen candidates. MetricX runs refere
 
 Checkpoint `google/metricx-24-hybrid-large-v2p6-bfloat16` @ `febb720e29a059df2e8af3ffd71dcdc9e0a24910` (Apache-2.0, 2.29 GiB).
 
-Frozen margin: `1.0`; injected choice accuracy: 50.0%→87.5%.
+Frozen margin: `1.0`; counterbalanced control→MetricX injected choice accuracy: 50.0%→87.5%.
 
-| Split | Suspect units | Overrides | COMET baseline→MetricX | chrF++ baseline→MetricX | Runtime | Peak RSS |
-|---|---:|---:|---:|---:|---:|---:|
-| development | 2 | 0 | 0.4869→0.4869 | 45.57→45.57 | 18.4 s | 5.04 GiB |
+| Split | Suspect units | Overrides | COMET baseline→MetricX | chrF++ baseline→MetricX | Runtime | Peak RSS | Min system available |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| development | 2 | 0 | 0.4869→0.4869 | 45.57→45.57 | 19.3 s | 5.04 GiB | 18.72 GiB |
 
 Decision: **no-go-development**.
 
