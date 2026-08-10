@@ -583,11 +583,26 @@ struct HighQualitySemanticUnitEvidence: Codable, Equatable, Sendable {
     var speakerMappingIndices: [Int]
 }
 
-struct HighQualityAlignmentExchange: Equatable, Sendable {
+struct HighQualityAlignmentExchange: Codable, Equatable, Sendable {
     let chunks: [HighQualityAlignmentChunk]
     let modelID: String
     let revision: String
     let peakMemoryBytes: UInt64
+    let configuration: [String: String]?
+
+    init(
+        chunks: [HighQualityAlignmentChunk],
+        modelID: String,
+        revision: String,
+        peakMemoryBytes: UInt64,
+        configuration: [String: String]? = nil
+    ) {
+        self.chunks = chunks
+        self.modelID = modelID
+        self.revision = revision
+        self.peakMemoryBytes = peakMemoryBytes
+        self.configuration = configuration
+    }
 }
 
 struct HighQualityAlignmentEvidence: Codable, Equatable, Sendable {
@@ -601,6 +616,8 @@ struct HighQualityAlignmentEvidence: Codable, Equatable, Sendable {
     var semanticUnitPolicy: HighQualitySemanticUnitPolicyEvidence? = nil
     var semanticFragments: [HighQualitySemanticFragmentEvidence]? = nil
     var semanticUnits: [HighQualitySemanticUnitEvidence]? = nil
+    var configuration: [String: String]? = nil
+    var worker: HighQualityWorkerEvidence? = nil
 }
 
 struct HighQualityDiarizationSpan: Codable, Equatable, Sendable {
@@ -609,7 +626,7 @@ struct HighQualityDiarizationSpan: Codable, Equatable, Sendable {
     let end: TimeInterval
 }
 
-struct HighQualityDiarizationExchange: Equatable, Sendable {
+struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
     let spans: [HighQualityDiarizationSpan]
     let modelID: String
     let revision: String
@@ -685,6 +702,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
     let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let configuration: [String: String]?
     var validationDiagnostics: [String]
+    var worker: HighQualityWorkerEvidence?
 
     init(
         modelID: String,
@@ -696,7 +714,8 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         useExclusiveReconciliation: Bool? = nil,
         speakerCountPolicy: HighQualitySpeakerCountPolicy? = nil,
         configuration: [String: String]? = nil,
-        validationDiagnostics: [String]
+        validationDiagnostics: [String],
+        worker: HighQualityWorkerEvidence? = nil
     ) {
         self.modelID = modelID
         self.revision = revision
@@ -708,6 +727,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         self.speakerCountPolicy = speakerCountPolicy
         self.configuration = configuration
         self.validationDiagnostics = validationDiagnostics
+        self.worker = worker
     }
 }
 
@@ -944,6 +964,10 @@ struct HighQualityJob: Sendable {
             [HighQualityTranslationTurn]
         ) async throws -> HighQualityAlignmentExchange
         let unloadAlignment: @Sendable () async -> Void
+        let alignmentModelID: String
+        let alignmentRevision: String
+        let alignmentDeclaredPeakMemoryBytes: UInt64
+        let alignmentWorkerEvidence: @Sendable () async -> HighQualityWorkerEvidence?
         let prepareDiarization: @Sendable (
             @escaping @Sendable (Double, String) -> Void
         ) async throws -> Void
@@ -955,6 +979,8 @@ struct HighQualityJob: Sendable {
         let unloadDiarization: @Sendable () async -> Void
         let diarizationModelID: String
         let diarizationDeclaredPeakMemoryBytes: UInt64
+        let diarizationRevision: String
+        let diarizationWorkerEvidence: @Sendable () async -> HighQualityWorkerEvidence?
         let completeDiarizationAttribution: Bool
         let currentMemoryBytes: @Sendable () async -> UInt64
         let prepareTranslation: @Sendable (
@@ -1008,6 +1034,12 @@ struct HighQualityJob: Sendable {
                 )
             },
             unloadAlignment: @escaping @Sendable () async -> Void = {},
+            alignmentModelID: String = HighQualityForcedAlignerRuntime.modelID,
+            alignmentRevision: String = HighQualityForcedAlignerRuntime.revision,
+            alignmentDeclaredPeakMemoryBytes: UInt64 =
+                HighQualityForcedAlignerRuntime.declaredPeakMemoryBytes,
+            alignmentWorkerEvidence: @escaping @Sendable () async
+                -> HighQualityWorkerEvidence? = { nil },
             prepareDiarization: @escaping @Sendable (
                 @escaping @Sendable (Double, String) -> Void
             ) async throws -> Void = { _ in
@@ -1032,6 +1064,9 @@ struct HighQualityJob: Sendable {
             diarizationModelID: String = HighQualitySpeakerKitRuntime.modelID,
             diarizationDeclaredPeakMemoryBytes: UInt64 =
                 HighQualitySpeakerKitRuntime.declaredPeakMemoryBytes,
+            diarizationRevision: String = HighQualitySpeakerKitRuntime.revision,
+            diarizationWorkerEvidence: @escaping @Sendable () async
+                -> HighQualityWorkerEvidence? = { nil },
             completeDiarizationAttribution: Bool = false,
             currentMemoryBytes: @escaping @Sendable () async -> UInt64 = { 0 },
             prepareTranslation: @escaping @Sendable (
@@ -1072,11 +1107,17 @@ struct HighQualityJob: Sendable {
             self.prepareAlignment = prepareAlignment
             self.alignJapanese = alignJapanese
             self.unloadAlignment = unloadAlignment
+            self.alignmentModelID = alignmentModelID
+            self.alignmentRevision = alignmentRevision
+            self.alignmentDeclaredPeakMemoryBytes = alignmentDeclaredPeakMemoryBytes
+            self.alignmentWorkerEvidence = alignmentWorkerEvidence
             self.prepareDiarization = prepareDiarization
             self.diarizeSpeakers = diarizeSpeakers
             self.unloadDiarization = unloadDiarization
             self.diarizationModelID = diarizationModelID
             self.diarizationDeclaredPeakMemoryBytes = diarizationDeclaredPeakMemoryBytes
+            self.diarizationRevision = diarizationRevision
+            self.diarizationWorkerEvidence = diarizationWorkerEvidence
             self.completeDiarizationAttribution = completeDiarizationAttribution
             self.currentMemoryBytes = currentMemoryBytes
             self.prepareTranslation = prepareTranslation
@@ -1088,8 +1129,8 @@ struct HighQualityJob: Sendable {
 
         static func production(for backend: HighQualityASRBackend) -> Self {
             let asr = HighQualityASRWorkerClient(backend: backend)
-            let aligner = HighQualityForcedAlignerRuntime()
-            let diarizer = HighQualitySpeakerKitRuntime()
+            let aligner = HighQualityAlignmentSpeakerWorkerClient(stage: .alignment)
+            let diarizer = HighQualityAlignmentSpeakerWorkerClient(stage: .diarization)
             let translator = HighQualityTranslationWorkerClient()
             let loadSource: @Sendable (URL) async throws -> [Float] = {
                 try await AudioLoader.loadSamples(url: $0)
@@ -1126,9 +1167,11 @@ struct HighQualityJob: Sendable {
                 prepareAlignment: { try await aligner.prepare(progress: $0) },
                 alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                 unloadAlignment: { await aligner.unload() },
+                alignmentWorkerEvidence: { await aligner.evidence },
                 prepareDiarization: { try await diarizer.prepare(progress: $0) },
                 diarizeSpeakers: diarizeSpeakers,
                 unloadDiarization: { await diarizer.unload() },
+                diarizationWorkerEvidence: { await diarizer.evidence },
                 currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
                 prepareTranslation: { try await translator.prepare(progress: $0) },
                 translateEnglish: { try await translator.translate($0) },
@@ -1386,6 +1429,15 @@ struct HighQualityJob: Sendable {
             )
         }
 
+        func rejectTerminalCriticalPressure(
+            _ evidence: HighQualityWorkerEvidence?,
+            stage: String
+        ) throws {
+            guard evidence?.pressureTransitions.contains(where: { $0.level == .critical }) == true
+            else { return }
+            throw HighQualityAlignmentSpeakerWorkerError.criticalMemoryPressure(stage: stage)
+        }
+
         func cleanupModel(
             _ lease: HeavyweightModelLease?,
             modelID: String,
@@ -1601,21 +1653,31 @@ struct HighQualityJob: Sendable {
             if needsAlignment {
                 begin(.preparingAlignment, fraction: 0.62, message: "Preparing forced alignment…")
                 alignmentLoadStarted = true
+                let duration = Double(samples.count) / 16_000
+                alignmentEvidence = .init(
+                    modelID: services.alignmentModelID,
+                    revision: services.alignmentRevision,
+                    chunks: [],
+                    mergedCues: [],
+                    sourceDuration: duration,
+                    peakMemoryBytes: 0,
+                    validationDiagnostics: []
+                )
                 alignmentLease = try await acquireModel(
-                    HighQualityForcedAlignerRuntime.modelID,
-                    peak: HighQualityForcedAlignerRuntime.declaredPeakMemoryBytes
+                    services.alignmentModelID,
+                    peak: services.alignmentDeclaredPeakMemoryBytes
                 )
                 if let alignmentLease {
                     manifest.modelEvents.append(.init(
                         kind: .pressureChecked,
-                        modelID: HighQualityForcedAlignerRuntime.modelID,
+                        modelID: services.alignmentModelID,
                         at: Date(),
                         message: "policy=macos-memory-pressure peak=\(alignmentLease.declaredPeakBytes) reserve=\(alignmentLease.reserveBytes) total=\(alignmentLease.totalMemoryBytes) available=\(alignmentLease.availableMemoryBytes) baseline=\(alignmentLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
                     kind: .loadStarted,
-                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    modelID: services.alignmentModelID,
                     at: Date()
                 ))
                 try await withMemoryGuard(alignmentLease) {
@@ -1630,7 +1692,7 @@ struct HighQualityJob: Sendable {
                 try await markLoaded(alignmentLease)
                 manifest.modelEvents.append(.init(
                     kind: .loadCompleted,
-                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    modelID: services.alignmentModelID,
                     at: Date()
                 ))
                 try Task.checkCancellation()
@@ -1638,7 +1700,6 @@ struct HighQualityJob: Sendable {
                 let exchange = try await withMemoryGuard(alignmentLease) {
                     try await services.alignJapanese(samples, baseTurns)
                 }
-                let duration = Double(samples.count) / 16_000
                 alignmentEvidence = .init(
                     modelID: exchange.modelID,
                     revision: exchange.revision,
@@ -1646,7 +1707,8 @@ struct HighQualityJob: Sendable {
                     mergedCues: [],
                     sourceDuration: duration,
                     peakMemoryBytes: exchange.peakMemoryBytes,
-                    validationDiagnostics: []
+                    validationDiagnostics: [],
+                    configuration: exchange.configuration
                 )
                 do {
                     let merged = try Self.validatedAlignment(
@@ -1661,7 +1723,8 @@ struct HighQualityJob: Sendable {
                         mergedCues: merged,
                         sourceDuration: duration,
                         peakMemoryBytes: exchange.peakMemoryBytes,
-                        validationDiagnostics: []
+                        validationDiagnostics: [],
+                        configuration: exchange.configuration
                     )
                     let semantic = try Self.semanticTranslationUnits(
                         alignment: validatedEvidence,
@@ -1685,7 +1748,7 @@ struct HighQualityJob: Sendable {
                 alignmentLease = nil
                 manifest.modelEvents.append(.init(
                     kind: .unloadCompleted,
-                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    modelID: services.alignmentModelID,
                     at: Date()
                 ))
                 if let release {
@@ -1695,11 +1758,20 @@ struct HighQualityJob: Sendable {
                     )
                     manifest.modelEvents.append(.init(
                         kind: .memoryReleaseChecked,
-                        modelID: HighQualityForcedAlignerRuntime.modelID,
+                        modelID: services.alignmentModelID,
                         at: Date(),
                         message: releaseMessage(release)
                     ))
                 }
+                alignmentEvidence?.worker = await services.alignmentWorkerEvidence()
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    alignmentEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
+                )
+                try rejectTerminalCriticalPressure(
+                    alignmentEvidence?.worker,
+                    stage: "Forced alignment"
+                )
                 try Task.checkCancellation()
                 alignedItems = alignmentEvidence?.chunks.flatMap(\.rawItems) ?? []
                 if alignedItems.isEmpty {
@@ -1716,6 +1788,17 @@ struct HighQualityJob: Sendable {
             if request.speakerLabels {
                 begin(.preparingDiarization, fraction: 0.74, message: "Preparing SpeakerKit…")
                 diarizationLoadStarted = true
+                diarizationEvidence = .init(
+                    modelID: services.diarizationModelID,
+                    revision: services.diarizationRevision,
+                    rawSpans: [],
+                    mappings: [],
+                    overlapRanges: [],
+                    peakMemoryBytes: 0,
+                    useExclusiveReconciliation: request.useExclusiveReconciliation,
+                    speakerCountPolicy: request.speakerCountPolicy,
+                    validationDiagnostics: []
+                )
                 diarizationLease = try await acquireModel(
                     services.diarizationModelID,
                     peak: services.diarizationDeclaredPeakMemoryBytes
@@ -1811,6 +1894,15 @@ struct HighQualityJob: Sendable {
                         message: releaseMessage(release)
                     ))
                 }
+                diarizationEvidence?.worker = await services.diarizationWorkerEvidence()
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    diarizationEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
+                )
+                try rejectTerminalCriticalPressure(
+                    diarizationEvidence?.worker,
+                    stage: "SpeakerKit"
+                )
                 try Task.checkCancellation()
             }
             let speakerAttachment = Self.speakerAttachment(
@@ -2292,8 +2384,19 @@ struct HighQualityJob: Sendable {
                 alignmentUnloaded = true
                 await cleanupModel(
                     alignmentLease,
-                    modelID: HighQualityForcedAlignerRuntime.modelID,
+                    modelID: services.alignmentModelID,
                     unload: services.unloadAlignment
+                )
+            }
+            if alignmentLoadStarted {
+                if [.preparingAlignment, .aligning].contains(currentStage),
+                   alignmentEvidence?.validationDiagnostics.isEmpty == true {
+                    alignmentEvidence?.validationDiagnostics = [error.localizedDescription]
+                }
+                alignmentEvidence?.worker = await services.alignmentWorkerEvidence()
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    alignmentEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
                 )
             }
             if diarizationLoadStarted, !diarizationUnloaded {
@@ -2302,6 +2405,17 @@ struct HighQualityJob: Sendable {
                     diarizationLease,
                     modelID: services.diarizationModelID,
                     unload: services.unloadDiarization
+                )
+            }
+            if diarizationLoadStarted {
+                if [.preparingDiarization, .diarizing].contains(currentStage),
+                   diarizationEvidence?.validationDiagnostics.isEmpty == true {
+                    diarizationEvidence?.validationDiagnostics = [error.localizedDescription]
+                }
+                diarizationEvidence?.worker = await services.diarizationWorkerEvidence()
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    diarizationEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
                 )
             }
             if translationLoadStarted, !translationUnloaded {

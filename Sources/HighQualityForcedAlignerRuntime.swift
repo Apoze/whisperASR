@@ -104,7 +104,11 @@ actor HighQualityForcedAlignerRuntime {
             chunks: chunks,
             modelID: Self.modelID,
             revision: Self.revision,
-            peakMemoryBytes: UInt64(max(0, Memory.peakMemory))
+            peakMemoryBytes: UInt64(max(0, Memory.peakMemory)),
+            configuration: [
+                "language": "Japanese",
+                "sampleRate": String(Self.sampleRate),
+            ]
         )
     }
 

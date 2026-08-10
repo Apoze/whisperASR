@@ -81,6 +81,13 @@ enum WhisperASREntryPoint {
                 directory: URL(fileURLWithPath: arguments[2], isDirectory: true)
             ))
         }
+        if arguments.count == 3,
+           let stage = HighQualityAlignmentSpeakerWorkerCommand.stage(for: arguments[1]) {
+            exit(await HighQualityAlignmentSpeakerWorkerCommand.run(
+                stage: stage,
+                directory: URL(fileURLWithPath: arguments[2], isDirectory: true)
+            ))
+        }
         WhisperASRApp.main()
     }
 }

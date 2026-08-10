@@ -2060,6 +2060,196 @@ final class HighQualityJobTests: XCTestCase {
         try await gate.endWorkflow(live)
     }
 
+    func testAlignmentAndDiarizationWorkerEvidenceReachesRawEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let alignmentWorker = Self.workerEvidence(pid: 41, peak: 120)
+        let diarizationWorker = Self.workerEvidence(pid: 42, peak: 240)
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 16_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { samples, turns in
+                var exchange = try await highQualityFixtureAlignment(samples, turns)
+                exchange = .init(
+                    chunks: exchange.chunks,
+                    modelID: exchange.modelID,
+                    revision: exchange.revision,
+                    peakMemoryBytes: exchange.peakMemoryBytes,
+                    configuration: ["language": "Japanese", "sampleRate": "16000"]
+                )
+                return exchange
+            },
+            unloadAlignment: {},
+            alignmentWorkerEvidence: { alignmentWorker },
+            prepareDiarization: { _ in },
+            diarizeSpeakers: { _, exclusive, policy in
+                .init(
+                    spans: [.init(speakerID: 0, start: 0, end: 1)],
+                    modelID: "fixture-speakerkit",
+                    revision: "fixture-revision",
+                    peakMemoryBytes: 0,
+                    useExclusiveReconciliation: exclusive,
+                    speakerCountPolicy: policy,
+                    configuration: [
+                        "precision": "quantized",
+                        "clusterDistanceThreshold": "library-default",
+                        "overlap": "non-exclusive",
+                        "attribution": "principal",
+                    ]
+                )
+            },
+            unloadDiarization: {},
+            diarizationWorkerEvidence: { diarizationWorker }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.evidence.alignment?.worker, alignmentWorker)
+        XCTAssertEqual(result.evidence.diarization?.worker, diarizationWorker)
+        XCTAssertEqual(result.evidence.alignment?.configuration?["sampleRate"], "16000")
+        XCTAssertEqual(result.evidence.diarization?.configuration?["precision"], "quantized")
+        XCTAssertEqual(result.manifest.peakMemoryBytes, 240)
+        XCTAssertEqual(result.turns.map(\.speakerLabel), ["SPEAKER_00"])
+    }
+
+    func testAlignmentWorkerFailureIsClassifiedAndPreservesPartialEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = UUID()
+        let worker = Self.workerEvidence(pid: 43, peak: 333)
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in
+                throw HighQualityAlignmentSpeakerWorkerError.protocolFailure(
+                    stage: "Forced alignment",
+                    message: "malformed evidence"
+                )
+            },
+            unloadAlignment: {},
+            alignmentWorkerEvidence: { worker }
+        ))
+
+        do {
+            _ = try await job.run(.init(
+                id: id,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishSubtitles],
+                backend: .qwenJA,
+                outputRoot: root
+            ))
+            XCTFail("Malformed alignment evidence must fail the job.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .alignment)
+        }
+
+        let directory = root.appendingPathComponent(id.uuidString)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(evidence.alignment?.worker, worker)
+        XCTAssertEqual(evidence.alignment?.validationDiagnostics, [
+            "Forced alignment worker failed: malformed evidence",
+        ])
+        XCTAssertEqual(evidence.failures.first?.stage, .alignment)
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("english-subtitles.srt").path
+        ))
+    }
+
+    func testCriticalTransitionAfterAlignmentResponseFailsBeforeExport() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = UUID()
+        let worker = Self.workerEvidence(
+            pid: 44,
+            peak: 444,
+            pressureTransitions: [
+                .init(level: .critical, at: Date(timeIntervalSince1970: 2)),
+            ]
+        )
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 16_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
+            unloadAlignment: {},
+            alignmentWorkerEvidence: { worker }
+        ))
+
+        do {
+            _ = try await job.run(.init(
+                id: id,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishSubtitles],
+                backend: .qwenJA,
+                outputRoot: root
+            ))
+            XCTFail("A terminal critical-pressure transition must fail before export.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .alignment)
+            XCTAssertTrue(error.message.contains("recoverable"))
+        }
+
+        let directory = root.appendingPathComponent(id.uuidString)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(evidence.alignment?.worker, worker)
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("english-subtitles.srt").path
+        ))
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("english-subtitles.vtt").path
+        ))
+    }
+
+    private static func workerEvidence(
+        pid: Int32,
+        peak: UInt64,
+        pressureTransitions: [MacMemoryPressureTransition] = []
+    ) -> HighQualityWorkerEvidence {
+        .init(
+            command: ["fixture-worker"],
+            processIdentifier: pid,
+            startedAt: Date(timeIntervalSince1970: 1),
+            exitedAt: Date(timeIntervalSince1970: 2),
+            elapsedSeconds: 1,
+            exitStatus: 0,
+            terminationReason: "exit",
+            forcedTermination: false,
+            peakPhysicalFootprintBytes: peak,
+            pressureTransitions: pressureTransitions,
+            availableMemorySamples: [],
+            swapUsedBeforeBytes: 10,
+            swapUsedAfterBytes: 10,
+            rawLogPath: "/tmp/fixture-worker.log",
+            rawLog: "fixture"
+        )
+    }
+
     private func assertFailure(
         _ expected: HighQualityJobFailureStage,
         operation: () async throws -> HighQualityJobResult

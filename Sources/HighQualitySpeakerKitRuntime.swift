@@ -77,6 +77,17 @@ actor HighQualitySpeakerKitRuntime {
         }
         let result: DiarizationResult = measured.value
         try Task.checkCancellation()
+        let configuration = [
+            "runtimeRevision": Self.runtimeRevision,
+            "precision": precision.rawValue,
+            "segmenterVariant": precision.segmenterVariant,
+            "embedderVariant": precision.embedderVariant,
+            "speakerCount": speakerCountPolicy.expectedCount.map { String($0) } ?? "automatic",
+            "clusterDistanceThreshold": clusterDistanceThreshold.map { String($0) }
+                ?? "library-default",
+            "overlap": useExclusiveReconciliation ? "exclusive" : "non-exclusive",
+            "attribution": "principal",
+        ]
         return .init(
             spans: result.segments.flatMap { segment in
                 segment.speaker.speakerIds.map {
@@ -91,7 +102,8 @@ actor HighQualitySpeakerKitRuntime {
             revision: Self.revision,
             peakMemoryBytes: measured.peakMemoryBytes,
             useExclusiveReconciliation: useExclusiveReconciliation,
-            speakerCountPolicy: speakerCountPolicy
+            speakerCountPolicy: speakerCountPolicy,
+            configuration: configuration
         )
     }
 
