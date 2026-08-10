@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 1,
+  "ticket": 56,
+  "model": {
+    "id": "google/metricx-24-hybrid-large-v2p6-bfloat16",
+    "revision": "febb720e29a059df2e8af3ffd71dcdc9e0a24910",
+    "license": "Apache-2.0",
+    "modelCard": "https://huggingface.co/google/metricx-24-hybrid-large-v2p6-bfloat16",
+    "weight": {
+      "file": "pytorch_model.bin",
+      "bytes": 2459348101,
+      "gitBlobOID": "9de31d966b258310857433bc21ce75497eb4a81e",
+      "sha256": "b1f2c03ab5ec5318a55b90b42eefa22431daa7b1a8e28a97a6aef23d18a24278",
+      "dtype": "bfloat16"
+    }
+  },
+  "runtimeSource": {
+    "repository": "https://github.com/google-research/metricx",
+    "revision": "fc4978eb064670f7cc33e93ea4f52d38396b8ae6",
+    "modelClass": "metricx24.models.MT5ForRegression",
+    "officialMaximumInputTokens": 1536,
+    "officialScoreRange": [
+      0,
+      25
+    ],
+    "scoreDirection": "lower-is-better",
+    "mode": "reference-free-qe",
+    "appleSilicon": "The official predictor falls back to PyTorch CPU when CUDA is absent. E15 freezes that native arm64 CPU path; it does not claim unsupported MPS execution. Exact runtime versions are captured by each run.",
+    "experimentRequirements": "Scripts/metricx_24_requirements.txt"
+  },
+  "policy": {
+    "schemaVersion": 1,
+    "ticket": 56,
+    "modelID": "google/metricx-24-hybrid-large-v2p6-bfloat16",
+    "modelRevision": "febb720e29a059df2e8af3ffd71dcdc9e0a24910",
+    "provenanceSHA256": "b0069de164770dba3d5fe8dc954c231b6677f14fb275f6ad5b87f89c7d0d434e",
+    "mode": "reference-free-qe",
+    "scoreDirection": "lower-is-better",
+    "candidatePolicy": "hard-veto-then-margin-over-baseline",
+    "hardFailureReasons": [
+      "control-scaffolding",
+      "critical-glossary-violation",
+      "degenerate-repetition",
+      "empty-output",
+      "residual-japanese",
+      "truncated-output"
+    ],
+    "margin": 1.0,
+    "calibration": {
+      "selectedMargin": 1.0,
+      "accuracy": 0.875,
+      "realDevelopmentOverrides": 0,
+      "grid": [
+        {
+          "margin": 0.0,
+          "correctInjectedChoices": 14,
+          "injectedChoices": 16,
+          "injectedAccuracy": 0.875,
+          "realDevelopmentOverrides": 0,
+          "realDevelopmentPairs": 2
+        },
+        {
+          "margin": 0.1,
+          "correctInjectedChoices": 14,
+          "injectedChoices": 16,
+          "injectedAccuracy": 0.875,
+          "realDevelopmentOverrides": 0,
+          "realDevelopmentPairs": 2
+        },
+        {
+          "margin": 0.25,
+          "correctInjectedChoices": 14,
+          "injectedChoices": 16,
+          "injectedAccuracy": 0.875,
+          "realDevelopmentOverrides": 0,
+          "realDevelopmentPairs": 2
+        },
+        {
+          "margin": 0.5,
+          "correctInjectedChoices": 14,
+          "injectedChoices": 16,
+          "injectedAccuracy": 0.875,
+          "realDevelopmentOverrides": 0,
+          "realDevelopmentPairs": 2
+        },
+        {
+          "margin": 1.0,
+          "correctInjectedChoices": 14,
+          "injectedChoices": 16,
+          "injectedAccuracy": 0.875,
+          "realDevelopmentOverrides": 0,
+          "realDevelopmentPairs": 2
+        },
+        {
+          "margin": 2.0,
+          "correctInjectedChoices": 13,
+          "injectedChoices": 16,
+          "injectedAccuracy": 0.8125,
+          "realDevelopmentOverrides": 0,
+          "realDevelopmentPairs": 2
+        }
+      ],
+      "baselineInjectedAccuracy": 0.5,
+      "humanEnglishReferencesUsed": false
+    },
+    "promotionGates": {
+      "minimumInjectedChoiceAccuracy": 0.9,
+      "minimumHoldoutCOMETGain": 0.005,
+      "minimumHoldoutChrFPlusPlusGain": 0.0,
+      "maximumAddedRuntimeFraction": 0.1,
+      "systemReserveBytes": 8589934592
+    },
+    "developmentSourceArtifactSHA256": "b8b0ed61c761e4e78b656b1fb7834e329293f7c14b5a11833ed332ff67fcd2ef",
+    "frozenBeforeHoldout": true
+  },
+  "rows": [
+    {
+      "split": "development",
+      "corpusID": "qudu2fx3ncc",
+      "suspectUnits": 2,
+      "scoredCandidates": 36,
+      "overrides": 0,
+      "baseline": {
+        "COMET": 0.48690228486180903,
+        "chrFPlusPlus": 45.56749914498826
+      },
+      "metricx": {
+        "COMET": 0.48690228486180903,
+        "chrFPlusPlus": 45.56749914498826
+      },
+      "selectedIntegrityReasonCounts": {},
+      "hardFailedSelections": 0,
+      "runtimeSeconds": 18.440250042127445,
+      "runtime": {
+        "python": "3.11.15 (main, Jun 23 2026, 15:46:51) [Clang 22.1.3 ]",
+        "platform": "macOS-26.5.2-arm64-arm-64bit",
+        "architecture": "arm64",
+        "torch": "2.7.1",
+        "transformers": "4.30.2",
+        "sentencepiece": "0.1.99",
+        "protobuf": "3.20.3",
+        "huggingfaceHub": "0.36.2",
+        "device": "cpu",
+        "modelID": "google/metricx-24-hybrid-large-v2p6-bfloat16",
+        "modelRevision": "febb720e29a059df2e8af3ffd71dcdc9e0a24910",
+        "tokenizerID": "google/mt5-xl",
+        "tokenizerRevision": "63fc6450d80515b48e026b69ef2fbbd426433e84",
+        "sourceRevision": "fc4978eb064670f7cc33e93ea4f52d38396b8ae6",
+        "weightPath": "/Users/maz/.cache/huggingface/hub/models--google--metricx-24-hybrid-large-v2p6-bfloat16/snapshots/febb720e29a059df2e8af3ffd71dcdc9e0a24910/pytorch_model.bin",
+        "weightSHA256": "b1f2c03ab5ec5318a55b90b42eefa22431daa7b1a8e28a97a6aef23d18a24278",
+        "modelDtype": "torch.bfloat16",
+        "modelLoadSeconds": 5.420009957859293,
+        "workerSeconds": 17.254341959021986,
+        "scoringSeconds": 9.125036037527025,
+        "scoredCandidates": 36
+      },
+      "peakMemoryBytes": 5409177600,
+      "weightBytes": 2459348101,
+      "rawScores": {
+        "development:injected-000:clean": 9.5625,
+        "development:injected-000:corrupt": 15.75,
+        "development:injected-001:clean": 3.84375,
+        "development:injected-001:corrupt": 6.46875,
+        "development:injected-002:clean": 3.15625,
+        "development:injected-002:corrupt": 9.875,
+        "development:injected-003:clean": 1.4375,
+        "development:injected-003:corrupt": 9.875,
+        "development:injected-004:clean": 3.203125,
+        "development:injected-004:corrupt": 3.390625,
+        "development:injected-005:clean": 2.03125,
+        "development:injected-005:corrupt": 1.4921875,
+        "development:injected-006:clean": 8.1875,
+        "development:injected-006:corrupt": 3.75,
+        "development:injected-007:clean": 1.6640625,
+        "development:injected-007:corrupt": 2.765625,
+        "development:injected-008:clean": 2.3125,
+        "development:injected-008:corrupt": 3.78125,
+        "development:injected-009:clean": 2.421875,
+        "development:injected-009:corrupt": 8.9375,
+        "development:injected-010:clean": 4.8125,
+        "development:injected-010:corrupt": 13.25,
+        "development:injected-011:clean": 1.5703125,
+        "development:injected-011:corrupt": 9.0,
+        "development:injected-012:clean": 6.59375,
+        "development:injected-012:corrupt": 15.875,
+        "development:injected-013:clean": 2.640625,
+        "development:injected-013:corrupt": 5.125,
+        "development:injected-014:clean": 2.6875,
+        "development:injected-014:corrupt": 8.625,
+        "development:injected-015:clean": 6.40625,
+        "development:injected-015:corrupt": 9.5625,
+        "development:unit-0001:attempt-1": 6.6875,
+        "development:unit-0001:attempt-2": 9.5625,
+        "development:unit-0033:attempt-1": 7.71875,
+        "development:unit-0033:attempt-2": 4.96875
+      }
+    }
+  ],
+  "gates": {
+    "development": {
+      "referenceFreeIsolation": true,
+      "scoresOnlySuspectUnits": true,
+      "noHardFailedSelection": true,
+      "sequentialModelHandoff": true,
+      "memoryReserve": true,
+      "injectedChoiceAccuracy": false,
+      "beatsBaselineOnCorruptions": true,
+      "developmentCOMETNonRegression": true
+    }
+  },
+  "readyForHoldout": false,
+  "liveGatesUnchanged": false,
+  "promoted": false,
+  "decision": "no-go-development",
+  "rawArtifacts": [
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-comet-score.json.gz",
+      "sha256": "34729ead23b5b092acc1040cccf2693ee65634e405a4508aa8ff8c2771367b82"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-comet-score.raw.txt.gz",
+      "sha256": "f2b0d3813a1698468e66aa6cf16ec5f8963ed5277e888032653b0ee0caeff2b6"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-external-evaluation.json.gz",
+      "sha256": "92a6f837740d73fc7a9502d239797faf59013b41c3747a3a4095d3e4bef1eba1"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-infrastructure-failure-missing-protobuf.json.gz",
+      "sha256": "140e21cdcff6bcc3c7292832b3fd6394f6b7c1dc1e83433645e1c4e245df74e5"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-infrastructure-failure-protobuf-5.29.5.json.gz",
+      "sha256": "0acccfa4b5cd28ca2ef4844eeba465fac7e530c42dd764df79b19b998eb9212c"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-infrastructure-failure-transformers-4.57.6.json.gz",
+      "sha256": "29a344d21e1ea8667cf6b32ab45a880545883519db3ddb893c60fa8dbd42742c"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-input.jsonl.gz",
+      "sha256": "81e3c0c0e745812d8c2c8139f5c8b2c00fd59c90dfa124a7d8e7c84008b2f61e"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-run.log.gz",
+      "sha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-runtime.json.gz",
+      "sha256": "c84cb16dee896fb452939afe716612dafe5db9c279bfc5fa2d6040eafaf8e058"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-scores.jsonl.gz",
+      "sha256": "5f20bc890e7af257211a96a370e24985ea4a276f05223b5b0f956943ad407f81"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-smoke-input.jsonl.gz",
+      "sha256": "6713536f770bc945d316c205020b1ab7295d003001c8bad54b04d826df429136"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-smoke-runtime.json.gz",
+      "sha256": "3e71c9c7bf4e1cdbafca12b579d251d3cd09ae99d0513917b6a83388d7366820"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-smoke-scores.jsonl.gz",
+      "sha256": "922ef7106e7d49b1ce36b045a453768b08dc494bf1873eca6d307d73f5c8d66e"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-smoke-worker.json.gz",
+      "sha256": "5577702ee740546eb71cc82b6c75f3df893c43b4d2cd71d92b5bc4bbc3d7f84f"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-metricx-worker.json.gz",
+      "sha256": "7fb90e445e1f0f21a05c0841dc5bc159ff67491e9d489013044f7f00b9ef0985"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-pairs.json.gz",
+      "sha256": "7ac29ad2807d78e676853a5faabd61962180cdd0616e7c8e70964207eb7b8f0e"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-selected-translation.json.gz",
+      "sha256": "e59221f4afb32f00ca391df22bdf0750d189b9956bee8285158e5d207ff71fec"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-selection.json.gz",
+      "sha256": "8815ae8723da814d0c463291769051bed6cc0c5b5f32da44ca62230647773c7f"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/policy.json",
+      "sha256": "de3e78e1e15705168784609793af007e1ed4d5cce6f59e7db59eed20d0ea37f9"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/provenance.json",
+      "sha256": "b0069de164770dba3d5fe8dc954c231b6677f14fb275f6ad5b87f89c7d0d434e"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E15/runtime-lock.txt",
+      "sha256": "80e94dec0b28bdf27f81dcf85b1578e03e72380c1695a9718d229dbd55641f63"
+    }
+  ],
+  "evidenceLimitation": "Two complete reference videos and few real suspect units do not establish universal QE quality."
+}
