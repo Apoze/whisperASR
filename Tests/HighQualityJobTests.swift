@@ -3,6 +3,118 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testAutoAndExpectedSpeakerCountsReachSpeakerKitAndRawEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        for policy in [HighQualitySpeakerCountPolicy.automatic, .expected(2)] {
+            let job = HighQualityJob(services: .init(
+                loadSource: { _ in Array(repeating: 0, count: 16_000) },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in "一。" },
+                unloadASR: {},
+                prepareAlignment: { _ in },
+                alignJapanese: { _, _ in
+                    .init(
+                        chunks: [.init(
+                            index: 0,
+                            sourceStart: 0,
+                            sourceEnd: 1,
+                            cues: [.init(id: "cue-0001", text: "一。", start: 0, end: 1)]
+                        )],
+                        modelID: "aligner",
+                        revision: "revision",
+                        peakMemoryBytes: 0
+                    )
+                },
+                unloadAlignment: {},
+                prepareDiarization: { _ in },
+                diarizeSpeakers: { _, _, receivedPolicy in
+                    XCTAssertEqual(receivedPolicy, policy)
+                    return .init(
+                        spans: [.init(speakerID: 0, start: 0, end: 1)],
+                        modelID: "speakerkit",
+                        revision: "revision",
+                        peakMemoryBytes: 0,
+                        speakerCountPolicy: receivedPolicy
+                    )
+                },
+                unloadDiarization: {}
+            ))
+            let request = HighQualityJobRequest(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                speakerLabels: true,
+                speakerCountPolicy: policy,
+                outputRoot: root
+            )
+
+            XCTAssertEqual(request.speakerCountPolicy, policy)
+            let result = try await job.run(request)
+
+            XCTAssertEqual(result.manifest.speakerCountPolicy, policy)
+            XCTAssertEqual(result.evidence.speakerCountPolicy, policy)
+            XCTAssertEqual(result.evidence.diarization?.speakerCountPolicy, policy)
+        }
+    }
+
+    func testInvalidOrDisabledExpectedSpeakerCountFailsBeforeModelPreparation() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        for (speakerLabels, policy) in [
+            (true, HighQualitySpeakerCountPolicy.expected(0)),
+            (true, .expected(21)),
+            (false, .expected(2)),
+        ] {
+            let calls = CallLog()
+            let job = HighQualityJob(services: .init(
+                loadSource: { _ in
+                    await calls.append("load-source")
+                    return [0]
+                },
+                prepareASR: { _ in await calls.append("prepare-asr") },
+                transcribeJapanese: { _ in "一。" },
+                unloadASR: {}
+            ))
+            let request = HighQualityJobRequest(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                speakerLabels: speakerLabels,
+                speakerCountPolicy: policy,
+                outputRoot: root
+            )
+
+            do {
+                _ = try await job.run(request)
+                XCTFail("Invalid Speaker-count policy must fail.")
+            } catch let error as HighQualityJobError {
+                XCTAssertEqual(error.stage, .application)
+                let directory = try XCTUnwrap(error.resultDirectory)
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let manifest = try decoder.decode(
+                    HighQualityJobManifest.self,
+                    from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+                )
+                let evidence = try decoder.decode(
+                    HighQualityRawEvidence.self,
+                    from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
+                )
+                XCTAssertEqual(manifest.status, .failed)
+                XCTAssertEqual(manifest.failures.first?.stage, .application)
+                XCTAssertEqual(manifest.speakerCountPolicy, policy)
+                XCTAssertEqual(evidence.speakerCountPolicy, policy)
+            }
+            let recordedCalls = await calls.values
+            XCTAssertTrue(recordedCalls.isEmpty)
+        }
+    }
+
     func testForcedAlignmentTimesStayInsideTheirAudioWindow() {
         let interval = HighQualityForcedAlignerRuntime.boundedInterval(
             start: 612.5,
@@ -81,7 +193,7 @@ final class HighQualityJobTests: XCTestCase {
                 },
                 unloadAlignment: {},
                 prepareDiarization: { _ in },
-                diarizeSpeakers: { _, _ in
+                diarizeSpeakers: { _, _, _ in
                     .init(
                         spans: spans,
                         modelID: "fixture-speakerkit",
@@ -206,7 +318,7 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: { await calls.append("unload-alignment") },
             prepareDiarization: { _ in await calls.append("prepare-speakerkit") },
-            diarizeSpeakers: { _, _ in
+            diarizeSpeakers: { _, _, _ in
                 .init(
                     spans: [
                         .init(speakerID: 7, start: 1, end: 4),
@@ -287,7 +399,7 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation in
+            diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 XCTAssertTrue(useExclusiveReconciliation)
                 return .init(
                     spans: [
@@ -405,8 +517,9 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation in
+            diarizeSpeakers: { _, useExclusiveReconciliation, speakerCountPolicy in
                 XCTAssertTrue(useExclusiveReconciliation)
+                XCTAssertEqual(speakerCountPolicy, .expected(2))
                 started.fulfill()
                 try await Task.sleep(for: .seconds(10))
                 return .init(spans: [], modelID: "speakerkit", revision: "revision", peakMemoryBytes: 0)
@@ -420,6 +533,7 @@ final class HighQualityJobTests: XCTestCase {
                 backend: .qwenJA,
                 speakerLabels: true,
                 useExclusiveReconciliation: true,
+                speakerCountPolicy: .expected(2),
                 outputRoot: root
             ))
         }
@@ -431,6 +545,19 @@ final class HighQualityJobTests: XCTestCase {
             XCTFail("Cancellation must stop SpeakerKit.")
         } catch let error as HighQualityJobError {
             XCTAssertEqual(error.stage, .cancelled)
+            let directory = try XCTUnwrap(error.resultDirectory)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let manifest = try decoder.decode(
+                HighQualityJobManifest.self,
+                from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+            )
+            let evidence = try decoder.decode(
+                HighQualityRawEvidence.self,
+                from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
+            )
+            XCTAssertEqual(manifest.speakerCountPolicy, .expected(2))
+            XCTAssertEqual(evidence.speakerCountPolicy, .expected(2))
         }
         let recordedCalls = await calls.values
         XCTAssertEqual(recordedCalls, ["unload-speakerkit"])
@@ -757,7 +884,7 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation in
+            diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 .init(
                     spans: [
                         .init(speakerID: 0, start: 1, end: 4),

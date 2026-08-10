@@ -3,6 +3,58 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityAcceptanceTests: XCTestCase {
+    func testFrozenExpectedSpeakerCountWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_SPEAKER_COUNT_EXPERIMENT"] == "1",
+              let evidencePath = environment["WHISPERASR_SPEAKER_COUNT_EVIDENCE"],
+              let sourcePath = environment["WHISPERASR_SPEAKER_COUNT_SOURCE"],
+              let outputPath = environment["WHISPERASR_SPEAKER_COUNT_OUTPUT"],
+              let rawJobID = environment["WHISPERASR_SPEAKER_COUNT_JOB_ID"],
+              let jobID = UUID(uuidString: rawJobID),
+              let rawMode = environment["WHISPERASR_SPEAKER_COUNT_MODE"],
+              let modelCachePath = environment["WHISPERASR_SPEAKER_COUNT_MODEL_CACHE"] else {
+            throw XCTSkip("Set the frozen inputs, output, job ID, mode and model cache for ticket #59.")
+        }
+        let policy: HighQualitySpeakerCountPolicy
+        switch rawMode {
+        case "automatic":
+            policy = .automatic
+        case "expected":
+            guard let rawCount = environment["WHISPERASR_EXPECTED_SPEAKER_COUNT"],
+                  let count = Int(rawCount) else {
+                XCTFail("Expected mode requires WHISPERASR_EXPECTED_SPEAKER_COUNT.")
+                return
+            }
+            policy = .expected(count)
+        default:
+            XCTFail("Unknown Speaker-count mode: \(rawMode)")
+            return
+        }
+
+        let baseline = try Self.frozenEvidence(at: evidencePath)
+        let alignment = try XCTUnwrap(baseline.alignment)
+        let result = try await Self.runFrozenSpeakerKitExperiment(
+            baseline: baseline,
+            alignment: alignment,
+            sourcePath: sourcePath,
+            outputPath: outputPath,
+            jobID: jobID,
+            precision: .quantized,
+            modelCachePath: modelCachePath,
+            enforceMemoryGate: true,
+            useExclusiveReconciliation: false,
+            speakerCountPolicy: policy
+        )
+
+        XCTAssertEqual(result.manifest.speakerCountPolicy, policy)
+        XCTAssertEqual(result.evidence.speakerCountPolicy, policy)
+        XCTAssertEqual(result.evidence.diarization?.speakerCountPolicy, policy)
+        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
+        XCTAssertFalse(result.evidence.diarization?.rawSpans.isEmpty ?? true)
+        XCTAssertTrue(result.evidence.diarization?.validationDiagnostics.isEmpty == true)
+        XCTAssertEqual(result.manifest.status, .completed)
+    }
+
     func testFrozenSpeakerKitPrecisionWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_SPEAKERKIT_PRECISION_EXPERIMENT"] == "1",
@@ -133,7 +185,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation in
+            diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 .init(
                     spans: diarization.rawSpans,
                     modelID: diarization.modelID,
@@ -226,7 +278,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation in
+            diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 .init(
                     spans: diarization.rawSpans,
                     modelID: diarization.modelID,
@@ -388,7 +440,8 @@ final class HighQualityAcceptanceTests: XCTestCase {
         precision: HighQualitySpeakerKitRuntime.Precision,
         modelCachePath: String?,
         enforceMemoryGate: Bool,
-        useExclusiveReconciliation: Bool
+        useExclusiveReconciliation: Bool,
+        speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic
     ) async throws -> HighQualityJobResult {
         let asrChunks = alignment.chunks.map { chunk in
             HighQualityASRChunk(
@@ -429,7 +482,8 @@ final class HighQualityAcceptanceTests: XCTestCase {
             diarizeSpeakers: {
                 try await diarizer.diarize(
                     samples: $0,
-                    useExclusiveReconciliation: $1
+                    useExclusiveReconciliation: $1,
+                    speakerCountPolicy: $2
                 )
             },
             unloadDiarization: { await diarizer.unload() },
@@ -461,6 +515,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             backend: baseline.model.backend,
             speakerLabels: true,
             useExclusiveReconciliation: useExclusiveReconciliation,
+            speakerCountPolicy: speakerCountPolicy,
             outputRoot: URL(fileURLWithPath: outputPath)
         )) { progress in
             print(

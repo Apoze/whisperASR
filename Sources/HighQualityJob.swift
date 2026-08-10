@@ -102,6 +102,30 @@ struct HighQualityJobProgress: Equatable, Sendable {
     let message: String
 }
 
+struct HighQualitySpeakerCountPolicy: Codable, Equatable, Hashable, Sendable {
+    enum Mode: String, Codable, Sendable {
+        case automatic
+        case expected
+    }
+
+    static let validExpectedCounts = 1...20
+    static let automatic = Self(mode: .automatic, expectedCount: nil)
+
+    let mode: Mode
+    let expectedCount: Int?
+
+    static func expected(_ count: Int) -> Self {
+        Self(mode: .expected, expectedCount: count)
+    }
+
+    var isValid: Bool {
+        switch mode {
+        case .automatic: expectedCount == nil
+        case .expected: expectedCount.map(Self.validExpectedCounts.contains) == true
+        }
+    }
+}
+
 struct HighQualityJobRequest: Sendable {
     let id: UUID
     let sourceURL: URL
@@ -109,6 +133,7 @@ struct HighQualityJobRequest: Sendable {
     let backend: HighQualityASRBackend
     let speakerLabels: Bool
     let useExclusiveReconciliation: Bool
+    let speakerCountPolicy: HighQualitySpeakerCountPolicy
     let speakerLabelsByCueID: [String: String]
     let translationContextPolicy: HighQualityConversationContextPolicy
     let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
@@ -121,6 +146,7 @@ struct HighQualityJobRequest: Sendable {
         backend: HighQualityASRBackend,
         speakerLabels: Bool = false,
         useExclusiveReconciliation: Bool = false,
+        speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
         speakerLabelsByCueID: [String: String] = [:],
         translationContextPolicy: HighQualityConversationContextPolicy = .none,
         translationContextResetReasonsByCueID: [
@@ -134,6 +160,7 @@ struct HighQualityJobRequest: Sendable {
         self.backend = backend
         self.speakerLabels = speakerLabels
         self.useExclusiveReconciliation = useExclusiveReconciliation
+        self.speakerCountPolicy = speakerCountPolicy
         self.speakerLabelsByCueID = speakerLabelsByCueID
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
@@ -581,19 +608,22 @@ struct HighQualityDiarizationExchange: Equatable, Sendable {
     let revision: String
     let peakMemoryBytes: UInt64
     let useExclusiveReconciliation: Bool
+    let speakerCountPolicy: HighQualitySpeakerCountPolicy
 
     init(
         spans: [HighQualityDiarizationSpan],
         modelID: String,
         revision: String,
         peakMemoryBytes: UInt64,
-        useExclusiveReconciliation: Bool = false
+        useExclusiveReconciliation: Bool = false,
+        speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic
     ) {
         self.spans = spans
         self.modelID = modelID
         self.revision = revision
         self.peakMemoryBytes = peakMemoryBytes
         self.useExclusiveReconciliation = useExclusiveReconciliation
+        self.speakerCountPolicy = speakerCountPolicy
     }
 }
 
@@ -621,6 +651,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
     let overlapRanges: [HighQualityOverlapRange]
     let peakMemoryBytes: UInt64
     let useExclusiveReconciliation: Bool?
+    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     var validationDiagnostics: [String]
 
     init(
@@ -631,6 +662,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         overlapRanges: [HighQualityOverlapRange],
         peakMemoryBytes: UInt64,
         useExclusiveReconciliation: Bool? = nil,
+        speakerCountPolicy: HighQualitySpeakerCountPolicy? = nil,
         validationDiagnostics: [String]
     ) {
         self.modelID = modelID
@@ -640,6 +672,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         self.overlapRanges = overlapRanges
         self.peakMemoryBytes = peakMemoryBytes
         self.useExclusiveReconciliation = useExclusiveReconciliation
+        self.speakerCountPolicy = speakerCountPolicy
         self.validationDiagnostics = validationDiagnostics
     }
 }
@@ -794,6 +827,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     let deliverables: [HighQualityDeliverable]
     let selectedBackend: HighQualityASRBackend
     let speakerLabels: Bool
+    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let dependencies: [HighQualityJobDependency]
     let model: HighQualityModelEvidence
     let startedAt: Date
@@ -808,6 +842,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
+    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let rawASR: String?
     let glossary: HighQualityGlossarySelection
     let alignment: HighQualityAlignmentEvidence?
@@ -863,7 +898,8 @@ struct HighQualityJob: Sendable {
         ) async throws -> Void
         let diarizeSpeakers: @Sendable (
             [Float],
-            Bool
+            Bool,
+            HighQualitySpeakerCountPolicy
         ) async throws -> HighQualityDiarizationExchange
         let unloadDiarization: @Sendable () async -> Void
         let currentMemoryBytes: @Sendable () async -> UInt64
@@ -925,8 +961,9 @@ struct HighQualityJob: Sendable {
             },
             diarizeSpeakers: @escaping @Sendable (
                 [Float],
-                Bool
-            ) async throws -> HighQualityDiarizationExchange = { _, _ in
+                Bool,
+                HighQualitySpeakerCountPolicy
+            ) async throws -> HighQualityDiarizationExchange = { _, _, _ in
                 throw HighQualityJobError(
                     stage: .diarization,
                     message: "SpeakerKit is not configured.",
@@ -995,11 +1032,13 @@ struct HighQualityJob: Sendable {
             }
             let diarizeSpeakers: @Sendable (
                 [Float],
-                Bool
+                Bool,
+                HighQualitySpeakerCountPolicy
             ) async throws -> HighQualityDiarizationExchange = {
                 try await diarizer.diarize(
                     samples: $0,
-                    useExclusiveReconciliation: $1
+                    useExclusiveReconciliation: $1,
+                    speakerCountPolicy: $2
                 )
             }
             switch backend {
@@ -1251,6 +1290,7 @@ struct HighQualityJob: Sendable {
             deliverables: request.deliverables.sorted { $0.rawValue < $1.rawValue },
             selectedBackend: request.backend,
             speakerLabels: request.speakerLabels || !request.speakerLabelsByCueID.isEmpty,
+            speakerCountPolicy: request.speakerCountPolicy,
             dependencies: (isYouTubeSource ? [.sourceAcquisition] : [])
                 + [.sourceNormalization, .japaneseASR]
                 + (needsAlignment ? [.forcedAlignment] : [])
@@ -1345,6 +1385,20 @@ struct HighQualityJob: Sendable {
         }
 
         do {
+            guard request.speakerCountPolicy.isValid else {
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: "Expected speaker count must be an integer from 1 through 20.",
+                    resultDirectory: directory
+                )
+            }
+            guard request.speakerLabels || request.speakerCountPolicy == .automatic else {
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: "Expected speaker count requires Speaker labels.",
+                    resultDirectory: directory
+                )
+            }
             if let gate = services.heavyweightGate {
                 workflowLease = try await gate.beginWorkflow(.offline(request.id))
             }
@@ -1627,8 +1681,16 @@ struct HighQualityJob: Sendable {
                 begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
                 let exchange = try await services.diarizeSpeakers(
                     samples,
-                    request.useExclusiveReconciliation
+                    request.useExclusiveReconciliation,
+                    request.speakerCountPolicy
                 )
+                guard exchange.speakerCountPolicy == request.speakerCountPolicy else {
+                    throw HighQualityJobError(
+                        stage: .diarization,
+                        message: "SpeakerKit did not preserve the requested Speaker-count policy.",
+                        resultDirectory: directory
+                    )
+                }
                 diarizationEvidence = .init(
                     modelID: exchange.modelID,
                     revision: exchange.revision,
@@ -1637,6 +1699,7 @@ struct HighQualityJob: Sendable {
                     overlapRanges: [],
                     peakMemoryBytes: exchange.peakMemoryBytes,
                     useExclusiveReconciliation: exchange.useExclusiveReconciliation,
+                    speakerCountPolicy: exchange.speakerCountPolicy,
                     validationDiagnostics: []
                 )
                 do {
@@ -2654,6 +2717,7 @@ struct HighQualityJob: Sendable {
             },
             peakMemoryBytes: exchange.peakMemoryBytes,
             useExclusiveReconciliation: exchange.useExclusiveReconciliation,
+            speakerCountPolicy: exchange.speakerCountPolicy,
             validationDiagnostics: []
         )
     }
@@ -3170,6 +3234,7 @@ struct HighQualityJob: Sendable {
         HighQualityRawEvidence(
             source: manifest.source,
             model: manifest.model,
+            speakerCountPolicy: manifest.speakerCountPolicy,
             rawASR: rawASR,
             glossary: glossary,
             alignment: alignment,
