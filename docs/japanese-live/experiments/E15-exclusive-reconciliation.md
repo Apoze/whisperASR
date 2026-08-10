@@ -17,4 +17,4 @@ Raw evidence:
 
 Lossless raw snapshots, pinned settings and runner logs are checked in under `docs/japanese-live/experiments/evidence/E15/`.
 
-- `qudu2fx3ncc` baseline `.build/benchmarks/principal-speaker-attribution/development-pass2/24714AB0-F273-44A3-9828-67B54766070D/raw-asr.json`; candidate `.build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/jobs/57000001-0000-4000-8000-000000000001/raw-asr.json`.
+- `qudu2fx3ncc` baseline `.build/benchmarks/principal-speaker-attribution/development-pass2/24714AB0-F273-44A3-9828-67B54766070D/raw-asr.json`; candidate `.build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/jobs/57000001-0000-4000-8000-000000000001/raw-asr.json`; baseline runtime snapshot `docs/japanese-live/experiments/evidence/E15/development-baseline-runtime-raw-asr.json.gz`.

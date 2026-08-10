@@ -112,7 +112,8 @@ implementation_hashes() {
     Sources/HighQualityJob.swift Sources/HighQualitySpeakerKitRuntime.swift \
     Tests/HighQualityJobTests.swift Tests/HighQualityAcceptanceTests.swift \
     Scripts/run_exclusive_reconciliation_experiment.sh \
-    Scripts/report_exclusive_reconciliation.py; do
+    Scripts/report_exclusive_reconciliation.py \
+    Scripts/report_high_quality_acceptance.py; do
     digest="$(shasum -a 256 "$ROOT/$path" | awk '{print $1}')"
     result="$(jq -c --arg path "$path" --arg digest "$digest" \
       '. + {($path):$digest}' <<<"$result")"
@@ -135,7 +136,7 @@ unchanged_implementation_hashes() {
 }
 
 write_metadata() {
-  local corpus="$1" directory="$ARTIFACTS/$1" baseline runtime manifest source role pseudo
+  local corpus="$1" directory="$ARTIFACTS/$1" baseline runtime manifest source role pseudo split
   local implementation unchanged e06meta
   baseline="$(baseline_evidence "$corpus")"
   runtime="$(runtime_evidence "$corpus")"
@@ -143,6 +144,7 @@ write_metadata() {
   source="$(source_path "$corpus")"
   e06meta="$(e06_directory "$corpus")/run-meta.json"
   role="$([[ "$corpus" == qudu2fx3ncc ]] && echo development || echo untouched-holdout)"
+  split="$([[ "$corpus" == qudu2fx3ncc ]] && echo development || echo holdout)"
   pseudo="$([[ "$corpus" == qudu2fx3ncc ]] \
     && jq -nc '{"SPEAKER_13":"group-reaction/overlap annotation; not one acoustic identity"}' \
     || jq -nc '{}')"
@@ -155,6 +157,7 @@ write_metadata() {
     --arg manifest "$manifest" --arg manifestHash "$(shasum -a 256 "$manifest" | awk '{print $1}')" \
     --arg baseline "$baseline" --arg baselineHash "$(shasum -a 256 "$baseline" | awk '{print $1}')" \
     --arg runtime "$runtime" --arg runtimeHash "$(shasum -a 256 "$runtime" | awk '{print $1}')" \
+    --arg runtimeSnapshot "docs/japanese-live/experiments/evidence/E15/$split-baseline-runtime-raw-asr.json.gz" \
     --arg jobID "$(job_id "$corpus")" --arg baseCommit "$BASE_COMMIT" \
     --arg speakerModel "$(jq -r .fixedModels.speakerKit.modelID "$e06meta")" \
     --arg speakerRevision "$(jq -r .fixedModels.speakerKit.revision "$e06meta")" \
@@ -167,6 +170,7 @@ write_metadata() {
       corpusManifestPath:$manifest, corpusManifestSHA256:$manifestHash,
       baselineEvidencePath:$baseline, baselineEvidenceSHA256:$baselineHash,
       baselineRuntimeEvidencePath:$runtime, baselineRuntimeEvidenceSHA256:$runtimeHash,
+      baselineRuntimeSnapshotPath:$runtimeSnapshot,
       candidateJobID:$jobID, baseCommit:$baseCommit,
       speakerKit:{modelID:$speakerModel,revision:$speakerRevision,
         packageRevision:$whisperKitRevision},
@@ -185,13 +189,19 @@ write_metadata() {
 }
 
 finalize_metadata() {
-  local corpus="$1" directory="$ARTIFACTS/$1" job temporary
+  local corpus="$1" directory="$ARTIFACTS/$1" job temporary split implementation
   job="$directory/jobs/$(job_id "$corpus")"
   temporary="$directory/run-meta.updated.json"
+  split="$([[ "$corpus" == qudu2fx3ncc ]] && echo development || echo holdout)"
+  implementation="$(implementation_hashes)"
   jq \
     --arg raw "$(shasum -a 256 "$job/raw-asr.json" | awk '{print $1}')" \
     --arg manifest "$(shasum -a 256 "$job/manifest.json" | awk '{print $1}')" \
-    '. + {candidateArtifactSHA256:{"raw-asr.json":$raw,"manifest.json":$manifest}}' \
+    --arg runtimeSnapshot "docs/japanese-live/experiments/evidence/E15/$split-baseline-runtime-raw-asr.json.gz" \
+    --argjson implementation "$implementation" \
+    '. + {candidateArtifactSHA256:{"raw-asr.json":$raw,"manifest.json":$manifest},
+      baselineRuntimeSnapshotPath:$runtimeSnapshot,
+      implementationSHA256:$implementation}' \
     "$directory/run-meta.json" >"$temporary"
   mv "$temporary" "$directory/run-meta.json"
 }
@@ -251,6 +261,7 @@ run_candidate() {
       "$job/manifest.json" >/dev/null 2>&1; then
     echo "Reusing completed exclusive run: $corpus"
     check_candidate "$corpus"
+    finalize_metadata "$corpus"
     return
   fi
   if [[ -e "$job" ]]; then
@@ -286,21 +297,27 @@ snapshot_evidence() {
   mkdir -p "$evidence"
   gzip -n -c "$(baseline_evidence "$corpus")" \
     >"$evidence/$split-baseline-raw-asr.json.gz"
+  gzip -n -c "$(runtime_evidence "$corpus")" \
+    >"$evidence/$split-baseline-runtime-raw-asr.json.gz"
   gzip -n -c "$job/raw-asr.json" \
     >"$evidence/$split-exclusive-raw-asr.json.gz"
   cp "$job/manifest.json" "$evidence/$split-exclusive-manifest.json"
   cp "$ARTIFACTS/$corpus/run-meta.json" "$evidence/$split-run-meta.json"
   cp "$ARTIFACTS/$corpus/run.log" "$evidence/$split-run.log"
-  cp "$REPORT_JSON" "$evidence/report.json"
   cp "$ARTIFACTS/controls.json" "$evidence/controls.json"
+}
+
+snapshot_report() {
+  cp "$REPORT_JSON" "$ROOT/docs/japanese-live/experiments/evidence/E15/report.json"
 }
 
 if [[ "$MODE" == development ]]; then
   verify_frozen_input qudu2fx3ncc
   run_controls
   run_candidate qudu2fx3ncc
-  write_report
   snapshot_evidence qudu2fx3ncc
+  write_report
+  snapshot_report
   jq '{developmentPromotionEligible,decision}' "$REPORT_JSON"
   exit 0
 fi
@@ -314,6 +331,7 @@ jq -e '.developmentPromotionEligible == true' "$REPORT_JSON" >/dev/null || {
   exit 1
 }
 run_candidate md62mmdz0m
-write_report
 snapshot_evidence md62mmdz0m
+write_report
+snapshot_report
 jq '{promote,decision}' "$REPORT_JSON"

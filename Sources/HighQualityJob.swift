@@ -993,6 +993,15 @@ struct HighQualityJob: Sendable {
             ) async throws -> HighQualityYouTubeAcquisition = {
                 try await YouTubeAcquirer.acquire($0, to: $1)
             }
+            let diarizeSpeakers: @Sendable (
+                [Float],
+                Bool
+            ) async throws -> HighQualityDiarizationExchange = {
+                try await diarizer.diarize(
+                    samples: $0,
+                    useExclusiveReconciliation: $1
+                )
+            }
             switch backend {
             case .qwenJA:
                 let runtime = QwenRuntime()
@@ -1015,12 +1024,7 @@ struct HighQualityJob: Sendable {
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: {
-                        try await diarizer.diarize(
-                            samples: $0,
-                            useExclusiveReconciliation: $1
-                        )
-                    },
+                    diarizeSpeakers: diarizeSpeakers,
                     unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
                     prepareTranslation: { try await translator.prepare(progress: $0) },
@@ -1048,12 +1052,7 @@ struct HighQualityJob: Sendable {
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: {
-                        try await diarizer.diarize(
-                            samples: $0,
-                            useExclusiveReconciliation: $1
-                        )
-                    },
+                    diarizeSpeakers: diarizeSpeakers,
                     unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
                     prepareTranslation: { try await translator.prepare(progress: $0) },
@@ -1077,12 +1076,7 @@ struct HighQualityJob: Sendable {
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: {
-                        try await diarizer.diarize(
-                            samples: $0,
-                            useExclusiveReconciliation: $1
-                        )
-                    },
+                    diarizeSpeakers: diarizeSpeakers,
                     unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() },
                     prepareTranslation: { try await translator.prepare(progress: $0) },

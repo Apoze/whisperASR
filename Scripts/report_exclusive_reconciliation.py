@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import copy
+import gzip
+import hashlib
 import json
 from pathlib import Path
 
@@ -127,12 +129,32 @@ def one_variable(meta: dict) -> bool:
     return before is False and after is True and baseline == candidate
 
 
+def implementation_matches(meta: dict) -> bool:
+    hashes = meta.get("implementationSHA256")
+    return isinstance(hashes, dict) and bool(hashes) and all(
+        Path(path).is_file() and sha256(Path(path)) == expected
+        for path, expected in hashes.items()
+    )
+
+
+def gzip_content_sha256(path: Path) -> str | None:
+    digest = hashlib.sha256()
+    try:
+        with gzip.open(path, "rb") as handle:
+            while chunk := handle.read(1024 * 1024):
+                digest.update(chunk)
+    except OSError:
+        return None
+    return digest.hexdigest()
+
+
 def corpus_report(root: Path, corpus: str) -> dict:
     directory = root / corpus
     meta = read(directory / "run-meta.json")
     manifest_path = Path(meta["corpusManifestPath"])
     baseline_path = Path(meta["baselineEvidencePath"])
     runtime_path = Path(meta["baselineRuntimeEvidencePath"])
+    runtime_snapshot_path = Path(meta["baselineRuntimeSnapshotPath"])
     candidate_job = directory / "jobs" / meta["candidateJobID"]
     candidate_path = candidate_job / "raw-asr.json"
     baseline = read(baseline_path)
@@ -158,10 +180,14 @@ def corpus_report(root: Path, corpus: str) -> dict:
         "provenance": (
             sha256(manifest_path) == meta["corpusManifestSHA256"]
             and sha256(baseline_path) == meta["baselineEvidenceSHA256"]
+            and sha256(runtime_path) == meta["baselineRuntimeEvidenceSHA256"]
+            and gzip_content_sha256(runtime_snapshot_path)
+            == meta["baselineRuntimeEvidenceSHA256"]
             and sha256(Path(meta["sourcePath"])) == meta["sourceSHA256"]
             and sha256(candidate_path) == artifact_hashes.get("raw-asr.json")
             and sha256(candidate_job / "manifest.json")
             == artifact_hashes.get("manifest.json")
+            and implementation_matches(meta)
         ),
         "frozenASRAlignment": (
             baseline["rawASR"] == candidate["rawASR"]
@@ -219,6 +245,8 @@ def corpus_report(root: Path, corpus: str) -> dict:
         "eligible": all(gates.values()),
         "rawArtifacts": {
             "baseline": str(baseline_path),
+            "baselineRuntime": str(runtime_path),
+            "baselineRuntimeSnapshot": str(runtime_snapshot_path),
             "candidate": str(candidate_path),
             "runMetadata": str(directory / "run-meta.json"),
         },
@@ -276,7 +304,8 @@ def markdown(report: dict) -> str:
         lines.append(
             f'- `{row["corpusID"]}` baseline '
             f'`{portable(row["rawArtifacts"]["baseline"])}`; candidate '
-            f'`{portable(row["rawArtifacts"]["candidate"])}`.'
+            f'`{portable(row["rawArtifacts"]["candidate"])}`; baseline runtime snapshot '
+            f'`{row["rawArtifacts"]["baselineRuntimeSnapshot"]}`.'
         )
     return "\n".join(lines) + "\n"
 
@@ -307,6 +336,11 @@ def self_test() -> None:
         "baseline": {"threshold": None, "useExclusiveReconciliation": False},
         "candidate": {"threshold": None, "useExclusiveReconciliation": True},
     }})
+    script = Path(__file__)
+    assert implementation_matches({
+        "implementationSHA256": {str(script): sha256(script)},
+    })
+    assert not implementation_matches({"implementationSHA256": {}})
 
 
 def main() -> None:

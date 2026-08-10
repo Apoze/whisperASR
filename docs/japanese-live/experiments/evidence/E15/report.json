@@ -90,8 +90,10 @@
       "eligible": false,
       "rawArtifacts": {
         "baseline": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/principal-speaker-attribution/development-pass2/24714AB0-F273-44A3-9828-67B54766070D/raw-asr.json",
-        "candidate": ".build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/jobs/57000001-0000-4000-8000-000000000001/raw-asr.json",
-        "runMetadata": ".build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/run-meta.json"
+        "baselineRuntime": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/raw-asr.json",
+        "baselineRuntimeSnapshot": "docs/japanese-live/experiments/evidence/E15/development-baseline-runtime-raw-asr.json.gz",
+        "candidate": "/private/tmp/whisperASR-ticket57.gdAVJo/.build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/jobs/57000001-0000-4000-8000-000000000001/raw-asr.json",
+        "runMetadata": "/private/tmp/whisperASR-ticket57.gdAVJo/.build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/run-meta.json"
       }
     }
   ]

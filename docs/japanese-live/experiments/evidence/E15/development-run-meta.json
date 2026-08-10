@@ -48,12 +48,13 @@
     }
   },
   "implementationSHA256": {
-    "Sources/HighQualityJob.swift": "930e858f2680f8a3283b2f1b4efc89029412e4dc941d2ec89fe1225a1d327925",
+    "Sources/HighQualityJob.swift": "8fd6abe5341ec9af5976f01bbd14b2b1e4b57f3adca1526f195bb87300f9e8f1",
     "Sources/HighQualitySpeakerKitRuntime.swift": "156d9b2dedc3aa48a90758e0b4f2bc54b92cb20084d19f40eb533854ea98254d",
-    "Tests/HighQualityJobTests.swift": "8b6542e6ff2e4cae75e2a519997f9a0ab2fb3bda873b97de379de17163371c9b",
+    "Tests/HighQualityJobTests.swift": "4499c586361ec554fa582b9f6ea8f2485886c4ba59f7eecd2b65e5db70891ff4",
     "Tests/HighQualityAcceptanceTests.swift": "4e62b6bd6b1944f9a3b43812a6296f9de3d41a9759ef0134f7a17877c7388f19",
-    "Scripts/run_exclusive_reconciliation_experiment.sh": "13e387528ad7cf8e006a9a9dc53936d28d206659a43866a4afc9ea8deebc63cc",
-    "Scripts/report_exclusive_reconciliation.py": "57f4faef2691a64f37f3ada7a8b7f9b5bbd6d7692d51828e926a42bcac955fbe"
+    "Scripts/run_exclusive_reconciliation_experiment.sh": "d860da76d864c4bb07cf85bcceddded4b69da998c6667474e103333057a0b25f",
+    "Scripts/report_exclusive_reconciliation.py": "4799bb6e200685217282fbaca56386554b93c7704dfd22e4c5088f717503c883",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd"
   },
   "unchangedImplementations": {
     "Sources/AppleLiveServices.swift": {
@@ -84,5 +85,6 @@
   "candidateArtifactSHA256": {
     "raw-asr.json": "b86ee11c6532a85b8d8173c612f62786b620e812241f22a0005281f6470c23b3",
     "manifest.json": "3bd20b758dba435613dace58b5f7b0effe322a3a47a32fcf1b1c3f8534a8aa56"
-  }
+  },
+  "baselineRuntimeSnapshotPath": "docs/japanese-live/experiments/evidence/E15/development-baseline-runtime-raw-asr.json.gz"
 }
