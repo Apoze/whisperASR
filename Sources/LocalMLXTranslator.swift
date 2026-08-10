@@ -65,6 +65,10 @@ actor LocalMLXTranslator {
     static let declaredPeakMemoryBytes = Candidate.productDefault.declaredPeakMemoryBytes
     static let inputTokenLimit = 2_048
     static let generationParameters = GenerateParameters(maxTokens: 256, temperature: 0)
+    static let retryGenerationParameters = GenerateParameters(
+        maxTokens: 128,
+        temperature: 0
+    )
 
     let candidate: Candidate
     private var container: ModelContainer?
@@ -118,7 +122,12 @@ actor LocalMLXTranslator {
                 let unitStarted = Date()
                 let prompt = Self.frozenPrompt(for: turn)
                 let messages = messages(for: turn, in: batch)
-                let nativePrompt = try Self.nativePrompt(messages)
+                let parameters = batch.retryReasonCodes == nil
+                    ? Self.generationParameters
+                    : Self.retryGenerationParameters
+                let nativePrompt = try batch.retryReasonCodes == nil
+                    ? Self.nativePrompt(messages)
+                    : Self.retryNativeInput(messages)
                 let tokenCount = try await Self.tokenCount(messages, using: container)
                 guard tokenCount <= Self.inputTokenLimit else {
                     throw HighQualityTranslationServiceError(
@@ -146,7 +155,7 @@ actor LocalMLXTranslator {
                 ))
                 let stream = try await container.generate(
                     input: input,
-                    parameters: Self.generationParameters
+                    parameters: parameters
                 )
                 var output = ""
                 var outputTokens: Int?
@@ -266,7 +275,9 @@ actor LocalMLXTranslator {
         in batch: HighQualityTranslationBatch
     ) -> [PromptMessage] {
         if candidate == .translateGemma12B {
-            return [Self.directUserMessage(turn.japanese)]
+            return batch.retryReasonCodes == nil
+                ? [Self.directUserMessage(turn.japanese)]
+                : [Self.retryUserMessage(for: turn, glossary: batch.glossary)]
         }
         var pairs: [(String, String)] = []
         for term in batch.glossary {
@@ -301,15 +312,50 @@ actor LocalMLXTranslator {
         try nativePrompt([directUserMessage(japanese)])
     }
 
-    private static func directUserMessage(_ text: String) -> PromptMessage {
+    static func retryNativePrompt(
+        for turn: HighQualityTranslationTurn,
+        glossary: [HighQualityGlossaryPromptTerm]
+    ) throws -> String {
+        try retryNativeInput([retryUserMessage(for: turn, glossary: glossary)])
+    }
+
+    private static func retryUserMessage(
+        for turn: HighQualityTranslationTurn,
+        glossary: [HighQualityGlossaryPromptTerm]
+    ) -> PromptMessage {
+        let japanese = turn.japanese
+        let canonicalTerms = glossary.compactMap { term -> String? in
+            guard let matched = term.japanese.first(where: japanese.contains),
+                  let canonical = term.japanese.first else { return nil }
+            return matched == canonical
+                ? "\(canonical) = \(term.english)"
+                : "\(matched) = \(canonical) = \(term.english)"
+        }
+        return directUserMessage(
+            (canonicalTerms + [japanese]).joined(separator: "\n"),
+            sourceLanguage: "ja-JP"
+        )
+    }
+
+    private static func directUserMessage(
+        _ text: String,
+        sourceLanguage: String = "ja"
+    ) -> PromptMessage {
         [
             "role": "user",
-            "content": [[
-                "type": "text",
-                "source_lang_code": "ja",
-                "target_lang_code": "en",
-                "text": text,
-            ] as [String: any Sendable]],
+            "content": [textBlock(text, sourceLanguage: sourceLanguage)],
+        ]
+    }
+
+    private static func textBlock(
+        _ text: String,
+        sourceLanguage: String = "ja"
+    ) -> PromptMessage {
+        [
+            "type": "text",
+            "source_lang_code": sourceLanguage,
+            "target_lang_code": "en",
+            "text": text,
         ]
     }
 
@@ -352,6 +398,16 @@ actor LocalMLXTranslator {
             withJSONObject: messages,
             options: [.sortedKeys, .withoutEscapingSlashes]
         ), as: UTF8.self)
+    }
+
+    private static func retryNativeInput(_ messages: [PromptMessage]) throws -> String {
+        String(decoding: try JSONSerialization.data(withJSONObject: [
+            "messages": messages,
+            "generation": [
+                "max_tokens": retryGenerationParameters.maxTokens ?? 0,
+                "temperature": retryGenerationParameters.temperature,
+            ] as [String: any Sendable],
+        ] as [String: any Sendable], options: [.sortedKeys, .withoutEscapingSlashes]), as: UTF8.self)
     }
 
     private static func tokenCount(

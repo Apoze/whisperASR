@@ -19,7 +19,7 @@ run_fixtures() {
   WHISPERASR_TRANSLATION_INTEGRITY_FIXTURES_OUTPUT="$ARTIFACTS/fixtures.json" \
     xcrun swift test --filter HighQualityTranslationIntegrityTests/testDeterministicCorruptionFixturesAndValidTranslations
   xcrun swift test --skip-build \
-    --filter HighQualityTranslationIntegrityTests/testShadowVerdictDoesNotChangePublishedDeliverable
+    --filter HighQualityTranslationIntegrityTests/testValidTranslationCompletesWithoutRetry
 }
 
 run_split() {

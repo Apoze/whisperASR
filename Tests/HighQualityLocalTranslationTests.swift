@@ -81,6 +81,62 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         )
         XCTAssertEqual(LocalMLXTranslator.inputTokenLimit, 2_048)
         XCTAssertEqual(LocalMLXTranslator.generationParameters.temperature, 0)
+
+        let retryPrompt = try LocalMLXTranslator.retryNativePrompt(
+            for: batch.turns[0],
+            glossary: batch.glossary
+        )
+        XCTAssertNotEqual(retryPrompt, try LocalMLXTranslator.directNativePrompt(
+            for: batch.turns[0].japanese
+        ))
+        XCTAssertTrue(retryPrompt.contains("Amayui Moka"))
+        XCTAssertFalse(retryPrompt.contains("Moka Amayui"))
+        XCTAssertFalse(retryPrompt.contains("Frozen metadata"))
+        XCTAssertFalse(retryPrompt.contains("SPEAKER_01"))
+        XCTAssertFalse(retryPrompt.contains("前の発話"))
+        XCTAssertFalse(retryPrompt.contains("次の発話"))
+
+        let retryWithoutTerms = try LocalMLXTranslator.retryNativePrompt(
+            for: .init(
+                id: "cue-0002",
+                japanese: "今日は晴れです。",
+                precedingJapanese: [],
+                followingJapanese: [],
+                speakerLabel: nil
+            ),
+            glossary: []
+        )
+        XCTAssertNotEqual(
+            retryWithoutTerms,
+            try LocalMLXTranslator.directNativePrompt(for: "今日は晴れです。")
+        )
+        XCTAssertEqual(
+            retryWithoutTerms.components(separatedBy: #""source_lang_code""#).count - 1,
+            1
+        )
+        XCTAssertTrue(retryWithoutTerms.contains(#""messages""#))
+        XCTAssertTrue(retryWithoutTerms.contains(#""max_tokens":128"#))
+        XCTAssertTrue(retryWithoutTerms.contains(#""source_lang_code":"ja-JP""#))
+        XCTAssertTrue(retryWithoutTerms.contains(#""temperature":0"#))
+        XCTAssertTrue(retryWithoutTerms.contains("今日は晴れです。"))
+        XCTAssertEqual(LocalMLXTranslator.retryGenerationParameters.maxTokens, 128)
+
+        let aliasPrompt = try LocalMLXTranslator.retryNativePrompt(
+            for: .init(
+                id: "cue-0003",
+                japanese: "甘いモカが来ました。",
+                precedingJapanese: [],
+                followingJapanese: [],
+                speakerLabel: nil
+            ),
+            glossary: [.init(
+                id: "amayui-moka",
+                japanese: ["甘結もか", "甘いモカ"],
+                english: "Amayui Moka",
+                englishAliases: []
+            )]
+        )
+        XCTAssertTrue(aliasPrompt.contains(#"甘いモカ = 甘結もか = Amayui Moka\n甘いモカが来ました。"#))
     }
 
     func testLocalTranslationRunsOnlyAfterASRUnloadWithoutHostedCredentials() async throws {

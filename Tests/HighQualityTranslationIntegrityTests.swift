@@ -43,14 +43,14 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
         }
     }
 
-    func testShadowVerdictDoesNotChangePublishedDeliverable() async throws {
+    func testValidTranslationCompletesWithoutRetry() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let source = root.appendingPathComponent("source.wav")
         try Data().write(to: source)
-        let published = "Good morning. おはよう"
+        let translator = RetryFixture(["Good morning."])
         let job = HighQualityJob(services: .init(
             loadSource: { _ in [Float](repeating: 0.1, count: 16_000) },
             prepareASR: { _ in },
@@ -58,14 +58,7 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
             unloadASR: {},
             prepareAlignment: { _ in },
             alignJapanese: highQualityFixtureAlignment,
-            translateEnglish: { request in
-                .init(
-                    model: "fixture-model",
-                    response: #"{"translations":[{"id":"unit-0001","text":"Good morning. おはよう"}]}"#,
-                    attempts: [.init(number: 1, duration: 0.1, outcome: "success")],
-                    batches: [batch(request.turns[0].id, published)]
-                )
-            }
+            translateEnglish: { try await translator.translate($0) }
         ))
 
         let result = try await job.run(.init(
@@ -75,15 +68,282 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
             outputRoot: root
         ))
 
-        XCTAssertEqual(result.englishTranscript, published)
-        XCTAssertEqual(
-            try String(contentsOf: result.directory
-                .appendingPathComponent("english-translation-transcript.txt"), encoding: .utf8),
-            published + "\n"
-        )
+        XCTAssertEqual(result.englishTranscript, "Good morning.")
+        let requestCount = await translator.requests.count
+        XCTAssertEqual(requestCount, 1)
         let verdict = try XCTUnwrap(result.evidence.translation?.integrityVerdicts.first)
-        XCTAssertEqual(verdict.verdict, .hardFailure)
-        XCTAssertEqual(verdict.reasons.map(\.code), [.residualJapanese])
+        XCTAssertEqual(verdict.verdict, .pass)
+        XCTAssertEqual(result.evidence.translation?.batches.first?.attemptNumber, 1)
+        XCTAssertEqual(result.evidence.translation?.batches.first?.selected, true)
+        XCTAssertEqual(result.evidence.translation?.batches.first?.terminalOutcome, "accepted")
+    }
+
+    func testRetriesOnlyRejectedUnitWithCriticalTermsAndSelectsRecovery() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let translator = RetryFixture([
+            "Good morning.", "Sweet Moka has arrived.",
+            "Amayui Moka has arrived.",
+        ])
+        let result = try await HighQualityJob(services: .init(
+            loadSource: { _ in [Float](repeating: 0.1, count: 32_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "おはよう。甘結もかが来ました。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
+            translateEnglish: { try await translator.translate($0) }
+        )).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishTranslationTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+
+        let requests = await translator.requests
+        XCTAssertEqual(requests.count, 2)
+        XCTAssertEqual(requests[0].turns.map(\.id), ["unit-0001", "unit-0002"])
+        XCTAssertEqual(requests[1].turns.map(\.id), ["unit-0002"])
+        XCTAssertEqual(requests[1].turns.map(\.japanese), ["甘結もかが来ました。"])
+        XCTAssertEqual(requests[1].glossary.map(\.id), ["amayui-moka"])
+        XCTAssertEqual(
+            requests[1].retryReasonCodes?["unit-0002"],
+            [.criticalGlossaryViolation]
+        )
+        XCTAssertNotEqual(requests[0], requests[1])
+        XCTAssertEqual(result.turns.compactMap(\.english), ["Good morning.", "Amayui Moka has arrived."])
+        XCTAssertEqual(result.evidence.translation?.attempts.map(\.number), [1, 2])
+        XCTAssertEqual(result.evidence.translation?.batches.map(\.attemptNumber), [1, 1, 2])
+        XCTAssertEqual(result.evidence.translation?.batches.map(\.selected), [true, false, true])
+        XCTAssertEqual(
+            result.evidence.translation?.batches.map(\.terminalOutcome),
+            ["accepted", "rejected", "accepted"]
+        )
+        XCTAssertEqual(
+            result.evidence.translation?.batches[1].validationReasonCodes,
+            [.criticalGlossaryViolation]
+        )
+        XCTAssertTrue(result.evidence.translation?.integrityVerdicts.allSatisfy {
+            $0.verdict == .pass
+        } == true)
+    }
+
+    func testRetryValidationKeepsAcceptedNeighboursForCopyDetection() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let translator = RetryFixture([
+            "A completely unrelated sentence.", "Invalid. おはよう",
+            "A completely unrelated sentence.",
+        ])
+        let result = try await HighQualityJob(services: .init(
+            loadSource: { _ in [Float](repeating: 0.1, count: 32_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "今日は東京で晴れです。猫が静かに眠っています。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
+            translateEnglish: { try await translator.translate($0) }
+        )).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishTranslationTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+
+        let retryVerdict = try XCTUnwrap(result.evidence.translation?.integrityVerdicts
+            .first { $0.cueID == "unit-0002" })
+        XCTAssertEqual(retryVerdict.verdict, .suspect)
+        XCTAssertTrue(retryVerdict.reasons.contains { $0.code == .copiedNeighbour })
+        XCTAssertEqual(result.evidence.translation?.batches.last?.selected, true)
+    }
+
+    func testSecondValidationFailureFailsTranslationWithoutPublishingEnglish() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let request = HighQualityJobRequest(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishTranslationTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        )
+        let translator = RetryFixture(["Good morning. おはよう", "Morning. おはよう"])
+        do {
+            _ = try await HighQualityJob(services: .init(
+                loadSource: { _ in [Float](repeating: 0.1, count: 16_000) },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in "おはよう。" },
+                unloadASR: {},
+                prepareAlignment: { _ in },
+                alignJapanese: highQualityFixtureAlignment,
+                translateEnglish: { try await translator.translate($0) }
+            )).run(request)
+            XCTFail("A twice-rejected translation must fail.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .translation)
+            XCTAssertTrue(error.message.contains("failed validation twice"))
+        }
+
+        let directory = root.appendingPathComponent(request.id.uuidString)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory
+            .appendingPathComponent("english-translation-transcript.txt").path))
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(evidence.translation?.batches.map(\.attemptNumber), [1, 2])
+        XCTAssertEqual(evidence.translation?.batches.map(\.selected), [false, false])
+        XCTAssertEqual(evidence.translation?.batches.last?.terminalOutcome, "failed")
+        XCTAssertEqual(evidence.translation?.validationFailures.count, 1)
+    }
+
+    func testMalformedRetryPreservesSecondAttemptEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let request = HighQualityJobRequest(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishTranslationTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        )
+        let calls = RetryCounter()
+        do {
+            _ = try await HighQualityJob(services: .init(
+                loadSource: { _ in [Float](repeating: 0.1, count: 16_000) },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in "おはよう。" },
+                unloadASR: {},
+                prepareAlignment: { _ in },
+                alignJapanese: highQualityFixtureAlignment,
+                translateEnglish: { batch in
+                    let attempt = await calls.increment()
+                    let output = attempt == 1 ? "Good morning. おはよう" : "malformed output"
+                    return .init(
+                        model: "fixture-model",
+                        response: attempt == 1
+                            ? #"{"translations":[{"id":"unit-0001","text":"Good morning. おはよう"}]}"#
+                            : "not-json",
+                        attempts: [.init(number: 1, duration: 0.1, outcome: "success")],
+                        batches: [.init(
+                            cueIDs: [batch.turns[0].id],
+                            sanitizedPrompt: batch.turns[0].japanese,
+                            nativePrompt: "native-\(attempt)",
+                            nativeOutput: output,
+                            sanitizedOutput: output,
+                            inputTokens: 7,
+                            outputTokens: 3,
+                            finishReason: "stop",
+                            duration: 0.1
+                        )]
+                    )
+                }
+            )).run(request)
+            XCTFail("A malformed retry must fail.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .translation)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: root.appendingPathComponent(request.id.uuidString)
+                .appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(evidence.translation?.attempts.map(\.number), [1, 2])
+        XCTAssertEqual(evidence.translation?.batches.map(\.nativePrompt), ["native-1", "native-2"])
+        XCTAssertEqual(evidence.translation?.batches.last?.attemptNumber, 2)
+        XCTAssertEqual(evidence.translation?.batches.last?.terminalOutcome, "failed")
+        XCTAssertEqual(evidence.translation?.batches.last?.inputTokens, 7)
+        XCTAssertEqual(evidence.translation?.batches.last?.duration, 0.1)
+    }
+
+    func testCancellationDuringRetryUnloadsTranslatorAndReleasesModelGate() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = RetryCounter()
+        let unloads = RetryCounter()
+        let retryStarted = expectation(description: "retry started")
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24 * 1_024 * 1_024 * 1_024,
+            reserveBytes: HeavyweightModelGate.systemReserveBytes,
+            releaseToleranceBytes: 1,
+            releaseTimeout: .milliseconds(20),
+            releasePollInterval: .milliseconds(1),
+            currentMemoryBytes: { 1_000 }
+        )
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [Float](repeating: 0.1, count: 16_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "おはよう。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
+            translateEnglish: { request in
+                if await calls.increment() == 1 {
+                    return .init(
+                        model: "fixture-model",
+                        response: #"{"translations":[{"id":"unit-0001","text":"Good morning. おはよう"}]}"#,
+                        attempts: [.init(number: 1, duration: 0.1, outcome: "success")],
+                        batches: [batch(request.turns[0].id, "Good morning. おはよう")]
+                    )
+                }
+                retryStarted.fulfill()
+                do {
+                    try await Task.sleep(for: .seconds(10))
+                } catch {
+                    throw HighQualityTranslationServiceError(
+                        model: "fixture-model",
+                        attempts: [.init(number: 1, duration: 0.1, outcome: "cancelled")],
+                        response: nil,
+                        batches: [batch(request.turns[0].id, "")],
+                        message: "cancelled"
+                    )
+                }
+                throw CancellationError()
+            },
+            unloadTranslation: { _ = await unloads.increment() },
+            heavyweightGate: gate
+        ))
+        let task = Task {
+            try await job.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishTranslationTranscript],
+                backend: .qwenJA,
+                outputRoot: root
+            ))
+        }
+        await fulfillment(of: [retryStarted], timeout: 2)
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("Cancellation must stop the retry.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .cancelled)
+        }
+        let unloadCount = await unloads.value
+        XCTAssertEqual(unloadCount, 1)
+        let directory = try XCTUnwrap(FileManager.default.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: nil
+        ).first)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(evidence.translation?.batches.map(\.attemptNumber), [1, 2])
+        XCTAssertEqual(evidence.translation?.batches.last?.terminalOutcome, "failed")
+        let live = try await gate.beginWorkflow(.live)
+        try await gate.endWorkflow(live)
     }
 
     func testWritesFrozenCorpusVerdictsWhenOptedIn() throws {
@@ -130,6 +390,93 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
         XCTAssertTrue(verdicts.allSatisfy {
             $0.thresholdVersion == HighQualityTranslationIntegrityThresholds.developmentV1.version
         })
+    }
+
+    func testRetriesFrozenRejectedUnitsWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_TRANSLATION_RETRY_EXPERIMENT"] == "1",
+              let corpus = environment["WHISPERASR_TRANSLATION_RETRY_CORPUS"],
+              let baselinePath = environment["WHISPERASR_TRANSLATION_RETRY_BASELINE"],
+              let verdictsPath = environment["WHISPERASR_TRANSLATION_RETRY_VERDICTS"],
+              let outputPath = environment["WHISPERASR_TRANSLATION_RETRY_OUTPUT"] else {
+            throw XCTSkip("Set translation-retry corpus, baseline, verdict, and output paths.")
+        }
+        if corpus == "holdout" {
+            XCTAssertEqual(environment["WHISPERASR_TRANSLATION_RETRY_ALLOW_HOLDOUT"], "1")
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let baseline = try decoder.decode(
+            HighQualityTranslationEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: baselinePath))
+        )
+        let validation = try decoder.decode(
+            CorpusArtifact.self,
+            from: Data(contentsOf: URL(fileURLWithPath: verdictsPath))
+        )
+        let rejected = validation.verdicts.filter { $0.verdict != .pass }
+        let rejectedIDs = Set(rejected.map(\.cueID))
+        let criticalTermIDs = Set(rejected.flatMap {
+            $0.glossaryOpportunities.filter(\.critical).map(\.id)
+        })
+        let request = HighQualityTranslationBatch(
+            source: baseline.request.source,
+            turns: baseline.request.turns.filter { rejectedIDs.contains($0.id) },
+            glossary: baseline.request.glossary.filter { criticalTermIDs.contains($0.id) },
+            retryReasonCodes: Dictionary(uniqueKeysWithValues: rejected.map {
+                ($0.cueID, $0.reasons.map(\.code))
+            })
+        )
+        var retryEvidence: HighQualityTranslationEvidence?
+        var retryVerdicts: [HighQualityTranslationIntegrityVerdict] = []
+        if !request.turns.isEmpty {
+            let translator = LocalMLXTranslator()
+            do {
+                try await translator.prepare(progress: { _, _ in })
+                let exchange = try await translator.translate(request)
+                await translator.unload()
+                let translations: [String: String] = Dictionary(uniqueKeysWithValues: exchange.batches.compactMap {
+                    guard let id = $0.cueIDs.first else { return nil }
+                    return (id, $0.sanitizedOutput)
+                })
+                let glossary = request.glossary.map {
+                    HighQualityTranslationIntegrityGlossaryTerm($0, critical: true)
+                }
+                retryVerdicts = HighQualityTranslationIntegrityValidator.validate(
+                    turns: request.turns,
+                    translations: translations,
+                    batches: exchange.batches,
+                    glossary: glossary
+                )
+                retryEvidence = .init(
+                    request: request,
+                    response: exchange.response,
+                    model: exchange.model,
+                    attempts: exchange.attempts,
+                    revision: exchange.revision,
+                    runtimeVersion: exchange.runtimeVersion,
+                    batches: exchange.batches,
+                    peakMemoryBytes: exchange.peakMemoryBytes,
+                    validationFailures: [],
+                    integrityVerdicts: retryVerdicts
+                )
+            } catch {
+                await translator.unload()
+                throw error
+            }
+        }
+        try write(
+            RetryCorpusArtifact(
+                schemaVersion: 1,
+                corpus: corpus,
+                baselineArtifact: baselinePath,
+                verdictArtifact: verdictsPath,
+                rejectedCueIDs: request.turns.map(\.id),
+                retry: retryEvidence,
+                retryVerdicts: retryVerdicts
+            ),
+            to: URL(fileURLWithPath: outputPath)
+        )
     }
 
     private func fixtureResults() throws -> [FixtureResult] {
@@ -311,6 +658,16 @@ private struct CorpusArtifact: Codable {
     let verdicts: [HighQualityTranslationIntegrityVerdict]
 }
 
+private struct RetryCorpusArtifact: Codable {
+    let schemaVersion: Int
+    let corpus: String
+    let baselineArtifact: String
+    let verdictArtifact: String
+    let rejectedCueIDs: [String]
+    let retry: HighQualityTranslationEvidence?
+    let retryVerdicts: [HighQualityTranslationIntegrityVerdict]
+}
+
 private func turn(_ id: String, _ japanese: String) -> HighQualityTranslationTurn {
     .init(
         id: id,
@@ -335,4 +692,55 @@ private func batch(
         outputTokens: max(1, output.count / 4),
         finishReason: finishReason
     )
+}
+
+private actor RetryFixture {
+    private var outputs: [String]
+    private(set) var requests: [HighQualityTranslationBatch] = []
+
+    init(_ outputs: [String]) {
+        self.outputs = outputs
+    }
+
+    func translate(_ request: HighQualityTranslationBatch) throws -> HighQualityTranslationExchange {
+        requests.append(request)
+        let attempt = requests.count
+        let selected = Array(outputs.prefix(request.turns.count))
+        outputs.removeFirst(selected.count)
+        let translations = zip(request.turns, selected).map {
+            ["id": $0.id, "text": $1]
+        }
+        let response = String(decoding: try JSONSerialization.data(withJSONObject: [
+            "translations": translations,
+        ]), as: UTF8.self)
+        return .init(
+            model: "fixture-model",
+            response: response,
+            attempts: [.init(number: 1, duration: 0.1, outcome: "success")],
+            revision: "fixture-revision",
+            runtimeVersion: "fixture-runtime",
+            batches: zip(request.turns, selected).map { turn, output in
+                .init(
+                    cueIDs: [turn.id],
+                    sanitizedPrompt: turn.japanese,
+                    nativePrompt: "attempt-\(attempt):\(turn.japanese)",
+                    nativeOutput: output,
+                    sanitizedOutput: output,
+                    inputTokens: turn.japanese.count,
+                    outputTokens: output.count,
+                    finishReason: "stop",
+                    duration: 0.1
+                )
+            }
+        )
+    }
+}
+
+private actor RetryCounter {
+    private(set) var value = 0
+
+    func increment() -> Int {
+        value += 1
+        return value
+    }
 }

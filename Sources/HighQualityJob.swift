@@ -202,6 +202,34 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let turns: [HighQualityTranslationTurn]
     let glossary: [HighQualityGlossaryPromptTerm]
+    let retryReasonCodes: [String: [HighQualityTranslationIntegrityReasonCode]]?
+
+    init(
+        source: HighQualitySourceProvenance,
+        turns: [HighQualityTranslationTurn],
+        glossary: [HighQualityGlossaryPromptTerm],
+        retryReasonCodes: [String: [HighQualityTranslationIntegrityReasonCode]]? = nil
+    ) {
+        self.source = source
+        self.turns = turns
+        self.glossary = glossary
+        self.retryReasonCodes = retryReasonCodes
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case source, turns, glossary, retryReasonCodes
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        source = try values.decode(HighQualitySourceProvenance.self, forKey: .source)
+        turns = try values.decode([HighQualityTranslationTurn].self, forKey: .turns)
+        glossary = try values.decode([HighQualityGlossaryPromptTerm].self, forKey: .glossary)
+        retryReasonCodes = try values.decodeIfPresent(
+            [String: [HighQualityTranslationIntegrityReasonCode]].self,
+            forKey: .retryReasonCodes
+        )
+    }
 }
 
 struct HighQualityTranslationAttempt: Codable, Equatable, Sendable {
@@ -250,6 +278,10 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
     let outputTokens: Int?
     let finishReason: String?
     let duration: TimeInterval?
+    let attemptNumber: Int?
+    let validationReasonCodes: [HighQualityTranslationIntegrityReasonCode]?
+    let selected: Bool?
+    let terminalOutcome: String?
 
     init(
         cueIDs: [String],
@@ -262,7 +294,11 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
         inputTokens: Int,
         outputTokens: Int? = nil,
         finishReason: String? = nil,
-        duration: TimeInterval? = nil
+        duration: TimeInterval? = nil,
+        attemptNumber: Int? = nil,
+        validationReasonCodes: [HighQualityTranslationIntegrityReasonCode]? = nil,
+        selected: Bool? = nil,
+        terminalOutcome: String? = nil
     ) {
         self.cueIDs = cueIDs
         self.sanitizedPrompt = sanitizedPrompt
@@ -275,6 +311,10 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
         self.outputTokens = outputTokens
         self.finishReason = finishReason
         self.duration = duration
+        self.attemptNumber = attemptNumber
+        self.validationReasonCodes = validationReasonCodes
+        self.selected = selected
+        self.terminalOutcome = terminalOutcome
     }
 }
 
@@ -1608,38 +1648,206 @@ struct HighQualityJob: Sendable {
                         )
                     )
                     do {
-                        translationsByID = try Self.validatedTranslations(
+                        var selectedTranslations = try Self.validatedTranslations(
                             exchange.response,
                             for: turns
                         )
-                        translationEvidence?.integrityVerdicts =
-                            HighQualityTranslationIntegrityValidator.validate(
-                                turns: turns,
-                                translations: translationsByID,
-                                batches: exchange.batches,
-                                glossary: integrityGlossary
+                        let firstVerdicts = HighQualityTranslationIntegrityValidator.validate(
+                            turns: turns,
+                            translations: selectedTranslations,
+                            batches: exchange.batches,
+                            glossary: integrityGlossary
+                        )
+                        let rejected = firstVerdicts.filter { $0.verdict != .pass }
+                        var attempts = Self.numberedAttempts(exchange.attempts, startingAt: 1)
+                        var batches = Self.annotatedBatches(
+                            exchange.batches,
+                            verdicts: firstVerdicts,
+                            attempt: 1
+                        )
+                        var finalVerdicts = firstVerdicts
+                        var response = exchange.response
+                        var peakMemoryBytes = exchange.peakMemoryBytes
+
+                        if !rejected.isEmpty {
+                            try Task.checkCancellation()
+                            let rejectedIDs = Set(rejected.map(\.cueID))
+                            let criticalTermIDs = Set(rejected.flatMap {
+                                $0.glossaryOpportunities.filter(\.critical).map(\.id)
+                            })
+                            let retryRequest = HighQualityTranslationBatch(
+                                source: translationRequest.source,
+                                turns: turns.filter { rejectedIDs.contains($0.id) },
+                                glossary: translationRequest.glossary.filter {
+                                    criticalTermIDs.contains($0.id)
+                                },
+                                retryReasonCodes: Dictionary(uniqueKeysWithValues: rejected.map {
+                                    ($0.cueID, $0.reasons.map(\.code))
+                                })
                             )
+                            progress(.init(
+                                stage: .translating,
+                                fraction: 0.86,
+                                message: "Retrying rejected English translation units…"
+                            ))
+                            let retryExchange: HighQualityTranslationExchange
+                            do {
+                                retryExchange = try await services.translateEnglish(retryRequest)
+                            } catch let error as HighQualityTranslationServiceError {
+                                let errorVerdicts = HighQualityTranslationIntegrityValidator.validate(
+                                    turns: retryRequest.turns,
+                                    batches: error.batches,
+                                    glossary: integrityGlossary.filter {
+                                        criticalTermIDs.contains($0.id)
+                                    }
+                                )
+                                attempts += Self.numberedAttempts(
+                                    error.attempts,
+                                    startingAt: attempts.count + 1
+                                )
+                                batches += Self.annotatedBatches(
+                                    error.batches,
+                                    verdicts: errorVerdicts,
+                                    attempt: 2,
+                                    forceFailure: true
+                                )
+                                translationEvidence = .init(
+                                    request: translationRequest,
+                                    response: error.response,
+                                    model: error.model,
+                                    attempts: attempts,
+                                    revision: error.revision,
+                                    runtimeVersion: error.runtimeVersion,
+                                    batches: batches,
+                                    peakMemoryBytes: max(peakMemoryBytes, error.peakMemoryBytes),
+                                    validationFailures: [error.localizedDescription],
+                                    integrityVerdicts: turns.compactMap { turn in
+                                        errorVerdicts.first { $0.cueID == turn.id }
+                                            ?? firstVerdicts.first { $0.cueID == turn.id }
+                                    }
+                                )
+                                throw error
+                            }
+                            attempts += Self.numberedAttempts(
+                                retryExchange.attempts,
+                                startingAt: attempts.count + 1
+                            )
+                            peakMemoryBytes = max(peakMemoryBytes, retryExchange.peakMemoryBytes)
+                            let retryTranslations: [String: String]
+                            do {
+                                retryTranslations = try Self.validatedTranslations(
+                                    retryExchange.response,
+                                    for: retryRequest.turns
+                                )
+                            } catch {
+                                let errorVerdicts = HighQualityTranslationIntegrityValidator.validate(
+                                    turns: retryRequest.turns,
+                                    batches: retryExchange.batches,
+                                    glossary: integrityGlossary.filter {
+                                        criticalTermIDs.contains($0.id)
+                                    }
+                                )
+                                batches += Self.annotatedBatches(
+                                    retryExchange.batches,
+                                    verdicts: errorVerdicts,
+                                    attempt: 2,
+                                    forceFailure: true
+                                )
+                                let message = error.localizedDescription
+                                translationEvidence = .init(
+                                    request: translationRequest,
+                                    response: retryExchange.response,
+                                    model: retryExchange.model,
+                                    attempts: attempts,
+                                    revision: retryExchange.revision,
+                                    runtimeVersion: retryExchange.runtimeVersion,
+                                    batches: batches,
+                                    peakMemoryBytes: peakMemoryBytes,
+                                    validationFailures: [message],
+                                    integrityVerdicts: turns.compactMap { turn in
+                                        errorVerdicts.first { $0.cueID == turn.id }
+                                            ?? firstVerdicts.first { $0.cueID == turn.id }
+                                    }
+                                )
+                                throw error
+                            }
+                            var candidateTranslations = selectedTranslations
+                            candidateTranslations.merge(retryTranslations) { _, retry in retry }
+                            let retryVerdicts = HighQualityTranslationIntegrityValidator.validate(
+                                turns: turns,
+                                translations: candidateTranslations,
+                                batches: retryExchange.batches,
+                                glossary: integrityGlossary
+                            ).filter { rejectedIDs.contains($0.cueID) }
+                            batches += Self.annotatedBatches(
+                                retryExchange.batches,
+                                verdicts: retryVerdicts,
+                                attempt: 2
+                            )
+                            finalVerdicts = turns.compactMap { turn in
+                                retryVerdicts.first { $0.cueID == turn.id }
+                                    ?? firstVerdicts.first { $0.cueID == turn.id }
+                            }
+                            if retryVerdicts.contains(where: { $0.verdict == .hardFailure }) {
+                                let failedIDs = retryVerdicts.filter { $0.verdict == .hardFailure }
+                                    .map(\.cueID).joined(separator: ", ")
+                                let message = "English translation failed validation twice for \(failedIDs). No invalid Deliverable was published."
+                                translationEvidence = .init(
+                                    request: translationRequest,
+                                    response: retryExchange.response,
+                                    model: retryExchange.model,
+                                    attempts: attempts,
+                                    revision: retryExchange.revision,
+                                    runtimeVersion: retryExchange.runtimeVersion,
+                                    batches: batches,
+                                    peakMemoryBytes: peakMemoryBytes,
+                                    validationFailures: [message],
+                                    integrityVerdicts: finalVerdicts
+                                )
+                                throw HighQualityTranslationValidationError(message: message)
+                            }
+                            selectedTranslations.merge(retryTranslations) { _, retry in retry }
+                            response = try Self.translationResponse(selectedTranslations, for: turns)
+                        }
+
+                        translationsByID = selectedTranslations
+                        translationEvidence = .init(
+                            request: translationRequest,
+                            response: response,
+                            model: exchange.model,
+                            attempts: attempts,
+                            revision: exchange.revision,
+                            runtimeVersion: exchange.runtimeVersion,
+                            batches: batches,
+                            peakMemoryBytes: peakMemoryBytes,
+                            validationFailures: [],
+                            integrityVerdicts: finalVerdicts
+                        )
                     } catch {
-                        translationEvidence?.validationFailures = [error.localizedDescription]
+                        if translationEvidence?.validationFailures.isEmpty == true {
+                            translationEvidence?.validationFailures = [error.localizedDescription]
+                        }
                         throw error
                     }
                 } catch let error as HighQualityTranslationServiceError {
-                    translationEvidence = .init(
-                        request: translationRequest,
-                        response: error.response,
-                        model: error.model,
-                        attempts: error.attempts,
-                        revision: error.revision,
-                        runtimeVersion: error.runtimeVersion,
-                        batches: error.batches,
-                        peakMemoryBytes: error.peakMemoryBytes,
-                        validationFailures: [],
-                        integrityVerdicts: HighQualityTranslationIntegrityValidator.validate(
-                            turns: turns,
+                    if translationEvidence?.validationFailures.isEmpty != false {
+                        translationEvidence = .init(
+                            request: translationRequest,
+                            response: error.response,
+                            model: error.model,
+                            attempts: error.attempts,
+                            revision: error.revision,
+                            runtimeVersion: error.runtimeVersion,
                             batches: error.batches,
-                            glossary: integrityGlossary
+                            peakMemoryBytes: error.peakMemoryBytes,
+                            validationFailures: [],
+                            integrityVerdicts: HighQualityTranslationIntegrityValidator.validate(
+                                turns: turns,
+                                batches: error.batches,
+                                glossary: integrityGlossary
+                            )
                         )
-                    )
+                    }
                     throw error
                 }
                 translationUnloaded = true
@@ -2393,6 +2601,64 @@ struct HighQualityJob: Sendable {
             )
         }
         return translations
+    }
+
+    private static func translationResponse(
+        _ translations: [String: String],
+        for turns: [HighQualityTranslationTurn]
+    ) throws -> String {
+        let items = turns.compactMap { turn in
+            translations[turn.id].map { ["id": turn.id, "text": $0] }
+        }
+        return String(decoding: try JSONSerialization.data(withJSONObject: [
+            "translations": items,
+        ]), as: UTF8.self)
+    }
+
+    private static func numberedAttempts(
+        _ attempts: [HighQualityTranslationAttempt],
+        startingAt firstNumber: Int
+    ) -> [HighQualityTranslationAttempt] {
+        attempts.enumerated().map { offset, attempt in
+            .init(
+                number: firstNumber + offset,
+                duration: attempt.duration,
+                outcome: attempt.outcome
+            )
+        }
+    }
+
+    private static func annotatedBatches(
+        _ batches: [HighQualityLocalTranslationBatch],
+        verdicts: [HighQualityTranslationIntegrityVerdict],
+        attempt: Int,
+        forceFailure: Bool = false
+    ) -> [HighQualityLocalTranslationBatch] {
+        batches.map { batch in
+            let unitVerdicts = verdicts.filter { batch.cueIDs.contains($0.cueID) }
+            let accepted = !forceFailure
+                && !unitVerdicts.isEmpty
+                && unitVerdicts.allSatisfy {
+                    attempt == 1 ? $0.verdict == .pass : $0.verdict != .hardFailure
+                }
+            return .init(
+                cueIDs: batch.cueIDs,
+                sanitizedPrompt: batch.sanitizedPrompt,
+                nativePrompt: batch.nativePrompt,
+                nativeOutput: batch.nativeOutput,
+                model: batch.model,
+                revision: batch.revision,
+                sanitizedOutput: batch.sanitizedOutput,
+                inputTokens: batch.inputTokens,
+                outputTokens: batch.outputTokens,
+                finishReason: batch.finishReason,
+                duration: batch.duration,
+                attemptNumber: attempt,
+                validationReasonCodes: unitVerdicts.flatMap { $0.reasons.map(\.code) },
+                selected: accepted,
+                terminalOutcome: accepted ? "accepted" : (attempt == 1 ? "rejected" : "failed")
+            )
+        }
     }
 
     private static func containsTranslationScaffolding(_ text: String) -> Bool {
