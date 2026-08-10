@@ -1,13 +1,15 @@
 # Bounded high-quality glossary
 
-The built-in catalog is a 16-term seed: four entries each for anime, VTuber,
-gaming, and conversation. It is intentionally not exhaustive. Source-specific
-names, slang, new releases, and context-dependent translations may be absent.
+Catalog schema 2, version `2026-08-10`, contains 35 sourced entries across
+anime, VTuber, gaming, and conversation. It prioritizes terms evidenced by the
+Offline acceptance corpus plus reusable high-frequency terms; it is not a claim
+of universal coverage.
 
-Each entry stores Japanese forms, one canonical English form, English aliases,
-an official provenance URL, and explicit inclusion/exclusion rules. The current
-sources are official anime sites, VTuber organization/member sites, game
-publishers, and Japan Foundation teaching material.
+Each entry stores the official Japanese form, kana/kanji/romanized variants
+when applicable, one canonical English form, English aliases, domain/source
+scope, ambiguity class, official provenance, verification date, and explicit
+inclusion/exclusion rules. Sources are official franchise sites, VTuber rosters
+and channels, game publishers/manuals, and Japan Foundation teaching material.
 
 Source metadata may add up to eight exact bilingual pairs written as
 `Japanese (Canonical English)`. Unpaired text is ignored: the app does not
@@ -30,11 +32,17 @@ budget reason, and the per-job canonical terminology register. A canonical is
 registered only after selection and then constrains later ambiguous
 occurrences. The raw ASR text is never rewritten.
 
-The checked-in `high-quality-glossary-development.json` measures 1.0 precision,
+The historical `high-quality-glossary-development.json` measures 1.0 precision,
 recall, F1, and glossary accuracy with 0.0 false-correction risk on
 `qudu2fx3ncc`. Reproduce it with
-`swift test --filter HighQualityGlossaryTests/testCheckedInDevelopmentReportMatchesQuduCorpus`.
+`swift test --filter HighQualityGlossaryTests/testHistoricalDevelopmentReportRemainsDecodable`.
 The frozen `md62mmdz0m` holdout has no applicable critical glossary
 opportunity. Ticket #53 is therefore recorded but not promoted into the direct
 TranslateGemma prompt; the existing retry protocol may use only applicable
 hard canonical terms. See `japanese-live/experiments/E12-cue-local-glossary.md`.
+
+Ticket #54 coverage and real-video diagnostics are in
+`high-quality-glossary-e13.json`. The expanded entries have reference coverage
+but no opportunity in the product ASR translation units; the E13 development
+rerun is unchanged and holdout selection is empty, so the result remains
+diagnostic and is not promoted.

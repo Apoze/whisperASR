@@ -8,19 +8,64 @@ enum HighQualityGlossaryDomain: String, Codable, CaseIterable, Sendable {
     case source
 }
 
+enum HighQualityGlossaryAmbiguity: String, Codable, Sendable {
+    case fixed
+    case commonWord = "common-word"
+    case contextDependent = "context-dependent"
+}
+
 struct HighQualityGlossaryTerm: Codable, Equatable, Sendable {
     let id: String
     let domain: HighQualityGlossaryDomain
+    let sourceScope: String
+    let officialJapanese: String
     let japaneseForms: [String]
     let canonicalEnglish: String
     let englishAliases: [String]
+    let ambiguityClass: HighQualityGlossaryAmbiguity
     let provenance: [String]
+    let verifiedOn: String
     let inclusionRule: String
     let exclusionRule: String
     let ambiguousJapaneseForms: [String]
 
     var guidance: HighQualityGlossaryGuidance {
         domain == .conversation ? .soft : .hard
+    }
+}
+
+extension HighQualityGlossaryTerm {
+    private enum CodingKeys: String, CodingKey {
+        case id, domain, sourceScope, officialJapanese, japaneseForms, canonicalEnglish
+        case englishAliases, ambiguityClass, provenance, verifiedOn, inclusionRule
+        case exclusionRule, ambiguousJapaneseForms
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(String.self, forKey: .id)
+        domain = try values.decode(HighQualityGlossaryDomain.self, forKey: .domain)
+        japaneseForms = try values.decode([String].self, forKey: .japaneseForms)
+        canonicalEnglish = try values.decode(String.self, forKey: .canonicalEnglish)
+        englishAliases = try values.decode([String].self, forKey: .englishAliases)
+        provenance = try values.decode([String].self, forKey: .provenance)
+        inclusionRule = try values.decode(String.self, forKey: .inclusionRule)
+        exclusionRule = try values.decode(String.self, forKey: .exclusionRule)
+        ambiguousJapaneseForms = try values.decode(
+            [String].self,
+            forKey: .ambiguousJapaneseForms
+        )
+        sourceScope = try values.decodeIfPresent(String.self, forKey: .sourceScope)
+            ?? domain.rawValue
+        officialJapanese = try values.decodeIfPresent(String.self, forKey: .officialJapanese)
+            ?? japaneseForms.first ?? ""
+        ambiguityClass = try values.decodeIfPresent(
+            HighQualityGlossaryAmbiguity.self,
+            forKey: .ambiguityClass
+        ) ?? (domain == .conversation ? .contextDependent
+            : ambiguousJapaneseForms.isEmpty ? .fixed : .commonWord)
+        verifiedOn = try values.decodeIfPresent(String.self, forKey: .verifiedOn)
+            ?? "2026-02-17"
     }
 }
 
@@ -274,25 +319,46 @@ struct HighQualityGlossarySelection: Codable, Equatable, Sendable {
 }
 
 enum HighQualityGlossaryCatalog {
-    static let coverageLimit = "Built-in seed terms only; source names, slang, new releases, and context-dependent translations may be absent."
+    static let schemaVersion = 2
+    static let catalogVersion = "2026-08-10"
+    static let coverageLimit = "Sourced high-frequency terms only; coverage is not universal and new releases, source names, slang, and context-dependent translations may be absent."
 
     static let terms: [HighQualityGlossaryTerm] = [
-        term("demon-slayer", .anime, ["鬼滅の刃", "鬼滅"], "Demon Slayer: Kimetsu no Yaiba", ["Demon Slayer"], "https://demonslayer-anime.com/", ambiguous: ["鬼滅"]),
-        term("attack-on-titan", .anime, ["進撃の巨人", "進撃"], "Attack on Titan", [], "https://shingeki.tv/final/", ambiguous: ["進撃"]),
-        term("my-hero-academia", .anime, ["僕のヒーローアカデミア", "ヒロアカ"], "My Hero Academia", [], "https://heroaca.com/"),
-        term("jujutsu-kaisen", .anime, ["呪術廻戦", "呪術"], "JUJUTSU KAISEN", [], "https://jujutsukaisen.jp/", ambiguous: ["呪術"]),
-        term("hololive", .vtuber, ["ホロライブ", "ホロ"], "hololive", ["hololive production"], "https://hololive.hololivepro.com/en/", ambiguous: ["ホロ"]),
-        term("nijisanji", .vtuber, ["にじさんじ", "虹さんじ"], "NIJISANJI", [], "https://www.nijisanji.jp/en"),
-        term("vspo", .vtuber, ["ぶいすぽっ！", "ぶいすぽ", "VSPO"], "VSPO!", [], "https://store.vspo.jp/en"),
-        term("amayui-moka", .vtuber, ["甘結もか", "甘いモカ"], "Amayui Moka", ["Moka Amayui"], "https://vspo.jp/en/"),
-        term("apex-legends", .gaming, ["エーペックスレジェンズ", "Apex Legends", "エペ"], "Apex Legends", [], "https://www.ea.com/ja-jp/games/apex-legends/about/frequently-asked-questions", ambiguous: ["エペ"]),
-        term("valorant", .gaming, ["ヴァロラント", "VALORANT"], "VALORANT", [], "https://playvalorant.com/ja-jp/"),
-        term("street-fighter-6", .gaming, ["ストリートファイター6", "ストロク"], "Street Fighter 6", ["SF6"], "https://www.streetfighter.com/6/ja-jp/", ambiguous: ["ストロク"]),
-        term("minecraft", .gaming, ["マインクラフト", "マイクラ"], "Minecraft", [], "https://www.minecraft.net/ja-jp", ambiguous: ["マイクラ"]),
-        term("otsukaresama", .conversation, ["お疲れさま", "お疲れ様"], "Thanks for your hard work", ["Good work"], "https://www.irodori.jpf.go.jp/assets/data/wordlist_X.pdf"),
-        term("yoroshiku-onegaishimasu", .conversation, ["よろしくお願いします"], "Thank you in advance", ["Nice to meet you"], "https://www.irodori.jpf.go.jp/assets/data/Grammar_all.pdf"),
-        term("itadakimasu", .conversation, ["いただきます"], "Let's eat", ["Thank you for the food"], "https://www.irodori.jpf.go.jp/assets/data/wordlist_X.pdf"),
-        term("senpai", .conversation, ["先輩"], "senior", ["senpai"], "https://www.irodori.jpf.go.jp/assets/data/Grammar_all.pdf"),
+        term("demon-slayer", .anime, ["鬼滅の刃", "鬼滅"], "Demon Slayer: Kimetsu no Yaiba", ["Demon Slayer"], ["https://demonslayer-anime.com/"], ambiguous: ["鬼滅"]),
+        term("attack-on-titan", .anime, ["進撃の巨人", "進撃"], "Attack on Titan", [], ["https://shingeki.tv/final/"], ambiguous: ["進撃"]),
+        term("my-hero-academia", .anime, ["僕のヒーローアカデミア", "ヒロアカ"], "My Hero Academia", [], ["https://heroaca.com/"]),
+        term("jujutsu-kaisen", .anime, ["呪術廻戦", "呪術"], "JUJUTSU KAISEN", [], ["https://jujutsukaisen.jp/"], ambiguous: ["呪術"]),
+        term("chainsaw-man", .anime, ["チェンソーマン", "ちぇんそーまん", "Chainsaw Man"], "Chainsaw Man", [], ["https://chainsawman.dog/", "https://www.viz.com/chainsaw-man"]),
+        term("frieren", .anime, ["葬送のフリーレン", "そうそうのフリーレン", "Sousou no Frieren"], "Frieren: Beyond Journey's End", ["Frieren"], ["https://frieren-anime.jp/", "https://www.viz.com/frieren-beyond-journeys-end"]),
+        term("oshi-no-ko", .anime, ["【推しの子】", "推しの子", "おしのこ", "Oshi no Ko"], "Oshi No Ko", ["[Oshi No Ko]"], ["https://ichigoproduction.com/", "https://yenpress.com/series/oshi-no-ko"]),
+        term("one-piece", .anime, ["ONE PIECE", "ワンピース", "わんぴーす"], "ONE PIECE", ["One Piece"], ["https://one-piece.com/"]),
+        term("hololive", .vtuber, ["ホロライブ", "ホロ"], "hololive", ["hololive production"], ["https://hololive.hololivepro.com/en/"], ambiguous: ["ホロ"]),
+        term("nijisanji", .vtuber, ["にじさんじ", "虹さんじ"], "NIJISANJI", [], ["https://www.nijisanji.jp/en"]),
+        term("vspo", .vtuber, ["ぶいすぽっ！", "ぶいすぽ", "VSPO"], "VSPO!", [], ["https://vspo.jp/en/"]),
+        term("amayui-moka", .vtuber, ["甘結もか", "あまゆいもか", "Amayui Moka", "甘いモカ"], "Amayui Moka", ["Moka Amayui"], ["https://vspo.jp/en/"]),
+        term("yano-kuromu", .vtuber, ["夜乃くろむ", "やのくろむ", "Yano Kuromu", "くろむ"], "Yano Kuromu", ["Kuromu Yano"], ["https://www.youtube.com/@YanoKuromu"], ambiguous: ["くろむ"]),
+        term("shirayuki-reid", .vtuber, ["白雪レイド", "しらゆきレイド", "Shirayuki Reid", "レイド"], "Shirayuki Reid", ["Reid Shirayuki"], ["https://neo-porte.jp/member/shirayuki-reid"], ambiguous: ["レイド"]),
+        term("apex-legends", .gaming, ["エーペックスレジェンズ", "Apex Legends", "エペ"], "Apex Legends", [], ["https://www.ea.com/ja-jp/games/apex-legends/about/frequently-asked-questions"], ambiguous: ["エペ"]),
+        term("valorant", .gaming, ["ヴァロラント", "VALORANT"], "VALORANT", [], ["https://playvalorant.com/ja-jp/"]),
+        term("street-fighter-6", .gaming, ["ストリートファイター6", "ストロク"], "Street Fighter 6", ["SF6"], ["https://www.streetfighter.com/6/ja-jp/"], ambiguous: ["ストロク"]),
+        term("minecraft", .gaming, ["マインクラフト", "マイクラ"], "Minecraft", [], ["https://www.minecraft.net/ja-jp"], ambiguous: ["マイクラ"]),
+        term("tachikawa", .gaming, ["立川選手", "Tachikawa", "立川", "たちかわ"], "Tachikawa", [], ["https://burning-core.com/teams/tachikawa"], ambiguous: ["立川", "たちかわ"]),
+        term("akuma", .gaming, ["豪鬼", "ごうき", "Gouki", "Akuma"], "Akuma", ["Gouki"], ["https://www.streetfighter.com/6/ja-jp/character/akuma", "https://www.streetfighter.com/6/en-us/character/akuma"], scope: "Street Fighter character"),
+        term("demon-raid", .gaming, ["百鬼襲", "ひゃっきしゅう", "Hyakki Shu"], "Demon Raid", ["Hyakki Shu"], ["https://www.streetfighter.com/6/ja-jp/character/akuma", "https://www.streetfighter.com/6/en-us/character/akuma"], scope: "Street Fighter 6 move"),
+        term("modern-controls", .gaming, ["モダン操作", "モダンコントロール", "モダン"], "Modern controls", ["Modern control type"], ["https://game.capcom.com/manual/SF6"], ambiguous: ["モダン"], scope: "Street Fighter 6 control type"),
+        term("drive-impact", .gaming, ["ドライブインパクト", "Drive Impact"], "Drive Impact", [], ["https://game.capcom.com/manual/SF6"], scope: "Street Fighter 6 system mechanic"),
+        term("burnout", .gaming, ["バーンアウト", "Burnout"], "Burnout", [], ["https://game.capcom.com/manual/SF6/ja/steam/page/3/2", "https://game.capcom.com/manual/SF6/en/switch2/page/3/3"], scope: "Street Fighter 6 system state"),
+        term("mirage", .gaming, ["ミラージュ", "Mirage"], "Mirage", [], ["https://www.ea.com/ja/games/apex-legends/apex-legends/characters-hub/mirage"], ambiguous: ["ミラージュ"], scope: "Apex Legends character"),
+        term("apex-ring", .gaming, ["リング", "安置", "あんち"], "the Ring", ["safe zone"], ["https://www.ea.com/ja-jp/games/apex-legends/about/frequently-asked-questions"], ambiguous: ["リング", "安置", "あんち"], scope: "Apex Legends play area"),
+        term("keyboard-and-mouse", .gaming, ["キーボードとマウス", "キーマウ"], "keyboard and mouse", ["mouse and keyboard"], ["https://www.playstation.com/ja-jp/support/hardware/keyboard-mouse-ps5/"], scope: "gaming input method"),
+        term("otsukaresama", .conversation, ["お疲れさま", "お疲れ様", "otsukaresama"], "Thanks for your hard work", ["Good work"], ["https://www.irodori.jpf.go.jp/assets/data/wordlist_X.pdf"]),
+        term("yoroshiku-onegaishimasu", .conversation, ["よろしくお願いします", "yoroshiku onegaishimasu"], "Thank you in advance", ["Nice to meet you"], ["https://www.irodori.jpf.go.jp/assets/data/Grammar_all.pdf"]),
+        term("itadakimasu", .conversation, ["いただきます", "itadakimasu"], "Let's eat", ["Thank you for the food"], ["https://www.irodori.jpf.go.jp/assets/data/wordlist_X.pdf"]),
+        term("senpai", .conversation, ["先輩", "せんぱい", "senpai"], "senior", ["senpai"], ["https://www.irodori.jpf.go.jp/assets/data/Grammar_all.pdf"]),
+        term("hajimemashite", .conversation, ["初めまして", "はじめまして", "hajimemashite"], "Nice to meet you", [], ["https://www.irodori.jpf.go.jp/en/starter/pdf.html"]),
+        term("ohayo-gozaimasu", .conversation, ["おはようございます", "ohayo gozaimasu"], "Good morning", [], ["https://www.irodori.jpf.go.jp/en/starter/pdf.html"]),
+        term("gochisosama", .conversation, ["ごちそうさまでした", "ご馳走さまでした", "gochisosama deshita"], "Thank you for the meal", [], ["https://www.irodori.jpf.go.jp/assets/data/wordlist_X.pdf"]),
+        term("ittekimasu", .conversation, ["行ってきます", "いってきます", "ittekimasu"], "I'm leaving", ["See you later"], ["https://www.irodori.jpf.go.jp/assets/data/wordlist_X.pdf"]),
     ]
 
     private static func term(
@@ -301,20 +367,38 @@ enum HighQualityGlossaryCatalog {
         _ japaneseForms: [String],
         _ canonicalEnglish: String,
         _ englishAliases: [String],
-        _ provenance: String,
-        ambiguous: [String] = []
+        _ provenance: [String],
+        ambiguous: [String] = [],
+        scope: String? = nil
     ) -> HighQualityGlossaryTerm {
-        HighQualityGlossaryTerm(
+        let ambiguityClass: HighQualityGlossaryAmbiguity = domain == .conversation
+            ? .contextDependent : ambiguous.isEmpty ? .fixed : .commonWord
+        let inclusionRule: String
+        switch ambiguityClass {
+        case .fixed:
+            inclusionRule = "Select only when an exact Japanese or metadata form is present."
+        case .commonWord:
+            inclusionRule = "Select an ambiguous form only when source metadata or an unambiguous full form confirms it."
+        case .contextDependent:
+            inclusionRule = "Select as soft guidance only when an exact Japanese form is present."
+        }
+        return HighQualityGlossaryTerm(
             id: id,
             domain: domain,
+            sourceScope: scope ?? domain.rawValue,
+            officialJapanese: japaneseForms[0],
             japaneseForms: japaneseForms,
             canonicalEnglish: canonicalEnglish,
             englishAliases: englishAliases,
-            provenance: [provenance],
-            inclusionRule: "Select only when an exact Japanese or metadata form is present.",
-            exclusionRule: ambiguous.isEmpty
-                ? "Reject when no exact source relevance signal is present."
-                : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+            ambiguityClass: ambiguityClass,
+            provenance: provenance,
+            verifiedOn: catalogVersion,
+            inclusionRule: inclusionRule,
+            exclusionRule: ambiguityClass == .contextDependent
+                ? "Reject without an exact form and never require the canonical wording when context favors another translation."
+                : ambiguous.isEmpty
+                    ? "Reject when no exact source relevance signal is present."
+                    : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
             ambiguousJapaneseForms: ambiguous
         )
     }
@@ -518,10 +602,14 @@ enum HighQualityGlossarySelector {
                 terms.append(.init(
                     id: id,
                     domain: .source,
+                    sourceScope: "bilingual source metadata",
+                    officialJapanese: japanese,
                     japaneseForms: [japanese],
                     canonicalEnglish: english,
                     englishAliases: [],
+                    ambiguityClass: .fixed,
                     provenance: [provenance],
+                    verifiedOn: HighQualityGlossaryCatalog.catalogVersion,
                     inclusionRule: "Select an exact bilingual pair supplied by source metadata.",
                     exclusionRule: "Reject unpaired or duplicate metadata text.",
                     ambiguousJapaneseForms: []

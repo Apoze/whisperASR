@@ -1,0 +1,5900 @@
+{
+  "catalogVersion" : "2026-08-10",
+  "corpusID" : "md62mmdz0m",
+  "schemaVersion" : 2,
+  "selection" : {
+    "budget" : {
+      "maxEncodedBytes" : 2048,
+      "maxEntries" : 12,
+      "maxFalseCorrectionRisk" : 0,
+      "maxInputTokenShare" : 0.25,
+      "maxScoringOperations" : 512
+    },
+    "contextBytes" : 86610,
+    "coverageLimit" : "Sourced high-frequency terms only; coverage is not universal and new releases, source names, slang, and context-dependent translations may be absent.",
+    "decisions" : [
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 109,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Akuma",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Gouki"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "akuma",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "豪鬼",
+            "ごうき",
+            "Gouki",
+            "Akuma"
+          ],
+          "officialJapanese" : "豪鬼",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/character\/akuma",
+            "https:\/\/www.streetfighter.com\/6\/en-us\/character\/akuma"
+          ],
+          "sourceScope" : "Street Fighter character",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 155,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Amayui Moka",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Moka Amayui"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "amayui-moka",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "甘結もか",
+            "あまゆいもか",
+            "Amayui Moka",
+            "甘いモカ"
+          ],
+          "officialJapanese" : "甘結もか",
+          "provenance" : [
+            "https:\/\/vspo.jp\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 139,
+        "falseCorrectionRisk" : 1,
+        "guidance" : "hard",
+        "reason" : "false-correction-risk budget",
+        "score" : 32,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+          {
+            "cueID" : "unit-0027",
+            "matchedForm" : "エペ",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          },
+          {
+            "cueID" : "unit-0129",
+            "matchedForm" : "エペ",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          }
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "エペ"
+          ],
+          "canonicalEnglish" : "Apex Legends",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "apex-legends",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "エーペックスレジェンズ",
+            "Apex Legends",
+            "エペ"
+          ],
+          "officialJapanese" : "エーペックスレジェンズ",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja-jp\/games\/apex-legends\/about\/frequently-asked-questions"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 116,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "リング",
+            "安置",
+            "あんち"
+          ],
+          "canonicalEnglish" : "the Ring",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "safe zone"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "apex-ring",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "リング",
+            "安置",
+            "あんち"
+          ],
+          "officialJapanese" : "リング",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja-jp\/games\/apex-legends\/about\/frequently-asked-questions"
+          ],
+          "sourceScope" : "Apex Legends play area",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "進撃"
+          ],
+          "canonicalEnglish" : "Attack on Titan",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "attack-on-titan",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "進撃の巨人",
+            "進撃"
+          ],
+          "officialJapanese" : "進撃の巨人",
+          "provenance" : [
+            "https:\/\/shingeki.tv\/final\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 100,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Burnout",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "burnout",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "バーンアウト",
+            "Burnout"
+          ],
+          "officialJapanese" : "バーンアウト",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6\/ja\/steam\/page\/3\/2",
+            "https:\/\/game.capcom.com\/manual\/SF6\/en\/switch2\/page\/3\/3"
+          ],
+          "sourceScope" : "Street Fighter 6 system state",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 142,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Chainsaw Man",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "chainsaw-man",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "チェンソーマン",
+            "ちぇんそーまん",
+            "Chainsaw Man"
+          ],
+          "officialJapanese" : "チェンソーマン",
+          "provenance" : [
+            "https:\/\/chainsawman.dog\/",
+            "https:\/\/www.viz.com\/chainsaw-man"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 136,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Demon Raid",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Hyakki Shu"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "demon-raid",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "百鬼襲",
+            "ひゃっきしゅう",
+            "Hyakki Shu"
+          ],
+          "officialJapanese" : "百鬼襲",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/character\/akuma",
+            "https:\/\/www.streetfighter.com\/6\/en-us\/character\/akuma"
+          ],
+          "sourceScope" : "Street Fighter 6 move",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 135,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "鬼滅"
+          ],
+          "canonicalEnglish" : "Demon Slayer: Kimetsu no Yaiba",
+          "domain" : "anime",
+          "englishAliases" : [
+            "Demon Slayer"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "demon-slayer",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "鬼滅の刃",
+            "鬼滅"
+          ],
+          "officialJapanese" : "鬼滅の刃",
+          "provenance" : [
+            "https:\/\/demonslayer-anime.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 124,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Drive Impact",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "drive-impact",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ドライブインパクト",
+            "Drive Impact"
+          ],
+          "officialJapanese" : "ドライブインパクト",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6"
+          ],
+          "sourceScope" : "Street Fighter 6 system mechanic",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 180,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Frieren: Beyond Journey's End",
+          "domain" : "anime",
+          "englishAliases" : [
+            "Frieren"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "frieren",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "葬送のフリーレン",
+            "そうそうのフリーレン",
+            "Sousou no Frieren"
+          ],
+          "officialJapanese" : "葬送のフリーレン",
+          "provenance" : [
+            "https:\/\/frieren-anime.jp\/",
+            "https:\/\/www.viz.com\/frieren-beyond-journeys-end"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 167,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thank you for the meal",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "gochisosama",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "ごちそうさまでした",
+            "ご馳走さまでした",
+            "gochisosama deshita"
+          ],
+          "officialJapanese" : "ごちそうさまでした",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 139,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Nice to meet you",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "hajimemashite",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "初めまして",
+            "はじめまして",
+            "hajimemashite"
+          ],
+          "officialJapanese" : "初めまして",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/en\/starter\/pdf.html"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 119,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ホロ"
+          ],
+          "canonicalEnglish" : "hololive",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "hololive production"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "hololive",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ホロライブ",
+            "ホロ"
+          ],
+          "officialJapanese" : "ホロライブ",
+          "provenance" : [
+            "https:\/\/hololive.hololivepro.com\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 134,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Let's eat",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Thank you for the food"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "itadakimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "いただきます",
+            "itadakimasu"
+          ],
+          "officialJapanese" : "いただきます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 146,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "I'm leaving",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "See you later"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "ittekimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "行ってきます",
+            "いってきます",
+            "ittekimasu"
+          ],
+          "officialJapanese" : "行ってきます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "呪術"
+          ],
+          "canonicalEnglish" : "JUJUTSU KAISEN",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "jujutsu-kaisen",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "呪術廻戦",
+            "呪術"
+          ],
+          "officialJapanese" : "呪術廻戦",
+          "provenance" : [
+            "https:\/\/jujutsukaisen.jp\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 156,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "keyboard and mouse",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "mouse and keyboard"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "keyboard-and-mouse",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "キーボードとマウス",
+            "キーマウ"
+          ],
+          "officialJapanese" : "キーボードとマウス",
+          "provenance" : [
+            "https:\/\/www.playstation.com\/ja-jp\/support\/hardware\/keyboard-mouse-ps5\/"
+          ],
+          "sourceScope" : "gaming input method",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "マイクラ"
+          ],
+          "canonicalEnglish" : "Minecraft",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "minecraft",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "マインクラフト",
+            "マイクラ"
+          ],
+          "officialJapanese" : "マインクラフト",
+          "provenance" : [
+            "https:\/\/www.minecraft.net\/ja-jp"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 94,
+        "falseCorrectionRisk" : 1,
+        "guidance" : "hard",
+        "reason" : "false-correction-risk budget",
+        "score" : 16,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+          {
+            "cueID" : "unit-0003",
+            "matchedForm" : "ミラージュ",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          }
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ミラージュ"
+          ],
+          "canonicalEnglish" : "Mirage",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "mirage",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ミラージュ",
+            "Mirage"
+          ],
+          "officialJapanese" : "ミラージュ",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja\/games\/apex-legends\/apex-legends\/characters-hub\/mirage"
+          ],
+          "sourceScope" : "Apex Legends character",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 166,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "モダン"
+          ],
+          "canonicalEnglish" : "Modern controls",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Modern control type"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "modern-controls",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "モダン操作",
+            "モダンコントロール",
+            "モダン"
+          ],
+          "officialJapanese" : "モダン操作",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6"
+          ],
+          "sourceScope" : "Street Fighter 6 control type",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 138,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "My Hero Academia",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "my-hero-academia",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "僕のヒーローアカデミア",
+            "ヒロアカ"
+          ],
+          "officialJapanese" : "僕のヒーローアカデミア",
+          "provenance" : [
+            "https:\/\/heroaca.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 106,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "NIJISANJI",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "nijisanji",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "にじさんじ",
+            "虹さんじ"
+          ],
+          "officialJapanese" : "にじさんじ",
+          "provenance" : [
+            "https:\/\/www.nijisanji.jp\/en"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 130,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Good morning",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "ohayo-gozaimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "おはようございます",
+            "ohayo gozaimasu"
+          ],
+          "officialJapanese" : "おはようございます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/en\/starter\/pdf.html"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 132,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "ONE PIECE",
+          "domain" : "anime",
+          "englishAliases" : [
+            "One Piece"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "one-piece",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ONE PIECE",
+            "ワンピース",
+            "わんぴーす"
+          ],
+          "officialJapanese" : "ONE PIECE",
+          "provenance" : [
+            "https:\/\/one-piece.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 153,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Oshi No Ko",
+          "domain" : "anime",
+          "englishAliases" : [
+            "[Oshi No Ko]"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "oshi-no-ko",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "【推しの子】",
+            "推しの子",
+            "おしのこ",
+            "Oshi no Ko"
+          ],
+          "officialJapanese" : "【推しの子】",
+          "provenance" : [
+            "https:\/\/ichigoproduction.com\/",
+            "https:\/\/yenpress.com\/series\/oshi-no-ko"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 151,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thanks for your hard work",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Good work"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "otsukaresama",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "お疲れさま",
+            "お疲れ様",
+            "otsukaresama"
+          ],
+          "officialJapanese" : "お疲れさま",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 108,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "senior",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "senpai"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "senpai",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "先輩",
+            "せんぱい",
+            "senpai"
+          ],
+          "officialJapanese" : "先輩",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 170,
+        "falseCorrectionRisk" : 1,
+        "guidance" : "hard",
+        "reason" : "false-correction-risk budget",
+        "score" : 32,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+          {
+            "cueID" : "unit-0242",
+            "matchedForm" : "レイド",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          },
+          {
+            "cueID" : "unit-0249",
+            "matchedForm" : "レイド",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          }
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "レイド"
+          ],
+          "canonicalEnglish" : "Shirayuki Reid",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Reid Shirayuki"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "shirayuki-reid",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "白雪レイド",
+            "しらゆきレイド",
+            "Shirayuki Reid",
+            "レイド"
+          ],
+          "officialJapanese" : "白雪レイド",
+          "provenance" : [
+            "https:\/\/neo-porte.jp\/member\/shirayuki-reid"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 141,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ストロク"
+          ],
+          "canonicalEnglish" : "Street Fighter 6",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "SF6"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "street-fighter-6",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ストリートファイター6",
+            "ストロク"
+          ],
+          "officialJapanese" : "ストリートファイター6",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 124,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "立川",
+            "たちかわ"
+          ],
+          "canonicalEnglish" : "Tachikawa",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "tachikawa",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "立川選手",
+            "Tachikawa",
+            "立川",
+            "たちかわ"
+          ],
+          "officialJapanese" : "立川選手",
+          "provenance" : [
+            "https:\/\/burning-core.com\/teams\/tachikawa"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 103,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VALORANT",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "valorant",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ヴァロラント",
+            "VALORANT"
+          ],
+          "officialJapanese" : "ヴァロラント",
+          "provenance" : [
+            "https:\/\/playvalorant.com\/ja-jp\/"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VSPO!",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "vspo",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ぶいすぽっ！",
+            "ぶいすぽ",
+            "VSPO"
+          ],
+          "officialJapanese" : "ぶいすぽっ！",
+          "provenance" : [
+            "https:\/\/vspo.jp\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 152,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "くろむ"
+          ],
+          "canonicalEnglish" : "Yano Kuromu",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Kuromu Yano"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "yano-kuromu",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "夜乃くろむ",
+            "やのくろむ",
+            "Yano Kuromu",
+            "くろむ"
+          ],
+          "officialJapanese" : "夜乃くろむ",
+          "provenance" : [
+            "https:\/\/www.youtube.com\/@YanoKuromu"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 175,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thank you in advance",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Nice to meet you"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "yoroshiku-onegaishimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "よろしくお願いします",
+            "yoroshiku onegaishimasu"
+          ],
+          "officialJapanese" : "よろしくお願いします",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      }
+    ],
+    "encodedSize" : 2,
+    "scoringOperations" : 230,
+    "terminologyRegister" : {
+
+    },
+    "tokenShareByCueID" : {
+      "unit-0001" : 0.00048828125,
+      "unit-0002" : 0.00048828125,
+      "unit-0003" : 0.00048828125,
+      "unit-0004" : 0.00048828125,
+      "unit-0005" : 0.00048828125,
+      "unit-0006" : 0.00048828125,
+      "unit-0007" : 0.00048828125,
+      "unit-0008" : 0.00048828125,
+      "unit-0009" : 0.00048828125,
+      "unit-0010" : 0.00048828125,
+      "unit-0011" : 0.00048828125,
+      "unit-0012" : 0.00048828125,
+      "unit-0013" : 0.00048828125,
+      "unit-0014" : 0.00048828125,
+      "unit-0015" : 0.00048828125,
+      "unit-0016" : 0.00048828125,
+      "unit-0017" : 0.00048828125,
+      "unit-0018" : 0.00048828125,
+      "unit-0019" : 0.00048828125,
+      "unit-0020" : 0.00048828125,
+      "unit-0021" : 0.00048828125,
+      "unit-0022" : 0.00048828125,
+      "unit-0023" : 0.00048828125,
+      "unit-0024" : 0.00048828125,
+      "unit-0025" : 0.00048828125,
+      "unit-0026" : 0.00048828125,
+      "unit-0027" : 0.00048828125,
+      "unit-0028" : 0.00048828125,
+      "unit-0029" : 0.00048828125,
+      "unit-0030" : 0.00048828125,
+      "unit-0031" : 0.00048828125,
+      "unit-0032" : 0.00048828125,
+      "unit-0033" : 0.00048828125,
+      "unit-0034" : 0.00048828125,
+      "unit-0035" : 0.00048828125,
+      "unit-0036" : 0.00048828125,
+      "unit-0037" : 0.00048828125,
+      "unit-0038" : 0.00048828125,
+      "unit-0039" : 0.00048828125,
+      "unit-0040" : 0.00048828125,
+      "unit-0041" : 0.00048828125,
+      "unit-0042" : 0.00048828125,
+      "unit-0043" : 0.00048828125,
+      "unit-0044" : 0.00048828125,
+      "unit-0045" : 0.00048828125,
+      "unit-0046" : 0.00048828125,
+      "unit-0047" : 0.00048828125,
+      "unit-0048" : 0.00048828125,
+      "unit-0049" : 0.00048828125,
+      "unit-0050" : 0.00048828125,
+      "unit-0051" : 0.00048828125,
+      "unit-0052" : 0.00048828125,
+      "unit-0053" : 0.00048828125,
+      "unit-0054" : 0.00048828125,
+      "unit-0055" : 0.00048828125,
+      "unit-0056" : 0.00048828125,
+      "unit-0057" : 0.00048828125,
+      "unit-0058" : 0.00048828125,
+      "unit-0059" : 0.00048828125,
+      "unit-0060" : 0.00048828125,
+      "unit-0061" : 0.00048828125,
+      "unit-0062" : 0.00048828125,
+      "unit-0063" : 0.00048828125,
+      "unit-0064" : 0.00048828125,
+      "unit-0065" : 0.00048828125,
+      "unit-0066" : 0.00048828125,
+      "unit-0067" : 0.00048828125,
+      "unit-0068" : 0.00048828125,
+      "unit-0069" : 0.00048828125,
+      "unit-0070" : 0.00048828125,
+      "unit-0071" : 0.00048828125,
+      "unit-0072" : 0.00048828125,
+      "unit-0073" : 0.00048828125,
+      "unit-0074" : 0.00048828125,
+      "unit-0075" : 0.00048828125,
+      "unit-0076" : 0.00048828125,
+      "unit-0077" : 0.00048828125,
+      "unit-0078" : 0.00048828125,
+      "unit-0079" : 0.00048828125,
+      "unit-0080" : 0.00048828125,
+      "unit-0081" : 0.00048828125,
+      "unit-0082" : 0.00048828125,
+      "unit-0083" : 0.00048828125,
+      "unit-0084" : 0.00048828125,
+      "unit-0085" : 0.00048828125,
+      "unit-0086" : 0.00048828125,
+      "unit-0087" : 0.00048828125,
+      "unit-0088" : 0.00048828125,
+      "unit-0089" : 0.00048828125,
+      "unit-0090" : 0.00048828125,
+      "unit-0091" : 0.00048828125,
+      "unit-0092" : 0.00048828125,
+      "unit-0093" : 0.00048828125,
+      "unit-0094" : 0.00048828125,
+      "unit-0095" : 0.00048828125,
+      "unit-0096" : 0.00048828125,
+      "unit-0097" : 0.00048828125,
+      "unit-0098" : 0.00048828125,
+      "unit-0099" : 0.00048828125,
+      "unit-0100" : 0.00048828125,
+      "unit-0101" : 0.00048828125,
+      "unit-0102" : 0.00048828125,
+      "unit-0103" : 0.00048828125,
+      "unit-0104" : 0.00048828125,
+      "unit-0105" : 0.00048828125,
+      "unit-0106" : 0.00048828125,
+      "unit-0107" : 0.00048828125,
+      "unit-0108" : 0.00048828125,
+      "unit-0109" : 0.00048828125,
+      "unit-0110" : 0.00048828125,
+      "unit-0111" : 0.00048828125,
+      "unit-0112" : 0.00048828125,
+      "unit-0113" : 0.00048828125,
+      "unit-0114" : 0.00048828125,
+      "unit-0115" : 0.00048828125,
+      "unit-0116" : 0.00048828125,
+      "unit-0117" : 0.00048828125,
+      "unit-0118" : 0.00048828125,
+      "unit-0119" : 0.00048828125,
+      "unit-0120" : 0.00048828125,
+      "unit-0121" : 0.00048828125,
+      "unit-0122" : 0.00048828125,
+      "unit-0123" : 0.00048828125,
+      "unit-0124" : 0.00048828125,
+      "unit-0125" : 0.00048828125,
+      "unit-0126" : 0.00048828125,
+      "unit-0127" : 0.00048828125,
+      "unit-0128" : 0.00048828125,
+      "unit-0129" : 0.00048828125,
+      "unit-0130" : 0.00048828125,
+      "unit-0131" : 0.00048828125,
+      "unit-0132" : 0.00048828125,
+      "unit-0133" : 0.00048828125,
+      "unit-0134" : 0.00048828125,
+      "unit-0135" : 0.00048828125,
+      "unit-0136" : 0.00048828125,
+      "unit-0137" : 0.00048828125,
+      "unit-0138" : 0.00048828125,
+      "unit-0139" : 0.00048828125,
+      "unit-0140" : 0.00048828125,
+      "unit-0141" : 0.00048828125,
+      "unit-0142" : 0.00048828125,
+      "unit-0143" : 0.00048828125,
+      "unit-0144" : 0.00048828125,
+      "unit-0145" : 0.00048828125,
+      "unit-0146" : 0.00048828125,
+      "unit-0147" : 0.00048828125,
+      "unit-0148" : 0.00048828125,
+      "unit-0149" : 0.00048828125,
+      "unit-0150" : 0.00048828125,
+      "unit-0151" : 0.00048828125,
+      "unit-0152" : 0.00048828125,
+      "unit-0153" : 0.00048828125,
+      "unit-0154" : 0.00048828125,
+      "unit-0155" : 0.00048828125,
+      "unit-0156" : 0.00048828125,
+      "unit-0157" : 0.00048828125,
+      "unit-0158" : 0.00048828125,
+      "unit-0159" : 0.00048828125,
+      "unit-0160" : 0.00048828125,
+      "unit-0161" : 0.00048828125,
+      "unit-0162" : 0.00048828125,
+      "unit-0163" : 0.00048828125,
+      "unit-0164" : 0.00048828125,
+      "unit-0165" : 0.00048828125,
+      "unit-0166" : 0.00048828125,
+      "unit-0167" : 0.00048828125,
+      "unit-0168" : 0.00048828125,
+      "unit-0169" : 0.00048828125,
+      "unit-0170" : 0.00048828125,
+      "unit-0171" : 0.00048828125,
+      "unit-0172" : 0.00048828125,
+      "unit-0173" : 0.00048828125,
+      "unit-0174" : 0.00048828125,
+      "unit-0175" : 0.00048828125,
+      "unit-0176" : 0.00048828125,
+      "unit-0177" : 0.00048828125,
+      "unit-0178" : 0.00048828125,
+      "unit-0179" : 0.00048828125,
+      "unit-0180" : 0.00048828125,
+      "unit-0181" : 0.00048828125,
+      "unit-0182" : 0.00048828125,
+      "unit-0183" : 0.00048828125,
+      "unit-0184" : 0.00048828125,
+      "unit-0185" : 0.00048828125,
+      "unit-0186" : 0.00048828125,
+      "unit-0187" : 0.00048828125,
+      "unit-0188" : 0.00048828125,
+      "unit-0189" : 0.00048828125,
+      "unit-0190" : 0.00048828125,
+      "unit-0191" : 0.00048828125,
+      "unit-0192" : 0.00048828125,
+      "unit-0193" : 0.00048828125,
+      "unit-0194" : 0.00048828125,
+      "unit-0195" : 0.00048828125,
+      "unit-0196" : 0.00048828125,
+      "unit-0197" : 0.00048828125,
+      "unit-0198" : 0.00048828125,
+      "unit-0199" : 0.00048828125,
+      "unit-0200" : 0.00048828125,
+      "unit-0201" : 0.00048828125,
+      "unit-0202" : 0.00048828125,
+      "unit-0203" : 0.00048828125,
+      "unit-0204" : 0.00048828125,
+      "unit-0205" : 0.00048828125,
+      "unit-0206" : 0.00048828125,
+      "unit-0207" : 0.00048828125,
+      "unit-0208" : 0.00048828125,
+      "unit-0209" : 0.00048828125,
+      "unit-0210" : 0.00048828125,
+      "unit-0211" : 0.00048828125,
+      "unit-0212" : 0.00048828125,
+      "unit-0213" : 0.00048828125,
+      "unit-0214" : 0.00048828125,
+      "unit-0215" : 0.00048828125,
+      "unit-0216" : 0.00048828125,
+      "unit-0217" : 0.00048828125,
+      "unit-0218" : 0.00048828125,
+      "unit-0219" : 0.00048828125,
+      "unit-0220" : 0.00048828125,
+      "unit-0221" : 0.00048828125,
+      "unit-0222" : 0.00048828125,
+      "unit-0223" : 0.00048828125,
+      "unit-0224" : 0.00048828125,
+      "unit-0225" : 0.00048828125,
+      "unit-0226" : 0.00048828125,
+      "unit-0227" : 0.00048828125,
+      "unit-0228" : 0.00048828125,
+      "unit-0229" : 0.00048828125,
+      "unit-0230" : 0.00048828125,
+      "unit-0231" : 0.00048828125,
+      "unit-0232" : 0.00048828125,
+      "unit-0233" : 0.00048828125,
+      "unit-0234" : 0.00048828125,
+      "unit-0235" : 0.00048828125,
+      "unit-0236" : 0.00048828125,
+      "unit-0237" : 0.00048828125,
+      "unit-0238" : 0.00048828125,
+      "unit-0239" : 0.00048828125,
+      "unit-0240" : 0.00048828125,
+      "unit-0241" : 0.00048828125,
+      "unit-0242" : 0.00048828125,
+      "unit-0243" : 0.00048828125,
+      "unit-0244" : 0.00048828125,
+      "unit-0245" : 0.00048828125,
+      "unit-0246" : 0.00048828125,
+      "unit-0247" : 0.00048828125,
+      "unit-0248" : 0.00048828125,
+      "unit-0249" : 0.00048828125,
+      "unit-0250" : 0.00048828125,
+      "unit-0251" : 0.00048828125,
+      "unit-0252" : 0.00048828125,
+      "unit-0253" : 0.00048828125,
+      "unit-0254" : 0.00048828125,
+      "unit-0255" : 0.00048828125,
+      "unit-0256" : 0.00048828125,
+      "unit-0257" : 0.00048828125,
+      "unit-0258" : 0.00048828125,
+      "unit-0259" : 0.00048828125,
+      "unit-0260" : 0.00048828125,
+      "unit-0261" : 0.00048828125,
+      "unit-0262" : 0.00048828125,
+      "unit-0263" : 0.00048828125,
+      "unit-0264" : 0.00048828125,
+      "unit-0265" : 0.00048828125,
+      "unit-0266" : 0.00048828125,
+      "unit-0267" : 0.00048828125,
+      "unit-0268" : 0.00048828125,
+      "unit-0269" : 0.00048828125,
+      "unit-0270" : 0.00048828125,
+      "unit-0271" : 0.00048828125,
+      "unit-0272" : 0.00048828125,
+      "unit-0273" : 0.00048828125
+    }
+  },
+  "source" : {
+    "byteCount" : 2249441,
+    "fileName" : "raw-asr.json",
+    "modifiedAt" : "2026-08-09T12:03:13Z",
+    "path" : "docs\/japanese-live\/corpora\/md62mmdz0m\/manifest.json"
+  },
+  "ticket" : 54,
+  "turns" : [
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0001",
+      "japanese" : "えなんか2人かっこいいのついてるわ背中に",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 3.76,
+      "sourceStart" : 0.16
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0002",
+      "japanese" : "あついてない感じか分かんないそれあちゃあ",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 8.64,
+      "sourceStart" : 4.72
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0003",
+      "japanese" : "ちゃこの中なミラージュのポーズも今ってちょっと確かにあちゃーっ",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 20.32,
+      "sourceStart" : 10.8
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0004",
+      "japanese" : "てポーズしてるこっちの画面では多分レイノさんの画面は胸張ってるけどななんかマジで口に手当ててあち",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 27.52,
+      "sourceStart" : 21.12
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0005",
+      "japanese" : "ゃってしてるよねしてるレジェンドに行けばいいのかこれそうレジェンで",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 31.6,
+      "sourceStart" : 27.52
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0006",
+      "japanese" : "本当だ何これオー",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 34.08,
+      "sourceStart" : 32.64
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0007",
+      "japanese" : "ラこれおおシルバー",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 38.4,
+      "sourceStart" : 35.68
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0008",
+      "japanese" : "シルバなんだか大丈夫俺なんかしんないけどずっと反映されなくて",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 45.2,
+      "sourceStart" : 39.92
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0009",
+      "japanese" : "ルーキーだったからえだってルーギーもルーガーじゃんこれルーグやこれルーリーなのルーティーだろうえ",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 52.96,
+      "sourceStart" : 46
+    },
+    {
+      "followingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "id" : "unit-0010",
+      "japanese" : "これ白いのシルヴァじゃないのいやいやいやもう大体三角1個しかついていないやバグってるよしょぼすぎ",
+      "precedingJapanese" : [
+
+      ],
+      "sourceEnd" : 59.28,
+      "sourceStart" : 52.96
+    },
+    {
+      "followingJapanese" : [
+        "何がどこ。"
+      ],
+      "id" : "unit-0011",
+      "japanese" : "しかもユイピソ左上のレベル2じゃない。",
+      "precedingJapanese" : [
+        "えなんか2人かっこいいのついてるわ背中にあついてない感じか分かんないそれあちゃあちゃこの中なミラージュのポーズも今ってちょっと確かにあちゃーってポーズしてるこっちの画面では多分レイノさんの画面は胸張ってるけどななんかマジで口に手当ててあちゃってしてるよねしてるレジェンドに行けばいいのかこれそうレジェンで本当だ何これオーラこれおおシルバーシルバなんだか大丈夫俺なんかしんないけどずっと反映されなくてルーキーだったからえだってルーギーもルーガーじゃんこれルーグやこれルーリーなのルーティーだろうえこれ白いのシルヴァじゃないのいやいやいやもう大体三角1個しかついていないやバグってるよしょぼすぎ"
+      ],
+      "sourceEnd" : 63.76,
+      "sourceStart" : 60.4
+    },
+    {
+      "followingJapanese" : [
+        "本当だ。"
+      ],
+      "id" : "unit-0012",
+      "japanese" : "何がどこ。",
+      "precedingJapanese" : [
+        "しかもユイピソ左上のレベル2じゃない。"
+      ],
+      "sourceEnd" : 65.2,
+      "sourceStart" : 64.48
+    },
+    {
+      "followingJapanese" : [
+        "レベル2やん。"
+      ],
+      "id" : "unit-0013",
+      "japanese" : "本当だ。",
+      "precedingJapanese" : [
+        "何がどこ。"
+      ],
+      "sourceEnd" : 66.16,
+      "sourceStart" : 65.28
+    },
+    {
+      "followingJapanese" : [
+        "え、バグり散らかしてない。"
+      ],
+      "id" : "unit-0014",
+      "japanese" : "レベル2やん。",
+      "precedingJapanese" : [
+        "本当だ。"
+      ],
+      "sourceEnd" : 67.44,
+      "sourceStart" : 66.39999999999999
+    },
+    {
+      "followingJapanese" : [
+        "だから何もわからない。"
+      ],
+      "id" : "unit-0015",
+      "japanese" : "え、",
+      "precedingJapanese" : [
+        "レベル2やん。"
+      ],
+      "sourceEnd" : 68.4,
+      "sourceStart" : 68.24
+    },
+    {
+      "followingJapanese" : [
+        "だから何もわからない。"
+      ],
+      "id" : "unit-0016",
+      "japanese" : "バグり散らかしてない。",
+      "precedingJapanese" : [
+        "レベル2やん。"
+      ],
+      "sourceEnd" : 70.96,
+      "sourceStart" : 69.52
+    },
+    {
+      "followingJapanese" : [
+        "サブアカやめてください。"
+      ],
+      "id" : "unit-0017",
+      "japanese" : "だから何もわからない。",
+      "precedingJapanese" : [
+        "え、バグり散らかしてない。"
+      ],
+      "sourceEnd" : 72.92,
+      "sourceStart" : 70.96
+    },
+    {
+      "followingJapanese" : [
+        "本箱でやるとランク下がりそうだからサブ箱持ってきたタイプでしょ。"
+      ],
+      "id" : "unit-0018",
+      "japanese" : "サブアカやめてください。",
+      "precedingJapanese" : [
+        "だから何もわからない。"
+      ],
+      "sourceEnd" : 74.4,
+      "sourceStart" : 72.96
+    },
+    {
+      "followingJapanese" : [
+        "これやば。"
+      ],
+      "id" : "unit-0019",
+      "japanese" : "本箱でやるとランク下がりそうだからサブ箱持ってきたタイプでしょ。",
+      "precedingJapanese" : [
+        "サブアカやめてください。"
+      ],
+      "sourceEnd" : 79.6,
+      "sourceStart" : 74.48
+    },
+    {
+      "followingJapanese" : [
+        "公開で終わってる。"
+      ],
+      "id" : "unit-0020",
+      "japanese" : "これやば。",
+      "precedingJapanese" : [
+        "本箱でやるとランク下がりそうだからサブ箱持ってきたタイプでしょ。"
+      ],
+      "sourceEnd" : 80.8,
+      "sourceStart" : 79.6
+    },
+    {
+      "followingJapanese" : [
+        "公開でも敵の1人じゃん。"
+      ],
+      "id" : "unit-0021",
+      "japanese" : "公開で終わってる。",
+      "precedingJapanese" : [
+        "これやば。"
+      ],
+      "sourceEnd" : 82.96,
+      "sourceStart" : 81.52
+    },
+    {
+      "followingJapanese" : [
+        "いやマジで今日タイトルに何もわからないって書いててサムネにも何もわからないっていう保険張りながら来てます。"
+      ],
+      "id" : "unit-0022",
+      "japanese" : "公開でも敵の1人じゃん。",
+      "precedingJapanese" : [
+        "公開で終わってる。"
+      ],
+      "sourceEnd" : 85.03999999999999,
+      "sourceStart" : 82.96
+    },
+    {
+      "followingJapanese" : [
+        "浅丸にめっちゃ聞いたの。"
+      ],
+      "id" : "unit-0023",
+      "japanese" : "いや",
+      "precedingJapanese" : [
+        "公開でも敵の1人じゃん。"
+      ],
+      "sourceEnd" : 85.52,
+      "sourceStart" : 85.2
+    },
+    {
+      "followingJapanese" : [
+        "浅丸にめっちゃ聞いたの。"
+      ],
+      "id" : "unit-0024",
+      "japanese" : "マジで今日タイトルに何もわからないって書いててサムネにも何もわからないっていう保険張りながら来て",
+      "precedingJapanese" : [
+        "公開でも敵の1人じゃん。"
+      ],
+      "sourceEnd" : 92.32,
+      "sourceStart" : 86.4
+    },
+    {
+      "followingJapanese" : [
+        "浅丸にめっちゃ聞いたの。"
+      ],
+      "id" : "unit-0025",
+      "japanese" : "ます。",
+      "precedingJapanese" : [
+        "公開でも敵の1人じゃん。"
+      ],
+      "sourceEnd" : 92.64,
+      "sourceStart" : 92.32
+    },
+    {
+      "followingJapanese" : [
+        "うち本当にエペできないといいのって誘ってもらったけどえ大丈夫。"
+      ],
+      "id" : "unit-0026",
+      "japanese" : "浅丸にめっちゃ聞いたの。",
+      "precedingJapanese" : [
+        "いやマジで今日タイトルに何もわからないって書いててサムネにも何もわからないっていう保険張りながら来てます。"
+      ],
+      "sourceEnd" : 96.16,
+      "sourceStart" : 92.96000000000001
+    },
+    {
+      "followingJapanese" : [
+        "うち本当にもう分かんないよってめっちゃ聞いて大丈夫っていう言われてきてるからだってこのメンバーだよ。"
+      ],
+      "id" : "unit-0027",
+      "japanese" : "うち本当にエペできないといいのって誘ってもらったけどえ大丈夫。",
+      "precedingJapanese" : [
+        "浅丸にめっちゃ聞いたの。"
+      ],
+      "sourceEnd" : 103.36,
+      "sourceStart" : 96.16
+    },
+    {
+      "followingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "id" : "unit-0028",
+      "japanese" : "うち本当にもう分かんないよってめっちゃ聞いて大丈夫っていう言われてきてるからだってこのメンバーだ",
+      "precedingJapanese" : [
+        "うち本当にエペできないといいのって誘ってもらったけどえ大丈夫。"
+      ],
+      "sourceEnd" : 109.91999999999999,
+      "sourceStart" : 103.36
+    },
+    {
+      "followingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "id" : "unit-0029",
+      "japanese" : "よ。",
+      "precedingJapanese" : [
+        "うち本当にエペできないといいのって誘ってもらったけどえ大丈夫。"
+      ],
+      "sourceEnd" : 110.32,
+      "sourceStart" : 109.91999999999999
+    },
+    {
+      "followingJapanese" : [
+        "ずっと何年間ぐらいだろう、67年間くらいiPhone10R使ってて、画面もバキバキのまま頑張って使ってたんですけど、ついに17Pro Maxになりまして、うわー、一番いいやつや、Pro Maxってでかいやつ、え、そうなんかよくわかんないから、一番名前すごそうなやつに、待ってで、かいやつなんだしかもプロマックスだからでかいじゃん、プロ17、17プロ、10Pro Maxがあって、うん、なんかよく分かんない、から一番いい、やつください、せよ、そんなやつにして、この店で一番いいヤツください、で、プロマックス、プロ、マックスにして、なんか容量もわかん、ないからテラバ、1テラ、バイト、一番で、けえやつしてください、やばい、もう不合法の買い方やん、"
+      ],
+      "id" : "unit-0030",
+      "japanese" : "まあ大丈夫でし全然関係ないんですけど。",
+      "precedingJapanese" : [
+        "うち本当にもう分かんないよってめっちゃ聞いて大丈夫っていう言われてきてるからだってこのメンバーだよ。"
+      ],
+      "sourceEnd" : 113.91999999999999,
+      "sourceStart" : 111.19999999999999
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0031",
+      "japanese" : "ずっと何年間ぐらいだろう、67年間くらいiPhone10R使ってて、画面もバキバキのまま頑張って",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 125.12,
+      "sourceStart" : 115.68
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0032",
+      "japanese" : "使ってたんですけ",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 126,
+      "sourceStart" : 125.12
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0033",
+      "japanese" : "ど、ついに1",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 128.4,
+      "sourceStart" : 126.8
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0034",
+      "japanese" : "7Pro Maxになりまして、うわー、一番いいやつや、Pro Maxってでかいやつ、え、",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 136.56,
+      "sourceStart" : 129.2
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0035",
+      "japanese" : "そうなんかよくわかんないから、一番名前すごそうなやつに、待ってで、かいやつなんだしかもプロマック",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 146.16,
+      "sourceStart" : 137.44
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0036",
+      "japanese" : "スだからでかいじゃん、プロ17、17プロ、10Pro Maxがあって、うん、なんかよく分かんない",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 153.76,
+      "sourceStart" : 147.12
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0037",
+      "japanese" : "、から一番いい、やつください、せよ、そんなやつにして、この店で一番いいヤツください、",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 159.04,
+      "sourceStart" : 153.68
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0038",
+      "japanese" : "で、プロマックス、プロ、",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 161.52,
+      "sourceStart" : 159.84
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0039",
+      "japanese" : "マックスにして、",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 163.76,
+      "sourceStart" : 162.32
+    },
+    {
+      "followingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "id" : "unit-0040",
+      "japanese" : "なんか容量もわかん、ないからテラバ、1テラ、バイト、一番で、けえやつしてください、やばい、",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 170.88,
+      "sourceStart" : 164.88
+    },
+    {
+      "followingJapanese" : [
+        "でも私も去年買い替えたんだけど、それまでずっと11プロ使ってたわ。"
+      ],
+      "id" : "unit-0041",
+      "japanese" : "もう不合法の買い方やん、なんか分かんなくて。",
+      "precedingJapanese" : [
+        "まあ大丈夫でし全然関係ないんですけど。"
+      ],
+      "sourceEnd" : 176.12,
+      "sourceStart" : 171.76
+    },
+    {
+      "followingJapanese" : [
+        "16？"
+      ],
+      "id" : "unit-0042",
+      "japanese" : "でも私も去年買い替えたんだけど、それまでずっと11プロ使ってたわ。",
+      "precedingJapanese" : [
+        "なんか分かんなくて。"
+      ],
+      "sourceEnd" : 181.64,
+      "sourceStart" : 176.12
+    },
+    {
+      "followingJapanese" : [
+        "今15かな。"
+      ],
+      "id" : "unit-0043",
+      "japanese" : "16？",
+      "precedingJapanese" : [
+        "でも私も去年買い替えたんだけど、それまでずっと11プロ使ってたわ。"
+      ],
+      "sourceEnd" : 182.35999999999999,
+      "sourceStart" : 181.79999999999998
+    },
+    {
+      "followingJapanese" : [
+        "だから俺も去年10から16に変えたよ。"
+      ],
+      "id" : "unit-0044",
+      "japanese" : "今15かな。",
+      "precedingJapanese" : [
+        "16？"
+      ],
+      "sourceEnd" : 185.24,
+      "sourceStart" : 182.35999999999999
+    },
+    {
+      "followingJapanese" : [
+        "え？"
+      ],
+      "id" : "unit-0045",
+      "japanese" : "だから俺も去年10から16に変えたよ。",
+      "precedingJapanese" : [
+        "今15かな。"
+      ],
+      "sourceEnd" : 191.07999999999998,
+      "sourceStart" : 185.24
+    },
+    {
+      "followingJapanese" : [
+        "結構近か。"
+      ],
+      "id" : "unit-0046",
+      "japanese" : "え？",
+      "precedingJapanese" : [
+        "だから俺も去年10から16に変えたよ。"
+      ],
+      "sourceEnd" : 191.72,
+      "sourceStart" : 191.56
+    },
+    {
+      "followingJapanese" : [
+        "結構みんな使ってた。"
+      ],
+      "id" : "unit-0047",
+      "japanese" : "結構近か。",
+      "precedingJapanese" : [
+        "え？"
+      ],
+      "sourceEnd" : 194.28,
+      "sourceStart" : 191.72
+    },
+    {
+      "followingJapanese" : [
+        "みんな結構近い。"
+      ],
+      "id" : "unit-0048",
+      "japanese" : "結構みんな使ってた。",
+      "precedingJapanese" : [
+        "結構近か。"
+      ],
+      "sourceEnd" : 195.24,
+      "sourceStart" : 194.28
+    },
+    {
+      "followingJapanese" : [
+        "いや別にね、10でね、別にいけるからね。"
+      ],
+      "id" : "unit-0049",
+      "japanese" : "みんな結構近い。",
+      "precedingJapanese" : [
+        "結構みんな使ってた。"
+      ],
+      "sourceEnd" : 196.35999999999999,
+      "sourceStart" : 195.48
+    },
+    {
+      "followingJapanese" : [
+        "そうなんだよ。"
+      ],
+      "id" : "unit-0050",
+      "japanese" : "いや別にね、10でね、別にいけるからね。",
+      "precedingJapanese" : [
+        "みんな結構近い。"
+      ],
+      "sourceEnd" : 200.302,
+      "sourceStart" : 196.35999999999999
+    },
+    {
+      "followingJapanese" : [
+        "変えたよね。"
+      ],
+      "id" : "unit-0051",
+      "japanese" : "そうなんだよ。",
+      "precedingJapanese" : [
+        "いや別にね、10でね、別にいけるからね。"
+      ],
+      "sourceEnd" : 200.92,
+      "sourceStart" : 200.337
+    },
+    {
+      "followingJapanese" : [
+        "俺画面も割れてなかったしな。"
+      ],
+      "id" : "unit-0052",
+      "japanese" : "変えたよね。",
+      "precedingJapanese" : [
+        "そうなんだよ。"
+      ],
+      "sourceEnd" : 202.28,
+      "sourceStart" : 200.92
+    },
+    {
+      "followingJapanese" : [
+        "ない。"
+      ],
+      "id" : "unit-0053",
+      "japanese" : "俺画面も割れてなかったしな。",
+      "precedingJapanese" : [
+        "変えたよね。"
+      ],
+      "sourceEnd" : 203.8,
+      "sourceStart" : 202.28
+    },
+    {
+      "followingJapanese" : [
+        "私も割れてない。"
+      ],
+      "id" : "unit-0054",
+      "japanese" : "ない。",
+      "precedingJapanese" : [
+        "俺画面も割れてなかったしな。"
+      ],
+      "sourceEnd" : 203.95999999999998,
+      "sourceStart" : 203.8
+    },
+    {
+      "followingJapanese" : [
+        "もうさ、1週間ぐらいなんだけど、まだもうちょっとフィルターにひび入っちゃって。"
+      ],
+      "id" : "unit-0055",
+      "japanese" : "私も割れてない。",
+      "precedingJapanese" : [
+        "ない。"
+      ],
+      "sourceEnd" : 205.24,
+      "sourceStart" : 203.95999999999998
+    },
+    {
+      "followingJapanese" : [
+        "なんで？"
+      ],
+      "id" : "unit-0056",
+      "japanese" : "もうさ、1週間ぐらいなんだけど、まだもうちょっとフィルターにひび入っちゃって。",
+      "precedingJapanese" : [
+        "私も割れてない。"
+      ],
+      "sourceEnd" : 212.2,
+      "sourceStart" : 205.64
+    },
+    {
+      "followingJapanese" : [
+        "なんで？"
+      ],
+      "id" : "unit-0057",
+      "japanese" : "なんで？",
+      "precedingJapanese" : [
+        "もうさ、1週間ぐらいなんだけど、まだもうちょっとフィルターにひび入っちゃって。"
+      ],
+      "sourceEnd" : 213.16,
+      "sourceStart" : 212.92
+    },
+    {
+      "followingJapanese" : [
+        "使い手に問題があるよな。"
+      ],
+      "id" : "unit-0058",
+      "japanese" : "なんで？",
+      "precedingJapanese" : [
+        "なんで？"
+      ],
+      "sourceEnd" : 213.32,
+      "sourceStart" : 213.16
+    },
+    {
+      "followingJapanese" : [
+        "こういうの落としちゃっても。"
+      ],
+      "id" : "unit-0059",
+      "japanese" : "使い手に問題があるよな。",
+      "precedingJapanese" : [
+        "なんで？"
+      ],
+      "sourceEnd" : 216.44,
+      "sourceStart" : 214.84
+    },
+    {
+      "followingJapanese" : [
+        "でも、私もよく落とすけど、画面までは割れないな。"
+      ],
+      "id" : "unit-0060",
+      "japanese" : "こういうの落としちゃっても。",
+      "precedingJapanese" : [
+        "使い手に問題があるよな。"
+      ],
+      "sourceEnd" : 217.64,
+      "sourceStart" : 216.44
+    },
+    {
+      "followingJapanese" : [
+        "マジ？"
+      ],
+      "id" : "unit-0061",
+      "japanese" : "でも、私もよく落とすけど、画面までは割れないな。",
+      "precedingJapanese" : [
+        "こういうの落としちゃっても。"
+      ],
+      "sourceEnd" : 222.51999999999998,
+      "sourceStart" : 218.35999999999999
+    },
+    {
+      "followingJapanese" : [
+        "あのフィルタは割れるけど、あそうそう、フィルたフィルーターが割れた。"
+      ],
+      "id" : "unit-0062",
+      "japanese" : "マジ？",
+      "precedingJapanese" : [
+        "でも、私もよく落とすけど、画面までは割れないな。"
+      ],
+      "sourceEnd" : 223.16,
+      "sourceStart" : 222.68
+    },
+    {
+      "followingJapanese" : [
+        "画面はまだ行ってないはず。"
+      ],
+      "id" : "unit-0063",
+      "japanese" : "あのフィルタは割れるけど、あそうそう、フィルたフィルーターが割れた。",
+      "precedingJapanese" : [
+        "マジ？"
+      ],
+      "sourceEnd" : 227.32,
+      "sourceStart" : 223.48
+    },
+    {
+      "followingJapanese" : [
+        "こういう人のためにあるんだな、フィルターとかって。"
+      ],
+      "id" : "unit-0064",
+      "japanese" : "画面はまだ行ってないはず。",
+      "precedingJapanese" : [
+        "あのフィルタは割れるけど、あそうそう、フィルたフィルーターが割れた。"
+      ],
+      "sourceEnd" : 229.07999999999998,
+      "sourceStart" : 227.56
+    },
+    {
+      "followingJapanese" : [
+        "いや、フィールターないと怖いね。"
+      ],
+      "id" : "unit-0065",
+      "japanese" : "こういう人のためにあるんだな、フィルターとかって。",
+      "precedingJapanese" : [
+        "画面はまだ行ってないはず。"
+      ],
+      "sourceEnd" : 233.29999999999998,
+      "sourceStart" : 230.5
+    },
+    {
+      "followingJapanese" : [
+        "使うの。"
+      ],
+      "id" : "unit-0066",
+      "japanese" : "いや、フィールターないと怖いね。",
+      "precedingJapanese" : [
+        "こういう人のためにあるんだな、フィルターとかって。"
+      ],
+      "sourceEnd" : 234.82,
+      "sourceStart" : 233.29999999999998
+    },
+    {
+      "followingJapanese" : [
+        "え、そう。"
+      ],
+      "id" : "unit-0067",
+      "japanese" : "使うの。",
+      "precedingJapanese" : [
+        "いや、フィールターないと怖いね。"
+      ],
+      "sourceEnd" : 235.38,
+      "sourceStart" : 234.82
+    },
+    {
+      "followingJapanese" : [
+        "これフィルターつけてないし、カバーもつけていない。"
+      ],
+      "id" : "unit-0068",
+      "japanese" : "え、そう。",
+      "precedingJapanese" : [
+        "使うの。"
+      ],
+      "sourceEnd" : 236.26,
+      "sourceStart" : 236.01999999999998
+    },
+    {
+      "followingJapanese" : [
+        "ええ、怖い。"
+      ],
+      "id" : "unit-0069",
+      "japanese" : "これフィルターつけてないし、",
+      "precedingJapanese" : [
+        "え、そう。"
+      ],
+      "sourceEnd" : 238.42,
+      "sourceStart" : 236.26
+    },
+    {
+      "followingJapanese" : [
+        "ええ、怖い。"
+      ],
+      "id" : "unit-0070",
+      "japanese" : "カバーもつけていない。",
+      "precedingJapanese" : [
+        "え、そう。"
+      ],
+      "sourceEnd" : 240.34,
+      "sourceStart" : 239.38
+    },
+    {
+      "followingJapanese" : [
+        "それ、つるって落としたらバリっていきますよ。"
+      ],
+      "id" : "unit-0071",
+      "japanese" : "ええ、怖い。",
+      "precedingJapanese" : [
+        "これフィルターつけてないし、カバーもつけていない。"
+      ],
+      "sourceEnd" : 241.94,
+      "sourceStart" : 240.66
+    },
+    {
+      "followingJapanese" : [
+        "落とさないの。"
+      ],
+      "id" : "unit-0072",
+      "japanese" : "それ、つるって落としたらバリっていきますよ。",
+      "precedingJapanese" : [
+        "ええ、怖い。"
+      ],
+      "sourceEnd" : 244.98,
+      "sourceStart" : 242.5
+    },
+    {
+      "followingJapanese" : [
+        "そもそも私、ガチで落とす。"
+      ],
+      "id" : "unit-0073",
+      "japanese" : "落とさないの。",
+      "precedingJapanese" : [
+        "それ、つるって落としたらバリっていきますよ。"
+      ],
+      "sourceEnd" : 246.1,
+      "sourceStart" : 245.45999999999998
+    },
+    {
+      "followingJapanese" : [
+        "え。"
+      ],
+      "id" : "unit-0074",
+      "japanese" : "そもそも私、ガチで落とす。",
+      "precedingJapanese" : [
+        "落とさないの。"
+      ],
+      "sourceEnd" : 248.1,
+      "sourceStart" : 246.26
+    },
+    {
+      "followingJapanese" : [
+        "わかる。"
+      ],
+      "id" : "unit-0075",
+      "japanese" : "え。",
+      "precedingJapanese" : [
+        "そもそも私、ガチで落とす。"
+      ],
+      "sourceEnd" : 248.66,
+      "sourceStart" : 248.57999999999998
+    },
+    {
+      "followingJapanese" : [
+        "手滑るよね。"
+      ],
+      "id" : "unit-0076",
+      "japanese" : "わかる。",
+      "precedingJapanese" : [
+        "え。"
+      ],
+      "sourceEnd" : 249.06,
+      "sourceStart" : 248.66
+    },
+    {
+      "followingJapanese" : [
+        "うん。"
+      ],
+      "id" : "unit-0077",
+      "japanese" : "手滑るよね。",
+      "precedingJapanese" : [
+        "わかる。"
+      ],
+      "sourceEnd" : 249.85999999999999,
+      "sourceStart" : 249.06
+    },
+    {
+      "followingJapanese" : [
+        "でも、悪力が。"
+      ],
+      "id" : "unit-0078",
+      "japanese" : "うん。",
+      "precedingJapanese" : [
+        "手滑るよね。"
+      ],
+      "sourceEnd" : 250.34,
+      "sourceStart" : 250.34
+    },
+    {
+      "followingJapanese" : [
+        "ショップもお茶もめっちゃこぼすんよな。"
+      ],
+      "id" : "unit-0079",
+      "japanese" : "でも、悪力が。",
+      "precedingJapanese" : [
+        "うん。"
+      ],
+      "sourceEnd" : 251.7,
+      "sourceStart" : 250.34
+    },
+    {
+      "followingJapanese" : [
+        "今バー。"
+      ],
+      "id" : "unit-0080",
+      "japanese" : "ショップもお茶もめっちゃ",
+      "precedingJapanese" : [
+        "でも、悪力が。"
+      ],
+      "sourceEnd" : 253.45999999999998,
+      "sourceStart" : 251.7
+    },
+    {
+      "followingJapanese" : [
+        "今バー。"
+      ],
+      "id" : "unit-0081",
+      "japanese" : "こぼすんよな。",
+      "precedingJapanese" : [
+        "でも、悪力が。"
+      ],
+      "sourceEnd" : 255.62,
+      "sourceStart" : 254.74
+    },
+    {
+      "followingJapanese" : [
+        "マジでバーさん。"
+      ],
+      "id" : "unit-0082",
+      "japanese" : "今バー。",
+      "precedingJapanese" : [
+        "ショップもお茶もめっちゃこぼすんよな。"
+      ],
+      "sourceEnd" : 256.82,
+      "sourceStart" : 255.62
+    },
+    {
+      "followingJapanese" : [
+        "今バーマジでバーサンなんだよ。"
+      ],
+      "id" : "unit-0083",
+      "japanese" : "マジでバーさん。",
+      "precedingJapanese" : [
+        "今バー。"
+      ],
+      "sourceEnd" : 257.86,
+      "sourceStart" : 256.9
+    },
+    {
+      "followingJapanese" : [
+        "ショックは落とせないから。"
+      ],
+      "id" : "unit-0084",
+      "japanese" : "今バーマジでバーサンなんだよ。",
+      "precedingJapanese" : [
+        "マジでバーさん。"
+      ],
+      "sourceEnd" : 260.9,
+      "sourceStart" : 257.94
+    },
+    {
+      "followingJapanese" : [
+        "もう何回配信ビアでお茶ぶちまけたか。"
+      ],
+      "id" : "unit-0085",
+      "japanese" : "ショックは落とせないから。",
+      "precedingJapanese" : [
+        "今バーマジでバーサンなんだよ。"
+      ],
+      "sourceEnd" : 262.18,
+      "sourceStart" : 260.9
+    },
+    {
+      "followingJapanese" : [
+        "最近口元ゆるいんだよ。"
+      ],
+      "id" : "unit-0086",
+      "japanese" : "もう何回配信ビアでお茶ぶちまけたか。",
+      "precedingJapanese" : [
+        "ショックは落とせないから。"
+      ],
+      "sourceEnd" : 267.78,
+      "sourceStart" : 262.18
+    },
+    {
+      "followingJapanese" : [
+        "なんか待ってわかる。"
+      ],
+      "id" : "unit-0087",
+      "japanese" : "最近口元ゆるいんだよ。",
+      "precedingJapanese" : [
+        "もう何回配信ビアでお茶ぶちまけたか。"
+      ],
+      "sourceEnd" : 272.9,
+      "sourceStart" : 267.78
+    },
+    {
+      "followingJapanese" : [
+        "口元もゆるいや。"
+      ],
+      "id" : "unit-0088",
+      "japanese" : "なんか待ってわかる。",
+      "precedingJapanese" : [
+        "最近口元ゆるいんだよ。"
+      ],
+      "sourceEnd" : 273.94,
+      "sourceStart" : 272.98
+    },
+    {
+      "followingJapanese" : [
+        "ゆいバー。"
+      ],
+      "id" : "unit-0089",
+      "japanese" : "口元もゆるいや。",
+      "precedingJapanese" : [
+        "なんか待ってわかる。"
+      ],
+      "sourceEnd" : 275.21999999999997,
+      "sourceStart" : 274.58
+    },
+    {
+      "followingJapanese" : [
+        "口からお茶飛び出る。"
+      ],
+      "id" : "unit-0090",
+      "japanese" : "ゆいバー。",
+      "precedingJapanese" : [
+        "口元もゆるいや。"
+      ],
+      "sourceEnd" : 276.9,
+      "sourceStart" : 275.21999999999997
+    },
+    {
+      "followingJapanese" : [
+        "水こぼれる。"
+      ],
+      "id" : "unit-0091",
+      "japanese" : "口からお茶飛び出る。",
+      "precedingJapanese" : [
+        "ゆいバー。"
+      ],
+      "sourceEnd" : 278.58,
+      "sourceStart" : 276.9
+    },
+    {
+      "followingJapanese" : [
+        "なんかやだよ。"
+      ],
+      "id" : "unit-0092",
+      "japanese" : "水こぼれる。",
+      "precedingJapanese" : [
+        "口からお茶飛び出る。"
+      ],
+      "sourceEnd" : 281.46,
+      "sourceStart" : 278.58
+    },
+    {
+      "followingJapanese" : [
+        "退化してんだよね。"
+      ],
+      "id" : "unit-0093",
+      "japanese" : "なんかやだよ。",
+      "precedingJapanese" : [
+        "水こぼれる。"
+      ],
+      "sourceEnd" : 284.74,
+      "sourceStart" : 281.53999999999996
+    },
+    {
+      "followingJapanese" : [
+        "もうそうなんだよね。"
+      ],
+      "id" : "unit-0094",
+      "japanese" : "退化してんだよね。",
+      "precedingJapanese" : [
+        "なんかやだよ。"
+      ],
+      "sourceEnd" : 286.26,
+      "sourceStart" : 285.06
+    },
+    {
+      "followingJapanese" : [
+        "まあ、人間最終的に赤ちゃんに戻っていくって言うからね。"
+      ],
+      "id" : "unit-0095",
+      "japanese" : "もうそうなんだよね。",
+      "precedingJapanese" : [
+        "退化してんだよね。"
+      ],
+      "sourceEnd" : 288.26,
+      "sourceStart" : 286.26
+    },
+    {
+      "followingJapanese" : [
+        "もう切り替えしたのか。"
+      ],
+      "id" : "unit-0096",
+      "japanese" : "まあ、人間最終的に赤ちゃんに戻っていくって言うからね。",
+      "precedingJapanese" : [
+        "もうそうなんだよね。"
+      ],
+      "sourceEnd" : 291.86,
+      "sourceStart" : 288.9
+    },
+    {
+      "followingJapanese" : [
+        "そう早いやろ。"
+      ],
+      "id" : "unit-0097",
+      "japanese" : "もう切り替えしたのか。",
+      "precedingJapanese" : [
+        "まあ、人間最終的に赤ちゃんに戻っていくって言うからね。"
+      ],
+      "sourceEnd" : 294.65999999999997,
+      "sourceStart" : 293.54
+    },
+    {
+      "followingJapanese" : [
+        "早すぎやろやっぱね。"
+      ],
+      "id" : "unit-0098",
+      "japanese" : "そう早いやろ。",
+      "precedingJapanese" : [
+        "もう切り替えしたのか。"
+      ],
+      "sourceEnd" : 296.1,
+      "sourceStart" : 294.74
+    },
+    {
+      "followingJapanese" : [
+        "使わないとっていうか動かないと退化していくんだなって。"
+      ],
+      "id" : "unit-0099",
+      "japanese" : "早すぎやろやっぱね。",
+      "precedingJapanese" : [
+        "そう早いやろ。"
+      ],
+      "sourceEnd" : 297.7,
+      "sourceStart" : 296.42
+    },
+    {
+      "followingJapanese" : [
+        "いやでも別に口元だけは一番動かしてるだろう。"
+      ],
+      "id" : "unit-0100",
+      "japanese" : "使わないとっていうか動かないと退化していくんだなって。",
+      "precedingJapanese" : [
+        "早すぎやろやっぱね。"
+      ],
+      "sourceEnd" : 301.54,
+      "sourceStart" : 297.7
+    },
+    {
+      "followingJapanese" : [
+        "むしろ確かにその辺の人間よりそこで劣化し始めたらもう終わりよ。"
+      ],
+      "id" : "unit-0101",
+      "japanese" : "いやでも別に口元だけは一番動かしてるだろう。",
+      "precedingJapanese" : [
+        "使わないとっていうか動かないと退化していくんだなって。"
+      ],
+      "sourceEnd" : 306.34,
+      "sourceStart" : 301.54
+    },
+    {
+      "followingJapanese" : [
+        "確かに気抜いたら鼻水出てくる。"
+      ],
+      "id" : "unit-0102",
+      "japanese" : "むしろ確かにその辺の人間より",
+      "precedingJapanese" : [
+        "いやでも別に口元だけは一番動かしてるだろう。"
+      ],
+      "sourceEnd" : 308.65999999999997,
+      "sourceStart" : 306.34
+    },
+    {
+      "followingJapanese" : [
+        "確かに気抜いたら鼻水出てくる。"
+      ],
+      "id" : "unit-0103",
+      "japanese" : "そこで劣化し始めたらもう終わりよ。",
+      "precedingJapanese" : [
+        "いやでも別に口元だけは一番動かしてるだろう。"
+      ],
+      "sourceEnd" : 311.62,
+      "sourceStart" : 309.7
+    },
+    {
+      "followingJapanese" : [
+        "え鼻水気抜いたら鼻水出るからティッシュつめるわ。"
+      ],
+      "id" : "unit-0104",
+      "japanese" : "確かに気抜いたら鼻水出てくる。",
+      "precedingJapanese" : [
+        "むしろ確かにその辺の人間よりそこで劣化し始めたらもう終わりよ。"
+      ],
+      "sourceEnd" : 318.772,
+      "sourceStart" : 313.06
+    },
+    {
+      "followingJapanese" : [
+        "うわーよくないよ逆流するよ。"
+      ],
+      "id" : "unit-0105",
+      "japanese" : "え鼻水気抜いたら鼻水出るからティッシュつめるわ。",
+      "precedingJapanese" : [
+        "確かに気抜いたら鼻水出てくる。"
+      ],
+      "sourceEnd" : 323.54,
+      "sourceStart" : 318.82
+    },
+    {
+      "followingJapanese" : [
+        "逆流したらよくないの。"
+      ],
+      "id" : "unit-0106",
+      "japanese" : "うわーよくないよ逆流するよ。",
+      "precedingJapanese" : [
+        "え鼻水気抜いたら鼻水出るからティッシュつめるわ。"
+      ],
+      "sourceEnd" : 327.53999999999996,
+      "sourceStart" : 323.62
+    },
+    {
+      "followingJapanese" : [
+        "逆流入して喉がただれる。"
+      ],
+      "id" : "unit-0107",
+      "japanese" : "逆流したらよくないの。",
+      "precedingJapanese" : [
+        "うわーよくないよ逆流するよ。"
+      ],
+      "sourceEnd" : 332.18,
+      "sourceStart" : 329.78
+    },
+    {
+      "followingJapanese" : [
+        "あーそういうこと。"
+      ],
+      "id" : "unit-0108",
+      "japanese" : "逆流入して喉がただれる。",
+      "precedingJapanese" : [
+        "逆流したらよくないの。"
+      ],
+      "sourceEnd" : 336.26,
+      "sourceStart" : 333.14
+    },
+    {
+      "followingJapanese" : [
+        "でも小っちゃい頃めっちゃずるずる吸ってたな。"
+      ],
+      "id" : "unit-0109",
+      "japanese" : "あーそういうこ",
+      "precedingJapanese" : [
+        "逆流入して喉がただれる。"
+      ],
+      "sourceEnd" : 338.1,
+      "sourceStart" : 336.74
+    },
+    {
+      "followingJapanese" : [
+        "でも小っちゃい頃めっちゃずるずる吸ってたな。"
+      ],
+      "id" : "unit-0110",
+      "japanese" : "と。",
+      "precedingJapanese" : [
+        "逆流入して喉がただれる。"
+      ],
+      "sourceEnd" : 339.86,
+      "sourceStart" : 338.9
+    },
+    {
+      "followingJapanese" : [
+        "わかる。"
+      ],
+      "id" : "unit-0111",
+      "japanese" : "でも小っちゃい頃めっちゃずるずる吸ってたな。",
+      "precedingJapanese" : [
+        "あーそういうこと。"
+      ],
+      "sourceEnd" : 341.62,
+      "sourceStart" : 339.94
+    },
+    {
+      "followingJapanese" : [
+        "やめなさいあんた。"
+      ],
+      "id" : "unit-0112",
+      "japanese" : "わかる。",
+      "precedingJapanese" : [
+        "でも小っちゃい頃めっちゃずるずる吸ってたな。"
+      ],
+      "sourceEnd" : 342.98,
+      "sourceStart" : 341.62
+    },
+    {
+      "followingJapanese" : [
+        "言われる言われる。"
+      ],
+      "id" : "unit-0113",
+      "japanese" : "やめなさいあんた。",
+      "precedingJapanese" : [
+        "わかる。"
+      ],
+      "sourceEnd" : 344.02,
+      "sourceStart" : 343.22
+    },
+    {
+      "followingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "id" : "unit-0114",
+      "japanese" : "言われる言われる。",
+      "precedingJapanese" : [
+        "やめなさいあんた。"
+      ],
+      "sourceEnd" : 345.53999999999996,
+      "sourceStart" : 344.5
+    },
+    {
+      "followingJapanese" : [
+        "えそれ噛むの下手やね鼻の下赤くなるえでも戻ってる私鼻のした鼻の赤くなるのはしょうがないえあとうち両方の鼻にティッシュ詰めるけど詰めてる今ね配信中に鼻に詰めないのティッシュあんたえそれ傷くない喋りながら口呼吸してんの今そうだよえつらねえつラ今回のチャンピオンも清掃はやりませんよそんなことだってもうつまは垂れてくるからあびっくりしたもう清掃忘れたんですよ違うじゃんサラサラすぎてどっちとの鼻水と清掃わえでもどう鼻水垂れ流しながらエイペックスやってる清掃どうよじゃあいや別に適度に噛みながらでええやんそれはダダ漏れなんで000なんダダボレ"
+      ],
+      "id" : "unit-0115",
+      "japanese" : "でもさ壁すぎるとさ耳がいかれない。",
+      "precedingJapanese" : [
+        "言われる言われる。"
+      ],
+      "sourceEnd" : 349.22,
+      "sourceStart" : 345.7
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "id" : "unit-0116",
+      "japanese" : "えそれ噛むの下手やね鼻の下赤くなるえでも戻ってる私鼻のした鼻の赤くなるのはしょうがない",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 358.7,
+      "sourceStart" : 350.38
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "id" : "unit-0117",
+      "japanese" : "え",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 359.98,
+      "sourceStart" : 359.5
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "id" : "unit-0118",
+      "japanese" : "あとうち両方の鼻にティッシュ詰めるけど詰めてる",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 366.3,
+      "sourceStart" : 361.82
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "id" : "unit-0119",
+      "japanese" : "今ね配信中に鼻に詰めないのティッシュあんたえそれ傷くない喋りながら口呼吸してんの今そうだよえつら",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 377.5,
+      "sourceStart" : 368.38
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "id" : "unit-0120",
+      "japanese" : "ねえつラ今回のチャンピオンも清掃はやりませんよそんなことだってもうつまは垂れてくるから",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 386.54,
+      "sourceStart" : 377.5
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "id" : "unit-0121",
+      "japanese" : "あびっくりしたもう清掃忘れたんですよ違うじゃんサラサラすぎてどっちとの鼻水と清掃わえで",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 397.18,
+      "sourceStart" : 387.74
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "id" : "unit-0122",
+      "japanese" : "もどう鼻水垂れ流しながらエイペックスやってる清掃どうよじゃあ",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 404.3,
+      "sourceStart" : 398.7
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュつめてるかどっちがいいのよ。"
+      ],
+      "id" : "unit-0123",
+      "japanese" : "いや別に適度に噛みながらでええやんそれはダダ漏れなんで000なんダダボレテ",
+      "precedingJapanese" : [
+        "でもさ壁すぎるとさ耳がいかれない。"
+      ],
+      "sourceEnd" : 412.2,
+      "sourceStart" : 405.66
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュつめてるかどっちがいいのよ。"
+      ],
+      "id" : "unit-0124",
+      "japanese" : "ィッシュ詰めてる。",
+      "precedingJapanese" : [
+        "えそれ噛むの下手やね鼻の下赤くなるえでも戻ってる私鼻のした鼻の赤くなるのはしょうがないえあとうち両方の鼻にティッシュ詰めるけど詰めてる今ね配信中に鼻に詰めないのティッシュあんたえそれ傷くない喋りながら口呼吸してんの今そうだよえつらねえつラ今回のチャンピオンも清掃はやりませんよそんなことだってもうつまは垂れてくるからあびっくりしたもう清掃忘れたんですよ違うじゃんサラサラすぎてどっちとの鼻水と清掃わえでもどう鼻水垂れ流しながらエイペックスやってる清掃どうよじゃあいや別に適度に噛みながらでええやんそれはダダ漏れなんで000なんダダボレ"
+      ],
+      "sourceEnd" : 414.12,
+      "sourceStart" : 413.4
+    },
+    {
+      "followingJapanese" : [
+        "どっちもやだよ。"
+      ],
+      "id" : "unit-0125",
+      "japanese" : "ティッシュつめてるかどっちがいいのよ。",
+      "precedingJapanese" : [
+        "ティッシュ詰めてる。"
+      ],
+      "sourceEnd" : 418.12,
+      "sourceStart" : 414.36
+    },
+    {
+      "followingJapanese" : [
+        "それ言ったら私も困っちゃうな。"
+      ],
+      "id" : "unit-0126",
+      "japanese" : "どっちもやだよ。",
+      "precedingJapanese" : [
+        "ティッシュつめてるかどっちがいいのよ。"
+      ],
+      "sourceEnd" : 421.4,
+      "sourceStart" : 420.44
+    },
+    {
+      "followingJapanese" : [
+        "やばい。"
+      ],
+      "id" : "unit-0127",
+      "japanese" : "それ言ったら私も困っちゃうな。",
+      "precedingJapanese" : [
+        "どっちもやだよ。"
+      ],
+      "sourceEnd" : 423.48,
+      "sourceStart" : 421.64
+    },
+    {
+      "followingJapanese" : [
+        "エペックスに適応できてない。"
+      ],
+      "id" : "unit-0128",
+      "japanese" : "やばい。",
+      "precedingJapanese" : [
+        "それ言ったら私も困っちゃうな。"
+      ],
+      "sourceEnd" : 424.28000000000003,
+      "sourceStart" : 423.5
+    },
+    {
+      "followingJapanese" : [
+        "目が追いつかない。"
+      ],
+      "id" : "unit-0129",
+      "japanese" : "エペックスに適応できてない。",
+      "precedingJapanese" : [
+        "やばい。"
+      ],
+      "sourceEnd" : 426.2,
+      "sourceStart" : 424.36
+    },
+    {
+      "followingJapanese" : [
+        "でも昨日やってました。"
+      ],
+      "id" : "unit-0130",
+      "japanese" : "目が追いつかない。",
+      "precedingJapanese" : [
+        "エペックスに適応できてない。"
+      ],
+      "sourceEnd" : 428.12,
+      "sourceStart" : 426.2
+    },
+    {
+      "followingJapanese" : [
+        "なやってたけど起動部追いついてなかった。"
+      ],
+      "id" : "unit-0131",
+      "japanese" : "でも昨日やってました。",
+      "precedingJapanese" : [
+        "目が追いつかない。"
+      ],
+      "sourceEnd" : 431.64,
+      "sourceStart" : 428.6
+    },
+    {
+      "followingJapanese" : [
+        "でダメだ。"
+      ],
+      "id" : "unit-0132",
+      "japanese" : "なやってたけど起動部追いついてなかった。",
+      "precedingJapanese" : [
+        "でも昨日やってました。"
+      ],
+      "sourceEnd" : 434.76,
+      "sourceStart" : 431.64
+    },
+    {
+      "followingJapanese" : [
+        "俺も鼻に詰まってるティッシュが気になって喋れん。"
+      ],
+      "id" : "unit-0133",
+      "japanese" : "でダメだ。",
+      "precedingJapanese" : [
+        "なやってたけど起動部追いついてなかった。"
+      ],
+      "sourceEnd" : 436.12,
+      "sourceStart" : 434.76
+    },
+    {
+      "followingJapanese" : [
+        "ごめん。"
+      ],
+      "id" : "unit-0134",
+      "japanese" : "俺も鼻に詰まってるティッシュが気になって喋れん。",
+      "precedingJapanese" : [
+        "でダメだ。"
+      ],
+      "sourceEnd" : 443.8,
+      "sourceStart" : 436.12
+    },
+    {
+      "followingJapanese" : [
+        "写真送ろうか。"
+      ],
+      "id" : "unit-0135",
+      "japanese" : "ごめん。",
+      "precedingJapanese" : [
+        "俺も鼻に詰まってるティッシュが気になって喋れん。"
+      ],
+      "sourceEnd" : 444.52,
+      "sourceStart" : 443.88
+    },
+    {
+      "followingJapanese" : [
+        "いい。"
+      ],
+      "id" : "unit-0136",
+      "japanese" : "写真送ろうか。",
+      "precedingJapanese" : [
+        "ごめん。"
+      ],
+      "sourceEnd" : 448.76,
+      "sourceStart" : 444.52
+    },
+    {
+      "followingJapanese" : [
+        "本当にやめて。"
+      ],
+      "id" : "unit-0137",
+      "japanese" : "いい。",
+      "precedingJapanese" : [
+        "写真送ろうか。"
+      ],
+      "sourceEnd" : 449.24,
+      "sourceStart" : 448.76
+    },
+    {
+      "followingJapanese" : [
+        "ピージーに聞いたらどうしよう。"
+      ],
+      "id" : "unit-0138",
+      "japanese" : "本当にやめて。",
+      "precedingJapanese" : [
+        "いい。"
+      ],
+      "sourceEnd" : 452.6,
+      "sourceStart" : 449.617
+    },
+    {
+      "followingJapanese" : [
+        "詰まってます。"
+      ],
+      "id" : "unit-0139",
+      "japanese" : "ピージーに聞いたらどうしよう。",
+      "precedingJapanese" : [
+        "本当にやめて。"
+      ],
+      "sourceEnd" : 454.36,
+      "sourceStart" : 453.48
+    },
+    {
+      "followingJapanese" : [
+        "砕けすぎじゃない。"
+      ],
+      "id" : "unit-0140",
+      "japanese" : "詰まってます。",
+      "precedingJapanese" : [
+        "ピージーに聞いたらどうしよう。"
+      ],
+      "sourceEnd" : 455.24,
+      "sourceStart" : 454.36
+    },
+    {
+      "followingJapanese" : [
+        "えでもうちも2人に穴詰めって送れるわ。"
+      ],
+      "id" : "unit-0141",
+      "japanese" : "砕けすぎじゃない。",
+      "precedingJapanese" : [
+        "詰まってます。"
+      ],
+      "sourceEnd" : 457,
+      "sourceStart" : 455.32
+    },
+    {
+      "followingJapanese" : [
+        "本当に一番困るの。"
+      ],
+      "id" : "unit-0142",
+      "japanese" : "えでもうちも2人に穴詰めって送れるわ。",
+      "precedingJapanese" : [
+        "砕けすぎじゃない。"
+      ],
+      "sourceEnd" : 465.8,
+      "sourceStart" : 457.06
+    },
+    {
+      "followingJapanese" : [
+        "冷蔵三段。"
+      ],
+      "id" : "unit-0143",
+      "japanese" : "本当に一番困るの。",
+      "precedingJapanese" : [
+        "えでもうちも2人に穴詰めって送れるわ。"
+      ],
+      "sourceEnd" : 470.52,
+      "sourceStart" : 469.4
+    },
+    {
+      "followingJapanese" : [
+        "確かに別にいいよ。"
+      ],
+      "id" : "unit-0144",
+      "japanese" : "冷蔵三段。",
+      "precedingJapanese" : [
+        "本当に一番困るの。"
+      ],
+      "sourceEnd" : 471.24,
+      "sourceStart" : 470.52
+    },
+    {
+      "followingJapanese" : [
+        "したら俺も送るんだ。"
+      ],
+      "id" : "unit-0145",
+      "japanese" : "確かに別にいいよ。",
+      "precedingJapanese" : [
+        "冷蔵三段。"
+      ],
+      "sourceEnd" : 473.16,
+      "sourceStart" : 471.56
+    },
+    {
+      "followingJapanese" : [
+        "じゃあ加工してスリショットみたいにする。"
+      ],
+      "id" : "unit-0146",
+      "japanese" : "したら俺も送るんだ。",
+      "precedingJapanese" : [
+        "確かに別にいいよ。"
+      ],
+      "sourceEnd" : 474.04,
+      "sourceStart" : 473.24
+    },
+    {
+      "followingJapanese" : [
+        "そうだね。"
+      ],
+      "id" : "unit-0147",
+      "japanese" : "じゃあ加工してスリショットみたいにする。",
+      "precedingJapanese" : [
+        "したら俺も送るんだ。"
+      ],
+      "sourceEnd" : 479.76,
+      "sourceStart" : 476.88
+    },
+    {
+      "followingJapanese" : [
+        "なんか一時アンチガイいるだけでいてみたいな時代なかった。"
+      ],
+      "id" : "unit-0148",
+      "japanese" : "そうだね。",
+      "precedingJapanese" : [
+        "じゃあ加工してスリショットみたいにする。"
+      ],
+      "sourceEnd" : 483.52,
+      "sourceStart" : 480.08
+    },
+    {
+      "followingJapanese" : [
+        "あった。"
+      ],
+      "id" : "unit-0149",
+      "japanese" : "なんか一時アンチガイいるだけでいてみたいな時代なかった。",
+      "precedingJapanese" : [
+        "そうだね。"
+      ],
+      "sourceEnd" : 488,
+      "sourceStart" : 484.48
+    },
+    {
+      "followingJapanese" : [
+        "アンチが耐久棒できませんみたいな。"
+      ],
+      "id" : "unit-0150",
+      "japanese" : "あった。",
+      "precedingJapanese" : [
+        "なんか一時アンチガイいるだけでいてみたいな時代なかった。"
+      ],
+      "sourceEnd" : 488.8,
+      "sourceStart" : 488
+    },
+    {
+      "followingJapanese" : [
+        "あ、そうそうそう。"
+      ],
+      "id" : "unit-0151",
+      "japanese" : "アンチが耐久棒できませんみたいな。",
+      "precedingJapanese" : [
+        "あった。"
+      ],
+      "sourceEnd" : 491.68,
+      "sourceStart" : 488.8
+    },
+    {
+      "followingJapanese" : [
+        "まず今いけんだ。"
+      ],
+      "id" : "unit-0152",
+      "japanese" : "あ、そうそうそう。",
+      "precedingJapanese" : [
+        "アンチが耐久棒できませんみたいな。"
+      ],
+      "sourceEnd" : 492.64,
+      "sourceStart" : 491.68
+    },
+    {
+      "followingJapanese" : [
+        "外すわ。"
+      ],
+      "id" : "unit-0153",
+      "japanese" : "まず今いけんだ。",
+      "precedingJapanese" : [
+        "あ、そうそうそう。"
+      ],
+      "sourceEnd" : 495.6,
+      "sourceStart" : 492.64
+    },
+    {
+      "followingJapanese" : [
+        "安定が耐えきって決まったみたいな。"
+      ],
+      "id" : "unit-0154",
+      "japanese" : "外すわ。",
+      "precedingJapanese" : [
+        "まず今いけんだ。"
+      ],
+      "sourceEnd" : 499.68,
+      "sourceStart" : 495.6
+    },
+    {
+      "followingJapanese" : [
+        "決まったよね。"
+      ],
+      "id" : "unit-0155",
+      "japanese" : "安定が耐えきって決まったみたいな。",
+      "precedingJapanese" : [
+        "外すわ。"
+      ],
+      "sourceEnd" : 504.24,
+      "sourceStart" : 499.68
+    },
+    {
+      "followingJapanese" : [
+        "悪意があるだろう。"
+      ],
+      "id" : "unit-0156",
+      "japanese" : "決まったよね。",
+      "precedingJapanese" : [
+        "安定が耐えきって決まったみたいな。"
+      ],
+      "sourceEnd" : 505.2,
+      "sourceStart" : 504.32
+    },
+    {
+      "followingJapanese" : [
+        "その場でのしか。"
+      ],
+      "id" : "unit-0157",
+      "japanese" : "悪意があるだろう。",
+      "precedingJapanese" : [
+        "決まったよね。"
+      ],
+      "sourceEnd" : 506.76,
+      "sourceStart" : 505.2
+    },
+    {
+      "followingJapanese" : [
+        "わかりますよ。"
+      ],
+      "id" : "unit-0158",
+      "japanese" : "その場でのしか。",
+      "precedingJapanese" : [
+        "悪意があるだろう。"
+      ],
+      "sourceEnd" : 507.84,
+      "sourceStart" : 506.82
+    },
+    {
+      "followingJapanese" : [
+        "ちょっとオタクが出てる。"
+      ],
+      "id" : "unit-0159",
+      "japanese" : "わかりますよ。",
+      "precedingJapanese" : [
+        "その場でのしか。"
+      ],
+      "sourceEnd" : 508.32,
+      "sourceStart" : 507.84
+    },
+    {
+      "followingJapanese" : [
+        "僕もその時期は嫌いでした。"
+      ],
+      "id" : "unit-0160",
+      "japanese" : "ちょっとオタクが出てる。",
+      "precedingJapanese" : [
+        "わかりますよ。"
+      ],
+      "sourceEnd" : 511.52,
+      "sourceStart" : 508.4
+    },
+    {
+      "followingJapanese" : [
+        "悪いやりすぎでしょ。"
+      ],
+      "id" : "unit-0161",
+      "japanese" : "僕もその時期は嫌いでした。",
+      "precedingJapanese" : [
+        "ちょっとオタクが出てる。"
+      ],
+      "sourceEnd" : 513.2,
+      "sourceStart" : 511.52
+    },
+    {
+      "followingJapanese" : [
+        "ちょっと寄ってる。"
+      ],
+      "id" : "unit-0162",
+      "japanese" : "悪いやりすぎでしょ。",
+      "precedingJapanese" : [
+        "僕もその時期は嫌いでした。"
+      ],
+      "sourceEnd" : 517.12,
+      "sourceStart" : 513.2
+    },
+    {
+      "followingJapanese" : [
+        "ねえ、なんかアレンジ入れすぎじゃない？"
+      ],
+      "id" : "unit-0163",
+      "japanese" : "ちょっと寄ってる。",
+      "precedingJapanese" : [
+        "悪いやりすぎでしょ。"
+      ],
+      "sourceEnd" : 518.96,
+      "sourceStart" : 518
+    },
+    {
+      "followingJapanese" : [
+        "アレンジャいてる。"
+      ],
+      "id" : "unit-0164",
+      "japanese" : "ねえ、なんかアレンジ入れすぎじゃない？",
+      "precedingJapanese" : [
+        "ちょっと寄ってる。"
+      ],
+      "sourceEnd" : 522.24,
+      "sourceStart" : 520
+    },
+    {
+      "followingJapanese" : [
+        "そんな感じだったけどな。"
+      ],
+      "id" : "unit-0165",
+      "japanese" : "アレンジャいてる。",
+      "precedingJapanese" : [
+        "ねえ、なんかアレンジ入れすぎじゃない？"
+      ],
+      "sourceEnd" : 523.44,
+      "sourceStart" : 522.48
+    },
+    {
+      "followingJapanese" : [
+        "当たらないぜ。"
+      ],
+      "id" : "unit-0166",
+      "japanese" : "そんな感じだったけどな。",
+      "precedingJapanese" : [
+        "アレンジャいてる。"
+      ],
+      "sourceEnd" : 525.2,
+      "sourceStart" : 523.92
+    },
+    {
+      "followingJapanese" : [
+        "どうしよう。"
+      ],
+      "id" : "unit-0167",
+      "japanese" : "当たらないぜ。",
+      "precedingJapanese" : [
+        "そんな感じだったけどな。"
+      ],
+      "sourceEnd" : 526.3199999999999,
+      "sourceStart" : 525.52
+    },
+    {
+      "followingJapanese" : [
+        "気まぐれで見るか。"
+      ],
+      "id" : "unit-0168",
+      "japanese" : "どうしよう。",
+      "precedingJapanese" : [
+        "当たらないぜ。"
+      ],
+      "sourceEnd" : 527.76,
+      "sourceStart" : 526.3199999999999
+    },
+    {
+      "followingJapanese" : [
+        "マジで。"
+      ],
+      "id" : "unit-0169",
+      "japanese" : "気まぐれで見るか。",
+      "precedingJapanese" : [
+        "どうしよう。"
+      ],
+      "sourceEnd" : 528.72,
+      "sourceStart" : 527.76
+    },
+    {
+      "followingJapanese" : [
+        "アリのアリ。"
+      ],
+      "id" : "unit-0170",
+      "japanese" : "マジで。",
+      "precedingJapanese" : [
+        "気まぐれで見るか。"
+      ],
+      "sourceEnd" : 529.2,
+      "sourceStart" : 528.72
+    },
+    {
+      "followingJapanese" : [
+        "アリアです。"
+      ],
+      "id" : "unit-0171",
+      "japanese" : "アリのアリ。",
+      "precedingJapanese" : [
+        "マジで。"
+      ],
+      "sourceEnd" : 532.48,
+      "sourceStart" : 530.56
+    },
+    {
+      "followingJapanese" : [
+        "マジで当たんない。"
+      ],
+      "id" : "unit-0172",
+      "japanese" : "アリアです。",
+      "precedingJapanese" : [
+        "アリのアリ。"
+      ],
+      "sourceEnd" : 534.7199999999999,
+      "sourceStart" : 534.16
+    },
+    {
+      "followingJapanese" : [
+        "え、でも絶対視点移動間に合わない。"
+      ],
+      "id" : "unit-0173",
+      "japanese" : "マジで当たんない。",
+      "precedingJapanese" : [
+        "アリアです。"
+      ],
+      "sourceEnd" : 536.3199999999999,
+      "sourceStart" : 535.3599999999999
+    },
+    {
+      "followingJapanese" : [
+        "どうしようかな。"
+      ],
+      "id" : "unit-0174",
+      "japanese" : "え、",
+      "precedingJapanese" : [
+        "マジで当たんない。"
+      ],
+      "sourceEnd" : 536.3199999999999,
+      "sourceStart" : 536.3199999999999
+    },
+    {
+      "followingJapanese" : [
+        "どうしようかな。"
+      ],
+      "id" : "unit-0175",
+      "japanese" : "でも絶対視点移動間に合わない。",
+      "precedingJapanese" : [
+        "マジで当たんない。"
+      ],
+      "sourceEnd" : 539.8399999999999,
+      "sourceStart" : 537.52
+    },
+    {
+      "followingJapanese" : [
+        "めっちゃ感度上げる。"
+      ],
+      "id" : "unit-0176",
+      "japanese" : "どうしようかな。",
+      "precedingJapanese" : [
+        "え、でも絶対視点移動間に合わない。"
+      ],
+      "sourceEnd" : 540.64,
+      "sourceStart" : 539.92
+    },
+    {
+      "followingJapanese" : [
+        "バカの発想。"
+      ],
+      "id" : "unit-0177",
+      "japanese" : "めっちゃ感度上げる。",
+      "precedingJapanese" : [
+        "どうしようかな。"
+      ],
+      "sourceEnd" : 544.4,
+      "sourceStart" : 540.7199999999999
+    },
+    {
+      "followingJapanese" : [
+        "そりゃそうなんだけどね。"
+      ],
+      "id" : "unit-0178",
+      "japanese" : "バカの発想。",
+      "precedingJapanese" : [
+        "めっちゃ感度上げる。"
+      ],
+      "sourceEnd" : 549.3599999999999,
+      "sourceStart" : 548.56
+    },
+    {
+      "followingJapanese" : [
+        "視点間に合わな。"
+      ],
+      "id" : "unit-0179",
+      "japanese" : "そりゃそうなんだけどね。",
+      "precedingJapanese" : [
+        "バカの発想。"
+      ],
+      "sourceEnd" : 551.92,
+      "sourceStart" : 550.7199999999999
+    },
+    {
+      "followingJapanese" : [
+        "い、感度あげる。"
+      ],
+      "id" : "unit-0180",
+      "japanese" : "視点間に合わな。",
+      "precedingJapanese" : [
+        "そりゃそうなんだけどね。"
+      ],
+      "sourceEnd" : 555.5999999999999,
+      "sourceStart" : 554.64
+    },
+    {
+      "followingJapanese" : [
+        "玉当たって感度下げ。"
+      ],
+      "id" : "unit-0181",
+      "japanese" : "い、感度あげる。",
+      "precedingJapanese" : [
+        "視点間に合わな。"
+      ],
+      "sourceEnd" : 556.4799999999999,
+      "sourceStart" : 555.5999999999999
+    },
+    {
+      "followingJapanese" : [
+        "る、視点間違わない。"
+      ],
+      "id" : "unit-0182",
+      "japanese" : "玉当たって感度下げ。",
+      "precedingJapanese" : [
+        "い、感度あげる。"
+      ],
+      "sourceEnd" : 558.4,
+      "sourceStart" : 556.4799999999999
+    },
+    {
+      "followingJapanese" : [
+        "感度、上げる、勝てね。"
+      ],
+      "id" : "unit-0183",
+      "japanese" : "る、視点間違わない。",
+      "precedingJapanese" : [
+        "玉当たって感度下げ。"
+      ],
+      "sourceEnd" : 559.92,
+      "sourceStart" : 558.4
+    },
+    {
+      "followingJapanese" : [
+        "やめる。"
+      ],
+      "id" : "unit-0184",
+      "japanese" : "感度、上げる、勝てね。",
+      "precedingJapanese" : [
+        "る、視点間違わない。"
+      ],
+      "sourceEnd" : 563.92,
+      "sourceStart" : 560.16
+    },
+    {
+      "followingJapanese" : [
+        "もうやっぱやめる、詰めようかな。"
+      ],
+      "id" : "unit-0185",
+      "japanese" : "やめる。",
+      "precedingJapanese" : [
+        "感度、上げる、勝てね。"
+      ],
+      "sourceEnd" : 564.7199999999999,
+      "sourceStart" : 564.16
+    },
+    {
+      "followingJapanese" : [
+        "鼻にティッシュ。"
+      ],
+      "id" : "unit-0186",
+      "japanese" : "もうやっぱやめる、詰めようかな。",
+      "precedingJapanese" : [
+        "やめる。"
+      ],
+      "sourceEnd" : 570.0799999999999,
+      "sourceStart" : 567.12
+    },
+    {
+      "followingJapanese" : [
+        "詰めるわ。"
+      ],
+      "id" : "unit-0187",
+      "japanese" : "鼻にティッシュ。",
+      "precedingJapanese" : [
+        "もうやっぱやめる、詰めようかな。"
+      ],
+      "sourceEnd" : 570.88,
+      "sourceStart" : 570.0799999999999
+    },
+    {
+      "followingJapanese" : [
+        "待ってないけど詰めておかな。"
+      ],
+      "id" : "unit-0188",
+      "japanese" : "詰めるわ。",
+      "precedingJapanese" : [
+        "鼻にティッシュ。"
+      ],
+      "sourceEnd" : 571.8399999999999,
+      "sourceStart" : 570.88
+    },
+    {
+      "followingJapanese" : [
+        "特にティッシュがなくて除菌シートですけど。"
+      ],
+      "id" : "unit-0189",
+      "japanese" : "待ってないけど詰めておかな。",
+      "precedingJapanese" : [
+        "詰めるわ。"
+      ],
+      "sourceEnd" : 573.3599999999999,
+      "sourceStart" : 572.0799999999999
+    },
+    {
+      "followingJapanese" : [
+        "除菌シー、ト詰めた。"
+      ],
+      "id" : "unit-0190",
+      "japanese" : "特にティッシュがなくて除菌シートですけど。",
+      "precedingJapanese" : [
+        "待ってないけど詰めておかな。"
+      ],
+      "sourceEnd" : 576,
+      "sourceStart" : 573.76
+    },
+    {
+      "followingJapanese" : [
+        "じゃあもうしょうがないからいいじゃん。"
+      ],
+      "id" : "unit-0191",
+      "japanese" : "除菌シー、ト詰めた。",
+      "precedingJapanese" : [
+        "特にティッシュがなくて除菌シートですけど。"
+      ],
+      "sourceEnd" : 577.1999999999999,
+      "sourceStart" : 576.4799999999999
+    },
+    {
+      "followingJapanese" : [
+        "スースーしそうで。"
+      ],
+      "id" : "unit-0192",
+      "japanese" : "じゃあもうしょうがないからい",
+      "precedingJapanese" : [
+        "除菌シー、ト詰めた。"
+      ],
+      "sourceEnd" : 578.24,
+      "sourceStart" : 577.1999999999999
+    },
+    {
+      "followingJapanese" : [
+        "スースーしそうで。"
+      ],
+      "id" : "unit-0193",
+      "japanese" : "いじゃん。",
+      "precedingJapanese" : [
+        "除菌シー、ト詰めた。"
+      ],
+      "sourceEnd" : 581.04,
+      "sourceStart" : 580.7199999999999
+    },
+    {
+      "followingJapanese" : [
+        "これでいけるでしょ。"
+      ],
+      "id" : "unit-0194",
+      "japanese" : "スースーしそうで。",
+      "precedingJapanese" : [
+        "じゃあもうしょうがないからいいじゃん。"
+      ],
+      "sourceEnd" : 581.8399999999999,
+      "sourceStart" : 581.04
+    },
+    {
+      "followingJapanese" : [
+        "これできましょん。"
+      ],
+      "id" : "unit-0195",
+      "japanese" : "これでいけるでしょ。",
+      "precedingJapanese" : [
+        "スースーしそうで。"
+      ],
+      "sourceEnd" : 584.16,
+      "sourceStart" : 582.4799999999999
+    },
+    {
+      "followingJapanese" : [
+        "待ってる。"
+      ],
+      "id" : "unit-0196",
+      "japanese" : "これできましょん。",
+      "precedingJapanese" : [
+        "これでいけるでしょ。"
+      ],
+      "sourceEnd" : 586.8,
+      "sourceStart" : 585.68
+    },
+    {
+      "followingJapanese" : [
+        "うちも除菌、シートする。"
+      ],
+      "id" : "unit-0197",
+      "japanese" : "待ってる。",
+      "precedingJapanese" : [
+        "これできましょん。"
+      ],
+      "sourceEnd" : 588.24,
+      "sourceStart" : 587.8399999999999
+    },
+    {
+      "followingJapanese" : [
+        "いや、苦しい。"
+      ],
+      "id" : "unit-0198",
+      "japanese" : "うちも除菌、シートする。",
+      "precedingJapanese" : [
+        "待ってる。"
+      ],
+      "sourceEnd" : 589.68,
+      "sourceStart" : 588.24
+    },
+    {
+      "followingJapanese" : [
+        "口笛してみな。"
+      ],
+      "id" : "unit-0199",
+      "japanese" : "いや、苦しい。",
+      "precedingJapanese" : [
+        "うちも除菌、シートする。"
+      ],
+      "sourceEnd" : 591.04,
+      "sourceStart" : 589.68
+    },
+    {
+      "followingJapanese" : [
+        "できる？"
+      ],
+      "id" : "unit-0200",
+      "japanese" : "口笛してみな。",
+      "precedingJapanese" : [
+        "いや、苦しい。"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "すごい上手。"
+      ],
+      "id" : "unit-0201",
+      "japanese" : "できる？",
+      "precedingJapanese" : [
+        "口笛してみな。"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "黙れよ。"
+      ],
+      "id" : "unit-0202",
+      "japanese" : "すごい上手。",
+      "precedingJapanese" : [
+        "できる？"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "笑うと飛んできますよ。"
+      ],
+      "id" : "unit-0203",
+      "japanese" : "黙れよ。",
+      "precedingJapanese" : [
+        "すごい上手。"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "そうですよね。"
+      ],
+      "id" : "unit-0204",
+      "japanese" : "笑うと飛んできますよ。",
+      "precedingJapanese" : [
+        "黙れよ。"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "冷笑すると飛んでいく。"
+      ],
+      "id" : "unit-0205",
+      "japanese" : "そうですよね。",
+      "precedingJapanese" : [
+        "笑うと飛んできますよ。"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "ガッツリ笑ったらさ大丈夫なんだけど、冷笑すると飛びますよ。"
+      ],
+      "id" : "unit-0206",
+      "japanese" : "冷笑すると飛んでいく。",
+      "precedingJapanese" : [
+        "そうですよね。"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "でわかる？"
+      ],
+      "id" : "unit-0207",
+      "japanese" : "ガッツリ笑ったらさ大丈夫なんだけど、冷笑すると飛びますよ。",
+      "precedingJapanese" : [
+        "冷笑すると飛んでいく。"
+      ],
+      "sourceEnd" : 591.12,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "あ、危ないですよ。"
+      ],
+      "id" : "unit-0208",
+      "japanese" : "でわかる？",
+      "precedingJapanese" : [
+        "ガッツリ笑ったらさ大丈夫なんだけど、冷笑すると飛びますよ。"
+      ],
+      "sourceEnd" : 592.806,
+      "sourceStart" : 591.12
+    },
+    {
+      "followingJapanese" : [
+        "みたいな。"
+      ],
+      "id" : "unit-0209",
+      "japanese" : "あ、",
+      "precedingJapanese" : [
+        "でわかる？"
+      ],
+      "sourceEnd" : 596.18,
+      "sourceStart" : 594.493
+    },
+    {
+      "followingJapanese" : [
+        "みたいな。"
+      ],
+      "id" : "unit-0210",
+      "japanese" : "危ないですよ。",
+      "precedingJapanese" : [
+        "でわかる？"
+      ],
+      "sourceEnd" : 616.424,
+      "sourceStart" : 597.867
+    },
+    {
+      "followingJapanese" : [
+        "冷笑だと飛んでるよ。"
+      ],
+      "id" : "unit-0211",
+      "japanese" : "みたいな。",
+      "precedingJapanese" : [
+        "あ、危ないですよ。"
+      ],
+      "sourceEnd" : 629.92,
+      "sourceStart" : 618.111
+    },
+    {
+      "followingJapanese" : [
+        "飛んでった。"
+      ],
+      "id" : "unit-0212",
+      "japanese" : "冷笑だと飛んでるよ。",
+      "precedingJapanese" : [
+        "みたいな。"
+      ],
+      "sourceEnd" : 631.32,
+      "sourceStart" : 629.92
+    },
+    {
+      "followingJapanese" : [
+        "鼻で笑う。"
+      ],
+      "id" : "unit-0213",
+      "japanese" : "飛んでった。",
+      "precedingJapanese" : [
+        "冷笑だと飛んでるよ。"
+      ],
+      "sourceEnd" : 632.56,
+      "sourceStart" : 631.34
+    },
+    {
+      "followingJapanese" : [
+        "と飛びます。"
+      ],
+      "id" : "unit-0214",
+      "japanese" : "鼻で笑う。",
+      "precedingJapanese" : [
+        "飛んでった。"
+      ],
+      "sourceEnd" : 634.4,
+      "sourceStart" : 632.56
+    },
+    {
+      "followingJapanese" : [
+        "よ気をつけてね。"
+      ],
+      "id" : "unit-0215",
+      "japanese" : "と飛びます。",
+      "precedingJapanese" : [
+        "鼻で笑う。"
+      ],
+      "sourceEnd" : 640.96,
+      "sourceStart" : 640.32
+    },
+    {
+      "followingJapanese" : [
+        "飛んでたの？"
+      ],
+      "id" : "unit-0216",
+      "japanese" : "よ気をつけてね。",
+      "precedingJapanese" : [
+        "と飛びます。"
+      ],
+      "sourceEnd" : 645.12,
+      "sourceStart" : 640.96
+    },
+    {
+      "followingJapanese" : [
+        "飛んでこない。"
+      ],
+      "id" : "unit-0217",
+      "japanese" : "飛んでたの？",
+      "precedingJapanese" : [
+        "よ気をつけてね。"
+      ],
+      "sourceEnd" : 646.28,
+      "sourceStart" : 646.28
+    },
+    {
+      "followingJapanese" : [
+        "飛んでない。"
+      ],
+      "id" : "unit-0218",
+      "japanese" : "飛んでこない。",
+      "precedingJapanese" : [
+        "飛んでたの？"
+      ],
+      "sourceEnd" : 646.28,
+      "sourceStart" : 646.28
+    },
+    {
+      "followingJapanese" : [
+        "鼻にティッシュ詰めて飛んでったらもういいこと1個もないけどね。"
+      ],
+      "id" : "unit-0219",
+      "japanese" : "飛んでない。",
+      "precedingJapanese" : [
+        "飛んでこない。"
+      ],
+      "sourceEnd" : 646.28,
+      "sourceStart" : 646.28
+    },
+    {
+      "followingJapanese" : [
+        "確かに。"
+      ],
+      "id" : "unit-0220",
+      "japanese" : "鼻にティッシュ",
+      "precedingJapanese" : [
+        "飛んでない。"
+      ],
+      "sourceEnd" : 651.8399999999999,
+      "sourceStart" : 646.28
+    },
+    {
+      "followingJapanese" : [
+        "確かに。"
+      ],
+      "id" : "unit-0221",
+      "japanese" : "詰めて飛んでったらもういいこと1個もないけどね。",
+      "precedingJapanese" : [
+        "飛んでない。"
+      ],
+      "sourceEnd" : 671,
+      "sourceStart" : 657.4
+    },
+    {
+      "followingJapanese" : [
+        "鼻水も飛んでいくし。"
+      ],
+      "id" : "unit-0222",
+      "japanese" : "確かに。",
+      "precedingJapanese" : [
+        "鼻にティッシュ詰めて飛んでったらもういいこと1個もないけどね。"
+      ],
+      "sourceEnd" : 671.88,
+      "sourceStart" : 671
+    },
+    {
+      "followingJapanese" : [
+        "ティッシュも飛ん。"
+      ],
+      "id" : "unit-0223",
+      "japanese" : "鼻水も飛んでいくし。",
+      "precedingJapanese" : [
+        "確かに。"
+      ],
+      "sourceEnd" : 674.52,
+      "sourceStart" : 671.88
+    },
+    {
+      "followingJapanese" : [
+        "でいくし、悪いとこ取り。"
+      ],
+      "id" : "unit-0224",
+      "japanese" : "ティッシュも飛ん。",
+      "precedingJapanese" : [
+        "鼻水も飛んでいくし。"
+      ],
+      "sourceEnd" : 677.4,
+      "sourceStart" : 674.52
+    },
+    {
+      "followingJapanese" : [
+        "お腹痛い。"
+      ],
+      "id" : "unit-0225",
+      "japanese" : "でいくし、悪いとこ取り。",
+      "precedingJapanese" : [
+        "ティッシュも飛ん。"
+      ],
+      "sourceEnd" : 680.776,
+      "sourceStart" : 677.4
+    },
+    {
+      "followingJapanese" : [
+        "ああ、え、ね、ね。"
+      ],
+      "id" : "unit-0226",
+      "japanese" : "お腹痛い。",
+      "precedingJapanese" : [
+        "でいくし、悪いとこ取り。"
+      ],
+      "sourceEnd" : 681.4,
+      "sourceStart" : 681.3199999999999
+    },
+    {
+      "followingJapanese" : [
+        "うん？"
+      ],
+      "id" : "unit-0227",
+      "japanese" : "ああ、え、ね、ね。",
+      "precedingJapanese" : [
+        "お腹痛い。"
+      ],
+      "sourceEnd" : 686.28,
+      "sourceStart" : 681.4
+    },
+    {
+      "followingJapanese" : [
+        "例えば、多分さ、全然話変わるんだけどさ、ラブタイプ診断みたいなやつやった？"
+      ],
+      "id" : "unit-0228",
+      "japanese" : "うん？",
+      "precedingJapanese" : [
+        "ああ、え、ね、ね。"
+      ],
+      "sourceEnd" : 686.76,
+      "sourceStart" : 686.4399999999999
+    },
+    {
+      "followingJapanese" : [
+        "やったよ。"
+      ],
+      "id" : "unit-0229",
+      "japanese" : "例えば、多分さ、全然話変わるんだけどさ、ラブタイプ診断みたいなやつやった？",
+      "precedingJapanese" : [
+        "うん？"
+      ],
+      "sourceEnd" : 692.76,
+      "sourceStart" : 686.7919999999999
+    },
+    {
+      "followingJapanese" : [
+        "え、何だったの？"
+      ],
+      "id" : "unit-0230",
+      "japanese" : "やったよ。",
+      "precedingJapanese" : [
+        "例えば、多分さ、全然話変わるんだけどさ、ラブタイプ診断みたいなやつやった？"
+      ],
+      "sourceEnd" : 693.48,
+      "sourceStart" : 692.76
+    },
+    {
+      "followingJapanese" : [
+        "私、最後の恋人。"
+      ],
+      "id" : "unit-0231",
+      "japanese" : "え、何だったの？",
+      "precedingJapanese" : [
+        "やったよ。"
+      ],
+      "sourceEnd" : 695.16,
+      "sourceStart" : 694.1999999999999
+    },
+    {
+      "followingJapanese" : [
+        "え？"
+      ],
+      "id" : "unit-0232",
+      "japanese" : "私、最後の恋人。",
+      "precedingJapanese" : [
+        "え、何だったの？"
+      ],
+      "sourceEnd" : 696.6,
+      "sourceStart" : 695.24
+    },
+    {
+      "followingJapanese" : [
+        "なんかいいね。"
+      ],
+      "id" : "unit-0233",
+      "japanese" : "え？",
+      "precedingJapanese" : [
+        "私、最後の恋人。"
+      ],
+      "sourceEnd" : 697.3199999999999,
+      "sourceStart" : 697.24
+    },
+    {
+      "followingJapanese" : [
+        "え。"
+      ],
+      "id" : "unit-0234",
+      "japanese" : "なんかいいね。",
+      "precedingJapanese" : [
+        "え？"
+      ],
+      "sourceEnd" : 700.4399999999999,
+      "sourceStart" : 699
+    },
+    {
+      "followingJapanese" : [
+        "何？"
+      ],
+      "id" : "unit-0235",
+      "japanese" : "え。",
+      "precedingJapanese" : [
+        "なんかいいね。"
+      ],
+      "sourceEnd" : 700.92,
+      "sourceStart" : 700.92
+    },
+    {
+      "followingJapanese" : [
+        "なんで？"
+      ],
+      "id" : "unit-0236",
+      "japanese" : "何？",
+      "precedingJapanese" : [
+        "え。"
+      ],
+      "sourceEnd" : 702.52,
+      "sourceStart" : 702.28
+    },
+    {
+      "followingJapanese" : [
+        "え。"
+      ],
+      "id" : "unit-0237",
+      "japanese" : "なんで？",
+      "precedingJapanese" : [
+        "何？"
+      ],
+      "sourceEnd" : 703,
+      "sourceStart" : 702.6
+    },
+    {
+      "followingJapanese" : [
+        "なんかっぽいなって。"
+      ],
+      "id" : "unit-0238",
+      "japanese" : "え。",
+      "precedingJapanese" : [
+        "なんで？"
+      ],
+      "sourceEnd" : 703.0799999999999,
+      "sourceStart" : 703.0799999999999
+    },
+    {
+      "followingJapanese" : [
+        "えうち、なんだっけ？"
+      ],
+      "id" : "unit-0239",
+      "japanese" : "なんかっぽいなって。",
+      "precedingJapanese" : [
+        "え。"
+      ],
+      "sourceEnd" : 704.92,
+      "sourceStart" : 703.0799999999999
+    },
+    {
+      "followingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "id" : "unit-0240",
+      "japanese" : "えうち、なんだっけ？",
+      "precedingJapanese" : [
+        "なんかっぽいなって。"
+      ],
+      "sourceEnd" : 707.0799999999999,
+      "sourceStart" : 704.92
+    },
+    {
+      "followingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "id" : "unit-0241",
+      "japanese" : "え、うち、何だっけ。",
+      "precedingJapanese" : [
+        "えうち、なんだっけ？"
+      ],
+      "sourceEnd" : 707.88,
+      "sourceStart" : 707.0799999999999
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0242",
+      "japanese" : "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなや",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 716.9,
+      "sourceStart" : 708.26
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0243",
+      "japanese" : "つになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 724.18,
+      "sourceStart" : 716.9
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0244",
+      "japanese" : "ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプとい",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 731.54,
+      "sourceStart" : 724.18
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0245",
+      "japanese" : "いってことわかんないボ",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 733.38,
+      "sourceStart" : 731.54
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0246",
+      "japanese" : "スネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプ",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 742.34,
+      "sourceStart" : 734.5
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0247",
+      "japanese" : "なのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマ",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 751.06,
+      "sourceStart" : 742.34
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0248",
+      "japanese" : "ジイチズヤでいいみたいな",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 754.58,
+      "sourceStart" : 751.14
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0249",
+      "japanese" : "レイドサカちゃんみたいなやついやーえええーえ",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 757.22,
+      "sourceStart" : 755.54
+    },
+    {
+      "followingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "id" : "unit-0250",
+      "japanese" : "ー多分最後の子イビトらしい",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 766.02,
+      "sourceStart" : 760.66
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0251",
+      "japanese" : "わっぽいいや私もっぽいなって読んで思ったわ",
+      "precedingJapanese" : [
+        "え、うち、何だっけ。"
+      ],
+      "sourceEnd" : 771.46,
+      "sourceStart" : 767.14
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0252",
+      "japanese" : "え一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+      "precedingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "sourceEnd" : 779.5400000000001,
+      "sourceStart" : 772.82
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0253",
+      "japanese" : "お2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかん",
+      "precedingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "sourceEnd" : 788.5,
+      "sourceStart" : 781.86
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0254",
+      "japanese" : "ねえじゃあ後で調べるわ",
+      "precedingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "sourceEnd" : 791.5400000000001,
+      "sourceStart" : 788.5
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0255",
+      "japanese" : "俺だけ性癖の話なの良く",
+      "precedingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "sourceEnd" : 800.26,
+      "sourceStart" : 794.98
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0256",
+      "japanese" : "ない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピー",
+      "precedingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "sourceEnd" : 811.0600000000001,
+      "sourceStart" : 801.78
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0257",
+      "japanese" : "だから本当はバブバブしたいってことじ",
+      "precedingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "sourceEnd" : 815.0600000000001,
+      "sourceStart" : 811.0600000000001
+    },
+    {
+      "followingJapanese" : [
+        "恋愛心がなのにでもベイミーなそうことってことはまあその可能"
+      ],
+      "id" : "unit-0258",
+      "japanese" : "ゃない俺だけ性的の話だの良くない？",
+      "precedingJapanese" : [
+        "うちなんだっけみんなあチャッカリウサギえ可愛いえなんかレイドさんなんとかなんか赤ちゃんみたいなやつになったみたいななんかどこかで見た切り抜きで赤ちゃんそんな赤ちゃんじゃなくてなんだっけど隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえなんかじゃあ結構えまあついていけないよみたいなタイプといいってことわかんないボスネコがわからないボスの猫がわからないえボスと猫ならそうなんじゃないのなんか私は男を立てるタイプなのかもしれん最後の恋人は何系なのどうどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジイチズヤでいいみたいなレイドサカちゃんみたいなやついやーえええーえー多分最後の子イビトらしいわっぽいいや私もっぽいなって読んで思っ"
+      ],
+      "sourceEnd" : 818.9,
+      "sourceStart" : 816.02
+    },
+    {
+      "followingJapanese" : [
+        "想像に任せますね。"
+      ],
+      "id" : "unit-0259",
+      "japanese" : "恋愛心がなのにでもベイミーなそうことってことはまあ",
+      "precedingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "sourceEnd" : 826.02,
+      "sourceStart" : 818.9
+    },
+    {
+      "followingJapanese" : [
+        "でもそこはユーピーのなんかウサギちゃんはなんなの。"
+      ],
+      "id" : "unit-0260",
+      "japanese" : "その可能想像に任せますね。",
+      "precedingJapanese" : [
+        "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふんお2人はどどういうあれなの知らないけどえ赤ちゃん隠れベイビーとかわかんない赤ちゃんマジではわかんねえじゃあ後で調べるわ俺だけ性癖の話なの良くない恋愛診断なのにでも隠れたベイビーなそういうことってことまあその可能性はあるから隠れてベイピーだから本当はバブバブしたいってことじゃない俺だけ性的の話だの良くない？"
+      ],
+      "sourceEnd" : 835.3599999999999,
+      "sourceStart" : 829.86
+    },
+    {
+      "followingJapanese" : [
+        "あ、チャッカリウサぎはなんかうちも結構一途みたいな感じなんだけど、ただその人を一途に愛するより本当に大丈夫かみたいなのをごちゃっと分析するらしい。"
+      ],
+      "id" : "unit-0261",
+      "japanese" : "でもそこはユーピーのなんかウサギちゃんはなんなの。",
+      "precedingJapanese" : [
+        "想像に任せますね。"
+      ],
+      "sourceEnd" : 838.16,
+      "sourceStart" : 835.3599999999999
+    },
+    {
+      "followingJapanese" : [
+        "で、チャックリウサリウスギ来た。"
+      ],
+      "id" : "unit-0262",
+      "japanese" : "あ、チャッカリウサぎはなんかうちも結構一途みたいな感じなんだけど、ただその人を一途に愛するより本",
+      "precedingJapanese" : [
+        "でもそこはユーピーのなんかウサギちゃんはなんなの。"
+      ],
+      "sourceEnd" : 845.76,
+      "sourceStart" : 838.16
+    },
+    {
+      "followingJapanese" : [
+        "で、チャックリウサリウスギ来た。"
+      ],
+      "id" : "unit-0263",
+      "japanese" : "当に大丈夫かみたいなのをごちゃっと分析するらしい。",
+      "precedingJapanese" : [
+        "でもそこはユーピーのなんかウサギちゃんはなんなの。"
+      ],
+      "sourceEnd" : 848.64,
+      "sourceStart" : 845.8399999999999
+    },
+    {
+      "followingJapanese" : [
+        "チャッかりウサリー、チャクリウサジだから。"
+      ],
+      "id" : "unit-0264",
+      "japanese" : "で、チャックリウサリウスギ来た。",
+      "precedingJapanese" : [
+        "あ、チャッカリウサぎはなんかうちも結構一途みたいな感じなんだけど、ただその人を一途に愛するより本当に大丈夫かみたいなのをごちゃっと分析するらしい。"
+      ],
+      "sourceEnd" : 851.52,
+      "sourceStart" : 848.64
+    },
+    {
+      "followingJapanese" : [
+        "ちなみにチャックリウスぎと隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。"
+      ],
+      "id" : "unit-0265",
+      "japanese" : "チャッかりウサリー、チャクリウサジだから。",
+      "precedingJapanese" : [
+        "で、チャックリウサリウスギ来た。"
+      ],
+      "sourceEnd" : 854.7199999999999,
+      "sourceStart" : 851.52
+    },
+    {
+      "followingJapanese" : [
+        "ええ、やった。"
+      ],
+      "id" : "unit-0266",
+      "japanese" : "ちなみにチャックリウスぎと隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。",
+      "precedingJapanese" : [
+        "チャッかりウサリー、チャクリウサジだから。"
+      ],
+      "sourceEnd" : 861.76,
+      "sourceStart" : 855.28
+    },
+    {
+      "followingJapanese" : [
+        "一、正面。"
+      ],
+      "id" : "unit-0267",
+      "japanese" : "え",
+      "precedingJapanese" : [
+        "ちなみにチャックリウスぎと隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。"
+      ],
+      "sourceEnd" : 862.24,
+      "sourceStart" : 861.76
+    },
+    {
+      "followingJapanese" : [
+        "一、正面。"
+      ],
+      "id" : "unit-0268",
+      "japanese" : "え、やった。",
+      "precedingJapanese" : [
+        "ちなみにチャックリウスぎと隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。"
+      ],
+      "sourceEnd" : 863.3599999999999,
+      "sourceStart" : 863.28
+    },
+    {
+      "followingJapanese" : [
+        "待って、最後の恋人はなんか苦労しそうじゃない。"
+      ],
+      "id" : "unit-0269",
+      "japanese" : "一、正面。",
+      "precedingJapanese" : [
+        "ええ、やった。"
+      ],
+      "sourceEnd" : 863.8399999999999,
+      "sourceStart" : 863.3599999999999
+    },
+    {
+      "followingJapanese" : [
+        "最後の恋人は多分重すぎて苦努する。"
+      ],
+      "id" : "unit-0270",
+      "japanese" : "待って、最後の恋人はなんか苦労しそうじゃない。",
+      "precedingJapanese" : [
+        "一、正面。"
+      ],
+      "sourceEnd" : 867.8399999999999,
+      "sourceStart" : 864.24
+    },
+    {
+      "followingJapanese" : [
+        "重くないよ。"
+      ],
+      "id" : "unit-0271",
+      "japanese" : "最後の恋人は多分重すぎて苦努する。",
+      "precedingJapanese" : [
+        "待って、最後の恋人はなんか苦労しそうじゃない。"
+      ],
+      "sourceEnd" : 870.16,
+      "sourceStart" : 867.92
+    },
+    {
+      "followingJapanese" : [
+        "私でも重いのかな。"
+      ],
+      "id" : "unit-0272",
+      "japanese" : "重くないよ。",
+      "precedingJapanese" : [
+        "最後の恋人は多分重すぎて苦努する。"
+      ],
+      "sourceEnd" : 875.1999999999999,
+      "sourceStart" : 872.0799999999999
+    },
+    {
+      "followingJapanese" : [
+
+      ],
+      "id" : "unit-0273",
+      "japanese" : "私でも重いのかな。",
+      "precedingJapanese" : [
+        "重くないよ。"
+      ],
+      "sourceEnd" : 878.24,
+      "sourceStart" : 875.1999999999999
+    }
+  ],
+  "validationOpportunityTermIDsByCueID" : {
+    "unit-0001" : [
+
+    ],
+    "unit-0002" : [
+
+    ],
+    "unit-0003" : [
+
+    ],
+    "unit-0004" : [
+
+    ],
+    "unit-0005" : [
+
+    ],
+    "unit-0006" : [
+
+    ],
+    "unit-0007" : [
+
+    ],
+    "unit-0008" : [
+
+    ],
+    "unit-0009" : [
+
+    ],
+    "unit-0010" : [
+
+    ],
+    "unit-0011" : [
+
+    ],
+    "unit-0012" : [
+
+    ],
+    "unit-0013" : [
+
+    ],
+    "unit-0014" : [
+
+    ],
+    "unit-0015" : [
+
+    ],
+    "unit-0016" : [
+
+    ],
+    "unit-0017" : [
+
+    ],
+    "unit-0018" : [
+
+    ],
+    "unit-0019" : [
+
+    ],
+    "unit-0020" : [
+
+    ],
+    "unit-0021" : [
+
+    ],
+    "unit-0022" : [
+
+    ],
+    "unit-0023" : [
+
+    ],
+    "unit-0024" : [
+
+    ],
+    "unit-0025" : [
+
+    ],
+    "unit-0026" : [
+
+    ],
+    "unit-0027" : [
+
+    ],
+    "unit-0028" : [
+
+    ],
+    "unit-0029" : [
+
+    ],
+    "unit-0030" : [
+
+    ],
+    "unit-0031" : [
+
+    ],
+    "unit-0032" : [
+
+    ],
+    "unit-0033" : [
+
+    ],
+    "unit-0034" : [
+
+    ],
+    "unit-0035" : [
+
+    ],
+    "unit-0036" : [
+
+    ],
+    "unit-0037" : [
+
+    ],
+    "unit-0038" : [
+
+    ],
+    "unit-0039" : [
+
+    ],
+    "unit-0040" : [
+
+    ],
+    "unit-0041" : [
+
+    ],
+    "unit-0042" : [
+
+    ],
+    "unit-0043" : [
+
+    ],
+    "unit-0044" : [
+
+    ],
+    "unit-0045" : [
+
+    ],
+    "unit-0046" : [
+
+    ],
+    "unit-0047" : [
+
+    ],
+    "unit-0048" : [
+
+    ],
+    "unit-0049" : [
+
+    ],
+    "unit-0050" : [
+
+    ],
+    "unit-0051" : [
+
+    ],
+    "unit-0052" : [
+
+    ],
+    "unit-0053" : [
+
+    ],
+    "unit-0054" : [
+
+    ],
+    "unit-0055" : [
+
+    ],
+    "unit-0056" : [
+
+    ],
+    "unit-0057" : [
+
+    ],
+    "unit-0058" : [
+
+    ],
+    "unit-0059" : [
+
+    ],
+    "unit-0060" : [
+
+    ],
+    "unit-0061" : [
+
+    ],
+    "unit-0062" : [
+
+    ],
+    "unit-0063" : [
+
+    ],
+    "unit-0064" : [
+
+    ],
+    "unit-0065" : [
+
+    ],
+    "unit-0066" : [
+
+    ],
+    "unit-0067" : [
+
+    ],
+    "unit-0068" : [
+
+    ],
+    "unit-0069" : [
+
+    ],
+    "unit-0070" : [
+
+    ],
+    "unit-0071" : [
+
+    ],
+    "unit-0072" : [
+
+    ],
+    "unit-0073" : [
+
+    ],
+    "unit-0074" : [
+
+    ],
+    "unit-0075" : [
+
+    ],
+    "unit-0076" : [
+
+    ],
+    "unit-0077" : [
+
+    ],
+    "unit-0078" : [
+
+    ],
+    "unit-0079" : [
+
+    ],
+    "unit-0080" : [
+
+    ],
+    "unit-0081" : [
+
+    ],
+    "unit-0082" : [
+
+    ],
+    "unit-0083" : [
+
+    ],
+    "unit-0084" : [
+
+    ],
+    "unit-0085" : [
+
+    ],
+    "unit-0086" : [
+
+    ],
+    "unit-0087" : [
+
+    ],
+    "unit-0088" : [
+
+    ],
+    "unit-0089" : [
+
+    ],
+    "unit-0090" : [
+
+    ],
+    "unit-0091" : [
+
+    ],
+    "unit-0092" : [
+
+    ],
+    "unit-0093" : [
+
+    ],
+    "unit-0094" : [
+
+    ],
+    "unit-0095" : [
+
+    ],
+    "unit-0096" : [
+
+    ],
+    "unit-0097" : [
+
+    ],
+    "unit-0098" : [
+
+    ],
+    "unit-0099" : [
+
+    ],
+    "unit-0100" : [
+
+    ],
+    "unit-0101" : [
+
+    ],
+    "unit-0102" : [
+
+    ],
+    "unit-0103" : [
+
+    ],
+    "unit-0104" : [
+
+    ],
+    "unit-0105" : [
+
+    ],
+    "unit-0106" : [
+
+    ],
+    "unit-0107" : [
+
+    ],
+    "unit-0108" : [
+
+    ],
+    "unit-0109" : [
+
+    ],
+    "unit-0110" : [
+
+    ],
+    "unit-0111" : [
+
+    ],
+    "unit-0112" : [
+
+    ],
+    "unit-0113" : [
+
+    ],
+    "unit-0114" : [
+
+    ],
+    "unit-0115" : [
+
+    ],
+    "unit-0116" : [
+
+    ],
+    "unit-0117" : [
+
+    ],
+    "unit-0118" : [
+
+    ],
+    "unit-0119" : [
+
+    ],
+    "unit-0120" : [
+
+    ],
+    "unit-0121" : [
+
+    ],
+    "unit-0122" : [
+
+    ],
+    "unit-0123" : [
+
+    ],
+    "unit-0124" : [
+
+    ],
+    "unit-0125" : [
+
+    ],
+    "unit-0126" : [
+
+    ],
+    "unit-0127" : [
+
+    ],
+    "unit-0128" : [
+
+    ],
+    "unit-0129" : [
+
+    ],
+    "unit-0130" : [
+
+    ],
+    "unit-0131" : [
+
+    ],
+    "unit-0132" : [
+
+    ],
+    "unit-0133" : [
+
+    ],
+    "unit-0134" : [
+
+    ],
+    "unit-0135" : [
+
+    ],
+    "unit-0136" : [
+
+    ],
+    "unit-0137" : [
+
+    ],
+    "unit-0138" : [
+
+    ],
+    "unit-0139" : [
+
+    ],
+    "unit-0140" : [
+
+    ],
+    "unit-0141" : [
+
+    ],
+    "unit-0142" : [
+
+    ],
+    "unit-0143" : [
+
+    ],
+    "unit-0144" : [
+
+    ],
+    "unit-0145" : [
+
+    ],
+    "unit-0146" : [
+
+    ],
+    "unit-0147" : [
+
+    ],
+    "unit-0148" : [
+
+    ],
+    "unit-0149" : [
+
+    ],
+    "unit-0150" : [
+
+    ],
+    "unit-0151" : [
+
+    ],
+    "unit-0152" : [
+
+    ],
+    "unit-0153" : [
+
+    ],
+    "unit-0154" : [
+
+    ],
+    "unit-0155" : [
+
+    ],
+    "unit-0156" : [
+
+    ],
+    "unit-0157" : [
+
+    ],
+    "unit-0158" : [
+
+    ],
+    "unit-0159" : [
+
+    ],
+    "unit-0160" : [
+
+    ],
+    "unit-0161" : [
+
+    ],
+    "unit-0162" : [
+
+    ],
+    "unit-0163" : [
+
+    ],
+    "unit-0164" : [
+
+    ],
+    "unit-0165" : [
+
+    ],
+    "unit-0166" : [
+
+    ],
+    "unit-0167" : [
+
+    ],
+    "unit-0168" : [
+
+    ],
+    "unit-0169" : [
+
+    ],
+    "unit-0170" : [
+
+    ],
+    "unit-0171" : [
+
+    ],
+    "unit-0172" : [
+
+    ],
+    "unit-0173" : [
+
+    ],
+    "unit-0174" : [
+
+    ],
+    "unit-0175" : [
+
+    ],
+    "unit-0176" : [
+
+    ],
+    "unit-0177" : [
+
+    ],
+    "unit-0178" : [
+
+    ],
+    "unit-0179" : [
+
+    ],
+    "unit-0180" : [
+
+    ],
+    "unit-0181" : [
+
+    ],
+    "unit-0182" : [
+
+    ],
+    "unit-0183" : [
+
+    ],
+    "unit-0184" : [
+
+    ],
+    "unit-0185" : [
+
+    ],
+    "unit-0186" : [
+
+    ],
+    "unit-0187" : [
+
+    ],
+    "unit-0188" : [
+
+    ],
+    "unit-0189" : [
+
+    ],
+    "unit-0190" : [
+
+    ],
+    "unit-0191" : [
+
+    ],
+    "unit-0192" : [
+
+    ],
+    "unit-0193" : [
+
+    ],
+    "unit-0194" : [
+
+    ],
+    "unit-0195" : [
+
+    ],
+    "unit-0196" : [
+
+    ],
+    "unit-0197" : [
+
+    ],
+    "unit-0198" : [
+
+    ],
+    "unit-0199" : [
+
+    ],
+    "unit-0200" : [
+
+    ],
+    "unit-0201" : [
+
+    ],
+    "unit-0202" : [
+
+    ],
+    "unit-0203" : [
+
+    ],
+    "unit-0204" : [
+
+    ],
+    "unit-0205" : [
+
+    ],
+    "unit-0206" : [
+
+    ],
+    "unit-0207" : [
+
+    ],
+    "unit-0208" : [
+
+    ],
+    "unit-0209" : [
+
+    ],
+    "unit-0210" : [
+
+    ],
+    "unit-0211" : [
+
+    ],
+    "unit-0212" : [
+
+    ],
+    "unit-0213" : [
+
+    ],
+    "unit-0214" : [
+
+    ],
+    "unit-0215" : [
+
+    ],
+    "unit-0216" : [
+
+    ],
+    "unit-0217" : [
+
+    ],
+    "unit-0218" : [
+
+    ],
+    "unit-0219" : [
+
+    ],
+    "unit-0220" : [
+
+    ],
+    "unit-0221" : [
+
+    ],
+    "unit-0222" : [
+
+    ],
+    "unit-0223" : [
+
+    ],
+    "unit-0224" : [
+
+    ],
+    "unit-0225" : [
+
+    ],
+    "unit-0226" : [
+
+    ],
+    "unit-0227" : [
+
+    ],
+    "unit-0228" : [
+
+    ],
+    "unit-0229" : [
+
+    ],
+    "unit-0230" : [
+
+    ],
+    "unit-0231" : [
+
+    ],
+    "unit-0232" : [
+
+    ],
+    "unit-0233" : [
+
+    ],
+    "unit-0234" : [
+
+    ],
+    "unit-0235" : [
+
+    ],
+    "unit-0236" : [
+
+    ],
+    "unit-0237" : [
+
+    ],
+    "unit-0238" : [
+
+    ],
+    "unit-0239" : [
+
+    ],
+    "unit-0240" : [
+
+    ],
+    "unit-0241" : [
+
+    ],
+    "unit-0242" : [
+
+    ],
+    "unit-0243" : [
+
+    ],
+    "unit-0244" : [
+
+    ],
+    "unit-0245" : [
+
+    ],
+    "unit-0246" : [
+
+    ],
+    "unit-0247" : [
+
+    ],
+    "unit-0248" : [
+
+    ],
+    "unit-0249" : [
+
+    ],
+    "unit-0250" : [
+
+    ],
+    "unit-0251" : [
+
+    ],
+    "unit-0252" : [
+
+    ],
+    "unit-0253" : [
+
+    ],
+    "unit-0254" : [
+
+    ],
+    "unit-0255" : [
+
+    ],
+    "unit-0256" : [
+
+    ],
+    "unit-0257" : [
+
+    ],
+    "unit-0258" : [
+
+    ],
+    "unit-0259" : [
+
+    ],
+    "unit-0260" : [
+
+    ],
+    "unit-0261" : [
+
+    ],
+    "unit-0262" : [
+
+    ],
+    "unit-0263" : [
+
+    ],
+    "unit-0264" : [
+
+    ],
+    "unit-0265" : [
+
+    ],
+    "unit-0266" : [
+
+    ],
+    "unit-0267" : [
+
+    ],
+    "unit-0268" : [
+
+    ],
+    "unit-0269" : [
+
+    ],
+    "unit-0270" : [
+
+    ],
+    "unit-0271" : [
+
+    ],
+    "unit-0272" : [
+
+    ],
+    "unit-0273" : [
+
+    ]
+  }
+}
