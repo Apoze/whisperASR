@@ -12,3 +12,5 @@ Only `numberOfSpeakers` changes. Auto stays the product default; the explicit co
 Unlabelled JA is a separate attribution-coverage diagnostic. The spoken-content gate compares delivered Japanese after removing only `SPEAKER_NN:` prefixes.
 
 **Decision:** do not ship explicit count; holdout did not confirm the gain.
+
+The immutable #59 evidence is preserved under `docs/japanese-live/experiments/evidence/E17-speaker-count/`; paths embedded in those artifacts record their original run location.

@@ -3,58 +3,6 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityAcceptanceTests: XCTestCase {
-    func testFrozenExpectedSpeakerCountWhenOptedIn() async throws {
-        let environment = ProcessInfo.processInfo.environment
-        guard environment["WHISPERASR_RUN_SPEAKER_COUNT_EXPERIMENT"] == "1",
-              let evidencePath = environment["WHISPERASR_SPEAKER_COUNT_EVIDENCE"],
-              let sourcePath = environment["WHISPERASR_SPEAKER_COUNT_SOURCE"],
-              let outputPath = environment["WHISPERASR_SPEAKER_COUNT_OUTPUT"],
-              let rawJobID = environment["WHISPERASR_SPEAKER_COUNT_JOB_ID"],
-              let jobID = UUID(uuidString: rawJobID),
-              let rawMode = environment["WHISPERASR_SPEAKER_COUNT_MODE"],
-              let modelCachePath = environment["WHISPERASR_SPEAKER_COUNT_MODEL_CACHE"] else {
-            throw XCTSkip("Set the frozen inputs, output, job ID, mode and model cache for ticket #59.")
-        }
-        let policy: HighQualitySpeakerCountPolicy
-        switch rawMode {
-        case "automatic":
-            policy = .automatic
-        case "expected":
-            guard let rawCount = environment["WHISPERASR_EXPECTED_SPEAKER_COUNT"],
-                  let count = Int(rawCount) else {
-                XCTFail("Expected mode requires WHISPERASR_EXPECTED_SPEAKER_COUNT.")
-                return
-            }
-            policy = .expected(count)
-        default:
-            XCTFail("Unknown Speaker-count mode: \(rawMode)")
-            return
-        }
-
-        let baseline = try Self.frozenEvidence(at: evidencePath)
-        let alignment = try XCTUnwrap(baseline.alignment)
-        let result = try await Self.runFrozenSpeakerKitExperiment(
-            baseline: baseline,
-            alignment: alignment,
-            sourcePath: sourcePath,
-            outputPath: outputPath,
-            jobID: jobID,
-            precision: .quantized,
-            modelCachePath: modelCachePath,
-            enforceMemoryGate: true,
-            useExclusiveReconciliation: false,
-            speakerCountPolicy: policy
-        )
-
-        XCTAssertEqual(result.manifest.speakerCountPolicy, policy)
-        XCTAssertEqual(result.evidence.speakerCountPolicy, policy)
-        XCTAssertEqual(result.evidence.diarization?.speakerCountPolicy, policy)
-        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
-        XCTAssertFalse(result.evidence.diarization?.rawSpans.isEmpty ?? true)
-        XCTAssertTrue(result.evidence.diarization?.validationDiagnostics.isEmpty == true)
-        XCTAssertEqual(result.manifest.status, .completed)
-    }
-
     func testFrozenSpeakerKitThresholdWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_SPEAKERKIT_THRESHOLD_EXPERIMENT"] == "1",
@@ -86,10 +34,16 @@ final class HighQualityAcceptanceTests: XCTestCase {
             clusterDistanceThreshold: threshold
         )
 
-        try Self.assertFrozenSpeakerKitResult(
-            result,
-            baseline: baseline,
-            alignment: alignment
+        let candidate = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(candidate.useExclusiveReconciliation, false)
+        XCTAssertFalse(candidate.rawSpans.isEmpty)
+        XCTAssertFalse(candidate.mappings.isEmpty)
+        XCTAssertTrue(candidate.validationDiagnostics.isEmpty)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
+        XCTAssertEqual(
+            result.turns.map(\.japanese).joined(),
+            alignment.mergedCues.map(\.text).joined()
         )
     }
 
@@ -121,10 +75,16 @@ final class HighQualityAcceptanceTests: XCTestCase {
             useExclusiveReconciliation: false
         )
 
-        try Self.assertFrozenSpeakerKitResult(
-            result,
-            baseline: baseline,
-            alignment: alignment
+        let candidate = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(candidate.useExclusiveReconciliation, false)
+        XCTAssertFalse(candidate.rawSpans.isEmpty)
+        XCTAssertFalse(candidate.mappings.isEmpty)
+        XCTAssertTrue(candidate.validationDiagnostics.isEmpty)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
+        XCTAssertEqual(
+            result.turns.map(\.japanese).joined(),
+            alignment.mergedCues.map(\.text).joined()
         )
         XCTAssertEqual(
             Set(result.manifest.generatedFiles.map(\.path)),
@@ -217,7 +177,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation, _ in
+            diarizeSpeakers: { _, useExclusiveReconciliation in
                 .init(
                     spans: diarization.rawSpans,
                     modelID: diarization.modelID,
@@ -310,7 +270,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation, _ in
+            diarizeSpeakers: { _, useExclusiveReconciliation in
                 .init(
                     spans: diarization.rawSpans,
                     modelID: diarization.modelID,
@@ -463,24 +423,6 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
     }
 
-    private static func assertFrozenSpeakerKitResult(
-        _ result: HighQualityJobResult,
-        baseline: HighQualityRawEvidence,
-        alignment: HighQualityAlignmentEvidence
-    ) throws {
-        let candidate = try XCTUnwrap(result.evidence.diarization)
-        XCTAssertEqual(candidate.useExclusiveReconciliation, false)
-        XCTAssertFalse(candidate.rawSpans.isEmpty)
-        XCTAssertFalse(candidate.mappings.isEmpty)
-        XCTAssertTrue(candidate.validationDiagnostics.isEmpty)
-        XCTAssertEqual(result.manifest.status, .completed)
-        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
-        XCTAssertEqual(
-            result.turns.map(\.japanese).joined(),
-            alignment.mergedCues.map(\.text).joined()
-        )
-    }
-
     private static func runFrozenSpeakerKitExperiment(
         baseline: HighQualityRawEvidence,
         alignment: HighQualityAlignmentEvidence,
@@ -491,7 +433,6 @@ final class HighQualityAcceptanceTests: XCTestCase {
         modelCachePath: String?,
         enforceMemoryGate: Bool,
         useExclusiveReconciliation: Bool,
-        speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
         clusterDistanceThreshold: Float? = nil
     ) async throws -> HighQualityJobResult {
         let asrChunks = alignment.chunks.map { chunk in
@@ -534,7 +475,6 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 try await diarizer.diarize(
                     samples: $0,
                     useExclusiveReconciliation: $1,
-                    speakerCountPolicy: $2,
                     clusterDistanceThreshold: clusterDistanceThreshold
                 )
             },
@@ -567,7 +507,6 @@ final class HighQualityAcceptanceTests: XCTestCase {
             backend: baseline.model.backend,
             speakerLabels: true,
             useExclusiveReconciliation: useExclusiveReconciliation,
-            speakerCountPolicy: speakerCountPolicy,
             outputRoot: URL(fileURLWithPath: outputPath)
         )) { progress in
             print(

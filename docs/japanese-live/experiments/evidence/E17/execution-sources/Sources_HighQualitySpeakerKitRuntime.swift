@@ -54,7 +54,6 @@ actor HighQualitySpeakerKitRuntime {
     func diarize(
         samples: [Float],
         useExclusiveReconciliation: Bool = false,
-        speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
         clusterDistanceThreshold: Float? = nil
     ) async throws -> HighQualityDiarizationExchange {
         guard let speakerKit else {
@@ -77,7 +76,6 @@ actor HighQualitySpeakerKitRuntime {
             result = try await speakerKit.diarize(
                 audioArray: samples,
                 options: PyannoteDiarizationOptions(
-                    numberOfSpeakers: speakerCountPolicy.expectedCount,
                     clusterDistanceThreshold: clusterDistanceThreshold,
                     useExclusiveReconciliation: useExclusiveReconciliation
                 )
@@ -103,8 +101,7 @@ actor HighQualitySpeakerKitRuntime {
             modelID: Self.modelID,
             revision: Self.revision,
             peakMemoryBytes: peakMemoryBytes,
-            useExclusiveReconciliation: useExclusiveReconciliation,
-            speakerCountPolicy: speakerCountPolicy
+            useExclusiveReconciliation: useExclusiveReconciliation
         )
     }
 
