@@ -562,6 +562,14 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 throw XCTSkip("The untouched holdout requires explicit authorization.")
             }
         }
+        let contextPolicy: HighQualityConversationContextPolicy
+        switch environment["WHISPERASR_ACCEPTANCE_TRANSLATION_CONTEXT"] ?? "none" {
+        case "none": contextPolicy = .none
+        case "product-default": contextPolicy = .productDefault
+        default:
+            XCTFail("Unknown translation-context policy.")
+            return
+        }
 
         let result = try await HighQualityJob().run(.init(
             id: jobID,
@@ -569,6 +577,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             deliverables: Set(HighQualityDeliverable.allCases),
             backend: backend,
             speakerLabels: true,
+            translationContextPolicy: contextPolicy,
             outputRoot: URL(fileURLWithPath: outputPath)
         )) { progress in
             print("[acceptance][\(input.corpusID)][\(backend.rawValue)] "
@@ -589,22 +598,32 @@ final class HighQualityAcceptanceTests: XCTestCase {
 
         let alignment = try XCTUnwrap(result.evidence.alignment)
         XCTAssertEqual(alignment.modelID, HighQualityForcedAlignerRuntime.modelID)
+        XCTAssertEqual(alignment.revision, HighQualityForcedAlignerRuntime.revision)
         XCTAssertTrue(alignment.validationDiagnostics.isEmpty)
         XCTAssertFalse(alignment.mergedCues.isEmpty)
         XCTAssertFalse(alignment.chunks.flatMap(\.rawItems).isEmpty)
 
         let diarization = try XCTUnwrap(result.evidence.diarization)
         XCTAssertEqual(diarization.modelID, HighQualitySpeakerKitRuntime.modelID)
+        XCTAssertEqual(diarization.revision, HighQualitySpeakerKitRuntime.revision)
         XCTAssertTrue(diarization.validationDiagnostics.isEmpty)
         XCTAssertFalse(diarization.rawSpans.isEmpty)
         XCTAssertFalse(diarization.mappings.isEmpty)
 
         let translation = try XCTUnwrap(result.evidence.translation)
+        XCTAssertEqual(result.evidence.model.revision, backend.model.revision)
         XCTAssertEqual(translation.model, LocalMLXTranslator.modelID)
         XCTAssertEqual(translation.revision, LocalMLXTranslator.revision)
         XCTAssertEqual(translation.runtimeVersion, LocalMLXTranslator.runtimeVersion)
         XCTAssertTrue(translation.validationFailures.isEmpty)
         XCTAssertFalse(translation.batches.isEmpty)
+        if contextPolicy != .none {
+            XCTAssertEqual(
+                Set(translation.request.conversationContextByCueID.keys),
+                Set(translation.request.turns.map(\.id))
+            )
+            XCTAssertTrue(translation.batches.allSatisfy { $0.context != nil })
+        }
         XCTAssertTrue(translation.batches.allSatisfy {
             !$0.sanitizedPrompt.isEmpty
                 && $0.nativePrompt?.isEmpty == false

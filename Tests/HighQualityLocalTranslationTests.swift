@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 @testable import WhisperASRApp
 
@@ -390,7 +391,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             releaseToleranceBytes: 1,
             releaseTimeout: .milliseconds(5),
             releasePollInterval: .milliseconds(1),
-            currentMemoryBytes: { await memory.value }
+            currentMemoryBytes: { await memory.value },
+            currentAvailableMemoryBytes: { 24 * 1_024 * 1_024 * 1_024 }
         )
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -408,6 +410,7 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             unloadASR: {},
             prepareAlignment: { _ in },
             alignJapanese: highQualityFixtureAlignment,
+            currentMemoryBytes: { await memory.value },
             translateEnglish: { _ in
                 await memory.set(2_000)
                 throw TranslationTestError.unreachable
@@ -419,7 +422,9 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         do {
             _ = try await job.run(request)
             XCTFail("The translation failure must fail the job.")
-        } catch is HighQualityJobError {}
+        } catch let error as HighQualityJobError {
+            XCTAssertTrue(error.localizedDescription.contains("quit and reopen WhisperASR"))
+        }
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -432,6 +437,79 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         XCTAssertTrue(evidence.modelEvents.contains {
             $0.kind == .guardFailed && $0.modelID == LocalMLXTranslator.modelID
         })
+    }
+
+    func testTranslationRuntimeReserveViolationSurvivesContextAndUnloads() async throws {
+        let gib: UInt64 = 1_024 * 1_024 * 1_024
+        let memory = TranslationMemoryReading(gib)
+        let available = TranslationMemoryReading(20 * gib)
+        let unloads = TranslationCounter()
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24 * gib,
+            reserveBytes: 8 * gib,
+            releaseToleranceBytes: gib / 10,
+            releaseTimeout: .milliseconds(50),
+            releasePollInterval: .milliseconds(1),
+            monitorPollInterval: .milliseconds(1),
+            currentMemoryBytes: { await memory.value },
+            currentAvailableMemoryBytes: { await available.value }
+        )
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let request = HighQualityJobRequest(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishTranslationTranscript],
+            backend: .qwenJA,
+            translationContextPolicy: .previousAcceptedV1,
+            outputRoot: root
+        )
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0.1] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
+            currentMemoryBytes: { await memory.value },
+            translateEnglish: { _ in
+                await memory.set(16 * gib + 1)
+                while true { try await Task.sleep(for: .milliseconds(1)) }
+            },
+            unloadTranslation: {
+                await unloads.increment()
+                await memory.set(gib)
+            },
+            heavyweightGate: gate
+        ))
+
+        do {
+            _ = try await job.run(request)
+            XCTFail("TranslateGemma must stop before consuming the reserve.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .translation)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: root
+                .appendingPathComponent(request.id.uuidString)
+                .appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertTrue(evidence.modelEvents.contains {
+            $0.kind == .guardFailed && $0.modelID == LocalMLXTranslator.modelID
+        })
+        XCTAssertTrue(evidence.modelEvents.contains {
+            $0.kind == .memoryReleaseChecked
+                && $0.modelID == LocalMLXTranslator.modelID
+                && $0.message?.contains("runtimePeak=") == true
+        })
+        let unloadCount = await unloads.value
+        XCTAssertEqual(unloadCount, 1)
+        let live = try await gate.beginWorkflow(.live)
+        try await gate.endWorkflow(live)
     }
 
     func testRealTranslateGemmaDevelopmentSmokeWhenOptedIn() async throws {
@@ -477,6 +555,156 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         } catch {
             await runtime.unload()
             throw error
+        }
+    }
+
+    func testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_TRANSLATEGEMMA_MEMORY_SMOKE"] == "1" else {
+            throw XCTSkip("Run the ticket #62 bounded TranslateGemma memory smoke.")
+        }
+        guard environment["BENCHMARK_SLOT_GRANTED"] == "62" else {
+            XCTFail("The ticket #62 benchmark slot is required.")
+            return
+        }
+        let inputPath = try XCTUnwrap(environment["WHISPERASR_TRANSLATEGEMMA_SMOKE_INPUT"])
+        let outputPath = try XCTUnwrap(environment["WHISPERASR_TRANSLATEGEMMA_SMOKE_OUTPUT"])
+        guard !inputPath.localizedCaseInsensitiveContains("md62mmdz0m"),
+              !inputPath.localizedCaseInsensitiveContains("holdout") else {
+            XCTFail("The bounded development smoke must not open the holdout.")
+            return
+        }
+
+        let input = try Data(contentsOf: URL(fileURLWithPath: inputPath))
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let raw = try decoder.decode(HighQualityRawEvidence.self, from: input)
+        let baseline = try XCTUnwrap(raw.translation?.request)
+        let turns = Array(baseline.turns.prefix(8))
+        guard turns.count == 8 else {
+            XCTFail("The bounded memory smoke requires exactly eight frozen cues.")
+            return
+        }
+        let cueIDs = Set(turns.map(\.id))
+        let request = HighQualityTranslationBatch(
+            source: baseline.source,
+            turns: turns,
+            glossary: baseline.glossary,
+            glossaryByCueID: baseline.glossaryByCueID.filter { cueIDs.contains($0.key) }
+        )
+        let integrityGlossary = request.glossaryByCueID.mapValues { terms in
+            terms.map { HighQualityTranslationIntegrityGlossaryTerm($0, critical: false) }
+        }
+        var artifact = TranslateGemmaMemorySmokeArtifact(
+            schemaVersion: 2,
+            ticket: 62,
+            modelID: LocalMLXTranslator.modelID,
+            revision: LocalMLXTranslator.revision,
+            inputSHA256: SHA256.hash(data: input).map {
+                String(format: "%02x", $0)
+            }.joined(),
+            cueCount: turns.count,
+            baselineMemoryBytes: nil,
+            availableBeforeLoadBytes: nil,
+            runtimePeakMemoryBytes: nil,
+            minimumAvailableMemoryBytes: nil,
+            maximumMemoryBytes: nil,
+            reserveBytes: HeavyweightModelGate.systemReserveBytes,
+            releasedMemoryBytes: nil,
+            modelReportedPeakMemoryBytes: nil,
+            durationSeconds: nil,
+            batches: [],
+            response: nil,
+            primaryFailure: nil,
+            cleanupFailure: nil,
+            startedAt: Date(),
+            finishedAt: nil
+        )
+        let output = URL(fileURLWithPath: outputPath)
+        let runtime = LocalMLXTranslator()
+        let gate = HeavyweightModelGate.shared
+        var workflow: HeavyweightWorkflowLease?
+        var model: HeavyweightModelLease?
+        let started = ContinuousClock.now
+
+        do {
+            workflow = try await gate.beginWorkflow(.offline(UUID()))
+            model = try await gate.acquireModel(
+                workflow: workflow!,
+                modelID: LocalMLXTranslator.modelID,
+                declaredPeakBytes: LocalMLXTranslator.declaredPeakMemoryBytes
+            )
+            let activeModel = model!
+            artifact.baselineMemoryBytes = activeModel.baselineMemoryBytes
+            artifact.availableBeforeLoadBytes = activeModel.availableMemoryBytes
+            try await gate.withMemoryGuard(activeModel) {
+                try await runtime.prepare(progress: { _, _ in })
+            }
+            try await gate.markLoaded(activeModel)
+            let pass = try await HighQualityJob.firstTranslationPass(
+                request: request,
+                contextPolicy: .previousAcceptedV1,
+                resetReasons: [:],
+                integrityGlossaryByCueID: integrityGlossary,
+                translate: { batch in
+                    try await gate.withMemoryGuard(activeModel) {
+                        try await runtime.translate(batch)
+                    }
+                }
+            )
+            let memory = try await gate.memoryEvidence(activeModel)
+            artifact.runtimePeakMemoryBytes = memory.peakMemoryBytes
+            artifact.minimumAvailableMemoryBytes = memory.minimumAvailableMemoryBytes
+            artifact.maximumMemoryBytes = memory.maximumMemoryBytes
+            artifact.modelReportedPeakMemoryBytes = pass.exchange.peakMemoryBytes
+            artifact.batches = pass.exchange.batches
+            artifact.response = pass.exchange.response
+            artifact.releasedMemoryBytes = try await gate.releaseModel(
+                activeModel,
+                unload: { await runtime.unload() }
+            )
+            model = nil
+            try await gate.endWorkflow(workflow!)
+            workflow = nil
+            artifact.durationSeconds = Self.seconds(since: started)
+            artifact.finishedAt = Date()
+            try Self.writeMemorySmoke(artifact, to: output)
+
+            XCTAssertLessThanOrEqual(memory.peakMemoryBytes, memory.maximumMemoryBytes)
+            XCTAssertGreaterThanOrEqual(
+                memory.minimumAvailableMemoryBytes,
+                memory.reserveBytes
+            )
+            XCTAssertEqual(pass.exchange.batches.count, turns.count)
+        } catch let primaryError {
+            artifact.primaryFailure = primaryError.localizedDescription
+            if let model {
+                if let memory = try? await gate.memoryEvidence(model) {
+                    artifact.runtimePeakMemoryBytes = memory.peakMemoryBytes
+                    artifact.minimumAvailableMemoryBytes = memory.minimumAvailableMemoryBytes
+                    artifact.maximumMemoryBytes = memory.maximumMemoryBytes
+                }
+                do {
+                    artifact.releasedMemoryBytes = try await gate.releaseModel(
+                        model,
+                        unload: { await runtime.unload() }
+                    )
+                } catch let cleanupError {
+                    artifact.cleanupFailure = cleanupError.localizedDescription
+                }
+            } else {
+                await runtime.unload()
+            }
+            if let workflow { try? await gate.endWorkflow(workflow) }
+            if let translationError = primaryError as? HighQualityTranslationServiceError {
+                artifact.modelReportedPeakMemoryBytes = translationError.peakMemoryBytes
+                artifact.batches = translationError.batches
+                artifact.response = translationError.response
+            }
+            artifact.durationSeconds = Self.seconds(since: started)
+            artifact.finishedAt = Date()
+            try Self.writeMemorySmoke(artifact, to: output)
+            throw primaryError
         }
     }
 
@@ -547,6 +775,50 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             currentMemoryBytes: { 1_000 }
         )
     }
+
+    private static func seconds(since started: ContinuousClock.Instant) -> Double {
+        let duration = started.duration(to: .now)
+        return Double(duration.components.seconds)
+            + Double(duration.components.attoseconds) / 1_000_000_000_000_000_000
+    }
+
+    private static func writeMemorySmoke(
+        _ artifact: TranslateGemmaMemorySmokeArtifact,
+        to url: URL
+    ) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        try encoder.encode(artifact).write(to: url, options: .atomic)
+    }
+}
+
+private struct TranslateGemmaMemorySmokeArtifact: Codable {
+    let schemaVersion: Int
+    let ticket: Int
+    let modelID: String
+    let revision: String
+    let inputSHA256: String
+    let cueCount: Int
+    var baselineMemoryBytes: UInt64?
+    var availableBeforeLoadBytes: UInt64?
+    var runtimePeakMemoryBytes: UInt64?
+    var minimumAvailableMemoryBytes: UInt64?
+    var maximumMemoryBytes: UInt64?
+    let reserveBytes: UInt64
+    var releasedMemoryBytes: UInt64?
+    var modelReportedPeakMemoryBytes: UInt64?
+    var durationSeconds: Double?
+    var batches: [HighQualityLocalTranslationBatch]
+    var response: String?
+    var primaryFailure: String?
+    var cleanupFailure: String?
+    let startedAt: Date
+    var finishedAt: Date?
 }
 
 private enum TranslationTestError: Error {

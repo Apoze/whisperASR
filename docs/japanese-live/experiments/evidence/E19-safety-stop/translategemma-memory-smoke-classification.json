@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "ticket": 62,
+  "sourceArtifacts": {
+    "rawSmoke": {
+      "path": "translategemma-memory-smoke.json",
+      "sha256": "0bb40800bfc8f2e8a0254b8851d65671e382589ad0e46a08711bb5119763c3c8"
+    },
+    "xctestLog": {
+      "path": "translategemma-memory-smoke-xctest.log",
+      "sha256": "edb5195cb458e151961846bffe74790f3b7376da2dc735e3b2ac1eb7f1ff2f6c"
+    }
+  },
+  "primaryFailure": {
+    "kind": "runtime-reserve-violated",
+    "modelID": "mlx-community/translategemma-12b-it-4bit",
+    "currentBytes": 7098193728,
+    "maximumBytes": 17179869184,
+    "availableBytes": 7995981824,
+    "reserveBytes": 8589934592,
+    "source": "xctestLog"
+  },
+  "cleanupFailure": {
+    "kind": "memory-not-released",
+    "modelID": "mlx-community/translategemma-12b-it-4bit",
+    "currentBytes": 7212767088,
+    "maximumBytes": 558875440,
+    "source": "rawSmoke"
+  },
+  "normalization": "The legacy raw smoke artifact duplicated the cleanup error in its combined failure field. The raw file is preserved byte-for-byte; this sidecar separates the primary watchdog failure from the later cleanup failure using the hashed XCTest log and raw measurements."
+}

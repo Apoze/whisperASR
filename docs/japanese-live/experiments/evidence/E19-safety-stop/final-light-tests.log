@@ -1,0 +1,102 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /private/tmp/whisperASR-ticket62.T0MjTn/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /private/tmp/whisperASR-ticket62.T0MjTn/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/9] Write sources
+[4/9] Write swift-version--58304C5D6DBC2206.txt
+[6/9] Compiling WhisperASRTests HighQualityAcceptanceTests.swift
+[7/9] Emitting module WhisperASRTests
+[8/9] Compiling WhisperASRTests HighQualityLocalTranslationTests.swift
+[8/10] Write Objects.LinkFileList
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[2](whisper.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[3](ggml-backend-dl.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[4](ggml-backend-reg.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[5](ggml.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[7](ggml-alloc.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[8](ggml-backend.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[10](ggml-threading.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[11](ggml-quants.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[13](ggml-cpu.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[14](ggml-cpu.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[15](repack.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[17](quants.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[18](traits.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[21](binary-ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[22](unary-ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[23](vec.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[24](ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[25](quants.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[26](repack.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[27](ggml-metal.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[28](ggml-metal-device.m.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[29](ggml-metal-device.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[30](ggml-metal-common.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[31](ggml-metal-context.m.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[32](ggml-metal-ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[33](ggml-metal-embed.s.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/libwhisper_all.a[34](ggml-blas.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+[9/10] Linking WhisperASRPackageTests
+Build complete! (11.31s)
+Test Suite 'Selected tests' started at 2026-08-10 14:50:17.159.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 14:50:17.160.
+Test Suite 'HeavyweightModelGateTests' started at 2026-08-10 14:50:17.160.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCapacityAndMemoryReleaseChecksFailClosed]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCapacityAndMemoryReleaseChecksFailClosed]' passed (0.013 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testRuntimeWatchdogCancelsWhenFootprintBreaksTheReserve]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testRuntimeWatchdogCancelsWhenFootprintBreaksTheReserve]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testRuntimeWatchdogCancelsWhenSystemAvailableFallsBelowReserve]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testRuntimeWatchdogCancelsWhenSystemAvailableFallsBelowReserve]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' passed (0.000 seconds).
+Test Suite 'HeavyweightModelGateTests' passed at 2026-08-10 14:50:17.175.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.014 (0.015) seconds
+Test Suite 'HighQualityConversationContextTests' started at 2026-08-10 14:50:17.175.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testContextResetsAtFrozenDiscontinuitiesAndStaysWithinBudget]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testContextResetsAtFrozenDiscontinuitiesAndStaysWithinBudget]' passed (0.015 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testCopiedNeighbourNeverBecomesAcceptedContext]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testCopiedNeighbourNeverBecomesAcceptedContext]' passed (0.009 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testFrozenReportPromotesContextAsTheHighQualityDefault]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testFrozenReportPromotesContextAsTheHighQualityDefault]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testJobUsesOnlyEarlierAcceptedPairsAndRetriesWithoutContext]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testJobUsesOnlyEarlierAcceptedPairsAndRetriesWithoutContext]' passed (0.008 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testLaterFailureRetainsCompletedContextEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testLaterFailureRetainsCompletedContextEvidence]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testNativeContextPromptAlternatesAcceptedRolesAndKeepsCurrentUserClean]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testNativeContextPromptAlternatesAcceptedRolesAndKeepsCurrentUserClean]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testWritesFrozenContextCorpusWhenOptedIn]' started.
+/private/tmp/whisperASR-ticket62.T0MjTn/Tests/HighQualityConversationContextTests.swift:264: -[WhisperASRTests.HighQualityConversationContextTests testWritesFrozenContextCorpusWhenOptedIn] : Test skipped - Set the previous-accepted-context experiment paths.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testWritesFrozenContextCorpusWhenOptedIn]' skipped (0.001 seconds).
+Test Suite 'HighQualityConversationContextTests' passed at 2026-08-10 14:50:17.209.
+	 Executed 7 tests, with 1 test skipped and 0 failures (0 unexpected) in 0.034 (0.035) seconds
+Test Suite 'HighQualityJobTests' started at 2026-08-10 14:50:17.209.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRuntimeMemoryWatchdogFailsClosedUnloadsAndReleasesTheWorkflow]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRuntimeMemoryWatchdogFailsClosedUnloadsAndReleasesTheWorkflow]' passed (0.002 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-10 14:50:17.211.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'HighQualityLocalTranslationTests' started at 2026-08-10 14:50:17.211.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testCleanupMemoryFailureIsRecordedAsGuardEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testCleanupMemoryFailureIsRecordedAsGuardEvidence]' passed (0.012 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslationRuntimeReserveViolationSurvivesContextAndUnloads]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslationRuntimeReserveViolationSurvivesContextAndUnloads]' passed (0.005 seconds).
+Test Suite 'HighQualityLocalTranslationTests' passed at 2026-08-10 14:50:17.228.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.017 (0.017) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-10 14:50:17.228.
+	 Executed 17 tests, with 1 test skipped and 0 failures (0 unexpected) in 0.067 (0.068) seconds
+Test Suite 'Selected tests' passed at 2026-08-10 14:50:17.228.
+	 Executed 17 tests, with 1 test skipped and 0 failures (0 unexpected) in 0.067 (0.069) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

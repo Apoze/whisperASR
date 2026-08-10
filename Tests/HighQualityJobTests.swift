@@ -1969,6 +1969,75 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.manifest.peakMemoryBytes, 500)
     }
 
+    func testRuntimeMemoryWatchdogFailsClosedUnloadsAndReleasesTheWorkflow() async throws {
+        let gib: UInt64 = 1_024 * 1_024 * 1_024
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let footprint = MemoryValue(gib)
+        let available = MemoryValue(20 * gib)
+        let calls = CallLog()
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24 * gib,
+            reserveBytes: 8 * gib,
+            releaseToleranceBytes: gib / 10,
+            releaseTimeout: .milliseconds(50),
+            releasePollInterval: .milliseconds(1),
+            monitorPollInterval: .milliseconds(1),
+            currentMemoryBytes: { await footprint.value },
+            currentAvailableMemoryBytes: { await available.value }
+        )
+        let id = UUID()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in
+                await footprint.set(16 * gib + 1)
+                while true { try await Task.sleep(for: .milliseconds(1)) }
+            },
+            transcribeJapanese: { _ in "unused" },
+            unloadASR: {
+                await calls.append("unload")
+                await footprint.set(gib)
+            },
+            currentMemoryBytes: { await footprint.value },
+            heavyweightGate: gate
+        ))
+
+        do {
+            _ = try await job.run(.init(
+                id: id,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .whisperKit,
+                outputRoot: root
+            ))
+            XCTFail("The job must fail before consuming the 8 GB reserve.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .modelPreparation)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: root.appendingPathComponent(id.uuidString)
+                .appendingPathComponent("manifest.json"))
+        )
+        XCTAssertEqual(manifest.status, .failed)
+        XCTAssertTrue(manifest.modelEvents.contains {
+            $0.kind == .guardFailed && $0.message?.contains("process footprint") == true
+        }, "\(manifest.modelEvents)")
+        XCTAssertTrue(
+            manifest.modelEvents.contains { $0.kind == .memoryReleaseChecked },
+            "\(manifest.modelEvents)"
+        )
+        let callValues = await calls.values
+        XCTAssertEqual(callValues, ["unload"])
+
+        let live = try await gate.beginWorkflow(.live)
+        try await gate.endWorkflow(live)
+    }
+
     private func assertFailure(
         _ expected: HighQualityJobFailureStage,
         operation: () async throws -> HighQualityJobResult
@@ -2018,6 +2087,18 @@ private actor MemoryReadings {
 
     func next() -> UInt64 {
         values.count > 1 ? values.removeFirst() : values[0]
+    }
+}
+
+private actor MemoryValue {
+    private(set) var value: UInt64
+
+    init(_ value: UInt64) {
+        self.value = value
+    }
+
+    func set(_ value: UInt64) {
+        self.value = value
     }
 }
 

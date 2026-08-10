@@ -1319,6 +1319,7 @@ struct HighQualityJob: Sendable {
         var diarizationLease: HeavyweightModelLease?
         var translationLease: HeavyweightModelLease?
         var memorySampler: Task<UInt64, Never>?
+        var cleanupFailureMessage: String?
         var manifest = HighQualityJobManifest(
             schemaVersion: 1,
             jobID: request.id,
@@ -1368,15 +1369,36 @@ struct HighQualityJob: Sendable {
             try await gate.markLoaded(lease)
         }
 
+        @Sendable func withMemoryGuard<T: Sendable>(
+            _ lease: HeavyweightModelLease?,
+            operation: @escaping @Sendable () async throws -> T
+        ) async throws -> T {
+            guard let gate = services.heavyweightGate, let lease else {
+                return try await operation()
+            }
+            return try await gate.withMemoryGuard(lease, operation: operation)
+        }
+
         func releaseModel(
             _ lease: HeavyweightModelLease?,
             unload: @escaping @Sendable () async -> Void
-        ) async throws -> UInt64? {
+        ) async throws -> (
+            releasedMemoryBytes: UInt64,
+            evidence: HeavyweightModelMemoryEvidence
+        )? {
             guard let gate = services.heavyweightGate, let lease else {
                 await unload()
                 return nil
             }
-            return try await gate.releaseModel(lease, unload: unload)
+            let evidence = try await gate.memoryEvidence(lease)
+            let releasedMemoryBytes = try await gate.releaseModel(lease, unload: unload)
+            return (releasedMemoryBytes, evidence)
+        }
+
+        func releaseMessage(
+            _ release: (releasedMemoryBytes: UInt64, evidence: HeavyweightModelMemoryEvidence)
+        ) -> String {
+            "memory=\(release.releasedMemoryBytes) runtimePeak=\(release.evidence.peakMemoryBytes) minimumAvailable=\(release.evidence.minimumAvailableMemoryBytes) maximum=\(release.evidence.maximumMemoryBytes) reserve=\(release.evidence.reserveBytes)"
         }
 
         func cleanupModel(
@@ -1385,21 +1407,26 @@ struct HighQualityJob: Sendable {
             unload: @escaping @Sendable () async -> Void
         ) async {
             do {
-                let releasedMemory = try await releaseModel(lease, unload: unload)
+                let release = try await releaseModel(lease, unload: unload)
                 manifest.modelEvents.append(.init(
                     kind: .unloadCompleted,
                     modelID: modelID,
                     at: Date()
                 ))
-                if let releasedMemory {
+                if let release {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        release.evidence.peakMemoryBytes
+                    )
                     manifest.modelEvents.append(.init(
                         kind: .memoryReleaseChecked,
                         modelID: modelID,
                         at: Date(),
-                        message: "memory=\(releasedMemory)"
+                        message: releaseMessage(release)
                     ))
                 }
             } catch let gateError as HeavyweightModelGateError {
+                cleanupFailureMessage = gateError.localizedDescription
                 manifest.modelEvents.append(.init(
                     kind: .unloadCompleted,
                     modelID: modelID,
@@ -1412,6 +1439,7 @@ struct HighQualityJob: Sendable {
                     message: gateError.localizedDescription
                 ))
             } catch {
+                cleanupFailureMessage = error.localizedDescription
                 manifest.modelEvents.append(.init(
                     kind: .guardFailed,
                     modelID: modelID,
@@ -1510,7 +1538,7 @@ struct HighQualityJob: Sendable {
                     kind: .reserveChecked,
                     backend: request.backend,
                     at: Date(),
-                    message: "peak=\(asrLease.declaredPeakBytes) reserve=\(asrLease.reserveBytes) total=\(asrLease.totalMemoryBytes)"
+                    message: "peak=\(asrLease.declaredPeakBytes) reserve=\(asrLease.reserveBytes) total=\(asrLease.totalMemoryBytes) available=\(asrLease.availableMemoryBytes) baseline=\(asrLease.baselineMemoryBytes)"
                 ))
             }
             manifest.modelEvents.append(.init(
@@ -1518,12 +1546,14 @@ struct HighQualityJob: Sendable {
                 backend: request.backend,
                 at: Date()
             ))
-            try await services.prepareASR { fraction, message in
-                progress(.init(
-                    stage: .preparingASR,
-                    fraction: 0.2 + min(max(fraction, 0), 1) * 0.25,
-                    message: message
-                ))
+            try await withMemoryGuard(asrLease) {
+                try await services.prepareASR { fraction, message in
+                    progress(.init(
+                        stage: .preparingASR,
+                        fraction: 0.2 + min(max(fraction, 0), 1) * 0.25,
+                        message: message
+                    ))
+                }
             }
             try await markLoaded(asrLease)
             manifest.modelEvents.append(.init(
@@ -1536,9 +1566,13 @@ struct HighQualityJob: Sendable {
             begin(.transcribing, fraction: 0.5, message: "Transcribing Japanese…")
             let asrExchange: HighQualityASRExchange
             if needsAlignment {
-                asrExchange = try await services.transcribeJapaneseAnchored(samples)
+                asrExchange = try await withMemoryGuard(asrLease) {
+                    try await services.transcribeJapaneseAnchored(samples)
+                }
             } else {
-                let transcript = try await services.transcribeJapanese(samples)
+                let transcript = try await withMemoryGuard(asrLease) {
+                    try await services.transcribeJapanese(samples)
+                }
                 asrExchange = .init(rawTranscript: transcript, chunks: [])
             }
             let rawTranscript = asrExchange.rawTranscript
@@ -1553,19 +1587,23 @@ struct HighQualityJob: Sendable {
             }
             memorySampler = nil
             asrUnloaded = true
-            let asrReleasedMemory = try await releaseModel(asrLease, unload: services.unloadASR)
+            let asrRelease = try await releaseModel(asrLease, unload: services.unloadASR)
             asrLease = nil
             manifest.modelEvents.append(.init(
                 kind: .unloadCompleted,
                 backend: request.backend,
                 at: Date()
             ))
-            if let asrReleasedMemory {
+            if let asrRelease {
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    asrRelease.evidence.peakMemoryBytes
+                )
                 manifest.modelEvents.append(.init(
                     kind: .memoryReleaseChecked,
                     backend: request.backend,
                     at: Date(),
-                    message: "memory=\(asrReleasedMemory)"
+                    message: releaseMessage(asrRelease)
                 ))
             }
             let baseTurns = Self.translationTurns(
@@ -1586,7 +1624,7 @@ struct HighQualityJob: Sendable {
                         kind: .reserveChecked,
                         modelID: HighQualityForcedAlignerRuntime.modelID,
                         at: Date(),
-                        message: "peak=\(alignmentLease.declaredPeakBytes) reserve=\(alignmentLease.reserveBytes) total=\(alignmentLease.totalMemoryBytes)"
+                        message: "peak=\(alignmentLease.declaredPeakBytes) reserve=\(alignmentLease.reserveBytes) total=\(alignmentLease.totalMemoryBytes) available=\(alignmentLease.availableMemoryBytes) baseline=\(alignmentLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
@@ -1594,12 +1632,14 @@ struct HighQualityJob: Sendable {
                     modelID: HighQualityForcedAlignerRuntime.modelID,
                     at: Date()
                 ))
-                try await services.prepareAlignment { fraction, message in
-                    progress(.init(
-                        stage: .preparingAlignment,
-                        fraction: 0.62 + min(max(fraction, 0), 1) * 0.08,
-                        message: message
-                    ))
+                try await withMemoryGuard(alignmentLease) {
+                    try await services.prepareAlignment { fraction, message in
+                        progress(.init(
+                            stage: .preparingAlignment,
+                            fraction: 0.62 + min(max(fraction, 0), 1) * 0.08,
+                            message: message
+                        ))
+                    }
                 }
                 try await markLoaded(alignmentLease)
                 manifest.modelEvents.append(.init(
@@ -1609,7 +1649,9 @@ struct HighQualityJob: Sendable {
                 ))
                 try Task.checkCancellation()
                 begin(.aligning, fraction: 0.7, message: "Aligning Japanese transcript…")
-                let exchange = try await services.alignJapanese(samples, baseTurns)
+                let exchange = try await withMemoryGuard(alignmentLease) {
+                    try await services.alignJapanese(samples, baseTurns)
+                }
                 let duration = Double(samples.count) / 16_000
                 alignmentEvidence = .init(
                     modelID: exchange.modelID,
@@ -1650,7 +1692,7 @@ struct HighQualityJob: Sendable {
                 }
                 manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, exchange.peakMemoryBytes)
                 alignmentUnloaded = true
-                let releasedMemory = try await releaseModel(
+                let release = try await releaseModel(
                     alignmentLease,
                     unload: services.unloadAlignment
                 )
@@ -1660,12 +1702,16 @@ struct HighQualityJob: Sendable {
                     modelID: HighQualityForcedAlignerRuntime.modelID,
                     at: Date()
                 ))
-                if let releasedMemory {
+                if let release {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        release.evidence.peakMemoryBytes
+                    )
                     manifest.modelEvents.append(.init(
                         kind: .memoryReleaseChecked,
                         modelID: HighQualityForcedAlignerRuntime.modelID,
                         at: Date(),
-                        message: "memory=\(releasedMemory)"
+                        message: releaseMessage(release)
                     ))
                 }
                 try Task.checkCancellation()
@@ -1693,7 +1739,7 @@ struct HighQualityJob: Sendable {
                         kind: .reserveChecked,
                         modelID: services.diarizationModelID,
                         at: Date(),
-                        message: "peak=\(diarizationLease.declaredPeakBytes) reserve=\(diarizationLease.reserveBytes) total=\(diarizationLease.totalMemoryBytes)"
+                        message: "peak=\(diarizationLease.declaredPeakBytes) reserve=\(diarizationLease.reserveBytes) total=\(diarizationLease.totalMemoryBytes) available=\(diarizationLease.availableMemoryBytes) baseline=\(diarizationLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
@@ -1701,12 +1747,14 @@ struct HighQualityJob: Sendable {
                     modelID: services.diarizationModelID,
                     at: Date()
                 ))
-                try await services.prepareDiarization { fraction, message in
-                    progress(.init(
-                        stage: .preparingDiarization,
-                        fraction: 0.74 + min(max(fraction, 0), 1) * 0.04,
-                        message: message
-                    ))
+                try await withMemoryGuard(diarizationLease) {
+                    try await services.prepareDiarization { fraction, message in
+                        progress(.init(
+                            stage: .preparingDiarization,
+                            fraction: 0.74 + min(max(fraction, 0), 1) * 0.04,
+                            message: message
+                        ))
+                    }
                 }
                 try await markLoaded(diarizationLease)
                 manifest.modelEvents.append(.init(
@@ -1716,11 +1764,13 @@ struct HighQualityJob: Sendable {
                 ))
                 try Task.checkCancellation()
                 begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
-                let exchange = try await services.diarizeSpeakers(
-                    samples,
-                    request.useExclusiveReconciliation,
-                    request.speakerCountPolicy
-                )
+                let exchange = try await withMemoryGuard(diarizationLease) {
+                    try await services.diarizeSpeakers(
+                        samples,
+                        request.useExclusiveReconciliation,
+                        request.speakerCountPolicy
+                    )
+                }
                 guard exchange.speakerCountPolicy == request.speakerCountPolicy else {
                     throw HighQualityJobError(
                         stage: .diarization,
@@ -1753,7 +1803,7 @@ struct HighQualityJob: Sendable {
                 }
                 manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, exchange.peakMemoryBytes)
                 diarizationUnloaded = true
-                let releasedMemory = try await releaseModel(
+                let release = try await releaseModel(
                     diarizationLease,
                     unload: services.unloadDiarization
                 )
@@ -1763,12 +1813,16 @@ struct HighQualityJob: Sendable {
                     modelID: services.diarizationModelID,
                     at: Date()
                 ))
-                if let releasedMemory {
+                if let release {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        release.evidence.peakMemoryBytes
+                    )
                     manifest.modelEvents.append(.init(
                         kind: .memoryReleaseChecked,
                         modelID: services.diarizationModelID,
                         at: Date(),
-                        message: "memory=\(releasedMemory)"
+                        message: releaseMessage(release)
                     ))
                 }
                 try Task.checkCancellation()
@@ -1830,7 +1884,7 @@ struct HighQualityJob: Sendable {
                         kind: .reserveChecked,
                         modelID: LocalMLXTranslator.modelID,
                         at: Date(),
-                        message: "peak=\(translationLease.declaredPeakBytes) reserve=\(translationLease.reserveBytes) total=\(translationLease.totalMemoryBytes)"
+                        message: "peak=\(translationLease.declaredPeakBytes) reserve=\(translationLease.reserveBytes) total=\(translationLease.totalMemoryBytes) available=\(translationLease.availableMemoryBytes) baseline=\(translationLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
@@ -1839,12 +1893,14 @@ struct HighQualityJob: Sendable {
                     at: Date()
                 ))
                 do {
-                    try await services.prepareTranslation { fraction, message in
-                        progress(.init(
-                            stage: .translating,
-                            fraction: 0.8 + min(max(fraction, 0), 1) * 0.04,
-                            message: message
-                        ))
+                    try await withMemoryGuard(translationLease) {
+                        try await services.prepareTranslation { fraction, message in
+                            progress(.init(
+                                stage: .translating,
+                                fraction: 0.8 + min(max(fraction, 0), 1) * 0.04,
+                                message: message
+                            ))
+                        }
                     }
                     try await markLoaded(translationLease)
                     manifest.modelEvents.append(.init(
@@ -1853,12 +1909,20 @@ struct HighQualityJob: Sendable {
                         at: Date()
                     ))
                     progress(.init(stage: .translating, fraction: 0.84, message: "Translating to English locally…"))
+                    let activeTranslationLease = translationLease
+                    let guardedTranslate: @Sendable (
+                        HighQualityTranslationBatch
+                    ) async throws -> HighQualityTranslationExchange = { batch in
+                        try await withMemoryGuard(activeTranslationLease) {
+                            try await services.translateEnglish(batch)
+                        }
+                    }
                     let firstPass = try await Self.firstTranslationPass(
                         request: translationRequest,
                         contextPolicy: request.translationContextPolicy,
                         resetReasons: request.translationContextResetReasonsByCueID,
                         integrityGlossaryByCueID: integrityGlossaryByCueID,
-                        translate: services.translateEnglish
+                        translate: guardedTranslate
                     )
                     translationRequest = firstPass.request
                     let exchange = firstPass.exchange
@@ -1935,7 +1999,7 @@ struct HighQualityJob: Sendable {
                             ))
                             let retryExchange: HighQualityTranslationExchange
                             do {
-                                retryExchange = try await services.translateEnglish(retryRequest)
+                                retryExchange = try await guardedTranslate(retryRequest)
                             } catch let error as HighQualityTranslationServiceError {
                                 let errorVerdicts = HighQualityTranslationIntegrityValidator.validate(
                                     turns: retryRequest.turns,
@@ -2098,7 +2162,7 @@ struct HighQualityJob: Sendable {
                     throw error
                 }
                 translationUnloaded = true
-                let releasedMemory = try await releaseModel(
+                let release = try await releaseModel(
                     translationLease,
                     unload: services.unloadTranslation
                 )
@@ -2108,12 +2172,16 @@ struct HighQualityJob: Sendable {
                     modelID: LocalMLXTranslator.modelID,
                     at: Date()
                 ))
-                if let releasedMemory {
+                if let release {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        release.evidence.peakMemoryBytes
+                    )
                     manifest.modelEvents.append(.init(
                         kind: .memoryReleaseChecked,
                         modelID: LocalMLXTranslator.modelID,
                         at: Date(),
-                        message: "memory=\(releasedMemory)"
+                        message: releaseMessage(release)
                     ))
                 }
                 try Task.checkCancellation()
@@ -2281,9 +2349,13 @@ struct HighQualityJob: Sendable {
             manifest.stageDurations[currentStage, default: 0] += Date().timeIntervalSince(stageStartedAt)
             manifest.status = status
             manifest.finishedAt = Date()
+            let baseFailureMessage = error is CancellationError
+                ? "Job cancelled."
+                : error.localizedDescription
             let failure = HighQualityJobFailure(
                 stage: failureStage,
-                message: error is CancellationError ? "Job cancelled." : error.localizedDescription
+                message: cleanupFailureMessage.map { baseFailureMessage + " " + $0 }
+                    ?? baseFailureMessage
             )
             manifest.failures = [failure]
             manifest.generatedFiles = Self.generatedFiles(
@@ -2953,6 +3025,7 @@ struct HighQualityJob: Sendable {
             do {
                 exchange = try await translate(unitRequest)
             } catch {
+                if error is HeavyweightModelGateError { throw error }
                 let serviceError = error as? HighQualityTranslationServiceError
                 var errorAttempts = duration > 0 ? [HighQualityTranslationAttempt(
                     number: 1,

@@ -144,6 +144,7 @@ final class HeavyweightModelGateTests: XCTestCase {
                 error,
                 .memoryNotReleased(modelID: "asr", currentBytes: 1_101, maximumBytes: 1_100)
             )
+            XCTAssertTrue(error.localizedDescription.contains("quit and reopen WhisperASR"))
         }
 
         do {
@@ -156,6 +157,105 @@ final class HeavyweightModelGateTests: XCTestCase {
         } catch let error as HeavyweightModelGateError {
             XCTAssertEqual(error, .modelAlreadyActive(requested: "translator", active: "asr"))
         }
+    }
+
+    func testRuntimeWatchdogCancelsWhenFootprintBreaksTheReserve() async throws {
+        let footprint = MemoryReading(1_000)
+        let available = MemoryReading(20_000)
+        let cancelled = Counter()
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24_000,
+            reserveBytes: 8_000,
+            releaseToleranceBytes: 100,
+            releaseTimeout: .milliseconds(50),
+            releasePollInterval: .milliseconds(1),
+            monitorPollInterval: .milliseconds(1),
+            currentMemoryBytes: { await footprint.value },
+            currentAvailableMemoryBytes: { await available.value }
+        )
+        let workflow = try await gate.beginWorkflow(.offline(UUID()))
+        let lease = try await gate.acquireModel(
+            workflow: workflow,
+            modelID: "translator",
+            declaredPeakBytes: 8_000
+        )
+
+        let operation = Task {
+            try await gate.withMemoryGuard(lease) {
+                do {
+                    while true { try await Task.sleep(for: .milliseconds(1)) }
+                } catch {
+                    await cancelled.increment()
+                    throw error
+                }
+            }
+        }
+        await footprint.set(16_001)
+        do {
+            _ = try await operation.value
+            XCTFail("The operation must stop before consuming the 8 GB reserve.")
+        } catch let error as HeavyweightModelGateError {
+            XCTAssertEqual(
+                error,
+                .runtimeReserveViolated(
+                    modelID: "translator",
+                    currentBytes: 16_001,
+                    maximumBytes: 16_000,
+                    availableBytes: 20_000,
+                    reserveBytes: 8_000
+                )
+            )
+        }
+        let cancellationCount = await cancelled.value
+        XCTAssertEqual(cancellationCount, 1)
+
+        await footprint.set(1_000)
+        _ = try await gate.releaseModel(lease, unload: {})
+        try await gate.endWorkflow(workflow)
+    }
+
+    func testRuntimeWatchdogCancelsWhenSystemAvailableFallsBelowReserve() async throws {
+        let footprint = MemoryReading(1_000)
+        let available = MemoryReading(20_000)
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24_000,
+            reserveBytes: 8_000,
+            monitorPollInterval: .milliseconds(1),
+            currentMemoryBytes: { await footprint.value },
+            currentAvailableMemoryBytes: { await available.value }
+        )
+        let workflow = try await gate.beginWorkflow(.offline(UUID()))
+        let lease = try await gate.acquireModel(
+            workflow: workflow,
+            modelID: "asr",
+            declaredPeakBytes: 8_000
+        )
+        let operation = Task {
+            try await gate.withMemoryGuard(lease) {
+                while true { try await Task.sleep(for: .milliseconds(1)) }
+            }
+        }
+        await available.set(7_999)
+
+        do {
+            _ = try await operation.value
+            XCTFail("The operation must stop when system availability breaks the reserve.")
+        } catch let error as HeavyweightModelGateError {
+            XCTAssertEqual(
+                error,
+                .runtimeReserveViolated(
+                    modelID: "asr",
+                    currentBytes: 1_000,
+                    maximumBytes: 16_000,
+                    availableBytes: 7_999,
+                    reserveBytes: 8_000
+                )
+            )
+        }
+
+        await available.set(20_000)
+        _ = try await gate.releaseModel(lease, unload: {})
+        try await gate.endWorkflow(workflow)
     }
 
     func testLiveAndOfflineWorkflowsAreMutuallyExclusive() async throws {

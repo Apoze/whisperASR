@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "ticket": 62,
+  "candidateSelection": [
+    {
+      "ticket": 54,
+      "report": "docs/high-quality-glossary-e13.json",
+      "sha256": "2e3f0bfe03f98f6813aabbe713a34d6401c5f70b0f6f2dd83cfb473da8c1c4d0",
+      "promoted": false,
+      "selectedBehavior": "baseline",
+      "recordedDecision": "not-promoted"
+    },
+    {
+      "ticket": 55,
+      "report": "docs/high-quality-context-e14.json",
+      "sha256": "a870116cb40bc182a334f93041703f4fb93fac3afa0975434989d4135c580567",
+      "promoted": true,
+      "selectedBehavior": "previous-accepted-v1",
+      "recordedDecision": "promoted"
+    },
+    {
+      "ticket": 56,
+      "report": "docs/high-quality-metricx-e15.json",
+      "sha256": "efe5190593323d67dc73757771a08cdfeaa4eff2cac0c34faded38cade4d2bdd",
+      "promoted": false,
+      "selectedBehavior": "baseline",
+      "recordedDecision": "no-go-development"
+    },
+    {
+      "ticket": 57,
+      "report": "docs/japanese-live/experiments/evidence/E15/report.json",
+      "sha256": "093005ee94b9b57c05d4f33646051178f0643e0e4ec67b8dd9287548f2fc3255",
+      "promoted": false,
+      "selectedBehavior": "non-exclusive",
+      "recordedDecision": "do not promote; development gates or principal-Speaker gain failed"
+    },
+    {
+      "ticket": 58,
+      "report": "docs/japanese-live/experiments/evidence/E16/report.json",
+      "sha256": "d51f5be47aa4553f1899287bb5a0d6b1f819fa52910fbe4acac561ada36f093d",
+      "promoted": false,
+      "selectedBehavior": "W8A16/W8A16",
+      "recordedDecision": "do not promote; untouched holdout did not confirm every gate"
+    },
+    {
+      "ticket": 59,
+      "report": "docs/japanese-live/experiments/evidence/E17-speaker-count/report.json",
+      "sha256": "738651a136caf4b954e254776c70e167d27f8dc0429ece667c08ba855d9a8739",
+      "promoted": false,
+      "selectedBehavior": "automatic",
+      "recordedDecision": "do not ship explicit count; holdout did not confirm the gain"
+    },
+    {
+      "ticket": 60,
+      "report": "docs/japanese-live/experiments/evidence/E17/report.json",
+      "sha256": "79ff5320e34cf30df09452b017a4f6ca11b7724f99d0779f3c5e25865e5fe9a3",
+      "promoted": false,
+      "selectedBehavior": "library-default",
+      "recordedDecision": "do not promote; untouched holdout did not confirm every gate"
+    },
+    {
+      "ticket": 61,
+      "report": "docs/japanese-live/experiments/evidence/E18/development-report.json",
+      "sha256": "d9f312f3594bd4026028f23f82fcc9ebaa55e233ba60f046f69887fae88d1b82",
+      "promoted": false,
+      "selectedBehavior": "speakerkit",
+      "recordedDecision": "keep SpeakerKit; FluidAudio did not pass development"
+    }
+  ],
+  "configuration": {
+    "ASR": "qwen-ja-product-default",
+    "alignment": "Qwen3-ForcedAligner",
+    "diarization": "SpeakerKit-W8A16-auto-library-default-non-exclusive",
+    "translation": "TranslateGemma-12b-4bit-previous-accepted-v1",
+    "rejectedCandidatesRemainDisabled": true
+  },
+  "modelProvenance": {
+    "path": "docs/japanese-live/experiments/evidence/E19-safety-stop/model-weight-verification.json",
+    "sha256": "3b5961068c8e5d7250faee24bb485ce626e7f7bf6d6f0df5716377395f891dee",
+    "verificationTiming": "post-run-cache-verification"
+  },
+  "rows": [],
+  "controls": {
+    "build": true,
+    "sourceDecode": true,
+    "referenceIntegrity": true,
+    "modelPreparation": true,
+    "realCancellation": true,
+    "failureClassification": true,
+    "artifactParsing": true,
+    "selectableBackends": true,
+    "paidAPIAbsent": true,
+    "runtimeMemoryWatchdog": true,
+    "separatedSafetyFailures": true,
+    "modelRevisionsAndWeightHashes": true,
+    "strictSpeakerPromotionGate": true,
+    "postUnloadHandoff": false,
+    "liveRegression": false,
+    "fullSwiftSuite": false
+  },
+  "safetyGate": {
+    "developmentRun": {
+      "elapsedSecondsAtObservation": 301,
+      "physicalFootprintBytesApprox": 18468359373,
+      "physicalFootprintPeakBytesApprox": 18575733555,
+      "systemFreePercent": 8,
+      "stopped": true,
+      "manifestSerialized": false
+    },
+    "boundedTranslateGemmaSmoke": {
+      "requestedCueCount": 8,
+      "completedCueCount": 0,
+      "durationSeconds": 10.914,
+      "runtimePeakMemoryBytes": 7098193728,
+      "maximumMemoryBytes": 17179869184,
+      "minimumAvailableMemoryBytes": 7995981824,
+      "reserveBytes": 8589934592,
+      "modelReportedPeakMemoryBytes": null,
+      "releasedMemoryBytes": null,
+      "postUnloadObservedMemoryBytes": 7212767088,
+      "postUnloadMaximumBytes": 558875440,
+      "watchdogStoppedAtFirstViolation": true,
+      "failureClassification": {
+        "path": "docs/japanese-live/experiments/evidence/E19-safety-stop/translategemma-memory-smoke-classification.json",
+        "sha256": "1ee27d1459c284f05a69578f8e276cff8b8d418b1aaf5f801ce39c2f49f7c6b4"
+      },
+      "processExitFreePercent": 84
+    },
+    "holdoutOpened": false,
+    "COMETRun": false
+  },
+  "developmentEligible": false,
+  "workflowValid": false,
+  "liveGates": false,
+  "promoted": false,
+  "decision": "no-go-safety-development",
+  "productChanges": "runtime memory safety guard only; no candidate behavior or default promoted",
+  "scopeLimit": "Two supplied videos were not scored in E19: the development workflow stopped on its memory safety gate and the untouched channel-separated holdout stayed closed. This does not prove universal anime, VTuber, gaming, conversation, speaker, or overlap quality.",
+  "evidenceRoot": "docs/japanese-live/experiments/evidence/E19-safety-stop"
+}
