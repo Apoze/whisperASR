@@ -11,6 +11,7 @@ private typealias PromptMessage = [String: any Sendable]
 actor LocalMLXTranslator {
     enum Candidate: String, CaseIterable, Codable, Sendable {
         case translateGemma12B = "translategemma-12b-it-4bit"
+        case translateGemma4B = "translategemma-4b-it-4bit"
         case qwen3_14B = "qwen3-14b-4bit"
 
         static let productDefault = Candidate.translateGemma12B
@@ -18,6 +19,7 @@ actor LocalMLXTranslator {
         var modelID: String {
             switch self {
             case .translateGemma12B: "mlx-community/translategemma-12b-it-4bit"
+            case .translateGemma4B: "mlx-community/translategemma-4b-it-4bit"
             case .qwen3_14B: "mlx-community/Qwen3-14B-4bit"
             }
         }
@@ -25,6 +27,7 @@ actor LocalMLXTranslator {
         var revision: String {
             switch self {
             case .translateGemma12B: "f3dcfd54df14672fbcf0731086fb47a797a943ae"
+            case .translateGemma4B: "5788ec08c047f3f2e17808101b8d9566ac930d58"
             case .qwen3_14B: "a4d9b2df59d2c150bef02fcbe0d91046b7ca33a4"
             }
         }
@@ -36,6 +39,8 @@ actor LocalMLXTranslator {
                     "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
                     "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89",
                 ]
+            case .translateGemma4B:
+                ["113acb0c29997a3015af84bec2c8f967cb7b15f8959d1c26b9628b921e324c40"]
             case .qwen3_14B:
                 [
                     "5795efcfc7c96fd273e600562e8b111bfcc427415de9001d0a07e70cd99cff19",
@@ -44,18 +49,32 @@ actor LocalMLXTranslator {
             }
         }
 
+        var weightFileNames: [String] {
+            switch self {
+            case .translateGemma4B:
+                ["model.safetensors"]
+            case .translateGemma12B, .qwen3_14B:
+                ["model-00001-of-00002.safetensors", "model-00002-of-00002.safetensors"]
+            }
+        }
+
         var declaredPeakMemoryBytes: UInt64 {
             switch self {
             case .translateGemma12B: 8 * 1_024 * 1_024 * 1_024
+            case .translateGemma4B: 4 * 1_024 * 1_024 * 1_024
             case .qwen3_14B: 10 * 1_024 * 1_024 * 1_024
             }
         }
 
         var extraEOSTokens: Set<String> {
             switch self {
-            case .translateGemma12B: ["<end_of_turn>"]
+            case .translateGemma12B, .translateGemma4B: ["<end_of_turn>"]
             case .qwen3_14B: ["<|im_end|>"]
             }
+        }
+
+        var usesTranslateGemmaContract: Bool {
+            self == .translateGemma12B || self == .translateGemma4B
         }
     }
 
@@ -281,7 +300,7 @@ actor LocalMLXTranslator {
         for turn: HighQualityTranslationTurn,
         in batch: HighQualityTranslationBatch
     ) -> [PromptMessage] {
-        if candidate == .translateGemma12B {
+        if candidate.usesTranslateGemmaContract {
             if batch.retryReasonCodes != nil {
                 return [Self.retryUserMessage(for: turn, glossary: batch.glossary(for: turn))]
             }
@@ -401,7 +420,7 @@ actor LocalMLXTranslator {
         for turn: HighQualityTranslationTurn,
         candidate: Candidate
     ) -> String? {
-        if candidate == .translateGemma12B {
+        if candidate.usesTranslateGemmaContract {
             return output.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         let start = "<<<CURRENT:\(turn.id)>>>"

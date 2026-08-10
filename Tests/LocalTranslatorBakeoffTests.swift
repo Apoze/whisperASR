@@ -262,7 +262,7 @@ final class LocalTranslatorBakeoffTests: XCTestCase {
         }
     }
 
-    private static func cachedWeightHashes(
+    static func cachedWeightHashes(
         _ candidate: LocalMLXTranslator.Candidate
     ) throws -> [String] {
         let pieces = candidate.modelID.split(separator: "/", maxSplits: 1).map(String.init)
@@ -271,14 +271,13 @@ final class LocalTranslatorBakeoffTests: XCTestCase {
             kind: .model,
             commitHash: candidate.revision
         )
-        return try ["model-00001-of-00002.safetensors", "model-00002-of-00002.safetensors"]
-            .map {
-                let resolved = snapshot.appendingPathComponent($0).resolvingSymlinksInPath()
-                guard FileManager.default.fileExists(atPath: resolved.path) else {
-                    throw CocoaError(.fileNoSuchFile)
-                }
-                return try sha256File(resolved)
+        return try candidate.weightFileNames.map {
+            let resolved = snapshot.appendingPathComponent($0).resolvingSymlinksInPath()
+            guard FileManager.default.fileExists(atPath: resolved.path) else {
+                throw CocoaError(.fileNoSuchFile)
             }
+            return try sha256File(resolved)
+        }
     }
 
     private static func implementationHashes(root: URL) throws -> [String: String] {

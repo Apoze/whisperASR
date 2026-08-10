@@ -56,6 +56,56 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
     }
 }
 
+enum HighQualityTranslator: String, Codable, CaseIterable, Identifiable, Sendable {
+    case translateGemma12B = "translategemma-12b-it-4bit"
+    case translateGemma4B = "translategemma-4b-it-4bit"
+
+    static let productDefault: Self = .translateGemma12B
+
+    var id: Self { self }
+
+    var displayName: String {
+        switch self {
+        case .translateGemma12B: "TranslateGemma 12B"
+        case .translateGemma4B: "TranslateGemma 4B (Bêta)"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .translateGemma12B:
+            "Meilleure qualité — plus lent et plus gourmand en mémoire"
+        case .translateGemma4B:
+            "Bêta — plus rapide et léger, qualité en cours de comparaison"
+        }
+    }
+
+    var candidate: LocalMLXTranslator.Candidate {
+        switch self {
+        case .translateGemma12B: .translateGemma12B
+        case .translateGemma4B: .translateGemma4B
+        }
+    }
+
+    var model: HighQualityTranslationModelEvidence {
+        .init(
+            translator: self,
+            modelID: candidate.modelID,
+            revision: candidate.revision,
+            runtimeVersion: LocalMLXTranslator.runtimeVersion,
+            weightSHA256: candidate.weightSHA256
+        )
+    }
+}
+
+struct HighQualityTranslationModelEvidence: Codable, Equatable, Sendable {
+    let translator: HighQualityTranslator
+    let modelID: String
+    let revision: String
+    let runtimeVersion: String
+    let weightSHA256: [String]
+}
+
 enum HighQualityJobDependency: String, Codable, Sendable {
     case sourceAcquisition = "source-acquisition"
     case sourceNormalization = "source-normalization"
@@ -131,6 +181,7 @@ struct HighQualityJobRequest: Sendable {
     let sourceURL: URL
     let deliverables: Set<HighQualityDeliverable>
     let backend: HighQualityASRBackend
+    let translator: HighQualityTranslator
     let speakerLabels: Bool
     let useExclusiveReconciliation: Bool
     let speakerCountPolicy: HighQualitySpeakerCountPolicy
@@ -144,6 +195,7 @@ struct HighQualityJobRequest: Sendable {
         sourceURL: URL,
         deliverables: Set<HighQualityDeliverable>,
         backend: HighQualityASRBackend,
+        translator: HighQualityTranslator = .productDefault,
         speakerLabels: Bool = false,
         useExclusiveReconciliation: Bool = false,
         speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
@@ -158,6 +210,7 @@ struct HighQualityJobRequest: Sendable {
         self.sourceURL = sourceURL
         self.deliverables = deliverables
         self.backend = backend
+        self.translator = translator
         self.speakerLabels = speakerLabels
         self.useExclusiveReconciliation = useExclusiveReconciliation
         self.speakerCountPolicy = speakerCountPolicy
@@ -451,6 +504,7 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
     let attempts: [HighQualityTranslationAttempt]
     let revision: String?
     let runtimeVersion: String?
+    let weightSHA256: [String]
     let batches: [HighQualityLocalTranslationBatch]
     let peakMemoryBytes: UInt64
     var validationFailures: [String]
@@ -458,7 +512,7 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
     var worker: HighQualityTranslationWorkerEvidence?
 
     private enum CodingKeys: String, CodingKey {
-        case request, response, model, attempts, revision, runtimeVersion, batches
+        case request, response, model, attempts, revision, runtimeVersion, weightSHA256, batches
         case peakMemoryBytes, validationFailures, integrityVerdicts, worker
     }
 
@@ -469,6 +523,7 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
         attempts: [HighQualityTranslationAttempt],
         revision: String?,
         runtimeVersion: String?,
+        weightSHA256: [String] = [],
         batches: [HighQualityLocalTranslationBatch],
         peakMemoryBytes: UInt64,
         validationFailures: [String],
@@ -481,6 +536,7 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
         self.attempts = attempts
         self.revision = revision
         self.runtimeVersion = runtimeVersion
+        self.weightSHA256 = weightSHA256
         self.batches = batches
         self.peakMemoryBytes = peakMemoryBytes
         self.validationFailures = validationFailures
@@ -496,6 +552,7 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
         attempts = try values.decode([HighQualityTranslationAttempt].self, forKey: .attempts)
         revision = try values.decodeIfPresent(String.self, forKey: .revision)
         runtimeVersion = try values.decodeIfPresent(String.self, forKey: .runtimeVersion)
+        weightSHA256 = try values.decodeIfPresent([String].self, forKey: .weightSHA256) ?? []
         batches = try values.decodeIfPresent(
             [HighQualityLocalTranslationBatch].self,
             forKey: .batches
@@ -894,6 +951,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var source: HighQualitySourceProvenance
     let deliverables: [HighQualityDeliverable]
     let selectedBackend: HighQualityASRBackend
+    let translationModel: HighQualityTranslationModelEvidence?
     let speakerLabels: Bool
     let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let dependencies: [HighQualityJobDependency]
@@ -1127,11 +1185,14 @@ struct HighQualityJob: Sendable {
             self.heavyweightGate = heavyweightGate
         }
 
-        static func production(for backend: HighQualityASRBackend) -> Self {
+        static func production(
+            for backend: HighQualityASRBackend,
+            translator selection: HighQualityTranslator
+        ) -> Self {
             let asr = HighQualityASRWorkerClient(backend: backend)
             let aligner = HighQualityAlignmentSpeakerWorkerClient(stage: .alignment)
             let diarizer = HighQualityAlignmentSpeakerWorkerClient(stage: .diarization)
-            let translator = HighQualityTranslationWorkerClient()
+            let translator = HighQualityTranslationWorkerClient(candidate: selection.candidate)
             let loadSource: @Sendable (URL) async throws -> [Float] = {
                 try await AudioLoader.loadSamples(url: $0)
             }
@@ -1257,25 +1318,29 @@ struct HighQualityJob: Sendable {
         }
     }
 
-    private let servicesForBackend: @Sendable (HighQualityASRBackend) -> Services
+    private let servicesForSelection: @Sendable (
+        HighQualityASRBackend,
+        HighQualityTranslator
+    ) -> Services
 
     init() {
-        servicesForBackend = { Services.production(for: $0) }
+        servicesForSelection = { Services.production(for: $0, translator: $1) }
     }
 
     init(services: Services) {
-        servicesForBackend = { _ in services }
+        servicesForSelection = { _, _ in services }
     }
 
     init(servicesForBackend: @escaping @Sendable (HighQualityASRBackend) -> Services) {
-        self.servicesForBackend = servicesForBackend
+        servicesForSelection = { backend, _ in servicesForBackend(backend) }
     }
 
     func run(
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
-        let services = servicesForBackend(request.backend)
+        let services = servicesForSelection(request.backend, request.translator)
+        let translationModel = request.translator.model
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
         let needsTranslation = request.deliverables.contains(.englishTranslationTranscript)
@@ -1339,12 +1404,13 @@ struct HighQualityJob: Sendable {
         var memorySampler: Task<UInt64, Never>?
         var cleanupFailureMessage: String?
         var manifest = HighQualityJobManifest(
-            schemaVersion: 1,
+            schemaVersion: 2,
             jobID: request.id,
             status: .failed,
             source: Self.provenance(for: request.sourceURL),
             deliverables: request.deliverables.sorted { $0.rawValue < $1.rawValue },
             selectedBackend: request.backend,
+            translationModel: needsTranslation ? translationModel : nil,
             speakerLabels: request.speakerLabels || !request.speakerLabelsByCueID.isEmpty,
             speakerCountPolicy: request.speakerCountPolicy,
             dependencies: (isYouTubeSource ? [.sourceAcquisition] : [])
@@ -1918,7 +1984,11 @@ struct HighQualityJob: Sendable {
             )
             var translationsByID: [String: String] = [:]
             if needsTranslation {
-                begin(.translating, fraction: 0.8, message: "Preparing local TranslateGemma…")
+                begin(
+                    .translating,
+                    fraction: 0.8,
+                    message: "Preparing local \(request.translator.displayName)…"
+                )
                 var translationRequest = HighQualityTranslationBatch(
                     source: manifest.source,
                     turns: turns,
@@ -1944,30 +2014,31 @@ struct HighQualityJob: Sendable {
                 translationEvidence = .init(
                     request: translationRequest,
                     response: nil,
-                    model: LocalMLXTranslator.modelID,
+                    model: translationModel.modelID,
                     attempts: [],
-                    revision: LocalMLXTranslator.revision,
-                    runtimeVersion: LocalMLXTranslator.runtimeVersion,
+                    revision: translationModel.revision,
+                    runtimeVersion: translationModel.runtimeVersion,
+                    weightSHA256: translationModel.weightSHA256,
                     batches: [],
                     peakMemoryBytes: 0,
                     validationFailures: []
                 )
                 translationLoadStarted = true
                 translationLease = try await acquireModel(
-                    LocalMLXTranslator.modelID,
-                    peak: LocalMLXTranslator.declaredPeakMemoryBytes
+                    translationModel.modelID,
+                    peak: request.translator.candidate.declaredPeakMemoryBytes
                 )
                 if let translationLease {
                     manifest.modelEvents.append(.init(
                         kind: .pressureChecked,
-                        modelID: LocalMLXTranslator.modelID,
+                        modelID: translationModel.modelID,
                         at: Date(),
                         message: "policy=macos-memory-pressure peak=\(translationLease.declaredPeakBytes) reserve=\(translationLease.reserveBytes) total=\(translationLease.totalMemoryBytes) available=\(translationLease.availableMemoryBytes) baseline=\(translationLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
                     kind: .loadStarted,
-                    modelID: LocalMLXTranslator.modelID,
+                    modelID: translationModel.modelID,
                     at: Date()
                 ))
                 do {
@@ -1983,7 +2054,7 @@ struct HighQualityJob: Sendable {
                     try await markLoaded(translationLease)
                     manifest.modelEvents.append(.init(
                         kind: .loadCompleted,
-                        modelID: LocalMLXTranslator.modelID,
+                        modelID: translationModel.modelID,
                         at: Date()
                     ))
                     progress(.init(stage: .translating, fraction: 0.84, message: "Translating to English locally…"))
@@ -2000,6 +2071,7 @@ struct HighQualityJob: Sendable {
                         contextPolicy: request.translationContextPolicy,
                         resetReasons: request.translationContextResetReasonsByCueID,
                         integrityGlossaryByCueID: integrityGlossaryByCueID,
+                        fallbackModel: translationModel.modelID,
                         translate: guardedTranslate
                     )
                     translationRequest = firstPass.request
@@ -2011,6 +2083,7 @@ struct HighQualityJob: Sendable {
                         attempts: exchange.attempts,
                         revision: exchange.revision,
                         runtimeVersion: exchange.runtimeVersion,
+                        weightSHA256: translationModel.weightSHA256,
                         batches: exchange.batches,
                         peakMemoryBytes: exchange.peakMemoryBytes,
                         validationFailures: [],
@@ -2104,6 +2177,7 @@ struct HighQualityJob: Sendable {
                                     attempts: attempts,
                                     revision: error.revision,
                                     runtimeVersion: error.runtimeVersion,
+                                    weightSHA256: translationModel.weightSHA256,
                                     batches: batches,
                                     peakMemoryBytes: max(peakMemoryBytes, error.peakMemoryBytes),
                                     validationFailures: [error.localizedDescription],
@@ -2148,6 +2222,7 @@ struct HighQualityJob: Sendable {
                                     attempts: attempts,
                                     revision: retryExchange.revision,
                                     runtimeVersion: retryExchange.runtimeVersion,
+                                    weightSHA256: translationModel.weightSHA256,
                                     batches: batches,
                                     peakMemoryBytes: peakMemoryBytes,
                                     validationFailures: [message],
@@ -2187,6 +2262,7 @@ struct HighQualityJob: Sendable {
                                     attempts: attempts,
                                     revision: retryExchange.revision,
                                     runtimeVersion: retryExchange.runtimeVersion,
+                                    weightSHA256: translationModel.weightSHA256,
                                     batches: batches,
                                     peakMemoryBytes: peakMemoryBytes,
                                     validationFailures: [message],
@@ -2206,6 +2282,7 @@ struct HighQualityJob: Sendable {
                             attempts: attempts,
                             revision: exchange.revision,
                             runtimeVersion: exchange.runtimeVersion,
+                            weightSHA256: translationModel.weightSHA256,
                             batches: batches,
                             peakMemoryBytes: peakMemoryBytes,
                             validationFailures: [],
@@ -2226,6 +2303,7 @@ struct HighQualityJob: Sendable {
                             attempts: error.attempts,
                             revision: error.revision,
                             runtimeVersion: error.runtimeVersion,
+                            weightSHA256: translationModel.weightSHA256,
                             batches: error.batches,
                             peakMemoryBytes: error.peakMemoryBytes,
                             validationFailures: [],
@@ -2248,7 +2326,7 @@ struct HighQualityJob: Sendable {
                 translationLease = nil
                 manifest.modelEvents.append(.init(
                     kind: .unloadCompleted,
-                    modelID: LocalMLXTranslator.modelID,
+                    modelID: translationModel.modelID,
                     at: Date()
                 ))
                 if let release {
@@ -2258,7 +2336,7 @@ struct HighQualityJob: Sendable {
                     )
                     manifest.modelEvents.append(.init(
                         kind: .memoryReleaseChecked,
-                        modelID: LocalMLXTranslator.modelID,
+                        modelID: translationModel.modelID,
                         at: Date(),
                         message: releaseMessage(release)
                     ))
@@ -2422,7 +2500,7 @@ struct HighQualityJob: Sendable {
                 translationUnloaded = true
                 await cleanupModel(
                     translationLease,
-                    modelID: LocalMLXTranslator.modelID,
+                    modelID: translationModel.modelID,
                     unload: services.unloadTranslation
                 )
                 translationEvidence?.worker = await services.translationWorkerEvidence()
@@ -3091,6 +3169,7 @@ struct HighQualityJob: Sendable {
         contextPolicy: HighQualityConversationContextPolicy,
         resetReasons: [String: HighQualityConversationContextResetReason],
         integrityGlossaryByCueID: [String: [HighQualityTranslationIntegrityGlossaryTerm]],
+        fallbackModel: String = LocalMLXTranslator.modelID,
         translate: @Sendable (HighQualityTranslationBatch) async throws
             -> HighQualityTranslationExchange
     ) async throws -> (
@@ -3144,8 +3223,7 @@ struct HighQualityJob: Sendable {
                     startingAt: errorAttempts.count + 1
                 )
                 throw HighQualityTranslationServiceError(
-                    model: serviceError?.model ?? firstExchange?.model
-                        ?? LocalMLXTranslator.modelID,
+                    model: serviceError?.model ?? firstExchange?.model ?? fallbackModel,
                     attempts: errorAttempts,
                     response: serviceError?.response,
                     revision: serviceError?.revision ?? firstExchange?.revision,

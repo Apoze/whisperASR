@@ -819,6 +819,7 @@ final class HighQualityJobTests: XCTestCase {
             ))
 
             XCTAssertEqual(result.manifest.selectedBackend, backend)
+            XCTAssertEqual(result.manifest.translationModel, HighQualityTranslator.productDefault.model)
             XCTAssertEqual(result.subtitleCues.map(\.text), ["One"])
         }
     }
@@ -1653,6 +1654,7 @@ final class HighQualityJobTests: XCTestCase {
             )
             XCTAssertEqual(result.manifest.peakMemoryBytes, 123)
             XCTAssertEqual(result.manifest.selectedBackend, backend)
+            XCTAssertNil(result.manifest.translationModel)
             XCTAssertEqual(result.manifest.model.backend, backend)
             XCTAssertFalse(result.manifest.model.revision.isEmpty)
             if backend == .whisperKit {

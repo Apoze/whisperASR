@@ -75,10 +75,15 @@ enum WhisperASREntryPoint {
                 directory: URL(fileURLWithPath: arguments[3], isDirectory: true)
             ))
         }
-        if arguments.count == 3,
+        if arguments.count > 1,
            arguments[1] == HighQualityTranslationWorkerCommand.argument {
+            guard arguments.count == 4,
+                  let candidate = LocalMLXTranslator.Candidate(rawValue: arguments[3]) else {
+                exit(64)
+            }
             exit(await HighQualityTranslationWorkerCommand.run(
-                directory: URL(fileURLWithPath: arguments[2], isDirectory: true)
+                directory: URL(fileURLWithPath: arguments[2], isDirectory: true),
+                candidate: candidate
             ))
         }
         if arguments.count == 3,

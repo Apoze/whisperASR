@@ -30,10 +30,12 @@ private struct HighQualityTranslationWorkerResponse: Codable {
 }
 
 actor HighQualityTranslationWorkerClient {
+    private let candidate: LocalMLXTranslator.Candidate
     private let worker: HighQualityWorkerProcess
     private var sequence = 0
 
     init(
+        candidate: LocalMLXTranslator.Candidate = .productDefault,
         executableURL: URL = Bundle.main.executableURL
             ?? URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0]),
         workingDirectory: URL? = nil,
@@ -41,6 +43,7 @@ actor HighQualityTranslationWorkerClient {
         pollInterval: Duration = .milliseconds(100),
         shutdownTimeout: Duration = .seconds(3)
     ) {
+        self.candidate = candidate
         let directory = workingDirectory
             ?? FileManager.default.temporaryDirectory.appendingPathComponent(
                 "WhisperASR-TranslateGemma-\(UUID().uuidString)",
@@ -48,7 +51,11 @@ actor HighQualityTranslationWorkerClient {
             )
         worker = HighQualityWorkerProcess(
             executableURL: executableURL,
-            arguments: [HighQualityTranslationWorkerCommand.argument, directory.path],
+            arguments: [
+                HighQualityTranslationWorkerCommand.argument,
+                directory.path,
+                candidate.rawValue,
+            ],
             workingDirectory: directory,
             pressure: pressure,
             pollInterval: pollInterval,
@@ -70,7 +77,7 @@ actor HighQualityTranslationWorkerClient {
         } catch {
             throw Self.mapped(error)
         }
-        progress(0, "TranslateGemma worker \(pid) starting…")
+        progress(0, "\(candidate.rawValue) worker \(pid) starting…")
         do {
             let response: HighQualityTranslationWorkerResponse = try await worker.waitForJSON(
                 at: worker.workingDirectory.appendingPathComponent("ready.json")
@@ -83,7 +90,7 @@ actor HighQualityTranslationWorkerClient {
             guard response.ready == true else {
                 throw HighQualityTranslationWorkerError.protocolFailure("invalid ready response")
             }
-            progress(1, "TranslateGemma worker \(pid) ready")
+            progress(1, "\(candidate.rawValue) worker \(pid) ready")
         } catch {
             let critical = await worker.isCritical
             await worker.stop(critical: critical)
@@ -157,8 +164,11 @@ actor HighQualityTranslationWorkerClient {
 enum HighQualityTranslationWorkerCommand {
     static let argument = "--high-quality-translation-worker"
 
-    static func run(directory: URL) async -> Int32 {
-        let translator = LocalMLXTranslator()
+    static func run(
+        directory: URL,
+        candidate: LocalMLXTranslator.Candidate
+    ) async -> Int32 {
+        let translator = LocalMLXTranslator(candidate: candidate)
         let parentPID = getppid()
         let pressure = MacMemoryPressureMonitor.shared
         signal(SIGTERM, SIG_IGN)
@@ -234,10 +244,10 @@ enum HighQualityTranslationWorkerCommand {
                 ready: nil,
                 exchange: nil,
                 error: error as? HighQualityTranslationServiceError ?? .init(
-                    model: LocalMLXTranslator.modelID,
+                    model: candidate.modelID,
                     attempts: [],
                     response: nil,
-                    revision: LocalMLXTranslator.revision,
+                    revision: candidate.revision,
                     runtimeVersion: LocalMLXTranslator.runtimeVersion,
                     message: error.localizedDescription
                 ),

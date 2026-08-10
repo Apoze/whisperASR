@@ -3,11 +3,33 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityLocalTranslationTests: XCTestCase {
-    func testTranslateGemmaIsPinnedAndUsesOnlyTheCurrentJapaneseAsItsPrompt() throws {
+    func testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract() throws {
         XCTAssertEqual(LocalMLXTranslator.Candidate.productDefault, .translateGemma12B)
+        XCTAssertEqual(HighQualityTranslator.productDefault, .translateGemma12B)
+        XCTAssertEqual(HighQualityTranslator.translateGemma4B.displayName, "TranslateGemma 4B (Bêta)")
+        XCTAssertEqual(
+            HighQualityTranslator.allCases,
+            [.translateGemma12B, .translateGemma4B]
+        )
+        XCTAssertEqual(
+            HighQualityTranslator.translateGemma12B.detail,
+            "Meilleure qualité — plus lent et plus gourmand en mémoire"
+        )
+        XCTAssertEqual(
+            HighQualityTranslator.translateGemma4B.detail,
+            "Bêta — plus rapide et léger, qualité en cours de comparaison"
+        )
         XCTAssertEqual(
             LocalMLXTranslator.Candidate.translateGemma12B.revision,
             "f3dcfd54df14672fbcf0731086fb47a797a943ae"
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.translateGemma4B.modelID,
+            "mlx-community/translategemma-4b-it-4bit"
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.translateGemma4B.revision,
+            "5788ec08c047f3f2e17808101b8d9566ac930d58"
         )
         XCTAssertEqual(
             LocalMLXTranslator.Candidate.qwen3_14B.revision,
@@ -21,6 +43,17 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             ]
         )
         XCTAssertEqual(
+            LocalMLXTranslator.Candidate.translateGemma4B.weightSHA256,
+            ["113acb0c29997a3015af84bec2c8f967cb7b15f8959d1c26b9628b921e324c40"]
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.Candidate.translateGemma4B.weightFileNames,
+            ["model.safetensors"]
+        )
+        for candidate in LocalMLXTranslator.Candidate.allCases {
+            XCTAssertEqual(candidate.weightFileNames.count, candidate.weightSHA256.count)
+        }
+        XCTAssertEqual(
             LocalMLXTranslator.Candidate.qwen3_14B.weightSHA256,
             [
                 "5795efcfc7c96fd273e600562e8b111bfcc427415de9001d0a07e70cd99cff19",
@@ -31,6 +64,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             LocalMLXTranslator.Candidate.translateGemma12B.extraEOSTokens,
             ["<end_of_turn>"]
         )
+        XCTAssertTrue(LocalMLXTranslator.Candidate.translateGemma12B.usesTranslateGemmaContract)
+        XCTAssertTrue(LocalMLXTranslator.Candidate.translateGemma4B.usesTranslateGemmaContract)
         XCTAssertEqual(
             LocalMLXTranslator.Candidate.qwen3_14B.extraEOSTokens,
             ["<|im_end|>"]
@@ -140,6 +175,65 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         XCTAssertTrue(aliasPrompt.contains(#"甘いモカ = 甘結もか = Amayui Moka\n甘いモカが来ました。"#))
     }
 
+    func testBothTranslateGemmaSelectionsProduceEnglishDeliverablesAndEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        for selection in HighQualityTranslator.allCases {
+            let model = selection.model
+            let job = HighQualityJob(services: .init(
+                loadSource: { _ in Array(repeating: 0, count: 16_000) },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in "おはよう。" },
+                unloadASR: {},
+                prepareAlignment: { _ in },
+                alignJapanese: highQualityFixtureAlignment,
+                translateEnglish: { request in
+                    .init(
+                        model: model.modelID,
+                        response: #"{"translations":[{"id":"unit-0001","text":"Good morning."}]}"#,
+                        attempts: [.init(number: 1, duration: 0.01, outcome: "success")],
+                        revision: model.revision,
+                        runtimeVersion: model.runtimeVersion,
+                        batches: [.init(
+                            cueIDs: request.turns.map(\.id),
+                            sanitizedPrompt: "おはよう。",
+                            nativePrompt: "おはよう。",
+                            nativeOutput: "Good morning.",
+                            model: model.modelID,
+                            revision: model.revision,
+                            sanitizedOutput: "Good morning.",
+                            inputTokens: 8,
+                            outputTokens: 3,
+                            finishReason: "stop",
+                            duration: 0.01
+                        )],
+                        peakMemoryBytes: 123
+                    )
+                },
+                unloadTranslation: {}
+            ))
+
+            let result = try await job.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishTranslationTranscript, .englishSubtitles],
+                backend: .qwenJA,
+                translator: selection,
+                outputRoot: root
+            ))
+
+            XCTAssertEqual(result.manifest.schemaVersion, 2)
+            XCTAssertEqual(result.manifest.translationModel, model)
+            XCTAssertEqual(result.evidence.translation?.model, model.modelID)
+            XCTAssertEqual(result.evidence.translation?.revision, model.revision)
+            XCTAssertEqual(result.evidence.translation?.runtimeVersion, model.runtimeVersion)
+            XCTAssertEqual(result.evidence.translation?.weightSHA256, model.weightSHA256)
+            XCTAssertEqual(result.englishTranscript, "Good morning.")
+            XCTAssertEqual(result.subtitleCues.map(\.text), ["Good morning."])
+        }
+    }
+
     func testLocalTranslationRunsOnlyAfterASRUnloadWithoutHostedCredentials() async throws {
         let sequence = TranslationSequence()
         let gate = testGate()
@@ -239,6 +333,14 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                 "  Good morning.\n",
                 for: turn,
                 candidate: .translateGemma12B
+            ),
+            "Good morning."
+        )
+        XCTAssertEqual(
+            LocalMLXTranslator.translationText(
+                "  Good morning.\n",
+                for: turn,
+                candidate: .translateGemma4B
             ),
             "Good morning."
         )
@@ -365,6 +467,7 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         )
         object.removeValue(forKey: "revision")
         object.removeValue(forKey: "runtimeVersion")
+        object.removeValue(forKey: "weightSHA256")
         object.removeValue(forKey: "batches")
         object.removeValue(forKey: "peakMemoryBytes")
 
@@ -374,6 +477,7 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         )
         XCTAssertEqual(decoded.model, "legacy-model")
         XCTAssertEqual(decoded.batches, [])
+        XCTAssertEqual(decoded.weightSHA256, [])
         XCTAssertEqual(decoded.peakMemoryBytes, 0)
 
         let event = try JSONDecoder().decode(
@@ -718,6 +822,106 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             artifact.finishedAt = Date()
             try Self.writeMemorySmoke(artifact, to: output)
             throw primaryError
+        }
+    }
+
+    func testRealTranslateGemma4BWorkerDeliverablesWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_TRANSLATEGEMMA_4B_SMOKE"] == "1" else {
+            throw XCTSkip("Run the ticket #74 bounded TranslateGemma 4B smoke.")
+        }
+        guard environment["BENCHMARK_SLOT_GRANTED"] == "74" else {
+            XCTFail("The ticket #74 benchmark slot is required.")
+            return
+        }
+        let outputRoot = URL(fileURLWithPath: try XCTUnwrap(
+            environment["WHISPERASR_TRANSLATEGEMMA_4B_SMOKE_OUTPUT_ROOT"]
+        ), isDirectory: true)
+        let jobID = try XCTUnwrap(
+            UUID(uuidString: "74000000-0000-4000-8000-000000000074")
+        )
+        let resultDirectory = outputRoot.appendingPathComponent(jobID.uuidString)
+        let source = outputRoot.appendingPathComponent("\(jobID.uuidString)-japanese-source.txt")
+        guard !FileManager.default.fileExists(atPath: resultDirectory.path),
+              !FileManager.default.fileExists(atPath: source.path) else {
+            XCTFail("Smoke evidence already exists under: \(outputRoot.path)")
+            return
+        }
+        try FileManager.default.createDirectory(at: outputRoot, withIntermediateDirectories: true)
+        try "おはようございます。\n".write(to: source, atomically: true, encoding: .utf8)
+
+        let candidate = LocalMLXTranslator.Candidate.translateGemma4B
+        let worker = HighQualityTranslationWorkerClient(
+            candidate: candidate,
+            executableURL: highQualityTranslationWorkerExecutableURL(),
+            workingDirectory: resultDirectory.appendingPathComponent("worker-runtime")
+        )
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 16_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "おはようございます。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: highQualityFixtureAlignment,
+            unloadAlignment: {},
+            currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
+            prepareTranslation: { try await worker.prepare(progress: $0) },
+            translateEnglish: { try await worker.translate($0) },
+            unloadTranslation: { await worker.unload() },
+            translationWorkerEvidence: { await worker.evidence },
+            heavyweightGate: HeavyweightModelGate()
+        ))
+
+        do {
+            let result = try await job.run(.init(
+                id: jobID,
+                sourceURL: source,
+                deliverables: [.englishTranslationTranscript, .englishSubtitles],
+                backend: .qwenJA,
+                translator: .translateGemma4B,
+                outputRoot: outputRoot
+            ))
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let raw = try decoder.decode(
+                HighQualityRawEvidence.self,
+                from: Data(contentsOf: result.directory.appendingPathComponent("raw-asr.json"))
+            )
+            let recordedWorker = try XCTUnwrap(raw.translation?.worker)
+
+            XCTAssertEqual(result.manifest.status, .completed)
+            XCTAssertEqual(
+                result.manifest.translationModel,
+                HighQualityTranslator.translateGemma4B.model
+            )
+            XCTAssertEqual(raw.translation?.model, candidate.modelID)
+            XCTAssertEqual(raw.translation?.revision, candidate.revision)
+            XCTAssertEqual(raw.translation?.weightSHA256, candidate.weightSHA256)
+            XCTAssertEqual(
+                try LocalTranslatorBakeoffTests.cachedWeightHashes(candidate),
+                candidate.weightSHA256
+            )
+            XCTAssertEqual(recordedWorker.command.last, candidate.rawValue)
+            XCTAssertEqual(recordedWorker.exitStatus, 0)
+            XCTAssertFalse(recordedWorker.forcedTermination)
+            XCTAssertGreaterThan(recordedWorker.peakPhysicalFootprintBytes, 1_024 * 1_024 * 1_024)
+            XCTAssertFalse(try XCTUnwrap(result.englishTranscript).isEmpty)
+            XCTAssertFalse(result.subtitleCues.isEmpty)
+            for name in [
+                "english-translation-transcript.txt",
+                "english-subtitles.srt",
+                "english-subtitles.vtt",
+                "manifest.json",
+                "raw-asr.json",
+            ] {
+                XCTAssertGreaterThan(
+                    try Data(contentsOf: result.directory.appendingPathComponent(name)).count,
+                    0
+                )
+            }
+        } catch {
+            await worker.unload()
+            throw error
         }
     }
 

@@ -10,6 +10,38 @@ func highQualityTranslationWorkerExecutableURL() -> URL {
 }
 
 final class HighQualityTranslationWorkerTests: XCTestCase {
+    func testSelectedCandidateIsPassedToTheChildWorker() async throws {
+        let fixture = try WorkerFixture(script: """
+        #!/bin/sh
+        directory="$2"
+        printf '%s' "$3" > "$directory/candidate"
+        printf '{"ready":true}' > "$directory/ready.json"
+        while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
+        """)
+        let worker = HighQualityTranslationWorkerClient(
+            candidate: .translateGemma4B,
+            executableURL: fixture.executable,
+            workingDirectory: fixture.directory,
+            pressure: MacMemoryPressureMonitor(native: false),
+            pollInterval: .milliseconds(2),
+            shutdownTimeout: .milliseconds(50)
+        )
+
+        try await worker.prepare(progress: { _, _ in })
+        await worker.unload()
+
+        XCTAssertEqual(
+            try String(
+                contentsOf: fixture.directory.appendingPathComponent("candidate"),
+                encoding: .utf8
+            ),
+            LocalMLXTranslator.Candidate.translateGemma4B.rawValue
+        )
+        let recordedEvidence = await worker.evidence
+        let evidence = try XCTUnwrap(recordedEvidence)
+        XCTAssertEqual(evidence.command.last, LocalMLXTranslator.Candidate.translateGemma4B.rawValue)
+    }
+
     func testOneWorkerServesSequentialTranslations() async throws {
         let fixture = try WorkerFixture(script: """
         #!/bin/sh

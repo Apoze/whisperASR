@@ -10,6 +10,7 @@ struct HighQualityJobView: View {
     @State private var includeEnglishSubtitles = false
     @State private var includeSpeakerLabels = false
     @State private var backend: HighQualityASRBackend? = .productDefault
+    @State private var translator: HighQualityTranslator = .productDefault
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
         fraction: 0,
@@ -58,6 +59,18 @@ struct HighQualityJobView: View {
             Toggle("Speaker labels", isOn: $includeSpeakerLabels)
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
+
+            if includeEnglishTranscript || includeEnglishSubtitles {
+                Picker("Local translator", selection: $translator) {
+                    ForEach(HighQualityTranslator.allCases) {
+                        Text($0.displayName).tag($0)
+                    }
+                }
+                .disabled(isRunning)
+                Text(translator.detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Picker("Japanese ASR", selection: $backend) {
                 Text("Choose a backend…").tag(nil as HighQualityASRBackend?)
@@ -187,6 +200,7 @@ struct HighQualityJobView: View {
                     sourceURL: selectedSource,
                     deliverables: deliverables,
                     backend: backend,
+                    translator: translator,
                     speakerLabels: includeSpeakerLabels,
                     translationContextPolicy: .productDefault
                 )) { update in
