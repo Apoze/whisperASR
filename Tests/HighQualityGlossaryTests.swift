@@ -36,11 +36,23 @@ final class HighQualityGlossaryTests: XCTestCase {
         XCTAssertEqual(attack?.selected, false)
         XCTAssertEqual(attack?.reason, "false-correction-risk budget")
 
-        let confirmedAmbiguous = HighQualityGlossarySelector.select(
+        let metadataOnly = HighQualityGlossarySelector.select(
             source: source(title: "エペ 配信"),
             turns: turns("今日は晴れです。")
         )
-        XCTAssertTrue(confirmedAmbiguous.promptTerms.contains { $0.id == "apex-legends" })
+        XCTAssertFalse(metadataOnly.promptTerms.contains { $0.id == "apex-legends" })
+
+        let disambiguated = HighQualityGlossarySelector.select(
+            source: source(title: "エペ 配信"),
+            turns: turns("エペを始めます。")
+        )
+        XCTAssertEqual(disambiguated.promptTerms.map(\.id), ["apex-legends"])
+
+        let conflicting = HighQualityGlossarySelector.select(
+            source: source(title: "VALORANT 配信"),
+            turns: turns("エペを始めます。")
+        )
+        XCTAssertTrue(conflicting.promptTerms.isEmpty)
 
         let commonEnglish = HighQualityGlossarySelector.select(
             source: source(title: "Apex Plumbing"),
@@ -56,18 +68,18 @@ final class HighQualityGlossaryTests: XCTestCase {
         let mixedBudget = HighQualityGlossaryBudget(
             maxEntries: 12,
             maxEncodedBytes: 2_048,
-            maxContextShare: 0.9,
+            maxInputTokenShare: 0.9,
             maxScoringOperations: 512,
             maxFalseCorrectionRisk: 0.5
         )
         let first = HighQualityGlossarySelector.select(
             source: mixedSource,
-            turns: turns("よろしくお願いします。"),
+            turns: turns("星野ルナと鬼滅の刃とホロライブでエーペックスレジェンズ。よろしくお願いします。"),
             budget: mixedBudget
         )
         let second = HighQualityGlossarySelector.select(
             source: mixedSource,
-            turns: turns("よろしくお願いします。"),
+            turns: turns("星野ルナと鬼滅の刃とホロライブでエーペックスレジェンズ。よろしくお願いします。"),
             budget: mixedBudget
         )
         XCTAssertEqual(first, second)
@@ -83,6 +95,82 @@ final class HighQualityGlossaryTests: XCTestCase {
         XCTAssertEqual(sourceTerm?.term.provenance, ["https://youtu.be/fixture"])
     }
 
+    func testCueLocalSelectionUsesExactFormsMetadataOnlyForDisambiguationAndOneCanonical() {
+        let source = source(title: "VALORANT 配信")
+        let selection = HighQualityGlossarySelector.select(
+            source: source,
+            turns: [
+                turn("cue-0001", "エーペックスレジェンズを始めます。"),
+                turn("cue-0002", "甘結もかが来ました。"),
+                turn("cue-0003", "甘いモカが勝ちました。"),
+                turn("cue-0004", "エペを取ります。"),
+                turn("cue-0005", "お疲れ様。"),
+            ]
+        )
+
+        XCTAssertEqual(selection.promptTerms(for: "cue-0001").map(\.id), ["apex-legends"])
+        XCTAssertEqual(selection.promptTerms(for: "cue-0002").map(\.id), ["amayui-moka"])
+        XCTAssertEqual(selection.promptTerms(for: "cue-0003").map(\.id), ["amayui-moka"])
+        XCTAssertEqual(selection.promptTerms(for: "cue-0004").map(\.id), ["apex-legends"])
+        XCTAssertEqual(selection.promptTerms(for: "cue-0005").map(\.id), ["otsukaresama"])
+        XCTAssertFalse(selection.promptTerms.contains { $0.id == "valorant" })
+        XCTAssertEqual(selection.terminologyRegister["amayui-moka"], "Amayui Moka")
+        XCTAssertEqual(
+            selection.decisions.first { $0.term.id == "amayui-moka" }?.guidance,
+            .hard
+        )
+        XCTAssertEqual(
+            selection.decisions.first { $0.term.id == "otsukaresama" }?.guidance,
+            .soft
+        )
+        XCTAssertTrue(selection.tokenShareByCueID.values.allSatisfy {
+            $0 <= selection.budget.maxInputTokenShare
+        })
+    }
+
+    func testTerminologyRegisterDoesNotPropagateABudgetRejectedCanonical() {
+        let selection = HighQualityGlossarySelector.select(
+            source: source(),
+            turns: [
+                turn("cue-0001", "ホロライブで甘結もかを見ます。"),
+                turn("cue-0002", "ホロを見ます。"),
+                turn("cue-0003", "甘結もかが来ました。"),
+                turn("cue-0004", "甘結もかが勝ちました。"),
+            ],
+            budget: .init(
+                maxEntries: 1,
+                maxEncodedBytes: 10_000,
+                maxInputTokenShare: 0.9,
+                maxScoringOperations: 512,
+                maxFalseCorrectionRisk: 0
+            )
+        )
+
+        XCTAssertTrue(selection.promptTerms(for: "cue-0001").allSatisfy {
+            $0.id != "hololive"
+        })
+        XCTAssertTrue(selection.promptTerms(for: "cue-0002").allSatisfy {
+            $0.id != "hololive"
+        })
+        XCTAssertNil(selection.terminologyRegister["hololive"])
+    }
+
+    func testMetadataDoesNotOutrankAnExactCueMatch() {
+        let selection = HighQualityGlossarySelector.select(
+            source: source(title: "ホロライブ配信"),
+            turns: turns("エーペックスレジェンズとホロライブ。"),
+            budget: .init(
+                maxEntries: 1,
+                maxEncodedBytes: 10_000,
+                maxInputTokenShare: 0.9,
+                maxScoringOperations: 512,
+                maxFalseCorrectionRisk: 0
+            )
+        )
+
+        XCTAssertEqual(selection.promptTerms.map(\.id), ["apex-legends"])
+    }
+
     func testSelectionEnforcesEveryDeclaredBudgetBoundary() {
         let allTerms = HighQualityGlossaryCatalog.terms
             .flatMap(\.japaneseForms)
@@ -95,10 +183,9 @@ final class HighQualityGlossaryTests: XCTestCase {
         )
         XCTAssertLessThanOrEqual(standard.promptTerms.count, standard.budget.maxEntries)
         XCTAssertLessThanOrEqual(standard.encodedSize, standard.budget.maxEncodedBytes)
-        XCTAssertLessThanOrEqual(
-            Double(standard.encodedSize) / Double(standard.contextBytes),
-            standard.budget.maxContextShare
-        )
+        XCTAssertTrue(standard.tokenShareByCueID.values.allSatisfy {
+            $0 <= standard.budget.maxInputTokenShare
+        })
         XCTAssertLessThanOrEqual(
             standard.scoringOperations,
             standard.budget.maxScoringOperations
@@ -110,7 +197,7 @@ final class HighQualityGlossaryTests: XCTestCase {
             budget: .init(
                 maxEntries: 2,
                 maxEncodedBytes: 10_000,
-                maxContextShare: 0.9,
+                maxInputTokenShare: 0.9,
                 maxScoringOperations: 512,
                 maxFalseCorrectionRisk: 0.5
             )
@@ -124,7 +211,7 @@ final class HighQualityGlossaryTests: XCTestCase {
             budget: .init(
                 maxEntries: 16,
                 maxEncodedBytes: 1,
-                maxContextShare: 0.9,
+                maxInputTokenShare: 0.9,
                 maxScoringOperations: 512,
                 maxFalseCorrectionRisk: 0.5
             )
@@ -138,13 +225,15 @@ final class HighQualityGlossaryTests: XCTestCase {
             budget: .init(
                 maxEntries: 16,
                 maxEncodedBytes: 10_000,
-                maxContextShare: 0.0001,
+                maxInputTokenShare: 0.0001,
                 maxScoringOperations: 512,
                 maxFalseCorrectionRisk: 0.5
             )
         )
         XCTAssertTrue(tinyContext.promptTerms.isEmpty)
-        XCTAssertTrue(tinyContext.decisions.contains { $0.reason == "context-share budget" })
+        XCTAssertTrue(tinyContext.decisions.contains {
+            $0.reason == "input-token-share budget"
+        })
 
         let oneOperation = HighQualityGlossarySelector.select(
             source: source,
@@ -152,7 +241,7 @@ final class HighQualityGlossaryTests: XCTestCase {
             budget: .init(
                 maxEntries: 16,
                 maxEncodedBytes: 10_000,
-                maxContextShare: 0.9,
+                maxInputTokenShare: 0.9,
                 maxScoringOperations: 1,
                 maxFalseCorrectionRisk: 0.5
             )
@@ -250,6 +339,126 @@ final class HighQualityGlossaryTests: XCTestCase {
         )
     }
 
+    func testE12ReportFreezesDevelopmentBudgetAndDoesNotPromoteEmptyHoldout() throws {
+        let report = try JSONDecoder().decode(
+            HighQualityCueGlossaryReport.self,
+            from: Data(contentsOf: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                .appendingPathComponent("docs/high-quality-glossary-e12.json"))
+        )
+
+        XCTAssertEqual(report.ticket, 53)
+        XCTAssertEqual(report.budget.maxEntries, HighQualityGlossaryBudget.standard.maxEntries)
+        XCTAssertEqual(
+            report.budget.maxInputTokenShare,
+            HighQualityGlossaryBudget.standard.maxInputTokenShare
+        )
+        XCTAssertEqual(report.development.criticalTermAccuracy, 1)
+        XCTAssertEqual(report.development.falseInsertions, 0)
+        XCTAssertEqual(Set(report.developmentBudgetTuning.map(\.maxEntries)), [8, 10, 12])
+        XCTAssertEqual(
+            Set(report.developmentBudgetTuning.map(\.maxInputTokenShare)),
+            [0.15, 0.2, 0.25]
+        )
+        XCTAssertTrue(report.developmentBudgetTuning.allSatisfy {
+            $0.criticalTermAccuracy == 1 && $0.falseInsertions == 0
+        })
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let development = try JapaneseBenchmarkSupport.loadManifest(
+            at: root.appendingPathComponent(
+                "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json"
+            )
+        )
+        let turns = development.annotations.turns.map {
+            turn(String(format: "cue-%04d", $0.id), $0.japanese)
+        }
+        for trial in report.developmentBudgetTuning {
+            let selection = HighQualityGlossarySelector.select(
+                source: source(fileName: development.corpusID),
+                turns: turns,
+                budget: .init(
+                    maxEntries: trial.maxEntries,
+                    maxEncodedBytes: 2_048,
+                    maxInputTokenShare: trial.maxInputTokenShare,
+                    maxScoringOperations: 512,
+                    maxFalseCorrectionRisk: 0
+                )
+            )
+            let selected = Set(selection.promptTerms.map(\.id))
+            XCTAssertEqual(selected.count, trial.selectedTerms)
+            XCTAssertEqual(selected.contains("amayui-moka") ? 1 : 0,
+                           trial.criticalTermAccuracy)
+            XCTAssertEqual(selected.subtracting(["amayui-moka"]).count,
+                           trial.falseInsertions)
+        }
+        XCTAssertEqual(report.development.integrityGates.version,
+                       HighQualityTranslationIntegrityThresholds.developmentV1.version)
+        XCTAssertEqual(report.holdout.criticalOpportunities, 0)
+        XCTAssertNil(report.holdout.criticalTermAccuracy)
+        XCTAssertEqual(report.holdout.integrityGates,
+                       report.development.integrityGates)
+        for artifact in report.development.rawArtifacts + report.holdout.rawArtifacts {
+            let data = try Data(contentsOf: root.appendingPathComponent(artifact.path))
+            XCTAssertFalse(data.isEmpty, artifact.path)
+            XCTAssertEqual(artifact.sha256.count, 64)
+        }
+        XCTAssertFalse(report.promoted)
+        XCTAssertFalse(report.evidenceLimitation.isEmpty)
+    }
+
+    func testCheckedInE12SelectionEvidenceMatchesCurrentSelector() throws {
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let evidenceDirectory = root.appendingPathComponent(
+            "docs/japanese-live/experiments/evidence/E12"
+        )
+        for corpusID in ["qudu2fx3ncc", "md62mmdz0m"] {
+            let relativeManifest = "docs/japanese-live/corpora/\(corpusID)/manifest.json"
+            let manifest = try JapaneseBenchmarkSupport.loadManifest(
+                at: root.appendingPathComponent(relativeManifest)
+            )
+            let turns = manifest.annotations.turns.map {
+                turn(String(format: "cue-%04d", $0.id), $0.japanese)
+            }
+            let selection = HighQualityGlossarySelector.select(
+                source: HighQualitySourceProvenance(
+                    path: relativeManifest,
+                    fileName: corpusID,
+                    byteCount: nil,
+                    modifiedAt: nil,
+                    sourceURL: nil,
+                    youtube: nil
+                ),
+                turns: turns
+            )
+            let expected = HighQualityGlossarySelectionEvidence(
+                schemaVersion: 1,
+                ticket: 53,
+                corpusID: corpusID,
+                selection: selection,
+                validationOpportunityTermIDsByCueID: Dictionary(
+                    uniqueKeysWithValues: turns.map {
+                        ($0.id, selection.promptTerms(for: $0.id).map(\.id))
+                    }
+                )
+            )
+            let split = corpusID == "qudu2fx3ncc" ? "development" : "holdout"
+            let evidenceURL = evidenceDirectory.appendingPathComponent(
+                "\(split)-glossary-selection.json"
+            )
+            if ProcessInfo.processInfo.environment[
+                "WHISPERASR_WRITE_E12_GLOSSARY_EVIDENCE"
+            ] == "1" {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                try encoder.encode(expected).write(to: evidenceURL, options: .atomic)
+            }
+            let checkedIn = try JSONDecoder().decode(
+                HighQualityGlossarySelectionEvidence.self,
+                from: Data(contentsOf: evidenceURL)
+            )
+            XCTAssertEqual(checkedIn, expected, split)
+        }
+    }
+
     private func source(
         fileName: String = "source.wav",
         title: String = "",
@@ -274,13 +483,17 @@ final class HighQualityGlossaryTests: XCTestCase {
     }
 
     private func turns(_ japanese: String) -> [HighQualityTranslationTurn] {
-        [.init(
-            id: "cue-0001",
+        [turn("cue-0001", japanese)]
+    }
+
+    private func turn(_ id: String, _ japanese: String) -> HighQualityTranslationTurn {
+        .init(
+            id: id,
             japanese: japanese,
             precedingJapanese: [],
             followingJapanese: [],
             speakerLabel: nil
-        )]
+        )
     }
 }
 
@@ -293,4 +506,48 @@ private struct HighQualityGlossaryDevelopmentReport: Decodable {
     let negativeTermCount: Int
     let falseSelectedTermCount: Int
     let metrics: HighQualityGlossaryMetrics
+}
+
+private struct HighQualityGlossarySelectionEvidence: Codable, Equatable {
+    let schemaVersion: Int
+    let ticket: Int
+    let corpusID: String
+    let selection: HighQualityGlossarySelection
+    let validationOpportunityTermIDsByCueID: [String: [String]]
+}
+
+private struct HighQualityCueGlossaryReport: Decodable {
+    struct Budget: Decodable {
+        let maxEntries: Int
+        let maxInputTokenShare: Double
+    }
+
+    struct Split: Decodable {
+        let criticalOpportunities: Int
+        let criticalTermAccuracy: Double?
+        let falseInsertions: Int
+        let integrityGates: HighQualityTranslationIntegrityThresholds
+        let rawArtifacts: [Artifact]
+    }
+
+    struct BudgetTrial: Decodable {
+        let maxEntries: Int
+        let maxInputTokenShare: Double
+        let selectedTerms: Int
+        let criticalTermAccuracy: Double
+        let falseInsertions: Int
+    }
+
+    struct Artifact: Decodable {
+        let path: String
+        let sha256: String
+    }
+
+    let ticket: Int
+    let budget: Budget
+    let developmentBudgetTuning: [BudgetTrial]
+    let development: Split
+    let holdout: Split
+    let promoted: Bool
+    let evidenceLimitation: String
 }

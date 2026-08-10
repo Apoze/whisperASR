@@ -3,6 +3,32 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityTranslationIntegrityTests: XCTestCase {
+    func testValidationUsesOnlyCueLocalGlossaryOpportunities() throws {
+        let term = try XCTUnwrap(
+            HighQualityGlossaryCatalog.terms.first { $0.id == "apex-legends" }
+        )
+        let integrityTerm = HighQualityTranslationIntegrityGlossaryTerm(term)
+        let turns = [
+            turn("selected", "エーペックスレジェンズを始めます。"),
+            turn("rejected", "エペを始めます。"),
+        ]
+        let verdicts = HighQualityTranslationIntegrityValidator.validate(
+            turns: turns,
+            batches: [
+                batch("selected", "Apex Legends begins."),
+                batch("rejected", "The match begins."),
+            ],
+            glossary: [integrityTerm],
+            glossaryByCueID: ["selected": [integrityTerm], "rejected": []]
+        )
+
+        XCTAssertEqual(verdicts[0].glossaryOpportunities.map(\.id), ["apex-legends"])
+        XCTAssertTrue(verdicts[1].glossaryOpportunities.isEmpty)
+        XCTAssertFalse(verdicts[1].reasons.contains {
+            $0.code == .criticalGlossaryViolation
+        })
+    }
+
     func testDeterministicCorruptionFixturesAndValidTranslations() throws {
         let results = try fixtureResults()
         for result in results {

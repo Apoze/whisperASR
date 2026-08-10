@@ -277,20 +277,13 @@ actor LocalMLXTranslator {
         if candidate == .translateGemma12B {
             return batch.retryReasonCodes == nil
                 ? [Self.directUserMessage(turn.japanese)]
-                : [Self.retryUserMessage(for: turn, glossary: batch.glossary)]
+                : [Self.retryUserMessage(for: turn, glossary: batch.glossary(for: turn))]
         }
         var pairs: [(String, String)] = []
-        for term in batch.glossary {
+        for term in batch.glossary(for: turn) {
             for japanese in term.japanese {
-                for english in [term.english] + term.englishAliases {
-                    pairs.append((japanese, english))
-                }
+                pairs.append((japanese, term.english))
             }
-        }
-        if let metadata = batch.source.youtube {
-            pairs += [metadata.title, metadata.channel, metadata.description]
-                .filter { !$0.isEmpty }
-                .map { ($0, $0) }
         }
         var messages = pairs.flatMap { source, target in
             [qwenUserMessage(source), ["role": "assistant", "content": target]]
@@ -323,17 +316,24 @@ actor LocalMLXTranslator {
         for turn: HighQualityTranslationTurn,
         glossary: [HighQualityGlossaryPromptTerm]
     ) -> PromptMessage {
-        let japanese = turn.japanese
+        canonicalUserMessage(for: turn, glossary: glossary, sourceLanguage: "ja-JP")
+    }
+
+    private static func canonicalUserMessage(
+        for turn: HighQualityTranslationTurn,
+        glossary: [HighQualityGlossaryPromptTerm],
+        sourceLanguage: String = "ja"
+    ) -> PromptMessage {
         let canonicalTerms = glossary.compactMap { term -> String? in
-            guard let matched = term.japanese.first(where: japanese.contains),
+            guard let matched = term.japanese.first(where: turn.japanese.contains),
                   let canonical = term.japanese.first else { return nil }
             return matched == canonical
                 ? "\(canonical) = \(term.english)"
                 : "\(matched) = \(canonical) = \(term.english)"
         }
         return directUserMessage(
-            (canonicalTerms + [japanese]).joined(separator: "\n"),
-            sourceLanguage: "ja-JP"
+            (canonicalTerms + [turn.japanese]).joined(separator: "\n"),
+            sourceLanguage: sourceLanguage
         )
     }
 

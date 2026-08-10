@@ -744,6 +744,14 @@ final class HighQualityJobTests: XCTestCase {
                     Set(request.glossary.map(\.id)),
                     ["amayui-moka", "apex-legends", "otsukaresama"]
                 )
+                XCTAssertEqual(
+                    Set(request.glossary(for: request.turns[0]).map(\.id)),
+                    ["amayui-moka", "apex-legends"]
+                )
+                XCTAssertEqual(
+                    request.glossary(for: request.turns[1]).map(\.id),
+                    ["otsukaresama"]
+                )
                 let translations = request.turns.enumerated().map {
                     [
                         "id": $0.element.id,
@@ -774,6 +782,10 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(
             Set(result.evidence.glossary.decisions.filter(\.selected).map(\.term.id)),
             ["amayui-moka", "apex-legends", "otsukaresama"]
+        )
+        XCTAssertEqual(
+            result.evidence.glossary.terminologyRegister["amayui-moka"],
+            "Amayui Moka"
         )
     }
 

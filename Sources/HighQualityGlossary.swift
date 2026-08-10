@@ -18,6 +18,15 @@ struct HighQualityGlossaryTerm: Codable, Equatable, Sendable {
     let inclusionRule: String
     let exclusionRule: String
     let ambiguousJapaneseForms: [String]
+
+    var guidance: HighQualityGlossaryGuidance {
+        domain == .conversation ? .soft : .hard
+    }
+}
+
+enum HighQualityGlossaryGuidance: String, Codable, Sendable {
+    case hard
+    case soft
 }
 
 struct HighQualityGlossaryPromptTerm: Codable, Equatable, Sendable {
@@ -41,14 +50,54 @@ private extension HighQualityGlossaryTerm {
 struct HighQualityGlossaryBudget: Codable, Equatable, Sendable {
     let maxEntries: Int
     let maxEncodedBytes: Int
-    let maxContextShare: Double
+    let maxInputTokenShare: Double
     let maxScoringOperations: Int
     let maxFalseCorrectionRisk: Double
+
+    init(
+        maxEntries: Int,
+        maxEncodedBytes: Int,
+        maxInputTokenShare: Double,
+        maxScoringOperations: Int,
+        maxFalseCorrectionRisk: Double
+    ) {
+        self.maxEntries = maxEntries
+        self.maxEncodedBytes = maxEncodedBytes
+        self.maxInputTokenShare = maxInputTokenShare
+        self.maxScoringOperations = maxScoringOperations
+        self.maxFalseCorrectionRisk = maxFalseCorrectionRisk
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case maxEntries, maxEncodedBytes, maxInputTokenShare, maxContextShare
+        case maxScoringOperations, maxFalseCorrectionRisk
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        maxEntries = try values.decode(Int.self, forKey: .maxEntries)
+        maxEncodedBytes = try values.decode(Int.self, forKey: .maxEncodedBytes)
+        maxInputTokenShare = try values.decodeIfPresent(
+            Double.self,
+            forKey: .maxInputTokenShare
+        ) ?? values.decode(Double.self, forKey: .maxContextShare)
+        maxScoringOperations = try values.decode(Int.self, forKey: .maxScoringOperations)
+        maxFalseCorrectionRisk = try values.decode(Double.self, forKey: .maxFalseCorrectionRisk)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(maxEntries, forKey: .maxEntries)
+        try values.encode(maxEncodedBytes, forKey: .maxEncodedBytes)
+        try values.encode(maxInputTokenShare, forKey: .maxInputTokenShare)
+        try values.encode(maxScoringOperations, forKey: .maxScoringOperations)
+        try values.encode(maxFalseCorrectionRisk, forKey: .maxFalseCorrectionRisk)
+    }
 
     static let standard = Self(
         maxEntries: 12,
         maxEncodedBytes: 2_048,
-        maxContextShare: 0.35,
+        maxInputTokenShare: 0.25,
         maxScoringOperations: 512,
         maxFalseCorrectionRisk: 0
     )
@@ -66,7 +115,7 @@ struct HighQualityGlossarySignal: Codable, Equatable, Sendable {
             case .title: 8
             case .channel: 6
             case .description: 4
-            case .recognizedJapanese: 2
+            case .recognizedJapanese: 16
             }
         }
     }
@@ -74,6 +123,14 @@ struct HighQualityGlossarySignal: Codable, Equatable, Sendable {
     let source: Source
     let matchedForm: String
     let weight: Int
+    let cueID: String?
+
+    init(source: Source, matchedForm: String, weight: Int, cueID: String? = nil) {
+        self.source = source
+        self.matchedForm = matchedForm
+        self.weight = weight
+        self.cueID = cueID
+    }
 }
 
 struct HighQualityGlossaryDecision: Codable, Equatable, Sendable {
@@ -82,8 +139,63 @@ struct HighQualityGlossaryDecision: Codable, Equatable, Sendable {
     let score: Int
     let encodedSize: Int
     let falseCorrectionRisk: Double
+    let guidance: HighQualityGlossaryGuidance
+    let applicableCueIDs: [String]
+    var selectedCueIDs: [String]
     var selected: Bool
     var reason: String
+
+    private enum CodingKeys: String, CodingKey {
+        case term, signals, score, encodedSize, falseCorrectionRisk, guidance
+        case applicableCueIDs, selectedCueIDs, selected, reason
+    }
+
+    init(
+        term: HighQualityGlossaryTerm,
+        signals: [HighQualityGlossarySignal],
+        score: Int,
+        encodedSize: Int,
+        falseCorrectionRisk: Double,
+        guidance: HighQualityGlossaryGuidance,
+        applicableCueIDs: [String],
+        selectedCueIDs: [String] = [],
+        selected: Bool,
+        reason: String
+    ) {
+        self.term = term
+        self.signals = signals
+        self.score = score
+        self.encodedSize = encodedSize
+        self.falseCorrectionRisk = falseCorrectionRisk
+        self.guidance = guidance
+        self.applicableCueIDs = applicableCueIDs
+        self.selectedCueIDs = selectedCueIDs
+        self.selected = selected
+        self.reason = reason
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        term = try values.decode(HighQualityGlossaryTerm.self, forKey: .term)
+        signals = try values.decode([HighQualityGlossarySignal].self, forKey: .signals)
+        score = try values.decode(Int.self, forKey: .score)
+        encodedSize = try values.decode(Int.self, forKey: .encodedSize)
+        falseCorrectionRisk = try values.decode(Double.self, forKey: .falseCorrectionRisk)
+        guidance = try values.decodeIfPresent(
+            HighQualityGlossaryGuidance.self,
+            forKey: .guidance
+        ) ?? term.guidance
+        applicableCueIDs = try values.decodeIfPresent(
+            [String].self,
+            forKey: .applicableCueIDs
+        ) ?? signals.compactMap(\.cueID)
+        selected = try values.decode(Bool.self, forKey: .selected)
+        selectedCueIDs = try values.decodeIfPresent(
+            [String].self,
+            forKey: .selectedCueIDs
+        ) ?? (selected ? applicableCueIDs : [])
+        reason = try values.decode(String.self, forKey: .reason)
+    }
 }
 
 struct HighQualityGlossarySelection: Codable, Equatable, Sendable {
@@ -93,6 +205,8 @@ struct HighQualityGlossarySelection: Codable, Equatable, Sendable {
     let scoringOperations: Int
     let coverageLimit: String
     let decisions: [HighQualityGlossaryDecision]
+    let terminologyRegister: [String: String]
+    let tokenShareByCueID: [String: Double]
 
     static let empty = Self(
         budget: .standard,
@@ -100,11 +214,62 @@ struct HighQualityGlossarySelection: Codable, Equatable, Sendable {
         encodedSize: 0,
         scoringOperations: 0,
         coverageLimit: HighQualityGlossaryCatalog.coverageLimit,
-        decisions: []
+        decisions: [],
+        terminologyRegister: [:],
+        tokenShareByCueID: [:]
     )
 
     var promptTerms: [HighQualityGlossaryPromptTerm] {
         decisions.filter(\.selected).map(\.term.promptTerm)
+    }
+
+    func promptTerms(for cueID: String) -> [HighQualityGlossaryPromptTerm] {
+        decisions.filter { $0.selectedCueIDs.contains(cueID) }.map(\.term.promptTerm)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case budget, contextBytes, encodedSize, scoringOperations, coverageLimit, decisions
+        case terminologyRegister, tokenShareByCueID
+    }
+
+    init(
+        budget: HighQualityGlossaryBudget,
+        contextBytes: Int,
+        encodedSize: Int,
+        scoringOperations: Int,
+        coverageLimit: String,
+        decisions: [HighQualityGlossaryDecision],
+        terminologyRegister: [String: String],
+        tokenShareByCueID: [String: Double]
+    ) {
+        self.budget = budget
+        self.contextBytes = contextBytes
+        self.encodedSize = encodedSize
+        self.scoringOperations = scoringOperations
+        self.coverageLimit = coverageLimit
+        self.decisions = decisions
+        self.terminologyRegister = terminologyRegister
+        self.tokenShareByCueID = tokenShareByCueID
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        budget = try values.decode(HighQualityGlossaryBudget.self, forKey: .budget)
+        contextBytes = try values.decode(Int.self, forKey: .contextBytes)
+        encodedSize = try values.decode(Int.self, forKey: .encodedSize)
+        scoringOperations = try values.decode(Int.self, forKey: .scoringOperations)
+        coverageLimit = try values.decode(String.self, forKey: .coverageLimit)
+        decisions = try values.decode([HighQualityGlossaryDecision].self, forKey: .decisions)
+        terminologyRegister = try values.decodeIfPresent(
+            [String: String].self,
+            forKey: .terminologyRegister
+        ) ?? Dictionary(uniqueKeysWithValues: decisions.filter(\.selected).map {
+            ($0.term.id, $0.term.canonicalEnglish)
+        })
+        tokenShareByCueID = try values.decodeIfPresent(
+            [String: Double].self,
+            forKey: .tokenShareByCueID
+        ) ?? [:]
     }
 }
 
@@ -167,6 +332,9 @@ enum HighQualityGlossarySelector {
             (.description, source.youtube?.description ?? ""),
         ]
         let recognizedJapanese = turns.map(\.japanese).joined(separator: "\n")
+        let cueOrder = Dictionary(uniqueKeysWithValues: turns.enumerated().map {
+            ($0.element.id, $0.offset)
+        })
         var operations = 0
         var decisions: [String: HighQualityGlossaryDecision] = [:]
         let terms = HighQualityGlossaryCatalog.terms + sourceTerms(
@@ -177,7 +345,7 @@ enum HighQualityGlossarySelector {
 
         // ponytail: bounded linear scan; add an index only if the catalog grows substantially.
         for term in terms {
-            var signals: [HighQualityGlossarySignal] = []
+            var metadataSignals: [HighQualityGlossarySignal] = []
             let metadataForms = term.japaneseForms + (term.domain == .conversation
                 ? [] : [term.canonicalEnglish] + term.englishAliases)
             for (source, text) in metadata where !text.isEmpty {
@@ -187,40 +355,64 @@ enum HighQualityGlossarySelector {
                     operations: &operations,
                     limit: budget.maxScoringOperations
                 ) {
-                    signals.append(.init(source: source, matchedForm: match, weight: source.weight))
+                    metadataSignals.append(.init(
+                        source: source,
+                        matchedForm: match,
+                        weight: source.weight
+                    ))
                 }
             }
-            if let match = firstMatch(
+            var recognizedSignals: [HighQualityGlossarySignal] = []
+            if firstMatch(
                 in: recognizedJapanese,
                 forms: term.japaneseForms,
                 operations: &operations,
                 limit: budget.maxScoringOperations
-            ) {
-                signals.append(.init(
-                    source: .recognizedJapanese,
-                    matchedForm: match,
-                    weight: HighQualityGlossarySignal.Source.recognizedJapanese.weight
-                ))
+            ) != nil {
+                for turn in turns where !turn.japanese.isEmpty {
+                    guard let match = matchedForm(in: turn.japanese, forms: term.japaneseForms)
+                    else { continue }
+                    recognizedSignals.append(.init(
+                        source: .recognizedJapanese,
+                        matchedForm: match,
+                        weight: HighQualityGlossarySignal.Source.recognizedJapanese.weight,
+                        cueID: turn.id
+                    ))
+                }
+            }
+            let signals = recognizedSignals + metadataSignals
+            let firstUnambiguousCueIndex = recognizedSignals
+                .filter { !term.ambiguousJapaneseForms.contains($0.matchedForm) }
+                .compactMap { $0.cueID.flatMap { cueOrder[$0] } }
+                .min()
+            let applicableCueIDs: [String] = recognizedSignals.compactMap { signal in
+                guard !term.ambiguousJapaneseForms.contains(signal.matchedForm)
+                        || !metadataSignals.isEmpty
+                        || signal.cueID.flatMap({ cueOrder[$0] }).map({ cue in
+                            firstUnambiguousCueIndex.map { $0 < cue } ?? false
+                        }) == true else { return nil }
+                return signal.cueID
             }
             let prompt = term.promptTerm
-            let falseCorrectionRisk = signals.isEmpty ? 0 : Double(signals.filter {
-                $0.source == .recognizedJapanese
-                    && term.ambiguousJapaneseForms.contains($0.matchedForm)
-            }.count) / Double(signals.count)
+            let rejectedAmbiguities = recognizedSignals.count - applicableCueIDs.count
+            let falseCorrectionRisk = recognizedSignals.isEmpty ? 0
+                : Double(rejectedAmbiguities) / Double(recognizedSignals.count)
             let reason: String
-            if operations >= budget.maxScoringOperations && signals.isEmpty {
+            if operations >= budget.maxScoringOperations && recognizedSignals.isEmpty {
                 reason = "runtime-cost budget"
-            } else if falseCorrectionRisk > budget.maxFalseCorrectionRisk {
+            } else if applicableCueIDs.isEmpty && !recognizedSignals.isEmpty {
                 reason = "false-correction-risk budget"
             } else {
-                reason = signals.isEmpty ? "no relevance signal" : "eligible"
+                reason = applicableCueIDs.isEmpty ? "no cue-local relevance signal" : "eligible"
             }
             decisions[term.id] = .init(
                 term: term,
                 signals: signals,
-                score: signals.reduce(0) { $0 + $1.weight },
+                score: recognizedSignals.reduce(0) { $0 + $1.weight },
                 encodedSize: encodedSize(prompt),
                 falseCorrectionRisk: falseCorrectionRisk,
+                guidance: term.guidance,
+                applicableCueIDs: applicableCueIDs,
                 selected: false,
                 reason: reason
             )
@@ -229,44 +421,67 @@ enum HighQualityGlossarySelector {
         let ranked = decisions.values.filter { $0.reason == "eligible" }.sorted {
             $0.score == $1.score ? $0.term.id < $1.term.id : $0.score > $1.score
         }
-        var selectedPrompts: [HighQualityGlossaryPromptTerm] = []
+        var selectedPromptsByCueID: [String: [HighQualityGlossaryPromptTerm]] = [:]
+        var terminologyRegister: [String: String] = [:]
         for candidate in ranked {
             var decision = candidate
-            let nextPrompts = selectedPrompts + [candidate.term.promptTerm]
-            let nextEncodedSize = encodedSize(nextPrompts)
-            let nextContextBytes = encodedContextSize(
-                source: source,
-                turns: turns,
-                glossary: nextPrompts
-            )
-            if selectedPrompts.count >= budget.maxEntries {
-                decision.reason = "entry-count budget"
-            } else if nextEncodedSize > budget.maxEncodedBytes {
-                decision.reason = "encoded-size budget"
-            } else if Double(nextEncodedSize) / Double(max(nextContextBytes, 1))
-                > budget.maxContextShare {
-                decision.reason = "context-share budget"
-            } else {
-                decision.selected = true
-                decision.reason = "selected"
-                selectedPrompts = nextPrompts
+            var rejectedReasons = Set<String>()
+            let metadataDisambiguates = candidate.signals.contains {
+                $0.source != .recognizedJapanese
             }
+            for cueID in candidate.applicableCueIDs.sorted(by: {
+                cueOrder[$0, default: .max] < cueOrder[$1, default: .max]
+            }) {
+                let matchedForm = candidate.signals.first {
+                    $0.source == .recognizedJapanese && $0.cueID == cueID
+                }?.matchedForm
+                if matchedForm.map(candidate.term.ambiguousJapaneseForms.contains) == true,
+                   !metadataDisambiguates,
+                   terminologyRegister[candidate.term.id] == nil {
+                    rejectedReasons.insert("false-correction-risk budget")
+                    continue
+                }
+                let current = selectedPromptsByCueID[cueID, default: []]
+                let next = current + [candidate.term.promptTerm]
+                if current.count >= budget.maxEntries {
+                    rejectedReasons.insert("entry-count budget")
+                } else if encodedSize(next) > budget.maxEncodedBytes {
+                    rejectedReasons.insert("encoded-size budget")
+                } else if tokenShare(next) > budget.maxInputTokenShare {
+                    rejectedReasons.insert("input-token-share budget")
+                } else {
+                    selectedPromptsByCueID[cueID] = next
+                    decision.selectedCueIDs.append(cueID)
+                    terminologyRegister[candidate.term.id] = candidate.term.canonicalEnglish
+                }
+            }
+            decision.selected = !decision.selectedCueIDs.isEmpty
+            decision.reason = rejectedReasons.isEmpty
+                ? "selected"
+                : (decision.selected ? "partially selected: " : "")
+                    + rejectedReasons.sorted().joined(separator: ", ")
             decisions[candidate.term.id] = decision
         }
 
+        let selectedPrompts = decisions.values.filter(\.selected).map(\.term.promptTerm)
         let totalEncodedSize = encodedSize(selectedPrompts)
         let contextBytes = encodedContextSize(
             source: source,
             turns: turns,
             glossary: selectedPrompts
         )
+        let tokenShareByCueID = Dictionary(uniqueKeysWithValues: turns.map {
+            ($0.id, tokenShare(selectedPromptsByCueID[$0.id, default: []]))
+        })
         return HighQualityGlossarySelection(
             budget: budget,
             contextBytes: contextBytes,
             encodedSize: totalEncodedSize,
             scoringOperations: operations,
             coverageLimit: HighQualityGlossaryCatalog.coverageLimit,
-            decisions: decisions.values.sorted { $0.term.id < $1.term.id }
+            decisions: decisions.values.sorted { $0.term.id < $1.term.id },
+            terminologyRegister: terminologyRegister,
+            tokenShareByCueID: tokenShareByCueID
         )
     }
 
@@ -331,6 +546,13 @@ enum HighQualityGlossarySelector {
         return nil
     }
 
+    static func matchedForm(in text: String, forms: [String]) -> String? {
+        let normalizedText = normalized(text)
+        return forms.sorted(by: { $0.utf8.count > $1.utf8.count }).first {
+            contains(normalized($0), in: normalizedText)
+        }
+    }
+
     private static func contains(_ form: String, in text: String) -> Bool {
         guard form.unicodeScalars.allSatisfy(\.isASCII) else {
             return text.contains(form)
@@ -356,6 +578,14 @@ enum HighQualityGlossarySelector {
 
     private static func encodedSize<Value: Encodable>(_ value: Value) -> Int {
         (try? JSONEncoder().encode(value).count) ?? .max
+    }
+
+    private static func tokenShare(_ glossary: [HighQualityGlossaryPromptTerm]) -> Double {
+        guard let data = try? JSONEncoder().encode(glossary) else { return .infinity }
+        let scalars = String(decoding: data, as: UTF8.self).unicodeScalars
+        let nonASCII = scalars.filter { !$0.isASCII }.count
+        let ascii = scalars.count - nonASCII
+        return Double(nonASCII + (ascii + 3) / 4) / 2_048
     }
 
     private static func encodedContextSize(

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "ticket": 53,
+  "budget": {
+    "maxEntries": 12,
+    "maxEncodedBytes": 2048,
+    "maxInputTokenShare": 0.25,
+    "maxScoringOperations": 512,
+    "maxFalseCorrectionRisk": 0
+  },
+  "developmentBudgetTuning": [
+    {"maxEntries": 8, "maxInputTokenShare": 0.15, "selectedTerms": 1, "criticalTermAccuracy": 1, "falseInsertions": 0},
+    {"maxEntries": 8, "maxInputTokenShare": 0.20, "selectedTerms": 1, "criticalTermAccuracy": 1, "falseInsertions": 0},
+    {"maxEntries": 8, "maxInputTokenShare": 0.25, "selectedTerms": 1, "criticalTermAccuracy": 1, "falseInsertions": 0},
+    {"maxEntries": 10, "maxInputTokenShare": 0.25, "selectedTerms": 1, "criticalTermAccuracy": 1, "falseInsertions": 0},
+    {"maxEntries": 12, "maxInputTokenShare": 0.25, "selectedTerms": 1, "criticalTermAccuracy": 1, "falseInsertions": 0}
+  ],
+  "developmentTuningDecision": "All development candidates tied. Freeze the prescribed 25-percent ceiling and the 12-entry upper bound to avoid tuning against the holdout.",
+  "development": {
+    "corpusID": "qudu2fx3ncc",
+    "criticalOpportunities": 1,
+    "criticalTermAccuracy": 1,
+    "falseInsertions": 0,
+    "COMET": 0.4828819389918342,
+    "chrFPlusPlus": 45.684299211832645,
+    "terminalHardFailures": 0,
+    "terminalSuspects": 1,
+    "integrityGates": {
+      "version": "translation-integrity-dev-v1",
+      "minimumLengthRatio": 0.5,
+      "maximumLengthRatio": 6,
+      "copiedOutputSimilarity": 0.8,
+      "correspondingSourceSimilarity": 0.2,
+      "minimumCopiedOutputWords": 3,
+      "repetitionCount": 4
+    },
+    "rawArtifacts": [
+      {"path": "docs/japanese-live/experiments/evidence/E12/development-glossary-selection.json", "sha256": "f68f3d7ac2846402c763d5d1be17621da59ce07a7d10f9a41ee20e654307ef34"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/development-direct-protocol.json.gz", "sha256": "eb13f1f4946f7ae6693c9886af3fc0a539e5f2d206de1d43b5d43c9cb35cc972"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/development-integrity.json.gz", "sha256": "f6aa75dd4efad299fc9a717dd79bb94b41df6ec55179d2ad42887c66e6eee760"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/development-retry.json.gz", "sha256": "3031ef21d0acd7be54a0b1a5c27b94b9280b95f20ee0d12c17b756f29d856bd1"},
+      {"path": "docs/high-quality-glossary-development.json", "sha256": "58040290aab71cac95b3587ac3a92ba8222e0ac83ab81a15085c1963cf09647e"}
+    ]
+  },
+  "holdout": {
+    "corpusID": "md62mmdz0m",
+    "criticalOpportunities": 0,
+    "criticalTermAccuracy": null,
+    "falseInsertions": 0,
+    "COMET": 0.5856149821263837,
+    "chrFPlusPlus": 50.19480432152061,
+    "terminalHardFailures": 0,
+    "terminalSuspects": 0,
+    "integrityGates": {
+      "version": "translation-integrity-dev-v1",
+      "minimumLengthRatio": 0.5,
+      "maximumLengthRatio": 6,
+      "copiedOutputSimilarity": 0.8,
+      "correspondingSourceSimilarity": 0.2,
+      "minimumCopiedOutputWords": 3,
+      "repetitionCount": 4
+    },
+    "rawArtifacts": [
+      {"path": "docs/japanese-live/experiments/evidence/E12/holdout-glossary-selection.json", "sha256": "afc275a3d1e1389a92e66f45e56ef8855d0b3fb68337281fcc573e5cea853b53"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/holdout-direct-protocol.json.gz", "sha256": "6fafa90685389da3f0749055498767916a2bbb045249208a9d3b23e46e55243c"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/holdout-integrity.json.gz", "sha256": "ed88a98abbacdc91f11ec40753217608f59a8545b21707fe683c56f3c8190b19"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/holdout-retry.json.gz", "sha256": "1313a8c1b1811ff626932a5d54a2225e9fdf2dad9780f3ccc61d1765af90ef4e"}
+    ]
+  },
+  "promoted": false,
+  "evidenceLimitation": "The frozen holdout contains no applicable critical glossary opportunity, so it cannot demonstrate a measurable glossary gain."
+}

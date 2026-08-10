@@ -99,6 +99,7 @@ enum HighQualityTranslationIntegrityValidator {
         translations: [String: String] = [:],
         batches: [HighQualityLocalTranslationBatch],
         glossary: [HighQualityTranslationIntegrityGlossaryTerm],
+        glossaryByCueID: [String: [HighQualityTranslationIntegrityGlossaryTerm]]? = nil,
         thresholds: HighQualityTranslationIntegrityThresholds = .developmentV1,
         japaneseAllowlist: [String] = []
     ) -> [HighQualityTranslationIntegrityVerdict] {
@@ -130,8 +131,14 @@ enum HighQualityTranslationIntegrityValidator {
                 }
             }
 
-            let opportunities = glossary.compactMap { term -> HighQualityTranslationIntegrityGlossaryOpportunity? in
-                let matches = term.japaneseForms.filter { item.turn.japanese.contains($0) }
+            let cueGlossary = glossaryByCueID?[item.turn.id] ?? glossary
+            let opportunities = cueGlossary.compactMap { term -> HighQualityTranslationIntegrityGlossaryOpportunity? in
+                let matches = term.japaneseForms.filter {
+                    HighQualityGlossarySelector.matchedForm(
+                        in: item.turn.japanese,
+                        forms: [$0]
+                    ) != nil
+                }
                 guard !matches.isEmpty else { return nil }
                 let accepted = term.acceptedEnglishForms.filter {
                     containsAcceptedForm($0, in: output)

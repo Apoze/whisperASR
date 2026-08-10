@@ -202,22 +202,28 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let turns: [HighQualityTranslationTurn]
     let glossary: [HighQualityGlossaryPromptTerm]
+    let glossaryByCueID: [String: [HighQualityGlossaryPromptTerm]]
     let retryReasonCodes: [String: [HighQualityTranslationIntegrityReasonCode]]?
 
     init(
         source: HighQualitySourceProvenance,
         turns: [HighQualityTranslationTurn],
         glossary: [HighQualityGlossaryPromptTerm],
+        glossaryByCueID: [String: [HighQualityGlossaryPromptTerm]]? = nil,
         retryReasonCodes: [String: [HighQualityTranslationIntegrityReasonCode]]? = nil
     ) {
         self.source = source
         self.turns = turns
         self.glossary = glossary
+        self.glossaryByCueID = glossaryByCueID ?? Self.cueLocalGlossary(
+            turns: turns,
+            glossary: glossary
+        )
         self.retryReasonCodes = retryReasonCodes
     }
 
     private enum CodingKeys: String, CodingKey {
-        case source, turns, glossary, retryReasonCodes
+        case source, turns, glossary, glossaryByCueID, retryReasonCodes
     }
 
     init(from decoder: Decoder) throws {
@@ -225,10 +231,32 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
         source = try values.decode(HighQualitySourceProvenance.self, forKey: .source)
         turns = try values.decode([HighQualityTranslationTurn].self, forKey: .turns)
         glossary = try values.decode([HighQualityGlossaryPromptTerm].self, forKey: .glossary)
+        glossaryByCueID = try values.decodeIfPresent(
+            [String: [HighQualityGlossaryPromptTerm]].self,
+            forKey: .glossaryByCueID
+        ) ?? Self.cueLocalGlossary(turns: turns, glossary: glossary)
         retryReasonCodes = try values.decodeIfPresent(
             [String: [HighQualityTranslationIntegrityReasonCode]].self,
             forKey: .retryReasonCodes
         )
+    }
+
+    func glossary(for turn: HighQualityTranslationTurn) -> [HighQualityGlossaryPromptTerm] {
+        glossaryByCueID[turn.id] ?? []
+    }
+
+    private static func cueLocalGlossary(
+        turns: [HighQualityTranslationTurn],
+        glossary: [HighQualityGlossaryPromptTerm]
+    ) -> [String: [HighQualityGlossaryPromptTerm]] {
+        Dictionary(uniqueKeysWithValues: turns.map { turn in
+            (turn.id, glossary.filter { term in
+                HighQualityGlossarySelector.matchedForm(
+                    in: turn.japanese,
+                    forms: term.japanese
+                ) != nil
+            })
+        })
     }
 }
 
@@ -1573,7 +1601,7 @@ struct HighQualityJob: Sendable {
             alignmentEvidence?.semanticUnits = speakerAttachment.units
             glossary = HighQualityGlossarySelector.select(
                 source: manifest.source,
-                turns: baseTurns
+                turns: turns
             )
             var translationsByID: [String: String] = [:]
             if needsTranslation {
@@ -1581,11 +1609,25 @@ struct HighQualityJob: Sendable {
                 let translationRequest = HighQualityTranslationBatch(
                     source: manifest.source,
                     turns: turns,
-                    glossary: glossary.promptTerms
+                    glossary: glossary.promptTerms,
+                    glossaryByCueID: Dictionary(uniqueKeysWithValues: turns.map {
+                        ($0.id, glossary.promptTerms(for: $0.id))
+                    })
                 )
                 let integrityGlossary = glossary.decisions
                     .filter(\.selected)
                     .map { HighQualityTranslationIntegrityGlossaryTerm($0.term) }
+                let hardGlossaryTermIDs = Set(glossary.decisions.filter {
+                    $0.selected && $0.guidance == .hard
+                }.map(\.term.id))
+                let integrityGlossaryByCueID = translationRequest.glossaryByCueID.mapValues {
+                    $0.map {
+                        HighQualityTranslationIntegrityGlossaryTerm(
+                            $0,
+                            critical: hardGlossaryTermIDs.contains($0.id)
+                        )
+                    }
+                }
                 translationEvidence = .init(
                     request: translationRequest,
                     response: nil,
@@ -1644,7 +1686,8 @@ struct HighQualityJob: Sendable {
                         integrityVerdicts: HighQualityTranslationIntegrityValidator.validate(
                             turns: turns,
                             batches: exchange.batches,
-                            glossary: integrityGlossary
+                            glossary: integrityGlossary,
+                            glossaryByCueID: integrityGlossaryByCueID
                         )
                     )
                     do {
@@ -1656,7 +1699,8 @@ struct HighQualityJob: Sendable {
                             turns: turns,
                             translations: selectedTranslations,
                             batches: exchange.batches,
-                            glossary: integrityGlossary
+                            glossary: integrityGlossary,
+                            glossaryByCueID: integrityGlossaryByCueID
                         )
                         let rejected = firstVerdicts.filter { $0.verdict != .pass }
                         var attempts = Self.numberedAttempts(exchange.attempts, startingAt: 1)
@@ -1675,12 +1719,22 @@ struct HighQualityJob: Sendable {
                             let criticalTermIDs = Set(rejected.flatMap {
                                 $0.glossaryOpportunities.filter(\.critical).map(\.id)
                             })
+                            let retryIntegrityGlossaryByCueID = integrityGlossaryByCueID.mapValues {
+                                $0.filter { criticalTermIDs.contains($0.id) }
+                            }
                             let retryRequest = HighQualityTranslationBatch(
                                 source: translationRequest.source,
                                 turns: turns.filter { rejectedIDs.contains($0.id) },
                                 glossary: translationRequest.glossary.filter {
                                     criticalTermIDs.contains($0.id)
                                 },
+                                glossaryByCueID: Dictionary(uniqueKeysWithValues: turns
+                                    .filter { rejectedIDs.contains($0.id) }
+                                    .map { turn in
+                                        (turn.id, translationRequest.glossary(for: turn).filter {
+                                            criticalTermIDs.contains($0.id)
+                                        })
+                                    }),
                                 retryReasonCodes: Dictionary(uniqueKeysWithValues: rejected.map {
                                     ($0.cueID, $0.reasons.map(\.code))
                                 })
@@ -1699,7 +1753,8 @@ struct HighQualityJob: Sendable {
                                     batches: error.batches,
                                     glossary: integrityGlossary.filter {
                                         criticalTermIDs.contains($0.id)
-                                    }
+                                    },
+                                    glossaryByCueID: retryIntegrityGlossaryByCueID
                                 )
                                 attempts += Self.numberedAttempts(
                                     error.attempts,
@@ -1745,7 +1800,8 @@ struct HighQualityJob: Sendable {
                                     batches: retryExchange.batches,
                                     glossary: integrityGlossary.filter {
                                         criticalTermIDs.contains($0.id)
-                                    }
+                                    },
+                                    glossaryByCueID: retryIntegrityGlossaryByCueID
                                 )
                                 batches += Self.annotatedBatches(
                                     retryExchange.batches,
@@ -1777,7 +1833,8 @@ struct HighQualityJob: Sendable {
                                 turns: turns,
                                 translations: candidateTranslations,
                                 batches: retryExchange.batches,
-                                glossary: integrityGlossary
+                                glossary: integrityGlossary,
+                                glossaryByCueID: integrityGlossaryByCueID
                             ).filter { rejectedIDs.contains($0.cueID) }
                             batches += Self.annotatedBatches(
                                 retryExchange.batches,
@@ -1844,7 +1901,8 @@ struct HighQualityJob: Sendable {
                             integrityVerdicts: HighQualityTranslationIntegrityValidator.validate(
                                 turns: turns,
                                 batches: error.batches,
-                                glossary: integrityGlossary
+                                glossary: integrityGlossary,
+                                glossaryByCueID: integrityGlossaryByCueID
                             )
                         )
                     }
