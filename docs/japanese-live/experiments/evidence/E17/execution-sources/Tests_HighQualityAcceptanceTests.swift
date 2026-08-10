@@ -34,10 +34,16 @@ final class HighQualityAcceptanceTests: XCTestCase {
             clusterDistanceThreshold: threshold
         )
 
-        try Self.assertFrozenSpeakerKitResult(
-            result,
-            baseline: baseline,
-            alignment: alignment
+        let candidate = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(candidate.useExclusiveReconciliation, false)
+        XCTAssertFalse(candidate.rawSpans.isEmpty)
+        XCTAssertFalse(candidate.mappings.isEmpty)
+        XCTAssertTrue(candidate.validationDiagnostics.isEmpty)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
+        XCTAssertEqual(
+            result.turns.map(\.japanese).joined(),
+            alignment.mergedCues.map(\.text).joined()
         )
     }
 
@@ -69,10 +75,16 @@ final class HighQualityAcceptanceTests: XCTestCase {
             useExclusiveReconciliation: false
         )
 
-        try Self.assertFrozenSpeakerKitResult(
-            result,
-            baseline: baseline,
-            alignment: alignment
+        let candidate = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(candidate.useExclusiveReconciliation, false)
+        XCTAssertFalse(candidate.rawSpans.isEmpty)
+        XCTAssertFalse(candidate.mappings.isEmpty)
+        XCTAssertTrue(candidate.validationDiagnostics.isEmpty)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
+        XCTAssertEqual(
+            result.turns.map(\.japanese).joined(),
+            alignment.mergedCues.map(\.text).joined()
         )
         XCTAssertEqual(
             Set(result.manifest.generatedFiles.map(\.path)),
@@ -408,24 +420,6 @@ final class HighQualityAcceptanceTests: XCTestCase {
         return try decoder.decode(
             HighQualityRawEvidence.self,
             from: Data(contentsOf: URL(fileURLWithPath: path))
-        )
-    }
-
-    private static func assertFrozenSpeakerKitResult(
-        _ result: HighQualityJobResult,
-        baseline: HighQualityRawEvidence,
-        alignment: HighQualityAlignmentEvidence
-    ) throws {
-        let candidate = try XCTUnwrap(result.evidence.diarization)
-        XCTAssertEqual(candidate.useExclusiveReconciliation, false)
-        XCTAssertFalse(candidate.rawSpans.isEmpty)
-        XCTAssertFalse(candidate.mappings.isEmpty)
-        XCTAssertTrue(candidate.validationDiagnostics.isEmpty)
-        XCTAssertEqual(result.manifest.status, .completed)
-        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
-        XCTAssertEqual(
-            result.turns.map(\.japanese).joined(),
-            alignment.mergedCues.map(\.text).joined()
         )
     }
 
