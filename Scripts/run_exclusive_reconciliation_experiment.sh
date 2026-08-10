@@ -184,7 +184,8 @@ write_metadata() {
           minClusterSize:null,fullRedundancy:true,centroidSource:"finalAssignment",
           clipTimestamps:[]}},
       referenceAnnotations:{pseudoSpeakers:$pseudo},
-      implementationSHA256:$implementation,
+      executionImplementationSHA256:$implementation,
+      reviewedImplementationSHA256:$implementation,
       unchangedImplementations:$unchanged}' >"$directory/run-meta.json"
 }
 
@@ -194,6 +195,11 @@ finalize_metadata() {
   temporary="$directory/run-meta.updated.json"
   split="$([[ "$corpus" == qudu2fx3ncc ]] && echo development || echo holdout)"
   implementation="$(implementation_hashes)"
+  jq -e '.executionImplementationSHA256 | type == "object" and length > 0' \
+    "$directory/run-meta.json" >/dev/null || {
+      echo "Missing immutable execution hashes; refusing to relabel reused evidence." >&2
+      return 1
+    }
   jq \
     --arg raw "$(shasum -a 256 "$job/raw-asr.json" | awk '{print $1}')" \
     --arg manifest "$(shasum -a 256 "$job/manifest.json" | awk '{print $1}')" \
@@ -201,7 +207,7 @@ finalize_metadata() {
     --argjson implementation "$implementation" \
     '. + {candidateArtifactSHA256:{"raw-asr.json":$raw,"manifest.json":$manifest},
       baselineRuntimeSnapshotPath:$runtimeSnapshot,
-      implementationSHA256:$implementation}' \
+      reviewedImplementationSHA256:$implementation} | del(.implementationSHA256)' \
     "$directory/run-meta.json" >"$temporary"
   mv "$temporary" "$directory/run-meta.json"
 }

@@ -8,6 +8,7 @@ import copy
 import gzip
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 from report_high_quality_acceptance import (
@@ -129,12 +130,39 @@ def one_variable(meta: dict) -> bool:
     return before is False and after is True and baseline == candidate
 
 
-def implementation_matches(meta: dict) -> bool:
-    hashes = meta.get("implementationSHA256")
+def current_implementation_matches(meta: dict) -> bool:
+    hashes = meta.get("reviewedImplementationSHA256")
     return isinstance(hashes, dict) and bool(hashes) and all(
         Path(path).is_file() and sha256(Path(path)) == expected
         for path, expected in hashes.items()
     )
+
+
+def execution_implementation_matches(meta: dict) -> bool:
+    hashes = meta.get("executionImplementationSHA256")
+    if not isinstance(hashes, dict) or not hashes:
+        return False
+    commit = meta.get("executionSourceCommit")
+    paths = meta.get("executionSourcePaths")
+    if not commit:
+        return all(
+            Path(path).is_file() and sha256(Path(path)) == expected
+            for path, expected in hashes.items()
+        )
+    if not isinstance(paths, list) or not paths:
+        return False
+    for path in paths:
+        if path not in hashes:
+            return False
+        result = subprocess.run(
+            ["git", "show", f"{commit}:{path}"],
+            capture_output=True,
+            check=False,
+        )
+        digest = hashlib.sha256(result.stdout).hexdigest()
+        if result.returncode != 0 or digest != hashes[path]:
+            return False
+    return True
 
 
 def gzip_content_sha256(path: Path) -> str | None:
@@ -187,7 +215,8 @@ def corpus_report(root: Path, corpus: str) -> dict:
             and sha256(candidate_path) == artifact_hashes.get("raw-asr.json")
             and sha256(candidate_job / "manifest.json")
             == artifact_hashes.get("manifest.json")
-            and implementation_matches(meta)
+            and execution_implementation_matches(meta)
+            and current_implementation_matches(meta)
         ),
         "frozenASRAlignment": (
             baseline["rawASR"] == candidate["rawASR"]
@@ -337,10 +366,14 @@ def self_test() -> None:
         "candidate": {"threshold": None, "useExclusiveReconciliation": True},
     }})
     script = Path(__file__)
-    assert implementation_matches({
-        "implementationSHA256": {str(script): sha256(script)},
+    hashes = {str(script): sha256(script)}
+    assert current_implementation_matches({
+        "reviewedImplementationSHA256": hashes,
     })
-    assert not implementation_matches({"implementationSHA256": {}})
+    assert execution_implementation_matches({
+        "executionImplementationSHA256": hashes,
+    })
+    assert not current_implementation_matches({"reviewedImplementationSHA256": {}})
 
 
 def main() -> None:
