@@ -80,61 +80,28 @@ final class HeavyweightModelGateTests: XCTestCase {
         }
     }
 
-    func testCapacityAndMemoryReleaseChecksFailClosed() async throws {
+    func testOfflineAdmissionUsesMemoryPressureInsteadOfFixedReserve() async throws {
         let memory = MemoryReading(1_000)
+        let available = MemoryReading(7_999)
+        let pressure = MacMemoryPressureMonitor(native: false)
         let gate = HeavyweightModelGate(
             totalMemoryBytes: 24_000,
             reserveBytes: 8_000,
             releaseToleranceBytes: 100,
             releaseTimeout: .milliseconds(10),
             releasePollInterval: .milliseconds(1),
-            currentMemoryBytes: { await memory.value }
+            currentMemoryBytes: { await memory.value },
+            currentAvailableMemoryBytes: { await available.value },
+            memoryPressure: pressure
         )
         let workflow = try await gate.beginWorkflow(.offline(UUID()))
-
-        do {
-            _ = try await gate.acquireModel(
-                workflow: workflow,
-                modelID: "too-large",
-                declaredPeakBytes: 16_001
-            )
-            XCTFail("The 8 GB system reserve must be protected.")
-        } catch let error as HeavyweightModelGateError {
-            XCTAssertEqual(
-                error,
-                .insufficientCapacity(
-                    modelID: "too-large",
-                    declaredPeakBytes: 16_001,
-                    reserveBytes: 8_000,
-                    totalMemoryBytes: 24_000
-                )
-            )
-        }
-
-        do {
-            _ = try await gate.acquireModel(
-                workflow: workflow,
-                modelID: "baseline-plus-model-too-large",
-                declaredPeakBytes: 15_001
-            )
-            XCTFail("Current memory plus the model peak must preserve the reserve.")
-        } catch let error as HeavyweightModelGateError {
-            XCTAssertEqual(
-                error,
-                .insufficientCapacity(
-                    modelID: "baseline-plus-model-too-large",
-                    declaredPeakBytes: 15_001,
-                    reserveBytes: 8_000,
-                    totalMemoryBytes: 24_000
-                )
-            )
-        }
-
         let lease = try await gate.acquireModel(
             workflow: workflow,
-            modelID: "asr",
+            modelID: "translator",
             declaredPeakBytes: 8_000
         )
+        XCTAssertEqual(lease.availableMemoryBytes, 7_999)
+        XCTAssertEqual(lease.reserveBytes, 0)
         await memory.set(1_101)
         do {
             _ = try await gate.releaseModel(lease, unload: {})
@@ -142,7 +109,7 @@ final class HeavyweightModelGateTests: XCTestCase {
         } catch let error as HeavyweightModelGateError {
             XCTAssertEqual(
                 error,
-                .memoryNotReleased(modelID: "asr", currentBytes: 1_101, maximumBytes: 1_100)
+                .memoryNotReleased(modelID: "translator", currentBytes: 1_101, maximumBytes: 1_100)
             )
             XCTAssertTrue(error.localizedDescription.contains("quit and reopen WhisperASR"))
         }
@@ -155,31 +122,65 @@ final class HeavyweightModelGateTests: XCTestCase {
             )
             XCTFail("The failed release must keep the gate closed.")
         } catch let error as HeavyweightModelGateError {
-            XCTAssertEqual(error, .modelAlreadyActive(requested: "translator", active: "asr"))
+            XCTAssertEqual(error, .modelAlreadyActive(requested: "translator", active: "translator"))
         }
     }
 
-    func testRuntimeWatchdogCancelsWhenFootprintBreaksTheReserve() async throws {
+    func testWarningBlocksNextOfflineModelUntilPressureReturnsToNormal() async throws {
         let footprint = MemoryReading(1_000)
         let available = MemoryReading(20_000)
+        let pressure = MacMemoryPressureMonitor(native: false)
+        pressure.record(.warning)
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24_000,
+            reserveBytes: 8_000,
+            monitorPollInterval: .milliseconds(1),
+            currentMemoryBytes: { await footprint.value },
+            currentAvailableMemoryBytes: { await available.value },
+            memoryPressure: pressure
+        )
+        let workflow = try await gate.beginWorkflow(.offline(UUID()))
+        let acquired = Counter()
+        let acquisition = Task {
+            let lease = try await gate.acquireModel(
+                workflow: workflow,
+                modelID: "translator",
+                declaredPeakBytes: 8_000
+            )
+            await acquired.increment()
+            return lease
+        }
+        try await Task.sleep(for: .milliseconds(10))
+        let countWhileWarning = await acquired.value
+        XCTAssertEqual(countWhileWarning, 0)
+
+        pressure.record(.normal)
+        let lease = try await acquisition.value
+        let countAfterNormal = await acquired.value
+        XCTAssertEqual(countAfterNormal, 1)
+        _ = try await gate.releaseModel(lease, unload: {})
+        try await gate.endWorkflow(workflow)
+    }
+
+    func testCriticalPressureCancelsOfflineModelWithRecoverableFailure() async throws {
+        let footprint = MemoryReading(1_000)
+        let available = MemoryReading(20_000)
+        let pressure = MacMemoryPressureMonitor(native: false)
         let cancelled = Counter()
         let gate = HeavyweightModelGate(
             totalMemoryBytes: 24_000,
             reserveBytes: 8_000,
-            releaseToleranceBytes: 100,
-            releaseTimeout: .milliseconds(50),
-            releasePollInterval: .milliseconds(1),
             monitorPollInterval: .milliseconds(1),
             currentMemoryBytes: { await footprint.value },
-            currentAvailableMemoryBytes: { await available.value }
+            currentAvailableMemoryBytes: { await available.value },
+            memoryPressure: pressure
         )
         let workflow = try await gate.beginWorkflow(.offline(UUID()))
         let lease = try await gate.acquireModel(
             workflow: workflow,
-            modelID: "translator",
+            modelID: "asr",
             declaredPeakBytes: 8_000
         )
-
         let operation = Task {
             try await gate.withMemoryGuard(lease) {
                 do {
@@ -190,70 +191,22 @@ final class HeavyweightModelGateTests: XCTestCase {
                 }
             }
         }
-        await footprint.set(16_001)
+        pressure.record(.critical)
+
         do {
             _ = try await operation.value
-            XCTFail("The operation must stop before consuming the 8 GB reserve.")
+            XCTFail("Critical macOS memory pressure must stop the active model.")
         } catch let error as HeavyweightModelGateError {
             XCTAssertEqual(
                 error,
-                .runtimeReserveViolated(
-                    modelID: "translator",
-                    currentBytes: 16_001,
-                    maximumBytes: 16_000,
-                    availableBytes: 20_000,
-                    reserveBytes: 8_000
-                )
+                .criticalMemoryPressure(modelID: "asr")
             )
+            XCTAssertTrue(error.localizedDescription.contains("retry"))
         }
         let cancellationCount = await cancelled.value
         XCTAssertEqual(cancellationCount, 1)
 
-        await footprint.set(1_000)
-        _ = try await gate.releaseModel(lease, unload: {})
-        try await gate.endWorkflow(workflow)
-    }
-
-    func testRuntimeWatchdogCancelsWhenSystemAvailableFallsBelowReserve() async throws {
-        let footprint = MemoryReading(1_000)
-        let available = MemoryReading(20_000)
-        let gate = HeavyweightModelGate(
-            totalMemoryBytes: 24_000,
-            reserveBytes: 8_000,
-            monitorPollInterval: .milliseconds(1),
-            currentMemoryBytes: { await footprint.value },
-            currentAvailableMemoryBytes: { await available.value }
-        )
-        let workflow = try await gate.beginWorkflow(.offline(UUID()))
-        let lease = try await gate.acquireModel(
-            workflow: workflow,
-            modelID: "asr",
-            declaredPeakBytes: 8_000
-        )
-        let operation = Task {
-            try await gate.withMemoryGuard(lease) {
-                while true { try await Task.sleep(for: .milliseconds(1)) }
-            }
-        }
-        await available.set(7_999)
-
-        do {
-            _ = try await operation.value
-            XCTFail("The operation must stop when system availability breaks the reserve.")
-        } catch let error as HeavyweightModelGateError {
-            XCTAssertEqual(
-                error,
-                .runtimeReserveViolated(
-                    modelID: "asr",
-                    currentBytes: 1_000,
-                    maximumBytes: 16_000,
-                    availableBytes: 7_999,
-                    reserveBytes: 8_000
-                )
-            )
-        }
-
-        await available.set(20_000)
+        pressure.record(.normal)
         _ = try await gate.releaseModel(lease, unload: {})
         try await gate.endWorkflow(workflow)
     }

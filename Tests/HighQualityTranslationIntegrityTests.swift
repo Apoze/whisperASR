@@ -456,7 +456,9 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
         var retryEvidence: HighQualityTranslationEvidence?
         var retryVerdicts: [HighQualityTranslationIntegrityVerdict] = []
         if !request.turns.isEmpty {
-            let translator = LocalMLXTranslator()
+            let translator = HighQualityTranslationWorkerClient(
+                executableURL: highQualityTranslationWorkerExecutableURL()
+            )
             do {
                 try await translator.prepare(progress: { _, _ in })
                 let exchange = try await translator.translate(request)
@@ -484,7 +486,8 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
                     batches: exchange.batches,
                     peakMemoryBytes: exchange.peakMemoryBytes,
                     validationFailures: [],
-                    integrityVerdicts: retryVerdicts
+                    integrityVerdicts: retryVerdicts,
+                    worker: await translator.evidence
                 )
             } catch {
                 await translator.unload()

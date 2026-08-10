@@ -316,7 +316,7 @@ struct HighQualityTranslationAttempt: Codable, Equatable, Sendable {
     let outcome: String
 }
 
-struct HighQualityTranslationExchange: Equatable, Sendable {
+struct HighQualityTranslationExchange: Codable, Equatable, Sendable {
     let model: String
     let response: String
     let attempts: [HighQualityTranslationAttempt]
@@ -399,7 +399,7 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
     }
 }
 
-struct HighQualityTranslationServiceError: LocalizedError, Sendable {
+struct HighQualityTranslationServiceError: Codable, LocalizedError, Sendable {
     let model: String
     let attempts: [HighQualityTranslationAttempt]
     let response: String?
@@ -455,10 +455,11 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
     let peakMemoryBytes: UInt64
     var validationFailures: [String]
     var integrityVerdicts: [HighQualityTranslationIntegrityVerdict]
+    var worker: HighQualityTranslationWorkerEvidence?
 
     private enum CodingKeys: String, CodingKey {
         case request, response, model, attempts, revision, runtimeVersion, batches
-        case peakMemoryBytes, validationFailures, integrityVerdicts
+        case peakMemoryBytes, validationFailures, integrityVerdicts, worker
     }
 
     init(
@@ -471,7 +472,8 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
         batches: [HighQualityLocalTranslationBatch],
         peakMemoryBytes: UInt64,
         validationFailures: [String],
-        integrityVerdicts: [HighQualityTranslationIntegrityVerdict] = []
+        integrityVerdicts: [HighQualityTranslationIntegrityVerdict] = [],
+        worker: HighQualityTranslationWorkerEvidence? = nil
     ) {
         self.request = request
         self.response = response
@@ -483,6 +485,7 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
         self.peakMemoryBytes = peakMemoryBytes
         self.validationFailures = validationFailures
         self.integrityVerdicts = integrityVerdicts
+        self.worker = worker
     }
 
     init(from decoder: Decoder) throws {
@@ -509,6 +512,10 @@ struct HighQualityTranslationEvidence: Codable, Equatable, Sendable {
             [HighQualityTranslationIntegrityVerdict].self,
             forKey: .integrityVerdicts
         ) ?? []
+        worker = try values.decodeIfPresent(
+            HighQualityTranslationWorkerEvidence.self,
+            forKey: .worker
+        )
     }
 }
 
@@ -782,6 +789,7 @@ struct HighQualityModelEvent: Codable, Equatable, Sendable {
         case loadCompleted = "load-completed"
         case unloadCompleted = "unload-completed"
         case reserveChecked = "reserve-checked"
+        case pressureChecked = "memory-pressure-checked"
         case memoryReleaseChecked = "memory-release-checked"
         case guardFailed = "guard-failed"
     }
@@ -940,6 +948,8 @@ struct HighQualityJob: Sendable {
             HighQualityTranslationBatch
         ) async throws -> HighQualityTranslationExchange
         let unloadTranslation: @Sendable () async -> Void
+        let translationWorkerEvidence: @Sendable () async
+            -> HighQualityTranslationWorkerEvidence?
         let heavyweightGate: HeavyweightModelGate?
 
         init(
@@ -1019,6 +1029,8 @@ struct HighQualityJob: Sendable {
                 )
             },
             unloadTranslation: @escaping @Sendable () async -> Void = {},
+            translationWorkerEvidence: @escaping @Sendable () async
+                -> HighQualityTranslationWorkerEvidence? = { nil },
             heavyweightGate: HeavyweightModelGate? = nil
         ) {
             self.loadSource = loadSource
@@ -1051,13 +1063,14 @@ struct HighQualityJob: Sendable {
             self.prepareTranslation = prepareTranslation
             self.translateEnglish = translateEnglish
             self.unloadTranslation = unloadTranslation
+            self.translationWorkerEvidence = translationWorkerEvidence
             self.heavyweightGate = heavyweightGate
         }
 
         static func production(for backend: HighQualityASRBackend) -> Self {
             let aligner = HighQualityForcedAlignerRuntime()
             let diarizer = HighQualitySpeakerKitRuntime()
-            let translator = LocalMLXTranslator()
+            let translator = HighQualityTranslationWorkerClient()
             let loadSource: @Sendable (URL) async throws -> [Float] = {
                 try await AudioLoader.loadSamples(url: $0)
             }
@@ -1106,6 +1119,7 @@ struct HighQualityJob: Sendable {
                     prepareTranslation: { try await translator.prepare(progress: $0) },
                     translateEnglish: { try await translator.translate($0) },
                     unloadTranslation: { await translator.unload() },
+                    translationWorkerEvidence: { await translator.evidence },
                     heavyweightGate: .shared
                 )
             case .parakeetJA:
@@ -1134,6 +1148,7 @@ struct HighQualityJob: Sendable {
                     prepareTranslation: { try await translator.prepare(progress: $0) },
                     translateEnglish: { try await translator.translate($0) },
                     unloadTranslation: { await translator.unload() },
+                    translationWorkerEvidence: { await translator.evidence },
                     heavyweightGate: .shared
                 )
             case .whisperKit:
@@ -1158,6 +1173,7 @@ struct HighQualityJob: Sendable {
                     prepareTranslation: { try await translator.prepare(progress: $0) },
                     translateEnglish: { try await translator.translate($0) },
                     unloadTranslation: { await translator.unload() },
+                    translationWorkerEvidence: { await translator.evidence },
                     heavyweightGate: .shared
                 )
             }
@@ -1535,10 +1551,10 @@ struct HighQualityJob: Sendable {
             )
             if let asrLease {
                 manifest.modelEvents.append(.init(
-                    kind: .reserveChecked,
+                    kind: .pressureChecked,
                     backend: request.backend,
                     at: Date(),
-                    message: "peak=\(asrLease.declaredPeakBytes) reserve=\(asrLease.reserveBytes) total=\(asrLease.totalMemoryBytes) available=\(asrLease.availableMemoryBytes) baseline=\(asrLease.baselineMemoryBytes)"
+                    message: "policy=macos-memory-pressure peak=\(asrLease.declaredPeakBytes) reserve=\(asrLease.reserveBytes) total=\(asrLease.totalMemoryBytes) available=\(asrLease.availableMemoryBytes) baseline=\(asrLease.baselineMemoryBytes)"
                 ))
             }
             manifest.modelEvents.append(.init(
@@ -1621,10 +1637,10 @@ struct HighQualityJob: Sendable {
                 )
                 if let alignmentLease {
                     manifest.modelEvents.append(.init(
-                        kind: .reserveChecked,
+                        kind: .pressureChecked,
                         modelID: HighQualityForcedAlignerRuntime.modelID,
                         at: Date(),
-                        message: "peak=\(alignmentLease.declaredPeakBytes) reserve=\(alignmentLease.reserveBytes) total=\(alignmentLease.totalMemoryBytes) available=\(alignmentLease.availableMemoryBytes) baseline=\(alignmentLease.baselineMemoryBytes)"
+                        message: "policy=macos-memory-pressure peak=\(alignmentLease.declaredPeakBytes) reserve=\(alignmentLease.reserveBytes) total=\(alignmentLease.totalMemoryBytes) available=\(alignmentLease.availableMemoryBytes) baseline=\(alignmentLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
@@ -1736,10 +1752,10 @@ struct HighQualityJob: Sendable {
                 )
                 if let diarizationLease {
                     manifest.modelEvents.append(.init(
-                        kind: .reserveChecked,
+                        kind: .pressureChecked,
                         modelID: services.diarizationModelID,
                         at: Date(),
-                        message: "peak=\(diarizationLease.declaredPeakBytes) reserve=\(diarizationLease.reserveBytes) total=\(diarizationLease.totalMemoryBytes) available=\(diarizationLease.availableMemoryBytes) baseline=\(diarizationLease.baselineMemoryBytes)"
+                        message: "policy=macos-memory-pressure peak=\(diarizationLease.declaredPeakBytes) reserve=\(diarizationLease.reserveBytes) total=\(diarizationLease.totalMemoryBytes) available=\(diarizationLease.availableMemoryBytes) baseline=\(diarizationLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
@@ -1881,10 +1897,10 @@ struct HighQualityJob: Sendable {
                 )
                 if let translationLease {
                     manifest.modelEvents.append(.init(
-                        kind: .reserveChecked,
+                        kind: .pressureChecked,
                         modelID: LocalMLXTranslator.modelID,
                         at: Date(),
-                        message: "peak=\(translationLease.declaredPeakBytes) reserve=\(translationLease.reserveBytes) total=\(translationLease.totalMemoryBytes) available=\(translationLease.availableMemoryBytes) baseline=\(translationLease.baselineMemoryBytes)"
+                        message: "policy=macos-memory-pressure peak=\(translationLease.declaredPeakBytes) reserve=\(translationLease.reserveBytes) total=\(translationLease.totalMemoryBytes) available=\(translationLease.availableMemoryBytes) baseline=\(translationLease.baselineMemoryBytes)"
                     ))
                 }
                 manifest.modelEvents.append(.init(
@@ -2166,6 +2182,7 @@ struct HighQualityJob: Sendable {
                     translationLease,
                     unload: services.unloadTranslation
                 )
+                translationEvidence?.worker = await services.translationWorkerEvidence()
                 translationLease = nil
                 manifest.modelEvents.append(.init(
                     kind: .unloadCompleted,
@@ -2323,6 +2340,7 @@ struct HighQualityJob: Sendable {
                     modelID: LocalMLXTranslator.modelID,
                     unload: services.unloadTranslation
                 )
+                translationEvidence?.worker = await services.translationWorkerEvidence()
             }
             if let gate = services.heavyweightGate, let workflowLease {
                 try? await gate.endWorkflow(workflowLease)

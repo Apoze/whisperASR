@@ -60,6 +60,7 @@ enum HeavyweightModelGateError: LocalizedError, Equatable, Sendable {
         availableBytes: UInt64,
         reserveBytes: UInt64
     )
+    case criticalMemoryPressure(modelID: String)
     case memoryNotReleased(modelID: String, currentBytes: UInt64, maximumBytes: UInt64)
 
     var errorDescription: String? {
@@ -76,6 +77,8 @@ enum HeavyweightModelGateError: LocalizedError, Equatable, Sendable {
             "Cannot load \(modelID): only \(available) bytes are currently available, below its declared peak (\(peak) bytes) plus the system reserve (\(reserve) bytes)."
         case .runtimeReserveViolated(let modelID, let current, let maximum, let available, let reserve):
             "Stopped \(modelID): process footprint reached \(current) bytes (maximum \(maximum)) while \(available) system bytes remained (reserve \(reserve))."
+        case .criticalMemoryPressure(let modelID):
+            "Stopped \(modelID) because macOS memory pressure became critical. Close other applications and retry; the failure is recoverable."
         case .memoryNotReleased(let modelID, let current, let maximum):
             "Stopped after unloading \(modelID): memory remained at \(current) bytes, above the safe handoff limit of \(maximum) bytes. The model gate remains closed; quit and reopen WhisperASR before starting Live or another offline model."
         }
@@ -102,6 +105,7 @@ actor HeavyweightModelGate {
     private let monitorPollInterval: Duration
     private let currentMemoryBytes: @Sendable () async -> UInt64
     private let currentAvailableMemoryBytes: @Sendable () async -> UInt64
+    private let memoryPressure: MacMemoryPressureMonitor
     private var activeWorkflow: HeavyweightWorkflowLease?
     private var activeModel: ActiveModel?
 
@@ -117,7 +121,8 @@ actor HeavyweightModelGate {
         },
         currentAvailableMemoryBytes: @escaping @Sendable () async -> UInt64 = {
             HeavyweightModelGate.measuredSystemAvailableMemoryBytes()
-        }
+        },
+        memoryPressure: MacMemoryPressureMonitor = .shared
     ) {
         self.totalMemoryBytes = totalMemoryBytes
         self.reserveBytes = reserveBytes
@@ -127,6 +132,7 @@ actor HeavyweightModelGate {
         self.monitorPollInterval = monitorPollInterval
         self.currentMemoryBytes = currentMemoryBytes
         self.currentAvailableMemoryBytes = currentAvailableMemoryBytes
+        self.memoryPressure = memoryPressure
     }
 
     func beginWorkflow(_ workflow: HeavyweightModelWorkflow) throws -> HeavyweightWorkflowLease {
@@ -160,20 +166,33 @@ actor HeavyweightModelGate {
                 active: activeModel.lease.modelID
             )
         }
+        let isOffline = if case .offline = workflow.workflow { true } else { false }
+        if isOffline {
+            while memoryPressure.level == .warning {
+                try Task.checkCancellation()
+                try await Task.sleep(for: monitorPollInterval)
+            }
+            if memoryPressure.level == .critical {
+                throw HeavyweightModelGateError.criticalMemoryPressure(modelID: modelID)
+            }
+        }
         let baselineMemoryBytes = await currentMemoryBytes()
         let availableMemoryBytes = await currentAvailableMemoryBytes()
-        guard reserveBytes <= totalMemoryBytes,
-              baselineMemoryBytes <= totalMemoryBytes - reserveBytes,
-              declaredPeakBytes <= totalMemoryBytes - reserveBytes - baselineMemoryBytes else {
+        let applicableReserve = isOffline ? 0 : reserveBytes
+        guard applicableReserve <= totalMemoryBytes,
+              baselineMemoryBytes <= totalMemoryBytes - applicableReserve,
+              declaredPeakBytes <= totalMemoryBytes - applicableReserve - baselineMemoryBytes else {
             throw HeavyweightModelGateError.insufficientCapacity(
                 modelID: modelID,
                 declaredPeakBytes: declaredPeakBytes,
-                reserveBytes: reserveBytes,
+                reserveBytes: applicableReserve,
                 totalMemoryBytes: totalMemoryBytes
             )
         }
-        guard reserveBytes <= availableMemoryBytes,
-              declaredPeakBytes <= availableMemoryBytes - reserveBytes else {
+        guard isOffline || (
+            reserveBytes <= availableMemoryBytes
+                && declaredPeakBytes <= availableMemoryBytes - reserveBytes
+        ) else {
             throw HeavyweightModelGateError.insufficientSystemCapacity(
                 modelID: modelID,
                 declaredPeakBytes: declaredPeakBytes,
@@ -187,7 +206,7 @@ actor HeavyweightModelGate {
             modelID: modelID,
             baselineMemoryBytes: baselineMemoryBytes,
             declaredPeakBytes: declaredPeakBytes,
-            reserveBytes: reserveBytes,
+            reserveBytes: applicableReserve,
             totalMemoryBytes: totalMemoryBytes,
             availableMemoryBytes: availableMemoryBytes
         )
@@ -211,18 +230,24 @@ actor HeavyweightModelGate {
     ) async throws -> T {
         guard activeModel?.lease == lease else { throw HeavyweightModelGateError.invalidLease }
         let interval = monitorPollInterval
-        return try await withThrowingTaskGroup(of: T.self) { group in
-            group.addTask { try await operation() }
+        return try await withThrowingTaskGroup(of: T?.self) { group in
+            group.addTask { .some(try await operation()) }
             group.addTask {
-                while true {
-                    try Task.checkCancellation()
-                    try await self.sampleRuntimeMemory(lease)
-                    try await Task.sleep(for: interval)
+                do {
+                    while true {
+                        try Task.checkCancellation()
+                        try await self.sampleRuntimeMemory(lease)
+                        try await Task.sleep(for: interval)
+                    }
+                } catch is CancellationError {
+                    return nil
                 }
             }
             defer { group.cancelAll() }
-            guard let result = try await group.next() else { throw CancellationError() }
-            return result
+            while let next = try await group.next() {
+                if let result = next { return result }
+            }
+            throw CancellationError()
         }
     }
 
@@ -233,8 +258,8 @@ actor HeavyweightModelGate {
         return .init(
             peakMemoryBytes: activeModel.peakMemoryBytes,
             minimumAvailableMemoryBytes: activeModel.minimumAvailableMemoryBytes,
-            maximumMemoryBytes: totalMemoryBytes - reserveBytes,
-            reserveBytes: reserveBytes
+            maximumMemoryBytes: totalMemoryBytes - lease.reserveBytes,
+            reserveBytes: lease.reserveBytes
         )
     }
 
@@ -252,14 +277,25 @@ actor HeavyweightModelGate {
             availableBytes
         )
         activeModel = model
-        let maximumBytes = totalMemoryBytes - reserveBytes
-        guard currentBytes <= maximumBytes, availableBytes >= reserveBytes else {
+        let maximumBytes = totalMemoryBytes - lease.reserveBytes
+        if lease.reserveBytes == 0 {
+            switch memoryPressure.level {
+            case .normal:
+                return
+            case .warning:
+                Memory.clearCache()
+                return
+            case .critical:
+                throw HeavyweightModelGateError.criticalMemoryPressure(modelID: lease.modelID)
+            }
+        }
+        guard currentBytes <= maximumBytes, availableBytes >= lease.reserveBytes else {
             throw HeavyweightModelGateError.runtimeReserveViolated(
                 modelID: lease.modelID,
                 currentBytes: currentBytes,
                 maximumBytes: maximumBytes,
                 availableBytes: availableBytes,
-                reserveBytes: reserveBytes
+                reserveBytes: lease.reserveBytes
             )
         }
     }

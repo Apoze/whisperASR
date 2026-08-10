@@ -2,7 +2,6 @@ import SwiftUI
 import AppKit
 import ScreenCaptureKit
 
-@main
 struct WhisperASRApp: App {
     @State private var appState = AppState()
     @State private var audioPlayer = AudioPlayerManager()
@@ -61,6 +60,20 @@ struct WhisperASRApp: App {
         Settings {
             SettingsView()
         }
+    }
+}
+
+@main
+enum WhisperASREntryPoint {
+    static func main() async {
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.count == 3,
+           arguments[1] == HighQualityTranslationWorkerCommand.argument {
+            exit(await HighQualityTranslationWorkerCommand.run(
+                directory: URL(fileURLWithPath: arguments[2], isDirectory: true)
+            ))
+        }
+        WhisperASRApp.main()
     }
 }
 

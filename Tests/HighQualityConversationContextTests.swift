@@ -283,7 +283,9 @@ final class HighQualityConversationContextTests: XCTestCase {
                 )
             }
         }
-        let translator = LocalMLXTranslator()
+        let translator = HighQualityTranslationWorkerClient(
+            executableURL: highQualityTranslationWorkerExecutableURL()
+        )
         let evidence: HighQualityTranslationEvidence
         var retryCueIDs: [String] = []
         do {
@@ -386,7 +388,8 @@ final class HighQualityConversationContextTests: XCTestCase {
                 batches: batches,
                 peakMemoryBytes: peakMemoryBytes,
                 validationFailures: hardFailures.map { "terminal-hard-failure:\($0.cueID)" },
-                integrityVerdicts: finalVerdicts
+                integrityVerdicts: finalVerdicts,
+                worker: await translator.evidence
             )
         } catch {
             await translator.unload()

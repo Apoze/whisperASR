@@ -465,7 +465,9 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
         let alignment = try XCTUnwrap(baseline.alignment)
         let diarization = try XCTUnwrap(baseline.diarization)
-        let translator = LocalMLXTranslator()
+        let translator = HighQualityTranslationWorkerClient(
+            executableURL: highQualityTranslationWorkerExecutableURL()
+        )
         let asrChunks = alignment.chunks.map { chunk in
             HighQualityASRChunk(
                 index: chunk.index,
@@ -505,7 +507,8 @@ final class HighQualityAcceptanceTests: XCTestCase {
             unloadDiarization: {},
             prepareTranslation: { try await translator.prepare(progress: $0) },
             translateEnglish: { try await translator.translate($0) },
-            unloadTranslation: { await translator.unload() }
+            unloadTranslation: { await translator.unload() },
+            translationWorkerEvidence: { await translator.evidence }
         ))
 
         let result = try await job.run(.init(
@@ -639,7 +642,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             LocalMLXTranslator.modelID,
         ] {
             let events = result.manifest.modelEvents.filter { $0.modelID == modelID }.map(\.kind)
-            XCTAssertTrue(events.contains(.reserveChecked), "Missing reserve check for \(modelID)")
+            XCTAssertTrue(events.contains(.pressureChecked), "Missing pressure check for \(modelID)")
             XCTAssertTrue(events.contains(.loadCompleted), "Missing load for \(modelID)")
             XCTAssertTrue(events.contains(.unloadCompleted), "Missing unload for \(modelID)")
             XCTAssertTrue(events.contains(.memoryReleaseChecked), "Missing release check for \(modelID)")

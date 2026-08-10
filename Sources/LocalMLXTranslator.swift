@@ -269,6 +269,10 @@ actor LocalMLXTranslator {
         Memory.clearCache()
     }
 
+    func handleMemoryWarning() {
+        Memory.clearCache()
+    }
+
     static func frozenPrompt(for turn: HighQualityTranslationTurn) -> String {
         turn.japanese
     }

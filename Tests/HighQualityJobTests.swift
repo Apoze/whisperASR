@@ -1041,6 +1041,23 @@ final class HighQualityJobTests: XCTestCase {
         let source = root.appendingPathComponent("conversation.wav")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         try Data().write(to: source)
+        let workerEvidence = HighQualityTranslationWorkerEvidence(
+            command: ["fixture-worker"],
+            processIdentifier: 42,
+            startedAt: Date(timeIntervalSince1970: 1),
+            exitedAt: Date(timeIntervalSince1970: 2),
+            elapsedSeconds: 1,
+            exitStatus: 0,
+            terminationReason: "exit",
+            forcedTermination: false,
+            peakPhysicalFootprintBytes: 123,
+            pressureTransitions: [],
+            availableMemorySamples: [],
+            swapUsedBeforeBytes: 10,
+            swapUsedAfterBytes: 10,
+            rawLogPath: "/tmp/fixture-worker.log",
+            rawLog: "fixture"
+        )
 
         let job = HighQualityJob(services: .init(
             loadSource: { _ in [0.1] },
@@ -1074,7 +1091,8 @@ final class HighQualityJobTests: XCTestCase {
                         )
                     }
                 )
-            }
+            },
+            translationWorkerEvidence: { workerEvidence }
         ))
 
         let result = try await job.run(.init(
@@ -1097,6 +1115,7 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.evidence.translation?.model, "fixture-model")
         XCTAssertEqual(result.evidence.translation?.attempts.count, 1)
         XCTAssertEqual(result.evidence.translation?.validationFailures, [])
+        XCTAssertEqual(result.evidence.translation?.worker, workerEvidence)
         XCTAssertEqual(result.turns.map(\.id), ["unit-0001", "unit-0002"])
         XCTAssertEqual(result.turns.compactMap(\.english), ["Good morning", "How are you today?"])
         XCTAssertEqual(
@@ -1969,13 +1988,14 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.manifest.peakMemoryBytes, 500)
     }
 
-    func testRuntimeMemoryWatchdogFailsClosedUnloadsAndReleasesTheWorkflow() async throws {
+    func testCriticalMemoryPressureFailsClosedUnloadsAndReleasesTheWorkflow() async throws {
         let gib: UInt64 = 1_024 * 1_024 * 1_024
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let footprint = MemoryValue(gib)
         let available = MemoryValue(20 * gib)
+        let pressure = MacMemoryPressureMonitor(native: false)
         let calls = CallLog()
         let gate = HeavyweightModelGate(
             totalMemoryBytes: 24 * gib,
@@ -1985,13 +2005,14 @@ final class HighQualityJobTests: XCTestCase {
             releasePollInterval: .milliseconds(1),
             monitorPollInterval: .milliseconds(1),
             currentMemoryBytes: { await footprint.value },
-            currentAvailableMemoryBytes: { await available.value }
+            currentAvailableMemoryBytes: { await available.value },
+            memoryPressure: pressure
         )
         let id = UUID()
         let job = HighQualityJob(services: .init(
             loadSource: { _ in [0] },
             prepareASR: { _ in
-                await footprint.set(16 * gib + 1)
+                pressure.record(.critical)
                 while true { try await Task.sleep(for: .milliseconds(1)) }
             },
             transcribeJapanese: { _ in "unused" },
@@ -2011,7 +2032,7 @@ final class HighQualityJobTests: XCTestCase {
                 backend: .whisperKit,
                 outputRoot: root
             ))
-            XCTFail("The job must fail before consuming the 8 GB reserve.")
+            XCTFail("The job must fail when macOS memory pressure becomes critical.")
         } catch let error as HighQualityJobError {
             XCTAssertEqual(error.stage, .modelPreparation)
         }
@@ -2025,7 +2046,7 @@ final class HighQualityJobTests: XCTestCase {
         )
         XCTAssertEqual(manifest.status, .failed)
         XCTAssertTrue(manifest.modelEvents.contains {
-            $0.kind == .guardFailed && $0.message?.contains("process footprint") == true
+            $0.kind == .guardFailed && $0.message?.contains("memory pressure") == true
         }, "\(manifest.modelEvents)")
         XCTAssertTrue(
             manifest.modelEvents.contains { $0.kind == .memoryReleaseChecked },
@@ -2034,6 +2055,7 @@ final class HighQualityJobTests: XCTestCase {
         let callValues = await calls.values
         XCTAssertEqual(callValues, ["unload"])
 
+        pressure.record(.normal)
         let live = try await gate.beginWorkflow(.live)
         try await gate.endWorkflow(live)
     }

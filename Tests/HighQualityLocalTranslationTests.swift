@@ -439,10 +439,11 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         })
     }
 
-    func testTranslationRuntimeReserveViolationSurvivesContextAndUnloads() async throws {
+    func testTranslationCriticalPressureSurvivesContextAndUnloads() async throws {
         let gib: UInt64 = 1_024 * 1_024 * 1_024
         let memory = TranslationMemoryReading(gib)
         let available = TranslationMemoryReading(20 * gib)
+        let pressure = MacMemoryPressureMonitor(native: false)
         let unloads = TranslationCounter()
         let gate = HeavyweightModelGate(
             totalMemoryBytes: 24 * gib,
@@ -452,7 +453,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             releasePollInterval: .milliseconds(1),
             monitorPollInterval: .milliseconds(1),
             currentMemoryBytes: { await memory.value },
-            currentAvailableMemoryBytes: { await available.value }
+            currentAvailableMemoryBytes: { await available.value },
+            memoryPressure: pressure
         )
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -473,7 +475,7 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             alignJapanese: highQualityFixtureAlignment,
             currentMemoryBytes: { await memory.value },
             translateEnglish: { _ in
-                await memory.set(16 * gib + 1)
+                pressure.record(.critical)
                 while true { try await Task.sleep(for: .milliseconds(1)) }
             },
             unloadTranslation: {
@@ -485,7 +487,7 @@ final class HighQualityLocalTranslationTests: XCTestCase {
 
         do {
             _ = try await job.run(request)
-            XCTFail("TranslateGemma must stop before consuming the reserve.")
+            XCTFail("TranslateGemma must stop on critical macOS memory pressure.")
         } catch let error as HighQualityJobError {
             XCTAssertEqual(error.stage, .translation)
         }
@@ -508,6 +510,7 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         })
         let unloadCount = await unloads.value
         XCTAssertEqual(unloadCount, 1)
+        pressure.record(.normal)
         let live = try await gate.beginWorkflow(.live)
         try await gate.endWorkflow(live)
     }
@@ -516,7 +519,9 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         guard ProcessInfo.processInfo.environment["WHISPERASR_RUN_TRANSLATEGEMMA_SMOKE"] == "1" else {
             throw XCTSkip("Set WHISPERASR_RUN_TRANSLATEGEMMA_SMOKE=1 for the local 12B smoke run.")
         }
-        let runtime = LocalMLXTranslator()
+        let runtime = HighQualityTranslationWorkerClient(
+            executableURL: highQualityTranslationWorkerExecutableURL()
+        )
         do {
             try await runtime.prepare(progress: { _, _ in })
             let exchange = try await runtime.translate(.init(
@@ -558,13 +563,13 @@ final class HighQualityLocalTranslationTests: XCTestCase {
         }
     }
 
-    func testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn() async throws {
+    func testRealTranslateGemmaWorkerMemorySmokeWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
-        guard environment["WHISPERASR_RUN_TRANSLATEGEMMA_MEMORY_SMOKE"] == "1" else {
-            throw XCTSkip("Run the ticket #62 bounded TranslateGemma memory smoke.")
+        guard environment["WHISPERASR_RUN_TRANSLATEGEMMA_WORKER_SMOKE"] == "1" else {
+            throw XCTSkip("Run the ticket #71 bounded TranslateGemma worker smoke.")
         }
-        guard environment["BENCHMARK_SLOT_GRANTED"] == "62" else {
-            XCTFail("The ticket #62 benchmark slot is required.")
+        guard environment["BENCHMARK_SLOT_GRANTED"] == "71" else {
+            XCTFail("The ticket #71 benchmark slot is required.")
             return
         }
         let inputPath = try XCTUnwrap(environment["WHISPERASR_TRANSLATEGEMMA_SMOKE_INPUT"])
@@ -596,8 +601,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             terms.map { HighQualityTranslationIntegrityGlossaryTerm($0, critical: false) }
         }
         var artifact = TranslateGemmaMemorySmokeArtifact(
-            schemaVersion: 2,
-            ticket: 62,
+            schemaVersion: 3,
+            ticket: 71,
             modelID: LocalMLXTranslator.modelID,
             revision: LocalMLXTranslator.revision,
             inputSHA256: SHA256.hash(data: input).map {
@@ -608,8 +613,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             availableBeforeLoadBytes: nil,
             runtimePeakMemoryBytes: nil,
             minimumAvailableMemoryBytes: nil,
-            maximumMemoryBytes: nil,
-            reserveBytes: HeavyweightModelGate.systemReserveBytes,
+            maximumMemoryBytes: ProcessInfo.processInfo.physicalMemory,
+            reserveBytes: 0,
             releasedMemoryBytes: nil,
             modelReportedPeakMemoryBytes: nil,
             durationSeconds: nil,
@@ -618,11 +623,21 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             primaryFailure: nil,
             cleanupFailure: nil,
             startedAt: Date(),
-            finishedAt: nil
+            finishedAt: nil,
+            worker: nil
         )
         let output = URL(fileURLWithPath: outputPath)
-        let runtime = LocalMLXTranslator()
-        let gate = HeavyweightModelGate.shared
+        let workerDirectory = output.deletingLastPathComponent()
+            .appendingPathComponent("worker-runtime", isDirectory: true)
+        guard !FileManager.default.fileExists(atPath: workerDirectory.path) else {
+            XCTFail("Worker evidence directory already exists: \(workerDirectory.path)")
+            return
+        }
+        let runtime = HighQualityTranslationWorkerClient(
+            executableURL: highQualityTranslationWorkerExecutableURL(),
+            workingDirectory: workerDirectory
+        )
+        let gate = HeavyweightModelGate()
         var workflow: HeavyweightWorkflowLease?
         var model: HeavyweightModelLease?
         let started = ContinuousClock.now
@@ -652,10 +667,6 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                     }
                 }
             )
-            let memory = try await gate.memoryEvidence(activeModel)
-            artifact.runtimePeakMemoryBytes = memory.peakMemoryBytes
-            artifact.minimumAvailableMemoryBytes = memory.minimumAvailableMemoryBytes
-            artifact.maximumMemoryBytes = memory.maximumMemoryBytes
             artifact.modelReportedPeakMemoryBytes = pass.exchange.peakMemoryBytes
             artifact.batches = pass.exchange.batches
             artifact.response = pass.exchange.response
@@ -663,6 +674,10 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                 activeModel,
                 unload: { await runtime.unload() }
             )
+            artifact.worker = await runtime.evidence
+            artifact.runtimePeakMemoryBytes = artifact.worker?.peakPhysicalFootprintBytes
+            artifact.minimumAvailableMemoryBytes = artifact.worker?.availableMemorySamples
+                .map(\.availableMemoryBytes).min()
             model = nil
             try await gate.endWorkflow(workflow!)
             workflow = nil
@@ -670,20 +685,14 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             artifact.finishedAt = Date()
             try Self.writeMemorySmoke(artifact, to: output)
 
-            XCTAssertLessThanOrEqual(memory.peakMemoryBytes, memory.maximumMemoryBytes)
-            XCTAssertGreaterThanOrEqual(
-                memory.minimumAvailableMemoryBytes,
-                memory.reserveBytes
-            )
+            let worker = try XCTUnwrap(artifact.worker)
+            XCTAssertEqual(worker.exitStatus, 0)
+            XCTAssertFalse(worker.forcedTermination)
+            XCTAssertNotEqual(kill(worker.processIdentifier, 0), 0)
             XCTAssertEqual(pass.exchange.batches.count, turns.count)
         } catch let primaryError {
             artifact.primaryFailure = primaryError.localizedDescription
             if let model {
-                if let memory = try? await gate.memoryEvidence(model) {
-                    artifact.runtimePeakMemoryBytes = memory.peakMemoryBytes
-                    artifact.minimumAvailableMemoryBytes = memory.minimumAvailableMemoryBytes
-                    artifact.maximumMemoryBytes = memory.maximumMemoryBytes
-                }
                 do {
                     artifact.releasedMemoryBytes = try await gate.releaseModel(
                         model,
@@ -695,6 +704,10 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             } else {
                 await runtime.unload()
             }
+            artifact.worker = await runtime.evidence
+            artifact.runtimePeakMemoryBytes = artifact.worker?.peakPhysicalFootprintBytes
+            artifact.minimumAvailableMemoryBytes = artifact.worker?.availableMemorySamples
+                .map(\.availableMemoryBytes).min()
             if let workflow { try? await gate.endWorkflow(workflow) }
             if let translationError = primaryError as? HighQualityTranslationServiceError {
                 artifact.modelReportedPeakMemoryBytes = translationError.peakMemoryBytes
@@ -725,11 +738,14 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             from: Data(contentsOf: URL(fileURLWithPath: evidencePath))
         )
         let request = try XCTUnwrap(baseline.translation?.request)
-        let translator = LocalMLXTranslator()
+        let translator = HighQualityTranslationWorkerClient(
+            executableURL: highQualityTranslationWorkerExecutableURL()
+        )
         do {
             try await translator.prepare(progress: { _, _ in })
             let exchange = try await translator.translate(request)
             await translator.unload()
+            let worker = await translator.evidence
             let evidence = HighQualityTranslationEvidence(
                 request: request,
                 response: exchange.response,
@@ -739,7 +755,8 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                 runtimeVersion: exchange.runtimeVersion,
                 batches: exchange.batches,
                 peakMemoryBytes: exchange.peakMemoryBytes,
-                validationFailures: []
+                validationFailures: [],
+                worker: worker
             )
             let outputURL = URL(fileURLWithPath: outputPath)
             try FileManager.default.createDirectory(
@@ -819,6 +836,7 @@ private struct TranslateGemmaMemorySmokeArtifact: Codable {
     var cleanupFailure: String?
     let startedAt: Date
     var finishedAt: Date?
+    var worker: HighQualityTranslationWorkerEvidence?
 }
 
 private enum TranslationTestError: Error {
