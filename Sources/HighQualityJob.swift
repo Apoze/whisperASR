@@ -196,14 +196,14 @@ struct HighQualityYouTubeAcquisition: Sendable {
     let evidence: HighQualityYouTubeEvidence
 }
 
-struct HighQualityASRChunk: Equatable, Sendable {
+struct HighQualityASRChunk: Codable, Equatable, Sendable {
     let index: Int
     let sourceStart: TimeInterval
     let sourceEnd: TimeInterval
     let transcript: String
 }
 
-struct HighQualityASRExchange: Equatable, Sendable {
+struct HighQualityASRExchange: Codable, Equatable, Sendable {
     let rawTranscript: String
     let chunks: [HighQualityASRChunk]
 }
@@ -769,17 +769,30 @@ struct HighQualityModelEvidence: Codable, Equatable, Sendable {
     let modelID: String
     let revision: String
     let runtimeVersion: String?
+    let weightSHA256: [String: String]?
 
     init(
         backend: HighQualityASRBackend,
         modelID: String,
         revision: String,
-        runtimeVersion: String? = nil
+        runtimeVersion: String? = nil,
+        weightSHA256: [String: String]? = nil
     ) {
         self.backend = backend
         self.modelID = modelID
         self.revision = revision
         self.runtimeVersion = runtimeVersion
+        self.weightSHA256 = weightSHA256
+    }
+
+    func withWeightSHA256(_ hashes: [String: String]) -> Self {
+        .init(
+            backend: backend,
+            modelID: modelID,
+            revision: revision,
+            runtimeVersion: runtimeVersion,
+            weightSHA256: hashes
+        )
     }
 }
 
@@ -864,7 +877,8 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     let speakerLabels: Bool
     let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let dependencies: [HighQualityJobDependency]
-    let model: HighQualityModelEvidence
+    var model: HighQualityModelEvidence
+    var asrWorker: HighQualityASRWorkerEvidence? = nil
     let startedAt: Date
     var finishedAt: Date?
     var stageDurations: [HighQualityJobStage: TimeInterval]
@@ -877,6 +891,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
+    let asrWorker: HighQualityASRWorkerEvidence?
     let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let rawASR: String?
     let glossary: HighQualityGlossarySelection
@@ -920,6 +935,7 @@ struct HighQualityJob: Sendable {
         let transcribeJapanese: @Sendable ([Float]) async throws -> String
         let transcribeJapaneseAnchored: @Sendable ([Float]) async throws -> HighQualityASRExchange
         let unloadASR: @Sendable () async -> Void
+        let asrWorkerEvidence: @Sendable () async -> HighQualityASRWorkerEvidence?
         let prepareAlignment: @Sendable (
             @escaping @Sendable (Double, String) -> Void
         ) async throws -> Void
@@ -970,6 +986,8 @@ struct HighQualityJob: Sendable {
             transcribeJapanese: @escaping @Sendable ([Float]) async throws -> String,
             transcribeJapaneseAnchored: (@Sendable ([Float]) async throws -> HighQualityASRExchange)? = nil,
             unloadASR: @escaping @Sendable () async -> Void,
+            asrWorkerEvidence: @escaping @Sendable () async
+                -> HighQualityASRWorkerEvidence? = { nil },
             prepareAlignment: @escaping @Sendable (
                 @escaping @Sendable (Double, String) -> Void
             ) async throws -> Void = { _ in
@@ -1050,6 +1068,7 @@ struct HighQualityJob: Sendable {
                 )
             }
             self.unloadASR = unloadASR
+            self.asrWorkerEvidence = asrWorkerEvidence
             self.prepareAlignment = prepareAlignment
             self.alignJapanese = alignJapanese
             self.unloadAlignment = unloadAlignment
@@ -1068,6 +1087,7 @@ struct HighQualityJob: Sendable {
         }
 
         static func production(for backend: HighQualityASRBackend) -> Self {
+            let asr = HighQualityASRWorkerClient(backend: backend)
             let aligner = HighQualityForcedAlignerRuntime()
             let diarizer = HighQualitySpeakerKitRuntime()
             let translator = HighQualityTranslationWorkerClient()
@@ -1091,92 +1111,31 @@ struct HighQualityJob: Sendable {
                     speakerCountPolicy: $2
                 )
             }
-            switch backend {
-            case .qwenJA:
-                let runtime = QwenRuntime()
-                let transcribe: @Sendable ([Float]) async throws -> String = {
-                    try await runtime.transcribe(
-                        audio: $0,
-                        language: "Japanese",
-                        preserveRawOutput: true,
-                        cancellable: true
-                    )
-                }
-                return Self(
-                    loadSource: loadSource,
-                    acquireYouTube: acquireYouTube,
-                    prepareASR: { try await runtime.prepare(progress: $0) },
-                    transcribeJapanese: transcribe,
-                    transcribeJapaneseAnchored: { try await chunkedASR($0, transcribe: transcribe) },
-                    unloadASR: { await runtime.unload() },
-                    prepareAlignment: { try await aligner.prepare(progress: $0) },
-                    alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
-                    unloadAlignment: { await aligner.unload() },
-                    prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: diarizeSpeakers,
-                    unloadDiarization: { await diarizer.unload() },
-                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
-                    prepareTranslation: { try await translator.prepare(progress: $0) },
-                    translateEnglish: { try await translator.translate($0) },
-                    unloadTranslation: { await translator.unload() },
-                    translationWorkerEvidence: { await translator.evidence },
-                    heavyweightGate: .shared
-                )
-            case .parakeetJA:
-                let runtime = ParakeetRuntime()
-                let transcribe: @Sendable ([Float]) async throws -> String = {
-                    try await runtime.transcribe(
-                        audio: $0,
-                        preserveRawOutput: true,
-                        cancellable: true
-                    )
-                }
-                return Self(
-                    loadSource: loadSource,
-                    acquireYouTube: acquireYouTube,
-                    prepareASR: { try await runtime.prepare(progress: $0) },
-                    transcribeJapanese: transcribe,
-                    transcribeJapaneseAnchored: { try await chunkedASR($0, transcribe: transcribe) },
-                    unloadASR: { await runtime.unload() },
-                    prepareAlignment: { try await aligner.prepare(progress: $0) },
-                    alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
-                    unloadAlignment: { await aligner.unload() },
-                    prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: diarizeSpeakers,
-                    unloadDiarization: { await diarizer.unload() },
-                    currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
-                    prepareTranslation: { try await translator.prepare(progress: $0) },
-                    translateEnglish: { try await translator.translate($0) },
-                    unloadTranslation: { await translator.unload() },
-                    translationWorkerEvidence: { await translator.evidence },
-                    heavyweightGate: .shared
-                )
-            case .whisperKit:
-                let runtime = WhisperKitRuntime()
-                let transcribe: @Sendable ([Float]) async throws -> String = {
-                    try await runtime.transcribe(audio: $0)
-                }
-                return Self(
-                    loadSource: loadSource,
-                    acquireYouTube: acquireYouTube,
-                    prepareASR: { try await runtime.prepare(progress: $0) },
-                    transcribeJapanese: transcribe,
-                    transcribeJapaneseAnchored: { try await chunkedASR($0, transcribe: transcribe) },
-                    unloadASR: { await runtime.unload() },
-                    prepareAlignment: { try await aligner.prepare(progress: $0) },
-                    alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
-                    unloadAlignment: { await aligner.unload() },
-                    prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: diarizeSpeakers,
-                    unloadDiarization: { await diarizer.unload() },
-                    currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() },
-                    prepareTranslation: { try await translator.prepare(progress: $0) },
-                    translateEnglish: { try await translator.translate($0) },
-                    unloadTranslation: { await translator.unload() },
-                    translationWorkerEvidence: { await translator.evidence },
-                    heavyweightGate: .shared
-                )
-            }
+            return Self(
+                loadSource: loadSource,
+                acquireYouTube: acquireYouTube,
+                prepareASR: { try await asr.prepare(progress: $0) },
+                transcribeJapanese: {
+                    try await asr.transcribe($0, anchored: false).rawTranscript
+                },
+                transcribeJapaneseAnchored: {
+                    try await asr.transcribe($0, anchored: true)
+                },
+                unloadASR: { await asr.unload() },
+                asrWorkerEvidence: { await asr.evidence },
+                prepareAlignment: { try await aligner.prepare(progress: $0) },
+                alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
+                unloadAlignment: { await aligner.unload() },
+                prepareDiarization: { try await diarizer.prepare(progress: $0) },
+                diarizeSpeakers: diarizeSpeakers,
+                unloadDiarization: { await diarizer.unload() },
+                currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
+                prepareTranslation: { try await translator.prepare(progress: $0) },
+                translateEnglish: { try await translator.translate($0) },
+                unloadTranslation: { await translator.unload() },
+                translationWorkerEvidence: { await translator.evidence },
+                heavyweightGate: .shared
+            )
         }
 
         static func chunkedASR(
@@ -1417,6 +1376,16 @@ struct HighQualityJob: Sendable {
             "memory=\(release.releasedMemoryBytes) runtimePeak=\(release.evidence.peakMemoryBytes) minimumAvailable=\(release.evidence.minimumAvailableMemoryBytes) maximum=\(release.evidence.maximumMemoryBytes) reserve=\(release.evidence.reserveBytes)"
         }
 
+        func recordASRWorkerEvidence() async {
+            guard let evidence = await services.asrWorkerEvidence() else { return }
+            manifest.asrWorker = evidence
+            manifest.model = evidence.model
+            manifest.peakMemoryBytes = max(
+                manifest.peakMemoryBytes,
+                evidence.lifecycle.peakPhysicalFootprintBytes
+            )
+        }
+
         func cleanupModel(
             _ lease: HeavyweightModelLease?,
             modelID: String,
@@ -1605,6 +1574,7 @@ struct HighQualityJob: Sendable {
             asrUnloaded = true
             let asrRelease = try await releaseModel(asrLease, unload: services.unloadASR)
             asrLease = nil
+            await recordASRWorkerEvidence()
             manifest.modelEvents.append(.init(
                 kind: .unloadCompleted,
                 backend: request.backend,
@@ -2316,6 +2286,7 @@ struct HighQualityJob: Sendable {
                     modelID: request.backend.model.modelID,
                     unload: services.unloadASR
                 )
+                await recordASRWorkerEvidence()
             }
             if alignmentLoadStarted, !alignmentUnloaded {
                 alignmentUnloaded = true
@@ -3398,6 +3369,7 @@ struct HighQualityJob: Sendable {
         HighQualityRawEvidence(
             source: manifest.source,
             model: manifest.model,
+            asrWorker: manifest.asrWorker,
             speakerCountPolicy: manifest.speakerCountPolicy,
             rawASR: rawASR,
             glossary: glossary,

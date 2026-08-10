@@ -1,29 +1,6 @@
 import Darwin
 import Foundation
 
-struct HighQualityTranslationWorkerMemorySample: Codable, Equatable, Sendable {
-    let at: Date
-    let availableMemoryBytes: UInt64
-}
-
-struct HighQualityTranslationWorkerEvidence: Codable, Equatable, Sendable {
-    let command: [String]
-    let processIdentifier: Int32
-    let startedAt: Date
-    let exitedAt: Date
-    let elapsedSeconds: TimeInterval
-    let exitStatus: Int32
-    let terminationReason: String
-    let forcedTermination: Bool
-    let peakPhysicalFootprintBytes: UInt64
-    let pressureTransitions: [MacMemoryPressureTransition]
-    let availableMemorySamples: [HighQualityTranslationWorkerMemorySample]
-    let swapUsedBeforeBytes: UInt64?
-    let swapUsedAfterBytes: UInt64?
-    let rawLogPath: String
-    let rawLog: String
-}
-
 enum HighQualityTranslationWorkerError: LocalizedError, Equatable, Sendable {
     case criticalMemoryPressure
     case protocolFailure(String)
@@ -53,24 +30,8 @@ private struct HighQualityTranslationWorkerResponse: Codable {
 }
 
 actor HighQualityTranslationWorkerClient {
-    private let executableURL: URL
-    private let workingDirectory: URL
-    private let pressure: MacMemoryPressureMonitor
-    private let pollInterval: Duration
-    private let shutdownTimeout: Duration
-    private var process: Process?
-    private var logHandle: FileHandle?
-    private var monitorTask: Task<Void, Never>?
-    private var startedAt: Date?
-    private var pressureLevel = MacMemoryPressureLevel.normal
+    private let worker: HighQualityWorkerProcess
     private var sequence = 0
-    private var peakPhysicalFootprintBytes: UInt64 = 0
-    private var memorySamples: [HighQualityTranslationWorkerMemorySample] = []
-    private var swapUsedBeforeBytes: UInt64?
-    private var forcedTermination = false
-    private var criticalPressure = false
-    private var stopping = false
-    private(set) var evidence: HighQualityTranslationWorkerEvidence?
 
     init(
         executableURL: URL = Bundle.main.executableURL
@@ -80,101 +41,81 @@ actor HighQualityTranslationWorkerClient {
         pollInterval: Duration = .milliseconds(100),
         shutdownTimeout: Duration = .seconds(3)
     ) {
-        self.executableURL = executableURL
-        self.workingDirectory = workingDirectory
+        let directory = workingDirectory
             ?? FileManager.default.temporaryDirectory.appendingPathComponent(
                 "WhisperASR-TranslateGemma-\(UUID().uuidString)",
                 isDirectory: true
             )
-        self.pressure = pressure
-        self.pollInterval = pollInterval
-        self.shutdownTimeout = shutdownTimeout
+        worker = HighQualityWorkerProcess(
+            executableURL: executableURL,
+            arguments: [HighQualityTranslationWorkerCommand.argument, directory.path],
+            workingDirectory: directory,
+            pressure: pressure,
+            pollInterval: pollInterval,
+            shutdownTimeout: shutdownTimeout
+        )
     }
 
-    var processIdentifier: Int32? {
-        guard process?.isRunning == true else { return nil }
-        return process?.processIdentifier
+    var processIdentifier: Int32? { get async { await worker.processIdentifier } }
+
+    var evidence: HighQualityTranslationWorkerEvidence? {
+        get async { await worker.evidence }
     }
 
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
-        if process?.isRunning == true { return }
-        try FileManager.default.createDirectory(
-            at: workingDirectory,
-            withIntermediateDirectories: true
-        )
-        let logURL = workingDirectory.appendingPathComponent("worker.log")
-        FileManager.default.createFile(atPath: logURL.path, contents: nil)
-        let log = try FileHandle(forWritingTo: logURL)
-        let child = Process()
-        child.executableURL = executableURL
-        child.arguments = [HighQualityTranslationWorkerCommand.argument, workingDirectory.path]
-        child.standardOutput = log
-        child.standardError = log
-        try await waitForLaunchPressure()
-        startedAt = Date()
-        pressureLevel = .normal
-        swapUsedBeforeBytes = Self.swapUsedBytes()
-        logHandle = log
-        process = child
+        if await worker.processIdentifier != nil { return }
+        let pid: Int32
         do {
-            try child.run()
+            pid = try await worker.launch()
         } catch {
-            process = nil
-            try? log.close()
-            logHandle = nil
-            throw HighQualityTranslationWorkerError.protocolFailure(error.localizedDescription)
+            throw Self.mapped(error)
         }
-        progress(0, "TranslateGemma worker \(child.processIdentifier) starting…")
-        sample(child.processIdentifier)
-        monitorTask = Task { await monitor(child.processIdentifier) }
+        progress(0, "TranslateGemma worker \(pid) starting…")
         do {
-            let response: HighQualityTranslationWorkerResponse = try await waitForJSON(
-                at: workingDirectory.appendingPathComponent("ready.json")
+            let response: HighQualityTranslationWorkerResponse = try await worker.waitForJSON(
+                at: worker.workingDirectory.appendingPathComponent("ready.json")
             )
             if response.criticalMemoryPressure == true {
-                criticalPressure = true
+                await worker.stop(critical: true)
                 throw HighQualityTranslationWorkerError.criticalMemoryPressure
             }
             if let error = response.error { throw error }
             guard response.ready == true else {
                 throw HighQualityTranslationWorkerError.protocolFailure("invalid ready response")
             }
-            progress(1, "TranslateGemma worker \(child.processIdentifier) ready")
+            progress(1, "TranslateGemma worker \(pid) ready")
         } catch {
-            if pressure.level == .critical { criticalPressure = true }
-            await stop(critical: criticalPressure)
-            throw criticalPressure
-                ? HighQualityTranslationWorkerError.criticalMemoryPressure
-                : error
+            let critical = await worker.isCritical
+            await worker.stop(critical: critical)
+            throw critical ? HighQualityTranslationWorkerError.criticalMemoryPressure : Self.mapped(error)
         }
     }
 
     func translate(
         _ batch: HighQualityTranslationBatch
     ) async throws -> HighQualityTranslationExchange {
-        guard !criticalPressure else {
+        guard !(await worker.isCritical) else {
             throw HighQualityTranslationWorkerError.criticalMemoryPressure
         }
-        guard process?.isRunning == true else {
+        guard await worker.processIdentifier != nil else {
             throw HighQualityTranslationWorkerError.protocolFailure("process is not running")
         }
         sequence += 1
-        let requestURL = workingDirectory.appendingPathComponent("request-\(sequence).json")
-        let responseURL = workingDirectory.appendingPathComponent("response-\(sequence).json")
+        let requestURL = worker.workingDirectory.appendingPathComponent("request-\(sequence).json")
+        let responseURL = worker.workingDirectory.appendingPathComponent("response-\(sequence).json")
         try JSONEncoder().encode(batch).write(to: requestURL, options: .atomic)
         let response: HighQualityTranslationWorkerResponse
         do {
-            response = try await waitForJSON(at: responseURL)
+            response = try await worker.waitForJSON(at: responseURL)
         } catch {
-            if pressure.level == .critical { criticalPressure = true }
-            if criticalPressure {
+            if await worker.isCritical {
                 throw HighQualityTranslationWorkerError.criticalMemoryPressure
             }
-            throw error
+            throw Self.mapped(error)
         }
-        if response.criticalMemoryPressure == true || pressure.level == .critical {
-            criticalPressure = true
-            await stop(critical: true)
+        let critical = await worker.isCritical
+        if response.criticalMemoryPressure == true || critical {
+            await worker.stop(critical: true)
             if let error = response.error {
                 throw HighQualityTranslationServiceError(
                     model: error.model,
@@ -198,160 +139,18 @@ actor HighQualityTranslationWorkerClient {
     }
 
     func unload() async {
-        await stop(critical: criticalPressure)
+        let critical = await worker.isCritical
+        await worker.stop(critical: critical)
     }
 
-    private func monitor(_ pid: Int32) async {
-        while process?.processIdentifier == pid, process?.isRunning == true, !stopping {
-            sample(pid)
-            let level = pressure.level
-            if level != pressureLevel {
-                pressureLevel = level
-                switch level {
-                case .normal:
-                    break
-                case .warning:
-                    _ = kill(pid, SIGUSR1)
-                case .critical:
-                    criticalPressure = true
-                    await stop(critical: true)
-                    return
-                }
-            }
-            try? await Task.sleep(for: pollInterval)
+    private static func mapped(_ error: Error) -> Error {
+        guard let error = error as? HighQualityWorkerProcessError else { return error }
+        switch error {
+        case .criticalMemoryPressure:
+            return HighQualityTranslationWorkerError.criticalMemoryPressure
+        case .protocolFailure(let message):
+            return HighQualityTranslationWorkerError.protocolFailure(message)
         }
-        if process?.processIdentifier == pid, process?.isRunning == false, !stopping {
-            finish(process: process!, forced: forcedTermination)
-        }
-    }
-
-    private func stop(critical: Bool) async {
-        guard let child = process else { return }
-        guard !stopping else {
-            while process != nil { try? await Task.sleep(for: pollInterval) }
-            return
-        }
-        stopping = true
-        if child.isRunning {
-            if critical {
-                _ = kill(child.processIdentifier, SIGTERM)
-            } else {
-                try? Data().write(
-                    to: workingDirectory.appendingPathComponent("shutdown"),
-                    options: .atomic
-                )
-            }
-            await waitForExit(child, timeout: shutdownTimeout)
-        }
-        if child.isRunning, !critical {
-            _ = kill(child.processIdentifier, SIGTERM)
-            await waitForExit(child, timeout: shutdownTimeout)
-        }
-        if child.isRunning {
-            forcedTermination = true
-            _ = kill(child.processIdentifier, SIGKILL)
-            child.waitUntilExit()
-        }
-        finish(process: child, forced: forcedTermination)
-    }
-
-    private func waitForExit(_ child: Process, timeout: Duration) async {
-        let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: timeout)
-        while child.isRunning, clock.now < deadline {
-            sample(child.processIdentifier)
-            try? await Task.sleep(for: pollInterval)
-        }
-    }
-
-    private func waitForJSON<Value: Decodable>(at url: URL) async throws -> Value {
-        while true {
-            try Task.checkCancellation()
-            if FileManager.default.fileExists(atPath: url.path) {
-                return try JSONDecoder().decode(Value.self, from: Data(contentsOf: url))
-            }
-            if process?.isRunning != true {
-                if let child = process { finish(process: child, forced: forcedTermination) }
-                if criticalPressure {
-                    throw HighQualityTranslationWorkerError.criticalMemoryPressure
-                }
-                throw HighQualityTranslationWorkerError.protocolFailure("process exited before replying")
-            }
-            try await Task.sleep(for: pollInterval)
-        }
-    }
-
-    private func waitForLaunchPressure() async throws {
-        while pressure.level == .warning {
-            try Task.checkCancellation()
-            try await Task.sleep(for: pollInterval)
-        }
-        guard pressure.level != .critical else {
-            criticalPressure = true
-            throw HighQualityTranslationWorkerError.criticalMemoryPressure
-        }
-    }
-
-    private func sample(_ pid: Int32) {
-        peakPhysicalFootprintBytes = max(
-            peakPhysicalFootprintBytes,
-            Self.physicalFootprintBytes(pid: pid) ?? 0
-        )
-        memorySamples.append(.init(
-            at: Date(),
-            availableMemoryBytes: HeavyweightModelGate.measuredSystemAvailableMemoryBytes()
-        ))
-    }
-
-    private func finish(process child: Process, forced: Bool) {
-        guard process === child else { return }
-        let finishedAt = Date()
-        let beganAt = startedAt ?? finishedAt
-        try? logHandle?.close()
-        logHandle = nil
-        let logURL = workingDirectory.appendingPathComponent("worker.log")
-        let rawLog = (try? String(contentsOf: logURL, encoding: .utf8)) ?? ""
-        evidence = .init(
-            command: [executableURL.path, HighQualityTranslationWorkerCommand.argument, workingDirectory.path],
-            processIdentifier: child.processIdentifier,
-            startedAt: beganAt,
-            exitedAt: finishedAt,
-            elapsedSeconds: finishedAt.timeIntervalSince(beganAt),
-            exitStatus: child.terminationStatus,
-            terminationReason: child.terminationReason == .exit
-                ? "exit"
-                : "uncaught-signal",
-            forcedTermination: forced,
-            peakPhysicalFootprintBytes: peakPhysicalFootprintBytes,
-            pressureTransitions: pressure.transitions(since: beganAt),
-            availableMemorySamples: memorySamples,
-            swapUsedBeforeBytes: swapUsedBeforeBytes,
-            swapUsedAfterBytes: Self.swapUsedBytes(),
-            rawLogPath: logURL.path,
-            rawLog: rawLog
-        )
-        monitorTask?.cancel()
-        monitorTask = nil
-        process = nil
-        stopping = false
-    }
-
-    private nonisolated static func physicalFootprintBytes(pid: Int32) -> UInt64? {
-        var info = rusage_info_v4()
-        let status = withUnsafeMutablePointer(to: &info) { pointer in
-            UnsafeMutableRawPointer(pointer).withMemoryRebound(
-                to: rusage_info_t?.self,
-                capacity: 1
-            ) { proc_pid_rusage(pid, RUSAGE_INFO_V4, $0) }
-        }
-        return status == 0 ? info.ri_phys_footprint : nil
-    }
-
-    private nonisolated static func swapUsedBytes() -> UInt64? {
-        var usage = xsw_usage()
-        var size = MemoryLayout<xsw_usage>.size
-        let status = sysctlbyname("vm.swapusage", &usage, &size, nil, 0)
-        return status == 0 ? usage.xsu_used : nil
     }
 }
 

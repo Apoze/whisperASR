@@ -11,6 +11,11 @@ extension LocalPrototypeModelID {
 }
 
 actor WhisperKitRuntime {
+    nonisolated static let decodingOptions = DecodingOptions(
+        task: .transcribe,
+        language: "ja"
+    )
+
     private var pipeline: WhisperKit?
 
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
@@ -55,7 +60,7 @@ actor WhisperKitRuntime {
         try Task.checkCancellation()
         let results = try await pipeline.transcribe(
             audioArray: audio,
-            decodeOptions: DecodingOptions(task: .transcribe, language: "ja"),
+            decodeOptions: Self.decodingOptions,
             callback: { _ in !Task.isCancelled }
         )
         try Task.checkCancellation()
