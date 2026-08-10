@@ -23,6 +23,8 @@ TOKENIZER_ID = "google/mt5-xl"
 TOKENIZER_REVISION = "63fc6450d80515b48e026b69ef2fbbd426433e84"
 SOURCE_REVISION = "fc4978eb064670f7cc33e93ea4f52d38396b8ae6"
 WEIGHT_SHA256 = "b1f2c03ab5ec5318a55b90b42eefa22431daa7b1a8e28a97a6aef23d18a24278"
+PRODUCER_MODEL_ID = "mlx-community/translategemma-12b-it-4bit"
+PRODUCER_MODEL_REVISION = "f3dcfd54df14672fbcf0731086fb47a797a943ae"
 RESERVE_BYTES = 8 * 1_024**3
 DECLARED_PEAK_BYTES = 8 * 1_024**3
 MEMORY_PRESSURE_COMMAND = "/usr/bin/memory_pressure"
@@ -124,6 +126,23 @@ def git_revision(path: Path) -> str:
     ).strip()
 
 
+def validate_producer_release_proof(proof: dict, artifact_sha256: str) -> None:
+    expected = {
+        "schemaVersion": 1,
+        "producerArtifactSHA256": artifact_sha256,
+        "producerModelID": PRODUCER_MODEL_ID,
+        "producerModelRevision": PRODUCER_MODEL_REVISION,
+        "producerExitCode": 0,
+        "processWaitCompleted": True,
+        "modelUnloadCompleted": True,
+        "memoryReleaseCheckPassed": True,
+    }
+    if any(proof.get(key) != value for key, value in expected.items()):
+        raise ValueError("Producer release proof does not match the frozen handoff contract")
+    if type(proof.get("producerPID")) is not int or proof["producerPID"] <= 0:
+        raise ValueError("Producer release proof requires the waited producer PID")
+
+
 def worker(args: argparse.Namespace) -> None:
     rows = read_rows(args.input)
     validate_rows(rows)
@@ -218,8 +237,20 @@ def controller(args: argparse.Namespace) -> None:
     existing = translate_gemma_processes()
     total = physical_memory()
     baseline = rss_bytes(os.getpid())
+    producer_artifact_sha256 = file_sha256(args.producer_artifact)
     producer_modified_ns = args.producer_artifact.stat().st_mtime_ns
     producer_frozen = producer_modified_ns < controller_wall_time_ns
+    producer_proof = None
+    producer_proof_error = None
+    if args.producer_release_proof is None or not args.producer_release_proof.is_file():
+        producer_proof_error = "A PID/hash-bound producer release proof is required"
+    else:
+        try:
+            producer_proof = json.loads(args.producer_release_proof.read_text())
+            validate_producer_release_proof(producer_proof, producer_artifact_sha256)
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            producer_proof = None
+            producer_proof_error = str(error)
     memory_sampling_error = None
     try:
         memory_before = system_memory_sample()
@@ -229,19 +260,20 @@ def controller(args: argparse.Namespace) -> None:
     budget_capacity = baseline + DECLARED_PEAK_BYTES <= total - RESERVE_BYTES
     available_capacity = memory_before is not None \
         and memory_before["availableBytes"] >= DECLARED_PEAK_BYTES + RESERVE_BYTES
-    producer_absent = producer_frozen and not existing
+    producer_process_absent = producer_frozen and not existing
+    producer_release_proven = producer_proof is not None
     preflight_capacity = budget_capacity and available_capacity
+    preflight_passed = producer_process_absent and producer_release_proven \
+        and preflight_capacity and memory_sampling_error is None
     args.output.unlink(missing_ok=True)
     args.worker_metadata.unlink(missing_ok=True)
     runtime = {
         "schemaVersion": 1,
-        "outcome": "preflight-failure"
-        if not producer_absent or not preflight_capacity or memory_sampling_error
-        else "running",
+        "outcome": "running" if preflight_passed else "preflight-failure",
         "modelID": MODEL_ID,
         "modelRevision": MODEL_REVISION,
         "producerArtifact": str(args.producer_artifact),
-        "producerArtifactSHA256": file_sha256(args.producer_artifact),
+        "producerArtifactSHA256": producer_artifact_sha256,
         "physicalMemoryBytes": total,
         "systemReserveBytes": RESERVE_BYTES,
         "declaredPeakBytes": DECLARED_PEAK_BYTES,
@@ -249,14 +281,23 @@ def controller(args: argparse.Namespace) -> None:
         "budgetCapacity": budget_capacity,
         "availableCapacity": available_capacity,
         "preflightCapacity": preflight_capacity,
+        "preflightPassed": preflight_passed,
         "handoff": {
             "producerArtifactFrozenBeforeLoad": producer_frozen,
             "producerArtifactModifiedAtNanoseconds": producer_modified_ns,
             "controllerStartedAtNanoseconds": controller_wall_time_ns,
-            "frozenProducerProcessExited": producer_absent,
+            "producerProcessAbsentBeforeLoad": producer_process_absent,
+            "frozenProducerProcessExited": producer_release_proven,
             "translateGemmaProcessesBeforeLoad": existing,
-            "producerMemoryReleasedBeforeLoad": available_capacity,
-            "proofBasis": "The frozen artifact predates this controller, the TranslateGemma process scan is empty, and system-available memory can absorb the declared MetricX peak while preserving 8 GiB.",
+            "producerMemoryReleasedBeforeLoad": producer_release_proven,
+            "producerReleaseProofValidated": producer_release_proven,
+            "producerReleaseProofPath": str(args.producer_release_proof)
+            if args.producer_release_proof else None,
+            "producerReleaseProofSHA256": file_sha256(args.producer_release_proof)
+            if producer_release_proven else None,
+            "producerPID": producer_proof.get("producerPID") if producer_proof else None,
+            "producerReleaseProofError": producer_proof_error,
+            "proofBasis": "An explicit proof must bind the producer PID, waited exit, model unload, memory-release check, model revision, and frozen artifact SHA-256.",
             "workerExitedAfterScoring": False,
         },
         "systemMemory": {
@@ -267,7 +308,7 @@ def controller(args: argparse.Namespace) -> None:
             "samplingError": memory_sampling_error,
         },
     }
-    if not producer_absent or not preflight_capacity or memory_sampling_error:
+    if not preflight_passed:
         write_json(args.runtime, runtime)
         raise SystemExit("Heavyweight preflight failed before MetricX load")
     command = [
@@ -364,6 +405,25 @@ def self_test() -> None:
         pass
     else:
         raise AssertionError("memory pressure parsing must fail closed")
+    proof = {
+        "schemaVersion": 1,
+        "producerArtifactSHA256": "artifact-sha",
+        "producerModelID": PRODUCER_MODEL_ID,
+        "producerModelRevision": PRODUCER_MODEL_REVISION,
+        "producerPID": 123,
+        "producerExitCode": 0,
+        "processWaitCompleted": True,
+        "modelUnloadCompleted": True,
+        "memoryReleaseCheckPassed": True,
+    }
+    validate_producer_release_proof(proof, "artifact-sha")
+    try:
+        validate_producer_release_proof({**proof, "processWaitCompleted": False},
+                                        "artifact-sha")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("producer handoff proof must fail closed")
     validate_rows([{
         "candidateID": "candidate-a", "pairID": "pair-a", "source": "日本語",
         "hypothesis": "English", "suspectReasonCodes": ["injected-undertranslation"],
@@ -389,6 +449,7 @@ def main() -> None:
     parser.add_argument("--runtime", type=Path)
     parser.add_argument("--worker-metadata", type=Path)
     parser.add_argument("--producer-artifact", type=Path)
+    parser.add_argument("--producer-release-proof", type=Path)
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--device", default="cpu")
     args = parser.parse_args()

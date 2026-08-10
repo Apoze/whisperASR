@@ -165,6 +165,34 @@
       "minimumSystemAvailableBytes": 20100446945,
       "systemReserveBytes": 8589934592,
       "weightBytes": 2459348101,
+      "producerHandoff": {
+        "releaseProofPresent": false,
+        "releaseProven": false,
+        "audit": {
+          "schemaVersion": 1,
+          "ticket": 56,
+          "split": "development",
+          "producerArtifact": "docs/japanese-live/experiments/evidence/E14/development-context.json.gz",
+          "producerArtifactSHA256": "b8b0ed61c761e4e78b656b1fb7834e329293f7c14b5a11833ed332ff67fcd2ef",
+          "metricXRuntimeArtifactSHA256": "03057055649c8206171775bda3b2f0339dd717ef84ca59f9351352f0e358c7f5",
+          "producerModelID": "mlx-community/translategemma-12b-it-4bit",
+          "producerModelRevision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+          "producerPIDCaptured": false,
+          "producerWaitCompletedCaptured": false,
+          "modelUnloadCaptured": false,
+          "memoryReleaseCheckCaptured": false,
+          "nameScanAndSystemCapacityObserved": true,
+          "producerReleaseProven": false,
+          "verdict": "unproven",
+          "requiredFutureProof": [
+            "producer PID tied to artifact SHA-256",
+            "waited producer exit with exit code",
+            "model unload completed",
+            "producer memory-release check passed"
+          ],
+          "consequence": "Sequential handoff gate is false; no holdout or product promotion."
+        }
+      },
       "rawScores": {
         "development:injected-000:clean": 9.5625,
         "development:injected-000:corrupt": 15.75,
@@ -210,7 +238,7 @@
       "referenceFreeIsolation": true,
       "scoresOnlySuspectUnits": true,
       "noHardFailedSelection": true,
-      "sequentialModelHandoff": true,
+      "sequentialModelHandoff": false,
       "memoryReserve": true,
       "injectedChoiceAccuracy": false,
       "beatsCounterbalancedControl": true,
@@ -291,6 +319,10 @@
       "sha256": "8259c86c65431c7d3bf5f22e25072237bd80e80425f2c1a56f34728a5284f94a"
     },
     {
+      "path": "docs/japanese-live/experiments/evidence/E15/development-producer-handoff-audit.json.gz",
+      "sha256": "e08f171c280293a485d082e45cac08b5e7bdbec3ddf0f76092f9ccdaeb24c621"
+    },
+    {
       "path": "docs/japanese-live/experiments/evidence/E15/development-selected-translation.json.gz",
       "sha256": "e59221f4afb32f00ca391df22bdf0750d189b9956bee8285158e5d207ff71fec"
     },
@@ -327,5 +359,5 @@
       "sha256": "ed649f369858c9dfeabf704e83ed0eedb129fdffe8e912c5e01661e0a1d40cfa"
     }
   ],
-  "evidenceLimitation": "Two complete reference videos and few real suspect units do not establish universal QE quality."
+  "evidenceLimitation": "E14 has no PID/hash-bound producer exit, model-unload, and memory-release proof, so the sequential handoff gate is false. Two complete reference videos and few real suspect units do not establish universal QE quality."
 }

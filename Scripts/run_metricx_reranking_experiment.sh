@@ -13,6 +13,7 @@ LIVE_LOG="$ARTIFACTS/live-tests.log"
 METRICX_SOURCE="$ROOT/.build/metricx-runtime/source"
 METRICX_PYTHON="${METRICX_PYTHON:-$ROOT/.build/comet-venv/bin/python}"
 COMET_PYTHON="${COMET_PYTHON:-$METRICX_PYTHON}"
+PRODUCER_RELEASE_PROOF="${PRODUCER_RELEASE_PROOF:-}"
 MODE="${1:-full}"
 SOURCE_REVISION="fc4978eb064670f7cc33e93ea4f52d38396b8ae6"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
@@ -39,13 +40,23 @@ PYTHONPATH="$METRICX_SOURCE" "$METRICX_PYTHON" -c \
 
 run_split() {
   local split="$1" artifact="$E14/$1-context.json.gz" directory="$ARTIFACTS/$1"
+  local -a producer_proof_args=()
   python3 Scripts/report_metricx_reranking.py prepare "$split" "$artifact" "$directory"
+  if [[ -n "$PRODUCER_RELEASE_PROOF" ]]; then
+    [[ -f "$PRODUCER_RELEASE_PROOF" ]] || {
+      echo "Producer release proof is missing: $PRODUCER_RELEASE_PROOF" >&2
+      exit 1
+    }
+    cp "$PRODUCER_RELEASE_PROOF" "$directory/producer-release-proof.json"
+    producer_proof_args=(--producer-release-proof "$directory/producer-release-proof.json")
+  fi
   "$METRICX_PYTHON" Scripts/run_metricx_24_qe.py \
     --input "$directory/metricx-input.jsonl" \
     --output "$directory/metricx-scores.jsonl" \
     --runtime "$directory/metricx-runtime.json" \
     --worker-metadata "$directory/metricx-worker.json" \
     --producer-artifact "$artifact" \
+    "${producer_proof_args[@]}" \
     --source-root "$METRICX_SOURCE" \
     --device cpu 2>&1 | tee "$directory/metricx-run.log"
 }
@@ -74,7 +85,8 @@ package_split() {
       metricx-smoke-runtime.json metricx-smoke-worker.json \
       infrastructure-failure-transformers-4.57.6.json \
       infrastructure-failure-missing-protobuf.json \
-      infrastructure-failure-protobuf-5.29.5.json; do
+      infrastructure-failure-protobuf-5.29.5.json producer-release-proof.json \
+      producer-handoff-audit.json; do
     [[ -f "$directory/$file" ]] && gzip -n -c "$directory/$file" >"$EVIDENCE/$split-$file.gz"
   done
   for file in comet-score.json comet-score.raw.txt; do

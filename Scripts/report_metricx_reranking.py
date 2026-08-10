@@ -26,6 +26,8 @@ HARD_REASONS = {
 }
 MARGINS = [0.0, 0.1, 0.25, 0.5, 1.0, 2.0]
 INJECTED_PER_TYPE = 4
+PRODUCER_MODEL_ID = "mlx-community/translategemma-12b-it-4bit"
+PRODUCER_MODEL_REVISION = "f3dcfd54df14672fbcf0731086fb47a797a943ae"
 
 
 def read(path: Path) -> dict:
@@ -41,6 +43,31 @@ def write(path: Path, value: object) -> None:
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def producer_handoff_proven(runtime: dict, proof: dict | None,
+                            proof_sha256: str | None) -> bool:
+    handoff = runtime["handoff"]
+    expected = {
+        "schemaVersion": 1,
+        "producerArtifactSHA256": runtime["producerArtifactSHA256"],
+        "producerModelID": PRODUCER_MODEL_ID,
+        "producerModelRevision": PRODUCER_MODEL_REVISION,
+        "producerExitCode": 0,
+        "processWaitCompleted": True,
+        "modelUnloadCompleted": True,
+        "memoryReleaseCheckPassed": True,
+    }
+    return isinstance(proof, dict) \
+        and all(proof.get(key) == value for key, value in expected.items()) \
+        and type(proof.get("producerPID")) is int and proof["producerPID"] > 0 \
+        and handoff.get("producerReleaseProofValidated") is True \
+        and handoff.get("producerReleaseProofSHA256") == proof_sha256 \
+        and handoff.get("producerPID") == proof["producerPID"] \
+        and handoff.get("producerArtifactFrozenBeforeLoad") is True \
+        and handoff.get("producerProcessAbsentBeforeLoad") is True \
+        and not handoff.get("translateGemmaProcessesBeforeLoad") \
+        and handoff.get("workerExitedAfterScoring") is True
 
 
 def response_map(evidence: dict) -> dict[str, str]:
@@ -388,6 +415,12 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
             continue
         selection = read(directory / "selection.json")
         runtime = read(directory / "metricx-runtime.json")
+        proof_path = directory / "producer-release-proof.json"
+        producer_proof = read(proof_path) if proof_path.exists() else None
+        proof_sha256 = sha256(proof_path) if proof_path.exists() else None
+        handoff_proven = producer_handoff_proven(runtime, producer_proof, proof_sha256)
+        audit_path = directory / "producer-handoff-audit.json"
+        handoff_audit = read(audit_path) if audit_path.exists() else None
         score_values, score_data = scores(directory / "metricx-scores.jsonl")
         pair_data = read(directory / "pairs.json")["pairs"]
         expected_ids = {candidate["candidateID"] for pair in pair_data
@@ -431,6 +464,11 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
             "minimumSystemAvailableBytes": runtime["systemMemory"]["minimumAvailableBytes"],
             "systemReserveBytes": runtime["systemReserveBytes"],
             "weightBytes": provenance["model"]["weight"]["bytes"],
+            "producerHandoff": {
+                "releaseProofPresent": producer_proof is not None,
+                "releaseProven": handoff_proven,
+                "audit": handoff_audit,
+            },
             "rawScores": {candidate_id: score_values[candidate_id]
                           for candidate_id in sorted(score_values)},
         }
@@ -440,11 +478,7 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
             "scoresOnlySuspectUnits": set(score_values) == expected_ids
                 and all(item["suspectReasonCodes"] for item in score_data),
             "noHardFailedSelection": metricx_hard_selected == 0,
-            "sequentialModelHandoff": runtime["handoff"]["frozenProducerProcessExited"]
-                and runtime["handoff"]["producerArtifactFrozenBeforeLoad"]
-                and runtime["handoff"]["producerMemoryReleasedBeforeLoad"]
-                and not runtime["handoff"]["translateGemmaProcessesBeforeLoad"]
-                and runtime["handoff"]["workerExitedAfterScoring"],
+            "sequentialModelHandoff": handoff_proven,
             "memoryReserve": runtime["memoryReserveIntact"],
         }
         if split == "development":
@@ -498,12 +532,12 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
         "promoted": promoted,
         "decision": decision,
         "rawArtifacts": raw_artifacts,
-        "evidenceLimitation": "Two complete reference videos and few real suspect units do not establish universal QE quality.",
+        "evidenceLimitation": "E14 has no PID/hash-bound producer exit, model-unload, and memory-release proof, so the sequential handoff gate is false. Two complete reference videos and few real suspect units do not establish universal QE quality.",
     }
     write(json_path, result)
     lines = [
         "# E15 — MetricX reranking of suspect translations", "",
-        "Ticket #56 changes only selection between frozen candidates. MetricX runs reference-free after the TranslateGemma producer process has exited; it never rewrites text.", "",
+        "Ticket #56 changes only selection between frozen candidates and MetricX never rewrites text. This run lacks the required PID/hash-bound proof that TranslateGemma exited, unloaded, and released memory before MetricX loaded.", "",
         f'Checkpoint `{provenance["model"]["id"]}` @ `{provenance["model"]["revision"]}` '
         f'({provenance["model"]["license"]}, {provenance["model"]["weight"]["bytes"] / 1_073_741_824:.2f} GiB).', "",
         f'Frozen margin: `{policy["margin"]}`; counterbalanced control→MetricX '
@@ -523,13 +557,42 @@ def report(root: Path, provenance_path: Path, policy_path: Path, json_path: Path
             f'{row["peakMemoryBytes"] / 1_073_741_824:.2f} GiB | '
             f'{row["minimumSystemAvailableBytes"] / 1_073_741_824:.2f} GiB |'
         )
-    lines += ["", f"Decision: **{decision}**.", "",
+    lines += ["", "Sequential producer handoff: **not proven**; the gate is false and requires a future PID/hash-bound exit, unload, and memory-release artifact.", "",
+              f"Decision: **{decision}**; holdout remains closed.", "",
               "Two videos and the small number of real suspect units limit this conclusion."]
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
     markdown_path.write_text("\n".join(lines) + "\n")
 
 
 def self_test() -> None:
+    handoff_runtime = {
+        "producerArtifactSHA256": "artifact-sha",
+        "handoff": {
+            "producerReleaseProofValidated": True,
+            "producerReleaseProofSHA256": "proof-sha",
+            "producerPID": 123,
+            "producerArtifactFrozenBeforeLoad": True,
+            "producerProcessAbsentBeforeLoad": True,
+            "translateGemmaProcessesBeforeLoad": [],
+            "workerExitedAfterScoring": True,
+        },
+    }
+    handoff_proof = {
+        "schemaVersion": 1,
+        "producerArtifactSHA256": "artifact-sha",
+        "producerModelID": PRODUCER_MODEL_ID,
+        "producerModelRevision": PRODUCER_MODEL_REVISION,
+        "producerPID": 123,
+        "producerExitCode": 0,
+        "processWaitCompleted": True,
+        "modelUnloadCompleted": True,
+        "memoryReleaseCheckPassed": True,
+    }
+    assert producer_handoff_proven(handoff_runtime, handoff_proof, "proof-sha")
+    assert not producer_handoff_proven(handoff_runtime, None, None)
+    assert not producer_handoff_proven(
+        handoff_runtime, {**handoff_proof, "processWaitCompleted": False}, "proof-sha"
+    )
     pairs = [
         {
             "pairID": "baseline-clean", "kind": "injected-corruption",
