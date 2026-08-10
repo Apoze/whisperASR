@@ -3,6 +3,103 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityAcceptanceTests: XCTestCase {
+    func testFrozenExclusiveSpeakerReconciliationWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_EXCLUSIVE_RECONCILIATION_EXPERIMENT"] == "1",
+              let evidencePath = environment["WHISPERASR_EXCLUSIVE_RECONCILIATION_EVIDENCE"],
+              let sourcePath = environment["WHISPERASR_EXCLUSIVE_RECONCILIATION_SOURCE"],
+              let outputPath = environment["WHISPERASR_EXCLUSIVE_RECONCILIATION_OUTPUT"],
+              let rawJobID = environment["WHISPERASR_EXCLUSIVE_RECONCILIATION_JOB_ID"],
+              let jobID = UUID(uuidString: rawJobID) else {
+            throw XCTSkip("Set the frozen evidence, source, output and job ID for ticket #57.")
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let baseline = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: evidencePath))
+        )
+        let alignment = try XCTUnwrap(baseline.alignment)
+        let asrChunks = alignment.chunks.map { chunk in
+            HighQualityASRChunk(
+                index: chunk.index,
+                sourceStart: chunk.sourceStart,
+                sourceEnd: chunk.sourceEnd,
+                transcript: chunk.cues.map(\.text).joined()
+            )
+        }
+        let diarizer = HighQualitySpeakerKitRuntime()
+        let job = HighQualityJob(services: .init(
+            loadSource: { try await AudioLoader.loadSamples(url: $0) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in baseline.rawASR ?? "" },
+            transcribeJapaneseAnchored: { _ in
+                .init(rawTranscript: baseline.rawASR ?? "", chunks: asrChunks)
+            },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: alignment.chunks,
+                    modelID: alignment.modelID,
+                    revision: alignment.revision,
+                    peakMemoryBytes: alignment.peakMemoryBytes
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { try await diarizer.prepare(progress: $0) },
+            diarizeSpeakers: {
+                try await diarizer.diarize(
+                    samples: $0,
+                    useExclusiveReconciliation: $1
+                )
+            },
+            unloadDiarization: { await diarizer.unload() },
+            currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() },
+            translateEnglish: { request in
+                let translations = request.turns.enumerated().map { index, turn in
+                    [
+                        "id": turn.id,
+                        "text": (request.glossary(for: turn).map(\.english)
+                            + ["English \(index + 1)"]).joined(separator: " "),
+                    ]
+                }
+                let data = try JSONSerialization.data(withJSONObject: [
+                    "translations": translations,
+                ])
+                return .init(
+                    model: baseline.translation?.model ?? "frozen-translation-fixture",
+                    response: String(decoding: data, as: UTF8.self),
+                    attempts: []
+                )
+            }
+        ))
+
+        let result = try await job.run(.init(
+            id: jobID,
+            sourceURL: URL(fileURLWithPath: sourcePath),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: baseline.model.backend,
+            speakerLabels: true,
+            useExclusiveReconciliation: true,
+            outputRoot: URL(fileURLWithPath: outputPath)
+        ))
+
+        let candidate = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
+        XCTAssertEqual(candidate.useExclusiveReconciliation, true)
+        XCTAssertFalse(candidate.rawSpans.isEmpty)
+        XCTAssertTrue(candidate.overlapRanges.isEmpty)
+        XCTAssertEqual(
+            Set(candidate.mappings.map(\.alignmentItemIndex)).count,
+            candidate.mappings.count
+        )
+        XCTAssertEqual(
+            result.turns.map(\.japanese).joined(),
+            alignment.mergedCues.map(\.text).joined()
+        )
+    }
+
     func testFrozenPrincipalSpeakerAttributionWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_PRINCIPAL_SPEAKER_EXPERIMENT"] == "1",
@@ -45,18 +142,23 @@ final class HighQualityAcceptanceTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _ in
+            diarizeSpeakers: { _, useExclusiveReconciliation in
                 .init(
                     spans: diarization.rawSpans,
                     modelID: diarization.modelID,
                     revision: diarization.revision,
-                    peakMemoryBytes: diarization.peakMemoryBytes
+                    peakMemoryBytes: diarization.peakMemoryBytes,
+                    useExclusiveReconciliation: useExclusiveReconciliation
                 )
             },
             unloadDiarization: {},
             translateEnglish: { request in
-                let translations = request.turns.map {
-                    ["id": $0.id, "text": "translation-\($0.id)"]
+                let translations = request.turns.enumerated().map { index, turn in
+                    [
+                        "id": turn.id,
+                        "text": (request.glossary(for: turn).map(\.english)
+                            + ["English \(index + 1)"]).joined(separator: " "),
+                    ]
                 }
                 let data = try JSONSerialization.data(withJSONObject: [
                     "translations": translations,
@@ -86,7 +188,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
         XCTAssertEqual(
             result.turns.map(\.japanese).joined(),
-            alignment.chunks.flatMap(\.rawItems).map(\.text).joined()
+            alignment.mergedCues.map(\.text).joined()
         )
     }
 
@@ -133,12 +235,13 @@ final class HighQualityAcceptanceTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _ in
+            diarizeSpeakers: { _, useExclusiveReconciliation in
                 .init(
                     spans: diarization.rawSpans,
                     modelID: diarization.modelID,
                     revision: diarization.revision,
-                    peakMemoryBytes: diarization.peakMemoryBytes
+                    peakMemoryBytes: diarization.peakMemoryBytes,
+                    useExclusiveReconciliation: useExclusiveReconciliation
                 )
             },
             unloadDiarization: {},

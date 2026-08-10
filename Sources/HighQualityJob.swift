@@ -108,6 +108,7 @@ struct HighQualityJobRequest: Sendable {
     let deliverables: Set<HighQualityDeliverable>
     let backend: HighQualityASRBackend
     let speakerLabels: Bool
+    let useExclusiveReconciliation: Bool
     let speakerLabelsByCueID: [String: String]
     let translationContextPolicy: HighQualityConversationContextPolicy
     let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
@@ -119,6 +120,7 @@ struct HighQualityJobRequest: Sendable {
         deliverables: Set<HighQualityDeliverable>,
         backend: HighQualityASRBackend,
         speakerLabels: Bool = false,
+        useExclusiveReconciliation: Bool = false,
         speakerLabelsByCueID: [String: String] = [:],
         translationContextPolicy: HighQualityConversationContextPolicy = .none,
         translationContextResetReasonsByCueID: [
@@ -131,6 +133,7 @@ struct HighQualityJobRequest: Sendable {
         self.deliverables = deliverables
         self.backend = backend
         self.speakerLabels = speakerLabels
+        self.useExclusiveReconciliation = useExclusiveReconciliation
         self.speakerLabelsByCueID = speakerLabelsByCueID
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
@@ -577,6 +580,21 @@ struct HighQualityDiarizationExchange: Equatable, Sendable {
     let modelID: String
     let revision: String
     let peakMemoryBytes: UInt64
+    let useExclusiveReconciliation: Bool
+
+    init(
+        spans: [HighQualityDiarizationSpan],
+        modelID: String,
+        revision: String,
+        peakMemoryBytes: UInt64,
+        useExclusiveReconciliation: Bool = false
+    ) {
+        self.spans = spans
+        self.modelID = modelID
+        self.revision = revision
+        self.peakMemoryBytes = peakMemoryBytes
+        self.useExclusiveReconciliation = useExclusiveReconciliation
+    }
 }
 
 struct HighQualitySpeakerMapping: Codable, Equatable, Sendable {
@@ -602,7 +620,28 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
     let mappings: [HighQualitySpeakerMapping]
     let overlapRanges: [HighQualityOverlapRange]
     let peakMemoryBytes: UInt64
+    let useExclusiveReconciliation: Bool?
     var validationDiagnostics: [String]
+
+    init(
+        modelID: String,
+        revision: String,
+        rawSpans: [HighQualityDiarizationSpan],
+        mappings: [HighQualitySpeakerMapping],
+        overlapRanges: [HighQualityOverlapRange],
+        peakMemoryBytes: UInt64,
+        useExclusiveReconciliation: Bool? = nil,
+        validationDiagnostics: [String]
+    ) {
+        self.modelID = modelID
+        self.revision = revision
+        self.rawSpans = rawSpans
+        self.mappings = mappings
+        self.overlapRanges = overlapRanges
+        self.peakMemoryBytes = peakMemoryBytes
+        self.useExclusiveReconciliation = useExclusiveReconciliation
+        self.validationDiagnostics = validationDiagnostics
+    }
 }
 
 struct HighQualitySubtitleCue: Codable, Equatable, Sendable {
@@ -822,7 +861,10 @@ struct HighQualityJob: Sendable {
         let prepareDiarization: @Sendable (
             @escaping @Sendable (Double, String) -> Void
         ) async throws -> Void
-        let diarizeSpeakers: @Sendable ([Float]) async throws -> HighQualityDiarizationExchange
+        let diarizeSpeakers: @Sendable (
+            [Float],
+            Bool
+        ) async throws -> HighQualityDiarizationExchange
         let unloadDiarization: @Sendable () async -> Void
         let currentMemoryBytes: @Sendable () async -> UInt64
         let prepareTranslation: @Sendable (
@@ -882,8 +924,9 @@ struct HighQualityJob: Sendable {
                 )
             },
             diarizeSpeakers: @escaping @Sendable (
-                [Float]
-            ) async throws -> HighQualityDiarizationExchange = { _ in
+                [Float],
+                Bool
+            ) async throws -> HighQualityDiarizationExchange = { _, _ in
                 throw HighQualityJobError(
                     stage: .diarization,
                     message: "SpeakerKit is not configured.",
@@ -972,7 +1015,12 @@ struct HighQualityJob: Sendable {
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
+                    diarizeSpeakers: {
+                        try await diarizer.diarize(
+                            samples: $0,
+                            useExclusiveReconciliation: $1
+                        )
+                    },
                     unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
                     prepareTranslation: { try await translator.prepare(progress: $0) },
@@ -1000,7 +1048,12 @@ struct HighQualityJob: Sendable {
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
+                    diarizeSpeakers: {
+                        try await diarizer.diarize(
+                            samples: $0,
+                            useExclusiveReconciliation: $1
+                        )
+                    },
                     unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
                     prepareTranslation: { try await translator.prepare(progress: $0) },
@@ -1024,7 +1077,12 @@ struct HighQualityJob: Sendable {
                     alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                     unloadAlignment: { await aligner.unload() },
                     prepareDiarization: { try await diarizer.prepare(progress: $0) },
-                    diarizeSpeakers: { try await diarizer.diarize(samples: $0) },
+                    diarizeSpeakers: {
+                        try await diarizer.diarize(
+                            samples: $0,
+                            useExclusiveReconciliation: $1
+                        )
+                    },
                     unloadDiarization: { await diarizer.unload() },
                     currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() },
                     prepareTranslation: { try await translator.prepare(progress: $0) },
@@ -1573,7 +1631,10 @@ struct HighQualityJob: Sendable {
                 ))
                 try Task.checkCancellation()
                 begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
-                let exchange = try await services.diarizeSpeakers(samples)
+                let exchange = try await services.diarizeSpeakers(
+                    samples,
+                    request.useExclusiveReconciliation
+                )
                 diarizationEvidence = .init(
                     modelID: exchange.modelID,
                     revision: exchange.revision,
@@ -1581,6 +1642,7 @@ struct HighQualityJob: Sendable {
                     mappings: [],
                     overlapRanges: [],
                     peakMemoryBytes: exchange.peakMemoryBytes,
+                    useExclusiveReconciliation: exchange.useExclusiveReconciliation,
                     validationDiagnostics: []
                 )
                 do {
@@ -2597,6 +2659,7 @@ struct HighQualityJob: Sendable {
                     < ($1.start, $1.end, $1.speakerLabels.joined(separator: "+"))
             },
             peakMemoryBytes: exchange.peakMemoryBytes,
+            useExclusiveReconciliation: exchange.useExclusiveReconciliation,
             validationDiagnostics: []
         )
     }

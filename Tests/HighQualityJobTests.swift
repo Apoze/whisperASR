@@ -81,7 +81,7 @@ final class HighQualityJobTests: XCTestCase {
                 },
                 unloadAlignment: {},
                 prepareDiarization: { _ in },
-                diarizeSpeakers: { _ in
+                diarizeSpeakers: { _, _ in
                     .init(
                         spans: spans,
                         modelID: "fixture-speakerkit",
@@ -206,7 +206,7 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: { await calls.append("unload-alignment") },
             prepareDiarization: { _ in await calls.append("prepare-speakerkit") },
-            diarizeSpeakers: { _ in
+            diarizeSpeakers: { _, _ in
                 .init(
                     spans: [
                         .init(speakerID: 7, start: 1, end: 4),
@@ -258,6 +258,78 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.manifest.peakMemoryBytes, 200)
     }
 
+    func testExclusiveSpeakerReconciliationIsAuditableAndKeepsOneTranslationPerUnit() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 64_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [.init(
+                        index: 0,
+                        sourceStart: 0,
+                        sourceEnd: 4,
+                        cues: [.init(id: "cue-0001", text: "一。", start: 0, end: 4)],
+                        rawItems: [
+                            .init(cueID: "cue-0001", text: "一", start: 0, end: 2),
+                            .init(cueID: "cue-0001", text: "。", start: 2, end: 4),
+                        ]
+                    )],
+                    modelID: "fixture-aligner",
+                    revision: "frozen-revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _ in },
+            diarizeSpeakers: { _, useExclusiveReconciliation in
+                XCTAssertTrue(useExclusiveReconciliation)
+                return .init(
+                    spans: [
+                        .init(speakerID: 9, start: 0, end: 2),
+                        .init(speakerID: 3, start: 2, end: 4),
+                    ],
+                    modelID: "fixture-speakerkit",
+                    revision: "frozen-revision",
+                    peakMemoryBytes: 123,
+                    useExclusiveReconciliation: useExclusiveReconciliation
+                )
+            },
+            unloadDiarization: {},
+            translateEnglish: { request in
+                XCTAssertEqual(request.turns.map(\.japanese), ["一。"])
+                return .init(
+                    model: "fixture-translator",
+                    response: #"{"translations":[{"id":"unit-0001","text":"One"}]}"#,
+                    attempts: []
+                )
+            }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            useExclusiveReconciliation: true,
+            outputRoot: root
+        ))
+
+        let evidence = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(evidence.useExclusiveReconciliation, true)
+        XCTAssertTrue(evidence.overlapRanges.isEmpty)
+        XCTAssertEqual(evidence.mappings.map(\.alignmentItemIndex), [0, 1])
+        XCTAssertEqual(evidence.mappings.map(\.speakerLabel), ["SPEAKER_01", "SPEAKER_00"])
+        XCTAssertEqual(Set(evidence.mappings.map(\.alignmentItemIndex)).count, 2)
+        XCTAssertEqual(result.turns.map(\.japanese), ["一。"])
+        XCTAssertEqual(result.turns.map(\.english), ["One"])
+    }
+
     func testSpeakerRenameRegeneratesAllDeliverablesWithoutChangingRawIdentity() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -268,6 +340,7 @@ final class HighQualityJobTests: XCTestCase {
             deliverables: [.japaneseTranscript, .englishTranslationTranscript, .englishSubtitles],
             backend: .qwenJA,
             speakerLabels: true,
+            useExclusiveReconciliation: true,
             outputRoot: root
         ))
 
@@ -278,6 +351,7 @@ final class HighQualityJobTests: XCTestCase {
 
         XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerLabel)), ["SPEAKER_00"])
         XCTAssertEqual(Set(renamed.turns.compactMap(\.speakerName)), ["Alice"])
+        XCTAssertEqual(result.evidence.diarization?.useExclusiveReconciliation, true)
         XCTAssertEqual(renamed.evidence.diarization, result.evidence.diarization)
         let japanese = try String(
             contentsOf: result.directory.appendingPathComponent("japanese-transcript.txt"),
@@ -331,7 +405,8 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _ in
+            diarizeSpeakers: { _, useExclusiveReconciliation in
+                XCTAssertTrue(useExclusiveReconciliation)
                 started.fulfill()
                 try await Task.sleep(for: .seconds(10))
                 return .init(spans: [], modelID: "speakerkit", revision: "revision", peakMemoryBytes: 0)
@@ -344,6 +419,7 @@ final class HighQualityJobTests: XCTestCase {
                 deliverables: [.japaneseTranscript],
                 backend: .qwenJA,
                 speakerLabels: true,
+                useExclusiveReconciliation: true,
                 outputRoot: root
             ))
         }
@@ -681,15 +757,16 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: {},
             prepareDiarization: { _ in },
-            diarizeSpeakers: { _ in
+            diarizeSpeakers: { _, useExclusiveReconciliation in
                 .init(
                     spans: [
                         .init(speakerID: 0, start: 1, end: 4),
-                        .init(speakerID: 1, start: 2, end: 5),
+                        .init(speakerID: 1, start: 4, end: 5),
                     ],
                     modelID: "speakerkit",
                     revision: "revision",
-                    peakMemoryBytes: 0
+                    peakMemoryBytes: 0,
+                    useExclusiveReconciliation: useExclusiveReconciliation
                 )
             },
             unloadDiarization: {},

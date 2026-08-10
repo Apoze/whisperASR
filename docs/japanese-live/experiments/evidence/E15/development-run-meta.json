@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E15-exclusive-reconciliation",
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "corpusManifestPath": "/private/tmp/whisperASR-ticket57.gdAVJo/docs/japanese-live/corpora/qudu2fx3ncc/manifest.json",
+  "corpusManifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "baselineEvidencePath": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/principal-speaker-attribution/development-pass2/24714AB0-F273-44A3-9828-67B54766070D/raw-asr.json",
+  "baselineEvidenceSHA256": "9cddd5574529e654d1480107c23ba87d3fb9e72782765ce3efe7d6e0afc2cc53",
+  "baselineRuntimeEvidencePath": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/raw-asr.json",
+  "baselineRuntimeEvidenceSHA256": "b7281fdd3226930a4dc59758eb5e192642747ad6f9d18d942b850288ad42a394",
+  "candidateJobID": "57000001-0000-4000-8000-000000000001",
+  "baseCommit": "6dcbfdb017ffc55b3fc376994ac00e39cd025155",
+  "speakerKit": {
+    "modelID": "argmaxinc/speakerkit-coreml",
+    "revision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+    "packageRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d"
+  },
+  "settings": {
+    "baseline": {
+      "useExclusiveReconciliation": false,
+      "precision": "pinned-coreml-artifact",
+      "numberOfSpeakers": null,
+      "minActiveOffset": null,
+      "clusterDistanceThreshold": null,
+      "minClusterSize": null,
+      "fullRedundancy": true,
+      "centroidSource": "finalAssignment",
+      "clipTimestamps": []
+    },
+    "candidate": {
+      "useExclusiveReconciliation": true,
+      "precision": "pinned-coreml-artifact",
+      "numberOfSpeakers": null,
+      "minActiveOffset": null,
+      "clusterDistanceThreshold": null,
+      "minClusterSize": null,
+      "fullRedundancy": true,
+      "centroidSource": "finalAssignment",
+      "clipTimestamps": []
+    }
+  },
+  "referenceAnnotations": {
+    "pseudoSpeakers": {
+      "SPEAKER_13": "group-reaction/overlap annotation; not one acoustic identity"
+    }
+  },
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "930e858f2680f8a3283b2f1b4efc89029412e4dc941d2ec89fe1225a1d327925",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "156d9b2dedc3aa48a90758e0b4f2bc54b92cb20084d19f40eb533854ea98254d",
+    "Tests/HighQualityJobTests.swift": "8b6542e6ff2e4cae75e2a519997f9a0ab2fb3bda873b97de379de17163371c9b",
+    "Tests/HighQualityAcceptanceTests.swift": "4e62b6bd6b1944f9a3b43812a6296f9de3d41a9759ef0134f7a17877c7388f19",
+    "Scripts/run_exclusive_reconciliation_experiment.sh": "13e387528ad7cf8e006a9a9dc53936d28d206659a43866a4afc9ea8deebc63cc",
+    "Scripts/report_exclusive_reconciliation.py": "57f4faef2691a64f37f3ada7a8b7f9b5bbd6d7692d51828e926a42bcac955fbe"
+  },
+  "unchangedImplementations": {
+    "Sources/AppleLiveServices.swift": {
+      "baseSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6",
+      "candidateSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6"
+    },
+    "Sources/HighQualityTranslationIntegrity.swift": {
+      "baseSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278",
+      "candidateSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278"
+    },
+    "Sources/LiveRecoveryStore.swift": {
+      "baseSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94",
+      "candidateSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94"
+    },
+    "Sources/LocalMLXTranslator.swift": {
+      "baseSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9",
+      "candidateSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9"
+    },
+    "Sources/QwenPseudoLiveCoordinator.swift": {
+      "baseSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202",
+      "candidateSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202"
+    },
+    "Sources/TranslationService.swift": {
+      "baseSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26",
+      "candidateSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26"
+    }
+  },
+  "candidateArtifactSHA256": {
+    "raw-asr.json": "b86ee11c6532a85b8d8173c612f62786b620e812241f22a0005281f6470c23b3",
+    "manifest.json": "3bd20b758dba435613dace58b5f7b0effe322a3a47a32fcf1b1c3f8534a8aa56"
+  }
+}

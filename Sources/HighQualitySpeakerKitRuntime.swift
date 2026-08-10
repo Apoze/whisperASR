@@ -21,7 +21,10 @@ actor HighQualitySpeakerKitRuntime {
         progress(1, "SpeakerKit ready")
     }
 
-    func diarize(samples: [Float]) async throws -> HighQualityDiarizationExchange {
+    func diarize(
+        samples: [Float],
+        useExclusiveReconciliation: Bool = false
+    ) async throws -> HighQualityDiarizationExchange {
         guard let speakerKit else {
             throw HighQualityJobError(
                 stage: .diarization,
@@ -41,7 +44,9 @@ actor HighQualitySpeakerKitRuntime {
         do {
             result = try await speakerKit.diarize(
                 audioArray: samples,
-                options: PyannoteDiarizationOptions(useExclusiveReconciliation: false)
+                options: PyannoteDiarizationOptions(
+                    useExclusiveReconciliation: useExclusiveReconciliation
+                )
             )
         } catch {
             memorySampler.cancel()
@@ -63,7 +68,8 @@ actor HighQualitySpeakerKitRuntime {
             },
             modelID: Self.modelID,
             revision: Self.revision,
-            peakMemoryBytes: peakMemoryBytes
+            peakMemoryBytes: peakMemoryBytes,
+            useExclusiveReconciliation: useExclusiveReconciliation
         )
     }
 

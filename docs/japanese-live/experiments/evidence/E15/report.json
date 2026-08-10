@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E15-exclusive-reconciliation",
+  "primaryMetric": "speaker-attributed Japanese error rate",
+  "developmentPromotionEligible": false,
+  "holdoutRun": false,
+  "promote": false,
+  "decision": "do not promote; development gates or principal-Speaker gain failed",
+  "rows": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "role": "development",
+      "pseudoSpeakers": {
+        "SPEAKER_13": "group-reaction/overlap annotation; not one acoustic identity"
+      },
+      "baseline": {
+        "DERPercent": 108.46221378765807,
+        "JERPercent": 84.74678985341754,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 6,
+        "speakerCountAbsoluteError": 6,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2706,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 91.75991861648016,
+          "unattributedCharacterCount": 2803
+        },
+        "overlap": {
+          "precisionPercent": 12.572840537928329,
+          "recallPercent": 21.743761997917225,
+          "f1Percent": 15.932862351913657,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 161.52812600135803,
+          "matchedSeconds": 20.30867370605469,
+          "missedSeconds": 73.09132629394531,
+          "falseAlarmSeconds": 141.21945229530334
+        },
+        "activityFalseAlarmSeconds": 166.46592742919927,
+        "crossSpeakerOverlapSeconds": 161.52812600135803,
+        "runtimeSeconds": 12.874222993850708,
+        "preparationSeconds": 20.636031985282898,
+        "peakMemoryBytes": 720816744
+      },
+      "exclusive": {
+        "DERPercent": 89.89304022144715,
+        "JERPercent": 82.90872887521643,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 6,
+        "speakerCountAbsoluteError": 6,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2925,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 99.18616480162767,
+          "unattributedCharacterCount": 2803
+        },
+        "overlap": {
+          "precisionPercent": 0.0,
+          "recallPercent": 0.0,
+          "f1Percent": 0.0,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 0,
+          "matchedSeconds": 0,
+          "missedSeconds": 93.4,
+          "falseAlarmSeconds": 0.0
+        },
+        "activityFalseAlarmSeconds": 166.46592742919927,
+        "crossSpeakerOverlapSeconds": 0.0,
+        "runtimeSeconds": 12.505420923233032,
+        "preparationSeconds": 0.17757201194763184,
+        "peakMemoryBytes": 747996648
+      },
+      "gates": {
+        "provenance": true,
+        "frozenASRAlignment": true,
+        "oneVariable": true,
+        "sameSpeakerKit": true,
+        "exclusiveEvidence": true,
+        "oneActivePrincipalPerFrame": true,
+        "rawEvidence": true,
+        "pseudoSpeakersDeclared": true,
+        "zeroDuplication": true,
+        "japanesePreserved": true,
+        "translationStructured": true,
+        "deterministicControls": true,
+        "translationAndLiveUnchanged": true,
+        "principalSpeakerGain": false
+      },
+      "eligible": false,
+      "rawArtifacts": {
+        "baseline": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/principal-speaker-attribution/development-pass2/24714AB0-F273-44A3-9828-67B54766070D/raw-asr.json",
+        "candidate": ".build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/jobs/57000001-0000-4000-8000-000000000001/raw-asr.json",
+        "runMetadata": ".build/benchmarks/exclusive-reconciliation/qudu2fx3ncc/run-meta.json"
+      }
+    }
+  ]
+}
