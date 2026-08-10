@@ -187,7 +187,8 @@ struct HighQualityJobView: View {
                     sourceURL: selectedSource,
                     deliverables: deliverables,
                     backend: backend,
-                    speakerLabels: includeSpeakerLabels
+                    speakerLabels: includeSpeakerLabels,
+                    translationContextPolicy: .productDefault
                 )) { update in
                     Task { @MainActor in progress = update }
                 }

@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "ticket": 55,
+  "policy": {
+    "version": "previous-accepted-v1",
+    "maximumDepth": 2,
+    "maximumEncodedHistoryBytes": 512,
+    "largePauseSeconds": 8
+  },
+  "developmentResetCalibration": [
+    {
+      "largePauseSeconds": 4,
+      "resets": 8
+    },
+    {
+      "largePauseSeconds": 8,
+      "resets": 8,
+      "selected": true
+    },
+    {
+      "largePauseSeconds": 12,
+      "resets": 5
+    }
+  ],
+  "rows": [
+    {
+      "split": "development",
+      "corpusID": "qudu2fx3ncc",
+      "units": 313,
+      "retries": 2,
+      "baseline": {
+        "COMET": 0.4828819389918342,
+        "chrFPlusPlus": 45.684299211832645,
+        "runtimeSeconds": 470.2075459957123,
+        "inputTokens": 26966,
+        "terminalVerdicts": {
+          "pass": 312,
+          "suspect": 1
+        }
+      },
+      "candidate": {
+        "COMET": 0.48690228486180903,
+        "chrFPlusPlus": 45.56749914498826,
+        "runtimeSeconds": 988.666565656662,
+        "inputTokens": 84764,
+        "outputTokens": 4079,
+        "terminalVerdicts": {
+          "pass": 313
+        },
+        "peakMemoryBytes": 7526547496
+      },
+      "targetedDiscourse": {
+        "pronoun": {
+          "references": 21,
+          "baselineChrFPlusPlus": 38.658669508363076,
+          "candidateChrFPlusPlus": 37.77445496256423
+        },
+        "ellipsis": {
+          "references": 14,
+          "baselineChrFPlusPlus": 28.94386450451389,
+          "candidateChrFPlusPlus": 28.867688354246248
+        },
+        "lexicalConsistency": {
+          "repeatedSourceGroups": 5,
+          "baselineInconsistentGroups": 1,
+          "candidateInconsistentGroups": 1
+        },
+        "deterministicFixtures": [
+          "pronoun",
+          "ellipsis",
+          "lexical-consistency"
+        ]
+      },
+      "integrity": {
+        "exactHistoryAndCurrentTarget": true,
+        "futureJapaneseExcluded": true,
+        "rejectedHistoryExcluded": true,
+        "maxDepth": 2,
+        "maxEncodedHistoryBytes": 506,
+        "resets": {
+          "job-start": 1,
+          "none": 304,
+          "large-pause": 8
+        }
+      },
+      "regressions": {
+        "contamination": false,
+        "untranslated": false,
+        "criticalGlossary": false
+      }
+    },
+    {
+      "split": "holdout",
+      "corpusID": "md62mmdz0m",
+      "units": 273,
+      "retries": 2,
+      "baseline": {
+        "COMET": 0.5856149821263837,
+        "chrFPlusPlus": 50.19480432152061,
+        "runtimeSeconds": 388.4126390218735,
+        "inputTokens": 22838,
+        "terminalVerdicts": {
+          "pass": 273
+        }
+      },
+      "candidate": {
+        "COMET": 0.5873248673892989,
+        "chrFPlusPlus": 50.378472467946885,
+        "runtimeSeconds": 871.7972416877747,
+        "inputTokens": 75433,
+        "outputTokens": 3603,
+        "terminalVerdicts": {
+          "pass": 273
+        },
+        "peakMemoryBytes": 7481376998
+      },
+      "targetedDiscourse": {
+        "pronoun": {
+          "references": 36,
+          "baselineChrFPlusPlus": 44.2760208671985,
+          "candidateChrFPlusPlus": 46.373982319795196
+        },
+        "ellipsis": {
+          "references": 5,
+          "baselineChrFPlusPlus": 32.28525555985791,
+          "candidateChrFPlusPlus": 26.193905923776935
+        },
+        "lexicalConsistency": {
+          "repeatedSourceGroups": 2,
+          "baselineInconsistentGroups": 2,
+          "candidateInconsistentGroups": 2
+        },
+        "deterministicFixtures": [
+          "pronoun",
+          "ellipsis",
+          "lexical-consistency"
+        ]
+      },
+      "integrity": {
+        "exactHistoryAndCurrentTarget": true,
+        "futureJapaneseExcluded": true,
+        "rejectedHistoryExcluded": true,
+        "maxDepth": 2,
+        "maxEncodedHistoryBytes": 501,
+        "resets": {
+          "job-start": 1,
+          "none": 272
+        }
+      },
+      "regressions": {
+        "contamination": false,
+        "untranslated": false,
+        "criticalGlossary": false
+      }
+    }
+  ],
+  "gates": {
+    "development": {
+      "evidenceIntegrity": true,
+      "zeroTerminalHardFailures": true,
+      "primaryQualityGain": true,
+      "noIntegrityRegression": true,
+      "acceptableChrF": true
+    },
+    "holdout": {
+      "evidenceIntegrity": true,
+      "zeroTerminalHardFailures": true,
+      "primaryQualityGain": true,
+      "noIntegrityRegression": true,
+      "acceptableChrF": true
+    }
+  },
+  "liveGatesUnchanged": true,
+  "promoted": true,
+  "evidenceLimitation": "Two complete reference videos do not establish universal conversational quality.",
+  "rawArtifacts": [
+    {
+      "path": "docs/japanese-live/experiments/evidence/E14/development-comet-score.json.gz",
+      "sha256": "891c81c5ded7125188ba7a9b00c8fbde2bccfa398229833c074ad32773c763b9"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E14/development-context.json.gz",
+      "sha256": "b8b0ed61c761e4e78b656b1fb7834e329293f7c14b5a11833ed332ff67fcd2ef"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E14/holdout-comet-score.json.gz",
+      "sha256": "422f9a4c7f86f2a77617b2b721f3ef43ab1896b84abd03af39177902ee499b47"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E14/holdout-context.json.gz",
+      "sha256": "c36c265c520b67ce38d96a0fab257bea84fbd87faeec139c428467a1c10bbedb"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E14/live-tests.log",
+      "sha256": "4ff5fb1c92947c49803b9547076a7ee7cdf0f5691d32bf6f3d407a3ae5221468"
+    }
+  ]
+}

@@ -147,7 +147,8 @@ actor LocalMLXTranslator {
                     revision: candidate.revision,
                     sanitizedOutput: "",
                     inputTokens: tokenCount,
-                    duration: 0
+                    duration: 0,
+                    context: batch.context(for: turn)
                 )
                 let input = try await container.prepare(input: UserInput(
                     prompt: .messages(messages),
@@ -182,7 +183,8 @@ actor LocalMLXTranslator {
                         inputTokens: tokenCount,
                         outputTokens: outputTokens,
                         finishReason: finishReason,
-                        duration: Date().timeIntervalSince(unitStarted)
+                        duration: Date().timeIntervalSince(unitStarted),
+                        context: batch.context(for: turn)
                     )
                 }
                 try Task.checkCancellation()
@@ -211,7 +213,8 @@ actor LocalMLXTranslator {
                     inputTokens: tokenCount,
                     outputTokens: outputTokens,
                     finishReason: finishReason,
-                    duration: Date().timeIntervalSince(unitStarted)
+                    duration: Date().timeIntervalSince(unitStarted),
+                    context: batch.context(for: turn)
                 ))
                 inFlightTrace = nil
             }
@@ -275,9 +278,11 @@ actor LocalMLXTranslator {
         in batch: HighQualityTranslationBatch
     ) -> [PromptMessage] {
         if candidate == .translateGemma12B {
-            return batch.retryReasonCodes == nil
-                ? [Self.directUserMessage(turn.japanese)]
-                : [Self.retryUserMessage(for: turn, glossary: batch.glossary(for: turn))]
+            if batch.retryReasonCodes != nil {
+                return [Self.retryUserMessage(for: turn, glossary: batch.glossary(for: turn))]
+            }
+            return batch.context(for: turn).map(Self.contextMessages)
+                ?? [Self.directUserMessage(turn.japanese)]
         }
         var pairs: [(String, String)] = []
         for term in batch.glossary(for: turn) {
@@ -303,6 +308,10 @@ actor LocalMLXTranslator {
 
     static func directNativePrompt(for japanese: String) throws -> String {
         try nativePrompt([directUserMessage(japanese)])
+    }
+
+    static func contextNativePrompt(_ context: HighQualityConversationContextEvidence) throws -> String {
+        try nativePrompt(contextMessages(context))
     }
 
     static func retryNativePrompt(
@@ -345,6 +354,14 @@ actor LocalMLXTranslator {
             "role": "user",
             "content": [textBlock(text, sourceLanguage: sourceLanguage)],
         ]
+    }
+
+    private static func contextMessages(
+        _ context: HighQualityConversationContextEvidence
+    ) -> [PromptMessage] {
+        context.acceptedHistory.flatMap { pair in
+            [directUserMessage(pair.japanese), ["role": "assistant", "content": pair.english]]
+        } + [directUserMessage(context.currentTarget)]
     }
 
     private static func textBlock(

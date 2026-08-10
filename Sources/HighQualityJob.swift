@@ -109,6 +109,8 @@ struct HighQualityJobRequest: Sendable {
     let backend: HighQualityASRBackend
     let speakerLabels: Bool
     let speakerLabelsByCueID: [String: String]
+    let translationContextPolicy: HighQualityConversationContextPolicy
+    let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
     let outputRoot: URL
 
     init(
@@ -118,6 +120,10 @@ struct HighQualityJobRequest: Sendable {
         backend: HighQualityASRBackend,
         speakerLabels: Bool = false,
         speakerLabelsByCueID: [String: String] = [:],
+        translationContextPolicy: HighQualityConversationContextPolicy = .none,
+        translationContextResetReasonsByCueID: [
+            String: HighQualityConversationContextResetReason
+        ] = [:],
         outputRoot: URL = AppStoragePaths.highQualityJobs
     ) {
         self.id = id
@@ -126,6 +132,8 @@ struct HighQualityJobRequest: Sendable {
         self.backend = backend
         self.speakerLabels = speakerLabels
         self.speakerLabelsByCueID = speakerLabelsByCueID
+        self.translationContextPolicy = translationContextPolicy
+        self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
         self.outputRoot = outputRoot
     }
 }
@@ -203,6 +211,7 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
     let turns: [HighQualityTranslationTurn]
     let glossary: [HighQualityGlossaryPromptTerm]
     let glossaryByCueID: [String: [HighQualityGlossaryPromptTerm]]
+    let conversationContextByCueID: [String: HighQualityConversationContextEvidence]
     let retryReasonCodes: [String: [HighQualityTranslationIntegrityReasonCode]]?
 
     init(
@@ -210,6 +219,7 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
         turns: [HighQualityTranslationTurn],
         glossary: [HighQualityGlossaryPromptTerm],
         glossaryByCueID: [String: [HighQualityGlossaryPromptTerm]]? = nil,
+        conversationContextByCueID: [String: HighQualityConversationContextEvidence] = [:],
         retryReasonCodes: [String: [HighQualityTranslationIntegrityReasonCode]]? = nil
     ) {
         self.source = source
@@ -219,11 +229,13 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
             turns: turns,
             glossary: glossary
         )
+        self.conversationContextByCueID = conversationContextByCueID
         self.retryReasonCodes = retryReasonCodes
     }
 
     private enum CodingKeys: String, CodingKey {
-        case source, turns, glossary, glossaryByCueID, retryReasonCodes
+        case source, turns, glossary, glossaryByCueID, conversationContextByCueID
+        case retryReasonCodes
     }
 
     init(from decoder: Decoder) throws {
@@ -235,6 +247,10 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
             [String: [HighQualityGlossaryPromptTerm]].self,
             forKey: .glossaryByCueID
         ) ?? Self.cueLocalGlossary(turns: turns, glossary: glossary)
+        conversationContextByCueID = try values.decodeIfPresent(
+            [String: HighQualityConversationContextEvidence].self,
+            forKey: .conversationContextByCueID
+        ) ?? [:]
         retryReasonCodes = try values.decodeIfPresent(
             [String: [HighQualityTranslationIntegrityReasonCode]].self,
             forKey: .retryReasonCodes
@@ -243,6 +259,10 @@ struct HighQualityTranslationBatch: Codable, Equatable, Sendable {
 
     func glossary(for turn: HighQualityTranslationTurn) -> [HighQualityGlossaryPromptTerm] {
         glossaryByCueID[turn.id] ?? []
+    }
+
+    func context(for turn: HighQualityTranslationTurn) -> HighQualityConversationContextEvidence? {
+        conversationContextByCueID[turn.id]
     }
 
     private static func cueLocalGlossary(
@@ -310,6 +330,7 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
     let validationReasonCodes: [HighQualityTranslationIntegrityReasonCode]?
     let selected: Bool?
     let terminalOutcome: String?
+    let context: HighQualityConversationContextEvidence?
 
     init(
         cueIDs: [String],
@@ -326,7 +347,8 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
         attemptNumber: Int? = nil,
         validationReasonCodes: [HighQualityTranslationIntegrityReasonCode]? = nil,
         selected: Bool? = nil,
-        terminalOutcome: String? = nil
+        terminalOutcome: String? = nil,
+        context: HighQualityConversationContextEvidence? = nil
     ) {
         self.cueIDs = cueIDs
         self.sanitizedPrompt = sanitizedPrompt
@@ -343,6 +365,7 @@ struct HighQualityLocalTranslationBatch: Codable, Equatable, Sendable {
         self.validationReasonCodes = validationReasonCodes
         self.selected = selected
         self.terminalOutcome = terminalOutcome
+        self.context = context
     }
 }
 
@@ -1606,7 +1629,7 @@ struct HighQualityJob: Sendable {
             var translationsByID: [String: String] = [:]
             if needsTranslation {
                 begin(.translating, fraction: 0.8, message: "Preparing local TranslateGemma…")
-                let translationRequest = HighQualityTranslationBatch(
+                var translationRequest = HighQualityTranslationBatch(
                     source: manifest.source,
                     turns: turns,
                     glossary: glossary.promptTerms,
@@ -1672,7 +1695,15 @@ struct HighQualityJob: Sendable {
                         at: Date()
                     ))
                     progress(.init(stage: .translating, fraction: 0.84, message: "Translating to English locally…"))
-                    let exchange = try await services.translateEnglish(translationRequest)
+                    let firstPass = try await Self.firstTranslationPass(
+                        request: translationRequest,
+                        contextPolicy: request.translationContextPolicy,
+                        resetReasons: request.translationContextResetReasonsByCueID,
+                        integrityGlossaryByCueID: integrityGlossaryByCueID,
+                        translate: services.translateEnglish
+                    )
+                    translationRequest = firstPass.request
+                    let exchange = firstPass.exchange
                     translationEvidence = .init(
                         request: translationRequest,
                         response: exchange.response,
@@ -2609,7 +2640,7 @@ struct HighQualityJob: Sendable {
         speaker.map { "\($0): \(text)" } ?? text
     }
 
-    private static func validatedTranslations(
+    static func validatedTranslations(
         _ response: String,
         for turns: [HighQualityTranslationTurn]
     ) throws -> [String: String] {
@@ -2661,7 +2692,7 @@ struct HighQualityJob: Sendable {
         return translations
     }
 
-    private static func translationResponse(
+    static func translationResponse(
         _ translations: [String: String],
         for turns: [HighQualityTranslationTurn]
     ) throws -> String {
@@ -2686,7 +2717,135 @@ struct HighQualityJob: Sendable {
         }
     }
 
-    private static func annotatedBatches(
+    static func firstTranslationPass(
+        request: HighQualityTranslationBatch,
+        contextPolicy: HighQualityConversationContextPolicy,
+        resetReasons: [String: HighQualityConversationContextResetReason],
+        integrityGlossaryByCueID: [String: [HighQualityTranslationIntegrityGlossaryTerm]],
+        translate: @Sendable (HighQualityTranslationBatch) async throws
+            -> HighQualityTranslationExchange
+    ) async throws -> (
+        request: HighQualityTranslationBatch,
+        exchange: HighQualityTranslationExchange
+    ) {
+        guard contextPolicy != .none else {
+            return (request, try await translate(request))
+        }
+
+        var contextState = HighQualityConversationContextState(
+            policy: contextPolicy,
+            explicitResetReasons: resetReasons
+        )
+        var contexts: [String: HighQualityConversationContextEvidence] = [:]
+        var translations: [String: String] = [:]
+        var batches: [HighQualityLocalTranslationBatch] = []
+        var evaluatedTurns: [HighQualityTranslationTurn] = []
+        var duration: TimeInterval = 0
+        var peakMemoryBytes: UInt64 = 0
+        var firstExchange: HighQualityTranslationExchange?
+
+        for turn in request.turns {
+            try Task.checkCancellation()
+            let context = contextState.context(for: turn)
+            if let context { contexts[turn.id] = context }
+            let unitRequest = HighQualityTranslationBatch(
+                source: request.source,
+                turns: [turn],
+                glossary: request.glossary,
+                glossaryByCueID: [turn.id: request.glossary(for: turn)],
+                conversationContextByCueID: context.map { [turn.id: $0] } ?? [:]
+            )
+            let exchange: HighQualityTranslationExchange
+            do {
+                exchange = try await translate(unitRequest)
+            } catch {
+                let serviceError = error as? HighQualityTranslationServiceError
+                var errorAttempts = duration > 0 ? [HighQualityTranslationAttempt(
+                    number: 1,
+                    duration: duration,
+                    outcome: "success"
+                )] : []
+                errorAttempts += numberedAttempts(
+                    serviceError?.attempts ?? [.init(
+                        number: 1,
+                        duration: 0,
+                        outcome: error.localizedDescription
+                    )],
+                    startingAt: errorAttempts.count + 1
+                )
+                throw HighQualityTranslationServiceError(
+                    model: serviceError?.model ?? firstExchange?.model
+                        ?? LocalMLXTranslator.modelID,
+                    attempts: errorAttempts,
+                    response: serviceError?.response,
+                    revision: serviceError?.revision ?? firstExchange?.revision,
+                    runtimeVersion: serviceError?.runtimeVersion
+                        ?? firstExchange?.runtimeVersion,
+                    batches: batches + (serviceError?.batches ?? []),
+                    peakMemoryBytes: max(
+                        peakMemoryBytes,
+                        serviceError?.peakMemoryBytes ?? 0
+                    ),
+                    message: error.localizedDescription
+                )
+            }
+            if firstExchange == nil { firstExchange = exchange }
+            duration += exchange.attempts.reduce(0) { $0 + $1.duration }
+            peakMemoryBytes = max(peakMemoryBytes, exchange.peakMemoryBytes)
+            let unitBatches = exchange.batches.map { batch in
+                HighQualityLocalTranslationBatch(
+                    cueIDs: batch.cueIDs,
+                    sanitizedPrompt: batch.sanitizedPrompt,
+                    nativePrompt: batch.nativePrompt,
+                    nativeOutput: batch.nativeOutput,
+                    model: batch.model,
+                    revision: batch.revision,
+                    sanitizedOutput: batch.sanitizedOutput,
+                    inputTokens: batch.inputTokens,
+                    outputTokens: batch.outputTokens,
+                    finishReason: batch.finishReason,
+                    duration: batch.duration,
+                    context: context
+                )
+            }
+            batches += unitBatches
+            let unitTranslations = try validatedTranslations(exchange.response, for: [turn])
+            translations.merge(unitTranslations) { _, latest in latest }
+            evaluatedTurns.append(turn)
+            let verdict = HighQualityTranslationIntegrityValidator.validate(
+                turns: evaluatedTurns,
+                translations: translations,
+                batches: batches,
+                glossary: [],
+                glossaryByCueID: integrityGlossaryByCueID
+            ).first { $0.cueID == turn.id }
+            if verdict?.verdict == .pass, let english = unitTranslations[turn.id] {
+                contextState.accept(turn, english: english)
+            }
+        }
+
+        guard let firstExchange else {
+            return (request, try await translate(request))
+        }
+        let contextualRequest = HighQualityTranslationBatch(
+            source: request.source,
+            turns: request.turns,
+            glossary: request.glossary,
+            glossaryByCueID: request.glossaryByCueID,
+            conversationContextByCueID: contexts
+        )
+        return (contextualRequest, .init(
+            model: firstExchange.model,
+            response: try translationResponse(translations, for: request.turns),
+            attempts: [.init(number: 1, duration: duration, outcome: "success")],
+            revision: firstExchange.revision,
+            runtimeVersion: firstExchange.runtimeVersion,
+            batches: batches,
+            peakMemoryBytes: peakMemoryBytes
+        ))
+    }
+
+    static func annotatedBatches(
         _ batches: [HighQualityLocalTranslationBatch],
         verdicts: [HighQualityTranslationIntegrityVerdict],
         attempt: Int,
@@ -2714,7 +2873,8 @@ struct HighQualityJob: Sendable {
                 attemptNumber: attempt,
                 validationReasonCodes: unitVerdicts.flatMap { $0.reasons.map(\.code) },
                 selected: accepted,
-                terminalOutcome: accepted ? "accepted" : (attempt == 1 ? "rejected" : "failed")
+                terminalOutcome: accepted ? "accepted" : (attempt == 1 ? "rejected" : "failed"),
+                context: batch.context
             )
         }
     }
