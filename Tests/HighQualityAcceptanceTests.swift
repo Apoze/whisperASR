@@ -399,7 +399,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 )
             },
             unloadAlignment: {},
-            prepareDiarization: { _ in },
+            prepareDiarization: { _, _ in },
             diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 .init(
                     spans: diarization.rawSpans,
@@ -513,7 +513,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 )
             },
             unloadAlignment: {},
-            prepareDiarization: { _ in },
+            prepareDiarization: { _, _ in },
             diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 .init(
                     spans: diarization.rawSpans,
@@ -876,8 +876,12 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 )
             },
             unloadAlignment: {},
-            prepareDiarization: diarizer.prepare,
-            diarizeSpeakers: diarizer.diarize,
+            prepareDiarization: { _, progress in
+                try await diarizer.prepare(progress)
+            },
+            diarizeSpeakers: {
+                try await diarizer.diarize($0, $1, $2.countPolicy)
+            },
             unloadDiarization: diarizer.unload,
             diarizationModelID: diarizer.modelID,
             diarizationDeclaredPeakMemoryBytes: diarizer.declaredPeakMemoryBytes,

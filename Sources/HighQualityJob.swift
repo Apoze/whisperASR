@@ -176,6 +176,21 @@ struct HighQualitySpeakerCountPolicy: Codable, Equatable, Hashable, Sendable {
     }
 }
 
+struct HighQualitySpeakerConfiguration: Codable, Equatable, Sendable {
+    static let standard = Self(
+        enhancedPrecision: false,
+        sensitiveDetection: false,
+        countPolicy: .automatic
+    )
+    static let sensitiveClusteringThreshold: Float = 0.55
+
+    let enhancedPrecision: Bool
+    let sensitiveDetection: Bool
+    let countPolicy: HighQualitySpeakerCountPolicy
+
+    var isValid: Bool { countPolicy.isValid }
+}
+
 struct HighQualityJobRequest: Sendable {
     let id: UUID
     let sourceURL: URL
@@ -184,7 +199,8 @@ struct HighQualityJobRequest: Sendable {
     let translator: HighQualityTranslator
     let speakerLabels: Bool
     let useExclusiveReconciliation: Bool
-    let speakerCountPolicy: HighQualitySpeakerCountPolicy
+    let speakerConfiguration: HighQualitySpeakerConfiguration
+    var speakerCountPolicy: HighQualitySpeakerCountPolicy { speakerConfiguration.countPolicy }
     let speakerLabelsByCueID: [String: String]
     let translationContextPolicy: HighQualityConversationContextPolicy
     let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
@@ -198,6 +214,8 @@ struct HighQualityJobRequest: Sendable {
         translator: HighQualityTranslator = .productDefault,
         speakerLabels: Bool = false,
         useExclusiveReconciliation: Bool = false,
+        enhancedSpeakerPrecision: Bool = false,
+        sensitiveSpeakerDetection: Bool = false,
         speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
         speakerLabelsByCueID: [String: String] = [:],
         translationContextPolicy: HighQualityConversationContextPolicy = .none,
@@ -213,7 +231,11 @@ struct HighQualityJobRequest: Sendable {
         self.translator = translator
         self.speakerLabels = speakerLabels
         self.useExclusiveReconciliation = useExclusiveReconciliation
-        self.speakerCountPolicy = speakerCountPolicy
+        self.speakerConfiguration = .init(
+            enhancedPrecision: enhancedSpeakerPrecision,
+            sensitiveDetection: sensitiveSpeakerDetection,
+            countPolicy: speakerCountPolicy
+        )
         self.speakerLabelsByCueID = speakerLabelsByCueID
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
@@ -953,6 +975,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     let selectedBackend: HighQualityASRBackend
     let translationModel: HighQualityTranslationModelEvidence?
     let speakerLabels: Bool
+    let speakerConfiguration: HighQualitySpeakerConfiguration?
     let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let dependencies: [HighQualityJobDependency]
     var model: HighQualityModelEvidence
@@ -970,6 +993,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
     let asrWorker: HighQualityASRWorkerEvidence?
+    let speakerConfiguration: HighQualitySpeakerConfiguration?
     let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let rawASR: String?
     let glossary: HighQualityGlossarySelection
@@ -1027,12 +1051,13 @@ struct HighQualityJob: Sendable {
         let alignmentDeclaredPeakMemoryBytes: UInt64
         let alignmentWorkerEvidence: @Sendable () async -> HighQualityWorkerEvidence?
         let prepareDiarization: @Sendable (
+            HighQualitySpeakerConfiguration,
             @escaping @Sendable (Double, String) -> Void
         ) async throws -> Void
         let diarizeSpeakers: @Sendable (
             [Float],
             Bool,
-            HighQualitySpeakerCountPolicy
+            HighQualitySpeakerConfiguration
         ) async throws -> HighQualityDiarizationExchange
         let unloadDiarization: @Sendable () async -> Void
         let diarizationModelID: String
@@ -1099,8 +1124,9 @@ struct HighQualityJob: Sendable {
             alignmentWorkerEvidence: @escaping @Sendable () async
                 -> HighQualityWorkerEvidence? = { nil },
             prepareDiarization: @escaping @Sendable (
+                HighQualitySpeakerConfiguration,
                 @escaping @Sendable (Double, String) -> Void
-            ) async throws -> Void = { _ in
+            ) async throws -> Void = { _, _ in
                 throw HighQualityJobError(
                     stage: .diarization,
                     message: "SpeakerKit is not configured.",
@@ -1110,7 +1136,7 @@ struct HighQualityJob: Sendable {
             diarizeSpeakers: @escaping @Sendable (
                 [Float],
                 Bool,
-                HighQualitySpeakerCountPolicy
+                HighQualitySpeakerConfiguration
             ) async throws -> HighQualityDiarizationExchange = { _, _, _ in
                 throw HighQualityJobError(
                     stage: .diarization,
@@ -1205,12 +1231,12 @@ struct HighQualityJob: Sendable {
             let diarizeSpeakers: @Sendable (
                 [Float],
                 Bool,
-                HighQualitySpeakerCountPolicy
+                HighQualitySpeakerConfiguration
             ) async throws -> HighQualityDiarizationExchange = {
                 try await diarizer.diarize(
                     samples: $0,
                     useExclusiveReconciliation: $1,
-                    speakerCountPolicy: $2
+                    configuration: $2
                 )
             }
             return Self(
@@ -1229,7 +1255,9 @@ struct HighQualityJob: Sendable {
                 alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
                 unloadAlignment: { await aligner.unload() },
                 alignmentWorkerEvidence: { await aligner.evidence },
-                prepareDiarization: { try await diarizer.prepare(progress: $0) },
+                prepareDiarization: {
+                    try await diarizer.prepare(configuration: $0, progress: $1)
+                },
                 diarizeSpeakers: diarizeSpeakers,
                 unloadDiarization: { await diarizer.unload() },
                 diarizationWorkerEvidence: { await diarizer.evidence },
@@ -1412,6 +1440,7 @@ struct HighQualityJob: Sendable {
             selectedBackend: request.backend,
             translationModel: needsTranslation ? translationModel : nil,
             speakerLabels: request.speakerLabels || !request.speakerLabelsByCueID.isEmpty,
+            speakerConfiguration: request.speakerConfiguration,
             speakerCountPolicy: request.speakerCountPolicy,
             dependencies: (isYouTubeSource ? [.sourceAcquisition] : [])
                 + [.sourceNormalization, .japaneseASR]
@@ -1553,17 +1582,17 @@ struct HighQualityJob: Sendable {
         }
 
         do {
-            guard request.speakerCountPolicy.isValid else {
+            guard request.speakerConfiguration.isValid else {
                 throw HighQualityJobError(
                     stage: .application,
                     message: "Expected speaker count must be an integer from 1 through 20.",
                     resultDirectory: directory
                 )
             }
-            guard request.speakerLabels || request.speakerCountPolicy == .automatic else {
+            guard request.speakerLabels || request.speakerConfiguration == .standard else {
                 throw HighQualityJobError(
                     stage: .application,
-                    message: "Expected speaker count requires Speaker labels.",
+                    message: "SpeakerKit beta settings require Speaker labels.",
                     resultDirectory: directory
                 )
             }
@@ -1883,7 +1912,8 @@ struct HighQualityJob: Sendable {
                     at: Date()
                 ))
                 try await withMemoryGuard(diarizationLease) {
-                    try await services.prepareDiarization { fraction, message in
+                    try await services.prepareDiarization(request.speakerConfiguration) {
+                        fraction, message in
                         progress(.init(
                             stage: .preparingDiarization,
                             fraction: 0.74 + min(max(fraction, 0), 1) * 0.04,
@@ -1903,7 +1933,7 @@ struct HighQualityJob: Sendable {
                     try await services.diarizeSpeakers(
                         samples,
                         request.useExclusiveReconciliation,
-                        request.speakerCountPolicy
+                        request.speakerConfiguration
                     )
                 }
                 guard exchange.speakerCountPolicy == request.speakerCountPolicy else {
@@ -3562,6 +3592,7 @@ struct HighQualityJob: Sendable {
             source: manifest.source,
             model: manifest.model,
             asrWorker: manifest.asrWorker,
+            speakerConfiguration: manifest.speakerConfiguration,
             speakerCountPolicy: manifest.speakerCountPolicy,
             rawASR: rawASR,
             glossary: glossary,

@@ -119,7 +119,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
                 try await diarizer.diarize(
                     samples: samples,
                     useExclusiveReconciliation: false,
-                    speakerCountPolicy: .automatic
+                    configuration: .standard
                 )
             }
             _ = try await gate.releaseModel(diarizationLease) { await diarizer.unload() }
@@ -246,7 +246,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
         let diarization = try await diarizer.diarize(
             samples: [0.25],
             useExclusiveReconciliation: false,
-            speakerCountPolicy: .automatic
+            configuration: .standard
         )
         XCTAssertEqual(diarization.spans, [.init(speakerID: 3, start: 0, end: 1)])
         XCTAssertEqual(diarization.speakerCountPolicy, .automatic)
@@ -295,7 +295,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
             _ = try await worker.diarize(
                 samples: [0],
                 useExclusiveReconciliation: false,
-                speakerCountPolicy: .automatic
+                configuration: .standard
             )
             XCTFail("Malformed evidence must not cross the worker boundary.")
         } catch let error as HighQualityAlignmentSpeakerWorkerError {
@@ -307,6 +307,50 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
         await worker.unload()
         let evidence = await worker.evidence
         XCTAssertNotNil(evidence)
+    }
+
+    func testIndependentBetaSettingsCrossWorkerBoundary() async throws {
+        let fixture = try AuxiliaryWorkerFixture(script: """
+        #!/bin/sh
+        directory="$2"
+        printf '{"ready":true}' > "$directory/ready.json"
+        while [ ! -f "$directory/request.json" ]; do sleep 0.01; done
+        printf '{"diarization":{"spans":[{"speakerID":1,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":1,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"expected","expectedCount":3},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"full","segmenterVariant":"W32A32","embedderVariant":"W16A16","speakerCount":"3","clusterDistanceThreshold":"0.55","overlap":"non-exclusive","attribution":"principal"}}}' > "$directory/response.json"
+        while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
+        """)
+        let workingDirectory = fixture.directory.appendingPathComponent("uncreated", isDirectory: true)
+        let worker = HighQualityAlignmentSpeakerWorkerClient(
+            stage: .diarization,
+            executableURL: fixture.executable,
+            workingDirectory: workingDirectory,
+            pressure: MacMemoryPressureMonitor(native: false),
+            pollInterval: .milliseconds(2),
+            shutdownTimeout: .milliseconds(50)
+        )
+        let configuration = HighQualitySpeakerConfiguration(
+            enhancedPrecision: true,
+            sensitiveDetection: true,
+            countPolicy: .expected(3)
+        )
+        try await worker.prepare(configuration: configuration, progress: { _, _ in })
+
+        let result = try await worker.diarize(
+            samples: [0],
+            useExclusiveReconciliation: false,
+            configuration: configuration
+        )
+        let request = try String(
+            contentsOf: workingDirectory.appendingPathComponent("request.json"),
+            encoding: .utf8
+        )
+
+        XCTAssertEqual(result.speakerCountPolicy, .expected(3))
+        XCTAssertEqual(result.configuration?["precision"], "full")
+        XCTAssertEqual(result.configuration?["clusterDistanceThreshold"], "0.55")
+        XCTAssertTrue(request.contains(#""enhancedPrecision":true"#))
+        XCTAssertTrue(request.contains(#""sensitiveDetection":true"#))
+        XCTAssertTrue(request.contains(#""expectedCount":3"#))
+        await worker.unload()
     }
 
     func testWellFormedMismatchedProvenanceFailsClosed() async throws {
@@ -431,7 +475,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
             _ = try await worker.diarize(
                 samples: [0],
                 useExclusiveReconciliation: false,
-                speakerCountPolicy: .automatic
+                configuration: .standard
             )
             XCTFail("A crashed SpeakerKit worker must fail its request.")
         } catch let error as HighQualityAlignmentSpeakerWorkerError {

@@ -6,6 +6,10 @@ actor HighQualitySpeakerKitRuntime {
         case quantized
         case full
 
+        init(configuration: HighQualitySpeakerConfiguration) {
+            self = configuration.enhancedPrecision ? .full : .quantized
+        }
+
         var segmenterVariant: String { self == .quantized ? "W8A16" : "W32A32" }
         var embedderVariant: String { self == .quantized ? "W8A16" : "W16A16" }
     }
@@ -18,6 +22,14 @@ actor HighQualitySpeakerKitRuntime {
     private let precision: Precision
     private let downloadBase: String?
     private var speakerKit: SpeakerKit?
+
+    init(
+        configuration: HighQualitySpeakerConfiguration,
+        downloadBase: String? = nil
+    ) {
+        precision = Precision(configuration: configuration)
+        self.downloadBase = downloadBase
+    }
 
     init(precision: Precision = .quantized, downloadBase: String? = nil) {
         self.precision = precision

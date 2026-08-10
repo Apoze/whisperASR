@@ -2,13 +2,33 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+struct HighQualitySpeakerBetaControls: Equatable {
+    var includeLabels = false
+    var isExpanded = false
+    var enhancedPrecision = false
+    var sensitiveDetection = false
+    var knowsSpeakerCount = false
+    var expectedSpeakerCount = 2
+
+    var showsAdvancedSettings: Bool { includeLabels }
+    var showsExpectedCount: Bool { showsAdvancedSettings && knowsSpeakerCount }
+    var configuration: HighQualitySpeakerConfiguration {
+        guard includeLabels else { return .standard }
+        return .init(
+            enhancedPrecision: enhancedPrecision,
+            sensitiveDetection: sensitiveDetection,
+            countPolicy: knowsSpeakerCount ? .expected(expectedSpeakerCount) : .automatic
+        )
+    }
+}
+
 struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
     @State private var includeJapaneseTranscript = true
     @State private var includeEnglishTranscript = false
     @State private var includeEnglishSubtitles = false
-    @State private var includeSpeakerLabels = false
+    @State private var speakerBeta = HighQualitySpeakerBetaControls()
     @State private var backend: HighQualityASRBackend? = .productDefault
     @State private var translator: HighQualityTranslator = .productDefault
     @State private var progress = HighQualityJobProgress(
@@ -56,7 +76,7 @@ struct HighQualityJobView: View {
             Toggle("English WebVTT and SRT subtitles", isOn: $includeEnglishSubtitles)
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
-            Toggle("Speaker labels", isOn: $includeSpeakerLabels)
+            Toggle("Speaker labels", isOn: $speakerBeta.includeLabels)
                 .toggleStyle(.checkbox)
                 .disabled(isRunning)
 
@@ -70,6 +90,52 @@ struct HighQualityJobView: View {
                 Text(translator.detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            if speakerBeta.showsAdvancedSettings {
+                DisclosureGroup(
+                    "Réglages avancés (Bêta)",
+                    isExpanded: $speakerBeta.isExpanded
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Précision renforcée", isOn: $speakerBeta.enhancedPrecision)
+                            .toggleStyle(.checkbox)
+                            .accessibilityIdentifier("speaker-beta-enhanced-precision")
+                            .accessibilityHint("Analyse des locuteurs environ 30 % plus lente.")
+                        Text("Modèles haute précision. Analyse environ 30 % plus lente.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Toggle("Détection plus sensible", isOn: $speakerBeta.sensitiveDetection)
+                            .toggleStyle(.checkbox)
+                            .accessibilityIdentifier("speaker-beta-sensitive-detection")
+                            .accessibilityHint("Peut mieux séparer des voix proches.")
+                        Text("Peut mieux séparer des voix proches. Ajoute quelques secondes.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Picker("Nombre de locuteurs", selection: $speakerBeta.knowsSpeakerCount) {
+                            Text("Auto").tag(false)
+                            Text("Je le connais (Bêta)").tag(true)
+                        }
+                        .accessibilityIdentifier("speaker-beta-speaker-count-mode")
+                        .accessibilityHint("Auto, ou nombre exact si vous le connaissez.")
+                        if speakerBeta.showsExpectedCount {
+                            Stepper(
+                                "Nombre exact : \(speakerBeta.expectedSpeakerCount)",
+                                value: $speakerBeta.expectedSpeakerCount,
+                                in: HighQualitySpeakerCountPolicy.validExpectedCounts
+                            )
+                            .accessibilityIdentifier("speaker-beta-expected-speaker-count")
+                            Text("À utiliser seulement si vous connaissez le nombre exact.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.top, 8)
+                    .disabled(isRunning)
+                }
+                .accessibilityIdentifier("speaker-beta-settings")
             }
 
             Picker("Japanese ASR", selection: $backend) {
@@ -201,7 +267,10 @@ struct HighQualityJobView: View {
                     deliverables: deliverables,
                     backend: backend,
                     translator: translator,
-                    speakerLabels: includeSpeakerLabels,
+                    speakerLabels: speakerBeta.includeLabels,
+                    enhancedSpeakerPrecision: speakerBeta.configuration.enhancedPrecision,
+                    sensitiveSpeakerDetection: speakerBeta.configuration.sensitiveDetection,
+                    speakerCountPolicy: speakerBeta.configuration.countPolicy,
                     translationContextPolicy: .productDefault
                 )) { update in
                     Task { @MainActor in progress = update }

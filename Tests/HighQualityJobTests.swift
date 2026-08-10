@@ -3,12 +3,45 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
-    func testAutoAndExpectedSpeakerCountsReachSpeakerKitAndRawEvidence() async throws {
+    func testSpeakerBetaControlsVisibilityAndSafeDefaults() {
+        var controls = HighQualitySpeakerBetaControls()
+
+        XCTAssertFalse(controls.showsAdvancedSettings)
+        XCTAssertFalse(controls.isExpanded)
+        XCTAssertFalse(controls.showsExpectedCount)
+        XCTAssertEqual(controls.configuration, .standard)
+
+        controls.includeLabels = true
+        XCTAssertTrue(controls.showsAdvancedSettings)
+        XCTAssertFalse(controls.isExpanded)
+        XCTAssertFalse(controls.showsExpectedCount)
+        XCTAssertEqual(controls.configuration, .standard)
+
+        controls.enhancedPrecision = true
+        controls.sensitiveDetection = true
+        controls.knowsSpeakerCount = true
+        controls.expectedSpeakerCount = 3
+        XCTAssertTrue(controls.showsExpectedCount)
+        XCTAssertEqual(controls.configuration, .init(
+            enhancedPrecision: true,
+            sensitiveDetection: true,
+            countPolicy: .expected(3)
+        ))
+    }
+
+    func testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
-        for policy in [HighQualitySpeakerCountPolicy.automatic, .expected(2)] {
+        let configurations = [
+            HighQualitySpeakerConfiguration.standard,
+            .init(enhancedPrecision: true, sensitiveDetection: false, countPolicy: .automatic),
+            .init(enhancedPrecision: false, sensitiveDetection: true, countPolicy: .automatic),
+            .init(enhancedPrecision: false, sensitiveDetection: false, countPolicy: .expected(2)),
+            .init(enhancedPrecision: true, sensitiveDetection: true, countPolicy: .expected(3)),
+        ]
+        for configuration in configurations {
             let job = HighQualityJob(services: .init(
                 loadSource: { _ in Array(repeating: 0, count: 16_000) },
                 prepareASR: { _ in },
@@ -29,15 +62,15 @@ final class HighQualityJobTests: XCTestCase {
                     )
                 },
                 unloadAlignment: {},
-                prepareDiarization: { _ in },
-                diarizeSpeakers: { _, _, receivedPolicy in
-                    XCTAssertEqual(receivedPolicy, policy)
+                prepareDiarization: { _, _ in },
+                diarizeSpeakers: { _, _, receivedConfiguration in
+                    XCTAssertEqual(receivedConfiguration, configuration)
                     return .init(
                         spans: [.init(speakerID: 0, start: 0, end: 1)],
                         modelID: "speakerkit",
                         revision: "revision",
                         peakMemoryBytes: 0,
-                        speakerCountPolicy: receivedPolicy
+                        speakerCountPolicy: receivedConfiguration.countPolicy
                     )
                 },
                 unloadDiarization: {}
@@ -47,16 +80,22 @@ final class HighQualityJobTests: XCTestCase {
                 deliverables: [.japaneseTranscript],
                 backend: .qwenJA,
                 speakerLabels: true,
-                speakerCountPolicy: policy,
+                enhancedSpeakerPrecision: configuration.enhancedPrecision,
+                sensitiveSpeakerDetection: configuration.sensitiveDetection,
+                speakerCountPolicy: configuration.countPolicy,
                 outputRoot: root
             )
 
-            XCTAssertEqual(request.speakerCountPolicy, policy)
+            XCTAssertEqual(request.speakerConfiguration, configuration)
             let result = try await job.run(request)
 
-            XCTAssertEqual(result.manifest.speakerCountPolicy, policy)
-            XCTAssertEqual(result.evidence.speakerCountPolicy, policy)
-            XCTAssertEqual(result.evidence.diarization?.speakerCountPolicy, policy)
+            XCTAssertEqual(result.manifest.speakerConfiguration, configuration)
+            XCTAssertEqual(result.evidence.speakerConfiguration, configuration)
+            XCTAssertEqual(result.evidence.diarization?.speakerCountPolicy, configuration.countPolicy)
+            XCTAssertTrue(result.manifest.dependencies.contains(.forcedAlignment))
+            XCTAssertTrue(result.manifest.dependencies.contains(.speakerDiarization))
+            XCTAssertEqual(result.turns.map(\.speakerLabel), ["SPEAKER_00"])
+            XCTAssertEqual(result.evidence.diarization?.mappings.count, 1)
         }
     }
 
@@ -65,10 +104,12 @@ final class HighQualityJobTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
-        for (speakerLabels, policy) in [
-            (true, HighQualitySpeakerCountPolicy.expected(0)),
-            (true, .expected(21)),
-            (false, .expected(2)),
+        for (speakerLabels, enhancedPrecision, sensitiveDetection, policy) in [
+            (true, false, false, HighQualitySpeakerCountPolicy.expected(0)),
+            (true, false, false, .expected(21)),
+            (false, false, false, .expected(2)),
+            (false, true, false, .automatic),
+            (false, false, true, .automatic),
         ] {
             let calls = CallLog()
             let job = HighQualityJob(services: .init(
@@ -85,6 +126,8 @@ final class HighQualityJobTests: XCTestCase {
                 deliverables: [.japaneseTranscript],
                 backend: .qwenJA,
                 speakerLabels: speakerLabels,
+                enhancedSpeakerPrecision: enhancedPrecision,
+                sensitiveSpeakerDetection: sensitiveDetection,
                 speakerCountPolicy: policy,
                 outputRoot: root
             )
@@ -107,8 +150,8 @@ final class HighQualityJobTests: XCTestCase {
                 )
                 XCTAssertEqual(manifest.status, .failed)
                 XCTAssertEqual(manifest.failures.first?.stage, .application)
-                XCTAssertEqual(manifest.speakerCountPolicy, policy)
-                XCTAssertEqual(evidence.speakerCountPolicy, policy)
+                XCTAssertEqual(manifest.speakerConfiguration, request.speakerConfiguration)
+                XCTAssertEqual(evidence.speakerConfiguration, request.speakerConfiguration)
             }
             let recordedCalls = await calls.values
             XCTAssertTrue(recordedCalls.isEmpty)
@@ -192,7 +235,7 @@ final class HighQualityJobTests: XCTestCase {
                     )
                 },
                 unloadAlignment: {},
-                prepareDiarization: { _ in },
+                prepareDiarization: { _, _ in },
                 diarizeSpeakers: { _, _, _ in
                     .init(
                         spans: spans,
@@ -317,7 +360,7 @@ final class HighQualityJobTests: XCTestCase {
                 )
             },
             unloadAlignment: { await calls.append("unload-alignment") },
-            prepareDiarization: { _ in await calls.append("prepare-speakerkit") },
+            prepareDiarization: { _, _ in await calls.append("prepare-speakerkit") },
             diarizeSpeakers: { _, _, _ in
                 .init(
                     spans: [
@@ -439,7 +482,7 @@ final class HighQualityJobTests: XCTestCase {
                 )
             },
             unloadAlignment: {},
-            prepareDiarization: { _ in },
+            prepareDiarization: { _, _ in },
             diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 XCTAssertTrue(useExclusiveReconciliation)
                 return .init(
@@ -557,10 +600,14 @@ final class HighQualityJobTests: XCTestCase {
                 )
             },
             unloadAlignment: {},
-            prepareDiarization: { _ in },
-            diarizeSpeakers: { _, useExclusiveReconciliation, speakerCountPolicy in
+            prepareDiarization: { _, _ in },
+            diarizeSpeakers: { _, useExclusiveReconciliation, configuration in
                 XCTAssertTrue(useExclusiveReconciliation)
-                XCTAssertEqual(speakerCountPolicy, .expected(2))
+                XCTAssertEqual(configuration, .init(
+                    enhancedPrecision: true,
+                    sensitiveDetection: true,
+                    countPolicy: .expected(2)
+                ))
                 started.fulfill()
                 try await Task.sleep(for: .seconds(10))
                 return .init(spans: [], modelID: "speakerkit", revision: "revision", peakMemoryBytes: 0)
@@ -574,6 +621,8 @@ final class HighQualityJobTests: XCTestCase {
                 backend: .qwenJA,
                 speakerLabels: true,
                 useExclusiveReconciliation: true,
+                enhancedSpeakerPrecision: true,
+                sensitiveSpeakerDetection: true,
                 speakerCountPolicy: .expected(2),
                 outputRoot: root
             ))
@@ -597,8 +646,12 @@ final class HighQualityJobTests: XCTestCase {
                 HighQualityRawEvidence.self,
                 from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
             )
-            XCTAssertEqual(manifest.speakerCountPolicy, .expected(2))
-            XCTAssertEqual(evidence.speakerCountPolicy, .expected(2))
+            XCTAssertEqual(manifest.speakerConfiguration, .init(
+                enhancedPrecision: true,
+                sensitiveDetection: true,
+                countPolicy: .expected(2)
+            ))
+            XCTAssertEqual(evidence.speakerConfiguration, manifest.speakerConfiguration)
         }
         let recordedCalls = await calls.values
         XCTAssertEqual(recordedCalls, ["unload-speakerkit"])
@@ -925,7 +978,7 @@ final class HighQualityJobTests: XCTestCase {
                 )
             },
             unloadAlignment: {},
-            prepareDiarization: { _ in },
+            prepareDiarization: { _, _ in },
             diarizeSpeakers: { _, useExclusiveReconciliation, _ in
                 .init(
                     spans: [
@@ -2087,15 +2140,15 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadAlignment: {},
             alignmentWorkerEvidence: { alignmentWorker },
-            prepareDiarization: { _ in },
-            diarizeSpeakers: { _, exclusive, policy in
+            prepareDiarization: { _, _ in },
+            diarizeSpeakers: { _, exclusive, configuration in
                 .init(
                     spans: [.init(speakerID: 0, start: 0, end: 1)],
                     modelID: "fixture-speakerkit",
                     revision: "fixture-revision",
                     peakMemoryBytes: 0,
                     useExclusiveReconciliation: exclusive,
-                    speakerCountPolicy: policy,
+                    speakerCountPolicy: configuration.countPolicy,
                     configuration: [
                         "precision": "quantized",
                         "clusterDistanceThreshold": "library-default",

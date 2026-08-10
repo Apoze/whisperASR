@@ -29,7 +29,7 @@ private struct HighQualityAlignmentSpeakerWorkerRequest: Codable {
     let sampleCount: Int
     let turns: [HighQualityTranslationTurn]?
     let useExclusiveReconciliation: Bool?
-    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
+    let speakerConfiguration: HighQualitySpeakerConfiguration?
 }
 
 private struct HighQualityAlignmentSpeakerWorkerResponse: Codable {
@@ -80,8 +80,21 @@ actor HighQualityAlignmentSpeakerWorkerClient {
     var processIdentifier: Int32? { get async { await worker.processIdentifier } }
     var evidence: HighQualityWorkerEvidence? { get async { await worker.evidence } }
 
-    func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
+    func prepare(
+        configuration: HighQualitySpeakerConfiguration = .standard,
+        progress: @escaping @Sendable (Double, String) -> Void
+    ) async throws {
         do {
+            if stage == .diarization {
+                try FileManager.default.createDirectory(
+                    at: worker.workingDirectory,
+                    withIntermediateDirectories: true
+                )
+                try JSONEncoder().encode(configuration).write(
+                    to: worker.workingDirectory.appendingPathComponent("configuration.json"),
+                    options: .atomic
+                )
+            }
             let pid = try await worker.launch()
             progress(0, "\(stage.name) worker \(pid) starting…")
             let response: HighQualityAlignmentSpeakerWorkerResponse = try await worker.waitForJSON(
@@ -110,7 +123,7 @@ actor HighQualityAlignmentSpeakerWorkerClient {
             samples: samples,
             turns: turns,
             useExclusiveReconciliation: nil,
-            speakerCountPolicy: nil
+            speakerConfiguration: nil
         )
         guard let exchange = response.alignment else {
             throw error("missing alignment response")
@@ -122,14 +135,14 @@ actor HighQualityAlignmentSpeakerWorkerClient {
     func diarize(
         samples: [Float],
         useExclusiveReconciliation: Bool,
-        speakerCountPolicy: HighQualitySpeakerCountPolicy
+        configuration: HighQualitySpeakerConfiguration
     ) async throws -> HighQualityDiarizationExchange {
         guard stage == .diarization else { throw error("wrong worker stage") }
         let response = try await request(
             samples: samples,
             turns: nil,
             useExclusiveReconciliation: useExclusiveReconciliation,
-            speakerCountPolicy: speakerCountPolicy
+            speakerConfiguration: configuration
         )
         guard let exchange = response.diarization else {
             throw error("missing diarization response")
@@ -137,7 +150,7 @@ actor HighQualityAlignmentSpeakerWorkerClient {
         try validateDiarization(
             exchange,
             useExclusiveReconciliation: useExclusiveReconciliation,
-            speakerCountPolicy: speakerCountPolicy
+            configuration: configuration
         )
         return exchange
     }
@@ -147,13 +160,16 @@ actor HighQualityAlignmentSpeakerWorkerClient {
         try? FileManager.default.removeItem(
             at: worker.workingDirectory.appendingPathComponent("audio.f32")
         )
+        try? FileManager.default.removeItem(
+            at: worker.workingDirectory.appendingPathComponent("configuration.json")
+        )
     }
 
     private func request(
         samples: [Float],
         turns: [HighQualityTranslationTurn]?,
         useExclusiveReconciliation: Bool?,
-        speakerCountPolicy: HighQualitySpeakerCountPolicy?
+        speakerConfiguration: HighQualitySpeakerConfiguration?
     ) async throws -> HighQualityAlignmentSpeakerWorkerResponse {
         if await worker.isCritical {
             throw HighQualityAlignmentSpeakerWorkerError.criticalMemoryPressure(
@@ -171,7 +187,7 @@ actor HighQualityAlignmentSpeakerWorkerClient {
             sampleCount: samples.count,
             turns: turns,
             useExclusiveReconciliation: useExclusiveReconciliation,
-            speakerCountPolicy: speakerCountPolicy
+            speakerConfiguration: speakerConfiguration
         )
         try JSONEncoder().encode(request).write(
             to: worker.workingDirectory.appendingPathComponent("request.json"),
@@ -212,25 +228,29 @@ actor HighQualityAlignmentSpeakerWorkerClient {
     private func validateDiarization(
         _ exchange: HighQualityDiarizationExchange,
         useExclusiveReconciliation: Bool,
-        speakerCountPolicy: HighQualitySpeakerCountPolicy
+        configuration: HighQualitySpeakerConfiguration
     ) throws {
+        let precision = HighQualitySpeakerKitRuntime.Precision(configuration: configuration)
         let expectedConfiguration = [
             "runtimeRevision": HighQualitySpeakerKitRuntime.runtimeRevision,
-            "precision": "quantized",
-            "segmenterVariant": "W8A16",
-            "embedderVariant": "W8A16",
-            "speakerCount": speakerCountPolicy.expectedCount.map(String.init) ?? "automatic",
-            "clusterDistanceThreshold": "library-default",
+            "precision": precision.rawValue,
+            "segmenterVariant": precision.segmenterVariant,
+            "embedderVariant": precision.embedderVariant,
+            "speakerCount": configuration.countPolicy.expectedCount.map(String.init)
+                ?? "automatic",
+            "clusterDistanceThreshold": configuration.sensitiveDetection
+                ? String(HighQualitySpeakerConfiguration.sensitiveClusteringThreshold)
+                : "library-default",
             "overlap": useExclusiveReconciliation ? "exclusive" : "non-exclusive",
             "attribution": "principal",
         ]
         guard exchange.modelID == HighQualitySpeakerKitRuntime.modelID,
               exchange.revision == HighQualitySpeakerKitRuntime.revision,
               exchange.useExclusiveReconciliation == useExclusiveReconciliation,
-              exchange.speakerCountPolicy == speakerCountPolicy,
+              exchange.speakerCountPolicy == configuration.countPolicy,
               expectedConfiguration.allSatisfy({ exchange.configuration?[$0.key] == $0.value })
         else {
-            throw error("SpeakerKit provenance does not match the requested Standard settings")
+            throw error("SpeakerKit provenance does not match the requested settings")
         }
     }
 
@@ -323,7 +343,7 @@ enum HighQualityAlignmentSpeakerWorkerCommand {
             let request = try await waitForRequest(in: directory)
             guard let turns = request.turns,
                   request.useExclusiveReconciliation == nil,
-                  request.speakerCountPolicy == nil else {
+                  request.speakerConfiguration == nil else {
                 throw HighQualityAlignmentSpeakerWorkerError.protocolFailure(
                     stage: "Forced alignment",
                     message: "invalid request"
@@ -349,14 +369,19 @@ enum HighQualityAlignmentSpeakerWorkerCommand {
     }
 
     private static func runDiarization(in directory: URL) async throws {
-        let runtime = HighQualitySpeakerKitRuntime()
+        let configuration = try JSONDecoder().decode(
+            HighQualitySpeakerConfiguration.self,
+            from: Data(contentsOf: directory.appendingPathComponent("configuration.json"))
+        )
+        let runtime = HighQualitySpeakerKitRuntime(configuration: configuration)
         do {
             try await runtime.prepare(progress: { _, _ in })
             try write(.ready, to: directory.appendingPathComponent("ready.json"))
             let request = try await waitForRequest(in: directory)
             guard request.turns == nil,
                   let useExclusiveReconciliation = request.useExclusiveReconciliation,
-                  let speakerCountPolicy = request.speakerCountPolicy else {
+                  request.speakerConfiguration == configuration,
+                  configuration.isValid else {
                 throw HighQualityAlignmentSpeakerWorkerError.protocolFailure(
                     stage: "SpeakerKit",
                     message: "invalid request"
@@ -365,7 +390,9 @@ enum HighQualityAlignmentSpeakerWorkerCommand {
             let exchange = try await runtime.diarize(
                 samples: try samples(for: request, in: directory),
                 useExclusiveReconciliation: useExclusiveReconciliation,
-                speakerCountPolicy: speakerCountPolicy
+                speakerCountPolicy: configuration.countPolicy,
+                clusterDistanceThreshold: configuration.sensitiveDetection
+                    ? HighQualitySpeakerConfiguration.sensitiveClusteringThreshold : nil
             )
             try write(.init(
                 ready: nil,
