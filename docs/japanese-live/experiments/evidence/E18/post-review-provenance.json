@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E18-fluid-audio-offline",
+  "executionRunMetaPath": "docs/japanese-live/experiments/evidence/E18/development-run-meta.json",
+  "executionRunMetaSHA256": "d9a13738b3255bf5b90cbdfa13b06fc81dcd69efc1ad972efd18cd70aea3d96f",
+  "executionSnapshot": {
+    "path": "docs/japanese-live/experiments/evidence/E18/execution-sources/Sources_HighQualityJob.swift",
+    "sha256": "8a19f94a8b45515a88542d3062cdc9781ad711c231a77e007c710a73db060f2f"
+  },
+  "reviewedSource": {
+    "path": "Sources/HighQualityJob.swift",
+    "sha256": "4cb9e0cf9e8ff870adf46d6e5f52f2a8971c97c2246162fd4b739c1ff6384f26"
+  },
+  "postRunChange": {
+    "classification": "product-copy-restoration",
+    "runtimeOrScoringEffect": false,
+    "description": "Restored the three pre-existing SpeakerKit user-facing messages after the Standards review; model inputs, settings, outputs, scorer, gates and metrics are unchanged."
+  },
+  "reviews": {
+    "spec": "PASS",
+    "standards": "PASS"
+  }
+}

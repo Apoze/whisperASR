@@ -1,0 +1,85 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-10 13:20:22.266.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 13:20:22.267.
+Test Suite 'HeavyweightModelGateTests' started at 2026-08-10 13:20:22.267.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCapacityAndMemoryReleaseChecksFailClosed]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCapacityAndMemoryReleaseChecksFailClosed]' passed (0.012 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' passed (0.000 seconds).
+Test Suite 'HeavyweightModelGateTests' passed at 2026-08-10 13:20:22.281.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.014 (0.014) seconds
+Test Suite 'HighQualityJobTests' started at 2026-08-10 13:20:22.281.
+Test Case '-[WhisperASRTests.HighQualityJobTests testAutoAndExpectedSpeakerCountsReachSpeakerKitAndRawEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testAutoAndExpectedSpeakerCountsReachSpeakerKitAndRawEvidence]' passed (0.015 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringSpeakerKitReleasesDiarizationRuntime]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringSpeakerKitReleasesDiarizationRuntime]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCompleteAttributionIsOptInAndUsesDeterministicNearestSpan]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCompleteAttributionIsOptInAndUsesDeterministicNearestSpan]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts]' passed (0.014 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testExclusiveSpeakerReconciliationIsAuditableAndKeepsOneTranslationPerUnit]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testExclusiveSpeakerReconciliationIsAuditableAndKeepsOneTranslationPerUnit]' passed (0.007 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSemanticTranslationUnitsIgnoreDiarizationAndPreserveAlignedJapanese]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testSemanticTranslationUnitsIgnoreDiarizationAndPreserveAlignedJapanese]' passed (0.019 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerRenameRegeneratesAllDeliverablesWithoutChangingRawIdentity]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerRenameRegeneratesAllDeliverablesWithoutChangingRawIdentity]' passed (0.007 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-10 13:20:22.346.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.065 (0.065) seconds
+Test Suite 'HighQualityTranslationIntegrityTests' started at 2026-08-10 13:20:22.346.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testCancellationDuringRetryUnloadsTranslatorAndReleasesModelGate]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testCancellationDuringRetryUnloadsTranslatorAndReleasesModelGate]' passed (0.005 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testDeterministicCorruptionFixturesAndValidTranslations]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testDeterministicCorruptionFixturesAndValidTranslations]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testMalformedRetryPreservesSecondAttemptEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testMalformedRetryPreservesSecondAttemptEvidence]' passed (0.005 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testRetriesFrozenRejectedUnitsWhenOptedIn]' started.
+/private/tmp/whisperASR-ticket61.Nj9kJd/Tests/HighQualityTranslationIntegrityTests.swift:428: -[WhisperASRTests.HighQualityTranslationIntegrityTests testRetriesFrozenRejectedUnitsWhenOptedIn] : Test skipped - Set translation-retry corpus, baseline, verdict, and output paths.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testRetriesFrozenRejectedUnitsWhenOptedIn]' skipped (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testRetriesOnlyRejectedUnitWithCriticalTermsAndSelectsRecovery]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testRetriesOnlyRejectedUnitWithCriticalTermsAndSelectsRecovery]' passed (0.006 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testRetryValidationKeepsAcceptedNeighboursForCopyDetection]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testRetryValidationKeepsAcceptedNeighboursForCopyDetection]' passed (0.006 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testSecondValidationFailureFailsTranslationWithoutPublishingEnglish]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testSecondValidationFailureFailsTranslationWithoutPublishingEnglish]' passed (0.004 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testValidationUsesOnlyCueLocalGlossaryOpportunities]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testValidationUsesOnlyCueLocalGlossaryOpportunities]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testValidTranslationCompletesWithoutRetry]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testValidTranslationCompletesWithoutRetry]' passed (0.005 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testWritesFrozenCorpusVerdictsWhenOptedIn]' started.
+/private/tmp/whisperASR-ticket61.Nj9kJd/Tests/HighQualityTranslationIntegrityTests.swift:381: -[WhisperASRTests.HighQualityTranslationIntegrityTests testWritesFrozenCorpusVerdictsWhenOptedIn] : Test skipped - Set translation-integrity corpus, input, and output paths.
+Test Case '-[WhisperASRTests.HighQualityTranslationIntegrityTests testWritesFrozenCorpusVerdictsWhenOptedIn]' skipped (0.000 seconds).
+Test Suite 'HighQualityTranslationIntegrityTests' passed at 2026-08-10 13:20:22.381.
+	 Executed 10 tests, with 2 tests skipped and 0 failures (0 unexpected) in 0.034 (0.034) seconds
+Test Suite 'LiveCaptionTests' started at 2026-08-10 13:20:22.381.
+Test Case '-[WhisperASRTests.LiveCaptionTests testClearlyNonEnglishTranslationIsRejected]' started.
+Test Case '-[WhisperASRTests.LiveCaptionTests testClearlyNonEnglishTranslationIsRejected]' passed (0.004 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testEachPrototypeLoadsOnlyItsRequiredModels]' started.
+Test Case '-[WhisperASRTests.LiveCaptionTests testEachPrototypeLoadsOnlyItsRequiredModels]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testTranslationOnlyPrimarySegmentsDropMissingTranslations]' started.
+Test Case '-[WhisperASRTests.LiveCaptionTests testTranslationOnlyPrimarySegmentsDropMissingTranslations]' passed (0.000 seconds).
+Test Suite 'LiveCaptionTests' passed at 2026-08-10 13:20:22.385.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'LocalDiarizationShadowTests' started at 2026-08-10 13:20:22.385.
+Test Case '-[WhisperASRTests.LocalDiarizationShadowTests testUnpromotedDiarizationCannotInfluenceSubtitleBoundaries]' started.
+Test Case '-[WhisperASRTests.LocalDiarizationShadowTests testUnpromotedDiarizationCannotInfluenceSubtitleBoundaries]' passed (0.000 seconds).
+Test Suite 'LocalDiarizationShadowTests' passed at 2026-08-10 13:20:22.385.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'QwenPseudoLiveCoordinatorTests' started at 2026-08-10 13:20:22.385.
+Test Case '-[WhisperASRTests.QwenPseudoLiveCoordinatorTests testPseudoLiveEngineNeverRequestsAppleSpeech]' started.
+Test Case '-[WhisperASRTests.QwenPseudoLiveCoordinatorTests testPseudoLiveEngineNeverRequestsAppleSpeech]' passed (0.000 seconds).
+Test Suite 'QwenPseudoLiveCoordinatorTests' passed at 2026-08-10 13:20:22.385.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-10 13:20:22.385.
+	 Executed 27 tests, with 2 tests skipped and 0 failures (0 unexpected) in 0.116 (0.118) seconds
+Test Suite 'Selected tests' passed at 2026-08-10 13:20:22.385.
+	 Executed 27 tests, with 2 tests skipped and 0 failures (0 unexpected) in 0.116 (0.119) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

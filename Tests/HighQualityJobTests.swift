@@ -361,6 +361,9 @@ final class HighQualityJobTests: XCTestCase {
             result.evidence.diarization?.mappings.map(\.speakerLabel),
             ["SPEAKER_00", "SPEAKER_01"]
         )
+        XCTAssertTrue(result.evidence.diarization?.mappings.allSatisfy {
+            $0.attributionReason == nil
+        } == true)
         XCTAssertEqual(Set(result.turns.compactMap(\.speakerLabel)), ["SPEAKER_01"])
         XCTAssertEqual(result.turns.map(\.japanese), ["一。", "二。"])
         XCTAssertEqual(result.turns.map(\.speakerLabel), ["SPEAKER_01", nil])
@@ -368,6 +371,44 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.turns.map(\.end), [4, 9])
         XCTAssertEqual(result.japaneseTranscript, "SPEAKER_01: 一。\n二。")
         XCTAssertEqual(result.manifest.peakMemoryBytes, 200)
+    }
+
+    func testCompleteAttributionIsOptInAndUsesDeterministicNearestSpan() throws {
+        let exchange = HighQualityDiarizationExchange(
+            spans: [
+                .init(speakerID: 7, start: 0, end: 1),
+                .init(speakerID: 2, start: 3, end: 4),
+            ],
+            modelID: "fixture-diarizer",
+            revision: "fixture-revision",
+            peakMemoryBytes: 0
+        )
+        let gap = HighQualityAlignmentItem(
+            cueID: "cue-0001",
+            text: "間",
+            start: 1.5,
+            end: 2.5
+        )
+
+        let productDefault = try HighQualityJob.diarizationEvidence(
+            exchange,
+            items: [gap],
+            duration: 5
+        )
+        XCTAssertTrue(productDefault.mappings.isEmpty)
+
+        let experimental = try HighQualityJob.diarizationEvidence(
+            exchange,
+            items: [gap],
+            duration: 5,
+            completeAttribution: true
+        )
+        XCTAssertEqual(experimental.mappings.map(\.alignmentItemIndex), [0])
+        XCTAssertEqual(experimental.mappings.map(\.speakerLabel), ["SPEAKER_00"])
+        XCTAssertEqual(experimental.mappings.map(\.spanIndex), [1])
+        XCTAssertEqual(experimental.mappings.map(\.attributionReason), ["nearest-span-fallback"])
+        XCTAssertEqual(experimental.mappings.map(\.overlapStart), [3])
+        XCTAssertEqual(experimental.mappings.map(\.overlapEnd), [3])
     }
 
     func testExclusiveSpeakerReconciliationIsAuditableAndKeepsOneTranslationPerUnit() async throws {

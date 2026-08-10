@@ -1682,7 +1682,7 @@ struct HighQualityJob: Sendable {
                 }
             }
             if request.speakerLabels {
-                begin(.preparingDiarization, fraction: 0.74, message: "Preparing SpeakerKit…")
+                begin(.preparingDiarization, fraction: 0.74, message: "Preparing speaker diarizer…")
                 diarizationLoadStarted = true
                 diarizationLease = try await acquireModel(
                     services.diarizationModelID,
@@ -1724,7 +1724,7 @@ struct HighQualityJob: Sendable {
                 guard exchange.speakerCountPolicy == request.speakerCountPolicy else {
                     throw HighQualityJobError(
                         stage: .diarization,
-                        message: "SpeakerKit did not preserve the requested Speaker-count policy.",
+                        message: "The speaker diarizer did not preserve the requested Speaker-count policy.",
                         resultDirectory: directory
                     )
                 }
@@ -2692,7 +2692,7 @@ struct HighQualityJob: Sendable {
         }) else {
             throw HighQualityJobError(
                 stage: .diarization,
-                message: "SpeakerKit returned an invalid diarization span.",
+                message: "The speaker diarizer returned an invalid diarization span.",
                 resultDirectory: nil
             )
         }
