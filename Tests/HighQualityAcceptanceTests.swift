@@ -3,6 +3,55 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityAcceptanceTests: XCTestCase {
+    func testFrozenSpeakerKitPrecisionWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_SPEAKERKIT_PRECISION_EXPERIMENT"] == "1",
+              let evidencePath = environment["WHISPERASR_SPEAKERKIT_PRECISION_EVIDENCE"],
+              let sourcePath = environment["WHISPERASR_SPEAKERKIT_PRECISION_SOURCE"],
+              let outputPath = environment["WHISPERASR_SPEAKERKIT_PRECISION_OUTPUT"],
+              let rawJobID = environment["WHISPERASR_SPEAKERKIT_PRECISION_JOB_ID"],
+              let jobID = UUID(uuidString: rawJobID),
+              let rawPrecision = environment["WHISPERASR_SPEAKERKIT_PRECISION"],
+              let precision = HighQualitySpeakerKitRuntime.Precision(rawValue: rawPrecision),
+              let modelCachePath = environment["WHISPERASR_SPEAKERKIT_MODEL_CACHE"] else {
+            throw XCTSkip("Set the frozen inputs, output, job ID and precision for ticket #58.")
+        }
+
+        let baseline = try Self.frozenEvidence(at: evidencePath)
+        let alignment = try XCTUnwrap(baseline.alignment)
+        let result = try await Self.runFrozenSpeakerKitExperiment(
+            baseline: baseline,
+            alignment: alignment,
+            sourcePath: sourcePath,
+            outputPath: outputPath,
+            jobID: jobID,
+            precision: precision,
+            modelCachePath: modelCachePath,
+            enforceMemoryGate: true,
+            useExclusiveReconciliation: false
+        )
+
+        let candidate = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(candidate.useExclusiveReconciliation, false)
+        XCTAssertFalse(candidate.rawSpans.isEmpty)
+        XCTAssertFalse(candidate.mappings.isEmpty)
+        XCTAssertTrue(candidate.validationDiagnostics.isEmpty)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
+        XCTAssertEqual(
+            result.turns.map(\.japanese).joined(),
+            alignment.mergedCues.map(\.text).joined()
+        )
+        XCTAssertEqual(
+            Set(result.manifest.generatedFiles.map(\.path)),
+            [
+                "english-subtitles.srt", "english-subtitles.vtt",
+                "english-translation-transcript.txt", "japanese-transcript.txt",
+                "manifest.json", "raw-asr.json",
+            ]
+        )
+    }
+
     func testFrozenExclusiveSpeakerReconciliationWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_EXCLUSIVE_RECONCILIATION_EXPERIMENT"] == "1",
@@ -13,77 +62,19 @@ final class HighQualityAcceptanceTests: XCTestCase {
               let jobID = UUID(uuidString: rawJobID) else {
             throw XCTSkip("Set the frozen evidence, source, output and job ID for ticket #57.")
         }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let baseline = try decoder.decode(
-            HighQualityRawEvidence.self,
-            from: Data(contentsOf: URL(fileURLWithPath: evidencePath))
-        )
+        let baseline = try Self.frozenEvidence(at: evidencePath)
         let alignment = try XCTUnwrap(baseline.alignment)
-        let asrChunks = alignment.chunks.map { chunk in
-            HighQualityASRChunk(
-                index: chunk.index,
-                sourceStart: chunk.sourceStart,
-                sourceEnd: chunk.sourceEnd,
-                transcript: chunk.cues.map(\.text).joined()
-            )
-        }
-        let diarizer = HighQualitySpeakerKitRuntime()
-        let job = HighQualityJob(services: .init(
-            loadSource: { try await AudioLoader.loadSamples(url: $0) },
-            prepareASR: { _ in },
-            transcribeJapanese: { _ in baseline.rawASR ?? "" },
-            transcribeJapaneseAnchored: { _ in
-                .init(rawTranscript: baseline.rawASR ?? "", chunks: asrChunks)
-            },
-            unloadASR: {},
-            prepareAlignment: { _ in },
-            alignJapanese: { _, _ in
-                .init(
-                    chunks: alignment.chunks,
-                    modelID: alignment.modelID,
-                    revision: alignment.revision,
-                    peakMemoryBytes: alignment.peakMemoryBytes
-                )
-            },
-            unloadAlignment: {},
-            prepareDiarization: { try await diarizer.prepare(progress: $0) },
-            diarizeSpeakers: {
-                try await diarizer.diarize(
-                    samples: $0,
-                    useExclusiveReconciliation: $1
-                )
-            },
-            unloadDiarization: { await diarizer.unload() },
-            currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() },
-            translateEnglish: { request in
-                let translations = request.turns.enumerated().map { index, turn in
-                    [
-                        "id": turn.id,
-                        "text": (request.glossary(for: turn).map(\.english)
-                            + ["English \(index + 1)"]).joined(separator: " "),
-                    ]
-                }
-                let data = try JSONSerialization.data(withJSONObject: [
-                    "translations": translations,
-                ])
-                return .init(
-                    model: baseline.translation?.model ?? "frozen-translation-fixture",
-                    response: String(decoding: data, as: UTF8.self),
-                    attempts: []
-                )
-            }
-        ))
-
-        let result = try await job.run(.init(
-            id: jobID,
-            sourceURL: URL(fileURLWithPath: sourcePath),
-            deliverables: Set(HighQualityDeliverable.allCases),
-            backend: baseline.model.backend,
-            speakerLabels: true,
-            useExclusiveReconciliation: true,
-            outputRoot: URL(fileURLWithPath: outputPath)
-        ))
+        let result = try await Self.runFrozenSpeakerKitExperiment(
+            baseline: baseline,
+            alignment: alignment,
+            sourcePath: sourcePath,
+            outputPath: outputPath,
+            jobID: jobID,
+            precision: .quantized,
+            modelCachePath: nil,
+            enforceMemoryGate: false,
+            useExclusiveReconciliation: true
+        )
 
         let candidate = try XCTUnwrap(result.evidence.diarization)
         XCTAssertEqual(result.evidence.sampleCount, baseline.sampleCount)
@@ -377,6 +368,106 @@ final class HighQualityAcceptanceTests: XCTestCase {
             try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
             expectedFiles
         )
+    }
+
+    private static func frozenEvidence(at path: String) throws -> HighQualityRawEvidence {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: path))
+        )
+    }
+
+    private static func runFrozenSpeakerKitExperiment(
+        baseline: HighQualityRawEvidence,
+        alignment: HighQualityAlignmentEvidence,
+        sourcePath: String,
+        outputPath: String,
+        jobID: UUID,
+        precision: HighQualitySpeakerKitRuntime.Precision,
+        modelCachePath: String?,
+        enforceMemoryGate: Bool,
+        useExclusiveReconciliation: Bool
+    ) async throws -> HighQualityJobResult {
+        let asrChunks = alignment.chunks.map { chunk in
+            HighQualityASRChunk(
+                index: chunk.index,
+                sourceStart: chunk.sourceStart,
+                sourceEnd: chunk.sourceEnd,
+                transcript: chunk.cues.map(\.text).joined()
+            )
+        }
+        let diarizer = HighQualitySpeakerKitRuntime(
+            precision: precision,
+            downloadBase: modelCachePath
+        )
+        let gate = enforceMemoryGate
+            ? HeavyweightModelGate(
+                currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() }
+            )
+            : nil
+        let job = HighQualityJob(services: .init(
+            loadSource: { try await AudioLoader.loadSamples(url: $0) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in baseline.rawASR ?? "" },
+            transcribeJapaneseAnchored: { _ in
+                .init(rawTranscript: baseline.rawASR ?? "", chunks: asrChunks)
+            },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: alignment.chunks,
+                    modelID: alignment.modelID,
+                    revision: alignment.revision,
+                    peakMemoryBytes: alignment.peakMemoryBytes
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { try await diarizer.prepare(progress: $0) },
+            diarizeSpeakers: {
+                try await diarizer.diarize(
+                    samples: $0,
+                    useExclusiveReconciliation: $1
+                )
+            },
+            unloadDiarization: { await diarizer.unload() },
+            currentMemoryBytes: { WhisperKitRuntime.currentMemoryBytes() },
+            translateEnglish: { request in
+                let translations = request.turns.enumerated().map { index, turn in
+                    [
+                        "id": turn.id,
+                        "text": (request.glossary(for: turn).map(\.english)
+                            + ["English \(index + 1)"]).joined(separator: " "),
+                    ]
+                }
+                let data = try JSONSerialization.data(withJSONObject: [
+                    "translations": translations,
+                ])
+                return .init(
+                    model: baseline.translation?.model ?? "frozen-translation-fixture",
+                    response: String(decoding: data, as: UTF8.self),
+                    attempts: []
+                )
+            },
+            heavyweightGate: gate
+        ))
+
+        return try await job.run(.init(
+            id: jobID,
+            sourceURL: URL(fileURLWithPath: sourcePath),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: baseline.model.backend,
+            speakerLabels: true,
+            useExclusiveReconciliation: useExclusiveReconciliation,
+            outputRoot: URL(fileURLWithPath: outputPath)
+        )) { progress in
+            print(
+                "[speakerkit-precision][\(precision.rawValue)] "
+                    + "\(progress.stage.rawValue): \(progress.message)"
+            )
+        }
     }
 
     private struct Input {
