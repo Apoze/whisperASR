@@ -11,11 +11,11 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
     case parakeetJA = "parakeet-ja"
     case whisperKit = "whisperkit"
     case funASRNanoInt8 = "funasr-nano-int8"
-
-    // Experiment-only backends stay out of every product picker.
-    static let allCases: [Self] = [.qwenJA, .parakeetJA, .whisperKit]
+    case reazonSpeechK2V2 = "reazonspeech-k2-v2-int8"
 
     static let productDefault: Self = .qwenJA
+    // Experiment-only backends stay out of every product picker.
+    static let allCases: [Self] = [.qwenJA, .parakeetJA, .whisperKit]
 
     var id: Self { self }
 
@@ -25,6 +25,7 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
         case .parakeetJA: "Parakeet JA"
         case .whisperKit: "WhisperKit large-v3"
         case .funASRNanoInt8: "Fun-ASR Nano int8"
+        case .reazonSpeechK2V2: "ReazonSpeech K2 v2 int8"
         }
     }
 
@@ -56,6 +57,13 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
                 revision: "eb43d7ccc2e86b243f6a03b7df361033dda66db9523d1a92bf6aca2b50c9476b",
                 runtimeVersion: "sherpa-onnx 1.13.5 (3dc7c569f31ca2cd4a20ed6f7db780327e6714c5)"
             )
+        case .reazonSpeechK2V2:
+            .init(
+                backend: self,
+                modelID: "reazon-research/reazonspeech-k2-v2",
+                revision: "291488c8151be24d7da4bf7af26e533fad96e407",
+                runtimeVersion: "sherpa-onnx 1.13.4"
+            )
         }
     }
 
@@ -65,6 +73,7 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
         case .parakeetJA: 4 * 1_024 * 1_024 * 1_024
         case .whisperKit: 8 * 1_024 * 1_024 * 1_024
         case .funASRNanoInt8: 4 * 1_024 * 1_024 * 1_024
+        case .reazonSpeechK2V2: 2 * 1_024 * 1_024 * 1_024
         }
     }
 }
@@ -285,9 +294,27 @@ struct HighQualityASRChunk: Codable, Equatable, Sendable {
     let transcript: String
 }
 
+struct HighQualityASRCharacter: Codable, Equatable, Sendable {
+    let chunkIndex: Int
+    let text: String
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+}
+
 struct HighQualityASRExchange: Codable, Equatable, Sendable {
     let rawTranscript: String
     let chunks: [HighQualityASRChunk]
+    let characters: [HighQualityASRCharacter]?
+
+    init(
+        rawTranscript: String,
+        chunks: [HighQualityASRChunk],
+        characters: [HighQualityASRCharacter]? = nil
+    ) {
+        self.rawTranscript = rawTranscript
+        self.chunks = chunks
+        self.characters = characters
+    }
 }
 
 struct HighQualityTranslationTurn: Codable, Equatable, Sendable {
@@ -1317,8 +1344,19 @@ struct HighQualityJob: Sendable {
             _ samples: [Float],
             transcribe: @escaping @Sendable ([Float]) async throws -> String
         ) async throws -> HighQualityASRExchange {
+            try await chunkedASR(samples) { chunk in
+                .init(rawTranscript: try await transcribe(chunk), chunks: [])
+            }
+        }
+
+        static func chunkedASR(
+            _ samples: [Float],
+            transcribe: @escaping @Sendable ([Float]) async throws -> HighQualityASRExchange
+        ) async throws -> HighQualityASRExchange {
             var chunks: [HighQualityASRChunk] = []
+            var characters: [HighQualityASRCharacter]? = nil
             var start = 0
+            var alignmentAnchorStart = 0
             var previousBoundaryWasSilent = true
             while start < samples.count {
                 try Task.checkCancellation()
@@ -1332,27 +1370,48 @@ struct HighQualityJob: Sendable {
                 let windowStart = max(0, start - leadingOverlap)
                 let windowEnd = boundary.isSilent
                     ? boundary.index : min(samples.count, boundary.index + overlap)
-                let raw = try await transcribe(Array(samples[windowStart..<windowEnd]))
+                let rawExchange = try await transcribe(Array(samples[windowStart..<windowEnd]))
+                let raw = rawExchange.rawTranscript
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 let transcript = removingTranscriptOverlap(
                     prefix: chunks.last?.transcript ?? "",
                     suffix: raw
                 )
+                let sourceStart = Double(alignmentAnchorStart) / 16_000
+                let sourceEnd = Double(windowEnd) / 16_000
                 if !transcript.isEmpty {
+                    let chunkIndex = chunks.count
                     chunks.append(.init(
-                        index: chunks.count,
-                        sourceStart: chunks.last?.sourceEnd
-                            ?? Double(windowStart) / 16_000,
-                        sourceEnd: Double(windowEnd) / 16_000,
+                        index: chunkIndex,
+                        sourceStart: sourceStart,
+                        sourceEnd: sourceEnd,
                         transcript: transcript
                     ))
+                    if let rawCharacters = rawExchange.characters {
+                        let removedPrefixCount = raw.count - transcript.count
+                        let retained = rawCharacters.dropFirst(removedPrefixCount).map {
+                            HighQualityASRCharacter(
+                                chunkIndex: chunkIndex,
+                                text: $0.text,
+                                sourceStart: max(
+                                    sourceStart,
+                                    Double(windowStart) / 16_000 + $0.sourceStart
+                                ),
+                                sourceEnd: Double(windowStart) / 16_000 + $0.sourceEnd
+                            )
+                        }
+                        if characters == nil { characters = [] }
+                        characters?.append(contentsOf: retained)
+                    }
                 }
+                alignmentAnchorStart = windowEnd
                 start = boundary.index
                 previousBoundaryWasSilent = boundary.isSilent
             }
             return .init(
                 rawTranscript: chunks.map(\.transcript).joined(separator: "\n"),
-                chunks: chunks
+                chunks: chunks,
+                characters: characters
             )
         }
 

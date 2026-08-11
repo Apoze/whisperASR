@@ -53,6 +53,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
             whisperKitWeightSHA256 = try HighQualityASRWeightEvidence.collect(for: backend)
         case .funASRNanoInt8:
             throw XCTSkip("Fun-ASR direct parity uses only the pinned sherpa worker.")
+        case .reazonSpeechK2V2:
+            throw XCTSkip("ReazonSpeech parity uses its pinned external worker smoke.")
         }
         let exported = transcript.trimmingCharacters(in: .whitespacesAndNewlines) + "\n"
         let output = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -158,6 +160,54 @@ final class HighQualityASRWorkerTests: XCTestCase {
         }
     }
 
+    func testRealReazonWorkerCompletesTimestampedSmokeWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["BENCHMARK_SLOT_GRANTED"] == "89",
+              environment["WHISPERASR_RUN_REAZON_SMOKE"] == "1",
+              let fixturePath = environment["WHISPERASR_HIGH_QUALITY_ASR_FIXTURE"],
+              let expectedSHA256 = environment[
+                "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE_SHA256"
+              ],
+              let outputPath = environment["WHISPERASR_ACCEPTANCE_OUTPUT_ROOT"] else {
+            throw XCTSkip("Grant benchmark slot #89 and set the Reazon smoke environment.")
+        }
+        let fixture = URL(fileURLWithPath: fixturePath)
+        XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: fixture), expectedSHA256)
+        let backend = HighQualityASRBackend.reazonSpeechK2V2
+        let result = try await HighQualityJob().run(.init(
+            sourceURL: fixture,
+            deliverables: [.japaneseTranscript],
+            backend: backend,
+            outputRoot: URL(fileURLWithPath: outputPath)
+        ))
+
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.manifest.selectedBackend, backend)
+        XCTAssertEqual(result.manifest.dependencies, [
+            .sourceNormalization, .japaneseASR, .export,
+        ])
+        let worker = try XCTUnwrap(result.evidence.asrWorker)
+        let characters = try XCTUnwrap(worker.characters)
+        XCTAssertFalse(characters.isEmpty)
+        XCTAssertEqual(characters.map(\.text).joined(), result.evidence.rawASR)
+        XCTAssertTrue(characters.allSatisfy {
+            $0.sourceStart >= 0 && $0.sourceEnd >= $0.sourceStart
+        })
+        XCTAssertEqual(worker.model, backend.model.withWeightSHA256([
+            "decoder-epoch-99-avg-1.onnx":
+                "58b18211ae06265466bfa17172dab574df94f76c8bcb61a3640c28ba860e4124",
+            "encoder-epoch-99-avg-1.int8.onnx":
+                "2c7bd08a8a99f9ddd0d9e458456577b1f6279214e51426f114f9eced44c54e1d",
+            "joiner-epoch-99-avg-1.int8.onnx":
+                "49cc7ea1d3d35a40a27442db5e89996da64bf0e683a903dce76e99e57a12e4de",
+            "tokens.txt":
+                "2c3ac659818a48a0c04010e0593bbc4d7c8a24a054340b01131499c05fd52def",
+        ]))
+        XCTAssertEqual(worker.lifecycle.exitStatus, 0)
+        XCTAssertFalse(worker.lifecycle.forcedTermination)
+        XCTAssertNotEqual(kill(worker.lifecycle.processIdentifier, 0), 0)
+    }
+
     func testEveryBackendRoundTripsOneTranscriptAndExits() async throws {
         for backend in HighQualityASRBackend.allCases {
             let expected = "\(backend.rawValue)-日本語"
@@ -212,6 +262,35 @@ final class HighQualityASRWorkerTests: XCTestCase {
         await worker.unload()
 
         XCTAssertEqual(moved, frozen)
+    }
+
+    func testAnchoredCharacterTimingFailsClosedWhenNotMonotonic() {
+        let chunks = [HighQualityASRChunk(
+            index: 0, sourceStart: 0, sourceEnd: 2, transcript: "日本"
+        )]
+        let valid = HighQualityASRExchange(
+            rawTranscript: "日本",
+            chunks: chunks,
+            characters: [
+                .init(chunkIndex: 0, text: "日", sourceStart: 0.2, sourceEnd: 0.8),
+                .init(chunkIndex: 0, text: "本", sourceStart: 0.8, sourceEnd: 1.2),
+            ]
+        )
+        let regressing = HighQualityASRExchange(
+            rawTranscript: "日本",
+            chunks: chunks,
+            characters: [
+                .init(chunkIndex: 0, text: "日", sourceStart: 0.8, sourceEnd: 1),
+                .init(chunkIndex: 0, text: "本", sourceStart: 0.5, sourceEnd: 1.2),
+            ]
+        )
+
+        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+            valid, sampleCount: 32_000, anchored: true
+        ))
+        XCTAssertFalse(HighQualityASRWorkerClient.isValid(
+            regressing, sampleCount: 32_000, anchored: true
+        ))
     }
 
     func testMalformedOutputFailsAndWorkerTerminates() async throws {
@@ -378,6 +457,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
             "ce3de9ff8e084329bea612985ce6a60b4d998410071de595e749033c4d2486ad"
         case .funASRNanoInt8:
             preconditionFailure("Fun-ASR has no frozen #72 transcript")
+        case .reazonSpeechK2V2:
+            preconditionFailure("ReazonSpeech has no frozen heavy output before ticket #89.")
         }
     }
 

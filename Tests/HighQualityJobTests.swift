@@ -926,6 +926,34 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(processedSampleCount, samples.count + 12 * sampleRate)
     }
 
+    func testChunkedASRRetainsCharacterTimestampsAfterOverlapRemoval() async throws {
+        let sampleRate = 16_000
+        let samples = [Float](repeating: 0.5, count: 21 * sampleRate)
+        let counts = SampleCounts()
+
+        let result = try await HighQualityJob.Services.chunkedASR(samples) { chunk in
+            let text = await counts.append(chunk.count) == 1 ? "一共通" : "共通二"
+            return .init(
+                rawTranscript: text,
+                chunks: [],
+                characters: Array(text).enumerated().map { offset, character in
+                    .init(
+                        chunkIndex: 0,
+                        text: String(character),
+                        sourceStart: Double(offset == 2 && text == "共通二" ? 1 : offset),
+                        sourceEnd: Double(offset + 1)
+                    )
+                }
+            )
+        }
+
+        XCTAssertEqual(result.rawTranscript, "一共通\n二")
+        XCTAssertEqual(result.characters?.map(\.text).joined(), "一共通二")
+        XCTAssertEqual(result.characters?.map(\.chunkIndex), [0, 0, 0, 1])
+        XCTAssertEqual(result.characters?.last?.sourceStart, 20)
+        XCTAssertEqual(result.characters?.last?.sourceEnd, 21)
+    }
+
     func testChunkedASRKeepsForcedAlignmentWindowsWithinTwentySeconds() async throws {
         let sampleRate = 16_000
         let samples = [Float](repeating: 0.5, count: 91 * sampleRate)
@@ -939,6 +967,22 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.rawTranscript, "一。共通。\n二。\n三。\n四。\n五。")
         XCTAssertEqual(result.chunks.map(\.sourceStart), [0, 20, 38, 56, 74])
         XCTAssertEqual(result.chunks.map(\.sourceEnd), [20, 38, 56, 74, 91])
+        XCTAssertTrue(result.chunks.allSatisfy { $0.sourceEnd - $0.sourceStart <= 20 })
+    }
+
+    func testChunkedASRAdvancesAlignmentAnchorAcrossEmptyWindows() async throws {
+        let sampleRate = 16_000
+        let samples = [Float](repeating: 0.5, count: 91 * sampleRate)
+        let transcripts = ["一。", "", "二。", "", "三。"]
+        let counts = SampleCounts()
+
+        let result = try await HighQualityJob.Services.chunkedASR(samples) { chunk in
+            transcripts[await counts.append(chunk.count) - 1]
+        }
+
+        XCTAssertEqual(result.rawTranscript, "一。\n二。\n三。")
+        XCTAssertEqual(result.chunks.map(\.sourceStart), [0, 38, 74])
+        XCTAssertEqual(result.chunks.map(\.sourceEnd), [20, 56, 91])
         XCTAssertTrue(result.chunks.allSatisfy { $0.sourceEnd - $0.sourceStart <= 20 })
     }
 
@@ -1930,6 +1974,7 @@ final class HighQualityJobTests: XCTestCase {
             case .parakeetJA: " 日本語 \n"
             case .whisperKit: " 音声認識 \n"
             case .funASRNanoInt8: " 実験 \n"
+            case .reazonSpeechK2V2: ""
             }
             let job = HighQualityJob(servicesForBackend: { _ in
                 .init(
