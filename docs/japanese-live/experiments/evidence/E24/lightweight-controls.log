@@ -1,0 +1,59 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/3ce2/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/3ce2/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/6] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (5.23s)
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/3ce2/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/3ce2/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (4.97s)
+Test Suite 'Selected tests' started at 2026-08-12 01:00:42.797.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-12 01:00:42.798.
+Test Suite 'HighQualityASRWorkerTests' started at 2026-08-12 01:00:42.798.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testCancellationTerminatesPendingASRWorker]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testCancellationTerminatesPendingASRWorker]' passed (0.468 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testCriticalPressureStopsASRWorkerRecoverably]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testCriticalPressureStopsASRWorkerRecoverably]' passed (0.430 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testDirectBackendMatchesFrozenWorkerOutputWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/3ce2/whisperASR/Tests/HighQualityASRWorkerTests.swift:18: -[WhisperASRTests.HighQualityASRWorkerTests testDirectBackendMatchesFrozenWorkerOutputWhenOptedIn] : Test skipped - Grant benchmark slot #72 and set its direct parity environment.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testDirectBackendMatchesFrozenWorkerOutputWhenOptedIn]' skipped (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testEveryBackendRoundTripsOneTranscriptAndExits]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testEveryBackendRoundTripsOneTranscriptAndExits]' passed (0.841 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testFrozenAnchoredExchangeKeepsExactJapaneseOutput]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testFrozenAnchoredExchangeKeepsExactJapaneseOutput]' passed (0.279 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testJobManifestRetainsASRWorkerProvenanceAndPeakMemory]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testJobManifestRetainsASRWorkerProvenanceAndPeakMemory]' passed (0.017 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testMalformedOutputFailsAndWorkerTerminates]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testMalformedOutputFailsAndWorkerTerminates]' passed (0.284 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testPreparationFailureTerminatesWithDiagnostics]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testPreparationFailureTerminatesWithDiagnostics]' passed (0.251 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testRealBackendCompletesFrozenJapaneseJobWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/3ce2/whisperASR/Tests/HighQualityASRWorkerTests.swift:97: -[WhisperASRTests.HighQualityASRWorkerTests testRealBackendCompletesFrozenJapaneseJobWhenOptedIn] : Test skipped - Grant benchmark slot #72 and set its worker smoke environment.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testRealBackendCompletesFrozenJapaneseJobWhenOptedIn]' skipped (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testWeightEvidenceHashesOnlyModelWeights]' started.
+Test Case '-[WhisperASRTests.HighQualityASRWorkerTests testWeightEvidenceHashesOnlyModelWeights]' passed (0.003 seconds).
+Test Suite 'HighQualityASRWorkerTests' passed at 2026-08-12 01:00:45.374.
+	 Executed 10 tests, with 2 tests skipped and 0 failures (0 unexpected) in 2.574 (2.576) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-12 01:00:45.374.
+	 Executed 10 tests, with 2 tests skipped and 0 failures (0 unexpected) in 2.574 (2.576) seconds
+Test Suite 'Selected tests' passed at 2026-08-12 01:00:45.374.
+	 Executed 10 tests, with 2 tests skipped and 0 failures (0 unexpected) in 2.574 (2.577) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
