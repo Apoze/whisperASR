@@ -38,6 +38,15 @@ def write_lines(path: Path, values: list[str]) -> None:
     path.write_text("\n".join(value.replace("\n", " ") for value in values) + "\n", encoding="utf-8")
 
 
+def suspected_hallucination(row: dict) -> bool:
+    hypothesis = row["hypothesis"].strip()
+    reference = row["reference"].strip()
+    words = re.findall(r"[\w']+", hypothesis.casefold())
+    trigrams = list(zip(words, words[1:], words[2:]))
+    return (len(trigrams) >= 6 and len(set(trigrams)) * 2 < len(trigrams)) \
+        or len(hypothesis) > max(160, 4 * max(len(reference), 1))
+
+
 def relative(path: Path) -> str:
     try:
         return str(path.relative_to(Path.cwd()))

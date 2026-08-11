@@ -58,7 +58,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 backend: baseline.model.backend,
                 speakerLabels: true,
                 useExclusiveReconciliation: false,
-                speakerCountPolicy: .automatic,
+                speakerConfiguration: .standard,
                 outputRoot: URL(fileURLWithPath: outputPath)
             )) { progress in
                 stages.continuation.yield(progress.stage)
@@ -624,6 +624,9 @@ final class HighQualityAcceptanceTests: XCTestCase {
 
         XCTAssertEqual(result.manifest.status, .completed)
         XCTAssertEqual(result.manifest.selectedBackend, backend)
+        XCTAssertEqual(result.manifest.translationModel, HighQualityTranslator.productDefault.model)
+        XCTAssertEqual(result.manifest.speakerConfiguration, .standard)
+        XCTAssertEqual(result.evidence.speakerConfiguration, .standard)
         XCTAssertEqual(result.evidence.sampleCount, input.manifest.fixture.sampleCount)
         XCTAssertEqual(result.manifest.dependencies, [
             .sourceNormalization, .japaneseASR, .forcedAlignment,
@@ -632,6 +635,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
         XCTAssertFalse(result.japaneseTranscript.isEmpty)
         XCTAssertFalse(result.englishTranscript?.isEmpty ?? true)
         XCTAssertFalse(result.subtitleCues.isEmpty)
+        XCTAssertTrue(result.subtitleCues.allSatisfy { $0.end > $0.start })
         XCTAssertFalse(result.evidence.rawASR?.isEmpty ?? true)
 
         let alignment = try XCTUnwrap(result.evidence.alignment)
@@ -669,6 +673,20 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 && $0.inputTokens <= LocalMLXTranslator.inputTokenLimit
         })
 
+        let workers = [
+            try XCTUnwrap(result.evidence.asrWorker?.lifecycle),
+            try XCTUnwrap(alignment.worker),
+            try XCTUnwrap(diarization.worker),
+            try XCTUnwrap(translation.worker),
+        ]
+        XCTAssertEqual(Set(workers.map(\.processIdentifier)).count, workers.count)
+        XCTAssertTrue(workers.allSatisfy {
+            $0.exitStatus == 0 && !$0.forcedTermination && !$0.availableMemorySamples.isEmpty
+        })
+        XCTAssertTrue(zip(workers, workers.dropFirst()).allSatisfy {
+            $0.exitedAt <= $1.startedAt
+        })
+
         XCTAssertFalse(result.manifest.modelEvents.contains { $0.kind == .guardFailed })
         for modelID in [
             backend.model.modelID,
@@ -681,6 +699,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
             XCTAssertTrue(events.contains(.loadCompleted), "Missing load for \(modelID)")
             XCTAssertTrue(events.contains(.unloadCompleted), "Missing unload for \(modelID)")
             XCTAssertTrue(events.contains(.memoryReleaseChecked), "Missing release check for \(modelID)")
+            let pressure = try XCTUnwrap(result.manifest.modelEvents.first {
+                $0.modelID == modelID && $0.kind == .pressureChecked
+            })
+            XCTAssertTrue(pressure.message?.contains("policy=macos-memory-pressure") == true)
+            XCTAssertTrue(pressure.message?.contains("reserve=0") == true)
         }
 
         let expectedFiles = [
@@ -932,7 +955,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
             backend: baseline.model.backend,
             speakerLabels: true,
             useExclusiveReconciliation: useExclusiveReconciliation,
-            speakerCountPolicy: speakerCountPolicy,
+            speakerConfiguration: .init(
+                enhancedPrecision: false,
+                sensitiveDetection: false,
+                countPolicy: speakerCountPolicy
+            ),
             outputRoot: URL(fileURLWithPath: outputPath)
         )) { progress in
             print(

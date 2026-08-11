@@ -268,9 +268,7 @@ struct HighQualityJobView: View {
                     backend: backend,
                     translator: translator,
                     speakerLabels: speakerBeta.includeLabels,
-                    enhancedSpeakerPrecision: speakerBeta.configuration.enhancedPrecision,
-                    sensitiveSpeakerDetection: speakerBeta.configuration.sensitiveDetection,
-                    speakerCountPolicy: speakerBeta.configuration.countPolicy,
+                    speakerConfiguration: speakerBeta.configuration,
                     translationContextPolicy: .productDefault
                 )) { update in
                     Task { @MainActor in progress = update }

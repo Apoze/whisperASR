@@ -80,9 +80,7 @@ final class HighQualityJobTests: XCTestCase {
                 deliverables: [.japaneseTranscript],
                 backend: .qwenJA,
                 speakerLabels: true,
-                enhancedSpeakerPrecision: configuration.enhancedPrecision,
-                sensitiveSpeakerDetection: configuration.sensitiveDetection,
-                speakerCountPolicy: configuration.countPolicy,
+                speakerConfiguration: configuration,
                 outputRoot: root
             )
 
@@ -126,9 +124,11 @@ final class HighQualityJobTests: XCTestCase {
                 deliverables: [.japaneseTranscript],
                 backend: .qwenJA,
                 speakerLabels: speakerLabels,
-                enhancedSpeakerPrecision: enhancedPrecision,
-                sensitiveSpeakerDetection: sensitiveDetection,
-                speakerCountPolicy: policy,
+                speakerConfiguration: .init(
+                    enhancedPrecision: enhancedPrecision,
+                    sensitiveDetection: sensitiveDetection,
+                    countPolicy: policy
+                ),
                 outputRoot: root
             )
 
@@ -621,9 +621,11 @@ final class HighQualityJobTests: XCTestCase {
                 backend: .qwenJA,
                 speakerLabels: true,
                 useExclusiveReconciliation: true,
-                enhancedSpeakerPrecision: true,
-                sensitiveSpeakerDetection: true,
-                speakerCountPolicy: .expected(2),
+                speakerConfiguration: .init(
+                    enhancedPrecision: true,
+                    sensitiveDetection: true,
+                    countPolicy: .expected(2)
+                ),
                 outputRoot: root
             ))
         }
@@ -746,7 +748,7 @@ final class HighQualityJobTests: XCTestCase {
             unloadAlignment: { await calls.append("unload-alignment") },
             translateEnglish: { request in
                 let translations = request.turns.enumerated().map {
-                    ["id": $0.element.id, "text": $0.offset == 0 ? "One" : "Two"]
+                    ["id": $0.element.id, "text": $0.offset == 0 ? "One\n\ncontinued" : "Two"]
                 }
                 let response = try JSONSerialization.data(withJSONObject: [
                     "translations": translations,
@@ -777,7 +779,7 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.subtitleCues.map(\.id), ["unit-0001", "unit-0002"])
         XCTAssertEqual(result.subtitleCues.map(\.start), [1.5, 6.25])
         XCTAssertEqual(result.subtitleCues.map(\.end), [2.75, 8])
-        XCTAssertEqual(result.subtitleCues.map(\.text), ["One", "Two"])
+        XCTAssertEqual(result.subtitleCues.map(\.text), ["One\n\ncontinued", "Two"])
         XCTAssertNil(result.englishTranscript)
         XCTAssertEqual(result.evidence.alignment?.modelID, "fixture-aligner")
         XCTAssertEqual(result.evidence.alignment?.revision, "fixture-revision")
@@ -792,7 +794,7 @@ final class HighQualityJobTests: XCTestCase {
                 contentsOf: result.directory.appendingPathComponent("english-subtitles.vtt"),
                 encoding: .utf8
             ),
-            "WEBVTT\n\nunit-0001\n00:00:01.500 --> 00:00:02.750\nOne\n\n"
+            "WEBVTT\n\nunit-0001\n00:00:01.500 --> 00:00:02.750\nOne continued\n\n"
                 + "unit-0002\n00:00:06.250 --> 00:00:08.000\nTwo\n\n"
         )
         XCTAssertEqual(
@@ -800,7 +802,7 @@ final class HighQualityJobTests: XCTestCase {
                 contentsOf: result.directory.appendingPathComponent("english-subtitles.srt"),
                 encoding: .utf8
             ),
-            "1\n00:00:01,500 --> 00:00:02,750\nOne\n\n"
+            "1\n00:00:01,500 --> 00:00:02,750\nOne continued\n\n"
                 + "2\n00:00:06,250 --> 00:00:08,000\nTwo\n\n"
         )
     }
@@ -809,6 +811,7 @@ final class HighQualityJobTests: XCTestCase {
         let invalidCues: [HighQualityAlignedCue] = [
             .init(id: "cue-0001", text: "一。", start: -1, end: 1),
             .init(id: "cue-0001", text: "一。", start: 2, end: 1),
+            .init(id: "cue-0001", text: "一。", start: 1, end: 1),
             .init(id: "cue-0001", text: "一。", start: .nan, end: 1),
             .init(id: "cue-0001", text: "一。", start: 0, end: 11),
             .init(id: "cue-0001", text: "", start: 0, end: 1),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Score ticket #62 from the frozen #44 baseline and the real combined candidate."""
+"""Validate ticket #77 against the frozen corpus and product evidence."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from report_high_quality_acceptance import (
     cer,
@@ -20,7 +21,7 @@ from report_high_quality_acceptance import (
     translation_rows,
 )
 from report_japanese_l7d import chrf_pp
-from report_local_translator_bakeoff import comet_scores, write_lines
+from report_local_translator_bakeoff import comet_scores, subtitle_quality, write_lines
 
 
 CORPORA = ("qudu2fx3ncc", "md62mmdz0m")
@@ -106,41 +107,71 @@ def decision_manifest() -> list[dict]:
 
 
 def model_lifecycle(raw: dict) -> dict:
+    workers = [
+        (raw.get("asrWorker") or {}).get("lifecycle"),
+        (raw.get("alignment") or {}).get("worker"),
+        (raw.get("diarization") or {}).get("worker"),
+        (raw.get("translation") or {}).get("worker"),
+    ]
+    complete = all(workers)
     events = raw["modelEvents"]
-    indexes = {(event["modelID"], event["kind"]): index
-               for index, event in enumerate(events) if event["modelID"] in MODEL_IDS}
-    required = ("reserve-checked", "load-completed", "unload-completed", "memory-release-checked")
-    complete = all((model, kind) in indexes for model in MODEL_IDS for kind in required)
-    sequential = complete and all(
-        indexes[(left, "memory-release-checked")] < indexes[(right, "load-completed")]
-        for left, right in zip(MODEL_IDS, MODEL_IDS[1:])
+    pressure = [event for event in events if event["kind"] == "memory-pressure-checked"]
+    pressure_valid = len(pressure) == len(MODEL_IDS) and {
+        event["modelID"] for event in pressure
+    } == set(MODEL_IDS) and all(
+        "policy=macos-memory-pressure" in (event.get("message") or "")
+        and "reserve=0" in (event.get("message") or "")
+        for event in pressure
     )
-    reserve = all(
-        "reserve=8589934592" in (event.get("message") or "")
-        for event in events if event["kind"] == "reserve-checked"
-    )
-    release_fields = {
-        event["modelID"]: dict(re.findall(r"(runtimePeak|minimumAvailable|maximum|reserve)=(\d+)", event.get("message") or ""))
-        for event in events if event["kind"] == "memory-release-checked"
-    }
-    runtime_reserve = complete and all(
-        model in release_fields
-        and set(release_fields[model]) == {
-            "runtimePeak", "minimumAvailable", "maximum", "reserve"
-        }
-        and int(release_fields[model]["runtimePeak"])
-            <= int(release_fields[model]["maximum"])
-        and int(release_fields[model]["minimumAvailable"])
-            >= int(release_fields[model]["reserve"])
+    event_pairs = {(event["modelID"], event["kind"]) for event in events}
+    events_complete = all(
+        (model, kind) in event_pairs
         for model in MODEL_IDS
+        for kind in ("memory-pressure-checked", "load-completed", "unload-completed",
+                     "memory-release-checked")
     )
+    worker_valid = complete and all(
+        worker["exitStatus"] == 0
+        and not worker["forcedTermination"]
+        and worker["peakPhysicalFootprintBytes"] > 0
+        and worker["availableMemorySamples"]
+        and worker.get("swapUsedBeforeBytes") is not None
+        and worker.get("swapUsedAfterBytes") is not None
+        and not any(item["level"] == "critical" for item in worker["pressureTransitions"])
+        for worker in workers
+    )
+    sequential = complete and all(
+        datetime.fromisoformat(left["exitedAt"].replace("Z", "+00:00"))
+        <= datetime.fromisoformat(right["startedAt"].replace("Z", "+00:00"))
+        for left, right in zip(workers, workers[1:])
+    )
+    pids = [worker["processIdentifier"] for worker in workers] if complete else []
     return {
-        "completeLoadUnloadRelease": complete,
-        "sequential": sequential,
-        "eightGiBReserve": reserve,
-        "runtimeReservePreserved": runtime_reserve,
-        "noGuardFailure": not any(event["kind"] == "guard-failed" for event in events),
-        "metricXAbsent": not any("metricx" in event["modelID"].casefold() for event in events),
+        "gates": {
+            "allWorkersPresent": complete,
+            "completeModelEvents": events_complete,
+            "cleanWorkerExits": worker_valid,
+            "distinctWorkerProcesses": len(set(pids)) == len(MODEL_IDS),
+            "strictlySequential": sequential,
+            "dynamicPressurePolicy": pressure_valid,
+            "noFixedEightGiBReserve": not any(
+                "reserve=8589934592" in (event.get("message") or "") for event in events
+            ),
+            "noGuardFailure": not any(event["kind"] == "guard-failed" for event in events),
+        },
+        "workers": [] if not complete else [{
+            "stage": stage,
+            "processIdentifier": worker["processIdentifier"],
+            "elapsedSeconds": worker["elapsedSeconds"],
+            "peakPhysicalFootprintBytes": worker["peakPhysicalFootprintBytes"],
+            "minimumAvailableMemoryBytes": min(
+                item["availableMemoryBytes"] for item in worker["availableMemorySamples"]
+            ),
+            "swapUsedBeforeBytes": worker.get("swapUsedBeforeBytes"),
+            "swapUsedAfterBytes": worker.get("swapUsedAfterBytes"),
+            "swapDeltaBytes": worker["swapUsedAfterBytes"] - worker["swapUsedBeforeBytes"],
+            "pressureTransitions": worker["pressureTransitions"],
+        } for stage, worker in zip(("asr", "alignment", "diarization", "translation"), workers)],
     }
 
 
@@ -196,6 +227,81 @@ def stable_speaker_labels(raw: dict) -> bool:
     return bool(labels)
 
 
+def subtitle_timeline(text: str, webvtt: bool) -> list[dict]:
+    if webvtt:
+        text = text.removeprefix("WEBVTT\n\n")
+    rows = []
+    for block in re.split(r"\n\s*\n", text.strip()):
+        lines = block.splitlines()
+        if len(lines) < 3 or " --> " not in lines[1]:
+            return []
+        start, end = lines[1].split(" --> ", 1)
+        try:
+            def milliseconds(value: str) -> int:
+                hours, minutes, seconds = value.replace(",", ".").split(":")
+                whole, fraction = seconds.split(".")
+                return ((int(hours) * 60 + int(minutes)) * 60 + int(whole)) * 1000 \
+                    + int(fraction)
+            rows.append({
+                "id": lines[0], "startMilliseconds": milliseconds(start),
+                "endMilliseconds": milliseconds(end), "text": " ".join(lines[2:]).strip(),
+            })
+        except ValueError:
+            return []
+    return rows
+
+
+def subtitle_artifacts(job: Path, raw: dict) -> dict:
+    srt = subtitle_quality((job / "english-subtitles.srt").read_text(encoding="utf-8"))
+    vtt_text = (job / "english-subtitles.vtt").read_text(encoding="utf-8")
+    vtt_body = vtt_text.removeprefix("WEBVTT\n\n")
+    vtt_as_srt = re.sub(
+        r"(?m)^(\d{2}:\d{2}:\d{2})\.(\d{3}) --> (\d{2}:\d{2}:\d{2})\.(\d{3})$",
+        r"\1,\2 --> \3,\4",
+        vtt_body,
+    )
+    vtt = subtitle_quality(vtt_as_srt)
+    srt_rows = subtitle_timeline(
+        (job / "english-subtitles.srt").read_text(encoding="utf-8"), False
+    )
+    vtt_rows = subtitle_timeline(vtt_text, True)
+    turns = raw["translation"]["request"]["turns"]
+    expected = [{
+        "id": turn["id"],
+        "startMilliseconds": int(max(0, turn["sourceStart"]) * 1000 + 0.5),
+        "endMilliseconds": int(max(0, turn["sourceEnd"]) * 1000 + 0.5),
+    } for turn in turns]
+    timelines_match = [
+        (row["startMilliseconds"], row["endMilliseconds"]) for row in srt_rows
+    ] == [
+        (row["startMilliseconds"], row["endMilliseconds"]) for row in vtt_rows
+    ]
+    alignment_matches = [{key: row[key] for key in expected[0]} for row in vtt_rows] \
+        == expected if expected else False
+    outputs = {
+        row["id"]: " ".join(row["text"].split())
+        for row in json.loads(raw["translation"]["response"])["translations"]
+    }
+    exported_text = lambda row: re.sub(r"^(?:<v [^>]*>|\[[^]]+\] )", "", row["text"])
+    text_matches = len(srt_rows) == len(vtt_rows) == len(expected) and all(
+        exported_text(srt_row) == exported_text(vtt_row) == outputs.get(turn["id"])
+        for srt_row, vtt_row, turn in zip(srt_rows, vtt_rows, turns)
+    )
+    valid = vtt_text.startswith("WEBVTT\n\n") and srt["cueCount"] > 0 \
+        and srt["cueCount"] == vtt["cueCount"] and all(
+            not quality[key]
+            for quality in (srt, vtt)
+            for key in ("emptyCueIDs", "invalidDurationCueIDs")
+        ) and srt["malformedBlockCount"] == vtt["malformedBlockCount"] == 0 \
+        and timelines_match and alignment_matches and text_matches
+    return {
+        "valid": valid, "srt": srt, "vtt": vtt,
+        "srtVTTTimestampsMatch": timelines_match,
+        "alignmentTimestampsMatch": alignment_matches,
+        "translatedTextMatches": text_matches,
+    }
+
+
 def weight_provenance_valid(weight_items: list[dict]) -> bool:
     observed = {
         (item["modelID"], item["file"]): item["sha256"]
@@ -241,16 +347,16 @@ def speaker_gates(
         "rejectedCandidatesRemainBaseline": all(
             not row["promoted"] for row in decisions if row["ticket"] >= 57
         ),
-        "speakerAttributedJapaneseErrorGain":
+        "speakerAttributedJapaneseErrorNonRegression":
             candidate["speakerAttributedJapaneseError"]["ratePercent"]
-            < baseline["speakerAttributedJapaneseError"]["ratePercent"],
+            <= baseline["speakerAttributedJapaneseError"]["ratePercent"],
         "rawOverlapRetained": overlap_evidence_retained,
         "zeroInventedOverlap": candidate["overlap"]["inventedSeconds"] == 0,
     }
 
 
 def artifact_gates(root: Path, corpus: str, manifest: dict, raw: dict, metadata: dict,
-                   job: Path, decisions: list[dict]) -> dict:
+                   job_manifest: dict, job: Path, decisions: list[dict]) -> dict:
     required = {
         "english-subtitles.srt", "english-subtitles.vtt",
         "english-translation-transcript.txt", "japanese-transcript.txt",
@@ -261,6 +367,7 @@ def artifact_gates(root: Path, corpus: str, manifest: dict, raw: dict, metadata:
     archive_hash = next(item["sha256"] for item in manifest["source"]["references"]
                         if item["label"] == "reference-archive")
     lifecycle = model_lifecycle(raw)
+    subtitles = subtitle_artifacts(job, raw)
     return {
         "upstreamDecisions": metadata["candidateSelection"] == decisions,
         "sourceProvenance": metadata["sourceSHA256"] == source_hash
@@ -273,9 +380,16 @@ def artifact_gates(root: Path, corpus: str, manifest: dict, raw: dict, metadata:
             and not raw["alignment"]["validationDiagnostics"],
         "selectedSpeakerBaseline": raw["diarization"]["modelID"] == MODEL_IDS[2]
             and raw["diarization"].get("useExclusiveReconciliation") is False
+            and raw.get("speakerConfiguration") == {
+                "enhancedPrecision": False,
+                "sensitiveDetection": False,
+                "countPolicy": {"mode": "automatic"},
+            }
             and not raw["diarization"]["validationDiagnostics"],
-        "selectedTranslateGemma": raw["translation"]["model"] == MODEL_IDS[3],
-        "lifecycle": all(lifecycle.values()),
+        "selectedTranslateGemma": raw["translation"]["model"] == MODEL_IDS[3]
+            and job_manifest["translationModel"]["modelID"] == MODEL_IDS[3],
+        "lifecycle": all(lifecycle["gates"].values()),
+        "subtitleIntegrity": subtitles["valid"],
         "rawArtifactHashes": metadata["rawArtifactSHA256"] == {
             "manifest.json": sha256(job / "manifest.json"),
             "raw-asr.json": sha256(job / "raw-asr.json"),
@@ -287,6 +401,45 @@ def artifact_gates(root: Path, corpus: str, manifest: dict, raw: dict, metadata:
 def metric_mean(path: Path, hypothesis: Path) -> float | None:
     scores = comet_scores(path, hypothesis)
     return sum(scores) / len(scores) if scores else None
+
+
+def metric_interpretation(
+    baseline: float | None, candidate: float | None, higher_is_better: bool, impact: str
+) -> dict:
+    if baseline is None or candidate is None:
+        return {"baseline": baseline, "candidate": candidate, "delta": None,
+                "interpretation": "not-scored", "impact": impact}
+    delta = candidate - baseline
+    improved = delta > 0 if higher_is_better else delta < 0
+    return {
+        "baseline": baseline, "candidate": candidate, "delta": delta,
+        "interpretation": "improved" if improved else ("unchanged" if delta == 0 else "regressed"),
+        "impact": impact,
+    }
+
+
+def representative_examples(baseline: list[dict], candidate: list[dict]) -> list[dict]:
+    baseline_by_id = {row["id"]: row for row in baseline}
+    rows = []
+    for row in candidate:
+        previous = baseline_by_id[row["id"]]
+        rows.append({
+            "id": row["id"], "sourceJapanese": row["source"],
+            "referenceEnglish": row["reference"],
+            "baselineEnglish": previous["hypothesis"],
+            "candidateEnglish": row["hypothesis"],
+            "chrFDelta": chrf_pp(row["hypothesis"], row["reference"])
+                - chrf_pp(previous["hypothesis"], row["reference"]),
+            "candidateChrF": chrf_pp(row["hypothesis"], row["reference"]),
+        })
+    recovered = max(rows, key=lambda row: row["chrFDelta"])
+    lost = min(rows, key=lambda row: row["chrFDelta"])
+    mistranslated = min(rows, key=lambda row: row["candidateChrF"])
+    return [
+        dict(recovered, category="recovered", observed=recovered["chrFDelta"] > 0),
+        dict(lost, category="lost", observed=lost["chrFDelta"] < 0),
+        dict(mistranslated, category="mistranslated", observed=True),
+    ]
 
 
 def score_corpus(root: Path, baseline_root: Path, corpus: str,
@@ -320,6 +473,13 @@ def score_corpus(root: Path, baseline_root: Path, corpus: str,
     integrity = translation_integrity(candidate)
     baseline_speaker = diarization_metrics(manifest, baseline)
     speaker = diarization_metrics(manifest, candidate)
+    candidate_cer = cer(
+        "".join(turn["japanese"] for turn in manifest["annotations"]["turns"]),
+        candidate["rawASR"],
+    )
+    terminology = glossary_accuracy(candidate, candidate_rows)
+    subtitles = subtitle_artifacts(candidate_job, candidate)
+    resources = model_lifecycle(candidate)
     baseline_comet = metric_mean(comet_path, baseline_hypothesis)
     candidate_comet = metric_mean(comet_path, candidate_hypothesis)
     reference_text = " ".join(row["reference"] for row in candidate_rows)
@@ -340,6 +500,36 @@ def score_corpus(root: Path, baseline_root: Path, corpus: str,
         "overlapRanges" in candidate["diarization"],
         decisions,
     )
+    interpretations = {
+        "COMET": metric_interpretation(
+            baseline_comet, candidate_comet, True,
+            "Translation meaning changed; inspect recovered/lost speech examples below.",
+        ),
+        "chrFPlusPlus": metric_interpretation(
+            baseline_chrf, candidate_chrf, True,
+            "English wording/reference overlap changed; inspect cue examples below.",
+        ),
+        "DERPercent": metric_interpretation(
+            baseline_speaker["DERPercent"], speaker["DERPercent"], False,
+            f'Speaker attribution changed with {speaker["candidateSpeakerCount"]} candidate '
+            f'vs {speaker["referenceSpeakerCount"]} reference speakers.',
+        ),
+        "JERPercent": metric_interpretation(
+            baseline_speaker["JERPercent"], speaker["JERPercent"], False,
+            "Per-speaker temporal coverage changed; lower is better.",
+        ),
+        "speakerAttributedJapaneseErrorPercent": metric_interpretation(
+            baseline_speaker["speakerAttributedJapaneseError"]["ratePercent"],
+            speaker["speakerAttributedJapaneseError"]["ratePercent"], False,
+            f'{speaker["speakerAttributedJapaneseError"]["editDistance"]} Japanese '
+            f'character edits remain under mapped speaker identities.',
+        ),
+        "overlapF1Percent": metric_interpretation(
+            baseline_speaker["overlap"]["f1Percent"], speaker["overlap"]["f1Percent"], True,
+            f'Overlap detection missed {speaker["overlap"]["missedSeconds"]:.3f}s and '
+            f'invented {speaker["overlap"]["inventedSeconds"]:.3f}s.',
+        ),
+    }
     return {
         "corpusID": corpus,
         "role": "development" if corpus != HOLDOUT else "untouched-channel-separated-holdout",
@@ -355,21 +545,43 @@ def score_corpus(root: Path, baseline_root: Path, corpus: str,
             "commit": metadata["commit"],
             "COMET": candidate_comet,
             "chrFPlusPlus": candidate_chrf,
-            "japaneseCER": cer("".join(turn["japanese"] for turn in manifest["annotations"]["turns"]), candidate["rawASR"]),
-            "terminology": glossary_accuracy(candidate, candidate_rows),
+            "japaneseCER": candidate_cer,
+            "terminology": terminology,
             "translationIntegrity": integrity,
             "diarization": speaker,
             "runtimeSeconds": duration(candidate_manifest),
             "stageDurations": candidate_manifest["stageDurations"],
             "retryRate": integrity["retryRate"],
             "peakMemoryBytes": candidate_manifest["peakMemoryBytes"],
+            "subtitles": subtitles,
+            "resources": resources,
         },
-        "artifactGates": artifact_gates(root, corpus, manifest, candidate, metadata, candidate_job, decisions),
+        "artifactGates": artifact_gates(
+            root, corpus, manifest, candidate, metadata, candidate_manifest,
+            candidate_job, decisions,
+        ),
         "translationGates": translation_gates,
         "speakerGates": speaker_gate_results,
+        "metricInterpretations": interpretations,
+        "representativeExamples": representative_examples(baseline_rows, candidate_rows),
+        "qualityImpact": {
+            "speechRecognition": {
+                "changedFromBaseline": candidate["rawASR"] != baseline["rawASR"],
+                "candidateCERPercent": candidate_cer["ratePercent"],
+                "impact": "Japanese speech recognition and omissions; lower CER is better.",
+            },
+            "nameTerminology": {
+                **terminology,
+                "impact": "Pinned names and glossary terms retained or missed in English.",
+            },
+            "cueReadability": {
+                **subtitles,
+                "impact": "Cue timestamps, text identity and SRT/VTT readability.",
+            },
+        },
         "qualityGates": {
-            "COMETGain": baseline_comet is not None and candidate_comet is not None
-                and candidate_comet > baseline_comet,
+            "COMETNonRegression": baseline_comet is not None and candidate_comet is not None
+                and candidate_comet >= baseline_comet,
             "chrFPlusPlusNonRegression": candidate_chrf >= baseline_chrf,
         },
         "rawArtifacts": {
@@ -392,8 +604,11 @@ def main() -> None:
     parser.add_argument("--baseline-root", type=Path)
     parser.add_argument("--json", type=Path)
     parser.add_argument("--markdown", type=Path)
+    parser.add_argument("--quality-json", type=Path)
+    parser.add_argument("--resources-json", type=Path)
     parser.add_argument("--live-log", type=Path)
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--prepare-scoring", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         assert duration({"startedAt": "2026-01-01T00:00:00Z", "finishedAt": "2026-01-01T00:00:02Z"}) == 2
@@ -411,8 +626,70 @@ def main() -> None:
         gates = speaker_gates(
             baseline_speaker, candidate_speaker, True, True, [],
         )
-        assert not gates["speakerAttributedJapaneseErrorGain"]
+        assert gates["speakerAttributedJapaneseErrorNonRegression"]
         assert not gates["zeroInventedOverlap"]
+        assert metric_interpretation(1, 1, True, "meaning")["interpretation"] == "unchanged"
+        examples = representative_examples(
+            [{"id": "1", "source": "一", "reference": "one", "hypothesis": "two"}],
+            [{"id": "1", "source": "一", "reference": "one", "hypothesis": "one"}],
+        )
+        assert {example["category"] for example in examples} \
+            == {"recovered", "lost", "mistranslated"}
+        worker = {
+            "processIdentifier": 1, "startedAt": "2026-01-01T00:00:00Z",
+            "exitedAt": "2026-01-01T00:00:01Z", "elapsedSeconds": 1,
+            "exitStatus": 0, "forcedTermination": False,
+            "peakPhysicalFootprintBytes": 1,
+            "availableMemorySamples": [{"availableMemoryBytes": 1}],
+            "pressureTransitions": [], "swapUsedBeforeBytes": 0,
+            "swapUsedAfterBytes": 0,
+        }
+        raw_workers = {
+            "asrWorker": {"lifecycle": worker},
+            "alignment": {"worker": dict(
+                worker, processIdentifier=2, startedAt="2026-01-01T00:00:01Z",
+                exitedAt="2026-01-01T00:00:02Z",
+            )},
+            "diarization": {"worker": dict(
+                worker, processIdentifier=3, startedAt="2026-01-01T00:00:02Z",
+                exitedAt="2026-01-01T00:00:03Z",
+            )},
+            "translation": {"worker": dict(
+                worker, processIdentifier=4, startedAt="2026-01-01T00:00:03Z",
+                exitedAt="2026-01-01T00:00:04Z",
+            )},
+            "modelEvents": [{
+                "kind": kind, "modelID": model,
+                "message": "policy=macos-memory-pressure reserve=0"
+                    if kind == "memory-pressure-checked" else None,
+            } for model in MODEL_IDS for kind in (
+                "memory-pressure-checked", "load-completed", "unload-completed",
+                "memory-release-checked",
+            )],
+        }
+        assert all(model_lifecycle(raw_workers)["gates"].values())
+        raw_workers["alignment"]["worker"]["processIdentifier"] = 1
+        assert not model_lifecycle(raw_workers)["gates"]["distinctWorkerProcesses"]
+        with TemporaryDirectory() as directory:
+            job = Path(directory)
+            (job / "english-subtitles.srt").write_text(
+                "1\n00:00:00,000 --> 00:00:01,000\nHello\n", encoding="utf-8"
+            )
+            (job / "english-subtitles.vtt").write_text(
+                "WEBVTT\n\ncue-1\n00:00:00.000 --> 00:00:01.000\nHello\n",
+                encoding="utf-8",
+            )
+            subtitle_raw = {"translation": {
+                "request": {"turns": [{
+                    "id": "cue-1", "sourceStart": 0, "sourceEnd": 1,
+                }]},
+                "response": '{"translations":[{"id":"cue-1","text":"Hello"}]}',
+            }}
+            assert subtitle_artifacts(job, subtitle_raw)["valid"]
+            (job / "english-subtitles.srt").write_text(
+                "1\n00:00:00,000 --> 00:00:00,000\nHello\n", encoding="utf-8"
+            )
+            assert not subtitle_artifacts(job, subtitle_raw)["valid"]
         assert len(MODEL_REVISIONS) == 4 and len(MODEL_WEIGHT_SHA256) == 8
         retained_path = Path(
             "docs/japanese-live/experiments/evidence/E19-safety-stop/"
@@ -452,7 +729,14 @@ def main() -> None:
             for source in classification["sourceArtifacts"].values()
         )
         return
-    assert args.root and args.baseline_root and args.json and args.markdown and args.live_log
+    if args.prepare_scoring:
+        assert args.root and args.baseline_root
+        decisions = decision_manifest()
+        for corpus in CORPORA:
+            score_corpus(args.root, args.baseline_root, corpus, decisions)
+        return
+    assert args.root and args.baseline_root and args.json and args.markdown \
+        and args.quality_json and args.resources_json and args.live_log
     decisions = decision_manifest()
     rows = [row for corpus in CORPORA
             if (row := score_corpus(args.root, args.baseline_root, corpus, decisions))]
@@ -461,20 +745,22 @@ def main() -> None:
     development = next((row for row in rows if row["corpusID"] != HOLDOUT), None)
     holdout = next((row for row in rows if row["corpusID"] == HOLDOUT), None)
     development_eligible = development is not None and row_passes(development)
-    workflow_valid = all(controls.values()) and all(
-        all(row["artifactGates"].values()) for row in rows
-    )
-    promoted = bool(development_eligible and holdout and row_passes(holdout) and live_passed
-                    and controls.get("fullSwiftSuite", False))
+    workflow_valid = bool(development_eligible and holdout and row_passes(holdout)
+                          and live_passed and all(controls.values())
+                          and controls.get("fullSwiftSuite", False))
     report = {
         "schemaVersion": 1,
-        "ticket": 62,
+        "ticket": 77,
         "candidateSelection": decisions,
         "configuration": {
             "ASR": "qwen-ja-product-default",
             "alignment": "Qwen3-ForcedAligner",
             "diarization": "SpeakerKit-W8A16-auto-library-default-non-exclusive",
             "translation": "TranslateGemma-12b-4bit-previous-accepted-v1",
+            "speakerBetaOptions": [
+                "enhanced-precision", "sensitive-detection", "known-speaker-count",
+            ],
+            "translationBetaOption": "TranslateGemma-4b-it-4bit",
             "rejectedCandidatesRemainDisabled": True,
         },
         "rows": rows,
@@ -482,24 +768,53 @@ def main() -> None:
         "liveGates": live_passed,
         "developmentEligible": development_eligible,
         "workflowValid": workflow_valid,
-        "promoted": promoted,
-        "decision": "promote-combined-offline-candidate" if promoted else (
-            "holdout-not-opened" if holdout is None and development_eligible else
+        "promoted": False,
+        "decision": "validated-standard-offline-workflow" if workflow_valid else (
+            "development-pass-holdout-closed" if holdout is None and development_eligible else
             "no-go-development" if not development_eligible else "no-go-holdout"
         ),
-        "productChanges": "translation context only" if promoted else "none",
+        "productChanges": "none",
         "scopeLimit": "Two complete supplied videos validate only this offline workflow; they do not prove universal anime, VTuber, gaming, conversation, speaker, or overlap quality.",
     }
-    evidence = Path("docs/japanese-live/experiments/evidence/E19")
+    evidence = Path("docs/japanese-live/experiments/evidence/E22")
     report["retainedEvidence"] = [
         {"path": str(path), "sha256": sha256(path)}
-        for path in sorted(evidence.glob("*")) if path.is_file()
+        for path in sorted(evidence.glob("*"))
+        if path.is_file() and path.name not in {"quality-report.json", "resources-report.json"}
     ]
     args.json.parent.mkdir(parents=True, exist_ok=True)
     args.json.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    args.quality_json.parent.mkdir(parents=True, exist_ok=True)
+    args.quality_json.write_text(json.dumps({
+        "ticket": 77,
+        "rows": [{
+            "corpusID": row["corpusID"],
+            "baseline": row["baseline"],
+            "candidate": {key: value for key, value in row["candidate"].items()
+                          if key not in ("resources", "stageDurations", "runtimeSeconds",
+                                         "peakMemoryBytes")},
+            "qualityGates": row["qualityGates"],
+            "translationGates": row["translationGates"],
+            "speakerGates": row["speakerGates"],
+            "metricInterpretations": row["metricInterpretations"],
+            "representativeExamples": row["representativeExamples"],
+            "qualityImpact": row["qualityImpact"],
+        } for row in rows],
+    }, ensure_ascii=False, indent=2) + "\n")
+    args.resources_json.write_text(json.dumps({
+        "ticket": 77,
+        "memoryPolicy": "native macOS pressure; no fixed offline reserve",
+        "rows": [{
+            "corpusID": row["corpusID"],
+            "runtimeSeconds": row["candidate"]["runtimeSeconds"],
+            "stageDurations": row["candidate"]["stageDurations"],
+            "peakMemoryBytes": row["candidate"]["peakMemoryBytes"],
+            "workerEvidence": row["candidate"]["resources"],
+        } for row in rows],
+    }, ensure_ascii=False, indent=2) + "\n")
     lines = [
-        "# E19 — Combined offline candidate", "",
-        "Only #55 previous-accepted context is eligible; #54, #56 and #57–#61 retain baseline behavior.", "",
+        "# E22 — Standard offline validation (#77)", "",
+        "Standard uses 12B and SpeakerKit defaults; 4B and the three SpeakerKit beta options remain selectable and independent.", "",
         "| Split | COMET baseline→candidate | chrF++ baseline→candidate | CER | DER / JER | Speaker JA error | Speakers ref/cand | Overlap P/R/F1 | Retry | Runtime | Peak | Gates |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
@@ -515,6 +830,21 @@ def main() -> None:
             f'{100*candidate["retryRate"]:.2f}% | {candidate["runtimeSeconds"]:.0f}s | {candidate["peakMemoryBytes"]/2**30:.2f} GiB | '
             f'{"PASS" if row_passes(row) else "FAIL"} |'
         )
+    for row in rows:
+        lines += ["", f'## {row["role"]} interpretations', ""]
+        for name, item in row["metricInterpretations"].items():
+            delta = "pending" if item["delta"] is None else f'{item["delta"]:+.4f}'
+            lines.append(
+                f'- {name}: Δ {delta} — {item["interpretation"]}. {item["impact"]}'
+            )
+        lines += ["", "Representative speech:", ""]
+        for example in row["representativeExamples"]:
+            lines.append(
+                f'- {example["category"]} `{example["id"]}`: '
+                f'JA “{example["sourceJapanese"]}” → candidate “{example["candidateEnglish"]}” '
+                f'(reference “{example["referenceEnglish"]}”, baseline “{example["baselineEnglish"]}”, '
+                f'observed={str(example["observed"]).lower()}).'
+            )
     lines += ["", f'**Decision: {report["decision"]}.**', "", report["scopeLimit"]]
     args.markdown.parent.mkdir(parents=True, exist_ok=True)
     args.markdown.write_text("\n".join(lines) + "\n")

@@ -214,9 +214,7 @@ struct HighQualityJobRequest: Sendable {
         translator: HighQualityTranslator = .productDefault,
         speakerLabels: Bool = false,
         useExclusiveReconciliation: Bool = false,
-        enhancedSpeakerPrecision: Bool = false,
-        sensitiveSpeakerDetection: Bool = false,
-        speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
+        speakerConfiguration: HighQualitySpeakerConfiguration = .standard,
         speakerLabelsByCueID: [String: String] = [:],
         translationContextPolicy: HighQualityConversationContextPolicy = .none,
         translationContextResetReasonsByCueID: [
@@ -231,11 +229,7 @@ struct HighQualityJobRequest: Sendable {
         self.translator = translator
         self.speakerLabels = speakerLabels
         self.useExclusiveReconciliation = useExclusiveReconciliation
-        self.speakerConfiguration = .init(
-            enhancedPrecision: enhancedSpeakerPrecision,
-            sensitiveDetection: sensitiveSpeakerDetection,
-            countPolicy: speakerCountPolicy
-        )
+        self.speakerConfiguration = speakerConfiguration
         self.speakerLabelsByCueID = speakerLabelsByCueID
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
@@ -3439,7 +3433,7 @@ struct HighQualityJob: Sendable {
                 guard cue.start.isFinite,
                       cue.end.isFinite,
                       cue.start >= 0,
-                      cue.end >= cue.start,
+                      cue.end > cue.start,
                       cue.end <= duration,
                       cue.start >= chunk.sourceStart,
                       cue.end <= chunk.sourceEnd,
@@ -3502,20 +3496,26 @@ struct HighQualityJob: Sendable {
 
     private static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
         "WEBVTT\n\n" + cues.map { cue in
+            let content = subtitleText(cue.text)
             let text = (cue.speakerName ?? cue.speakerLabel).map {
-                "<v \(webVTTSpeaker($0))>\(cue.text)"
+                "<v \(webVTTSpeaker($0))>\(content)"
             }
-                ?? cue.text
+                ?? content
             return "\(cue.id)\n\(SubtitleTimecode.webVTT(cue.start)) --> \(SubtitleTimecode.webVTT(cue.end))\n\(text)\n"
         }.joined(separator: "\n") + (cues.isEmpty ? "" : "\n")
     }
 
     private static func srt(_ cues: [HighQualitySubtitleCue]) -> String {
         cues.enumerated().map { index, cue in
-            let text = (cue.speakerName ?? cue.speakerLabel).map { "[\($0)] \(cue.text)" }
-                ?? cue.text
+            let content = subtitleText(cue.text)
+            let text = (cue.speakerName ?? cue.speakerLabel).map { "[\($0)] \(content)" }
+                ?? content
             return "\(index + 1)\n\(SubtitleTimecode.srt(cue.start)) --> \(SubtitleTimecode.srt(cue.end))\n\(text)\n"
         }.joined(separator: "\n") + (cues.isEmpty ? "" : "\n")
+    }
+
+    private static func subtitleText(_ text: String) -> String {
+        text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
     private static func webVTTSpeaker(_ value: String) -> String {

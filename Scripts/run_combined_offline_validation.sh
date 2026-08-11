@@ -2,13 +2,15 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-ARTIFACTS="${WHISPERASR_COMBINED_ROOT:-$ROOT/.build/benchmarks/combined-offline-validation}"
+ARTIFACTS="${WHISPERASR_COMBINED_ROOT:-$ROOT/.build/benchmarks/standard-offline-validation-77}"
 BASELINE_ROOT="${WHISPERASR_FROZEN_BASELINE_ROOT:-/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance}"
 FROZEN_REPO="${WHISPERASR_FROZEN_REPO:-/Users/maz/Documents/projets/whisperASR}"
 VIDEO_ROOT="${JAPANESE_VIDEO_ROOT:-/Users/maz/Documents/videos/jap}"
 MODE="${1:-full}"
-REPORT_JSON="$ROOT/docs/high-quality-combined-e19.json"
-REPORT_MD="$ROOT/docs/japanese-live/experiments/E19-combined-offline-validation.md"
+REPORT_JSON="$ROOT/docs/high-quality-standard-e22.json"
+REPORT_MD="$ROOT/docs/japanese-live/experiments/E22-standard-offline-validation.md"
+QUALITY_JSON="$ROOT/docs/japanese-live/experiments/evidence/E22/quality-report.json"
+RESOURCES_JSON="$ROOT/docs/japanese-live/experiments/evidence/E22/resources-report.json"
 LIVE_LOG="$ARTIFACTS/live-tests.log"
 DEFAULT_COMET_PYTHON="$ROOT/.build/comet-venv/bin/python"
 [[ -x "$DEFAULT_COMET_PYTHON" ]] || \
@@ -20,9 +22,9 @@ TRANSLATOR_ROOT="${WHISPERASR_TRANSLATOR_ROOT:-/Users/maz/.cache/huggingface/hub
 SPEAKERKIT_ROOT="${WHISPERASR_SPEAKERKIT_ROOT:-/Users/maz/Documents/huggingface/models/argmaxinc/speakerkit-coreml}"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 
-case "$MODE" in development|final|full) ;; *) echo "usage: $0 [development|final|full]" >&2; exit 2 ;; esac
-[[ "${BENCHMARK_SLOT_GRANTED:-}" == "62" ]] || {
-  echo "Refusing heavyweight #62 run without BENCHMARK_SLOT_GRANTED=62" >&2
+case "$MODE" in preflight|development|final|full) ;; *) echo "usage: $0 [preflight|development|final|full]" >&2; exit 2 ;; esac
+[[ "$MODE" == preflight || "${BENCHMARK_SLOT_GRANTED:-}" == "77" ]] || {
+  echo "Refusing heavyweight #77 run without BENCHMARK_SLOT_GRANTED=77" >&2
   exit 2
 }
 [[ -x "$COMET_PYTHON" ]] || { echo "COMET v2.2.7 is required at $COMET_PYTHON" >&2; exit 1; }
@@ -31,7 +33,7 @@ mkdir -p "$ARTIFACTS/controls"
 
 manifest_for() { printf '%s/docs/japanese-live/corpora/%s/manifest.json\n' "$ROOT" "$1"; }
 video_directory() { [[ "$1" == qudu2fx3ncc ]] && printf '%s/1\n' "$VIDEO_ROOT" || printf '%s/2\n' "$VIDEO_ROOT"; }
-job_id() { [[ "$1" == qudu2fx3ncc ]] && echo 62000001-0000-4000-8000-000000000001 || echo 62000002-0000-4000-8000-000000000001; }
+job_id() { [[ "$1" == qudu2fx3ncc ]] && echo 77000001-0000-4000-8000-000000000001 || echo 77000002-0000-4000-8000-000000000001; }
 
 resolve_corpus_file() {
   local corpus="$1" label="$2" expected file
@@ -112,7 +114,7 @@ run_real_cancellation_control() {
 
 run_controls() {
   xcrun swift test \
-    --filter 'HighQualityJobTests/testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts|HighQualityJobTests/testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface|HighQualityJobTests/testCancellationIsSafeForEveryOfflineBackend|HighQualityJobTests/testPeakMemoryIsSampledDuringASRStages|HeavyweightModelGateTests|HighQualityLocalTranslationTests|HighQualityConversationContextTests' \
+    --filter 'HighQualityJobTests/testSpeakerBetaControlsVisibilityAndSafeDefaults|HighQualityJobTests/testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence|HighQualityJobTests/testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts|HighQualityJobTests/testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface|HighQualityJobTests/testCancellationIsSafeForEveryOfflineBackend|HighQualityJobTests/testPeakMemoryIsSampledDuringASRStages|HighQualityJobTests/testEnglish|HighQualityJobTests/testYouTube|HighQualityJobTests/testAlignmentAndDiarizationWorkerEvidenceReachesRawEvidence|HeavyweightModelGateTests|HighQualityASRWorkerTests|HighQualityAlignmentSpeakerWorkerTests|HighQualityTranslationWorkerTests|HighQualityLocalTranslationTests|HighQualityConversationContextTests' \
     2>&1 | tee "$ARTIFACTS/controls/light-tests.log"
   [[ -f .build/debug/mlx.metallib ]] || bash Scripts/build_mlx_metallib.sh debug
   python3 Scripts/report_combined_offline_validation.py --self-test
@@ -121,7 +123,11 @@ run_controls() {
   run_real_cancellation_control 2>&1 | tee "$ARTIFACTS/controls/real-cancellation.log"
   jq -n '{build:true,sourceDecode:true,referenceIntegrity:true,modelPreparation:true,
     realCancellation:true,failureClassification:true,artifactParsing:true,
-    selectableBackends:true,paidAPIAbsent:true}' >"$ARTIFACTS/controls.json"
+    selectableBackends:true,paidAPIAbsent:true,isolatedWorkers:true,
+    dynamicMemoryPressure:true,liveMutualExclusion:true,standardSpeakerDefaults:true,
+    speakerBetaOptionsIndependent:true,translatorSelections:true,
+    deliverableCombinations:true,youtubeAcquisition:true,englishOnly:true}' \
+    >"$ARTIFACTS/controls.json"
 }
 
 candidate_selection() {
@@ -196,12 +202,16 @@ write_metadata() {
   source="$(resolve_corpus_file "$corpus" source-video)"
   archive="$(resolve_corpus_file "$corpus" reference-archive)"
   implementation='{}'
-  for path in Sources/HighQualityJob.swift Sources/HighQualityConversationContext.swift \
-    Sources/HeavyweightModelGate.swift \
+  for path in Sources/HighQualityJob.swift Sources/HighQualityJobView.swift \
+    Sources/HighQualityConversationContext.swift Sources/HighQualityWorkerProcess.swift \
+    Sources/HighQualityASRWorker.swift Sources/HighQualityAlignmentSpeakerWorker.swift \
+    Sources/HighQualityTranslationWorker.swift Sources/HeavyweightModelGate.swift \
     Sources/HighQualityForcedAlignerRuntime.swift Sources/HighQualitySpeakerKitRuntime.swift \
     Sources/LocalMLXTranslator.swift Tests/HeavyweightModelGateTests.swift \
     Tests/HighQualityJobTests.swift Tests/HighQualityLocalTranslationTests.swift \
-    Tests/HighQualityAcceptanceTests.swift \
+    Tests/HighQualityAcceptanceTests.swift Tests/HighQualityASRWorkerTests.swift \
+    Tests/HighQualityAlignmentSpeakerWorkerTests.swift \
+    Tests/HighQualityTranslationWorkerTests.swift \
     Scripts/run_combined_offline_validation.sh Scripts/report_combined_offline_validation.py; do
     digest="$(shasum -a 256 "$ROOT/$path" | awk '{print $1}')"
     implementation="$(jq -c --arg path "$path" --arg digest "$digest" '. + {($path):$digest}' <<<"$implementation")"
@@ -243,14 +253,24 @@ check_candidate() {
   local corpus="$1" job="$ARTIFACTS/qwen-ja/$1/jobs/$(job_id "$1")" manifest="$(manifest_for "$1")"
   jq -e --argjson samples "$(jq '.fixture.sampleCount' "$manifest")" '
     .status == "completed" and .selectedBackend == "qwen-ja" and .failures == []
+      and .translationModel.modelID == "mlx-community/translategemma-12b-it-4bit"
+      and .speakerConfiguration == {enhancedPrecision:false,sensitiveDetection:false,
+        countPolicy:{mode:"automatic"}}
       and .peakMemoryBytes > 0' "$job/manifest.json" >/dev/null
   jq -e --argjson samples "$(jq '.fixture.sampleCount' "$manifest")" '
+    def worker_ok:
+      . != null and .exitStatus == 0 and .forcedTermination == false
+        and .peakPhysicalFootprintBytes > 0
+        and (.availableMemorySamples | length) > 0
+        and .swapUsedBeforeBytes != null and .swapUsedAfterBytes != null
+        and ([.pressureTransitions[].level] | index("critical") | not);
     .sampleCount == $samples and (.rawASR | length > 0)
       and .model.backend == "qwen-ja"
       and .model.revision == "7c70d18cb650655d32eafb952a74a49c6a3caad0"
       and .alignment.modelID == "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
       and .alignment.revision == "2f652af86ae0c73fe189b9429225c908ce4bf020"
       and .alignment.validationDiagnostics == []
+      and ([.alignment.semanticUnits[] | select(.end <= .start)] | length) == 0
       and .diarization.modelID == "argmaxinc/speakerkit-coreml"
       and .diarization.revision == "86ec9c929b52208b6656eb6a6361ed0d822a1f78"
       and .diarization.useExclusiveReconciliation == false
@@ -258,9 +278,29 @@ check_candidate() {
       and .translation.model == "mlx-community/translategemma-12b-it-4bit"
       and .translation.revision == "f3dcfd54df14672fbcf0731086fb47a797a943ae"
       and .translation.validationFailures == []
+      and .speakerConfiguration == {enhancedPrecision:false,sensitiveDetection:false,
+        countPolicy:{mode:"automatic"}}
       and (.translation.request.conversationContextByCueID | length)
         == (.translation.request.turns | length)
-      and ([.modelEvents[].kind] | index("guard-failed") | not)' "$job/raw-asr.json" >/dev/null
+      and ([.modelEvents[].kind] | index("guard-failed") | not)
+      and ([.modelEvents[] | select(.kind == "memory-pressure-checked")]
+        | length) == 4
+      and all(.modelEvents[] | select(.kind == "memory-pressure-checked");
+        (.message | contains("policy=macos-memory-pressure"))
+          and (.message | contains("reserve=0")))
+      and ([.asrWorker.lifecycle, .alignment.worker, .diarization.worker,
+        .translation.worker] | all(worker_ok))
+      and ([.asrWorker.lifecycle.processIdentifier, .alignment.worker.processIdentifier,
+        .diarization.worker.processIdentifier, .translation.worker.processIdentifier]
+        | unique | length) == 4
+      and .asrWorker.lifecycle.exitedAt <= .alignment.worker.startedAt
+      and .alignment.worker.exitedAt <= .diarization.worker.startedAt
+      and .diarization.worker.exitedAt <= .translation.worker.startedAt' \
+    "$job/raw-asr.json" >/dev/null
+  for path in japanese-transcript.txt english-translation-transcript.txt \
+    english-subtitles.srt english-subtitles.vtt; do
+    [[ -s "$job/$path" ]]
+  done
   jq empty "$job/manifest.json" "$job/raw-asr.json"
 }
 
@@ -309,7 +349,13 @@ run_candidate() {
 report() {
   python3 Scripts/report_combined_offline_validation.py "$ARTIFACTS" \
     --baseline-root "$BASELINE_ROOT" --json "$REPORT_JSON" --markdown "$REPORT_MD" \
+    --quality-json "$QUALITY_JSON" --resources-json "$RESOURCES_JSON" \
     --live-log "$LIVE_LOG"
+}
+
+prepare_score_inputs() {
+  python3 Scripts/report_combined_offline_validation.py "$ARTIFACTS" \
+    --baseline-root "$BASELINE_ROOT" --prepare-scoring
 }
 
 score() {
@@ -327,7 +373,7 @@ PY
 }
 
 retain_evidence() {
-  local evidence="$ROOT/docs/japanese-live/experiments/evidence/E19" corpus job
+  local evidence="$ROOT/docs/japanese-live/experiments/evidence/E22" corpus job deliverable
   mkdir -p "$evidence"
   cp "$ARTIFACTS/corpus-preflight.tsv" "$ARTIFACTS/controls.json" \
     "$ARTIFACTS/model-provenance.json" "$LIVE_LOG" "$evidence/"
@@ -335,6 +381,10 @@ retain_evidence() {
     job="$ARTIFACTS/qwen-ja/$corpus/jobs/$(job_id "$corpus")"
     gzip -n -c "$job/raw-asr.json" >"$evidence/$corpus-raw-asr.json.gz"
     cp "$job/manifest.json" "$evidence/$corpus-manifest.json"
+    for deliverable in japanese-transcript.txt english-translation-transcript.txt \
+      english-subtitles.srt english-subtitles.vtt; do
+      cp "$job/$deliverable" "$evidence/$corpus-$deliverable"
+    done
     cp "$ARTIFACTS/qwen-ja/$corpus/run-meta.json" "$evidence/$corpus-run-meta.json"
     gzip -n -c "$ARTIFACTS/qwen-ja/$corpus/run.log" >"$evidence/$corpus-run.log.gz"
     cp "$ARTIFACTS/metrics/$corpus/comet-score.json" "$evidence/$corpus-comet-score.json"
@@ -344,6 +394,33 @@ retain_evidence() {
   cp "$ARTIFACTS/full-swift-test.log" "$evidence/"
 }
 
+run_preflight() {
+  local tool commit
+  for tool in jq ffmpeg shasum xcrun python3; do command -v "$tool" >/dev/null; done
+  for commit in a513c22cbba69546f62b1982f8991b188a3919b9 \
+    db1edc9 804980c 1347e5d e248a12; do
+    git merge-base --is-ancestor "$commit" HEAD
+  done
+  bash -n Scripts/run_combined_offline_validation.sh
+  python3 Scripts/report_combined_offline_validation.py --self-test
+  "$COMET_PYTHON" -c 'import comet, torch; assert torch.backends.mps.is_available()'
+  xcrun swift build 2>&1 | tee "$ARTIFACTS/controls/preflight-build.log"
+  xcrun swift test \
+    --filter 'HighQualityJobTests/testSpeakerBetaControlsVisibilityAndSafeDefaults|HighQualityJobTests/testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence|HighQualityJobTests/testEnglishSubtitles|HeavyweightModelGateTests|HighQualityLocalTranslationTests/testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract|HighQualityAlignmentSpeakerWorkerTests/testIndependentBetaSettingsCrossWorkerBoundary' \
+    2>&1 | tee "$ARTIFACTS/controls/preflight-tests.log"
+  write_model_provenance
+  jq -n --arg commit "$(git rev-parse HEAD)" '{ticket:77,status:"BENCHMARK_READY",
+    commit:$commit,baseCommit:"a513c22cbba69546f62b1982f8991b188a3919b9",
+    integratedTickets:[71,72,73,74,75,76],heavyModelsLoaded:false,
+    command:"BENCHMARK_SLOT_GRANTED=77 bash Scripts/run_combined_offline_validation.sh full",
+    steps:["development controls and real Standard workflow","development integrity and quality gates","untouched holdout only after development passes","Live regression and full Swift suite","retain raw deliverables, telemetry, hashes, quality and resource reports"],
+    estimatedDuration:"35-60 minutes",estimatedPeakWorkerMemory:"12-14 GiB",
+    memoryPolicy:"native macOS pressure and swap telemetry; no fixed offline reserve"}' \
+    >"$ARTIFACTS/benchmark-ready.json"
+  echo "BENCHMARK_READY #77"
+  echo "Command: BENCHMARK_SLOT_GRANTED=77 bash Scripts/run_combined_offline_validation.sh full"
+}
+
 prepare_local_references
 : >"$ARTIFACTS/corpus-preflight.tsv"
 for corpus in qudu2fx3ncc md62mmdz0m; do
@@ -351,19 +428,30 @@ for corpus in qudu2fx3ncc md62mmdz0m; do
   verify_baseline "$corpus"
 done
 
+if [[ "$MODE" == preflight ]]; then
+  run_preflight
+  exit 0
+fi
+
+if [[ "$MODE" == final ]]; then
+  [[ -f "$ARTIFACTS/controls.json" ]]
+  [[ -f "$ARTIFACTS/qwen-ja/qudu2fx3ncc/jobs/$(job_id qudu2fx3ncc)/manifest.json" ]]
+fi
+
 if [[ "$MODE" != final ]]; then run_controls; fi
 run_candidate qudu2fx3ncc
-report
+prepare_score_inputs
 score qudu2fx3ncc
 report
 if ! jq -e '.developmentEligible' "$REPORT_JSON" >/dev/null; then
   echo "Development gates failed; untouched holdout remains closed."
-  exit 0
+  exit 1
 fi
 [[ "$MODE" != development ]] || { echo "Development gates passed; holdout remains untouched."; exit 0; }
 
 source_check md62mmdz0m
 run_candidate md62mmdz0m
+prepare_score_inputs
 score md62mmdz0m
 xcrun swift test --filter LiveCaptionTests 2>&1 | tee "$LIVE_LOG"
 xcrun swift test 2>&1 | tee "$ARTIFACTS/full-swift-test.log"
