@@ -10,6 +10,10 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
     case qwenJA = "qwen-ja"
     case parakeetJA = "parakeet-ja"
     case whisperKit = "whisperkit"
+    case funASRNanoInt8 = "funasr-nano-int8"
+
+    // Experiment-only backends stay out of every product picker.
+    static let allCases: [Self] = [.qwenJA, .parakeetJA, .whisperKit]
 
     static let productDefault: Self = .qwenJA
 
@@ -20,6 +24,7 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
         case .qwenJA: "Qwen JA"
         case .parakeetJA: "Parakeet JA"
         case .whisperKit: "WhisperKit large-v3"
+        case .funASRNanoInt8: "Fun-ASR Nano int8"
         }
     }
 
@@ -44,6 +49,13 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
                 revision: LocalPrototypeModelID.whisperKitModelRevision,
                 runtimeVersion: LocalPrototypeModelID.whisperKitRuntimeVersion
             )
+        case .funASRNanoInt8:
+            .init(
+                backend: self,
+                modelID: "k2-fsa/sherpa-onnx-funasr-nano-int8-2025-12-30",
+                revision: "eb43d7ccc2e86b243f6a03b7df361033dda66db9523d1a92bf6aca2b50c9476b",
+                runtimeVersion: "sherpa-onnx 1.13.5 (3dc7c569f31ca2cd4a20ed6f7db780327e6714c5)"
+            )
         }
     }
 
@@ -52,6 +64,7 @@ enum HighQualityASRBackend: String, Codable, CaseIterable, Identifiable, Sendabl
         case .qwenJA: 7 * 1_024 * 1_024 * 1_024
         case .parakeetJA: 4 * 1_024 * 1_024 * 1_024
         case .whisperKit: 8 * 1_024 * 1_024 * 1_024
+        case .funASRNanoInt8: 4 * 1_024 * 1_024 * 1_024
         }
     }
 }

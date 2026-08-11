@@ -51,6 +51,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
             transcript = try await runtime.transcribe(audio: samples)
             await runtime.unload()
             whisperKitWeightSHA256 = try HighQualityASRWeightEvidence.collect(for: backend)
+        case .funASRNanoInt8:
+            throw XCTSkip("Fun-ASR direct parity uses only the pinned sherpa worker.")
         }
         let exported = transcript.trimmingCharacters(in: .whitespacesAndNewlines) + "\n"
         let output = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -86,7 +88,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
 
     func testRealBackendCompletesFrozenJapaneseJobWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
-        guard environment["BENCHMARK_SLOT_GRANTED"] == "72",
+        let slot = environment["WHISPERASR_ASR_WORKER_SLOT"] ?? "72"
+        guard environment["BENCHMARK_SLOT_GRANTED"] == slot,
               environment["WHISPERASR_RUN_ASR_WORKER_SMOKE"] == "1",
               let rawBackend = environment["WHISPERASR_ASR_WORKER_BACKEND"],
               let backend = HighQualityASRBackend(rawValue: rawBackend),
@@ -94,13 +97,13 @@ final class HighQualityASRWorkerTests: XCTestCase {
               let expectedSHA256 = environment[
                 "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE_SHA256"
               ] else {
-            throw XCTSkip("Grant benchmark slot #72 and set its worker smoke environment.")
+            throw XCTSkip("Grant the requested benchmark slot and set its worker smoke environment.")
         }
         let fixture = URL(fileURLWithPath: fixturePath)
         XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: fixture), expectedSHA256)
         let outputRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent(
-                ".build/benchmarks/issue-72/\(backend.rawValue)",
+                ".build/benchmarks/issue-\(slot)/\(backend.rawValue)",
                 isDirectory: true
             )
         let executable = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -110,7 +113,10 @@ final class HighQualityASRWorkerTests: XCTestCase {
             loadSource: { try await AudioLoader.loadSamples(url: $0) },
             prepareASR: { try await asr.prepare(progress: $0) },
             transcribeJapanese: {
-                try await asr.transcribe($0, anchored: false).rawTranscript
+                try await asr.transcribe(
+                    $0,
+                    anchored: backend == .funASRNanoInt8
+                ).rawTranscript
             },
             transcribeJapaneseAnchored: { try await asr.transcribe($0, anchored: true) },
             unloadASR: { await asr.unload() },
@@ -142,12 +148,14 @@ final class HighQualityASRWorkerTests: XCTestCase {
         XCTAssertFalse(worker.lifecycle.forcedTermination)
         XCTAssertGreaterThan(worker.lifecycle.peakPhysicalFootprintBytes, 0)
         XCTAssertNotEqual(kill(worker.lifecycle.processIdentifier, 0), 0)
-        XCTAssertEqual(
-            try JapaneseBenchmarkSupport.sha256(
-                at: result.directory.appendingPathComponent("japanese-transcript.txt")
-            ),
-            frozenTranscriptSHA256(for: backend)
+        let transcriptSHA256 = try JapaneseBenchmarkSupport.sha256(
+            at: result.directory.appendingPathComponent("japanese-transcript.txt")
         )
+        if backend == .funASRNanoInt8 {
+            print("[issue-88][smoke] transcriptSHA256=\(transcriptSHA256)")
+        } else {
+            XCTAssertEqual(transcriptSHA256, frozenTranscriptSHA256(for: backend))
+        }
     }
 
     func testEveryBackendRoundTripsOneTranscriptAndExits() async throws {
@@ -368,6 +376,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
             "3cad6a614de6a0526a8b96ee07fc142ca1b431fe8c4997319092c7fccbd48bfb"
         case .whisperKit:
             "ce3de9ff8e084329bea612985ce6a60b4d998410071de595e749033c4d2486ad"
+        case .funASRNanoInt8:
+            preconditionFailure("Fun-ASR has no frozen #72 transcript")
         }
     }
 
@@ -483,7 +493,8 @@ private struct ASRWorkerFixture {
             workingDirectory: directory,
             pressure: pressure,
             pollInterval: .milliseconds(2),
-            shutdownTimeout: .milliseconds(50)
+            shutdownTimeout: .milliseconds(50),
+            launchOverride: (executable, [])
         )
     }
 }

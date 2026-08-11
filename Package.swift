@@ -66,6 +66,7 @@ let package = Package(
                 .product(name: "Tokenizers", package: "swift-transformers"),
             ],
             path: "Sources",
+            exclude: ["Runtime/FunASRNanoWorker.py"],
             resources: [
                 .copy("Runtime/VoxtralHelper"),
             ],

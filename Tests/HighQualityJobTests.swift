@@ -1918,6 +1918,10 @@ final class HighQualityJobTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: root) }
         XCTAssertEqual(HighQualityASRBackend.allCases, [.qwenJA, .parakeetJA, .whisperKit])
         XCTAssertEqual(HighQualityASRBackend.productDefault, .qwenJA)
+        XCTAssertEqual(
+            HighQualityASRBackend(rawValue: "funasr-nano-int8"),
+            .funASRNanoInt8
+        )
 
         for backend in HighQualityASRBackend.allCases {
             let progress = ProgressLog()
@@ -1925,6 +1929,7 @@ final class HighQualityJobTests: XCTestCase {
             case .qwenJA: " こんにちは \n"
             case .parakeetJA: " 日本語 \n"
             case .whisperKit: " 音声認識 \n"
+            case .funASRNanoInt8: " 実験 \n"
             }
             let job = HighQualityJob(servicesForBackend: { _ in
                 .init(

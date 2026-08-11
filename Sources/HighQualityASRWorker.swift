@@ -34,7 +34,7 @@ private struct HighQualityASRWorkerRequest: Codable {
     let anchored: Bool
 }
 
-private struct HighQualityASRWorkerResponse: Codable {
+private struct HighQualityASRWorkerResponse: Codable, Sendable {
     let ready: Bool?
     let model: HighQualityModelEvidence?
     let exchange: HighQualityASRExchange?
@@ -55,7 +55,8 @@ actor HighQualityASRWorkerClient {
         workingDirectory: URL? = nil,
         pressure: MacMemoryPressureMonitor = .shared,
         pollInterval: Duration = .milliseconds(100),
-        shutdownTimeout: Duration = .seconds(3)
+        shutdownTimeout: Duration = .seconds(3),
+        launchOverride: (executable: URL, argumentsPrefix: [String])? = nil
     ) {
         self.backend = backend
         let directory = workingDirectory
@@ -63,9 +64,10 @@ actor HighQualityASRWorkerClient {
                 "WhisperASR-ASR-\(backend.rawValue)-\(UUID().uuidString)",
                 isDirectory: true
             )
+        let launch = launchOverride ?? Self.launch(for: backend, executableURL: executableURL)
         worker = HighQualityWorkerProcess(
-            executableURL: executableURL,
-            arguments: [
+            executableURL: launch.executable,
+            arguments: launch.argumentsPrefix + [
                 HighQualityASRWorkerCommand.argument,
                 backend.rawValue,
                 directory.path,
@@ -100,8 +102,9 @@ actor HighQualityASRWorkerClient {
         }
         progress(0, "\(backend.displayName) worker \(pid) starting…")
         do {
-            let response: HighQualityASRWorkerResponse = try await worker.waitForJSON(
-                at: worker.workingDirectory.appendingPathComponent("ready.json")
+            let response = try await waitForWorkerJSON(
+                at: worker.workingDirectory.appendingPathComponent("ready.json"),
+                timeoutVariable: "WHISPERASR_FUNASR_PREPARE_TIMEOUT_SECONDS"
             )
             if response.criticalMemoryPressure == true {
                 await worker.stop(critical: true)
@@ -132,6 +135,11 @@ actor HighQualityASRWorkerClient {
         _ samples: [Float],
         anchored: Bool
     ) async throws -> HighQualityASRExchange {
+        if backend == .funASRNanoInt8, anchored {
+            return try await HighQualityJob.Services.chunkedASR(samples) {
+                try await self.transcribe($0, anchored: false).rawTranscript
+            }
+        }
         guard !(await worker.isCritical) else {
             throw HighQualityASRWorkerError.criticalMemoryPressure
         }
@@ -153,11 +161,15 @@ actor HighQualityASRWorkerClient {
 
         let response: HighQualityASRWorkerResponse
         do {
-            response = try await worker.waitForJSON(at: responseURL)
+            response = try await waitForWorkerJSON(
+                at: responseURL,
+                timeoutVariable: "WHISPERASR_FUNASR_REQUEST_TIMEOUT_SECONDS"
+            )
         } catch {
             if await worker.isCritical {
                 throw HighQualityASRWorkerError.criticalMemoryPressure
             }
+            if error is HighQualityASRWorkerError { await worker.stop() }
             throw Self.mapped(error)
         }
         let critical = await worker.isCritical
@@ -211,6 +223,45 @@ actor HighQualityASRWorkerClient {
         }
         return HighQualityASRWorkerError.protocolFailure(error.localizedDescription)
     }
+
+    private func waitForWorkerJSON(
+        at url: URL,
+        timeoutVariable: String
+    ) async throws -> HighQualityASRWorkerResponse {
+        guard backend == .funASRNanoInt8,
+              let value = ProcessInfo.processInfo.environment[timeoutVariable],
+              let seconds = Double(value), seconds > 0 else {
+            return try await worker.waitForJSON(at: url)
+        }
+        return try await withThrowingTaskGroup(of: HighQualityASRWorkerResponse.self) { group in
+            group.addTask { try await self.worker.waitForJSON(at: url) }
+            group.addTask {
+                try await Task.sleep(for: .seconds(seconds))
+                throw HighQualityASRWorkerError.protocolFailure(
+                    "Fun-ASR worker exceeded \(seconds)s while waiting for \(url.lastPathComponent)"
+                )
+            }
+            let response = try await group.next()!
+            group.cancelAll()
+            return response
+        }
+    }
+
+    private static func launch(
+        for backend: HighQualityASRBackend,
+        executableURL: URL
+    ) -> (executable: URL, argumentsPrefix: [String]) {
+        guard backend == .funASRNanoInt8 else { return (executableURL, []) }
+        let environment = ProcessInfo.processInfo.environment
+        let python = environment["WHISPERASR_FUNASR_PYTHON"]
+            ?? FileManager.default.currentDirectoryPath
+                + "/.build/runtimes/funasr-nano-int8/bin/python3"
+        let helper = environment["WHISPERASR_FUNASR_WORKER"]
+            ?? URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent()
+                .appendingPathComponent("Runtime/FunASRNanoWorker.py").path
+        return (URL(fileURLWithPath: python), [helper])
+    }
 }
 
 enum HighQualityASRWeightEvidence {
@@ -230,6 +281,11 @@ enum HighQualityASRWeightEvidence {
                     LocalPrototypeModelID.whisperKitVariant,
                     isDirectory: true
                 )
+        case .funASRNanoInt8:
+            directory = URL(fileURLWithPath: ProcessInfo.processInfo.environment[
+                "WHISPERASR_FUNASR_MODEL_DIR"
+            ] ?? FileManager.default.currentDirectoryPath
+                + "/.build/models/sherpa-onnx-funasr-nano-int8-2025-12-30")
         }
         return try hashes(in: directory)
     }
@@ -246,6 +302,8 @@ enum HighQualityASRWeightEvidence {
                 return false
             }
             return url.pathExtension == "safetensors"
+                || url.pathExtension == "onnx"
+                || ["merges.txt", "tokenizer.json", "vocab.json"].contains(url.lastPathComponent)
                 || (url.pathExtension == "bin"
                     && url.deletingLastPathComponent().lastPathComponent == "weights")
         }.sorted { $0.path < $1.path }
@@ -287,6 +345,10 @@ private actor HighQualityASRWorkerRuntime {
             try await parakeet.prepare(progress: progress)
         case .whisperKit:
             try await whisperKit.prepare(progress: progress)
+        case .funASRNanoInt8:
+            throw HighQualityASRWorkerError.protocolFailure(
+                "Fun-ASR Nano requires its pinned sherpa-onnx worker."
+            )
         }
     }
 
@@ -312,6 +374,10 @@ private actor HighQualityASRWorkerRuntime {
             }
         case .whisperKit:
             transcribe = { try await self.whisperKit.transcribe(audio: $0) }
+        case .funASRNanoInt8:
+            throw HighQualityASRWorkerError.protocolFailure(
+                "Fun-ASR Nano requires its pinned sherpa-onnx worker."
+            )
         }
         if anchored {
             return try await HighQualityJob.Services.chunkedASR(samples, transcribe: transcribe)
@@ -327,6 +393,8 @@ private actor HighQualityASRWorkerRuntime {
             await parakeet.unload()
         case .whisperKit:
             await whisperKit.unload()
+        case .funASRNanoInt8:
+            break
         }
     }
 

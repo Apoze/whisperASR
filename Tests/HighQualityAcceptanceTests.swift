@@ -678,6 +678,10 @@ final class HighQualityAcceptanceTests: XCTestCase {
               let outputPath = environment["WHISPERASR_ACCEPTANCE_OUTPUT_ROOT"] else {
             throw XCTSkip("Backend, job ID and output root are required.")
         }
+        if backend == .funASRNanoInt8,
+           environment["BENCHMARK_SLOT_GRANTED"] != "88" {
+            throw XCTSkip("Fun-ASR DEV requires the serialized benchmark slot #88.")
+        }
         if input.corpusID == "md62mmdz0m" {
             guard environment["WHISPERASR_ACCEPTANCE_ALLOW_HOLDOUT"] == "1" else {
                 throw XCTSkip("The untouched holdout requires explicit authorization.")
