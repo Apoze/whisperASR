@@ -454,8 +454,18 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_SEMANTIC_TRANSLATION_EXPERIMENT"] == "1",
               let evidencePath = environment["WHISPERASR_SEMANTIC_TRANSLATION_EVIDENCE"],
-              let outputPath = environment["WHISPERASR_SEMANTIC_TRANSLATION_OUTPUT"] else {
-            throw XCTSkip("Set the semantic-translation experiment evidence and output paths.")
+              let outputPath = environment["WHISPERASR_SEMANTIC_TRANSLATION_OUTPUT"],
+              let corpusID = environment["WHISPERASR_TRANSLATOR_CORPUS"],
+              let rawTranslator = environment["WHISPERASR_TRANSLATOR_CANDIDATE"],
+              let translator = HighQualityTranslator(rawValue: rawTranslator),
+              let rawJobID = environment["WHISPERASR_TRANSLATOR_JOB_ID"],
+              let jobID = UUID(uuidString: rawJobID) else {
+            throw XCTSkip("Set the frozen evidence, corpus, translator, job ID and output paths.")
+        }
+        if corpusID == "md62mmdz0m" {
+            guard environment["WHISPERASR_TRANSLATOR_ALLOW_HOLDOUT"] == "1" else {
+                throw XCTSkip("The final holdout requires explicit authorization.")
+            }
         }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -465,7 +475,16 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
         let alignment = try XCTUnwrap(baseline.alignment)
         let diarization = try XCTUnwrap(baseline.diarization)
-        let translator = HighQualityTranslationWorkerClient(
+        let frozenTranslation = try XCTUnwrap(baseline.translation)
+        XCTAssertEqual(baseline.model, HighQualityASRBackend.qwenJA.model)
+        XCTAssertEqual(alignment.modelID, HighQualityForcedAlignerRuntime.modelID)
+        XCTAssertEqual(alignment.revision, HighQualityForcedAlignerRuntime.revision)
+        XCTAssertEqual(diarization.modelID, HighQualitySpeakerKitRuntime.modelID)
+        XCTAssertEqual(diarization.revision, HighQualitySpeakerKitRuntime.revision)
+        XCTAssertEqual(diarization.speakerCountPolicy, .automatic)
+        XCTAssertEqual(diarization.useExclusiveReconciliation, false)
+        let translationWorker = HighQualityTranslationWorkerClient(
+            candidate: translator.candidate,
             executableURL: highQualityTranslationWorkerExecutableURL()
         )
         let asrChunks = alignment.chunks.map { chunk in
@@ -505,16 +524,18 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 )
             },
             unloadDiarization: {},
-            prepareTranslation: { try await translator.prepare(progress: $0) },
-            translateEnglish: { try await translator.translate($0) },
-            unloadTranslation: { await translator.unload() },
-            translationWorkerEvidence: { await translator.evidence }
+            prepareTranslation: { try await translationWorker.prepare(progress: $0) },
+            translateEnglish: { try await translationWorker.translate($0) },
+            unloadTranslation: { await translationWorker.unload() },
+            translationWorkerEvidence: { await translationWorker.evidence }
         ))
 
         let result = try await job.run(.init(
+            id: jobID,
             sourceURL: URL(fileURLWithPath: evidencePath),
             deliverables: Set(HighQualityDeliverable.allCases),
             backend: baseline.model.backend,
+            translator: translator,
             speakerLabels: true,
             outputRoot: URL(fileURLWithPath: outputPath)
         ))
@@ -526,9 +547,23 @@ final class HighQualityAcceptanceTests: XCTestCase {
         XCTAssertTrue(result.evidence.translation?.request.turns.allSatisfy {
             $0.speakerLabel == nil
         } == true)
-        XCTAssertEqual(result.evidence.translation?.model, LocalMLXTranslator.modelID)
-        XCTAssertEqual(result.evidence.translation?.revision, LocalMLXTranslator.revision)
-        XCTAssertEqual(result.evidence.translation?.runtimeVersion, LocalMLXTranslator.runtimeVersion)
+        let translation = try XCTUnwrap(result.evidence.translation)
+        XCTAssertEqual(translation.request.turns, frozenTranslation.request.turns)
+        XCTAssertEqual(translation.request.glossary, frozenTranslation.request.glossary)
+        XCTAssertEqual(
+            translation.request.glossaryByCueID,
+            frozenTranslation.request.glossaryByCueID
+        )
+        XCTAssertEqual(
+            translation.request.conversationContextByCueID,
+            frozenTranslation.request.conversationContextByCueID
+        )
+        XCTAssertEqual(translation.model, translator.model.modelID)
+        XCTAssertEqual(translation.revision, translator.model.revision)
+        XCTAssertEqual(translation.runtimeVersion, translator.model.runtimeVersion)
+        XCTAssertEqual(translation.weightSHA256, translator.model.weightSHA256)
+        XCTAssertEqual(translation.worker?.exitStatus, 0)
+        XCTAssertFalse(translation.worker?.forcedTermination ?? true)
         XCTAssertEqual(result.evidence.glossary.budget, baseline.glossary.budget)
         XCTAssertEqual(result.evidence.glossary.coverageLimit, baseline.glossary.coverageLimit)
         XCTAssertEqual(result.evidence.diarization?.rawSpans, diarization.rawSpans)
