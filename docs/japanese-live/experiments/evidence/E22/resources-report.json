@@ -1,0 +1,154 @@
+{
+  "ticket": 77,
+  "memoryPolicy": "native macOS pressure; no fixed offline reserve",
+  "rows": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "runtimeSeconds": 1064.0,
+      "stageDurations": {
+        "exporting": 0.10547196865081787,
+        "translating": 941.304729104042,
+        "preparing-alignment": 1.4579099416732788,
+        "diarizing": 12.654738903045654,
+        "preparing-asr": 4.154327034950256,
+        "preparing-diarization": 5.835254073143005,
+        "normalizing-source": 1.9157229661941528,
+        "aligning": 28.9655020236969,
+        "transcribing": 68.12763202190399
+      },
+      "peakMemoryBytes": 18339289016,
+      "workerEvidence": {
+        "gates": {
+          "allWorkersPresent": true,
+          "completeModelEvents": true,
+          "cleanWorkerExits": true,
+          "distinctWorkerProcesses": true,
+          "strictlySequential": true,
+          "dynamicPressurePolicy": true,
+          "noFixedEightGiBReserve": true,
+          "noGuardFailure": true
+        },
+        "workers": [
+          {
+            "stage": "asr",
+            "processIdentifier": 53582,
+            "elapsedSeconds": 72.24900901317596,
+            "peakPhysicalFootprintBytes": 10145732056,
+            "minimumAvailableMemoryBytes": 5944721408,
+            "swapUsedBeforeBytes": 6513229824,
+            "swapUsedAfterBytes": 6513229824,
+            "swapDeltaBytes": 0,
+            "pressureTransitions": []
+          },
+          {
+            "stage": "alignment",
+            "processIdentifier": 53626,
+            "elapsedSeconds": 30.422023057937622,
+            "peakPhysicalFootprintBytes": 3522611672,
+            "minimumAvailableMemoryBytes": 12831244288,
+            "swapUsedBeforeBytes": 6513229824,
+            "swapUsedAfterBytes": 6488064000,
+            "swapDeltaBytes": -25165824,
+            "pressureTransitions": []
+          },
+          {
+            "stage": "diarization",
+            "processIdentifier": 53642,
+            "elapsedSeconds": 18.21024799346924,
+            "peakPhysicalFootprintBytes": 741426592,
+            "minimumAvailableMemoryBytes": 14636662784,
+            "swapUsedBeforeBytes": 6488064000,
+            "swapUsedAfterBytes": 6488064000,
+            "swapDeltaBytes": 0,
+            "pressureTransitions": []
+          },
+          {
+            "stage": "translation",
+            "processIdentifier": 53650,
+            "elapsedSeconds": 941.291543006897,
+            "peakPhysicalFootprintBytes": 18339289016,
+            "minimumAvailableMemoryBytes": 2273722368,
+            "swapUsedBeforeBytes": 6488064000,
+            "swapUsedAfterBytes": 8714584064,
+            "swapDeltaBytes": 2226520064,
+            "pressureTransitions": []
+          }
+        ]
+      }
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "runtimeSeconds": 909.0,
+      "stageDurations": {
+        "preparing-alignment": 1.4849519729614258,
+        "transcribing": 55.098652958869934,
+        "preparing-asr": 4.212774038314819,
+        "aligning": 18.367043018341064,
+        "normalizing-source": 1.64805006980896,
+        "translating": 813.897430896759,
+        "diarizing": 8.262502074241638,
+        "exporting": 0.09390604496002197,
+        "preparing-diarization": 5.828593969345093
+      },
+      "peakMemoryBytes": 18335422440,
+      "workerEvidence": {
+        "gates": {
+          "allWorkersPresent": true,
+          "completeModelEvents": true,
+          "cleanWorkerExits": true,
+          "distinctWorkerProcesses": true,
+          "strictlySequential": true,
+          "dynamicPressurePolicy": true,
+          "noFixedEightGiBReserve": true,
+          "noGuardFailure": true
+        },
+        "workers": [
+          {
+            "stage": "asr",
+            "processIdentifier": 61651,
+            "elapsedSeconds": 59.246577978134155,
+            "peakPhysicalFootprintBytes": 10258830784,
+            "minimumAvailableMemoryBytes": 6456885248,
+            "swapUsedBeforeBytes": 5727387648,
+            "swapUsedAfterBytes": 5702221824,
+            "swapDeltaBytes": -25165824,
+            "pressureTransitions": []
+          },
+          {
+            "stage": "alignment",
+            "processIdentifier": 61666,
+            "elapsedSeconds": 19.84993600845337,
+            "peakPhysicalFootprintBytes": 3310455184,
+            "minimumAvailableMemoryBytes": 8284913664,
+            "swapUsedBeforeBytes": 5702221824,
+            "swapUsedAfterBytes": 5693833216,
+            "swapDeltaBytes": -8388608,
+            "pressureTransitions": []
+          },
+          {
+            "stage": "diarization",
+            "processIdentifier": 61680,
+            "elapsedSeconds": 13.860259056091309,
+            "peakPhysicalFootprintBytes": 719734224,
+            "minimumAvailableMemoryBytes": 13132726272,
+            "swapUsedBeforeBytes": 5693833216,
+            "swapUsedAfterBytes": 5574754304,
+            "swapDeltaBytes": -119078912,
+            "pressureTransitions": []
+          },
+          {
+            "stage": "translation",
+            "processIdentifier": 61687,
+            "elapsedSeconds": 813.8833459615707,
+            "peakPhysicalFootprintBytes": 18335422440,
+            "minimumAvailableMemoryBytes": 2559541248,
+            "swapUsedBeforeBytes": 5574754304,
+            "swapUsedAfterBytes": 8580628480,
+            "swapDeltaBytes": 3005874176,
+            "pressureTransitions": []
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -3,6 +3,145 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityTranslationIntegrityTests: XCTestCase {
+    func testRevalidatesRecordedTranslationEvidenceWhenOptedIn() throws {
+        guard let path = ProcessInfo.processInfo.environment[
+            "WHISPERASR_REVALIDATE_TRANSLATION_EVIDENCE"
+        ] else {
+            throw XCTSkip("Set a raw-asr.json path to revalidate recorded translations.")
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let raw = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: path))
+        )
+        let evidence = try XCTUnwrap(raw.translation)
+        let response = try XCTUnwrap(evidence.response)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(response.utf8))
+                as? [String: Any]
+        )
+        let rows = try XCTUnwrap(object["translations"] as? [[String: String]])
+        let translations: [String: String] = Dictionary(uniqueKeysWithValues: try rows.map {
+            row -> (String, String) in
+            (try XCTUnwrap(row["id"]), try XCTUnwrap(row["text"]))
+        })
+        let catalog = Dictionary(uniqueKeysWithValues: HighQualityGlossaryCatalog.terms.map {
+            ($0.id, $0)
+        })
+        let glossary = evidence.request.glossary.map {
+            HighQualityTranslationIntegrityGlossaryTerm(
+                $0,
+                critical: catalog[$0.id]?.domain != .conversation
+            )
+        }
+        let glossaryByCueID = evidence.request.glossaryByCueID.mapValues { terms in
+            terms.map {
+                HighQualityTranslationIntegrityGlossaryTerm(
+                    $0,
+                    critical: catalog[$0.id]?.domain != .conversation
+                )
+            }
+        }
+        let canonical = HighQualityTranslationIntegrityValidator.canonicalized(
+            translations,
+            turns: evidence.request.turns,
+            glossaryByCueID: glossaryByCueID
+        )
+        let verdicts = HighQualityTranslationIntegrityValidator.validate(
+            turns: evidence.request.turns,
+            translations: canonical,
+            batches: evidence.batches,
+            glossary: glossary,
+            glossaryByCueID: glossaryByCueID
+        )
+        let regenerated = try HighQualityJob.translationResponse(
+            canonical,
+            for: evidence.request.turns
+        )
+
+        XCTAssertEqual(canonical, translations)
+        XCTAssertEqual(
+            try HighQualityJob.validatedTranslations(
+                regenerated,
+                for: evidence.request.turns
+            ),
+            translations
+        )
+        XCTAssertEqual(verdicts.count, evidence.request.turns.count)
+        XCTAssertTrue(verdicts.allSatisfy { $0.verdict == .pass && $0.reasons.isEmpty })
+    }
+
+    func testAllowsFaithfulLaughterRepetitionButKeepsDegenerateSpeechBlocked() {
+        let source = "抱かれて、えええ、え、ハハハ、ハ、えハハ。ハハッ、ハッハッ。"
+        let outputs = [
+            "Hugging... oh, yes, uh, ha ha, ha, oh ha ha. Ha ha, ha ha.",
+            "Held… yes… uh… ha ha ha… ha… uh ha ha. Ha ha… ha ha.",
+        ]
+
+        for (index, output) in outputs.enumerated() {
+            let id = "laughter-\(index)"
+            let verdict = HighQualityTranslationIntegrityValidator.validate(
+                turns: [turn(id, source)],
+                batches: [batch(id, output)],
+                glossary: []
+            )[0]
+            XCTAssertEqual(verdict.verdict, .pass)
+            XCTAssertFalse(verdict.reasons.contains { $0.code == .degenerateRepetition })
+        }
+
+        let degenerate = HighQualityTranslationIntegrityValidator.validate(
+            turns: [turn("degenerate", "行け、行け、行け。")],
+            batches: [batch("degenerate", "go go go go")],
+            glossary: []
+        )[0]
+        XCTAssertTrue(degenerate.reasons.contains { $0.code == .degenerateRepetition })
+    }
+
+    func testCanonicalizesAttestedBurnoutVariantsOnlyForApplicableCriticalTerm() throws {
+        let term = HighQualityTranslationIntegrityGlossaryTerm(
+            try XCTUnwrap(HighQualityGlossaryCatalog.terms.first { $0.id == "burnout" })
+        )
+        let burnoutTurns = [
+            turn("unit-0171", "されるぐらいならですねバーンアウトしていいと思う。"),
+            turn("unit-0172", "バーンアウトした。"),
+        ]
+        let corrected = HighQualityTranslationIntegrityValidator.canonicalized(
+            [
+                "unit-0171": "If it comes to that, I think it's okay to burn out.",
+                "unit-0172": "I'm burned out.",
+            ],
+            turns: burnoutTurns,
+            glossaryByCueID: Dictionary(uniqueKeysWithValues: burnoutTurns.map {
+                ($0.id, [term])
+            })
+        )
+
+        XCTAssertEqual(
+            corrected["unit-0171"],
+            "If it comes to that, I think it's okay to Burnout."
+        )
+        XCTAssertEqual(corrected["unit-0172"], "I'm Burnout.")
+        XCTAssertTrue(HighQualityTranslationIntegrityValidator.validate(
+            turns: burnoutTurns,
+            translations: corrected,
+            batches: burnoutTurns.map { batch($0.id, corrected[$0.id]!) },
+            glossary: [],
+            glossaryByCueID: Dictionary(uniqueKeysWithValues: burnoutTurns.map {
+                ($0.id, [term])
+            })
+        ).allSatisfy { $0.verdict == .pass })
+
+        XCTAssertEqual(
+            HighQualityTranslationIntegrityValidator.canonicalized(
+                ["ordinary": "I'm burned out."],
+                turns: [turn("ordinary", "疲れ切った。")],
+                glossaryByCueID: ["ordinary": [term]]
+            )["ordinary"],
+            "I'm burned out."
+        )
+    }
+
     func testValidationUsesOnlyCueLocalGlossaryOpportunities() throws {
         let term = try XCTUnwrap(
             HighQualityGlossaryCatalog.terms.first { $0.id == "apex-legends" }
@@ -449,6 +588,11 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
             source: baseline.request.source,
             turns: baseline.request.turns.filter { rejectedIDs.contains($0.id) },
             glossary: baseline.request.glossary.filter { criticalTermIDs.contains($0.id) },
+            glossaryByCueID: baseline.request.glossaryByCueID
+                .filter { rejectedIDs.contains($0.key) }
+                .mapValues { terms in
+                    terms.filter { criticalTermIDs.contains($0.id) }
+                },
             retryReasonCodes: Dictionary(uniqueKeysWithValues: rejected.map {
                 ($0.cueID, $0.reasons.map(\.code))
             })
@@ -463,22 +607,35 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
                 try await translator.prepare(progress: { _, _ in })
                 let exchange = try await translator.translate(request)
                 await translator.unload()
-                let translations: [String: String] = Dictionary(uniqueKeysWithValues: exchange.batches.compactMap {
-                    guard let id = $0.cueIDs.first else { return nil }
-                    return (id, $0.sanitizedOutput)
-                })
                 let glossary = request.glossary.map {
                     HighQualityTranslationIntegrityGlossaryTerm($0, critical: true)
                 }
+                let glossaryByCueID = request.glossaryByCueID.mapValues { terms in
+                    terms.map {
+                        HighQualityTranslationIntegrityGlossaryTerm($0, critical: true)
+                    }
+                }
+                let translations = HighQualityTranslationIntegrityValidator.canonicalized(
+                    Dictionary(uniqueKeysWithValues: exchange.batches.compactMap {
+                        guard let id = $0.cueIDs.first else { return nil }
+                        return (id, $0.sanitizedOutput)
+                    }),
+                    turns: request.turns,
+                    glossaryByCueID: glossaryByCueID
+                )
                 retryVerdicts = HighQualityTranslationIntegrityValidator.validate(
                     turns: request.turns,
                     translations: translations,
                     batches: exchange.batches,
-                    glossary: glossary
+                    glossary: glossary,
+                    glossaryByCueID: glossaryByCueID
                 )
                 retryEvidence = .init(
                     request: request,
-                    response: exchange.response,
+                    response: try HighQualityJob.translationResponse(
+                        translations,
+                        for: request.turns
+                    ),
                     model: exchange.model,
                     attempts: exchange.attempts,
                     revision: exchange.revision,

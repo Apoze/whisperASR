@@ -606,6 +606,24 @@ struct HighQualityAlignmentItem: Codable, Equatable, Sendable {
     let end: TimeInterval
 }
 
+struct HighQualityAlignmentFallbackMerge: Codable, Equatable, Sendable {
+    let chunkIndex: Int
+    let sourceCueID: String
+    let targetCueID: String
+    let direction: String
+    let sourceText: String
+    let targetOriginalText: String
+    let mergedText: String
+    let sourceOriginalStart: TimeInterval
+    let sourceOriginalEnd: TimeInterval
+    let targetOriginalStart: TimeInterval
+    let targetOriginalEnd: TimeInterval
+    let finalStart: TimeInterval
+    let finalEnd: TimeInterval
+    let freeGapEnd: TimeInterval
+    let timingPolicy: String
+}
+
 struct HighQualityAlignmentChunk: Codable, Equatable, Sendable {
     let index: Int
     let sourceStart: TimeInterval
@@ -662,19 +680,22 @@ struct HighQualityAlignmentExchange: Codable, Equatable, Sendable {
     let revision: String
     let peakMemoryBytes: UInt64
     let configuration: [String: String]?
+    let fallbackMerges: [HighQualityAlignmentFallbackMerge]?
 
     init(
         chunks: [HighQualityAlignmentChunk],
         modelID: String,
         revision: String,
         peakMemoryBytes: UInt64,
-        configuration: [String: String]? = nil
+        configuration: [String: String]? = nil,
+        fallbackMerges: [HighQualityAlignmentFallbackMerge]? = nil
     ) {
         self.chunks = chunks
         self.modelID = modelID
         self.revision = revision
         self.peakMemoryBytes = peakMemoryBytes
         self.configuration = configuration
+        self.fallbackMerges = fallbackMerges
     }
 }
 
@@ -691,6 +712,7 @@ struct HighQualityAlignmentEvidence: Codable, Equatable, Sendable {
     var semanticUnits: [HighQualitySemanticUnitEvidence]? = nil
     var configuration: [String: String]? = nil
     var worker: HighQualityWorkerEvidence? = nil
+    var fallbackMerges: [HighQualityAlignmentFallbackMerge]? = nil
 }
 
 struct HighQualityDiarizationSpan: Codable, Equatable, Sendable {
@@ -1209,10 +1231,24 @@ struct HighQualityJob: Sendable {
             for backend: HighQualityASRBackend,
             translator selection: HighQualityTranslator
         ) -> Self {
-            let asr = HighQualityASRWorkerClient(backend: backend)
-            let aligner = HighQualityAlignmentSpeakerWorkerClient(stage: .alignment)
-            let diarizer = HighQualityAlignmentSpeakerWorkerClient(stage: .diarization)
-            let translator = HighQualityTranslationWorkerClient(candidate: selection.candidate)
+            let executableURL = ProcessInfo.processInfo.environment[
+                "WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"
+            ].map(URL.init(fileURLWithPath:))
+                ?? Bundle.main.executableURL
+                ?? URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
+            let asr = HighQualityASRWorkerClient(backend: backend, executableURL: executableURL)
+            let aligner = HighQualityAlignmentSpeakerWorkerClient(
+                stage: .alignment,
+                executableURL: executableURL
+            )
+            let diarizer = HighQualityAlignmentSpeakerWorkerClient(
+                stage: .diarization,
+                executableURL: executableURL
+            )
+            let translator = HighQualityTranslationWorkerClient(
+                candidate: selection.candidate,
+                executableURL: executableURL
+            )
             let loadSource: @Sendable (URL) async throws -> [Float] = {
                 try await AudioLoader.loadSamples(url: $0)
             }
@@ -1273,9 +1309,14 @@ struct HighQualityJob: Sendable {
             var previousBoundaryWasSilent = true
             while start < samples.count {
                 try Task.checkCancellation()
-                let boundary = quietASRBoundary(in: samples, after: start)
                 let overlap = 16_000
-                let windowStart = previousBoundaryWasSilent ? start : max(0, start - overlap)
+                let leadingOverlap = previousBoundaryWasSilent ? 0 : overlap
+                let boundary = quietASRBoundary(
+                    in: samples,
+                    after: start,
+                    leadingOverlap: leadingOverlap
+                )
+                let windowStart = max(0, start - leadingOverlap)
                 let windowEnd = boundary.isSilent
                     ? boundary.index : min(samples.count, boundary.index + overlap)
                 let raw = try await transcribe(Array(samples[windowStart..<windowEnd]))
@@ -1287,7 +1328,8 @@ struct HighQualityJob: Sendable {
                 if !transcript.isEmpty {
                     chunks.append(.init(
                         index: chunks.count,
-                        sourceStart: Double(windowStart) / 16_000,
+                        sourceStart: chunks.last?.sourceEnd
+                            ?? Double(windowStart) / 16_000,
                         sourceEnd: Double(windowEnd) / 16_000,
                         transcript: transcript
                     ))
@@ -1303,30 +1345,36 @@ struct HighQualityJob: Sendable {
 
         private static func quietASRBoundary(
             in samples: [Float],
-            after start: Int
+            after start: Int,
+            leadingOverlap: Int
         ) -> (index: Int, isSilent: Bool) {
             let sampleRate = 16_000
-            let target = start + 60 * sampleRate
-            let minimumTail = 10 * sampleRate
-            guard samples.count - target > minimumTail else { return (samples.count, true) }
+            let overlap = sampleRate
+            let maximumCore = HighQualityForcedAlignerRuntime.maximumWindowSeconds * sampleRate
+                - leadingOverlap
+            guard samples.count - start > maximumCore else { return (samples.count, true) }
 
+            let latestSilentCut = start + maximumCore
+            let fallbackCut = latestSilentCut - overlap
             let searchRadius = 5 * sampleRate
             let frame = sampleRate / 50
-            let searchStart = max(start + 30 * sampleRate, target - searchRadius)
-            let searchEnd = min(samples.count - frame, target + searchRadius)
-            var best = target
+            let searchStart = max(start + maximumCore / 2, latestSilentCut - searchRadius)
+            let searchEnd = min(samples.count - frame, latestSilentCut)
+            var best = fallbackCut
             var bestEnergy = Double.infinity
             for candidate in stride(from: searchStart, through: searchEnd, by: frame) {
                 let energy = samples[candidate..<(candidate + frame)].reduce(0.0) {
                     $0 + Double($1 * $1)
                 }
                 if energy < bestEnergy
-                    || (energy == bestEnergy && abs(candidate - target) < abs(best - target)) {
+                    || (energy == bestEnergy
+                        && abs(candidate - latestSilentCut) < abs(best - latestSilentCut)) {
                     best = candidate
                     bestEnergy = energy
                 }
             }
-            return (best, bestEnergy / Double(frame) <= 0.003 * 0.003)
+            let isSilent = bestEnergy / Double(frame) <= 0.003 * 0.003
+            return (isSilent ? best : fallbackCut, isSilent)
         }
 
         private static func removingTranscriptOverlap(prefix: String, suffix: String) -> String {
@@ -1797,13 +1845,15 @@ struct HighQualityJob: Sendable {
                     sourceDuration: duration,
                     peakMemoryBytes: exchange.peakMemoryBytes,
                     validationDiagnostics: [],
-                    configuration: exchange.configuration
+                    configuration: exchange.configuration,
+                    fallbackMerges: exchange.fallbackMerges
                 )
                 do {
                     let merged = try Self.validatedAlignment(
                         exchange.chunks,
                         turns: baseTurns,
-                        duration: duration
+                        duration: duration,
+                        fallbackMerges: exchange.fallbackMerges ?? []
                     )
                     var validatedEvidence = HighQualityAlignmentEvidence(
                         modelID: exchange.modelID,
@@ -1813,7 +1863,8 @@ struct HighQualityJob: Sendable {
                         sourceDuration: duration,
                         peakMemoryBytes: exchange.peakMemoryBytes,
                         validationDiagnostics: [],
-                        configuration: exchange.configuration
+                        configuration: exchange.configuration,
+                        fallbackMerges: exchange.fallbackMerges
                     )
                     let semantic = try Self.semanticTranslationUnits(
                         alignment: validatedEvidence,
@@ -2119,9 +2170,10 @@ struct HighQualityJob: Sendable {
                         )
                     )
                     do {
-                        var selectedTranslations = try Self.validatedTranslations(
-                            exchange.response,
-                            for: turns
+                        var selectedTranslations = HighQualityTranslationIntegrityValidator.canonicalized(
+                            try Self.validatedTranslations(exchange.response, for: turns),
+                            turns: turns,
+                            glossaryByCueID: integrityGlossaryByCueID
                         )
                         let firstVerdicts = HighQualityTranslationIntegrityValidator.validate(
                             turns: turns,
@@ -2138,7 +2190,7 @@ struct HighQualityJob: Sendable {
                             attempt: 1
                         )
                         var finalVerdicts = firstVerdicts
-                        var response = exchange.response
+                        var response = try Self.translationResponse(selectedTranslations, for: turns)
                         var peakMemoryBytes = exchange.peakMemoryBytes
 
                         if !rejected.isEmpty {
@@ -2219,9 +2271,13 @@ struct HighQualityJob: Sendable {
                             peakMemoryBytes = max(peakMemoryBytes, retryExchange.peakMemoryBytes)
                             let retryTranslations: [String: String]
                             do {
-                                retryTranslations = try Self.validatedTranslations(
-                                    retryExchange.response,
-                                    for: retryRequest.turns
+                                retryTranslations = HighQualityTranslationIntegrityValidator.canonicalized(
+                                    try Self.validatedTranslations(
+                                        retryExchange.response,
+                                        for: retryRequest.turns
+                                    ),
+                                    turns: retryRequest.turns,
+                                    glossaryByCueID: retryIntegrityGlossaryByCueID
                                 )
                             } catch {
                                 let errorVerdicts = HighQualityTranslationIntegrityValidator.validate(
@@ -2682,7 +2738,7 @@ struct HighQualityJob: Sendable {
         )
     }
 
-    private static func translationTurns(
+    static func translationTurns(
         from transcript: String,
         asrChunks: [HighQualityASRChunk],
         speakerLabelsByCueID: [String: String]
@@ -2716,7 +2772,7 @@ struct HighQualityJob: Sendable {
         }
     }
 
-    private static func semanticTranslationUnits(
+    static func semanticTranslationUnits(
         alignment: HighQualityAlignmentEvidence,
         sourceTurns: [HighQualityTranslationTurn]
     ) throws -> (
@@ -2734,9 +2790,22 @@ struct HighQualityJob: Sendable {
         let rawItems = alignment.chunks.sorted { $0.index < $1.index }.flatMap(\.rawItems)
         let indexedItems = rawItems.enumerated().map { ($0.offset, $0.element) }
         let itemsByCue = Dictionary(grouping: indexedItems, by: { $0.1.cueID })
+        let fallbackTargetIDs = Set(alignment.fallbackMerges?.map(\.targetCueID) ?? [])
+        var coarseCueTimingIDs: Set<String> = []
         var fragments: [HighQualitySemanticFragmentEvidence] = []
 
         for cue in alignment.mergedCues {
+            if fallbackTargetIDs.contains(cue.id) {
+                fragments.append(.init(
+                    index: fragments.count,
+                    alignmentItemIndex: nil,
+                    sourceCueID: cue.id,
+                    text: cue.text,
+                    start: cue.start,
+                    end: cue.end
+                ))
+                continue
+            }
             let items = itemsByCue[cue.id] ?? []
             if rawItems.isEmpty {
                 let characters = Array(cue.text)
@@ -2765,6 +2834,23 @@ struct HighQualityJob: Sendable {
                         end: indexedItem.1.start + Double(offset + 1) * duration
                     )
                 }
+            }
+            if !timedItems.isEmpty, timedItems.allSatisfy({ $0.end <= $0.start }) {
+                guard cue.text.count <= policy.maximumCharacters else {
+                    throw HighQualityTranslationValidationError(
+                        message: "Cue \(cue.id) needs coarse timing but exceeds the semantic limit."
+                    )
+                }
+                coarseCueTimingIDs.insert(cue.id)
+                fragments.append(.init(
+                    index: fragments.count,
+                    alignmentItemIndex: nil,
+                    sourceCueID: cue.id,
+                    text: cue.text,
+                    start: cue.start,
+                    end: cue.end
+                ))
+                continue
             }
             if timedItems.map(\.text).joined() == cue.text {
                 for item in timedItems {
@@ -2815,8 +2901,8 @@ struct HighQualityJob: Sendable {
                             ?? next?.alignmentItemIndex,
                         sourceCueID: cue.id,
                         text: String(character),
-                        start: previous?.start ?? next?.start ?? cue.start,
-                        end: previous?.end ?? next?.end ?? cue.end
+                        start: previous?.end ?? next?.start ?? cue.start,
+                        end: previous?.end ?? next?.start ?? cue.end
                     ))
                 }
             }
@@ -2844,6 +2930,11 @@ struct HighQualityJob: Sendable {
             }
         }
         finish("boundary:end-of-input")
+        for index in drafts.indices where !coarseCueTimingIDs.isDisjoint(
+            with: drafts[index].fragments.map(\.sourceCueID)
+        ) {
+            drafts[index].decisions.append("fallback:positive-cue-timing")
+        }
 
         var mergedDrafts: [HighQualitySemanticUnitDraft] = []
         for index in drafts.indices {
@@ -2866,6 +2957,52 @@ struct HighQualityJob: Sendable {
         }
         drafts = mergedDrafts
 
+        var index = 0
+        while index < drafts.count {
+            let start = drafts[index].fragments.map(\.start).min() ?? 0
+            let end = drafts[index].fragments.map(\.end).max() ?? 0
+            guard end <= start else {
+                index += 1
+                continue
+            }
+            let sourceCueIDs = Set(drafts[index].fragments.map(\.sourceCueID))
+            func viableNeighbor(_ neighbor: Int) -> Bool {
+                guard drafts.indices.contains(neighbor),
+                      drafts[neighbor].fragments.map(\.end).max() ?? 0
+                        > drafts[neighbor].fragments.map(\.start).min() ?? 0,
+                      !sourceCueIDs.isDisjoint(with: drafts[neighbor].fragments.map(\.sourceCueID)),
+                      drafts[index].japanese.count + drafts[neighbor].japanese.count
+                        <= policy.maximumCharacters else { return false }
+                return true
+            }
+            let previous = index > 0 && viableNeighbor(index - 1) ? index - 1 : nil
+            let following = viableNeighbor(index + 1) ? index + 1 : nil
+            let target: Int?
+            if let previous, let following {
+                let previousEnd = drafts[previous].fragments.map(\.end).max() ?? start
+                let followingStart = drafts[following].fragments.map(\.start).min() ?? end
+                target = start - previousEnd <= followingStart - end ? previous : following
+            } else {
+                target = previous ?? following
+            }
+            guard let target else {
+                throw HighQualityTranslationValidationError(
+                    message: "Zero-duration semantic unit has no valid same-cue neighbor."
+                )
+            }
+            if target < index {
+                drafts[target].fragments += drafts[index].fragments
+                drafts[target].decisions += ["merge:zero-duration-items-into-previous"]
+                    + drafts[index].decisions
+                drafts.remove(at: index)
+            } else {
+                drafts[target].fragments = drafts[index].fragments + drafts[target].fragments
+                drafts[target].decisions = drafts[index].decisions
+                    + ["merge:zero-duration-items-into-next"] + drafts[target].decisions
+                drafts.remove(at: index)
+            }
+        }
+
         let units = drafts.enumerated().map { offset, draft in
             HighQualitySemanticUnitEvidence(
                 id: String(format: "unit-%04d", offset + 1),
@@ -2882,9 +3019,11 @@ struct HighQualityJob: Sendable {
             )
         }
         guard units.map(\.japanese).joined() == sourceTurns.map(\.japanese).joined(),
-              Set(units.flatMap(\.sourceFragmentIndices)).count == fragments.count else {
+              Set(units.flatMap(\.sourceFragmentIndices)).count == fragments.count,
+              units.allSatisfy({ $0.end > $0.start }),
+              zip(units, units.dropFirst()).allSatisfy({ $1.start >= $0.end }) else {
             throw HighQualityTranslationValidationError(
-                message: "Semantic translation units do not preserve all aligned Japanese."
+                message: "Semantic translation units do not preserve a valid aligned timeline."
             )
         }
         let sourceTurnsByID = Dictionary(uniqueKeysWithValues: sourceTurns.map {
@@ -3281,7 +3420,11 @@ struct HighQualityJob: Sendable {
                 )
             }
             batches += unitBatches
-            let unitTranslations = try validatedTranslations(exchange.response, for: [turn])
+            let unitTranslations = HighQualityTranslationIntegrityValidator.canonicalized(
+                try validatedTranslations(exchange.response, for: [turn]),
+                turns: [turn],
+                glossaryByCueID: integrityGlossaryByCueID
+            )
             translations.merge(unitTranslations) { _, latest in latest }
             evaluatedTurns.append(turn)
             let verdict = HighQualityTranslationIntegrityValidator.validate(
@@ -3361,18 +3504,60 @@ struct HighQualityJob: Sendable {
                 .contains { lowercased.contains($0) }
     }
 
-    private static func validatedAlignment(
+    static func validatedAlignment(
         _ chunks: [HighQualityAlignmentChunk],
         turns: [HighQualityTranslationTurn],
-        duration: TimeInterval
+        duration: TimeInterval,
+        fallbackMerges: [HighQualityAlignmentFallbackMerge] = []
     ) throws -> [HighQualityAlignedCue] {
         guard duration.isFinite, duration >= 0 else {
             throw HighQualityTranslationValidationError(message: "Source duration is invalid.")
         }
-        let expectedText = Dictionary(uniqueKeysWithValues: turns.map {
+        let rawExpectedText = Dictionary(uniqueKeysWithValues: turns.map {
             ($0.id, $0.japanese.trimmingCharacters(in: .whitespacesAndNewlines))
         })
+        var expectedText = rawExpectedText
+        var mergedSourceIDs: Set<String> = []
+        for merge in fallbackMerges {
+            guard ["previous", "following"].contains(merge.direction),
+                  ["merge-adjacent-valid-cue", "coarse-fallback-free-window-gap"]
+                    .contains(merge.timingPolicy),
+                  merge.sourceCueID != merge.targetCueID,
+                  mergedSourceIDs.insert(merge.sourceCueID).inserted,
+                  let sourceText = expectedText[merge.sourceCueID],
+                  let targetText = expectedText[merge.targetCueID],
+                  sourceText == merge.sourceText,
+                  targetText == merge.targetOriginalText else {
+                throw HighQualityTranslationValidationError(
+                    message: "Alignment fallback evidence is inconsistent."
+                )
+            }
+            let mergedText = merge.direction == "previous"
+                ? targetText + sourceText : sourceText + targetText
+            let mergedDuration = merge.finalEnd - merge.finalStart
+            guard mergedText == merge.mergedText,
+                  mergedText.count <= HighQualityForcedAlignerRuntime.maximumFallbackCharacters,
+                  mergedDuration > 0,
+                  Double(mergedText.count) / mergedDuration
+                    <= HighQualityForcedAlignerRuntime.maximumFallbackCharactersPerSecond,
+                  merge.sourceOriginalStart.isFinite,
+                  merge.sourceOriginalEnd == merge.sourceOriginalStart,
+                  merge.targetOriginalStart.isFinite,
+                  merge.targetOriginalEnd > merge.targetOriginalStart,
+                  merge.finalStart == merge.targetOriginalStart,
+                  merge.finalEnd >= merge.targetOriginalEnd,
+                  merge.finalEnd <= merge.freeGapEnd,
+                  merge.timingPolicy == "coarse-fallback-free-window-gap"
+                    || merge.finalEnd == merge.targetOriginalEnd else {
+                throw HighQualityTranslationValidationError(
+                    message: "Alignment fallback timing or readability is invalid."
+                )
+            }
+            expectedText[merge.targetCueID] = mergedText
+            expectedText.removeValue(forKey: merge.sourceCueID)
+        }
         let expectedIDs = Set(expectedText.keys)
+        let rawExpectedIDs = Set(rawExpectedText.keys)
         var seen: Set<String> = []
         var previousEnd = -Double.infinity
         var previousChunkStart = -Double.infinity
@@ -3394,7 +3579,7 @@ struct HighQualityJob: Sendable {
             var previousRawStart = -Double.infinity
             for item in chunk.rawItems {
                 let text = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard expectedIDs.contains(item.cueID),
+                guard rawExpectedIDs.contains(item.cueID),
                       !text.isEmpty,
                       item.start.isFinite,
                       item.end.isFinite,
@@ -3445,8 +3630,22 @@ struct HighQualityJob: Sendable {
                 previousEnd = cue.end
                 merged.append(.init(id: cue.id, text: text, start: cue.start, end: cue.end))
             }
+            for fallback in fallbackMerges where fallback.chunkIndex == chunk.index {
+                guard !chunk.cues.contains(where: { $0.id == fallback.sourceCueID }),
+                      chunk.cues.contains(where: {
+                          $0.id == fallback.targetCueID
+                              && $0.text == fallback.mergedText
+                              && $0.start == fallback.finalStart
+                              && $0.end == fallback.finalEnd
+                      }) else {
+                    throw HighQualityTranslationValidationError(
+                        message: "Alignment fallback does not match its chunk."
+                    )
+                }
+            }
         }
-        guard seen == expectedIDs else {
+        guard seen == expectedIDs,
+              Set(fallbackMerges.map(\.chunkIndex)).isSubset(of: seenChunkIndices) else {
             throw HighQualityTranslationValidationError(
                 message: "Alignment is missing one or more transcript cues."
             )

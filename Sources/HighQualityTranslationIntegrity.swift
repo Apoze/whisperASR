@@ -166,7 +166,12 @@ enum HighQualityTranslationIntegrityValidator {
             if item.finishReason == "length" {
                 reasons.append(reason(.truncatedOutput, .hardFailure, ["finish-reason=length"]))
             }
-            if let repeated = repeatedPhrase(in: output, count: thresholds.repetitionCount) {
+            if let repeated = repeatedPhrase(in: output, count: thresholds.repetitionCount),
+               !sourceAttestsLaughter(
+                    item.turn.japanese,
+                    repeatedPhrase: repeated,
+                    count: thresholds.repetitionCount
+               ) {
                 reasons.append(reason(
                     .degenerateRepetition,
                     .hardFailure,
@@ -228,6 +233,34 @@ enum HighQualityTranslationIntegrityValidator {
         }
     }
 
+    static func canonicalized(
+        _ translations: [String: String],
+        turns: [HighQualityTranslationTurn],
+        glossaryByCueID: [String: [HighQualityTranslationIntegrityGlossaryTerm]]
+    ) -> [String: String] {
+        var result = translations
+        for turn in turns {
+            guard var output = result[turn.id] else { continue }
+            let applicableBurnout = glossaryByCueID[turn.id]?.contains { term in
+                term.id == "burnout"
+                    && term.critical
+                    && term.acceptedEnglishForms.first == "Burnout"
+                    && HighQualityGlossarySelector.matchedForm(
+                        in: turn.japanese,
+                        forms: term.japaneseForms
+                    ) != nil
+            } == true
+            guard applicableBurnout else { continue }
+            output = output.replacingOccurrences(
+                of: #"(?i)\bburn(?:ed)?\s+out\b"#,
+                with: "Burnout",
+                options: .regularExpression
+            )
+            result[turn.id] = output
+        }
+        return result
+    }
+
     private static func reason(
         _ code: HighQualityTranslationIntegrityReasonCode,
         _ severity: HighQualityTranslationIntegritySeverity,
@@ -287,6 +320,16 @@ enum HighQualityTranslationIntegrityValidator {
             }
         }
         return nil
+    }
+
+    private static func sourceAttestsLaughter(
+        _ source: String,
+        repeatedPhrase: String,
+        count: Int
+    ) -> Bool {
+        let phrase = repeatedPhrase.lowercased().filter(\.isLetter)
+        return ["ha", "haha", "heh", "hehe"].contains(phrase)
+            && source.filter { "ハは".contains($0) }.count >= count
     }
 
     private static func copiedNeighbourEvidence(

@@ -1,0 +1,6 @@
+{
+  "python": "3.12.13",
+  "torch": "2.13.0",
+  "mpsAvailable": true,
+  "deviceRequest": "MPS"
+}

@@ -155,7 +155,8 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
         directory="$2"
         printf '{"ready":true}' > "$directory/ready.json"
         while [ ! -f "$directory/request.json" ]; do sleep 0.01; done
-        printf '{"alignment":{"chunks":[{"index":0,"sourceStart":0,"sourceEnd":1,"cues":[{"id":"cue-0001","text":"一。","start":0.1,"end":0.9}],"rawItems":[{"cueID":"cue-0001","text":"一。","start":0.1,"end":0.9}]}],"modelID":"\(HighQualityForcedAlignerRuntime.modelID)","revision":"\(HighQualityForcedAlignerRuntime.revision)","peakMemoryBytes":12,"configuration":{"language":"Japanese","sampleRate":"16000"}}}' > "$directory/response.json"
+        printf '{"alignment":{"chunks":[{"index":0,"sourceStart":0,"sourceEnd":1,"cues":[{"id":"cue-0001","text":"一。","start":0.1,"end":0.9}],"rawItems":[{"cueID":"cue-0001","text":"一。","start":0.1,"end":0.9}]}],"modelID":"\(HighQualityForcedAlignerRuntime.modelID)","revision":"\(HighQualityForcedAlignerRuntime.revision)","peakMemoryBytes":12,"configuration":{"language":"Japanese","sampleRate":"16000"}}}' > "$directory/response.tmp"
+        mv "$directory/response.tmp" "$directory/response.json"
         while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
         """)
         let diarizationFixture = try AuxiliaryWorkerFixture(script: """
@@ -163,7 +164,8 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
         directory="$2"
         printf '{"ready":true}' > "$directory/ready.json"
         while [ ! -f "$directory/request.json" ]; do sleep 0.01; done
-        printf '{"diarization":{"spans":[{"speakerID":3,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":34,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"automatic"},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"quantized","segmenterVariant":"W8A16","embedderVariant":"W8A16","speakerCount":"automatic","clusterDistanceThreshold":"library-default","overlap":"non-exclusive","attribution":"principal"}}}' > "$directory/response.json"
+        printf '{"diarization":{"spans":[{"speakerID":3,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":34,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"automatic"},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"quantized","segmenterVariant":"W8A16","embedderVariant":"W8A16","speakerCount":"automatic","clusterDistanceThreshold":"library-default","overlap":"non-exclusive","attribution":"principal"}}}' > "$directory/response.tmp"
+        mv "$directory/response.tmp" "$directory/response.json"
         while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
         """)
         let pressure = MacMemoryPressureMonitor(native: false)

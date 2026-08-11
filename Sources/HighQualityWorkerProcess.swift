@@ -32,6 +32,23 @@ enum HighQualityWorkerProcessError: Error, Equatable, Sendable {
     case protocolFailure(String)
 }
 
+private final class HighQualityWorkerTermination: @unchecked Sendable {
+    private let lock = NSLock()
+    private var finished = false
+
+    var isFinished: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return finished
+    }
+
+    func record() {
+        lock.lock()
+        finished = true
+        lock.unlock()
+    }
+}
+
 actor HighQualityWorkerProcess {
     private let executableURL: URL
     private let arguments: [String]
@@ -40,6 +57,7 @@ actor HighQualityWorkerProcess {
     private let pollInterval: Duration
     private let shutdownTimeout: Duration
     private var process: Process?
+    private var termination: HighQualityWorkerTermination?
     private var logHandle: FileHandle?
     private var monitorTask: Task<Void, Never>?
     private var startedAt: Date?
@@ -69,14 +87,14 @@ actor HighQualityWorkerProcess {
     }
 
     var processIdentifier: Int32? {
-        guard process?.isRunning == true else { return nil }
+        guard termination?.isFinished != true else { return nil }
         return process?.processIdentifier
     }
 
     var isCritical: Bool { criticalPressure || pressure.level == .critical }
 
     func launch() async throws -> Int32 {
-        if let process, process.isRunning { return process.processIdentifier }
+        if let process, termination?.isFinished != true { return process.processIdentifier }
         try FileManager.default.createDirectory(
             at: workingDirectory,
             withIntermediateDirectories: true
@@ -89,6 +107,8 @@ actor HighQualityWorkerProcess {
         child.arguments = arguments
         child.standardOutput = log
         child.standardError = log
+        let termination = HighQualityWorkerTermination()
+        child.terminationHandler = { _ in termination.record() }
         try await waitForLaunchPressure()
         startedAt = Date()
         pressureLevel = .normal
@@ -100,10 +120,12 @@ actor HighQualityWorkerProcess {
         evidence = nil
         logHandle = log
         process = child
+        self.termination = termination
         do {
             try child.run()
         } catch {
             process = nil
+            self.termination = nil
             try? log.close()
             logHandle = nil
             throw HighQualityWorkerProcessError.protocolFailure(error.localizedDescription)
@@ -114,13 +136,39 @@ actor HighQualityWorkerProcess {
     }
 
     func waitForJSON<Value: Decodable>(at url: URL) async throws -> Value {
+        let clock = ContinuousClock()
+        var invalidData: Data?
+        var invalidSince: ContinuousClock.Instant?
         while true {
             try Task.checkCancellation()
             if FileManager.default.fileExists(atPath: url.path) {
-                return try JSONDecoder().decode(Value.self, from: Data(contentsOf: url))
+                let data = try Data(contentsOf: url)
+                do {
+                    return try JSONDecoder().decode(Value.self, from: data)
+                } catch {
+                    if termination?.isFinished == true || (process == nil && evidence != nil) {
+                        if let child = process {
+                            finish(process: child, forced: forcedTermination)
+                        }
+                        if criticalPressure {
+                            throw HighQualityWorkerProcessError.criticalMemoryPressure
+                        }
+                        throw error
+                    }
+                    if invalidData == data, let invalidSince,
+                       invalidSince.duration(to: clock.now) >= .milliseconds(50) {
+                        throw error
+                    }
+                    if invalidData != data {
+                        invalidData = data
+                        invalidSince = clock.now
+                    }
+                }
             }
-            if process?.isRunning != true {
-                if let child = process { finish(process: child, forced: forcedTermination) }
+            if termination?.isFinished == true || (process == nil && evidence != nil) {
+                if let child = process {
+                    finish(process: child, forced: forcedTermination)
+                }
                 if criticalPressure {
                     throw HighQualityWorkerProcessError.criticalMemoryPressure
                 }
@@ -134,13 +182,14 @@ actor HighQualityWorkerProcess {
 
     func stop(critical: Bool = false) async {
         if critical { criticalPressure = true }
-        guard let child = process else { return }
+        guard let child = process, let termination else { return }
         guard !stopping else {
-            while process != nil { try? await Task.sleep(for: pollInterval) }
+            await waitForExit(termination, timeout: max(shutdownTimeout, .seconds(1)))
+            if termination.isFinished { finish(process: child, forced: forcedTermination) }
             return
         }
         stopping = true
-        if child.isRunning {
+        if !termination.isFinished {
             if criticalPressure {
                 _ = kill(child.processIdentifier, SIGTERM)
             } else {
@@ -149,22 +198,26 @@ actor HighQualityWorkerProcess {
                     options: .atomic
                 )
             }
-            await waitForExit(child, timeout: shutdownTimeout)
+            await waitForExit(termination, timeout: shutdownTimeout)
         }
-        if child.isRunning, !criticalPressure {
+        if !termination.isFinished, !criticalPressure {
             _ = kill(child.processIdentifier, SIGTERM)
-            await waitForExit(child, timeout: shutdownTimeout)
+            await waitForExit(termination, timeout: shutdownTimeout)
         }
-        if child.isRunning {
+        if !termination.isFinished {
             forcedTermination = true
             _ = kill(child.processIdentifier, SIGKILL)
-            child.waitUntilExit()
+            await waitForExit(termination, timeout: max(shutdownTimeout, .seconds(1)))
+        }
+        guard termination.isFinished else {
+            stopping = false
+            return
         }
         finish(process: child, forced: forcedTermination)
     }
 
     private func monitor(_ pid: Int32) async {
-        while process?.processIdentifier == pid, process?.isRunning == true, !stopping {
+        while process?.processIdentifier == pid, termination?.isFinished != true, !stopping {
             sample(pid)
             let level = pressure.level
             if level != pressureLevel {
@@ -181,17 +234,20 @@ actor HighQualityWorkerProcess {
             }
             try? await Task.sleep(for: pollInterval)
         }
-        if process?.processIdentifier == pid, process?.isRunning == false, !stopping,
-           let process {
+        if process?.processIdentifier == pid, !stopping,
+           let process, termination?.isFinished == true {
             finish(process: process, forced: forcedTermination)
         }
     }
 
-    private func waitForExit(_ child: Process, timeout: Duration) async {
+    private func waitForExit(
+        _ termination: HighQualityWorkerTermination,
+        timeout: Duration
+    ) async {
         let clock = ContinuousClock()
         let deadline = clock.now.advanced(by: timeout)
-        while child.isRunning, clock.now < deadline {
-            sample(child.processIdentifier)
+        while !termination.isFinished, clock.now < deadline {
+            if let pid = process?.processIdentifier { sample(pid) }
             try? await Task.sleep(for: pollInterval)
         }
     }
@@ -246,6 +302,7 @@ actor HighQualityWorkerProcess {
         monitorTask?.cancel()
         monitorTask = nil
         process = nil
+        termination = nil
         stopping = false
     }
 

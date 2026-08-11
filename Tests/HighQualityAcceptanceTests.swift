@@ -582,6 +582,89 @@ final class HighQualityAcceptanceTests: XCTestCase {
         XCTAssertTrue(samples.contains { $0 != 0 })
     }
 
+    func testIssue77ASRAlignmentWindowExperimentWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_ISSUE77_ALIGNMENT_WINDOW_EXPERIMENT"] == "1",
+              let outputPath = environment["WHISPERASR_ISSUE77_ALIGNMENT_WINDOW_OUTPUT"] else {
+            throw XCTSkip("Set the ticket #77 ASR/alignment experiment inputs.")
+        }
+        let input = try Self.input(from: environment)
+        XCTAssertEqual(input.corpusID, "qudu2fx3ncc")
+        let samples = try await AudioLoader.loadSamples(url: input.sourceURL)
+        let executableURL = environment["WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"]
+            .map(URL.init(fileURLWithPath:))
+            ?? Bundle.main.executableURL
+            ?? URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
+
+        let asr = HighQualityASRWorkerClient(backend: .qwenJA, executableURL: executableURL)
+        let exchange: HighQualityASRExchange
+        do {
+            try await asr.prepare { _, message in print("[issue-77][asr] \(message)") }
+            exchange = try await asr.transcribe(samples, anchored: true)
+        } catch {
+            await asr.unload()
+            throw error
+        }
+        await asr.unload()
+        let asrWorkerEvidence = await asr.evidence
+        let asrWorker = try XCTUnwrap(asrWorkerEvidence)
+
+        let turns = HighQualityJob.translationTurns(
+            from: exchange.rawTranscript,
+            asrChunks: exchange.chunks,
+            speakerLabelsByCueID: [:]
+        )
+        let aligner = HighQualityAlignmentSpeakerWorkerClient(
+            stage: .alignment,
+            executableURL: executableURL
+        )
+        let alignment: HighQualityAlignmentExchange
+        do {
+            try await aligner.prepare { _, message in print("[issue-77][alignment] \(message)") }
+            alignment = try await aligner.align(samples: samples, turns: turns)
+        } catch {
+            await aligner.unload()
+            throw error
+        }
+        await aligner.unload()
+        let alignmentWorkerEvidence = await aligner.evidence
+        let alignmentWorker = try XCTUnwrap(alignmentWorkerEvidence)
+        let cues = alignment.chunks.flatMap(\.cues)
+        let items = alignment.chunks.flatMap(\.rawItems)
+        let maximumWindow = exchange.chunks.map { $0.sourceEnd - $0.sourceStart }.max() ?? 0
+        let evidence = Issue77AlignmentWindowEvidence(
+            ticket: 77,
+            corpusID: input.corpusID,
+            sourcePath: input.sourceURL.path,
+            sourceSHA256: try JapaneseBenchmarkSupport.sha256(at: input.sourceURL),
+            maximumWindowSeconds: HighQualityForcedAlignerRuntime.maximumWindowSeconds,
+            observedMaximumWindowSeconds: maximumWindow,
+            asr: exchange,
+            asrWorker: asrWorker,
+            alignment: alignment,
+            alignmentWorker: alignmentWorker,
+            cueCount: cues.count,
+            zeroDurationCueCount: cues.filter { $0.end <= $0.start }.count,
+            rawItemCount: items.count,
+            zeroDurationRawItemCount: items.filter { $0.end <= $0.start }.count,
+            strictlySequential: asrWorker.lifecycle.exitedAt <= alignmentWorker.startedAt
+        )
+        let outputURL = URL(fileURLWithPath: outputPath)
+        try FileManager.default.createDirectory(
+            at: outputURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(evidence).write(to: outputURL, options: .atomic)
+        print(
+            "[issue-77][result] windows=\(exchange.chunks.count) max=\(maximumWindow)s "
+                + "zeroCues=\(evidence.zeroDurationCueCount)/\(evidence.cueCount) "
+                + "zeroItems=\(evidence.zeroDurationRawItemCount)/\(evidence.rawItemCount)"
+        )
+    }
+
     func testRealFrozenWorkflowWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_HIGH_QUALITY_ACCEPTANCE"] == "1" else {
@@ -664,7 +747,10 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 Set(translation.request.conversationContextByCueID.keys),
                 Set(translation.request.turns.map(\.id))
             )
-            XCTAssertTrue(translation.batches.allSatisfy { $0.context != nil })
+            XCTAssertTrue(translation.batches.filter { $0.attemptNumber == 1 }
+                .allSatisfy { $0.context != nil })
+            XCTAssertTrue(translation.batches.filter { $0.attemptNumber == 2 }
+                .allSatisfy { $0.context == nil })
         }
         XCTAssertTrue(translation.batches.allSatisfy {
             !$0.sanitizedPrompt.isEmpty
@@ -973,6 +1059,24 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let corpusID: String
         let sourceURL: URL
         let manifest: JapaneseBenchmarkSupport.Manifest
+    }
+
+    private struct Issue77AlignmentWindowEvidence: Codable {
+        let ticket: Int
+        let corpusID: String
+        let sourcePath: String
+        let sourceSHA256: String
+        let maximumWindowSeconds: Int
+        let observedMaximumWindowSeconds: TimeInterval
+        let asr: HighQualityASRExchange
+        let asrWorker: HighQualityASRWorkerEvidence
+        let alignment: HighQualityAlignmentExchange
+        let alignmentWorker: HighQualityWorkerEvidence
+        let cueCount: Int
+        let zeroDurationCueCount: Int
+        let rawItemCount: Int
+        let zeroDurationRawItemCount: Int
+        let strictlySequential: Bool
     }
 
     private static func input(from environment: [String: String]) throws -> Input {

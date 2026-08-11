@@ -511,7 +511,32 @@ final class HighQualityGlossaryTests: XCTestCase {
                 HighQualityExpandedGlossaryEvidence.self,
                 from: Data(contentsOf: evidenceURL)
             )
-            XCTAssertEqual(checkedIn, expected, split)
+            let historicalExpected = HighQualityExpandedGlossaryEvidence(
+                schemaVersion: expected.schemaVersion,
+                catalogVersion: expected.catalogVersion,
+                ticket: expected.ticket,
+                corpusID: expected.corpusID,
+                source: expected.source,
+                turns: expected.turns,
+                selection: .init(
+                    budget: expected.selection.budget,
+                    contextBytes: checkedIn.selection.contextBytes,
+                    encodedSize: expected.selection.encodedSize,
+                    scoringOperations: expected.selection.scoringOperations,
+                    coverageLimit: expected.selection.coverageLimit,
+                    decisions: expected.selection.decisions,
+                    terminologyRegister: expected.selection.terminologyRegister,
+                    tokenShareByCueID: expected.selection.tokenShareByCueID
+                ),
+                validationOpportunityTermIDsByCueID:
+                    expected.validationOpportunityTermIDsByCueID
+            )
+            XCTAssertEqual(checkedIn, historicalExpected, split)
+            XCTAssertGreaterThanOrEqual(
+                expected.selection.contextBytes,
+                checkedIn.selection.contextBytes,
+                "Accepted-context fields must not relabel historical E13 byte evidence."
+            )
         }
 
         let report = try JSONDecoder().decode(

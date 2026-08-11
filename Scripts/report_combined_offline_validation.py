@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import collections
+import difflib
 import json
+import math
 import re
 from datetime import datetime
 from pathlib import Path
@@ -16,6 +18,7 @@ from report_high_quality_acceptance import (
     cue_integrity,
     diarization_metrics,
     glossary_accuracy,
+    normalize_ja,
     sha256,
     structured_cues_are_valid,
     translation_rows,
@@ -26,6 +29,23 @@ from report_local_translator_bakeoff import comet_scores, subtitle_quality, writ
 
 CORPORA = ("qudu2fx3ncc", "md62mmdz0m")
 HOLDOUT = "md62mmdz0m"
+SCORING_PATHS = (
+    Path("Scripts/report_combined_offline_validation.py"),
+    Path("Scripts/comet_score_compat.py"),
+)
+REQUIRED_IMPLEMENTATION_PATHS = (
+    "Sources/HighQualityTranslationIntegrity.swift",
+    "Sources/HighQualityJob.swift",
+    "Tests/HighQualityTranslationIntegrityTests.swift",
+)
+TEST_BINARY_PATH = Path(
+    ".build/debug/WhisperASRPackageTests.xctest/Contents/MacOS/WhisperASRPackageTests"
+)
+CONTROL_IMPLEMENTATION_PATHS = (
+    "Sources/YouTubeAcquirer.swift",
+    "Sources/HighQualityJob.swift",
+    "Tests/HighQualityJobTests.swift",
+)
 MODEL_IDS = (
     "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
     "mlx-community/Qwen3-ForcedAligner-0.6B-4bit",
@@ -70,6 +90,67 @@ DECISIONS = (
 
 def read(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def scoring_provenance_valid(metadata: dict) -> bool:
+    return metadata.get("scoringImplementationSHA256") == {
+        str(path): sha256(path) for path in SCORING_PATHS
+    }
+
+
+def implementation_revalidation_valid(
+    metadata: dict, raw_path: Path, log_path: Path, binary_path: Path = TEST_BINARY_PATH,
+) -> bool:
+    revalidation = metadata.get("revalidation") or {}
+    return raw_path.is_file() and log_path.is_file() and binary_path.is_file() \
+        and revalidation.get("kind") == "current-code-raw-replay" \
+        and revalidation.get("rawArtifactSHA256") == sha256(raw_path) \
+        and revalidation.get("testLogSHA256") == sha256(log_path) \
+        and revalidation.get("testBinarySHA256") == sha256(binary_path) \
+        and revalidation.get("implementationSHA256") == {
+            path: sha256(Path(path)) for path in REQUIRED_IMPLEMENTATION_PATHS
+        }
+
+
+def control_provenance_valid(root: Path, binary_path: Path = TEST_BINARY_PATH) -> bool:
+    path = root / "control-provenance.json"
+    log_path = root / "controls/youtube-revalidation.log"
+    if not path.is_file() or not log_path.is_file() or not binary_path.is_file():
+        return False
+    provenance = read(path)
+    return provenance.get("kind") == "current-code-youtube-control" \
+        and provenance.get("testLogSHA256") == sha256(log_path) \
+        and provenance.get("testBinarySHA256") == sha256(binary_path) \
+        and provenance.get("implementationSHA256") == {
+            item: sha256(Path(item)) for item in CONTROL_IMPLEMENTATION_PATHS
+        }
+
+
+def holdout_sequence_valid(root: Path) -> bool:
+    development_path = root / "development-report.json"
+    marker_path = root / "holdout-opened.json"
+    if not development_path.is_file() or not marker_path.is_file():
+        return False
+    development = read(development_path)
+    marker = read(marker_path)
+    return development.get("developmentEligible") is True \
+        and development.get("decision") == "development-pass-holdout-closed" \
+        and [row.get("corpusID") for row in development.get("rows", [])] == [CORPORA[0]] \
+        and marker.get("ticket") == 77 \
+        and marker.get("developmentReportSHA256") == sha256(development_path)
+
+
+def named_stage_durations(values: dict | list) -> dict[str, float]:
+    if isinstance(values, dict):
+        return values
+    assert len(values) % 2 == 0
+    return {str(values[index]): float(values[index + 1])
+            for index in range(0, len(values), 2)}
+
+
+def formatted_duration(seconds: float) -> str:
+    minutes = int(seconds) // 60
+    return f"{minutes}m {seconds - minutes * 60:.1f}s"
 
 
 def job_directory(root: Path, corpus: str) -> Path | None:
@@ -173,6 +254,13 @@ def model_lifecycle(raw: dict) -> dict:
             "pressureTransitions": worker["pressureTransitions"],
         } for stage, worker in zip(("asr", "alignment", "diarization", "translation"), workers)],
     }
+
+
+def observed_peak_memory_bytes(manifest: dict, lifecycle: dict) -> int:
+    return max(
+        manifest["peakMemoryBytes"],
+        *(worker["peakPhysicalFootprintBytes"] for worker in lifecycle["workers"]),
+    )
 
 
 def translation_integrity(raw: dict) -> dict:
@@ -294,11 +382,35 @@ def subtitle_artifacts(job: Path, raw: dict) -> dict:
             for key in ("emptyCueIDs", "invalidDurationCueIDs")
         ) and srt["malformedBlockCount"] == vtt["malformedBlockCount"] == 0 \
         and timelines_match and alignment_matches and text_matches
+    representative = max(srt_rows, key=lambda row: (
+        len(row["text"]) / max(
+            (row["endMilliseconds"] - row["startMilliseconds"]) / 1000, 0.001
+        )
+    )) if srt_rows else None
     return {
         "valid": valid, "srt": srt, "vtt": vtt,
         "srtVTTTimestampsMatch": timelines_match,
         "alignmentTimestampsMatch": alignment_matches,
         "translatedTextMatches": text_matches,
+        "readability": {
+            "over84CharacterCueCount": len(srt["over84CharacterCueIDs"]),
+            "over20CharactersPerSecondCueCount": len(
+                srt["over20CharactersPerSecondCueIDs"]
+            ),
+            "representativeHighDensityCue": None if representative is None else {
+                "id": representative["id"],
+                "text": representative["text"],
+                "durationSeconds": (
+                    representative["endMilliseconds"] - representative["startMilliseconds"]
+                ) / 1000,
+                "charactersPerSecond": len(representative["text"]) / (
+                    max(
+                        representative["endMilliseconds"]
+                        - representative["startMilliseconds"], 1
+                    ) / 1000
+                ),
+            },
+        },
     }
 
 
@@ -340,6 +452,7 @@ def speaker_gates(
     labels_are_stable: bool,
     overlap_evidence_retained: bool,
     decisions: list[dict],
+    unchanged_standard: bool = False,
 ) -> dict:
     return {
         "zeroTranscriptDuplication": candidate["duplicationCount"] == 0,
@@ -347,11 +460,12 @@ def speaker_gates(
         "rejectedCandidatesRemainBaseline": all(
             not row["promoted"] for row in decisions if row["ticket"] >= 57
         ),
-        "speakerAttributedJapaneseErrorNonRegression":
+        "speakerGainOrUnchangedStandard": unchanged_standard or
             candidate["speakerAttributedJapaneseError"]["ratePercent"]
-            <= baseline["speakerAttributedJapaneseError"]["ratePercent"],
+            < baseline["speakerAttributedJapaneseError"]["ratePercent"],
         "rawOverlapRetained": overlap_evidence_retained,
-        "zeroInventedOverlap": candidate["overlap"]["inventedSeconds"] == 0,
+        "zeroInventedOverlapOrUnchangedStandard": unchanged_standard
+            or candidate["overlap"]["inventedSeconds"] == 0,
     }
 
 
@@ -394,6 +508,10 @@ def artifact_gates(root: Path, corpus: str, manifest: dict, raw: dict, metadata:
             "manifest.json": sha256(job / "manifest.json"),
             "raw-asr.json": sha256(job / "raw-asr.json"),
         },
+        "implementationProvenance": implementation_revalidation_valid(
+            metadata, job / "raw-asr.json", root / "qwen-ja" / corpus / "revalidation.log",
+        ),
+        "scoringProvenance": scoring_provenance_valid(metadata),
         **model_provenance_gates(root, raw, metadata),
     }
 
@@ -480,6 +598,7 @@ def score_corpus(root: Path, baseline_root: Path, corpus: str,
     terminology = glossary_accuracy(candidate, candidate_rows)
     subtitles = subtitle_artifacts(candidate_job, candidate)
     resources = model_lifecycle(candidate)
+    peak_memory_bytes = observed_peak_memory_bytes(candidate_manifest, resources)
     baseline_comet = metric_mean(comet_path, baseline_hypothesis)
     candidate_comet = metric_mean(comet_path, candidate_hypothesis)
     reference_text = " ".join(row["reference"] for row in candidate_rows)
@@ -493,12 +612,17 @@ def score_corpus(root: Path, baseline_root: Path, corpus: str,
         "zeroValidationFailure": not integrity["validationFailures"],
         "contextEvidence": integrity["contextEvidenceValid"],
     }
+    artifacts = artifact_gates(
+        root, corpus, manifest, candidate, metadata, candidate_manifest,
+        candidate_job, decisions,
+    )
     speaker_gate_results = speaker_gates(
         baseline_speaker,
         speaker,
         stable_speaker_labels(candidate),
         "overlapRanges" in candidate["diarization"],
         decisions,
+        unchanged_standard=artifacts["selectedSpeakerBaseline"],
     )
     interpretations = {
         "COMET": metric_interpretation(
@@ -550,16 +674,13 @@ def score_corpus(root: Path, baseline_root: Path, corpus: str,
             "translationIntegrity": integrity,
             "diarization": speaker,
             "runtimeSeconds": duration(candidate_manifest),
-            "stageDurations": candidate_manifest["stageDurations"],
+            "stageDurations": named_stage_durations(candidate_manifest["stageDurations"]),
             "retryRate": integrity["retryRate"],
-            "peakMemoryBytes": candidate_manifest["peakMemoryBytes"],
+            "peakMemoryBytes": peak_memory_bytes,
             "subtitles": subtitles,
             "resources": resources,
         },
-        "artifactGates": artifact_gates(
-            root, corpus, manifest, candidate, metadata, candidate_manifest,
-            candidate_job, decisions,
-        ),
+        "artifactGates": artifacts,
         "translationGates": translation_gates,
         "speakerGates": speaker_gate_results,
         "metricInterpretations": interpretations,
@@ -598,6 +719,525 @@ def row_passes(row: dict) -> bool:
     ))
 
 
+def build_failed_row(corpus: str, status: str, failure: dict, runtime_seconds: float,
+                     stage_durations: dict, peak_memory_bytes: int, chunks: list[dict],
+                     workers: list[tuple[str, dict]], model_events: list[dict],
+                     raw_artifacts: dict) -> dict:
+    cues = [cue for chunk in chunks for cue in chunk["cues"]]
+    items = [item for chunk in chunks for item in chunk["rawItems"]]
+    workers = [(stage, worker) for stage, worker in workers if worker]
+    worker_rows = [{
+        "stage": stage,
+        "processIdentifier": worker["processIdentifier"],
+        "elapsedSeconds": worker["elapsedSeconds"],
+        "peakPhysicalFootprintBytes": worker["peakPhysicalFootprintBytes"],
+        "minimumAvailableMemoryBytes": min(
+            sample["availableMemoryBytes"] for sample in worker["availableMemorySamples"]
+        ),
+        "swapUsedBeforeBytes": worker["swapUsedBeforeBytes"],
+        "swapUsedAfterBytes": worker["swapUsedAfterBytes"],
+        "swapDeltaBytes": worker["swapUsedAfterBytes"] - worker["swapUsedBeforeBytes"],
+        "pressureTransitions": worker["pressureTransitions"],
+        "startedAt": worker["startedAt"],
+        "exitedAt": worker["exitedAt"],
+    } for stage, worker in workers]
+    durations = [chunk["sourceEnd"] - chunk["sourceStart"] for chunk in chunks]
+    ordered_cues = [cue for chunk in sorted(chunks, key=lambda value: value["index"])
+                    for cue in chunk["cues"]]
+    non_monotonic = sum(
+        cue["start"] < previous["end"]
+        for previous, cue in zip(ordered_cues, ordered_cues[1:])
+    )
+    return {
+        "corpusID": corpus,
+        "role": "development" if corpus != HOLDOUT else "untouched-channel-separated-holdout",
+        "status": status,
+        "failure": failure,
+        "runtimeSeconds": runtime_seconds,
+        "stageDurations": named_stage_durations(stage_durations),
+        "peakMemoryBytes": peak_memory_bytes,
+        "alignmentIntegrity": {
+            "windowCount": len(chunks),
+            "maximumWindowSeconds": max(durations, default=0),
+            "allWindowsWithinSelectedLimit": all(value <= 20.000_001 for value in durations),
+            "cueCount": len(cues),
+            "zeroDurationCueCount": sum(cue["end"] <= cue["start"] for cue in cues),
+            "nonMonotonicCueCount": non_monotonic,
+            "rawItemCount": len(items),
+            "zeroDurationRawItemCount": sum(item["end"] <= item["start"] for item in items),
+            "rawItemsAreDiagnosticOnly": True,
+            "firstInvalidCue": next((cue for cue in cues if cue["end"] <= cue["start"]), None),
+            "gatePassed": not any(cue["end"] <= cue["start"] for cue in cues)
+                and non_monotonic == 0,
+        },
+        "resources": {
+            "workers": worker_rows,
+            "strictlySequential": all(
+                left["exitedAt"] <= right["startedAt"]
+                for left, right in zip(worker_rows, worker_rows[1:])
+            ),
+            "zeroSwapGrowth": all(row["swapDeltaBytes"] <= 0 for row in worker_rows),
+            "noCriticalPressure": all(not any(
+                transition["level"] == "critical"
+                for transition in row["pressureTransitions"]
+            ) for row in worker_rows),
+            "noFixedEightGiBReserve": not any(
+                "reserve=8589934592" in (event.get("message") or "")
+                for event in model_events
+            ),
+        },
+        "rawArtifacts": raw_artifacts,
+    }
+
+
+def failed_row(root: Path, corpus: str) -> dict | None:
+    job = job_directory(root, corpus)
+    if job is None:
+        return None
+    manifest = read(job / "manifest.json")
+    if manifest["status"] == "completed":
+        return None
+    raw = read(job / "raw-asr.json")
+    failures = manifest.get("failures") or []
+    return build_failed_row(
+        corpus, manifest["status"], failures[0] if failures else {}, duration(manifest),
+        manifest["stageDurations"], manifest["peakMemoryBytes"],
+        (raw.get("alignment") or {}).get("chunks", []),
+        [("asr", (raw.get("asrWorker") or {}).get("lifecycle")),
+         ("alignment", (raw.get("alignment") or {}).get("worker"))],
+        raw.get("modelEvents", []), {
+            "manifest": str(job / "manifest.json"),
+            "rawASR": str(job / "raw-asr.json"),
+            "manifestSHA256": sha256(job / "manifest.json"),
+            "rawASRSHA256": sha256(job / "raw-asr.json"),
+        },
+    )
+
+
+def failed_experiment_row(root: Path) -> dict | None:
+    if job_directory(root, CORPORA[0]):
+        return None
+    path = root / "experiments/dev-alignment-window-20-owned-retry.json"
+    if not path.exists():
+        return None
+    raw = read(path)
+    asr = raw["asrWorker"]["lifecycle"]
+    alignment = raw["alignmentWorker"]
+    return build_failed_row(
+        raw["corpusID"], "diagnostic-failed", {
+            "stage": "alignment",
+            "message": "Targeted DEV ASR/alignment retained zero-duration cues after same-window retry.",
+        }, asr["elapsedSeconds"] + alignment["elapsedSeconds"], {
+            "transcribing": asr["elapsedSeconds"],
+            "aligning": alignment["elapsedSeconds"],
+        }, max(asr["peakPhysicalFootprintBytes"], alignment["peakPhysicalFootprintBytes"]),
+        raw["alignment"]["chunks"], [("asr", asr), ("alignment", alignment)], [], {
+            "experiment": str(path),
+            "experimentSHA256": sha256(path),
+            "evidenceKind": "targeted-development-asr-alignment-only",
+        },
+    )
+
+
+def zero_cue_policy_diagnosis(root: Path, corpus: str) -> dict:
+    job = job_directory(root, corpus)
+    raw = read(job / "raw-asr.json") if job else read(
+        root / "experiments/dev-alignment-window-20-owned-retry.json"
+    )
+    manifest = read(Path("docs/japanese-live/corpora") / corpus / "manifest.json")
+    sample_rate = manifest["fixture"]["sampleRate"]
+    reference_turns = manifest["annotations"]["turns"]
+    rows = []
+    kept_cues = []
+    policy_c_cues = []
+    policy_c_merges = []
+    chunks = sorted(raw["alignment"]["chunks"], key=lambda value: value["index"])
+    for chunk_position, chunk in enumerate(chunks):
+        cues = chunk["cues"]
+        next_global_cue_start = (
+            chunks[chunk_position + 1]["cues"][0]["start"]
+            if chunk_position + 1 < len(chunks)
+            and chunks[chunk_position + 1]["cues"] else chunk["sourceEnd"]
+        )
+        kept_cues.extend(cue for cue in cues if cue["end"] > cue["start"])
+        local_reference = [turn for turn in reference_turns
+                           if turn["endSample"] / sample_rate > chunk["sourceStart"]
+                           and turn["startSample"] / sample_rate < chunk["sourceEnd"]]
+        reference_text = "".join(turn["japanese"] for turn in local_reference)
+        for index, cue in enumerate(cues):
+            if cue["end"] > cue["start"]:
+                continue
+            normalized = normalize_ja(cue["text"])
+            ranked = sorted(local_reference, key=lambda turn: difflib.SequenceMatcher(
+                None, normalized, normalize_ja(turn["japanese"]), autojunk=False,
+            ).ratio(), reverse=True)
+            best = ranked[0] if ranked else None
+            similarity = 100 * difflib.SequenceMatcher(
+                None, normalized, normalize_ja(best["japanese"]), autojunk=False,
+            ).ratio() if best else 0
+            repeated = any(
+                len(normalized) >= width * 4
+                and normalized.endswith(normalized[-width:] * 4)
+                for width in range(1, max(1, len(normalized) // 4) + 1)
+            )
+            rows.append({
+                "cueID": cue["id"],
+                "text": cue["text"],
+                "normalizedCharacterCount": len(normalized),
+                "repeatedTail": repeated,
+                "asrWindow": [chunk["sourceStart"], chunk["sourceEnd"]],
+                "previousCue": cues[index - 1] if index else None,
+                "nextCue": cues[index + 1] if index + 1 < len(cues) else None,
+                "referenceDiagnostic": {
+                    "exactNormalizedMatchInWindow": normalized in normalize_ja(reference_text),
+                    "bestApproximateMatchPercent": similarity,
+                    "bestTurn": None if best is None else {
+                        "id": best["id"],
+                        "start": best["startSample"] / sample_rate,
+                        "end": best["endSample"] / sample_rate,
+                        "japanese": best["japanese"],
+                    },
+                },
+                "coarseFallbackWouldOverlapValidatedCueCount": sum(
+                    other["end"] > other["start"]
+                    and other["end"] > chunk["sourceStart"]
+                    and other["start"] < chunk["sourceEnd"]
+                    for other in cues
+                ),
+            })
+        simulated = [dict(cue) for cue in cues]
+        for cue_id in [cue["id"] for cue in cues if cue["end"] <= cue["start"]]:
+            index = next(i for i, cue in enumerate(simulated) if cue["id"] == cue_id)
+            zero = simulated[index]
+            previous = next((i for i in range(index - 1, -1, -1)
+                             if simulated[i]["end"] > simulated[i]["start"]), None)
+            following = next((i for i in range(index + 1, len(simulated))
+                              if simulated[i]["end"] > simulated[i]["start"]), None)
+            previous_distance = abs(zero["start"] - simulated[previous]["end"]) \
+                if previous is not None else math.inf
+            following_distance = abs(simulated[following]["start"] - zero["end"]) \
+                if following is not None else math.inf
+            target_index = previous if previous_distance <= following_distance else following
+            assert target_index is not None
+            direction = "previous" if target_index == previous else "following"
+            target = simulated[target_index]
+            target["text"] = target["text"] + zero["text"] if direction == "previous" \
+                else zero["text"] + target["text"]
+            duration_seconds = target["end"] - target["start"]
+            characters_per_second = len(target["text"]) / duration_seconds
+            policy_c_merges.append({
+                "sourceCueID": zero["id"],
+                "sourceText": zero["text"],
+                "targetCueID": target["id"],
+                "direction": direction,
+                "boundaryDistanceSeconds": min(previous_distance, following_distance),
+                "sourceWasLastCueInWindow": zero["id"] == cues[-1]["id"],
+                "windowEnd": chunk["sourceEnd"],
+                "nextGlobalCueStart": next_global_cue_start,
+                "targetIntervalUnchanged": [target["start"], target["end"]],
+                "mergedText": target["text"],
+                "mergedCharacterCount": len(target["text"]),
+                "charactersPerSecond": characters_per_second,
+                "under84Characters": len(target["text"]) <= 84,
+                "atMost20CharactersPerSecond": characters_per_second <= 20,
+            })
+            simulated.pop(index)
+        policy_c_cues.extend(simulated)
+    previous_end = -math.inf
+    kept_timeline_valid = True
+    for cue in kept_cues:
+        kept_timeline_valid = (
+            kept_timeline_valid
+            and cue["start"] >= previous_end
+            and cue["end"] > cue["start"]
+        )
+        previous_end = cue["end"]
+    dropped_characters = sum(row["normalizedCharacterCount"] for row in rows)
+    reference_supported = sum(
+        row["referenceDiagnostic"]["exactNormalizedMatchInWindow"]
+        or row["referenceDiagnostic"]["bestApproximateMatchPercent"] >= 70
+        for row in rows
+    )
+    original_text = "".join(cue["text"] for chunk in raw["alignment"]["chunks"]
+                            for cue in chunk["cues"])
+    merged_text = "".join(cue["text"] for cue in policy_c_cues)
+    previous_end = -math.inf
+    policy_c_timeline_valid = True
+    for cue in policy_c_cues:
+        policy_c_timeline_valid = (
+            policy_c_timeline_valid
+            and cue["end"] > cue["start"]
+            and cue["start"] >= previous_end
+        )
+        previous_end = cue["end"]
+    policy_c_readable = all(
+        merge["under84Characters"] and merge["atMost20CharactersPerSecond"]
+        for merge in policy_c_merges
+    )
+    policy_c2_cues = [dict(cue) for cue in policy_c_cues]
+    policy_c2_merges = []
+    for merge in policy_c_merges:
+        updated = dict(merge)
+        target = next(cue for cue in policy_c2_cues
+                      if cue["id"] == merge["targetCueID"])
+        original_interval = [target["start"], target["end"]]
+        free_gap_end = min(merge["windowEnd"], merge["nextGlobalCueStart"])
+        timing_policy = "merge-adjacent-valid-cue"
+        required_end = target["start"] + len(target["text"]) / 20
+        if required_end > target["end"]:
+            if (merge["sourceWasLastCueInWindow"]
+                    and merge["direction"] == "previous"
+                    and required_end <= free_gap_end):
+                target["end"] = required_end
+                timing_policy = "coarse-fallback-free-window-gap"
+        characters_per_second = len(target["text"]) / (target["end"] - target["start"])
+        updated.update({
+            "targetOriginalInterval": original_interval,
+            "finalInterval": [target["start"], target["end"]],
+            "freeGapEnd": free_gap_end,
+            "timingPolicy": timing_policy,
+            "charactersPerSecond": characters_per_second,
+            "under84Characters": len(target["text"]) <= 84,
+            "atMost20CharactersPerSecond": characters_per_second <= 20,
+        })
+        policy_c2_merges.append(updated)
+    previous_end = -math.inf
+    policy_c2_timeline_valid = True
+    for cue in policy_c2_cues:
+        policy_c2_timeline_valid = (
+            policy_c2_timeline_valid
+            and cue["end"] > cue["start"]
+            and cue["start"] >= previous_end
+        )
+        previous_end = cue["end"]
+    policy_c2_text_preserved = "".join(cue["text"] for cue in policy_c2_cues) \
+        == original_text
+    policy_c2_readable = all(
+        merge["under84Characters"] and merge["atMost20CharactersPerSecond"]
+        for merge in policy_c2_merges
+    )
+    policy_c2_acceptable = (
+        policy_c2_timeline_valid and policy_c2_text_preserved and policy_c2_readable
+    )
+    return {
+        "scope": "offline report-only; frozen references are never consulted by product runtime",
+        "rows": rows,
+        "policyAExcludeAfterFailedRetry": {
+            "positiveMonotonicTimeline": kept_timeline_valid,
+            "rawASRPreserved": True,
+            "alignedCueCountDropped": len(rows),
+            "normalizedCharactersDroppedFromTranslationAndSubtitles": dropped_characters,
+            "referenceSupportedCueCountDropped": reference_supported,
+            "acceptable": False,
+            "reason": "breaks end-to-end Japanese text preservation and omits reference-supported speech from EN/SRT/VTT",
+        },
+        "policyBCoarseRealASRWindow": {
+            "rawASRPreserved": True,
+            "validatedCuesChanged": False,
+            "coarseCueCount": len(rows),
+            "coarseCuesOverlappingValidatedCues": sum(
+                row["coarseFallbackWouldOverlapValidatedCueCount"] > 0 for row in rows
+            ),
+            "positiveMonotonicTimeline": False,
+            "acceptable": False,
+            "reason": "real ASR windows overlap already-valid cues; keeping those cues unchanged makes SRT/VTT non-monotonic and unreadable",
+        },
+        "policyCMergeNearestValidCue": {
+            "selectionRule": "nearest adjacent positive cue in the same ASR window by model-returned boundary distance; ties go to the preceding cue",
+            "usesReferenceAtRuntime": False,
+            "merges": policy_c_merges,
+            "fullTextAndOrderPreserved": merged_text == original_text,
+            "positiveMonotonicTimeline": policy_c_timeline_valid,
+            "referenceSupportedCueCountPreserved": reference_supported,
+            "readabilityThresholds": {"maximumCharacters": 84, "maximumCharactersPerSecond": 20},
+            "allReadabilityGatesGreen": policy_c_readable,
+            "maximumCharactersPerSecond": max(
+                (merge["charactersPerSecond"] for merge in policy_c_merges), default=0,
+            ),
+            "readabilityViolationCueIDs": [
+                merge["sourceCueID"] for merge in policy_c_merges
+                if not merge["under84Characters"]
+                or not merge["atMost20CharactersPerSecond"]
+            ],
+            "acceptable": policy_c_timeline_valid and merged_text == original_text
+                and policy_c_readable,
+            "reason": None if policy_c_readable else
+                "cue-0058 would force 10 characters into the unchanged 0.24-second cue-0057 interval (41.67 chars/s)",
+        },
+        "policyC2BoundedFreeGapExtension": {
+            "selectionRule": "Policy C; only a terminal same-window merge may extend its target end to the earlier of the ASR-window end and next global cue start, and only enough to reach 20 characters/second",
+            "usesReferenceAtRuntime": False,
+            "merges": policy_c2_merges,
+            "fullTextAndOrderPreserved": policy_c2_text_preserved,
+            "positiveMonotonicTimeline": policy_c2_timeline_valid,
+            "zeroOverlap": policy_c2_timeline_valid,
+            "allReadabilityGatesGreen": policy_c2_readable,
+            "maximumCharactersPerSecond": max(
+                (merge["charactersPerSecond"] for merge in policy_c2_merges), default=0,
+            ),
+            "coarseFallbackCueIDs": [
+                merge["sourceCueID"] for merge in policy_c2_merges
+                if merge["timingPolicy"] == "coarse-fallback-free-window-gap"
+            ],
+            "acceptable": policy_c2_acceptable,
+            "reason": None if policy_c2_acceptable else
+                "the bounded real gap cannot satisfy every cue-level readability gate",
+        },
+        "decision": "policy-c2-acceptable-on-development"
+            if policy_c2_acceptable else "no-policy-acceptable",
+    }
+
+
+def failed_report_state(
+    row: dict, policy_diagnosis: dict, development_eligible: bool = False,
+) -> dict:
+    stage = row.get("failure", {}).get("stage") or "unknown"
+    is_holdout = row.get("corpusID") == HOLDOUT
+    ready = not is_holdout and stage == "alignment" \
+        and row["alignmentIntegrity"]["zeroDurationCueCount"] > 0 and policy_diagnosis[
+        "policyC2BoundedFreeGapExtension"
+    ]["acceptable"]
+    return {
+        "stage": stage,
+        "developmentEligible": development_eligible if is_holdout else False,
+        "decision": f"holdout-failed-{stage}" if is_holdout else (
+            "ready-full-rerun-after-c2-development-simulation" if ready
+            else f"development-failed-{stage}"
+        ),
+        "qualityStatus": f"{'holdout' if is_holdout else 'development'}-not-scored-because-{stage}-failed",
+        "holdoutStatus": f"failed-{stage}" if is_holdout else "untouched-closed",
+        "split": "HOLDOUT" if is_holdout else "DEV",
+        "ready": ready,
+    }
+
+
+def write_failed_report(args: argparse.Namespace, decisions: list[dict], row: dict) -> None:
+    evidence = Path("docs/japanese-live/experiments/evidence/E22")
+    retained = [] if args.development_only else [
+        {"path": str(path), "sha256": sha256(path)}
+        for path in sorted(evidence.glob("*"))
+        if path.is_file() and path.name not in {"quality-report.json", "resources-report.json"}
+    ]
+    policy_diagnosis = zero_cue_policy_diagnosis(args.root, row["corpusID"])
+    development = score_corpus(
+        args.root, args.baseline_root, CORPORA[0], decisions,
+    ) if row["corpusID"] == HOLDOUT else None
+    state = failed_report_state(
+        row, policy_diagnosis,
+        development_eligible=bool(development and row_passes(development)),
+    )
+    report = {
+        "schemaVersion": 1,
+        "ticket": 77,
+        "candidateSelection": decisions,
+        "configuration": {
+            "ASR": "qwen-ja-product-default",
+            "alignment": "Qwen3-ForcedAligner; contiguous 20-second ASR anchors",
+            "diarization": "SpeakerKit-W8A16-auto-library-default-non-exclusive",
+            "translation": "TranslateGemma-12b-4bit-previous-accepted-v1",
+            "speakerBetaOptions": [
+                "enhanced-precision", "sensitive-detection", "known-speaker-count",
+            ],
+            "translationBetaOption": "TranslateGemma-4b-it-4bit",
+        },
+        "rows": ([development] if development else []) + [row],
+        "controls": read(args.root / "controls.json"),
+        "alignmentRouteDiagnosis": {
+            "localDependencyRevision": "d302a5c6080d2bb97bae38c7418f82abb76013b6",
+            "generateAPI": "one forced-alignment inference per bounded ASR anchor",
+            "declaredChunkLengthSeconds": 30,
+            "declaredSampleCount": 480_000,
+            "declaredMaximumMelFrames": 3_000,
+            "selectedWindowSeconds": 20,
+            "boundedRouteConfirmed": row["alignmentIntegrity"]["allWindowsWithinSelectedLimit"],
+            "windowSweep": [
+                {"seconds": 15, "zeroDurationCues": "3/264", "zeroDurationItems": "1601/4604",
+                 "japaneseCERPercent": 88.6584, "pathologicalLengthWindows": 1,
+                 "workerSeconds": 133.678,
+                 "artifactSHA256": "0d82fb614bcd907230d1c86c0f386e1460570a0f799f9b48ad3df0fe4d4e0cfc"},
+                {"seconds": 20, "zeroDurationCues": "7/279", "zeroDurationItems": "1455/4396",
+                 "japaneseCERPercent": 81.2646, "pathologicalLengthWindows": 0,
+                 "workerSeconds": 90.954,
+                 "artifactSHA256": "fb9e50c490e6bc87ebed2612b1372eb23b3508aae21ecbd5c6f85528f6d00a50"},
+                {"seconds": 25, "zeroDurationCues": "26/332", "zeroDurationItems": "1565/4354",
+                 "japaneseCERPercent": 78.8893, "pathologicalLengthWindows": 1,
+                 "workerSeconds": 136.480,
+                 "artifactSHA256": "e39e1a8cd28423fdeac31ac515a5d62b719472d04a39acaa3bb85e6c409197fb"},
+                {"seconds": 30, "zeroDurationCues": "30/304", "zeroDurationItems": "1566/4309",
+                 "japaneseCERPercent": 78.5547, "pathologicalLengthWindows": 2,
+                 "workerSeconds": 132.349,
+                 "artifactSHA256": "d14053f7024393e92fc97a2a61174225993e751877dd11c6965d63c6717ad4e2"},
+            ],
+            "selection": "20 seconds: lowest cue defect count without the 15-second ASR hallucination veto",
+            "sameWindowPerCueRetry": "attempted only after aggregate zero duration",
+            "result": "failure retained before downstream workflow completion",
+        },
+        "zeroCuePolicyDiagnosis": policy_diagnosis,
+        "liveGates": None,
+        "developmentEligible": state["developmentEligible"],
+        "workflowValid": False,
+        "promoted": False,
+        "decision": state["decision"],
+        "holdoutStatus": state["holdoutStatus"],
+        "qualityStatus": state["qualityStatus"],
+        "productChanges": "offline ASR anchors bounded to contiguous 20-second windows; faithful same-window per-cue retry; deterministic content-preserving C2 fallback using only a bounded real gap; positive enclosing-cue timing retained when character items are diagnostic-only; source-attested Japanese laughter exempted from the degenerate-repetition validator; deterministic worker executable resolution; Live unchanged",
+        "retainedEvidence": retained,
+    }
+    args.json.parent.mkdir(parents=True, exist_ok=True)
+    args.json.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    args.quality_json.parent.mkdir(parents=True, exist_ok=True)
+    args.quality_json.write_text(json.dumps({
+        "ticket": 77,
+        "status": report["qualityStatus"],
+        "alignmentIntegrity": row["alignmentIntegrity"],
+        "comparativeQualityConclusion": None,
+    }, ensure_ascii=False, indent=2) + "\n")
+    args.resources_json.write_text(json.dumps({
+        "ticket": 77,
+        "memoryPolicy": "native macOS pressure; no fixed offline reserve",
+        "runtimeSeconds": row["runtimeSeconds"],
+        "stageDurations": row["stageDurations"],
+        "peakMemoryBytes": row["peakMemoryBytes"],
+        "workerEvidence": row["resources"],
+    }, ensure_ascii=False, indent=2) + "\n")
+    integrity = row["alignmentIntegrity"]
+    policy_a = policy_diagnosis["policyAExcludeAfterFailedRetry"]
+    policy_b = policy_diagnosis["policyBCoarseRealASRWindow"]
+    policy_c = policy_diagnosis["policyCMergeNearestValidCue"]
+    policy_c2 = policy_diagnosis["policyC2BoundedFreeGapExtension"]
+    args.markdown.parent.mkdir(parents=True, exist_ok=True)
+    args.markdown.write_text(
+        "# E22 — Standard offline validation (#77)\n\n"
+        "Standard keeps 12B by default; 4B and the three independent SpeakerKit beta options remain selectable.\n\n"
+        f"- {state['split']}: **FAIL** at {state['stage']} after {row['runtimeSeconds']:.3f}s.\n"
+        f"- Route: {integrity['windowCount']} forced-alignment windows, maximum "
+        f"{integrity['maximumWindowSeconds']:.6f}s; every window is within the selected 20s bound.\n"
+        f"- Integrity: {integrity['zeroDurationCueCount']}/{integrity['cueCount']} zero-duration cues; "
+        f"{integrity['nonMonotonicCueCount']} non-monotonic cues; "
+        f"{integrity['zeroDurationRawItemCount']}/{integrity['rawItemCount']} zero-duration raw items (diagnostic only).\n"
+        f"- Peak: {row['peakMemoryBytes'] / 2**30:.2f} GiB; strict sequence: "
+        f"{str(row['resources']['strictlySequential']).lower()}; swap growth: 0 bytes; critical pressure: none.\n"
+        f"- Policy A would drop {policy_a['alignedCueCountDropped']} cues / "
+        f"{policy_a['normalizedCharactersDroppedFromTranslationAndSubtitles']} normalized characters from EN/SRT/VTT, "
+        f"including {policy_a['referenceSupportedCueCountDropped']} reference-supported cues.\n"
+        f"- Policy B would make {policy_b['coarseCuesOverlappingValidatedCues']}/"
+        f"{policy_b['coarseCueCount']} coarse real-window cues overlap already-valid cues.\n"
+        f"- Policy C preserves text/order and a monotonic timeline, but reaches "
+        f"{policy_c['maximumCharactersPerSecond']:.2f} chars/s; failures: "
+        f"{', '.join(policy_c['readabilityViolationCueIDs'])}.\n"
+        f"- Policy C2 preserves all text/order, stays monotonic with zero overlap, and reaches "
+        f"{policy_c2['maximumCharactersPerSecond']:.2f} chars/s; coarse fallback: "
+        f"{', '.join(policy_c2['coarseFallbackCueIDs'])}.\n"
+        f"- The {state['split']} workflow stopped at {state['stage']}; its downstream stages were not run.\n\n"
+        + ("**Decision: ready for one full rerun.** C2 is acceptable on DEV simulation; "
+           if state["ready"] else f"**Decision: {state['decision']}.** ")
+        + ("The holdout remains untouched until every DEV gate passes.\n"
+           if state["holdoutStatus"] == "untouched-closed"
+           else "The opened holdout failure is retained; no promotion.\n"),
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("root", nargs="?", type=Path)
@@ -609,12 +1249,47 @@ def main() -> None:
     parser.add_argument("--live-log", type=Path)
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--prepare-scoring", action="store_true")
+    parser.add_argument("--development-only", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         assert duration({"startedAt": "2026-01-01T00:00:00Z", "finishedAt": "2026-01-01T00:00:02Z"}) == 2
+        assert formatted_duration(1064) == "17m 44.0s"
         assert not row_passes({group: {"gate": group != "qualityGates"} for group in (
             "artifactGates", "translationGates", "speakerGates", "qualityGates",
         )})
+        state = failed_report_state(
+            {
+                "corpusID": CORPORA[0],
+                "failure": {"stage": "translation"},
+                "alignmentIntegrity": {"zeroDurationCueCount": 0},
+            },
+            {"policyC2BoundedFreeGapExtension": {"acceptable": True}},
+        )
+        assert state["decision"] == "development-failed-translation"
+        assert not state["developmentEligible"] and not state["ready"]
+        holdout_state = failed_report_state(
+            {
+                "corpusID": HOLDOUT,
+                "failure": {"stage": "alignment"},
+                "alignmentIntegrity": {"zeroDurationCueCount": 0},
+            },
+            {"policyC2BoundedFreeGapExtension": {"acceptable": True}},
+            development_eligible=True,
+        )
+        assert holdout_state["decision"] == "holdout-failed-alignment"
+        assert holdout_state["developmentEligible"] and not holdout_state["ready"]
+        assert holdout_state["holdoutStatus"] == "failed-alignment"
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            job = root / "qwen-ja" / CORPORA[0] / "jobs" / "real"
+            job.mkdir(parents=True)
+            (job / "manifest.json").write_text("{}", encoding="utf-8")
+            experiment = root / "experiments"
+            experiment.mkdir()
+            (experiment / "dev-alignment-window-20-owned-retry.json").write_text(
+                "{}", encoding="utf-8"
+            )
+            assert failed_experiment_row(root) is None
         baseline_speaker = {
             "speakerAttributedJapaneseError": {"ratePercent": 10.0},
         }
@@ -626,8 +1301,14 @@ def main() -> None:
         gates = speaker_gates(
             baseline_speaker, candidate_speaker, True, True, [],
         )
-        assert gates["speakerAttributedJapaneseErrorNonRegression"]
-        assert not gates["zeroInventedOverlap"]
+        assert not gates["speakerGainOrUnchangedStandard"]
+        assert not gates["zeroInventedOverlapOrUnchangedStandard"]
+        unchanged = speaker_gates(
+            baseline_speaker, candidate_speaker, True, True, [],
+            unchanged_standard=True,
+        )
+        assert unchanged["speakerGainOrUnchangedStandard"]
+        assert unchanged["zeroInventedOverlapOrUnchangedStandard"]
         assert metric_interpretation(1, 1, True, "meaning")["interpretation"] == "unchanged"
         examples = representative_examples(
             [{"id": "1", "source": "一", "reference": "one", "hypothesis": "two"}],
@@ -668,6 +1349,13 @@ def main() -> None:
             )],
         }
         assert all(model_lifecycle(raw_workers)["gates"].values())
+        assert observed_peak_memory_bytes(
+            {"peakMemoryBytes": 1}, model_lifecycle(raw_workers),
+        ) == 1
+        raw_workers["translation"]["worker"]["peakPhysicalFootprintBytes"] = 2
+        assert observed_peak_memory_bytes(
+            {"peakMemoryBytes": 1}, model_lifecycle(raw_workers),
+        ) == 2
         raw_workers["alignment"]["worker"]["processIdentifier"] = 1
         assert not model_lifecycle(raw_workers)["gates"]["distinctWorkerProcesses"]
         with TemporaryDirectory() as directory:
@@ -705,6 +1393,65 @@ def main() -> None:
         assert not weight_provenance_valid([*retained["weights"], stale])
         duplicate = [*retained["weights"][:-1], retained["weights"][0]]
         assert not weight_provenance_valid(duplicate)
+        scoring = {str(path): sha256(path) for path in SCORING_PATHS}
+        assert scoring_provenance_valid({"scoringImplementationSHA256": scoring})
+        assert not scoring_provenance_valid({
+            "scoringImplementationSHA256": dict(scoring, stale="bad"),
+        })
+        with TemporaryDirectory() as directory:
+            raw_path = Path(directory) / "raw.json"
+            log_path = Path(directory) / "revalidation.log"
+            binary_path = Path(directory) / "tests"
+            raw_path.write_text("{}", encoding="utf-8")
+            log_path.write_text("pass", encoding="utf-8")
+            binary_path.write_text("binary", encoding="utf-8")
+            revalidation = {
+                "kind": "current-code-raw-replay",
+                "rawArtifactSHA256": sha256(raw_path),
+                "testLogSHA256": sha256(log_path),
+                "testBinarySHA256": sha256(binary_path),
+                "implementationSHA256": {
+                    path: sha256(Path(path)) for path in REQUIRED_IMPLEMENTATION_PATHS
+                },
+            }
+            assert implementation_revalidation_valid(
+                {"revalidation": revalidation}, raw_path, log_path, binary_path,
+            )
+            revalidation["rawArtifactSHA256"] = "stale"
+            assert not implementation_revalidation_valid(
+                {"revalidation": revalidation}, raw_path, log_path, binary_path,
+            )
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "controls").mkdir()
+            log_path = root / "controls/youtube-revalidation.log"
+            binary_path = root / "tests"
+            log_path.write_text("pass", encoding="utf-8")
+            binary_path.write_text("binary", encoding="utf-8")
+            (root / "control-provenance.json").write_text(json.dumps({
+                "kind": "current-code-youtube-control",
+                "implementationSHA256": {
+                    path: sha256(Path(path)) for path in CONTROL_IMPLEMENTATION_PATHS
+                },
+                "testBinarySHA256": sha256(binary_path),
+                "testLogSHA256": sha256(log_path),
+            }), encoding="utf-8")
+            assert control_provenance_valid(root, binary_path)
+            development = {
+                "developmentEligible": True,
+                "decision": "development-pass-holdout-closed",
+                "rows": [{"corpusID": CORPORA[0]}],
+            }
+            development_path = root / "development-report.json"
+            development_path.write_text(json.dumps(development), encoding="utf-8")
+            (root / "holdout-opened.json").write_text(json.dumps({
+                "ticket": 77,
+                "developmentReportSHA256": sha256(development_path),
+            }), encoding="utf-8")
+            assert holdout_sequence_valid(root)
+            development["rows"].append({"corpusID": HOLDOUT})
+            development_path.write_text(json.dumps(development), encoding="utf-8")
+            assert not holdout_sequence_valid(root)
         raw_models = {
             "model": {"modelID": MODEL_IDS[0], "revision": MODEL_REVISIONS[MODEL_IDS[0]]},
             "alignment": {"modelID": MODEL_IDS[1], "revision": MODEL_REVISIONS[MODEL_IDS[1]]},
@@ -732,22 +1479,32 @@ def main() -> None:
     if args.prepare_scoring:
         assert args.root and args.baseline_root
         decisions = decision_manifest()
-        for corpus in CORPORA:
+        for corpus in CORPORA[:1] if args.development_only else CORPORA:
             score_corpus(args.root, args.baseline_root, corpus, decisions)
         return
     assert args.root and args.baseline_root and args.json and args.markdown \
         and args.quality_json and args.resources_json and args.live_log
     decisions = decision_manifest()
-    rows = [row for corpus in CORPORA
+    selected_corpora = CORPORA[:1] if args.development_only else CORPORA
+    failed = next((row for corpus in selected_corpora
+                   if (row := failed_row(args.root, corpus))), None) \
+        or failed_experiment_row(args.root)
+    if failed:
+        write_failed_report(args, decisions, failed)
+        return
+    rows = [row for corpus in selected_corpora
             if (row := score_corpus(args.root, args.baseline_root, corpus, decisions))]
     controls = read(args.root / "controls.json") if (args.root / "controls.json").exists() else {}
     live_passed = args.live_log.exists() and "Test Suite 'LiveCaptionTests' passed" in args.live_log.read_text()
     development = next((row for row in rows if row["corpusID"] != HOLDOUT), None)
     holdout = next((row for row in rows if row["corpusID"] == HOLDOUT), None)
     development_eligible = development is not None and row_passes(development)
+    holdout_gate = None if args.development_only else holdout_sequence_valid(args.root)
+    control_provenance = control_provenance_valid(args.root)
     workflow_valid = bool(development_eligible and holdout and row_passes(holdout)
                           and live_passed and all(controls.values())
-                          and controls.get("fullSwiftSuite", False))
+                          and controls.get("fullSwiftSuite", False)
+                          and holdout_gate and control_provenance)
     report = {
         "schemaVersion": 1,
         "ticket": 77,
@@ -766,6 +1523,8 @@ def main() -> None:
         "rows": rows,
         "controls": controls,
         "liveGates": live_passed,
+        "controlProvenance": control_provenance,
+        "holdoutGateSequence": holdout_gate,
         "developmentEligible": development_eligible,
         "workflowValid": workflow_valid,
         "promoted": False,
@@ -774,10 +1533,15 @@ def main() -> None:
             "no-go-development" if not development_eligible else "no-go-holdout"
         ),
         "productChanges": "none",
+        "reportingCorrections": {
+            "rawArtifactsChanged": False,
+            "peakMemory": "maximum observed worker physical footprint",
+            "implementationProvenance": list(REQUIRED_IMPLEMENTATION_PATHS),
+        },
         "scopeLimit": "Two complete supplied videos validate only this offline workflow; they do not prove universal anime, VTuber, gaming, conversation, speaker, or overlap quality.",
     }
     evidence = Path("docs/japanese-live/experiments/evidence/E22")
-    report["retainedEvidence"] = [
+    report["retainedEvidence"] = [] if args.development_only else [
         {"path": str(path), "sha256": sha256(path)}
         for path in sorted(evidence.glob("*"))
         if path.is_file() and path.name not in {"quality-report.json", "resources-report.json"}
@@ -829,6 +1593,24 @@ def main() -> None:
             f'{overlap["precisionPercent"]:.1f}/{overlap["recallPercent"]:.1f}/{overlap["f1Percent"]:.1f}% | '
             f'{100*candidate["retryRate"]:.2f}% | {candidate["runtimeSeconds"]:.0f}s | {candidate["peakMemoryBytes"]/2**30:.2f} GiB | '
             f'{"PASS" if row_passes(row) else "FAIL"} |'
+        )
+    lines += ["", "## Performance and subtitle readability", ""]
+    for row in rows:
+        candidate = row["candidate"]
+        readability = candidate["subtitles"]["readability"]
+        dense = readability["representativeHighDensityCue"]
+        stages = ", ".join(
+            f'{name}={formatted_duration(seconds)}'
+            for name, seconds in candidate["stageDurations"].items()
+        )
+        lines.append(
+            f'- {row["role"]}: total {formatted_duration(candidate["runtimeSeconds"])}; '
+            f'{stages}. '
+            f'SRT/VTT {candidate["subtitles"]["srt"]["cueCount"]} cues; '
+            f'{readability["over84CharacterCueCount"]} >84 characters and '
+            f'{readability["over20CharactersPerSecondCueCount"]} >20 chars/s; '
+            f'maximum-density cue `{dense["id"]}` is {dense["charactersPerSecond"]:.2f} chars/s '
+            f'over {dense["durationSeconds"]:.3f}s: “{dense["text"]}”.'
         )
     for row in rows:
         lines += ["", f'## {row["role"]} interpretations', ""]

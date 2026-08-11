@@ -139,7 +139,7 @@ enum YouTubeAcquirer {
             try controller.start(process)
             async let output = read(stdout.fileHandleForReading)
             async let errors = read(stderr.fileHandleForReading)
-            async let status = wait(for: process)
+            async let status = controller.wait()
             let result = await ProcessResult(
                 status: status,
                 stdout: String(decoding: output, as: UTF8.self),
@@ -162,14 +162,6 @@ enum YouTubeAcquirer {
         }
     }
 
-    private static func wait(for process: Process) async -> Int32 {
-        await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                process.waitUntilExit()
-                continuation.resume(returning: process.terminationStatus)
-            }
-        }
-    }
 }
 
 private struct ProcessResult {
@@ -201,6 +193,7 @@ private final class ProcessController: @unchecked Sendable {
     private let lock = NSLock()
     private var process: Process?
     private var isCancelled = false
+    private var isFinished = false
 
     var wasCancelled: Bool {
         lock.lock()
@@ -215,6 +208,7 @@ private final class ProcessController: @unchecked Sendable {
             throw CancellationError()
         }
         do {
+            process.terminationHandler = { [weak self] _ in self?.recordTermination() }
             try process.run()
             self.process = process
             lock.unlock()
@@ -232,5 +226,21 @@ private final class ProcessController: @unchecked Sendable {
         if runningProcess?.isRunning == true {
             runningProcess?.terminate()
         }
+    }
+
+    func wait() async -> Int32 {
+        while true {
+            lock.lock()
+            let result = isFinished ? process?.terminationStatus : nil
+            lock.unlock()
+            if let result { return result }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+    }
+
+    private func recordTermination() {
+        lock.lock()
+        isFinished = true
+        lock.unlock()
     }
 }

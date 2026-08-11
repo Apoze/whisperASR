@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE="${WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE:-$ROOT/.build/debug/WhisperASR}"
 ARTIFACTS="${WHISPERASR_COMBINED_ROOT:-$ROOT/.build/benchmarks/standard-offline-validation-77}"
 BASELINE_ROOT="${WHISPERASR_FROZEN_BASELINE_ROOT:-/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance}"
 FROZEN_REPO="${WHISPERASR_FROZEN_REPO:-/Users/maz/Documents/projets/whisperASR}"
@@ -64,17 +65,15 @@ verify_corpus() {
 }
 
 prepare_local_references() {
-  local corpus locator source destination
-  for corpus in qudu2fx3ncc md62mmdz0m; do
-    while IFS= read -r locator; do
-      destination="$ROOT/$locator"
-      [[ -f "$destination" ]] && continue
-      source="$FROZEN_REPO/$locator"
-      [[ -f "$source" ]] || { echo "Missing frozen local reference: $source" >&2; return 1; }
-      mkdir -p "$(dirname "$destination")"
-      ln -s "$source" "$destination"
-    done < <(jq -r '.source.references[] | select(.locator | test("^[a-z]+:") | not) | .locator' "$(manifest_for "$corpus")")
-  done
+  local corpus="$1" locator source destination
+  while IFS= read -r locator; do
+    destination="$ROOT/$locator"
+    [[ -f "$destination" ]] && continue
+    source="$FROZEN_REPO/$locator"
+    [[ -f "$source" ]] || { echo "Missing frozen local reference: $source" >&2; return 1; }
+    mkdir -p "$(dirname "$destination")"
+    ln -s "$source" "$destination"
+  done < <(jq -r '.source.references[] | select(.locator | test("^[a-z]+:") | not) | .locator' "$(manifest_for "$corpus")")
 }
 
 baseline_job() {
@@ -103,6 +102,10 @@ source_check() {
 
 run_real_cancellation_control() {
   local fixture="$ARTIFACTS/controls/dev-30s.wav" digest
+  [[ -x "$WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE" ]] || {
+    echo "Missing worker executable: $WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE" >&2
+    return 1
+  }
   ffmpeg -hide_banner -loglevel error -y -i "$(resolve_corpus_file qudu2fx3ncc source-video)" \
     -t 30 -vn -ac 1 -ar 16000 -c:a pcm_s16le "$fixture"
   digest="$(shasum -a 256 "$fixture" | awk '{print $1}')"
@@ -114,12 +117,24 @@ run_real_cancellation_control() {
 
 run_controls() {
   xcrun swift test \
-    --filter 'HighQualityJobTests/testSpeakerBetaControlsVisibilityAndSafeDefaults|HighQualityJobTests/testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence|HighQualityJobTests/testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts|HighQualityJobTests/testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface|HighQualityJobTests/testCancellationIsSafeForEveryOfflineBackend|HighQualityJobTests/testPeakMemoryIsSampledDuringASRStages|HighQualityJobTests/testEnglish|HighQualityJobTests/testYouTube|HighQualityJobTests/testAlignmentAndDiarizationWorkerEvidenceReachesRawEvidence|HeavyweightModelGateTests|HighQualityASRWorkerTests|HighQualityAlignmentSpeakerWorkerTests|HighQualityTranslationWorkerTests|HighQualityLocalTranslationTests|HighQualityConversationContextTests' \
+    --filter 'HighQualityJobTests/testSpeakerBetaControlsVisibilityAndSafeDefaults|HighQualityJobTests/testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence|HighQualityJobTests/testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts|HighQualityJobTests/testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface|HighQualityJobTests/testCancellationIsSafeForEveryOfflineBackend|HighQualityJobTests/testPeakMemoryIsSampledDuringASRStages|HighQualityJobTests/testEnglish|HighQualityJobTests/testAlignmentAndDiarizationWorkerEvidenceReachesRawEvidence|HeavyweightModelGateTests|HighQualityASRWorkerTests|HighQualityAlignmentSpeakerWorkerTests|HighQualityTranslationWorkerTests|HighQualityLocalTranslationTests|HighQualityConversationContextTests' \
     2>&1 | tee "$ARTIFACTS/controls/light-tests.log"
+  xcrun swift test --filter HighQualityJobTests/testYouTube \
+    2>&1 | tee "$ARTIFACTS/controls/youtube-revalidation.log"
+  local test_binary="$ROOT/.build/debug/WhisperASRPackageTests.xctest/Contents/MacOS/WhisperASRPackageTests"
+  jq -n \
+    --arg source "$(shasum -a 256 Sources/YouTubeAcquirer.swift | awk '{print $1}')" \
+    --arg job "$(shasum -a 256 Sources/HighQualityJob.swift | awk '{print $1}')" \
+    --arg tests "$(shasum -a 256 Tests/HighQualityJobTests.swift | awk '{print $1}')" \
+    --arg binary "$(shasum -a 256 "$test_binary" | awk '{print $1}')" \
+    --arg log "$(shasum -a 256 "$ARTIFACTS/controls/youtube-revalidation.log" | awk '{print $1}')" \
+    '{kind:"current-code-youtube-control",implementationSHA256:{
+      "Sources/YouTubeAcquirer.swift":$source,"Sources/HighQualityJob.swift":$job,
+      "Tests/HighQualityJobTests.swift":$tests},testBinarySHA256:$binary,
+      testLogSHA256:$log}' >"$ARTIFACTS/control-provenance.json"
   [[ -f .build/debug/mlx.metallib ]] || bash Scripts/build_mlx_metallib.sh debug
   python3 Scripts/report_combined_offline_validation.py --self-test
   source_check qudu2fx3ncc 2>&1 | tee "$ARTIFACTS/controls/source-qudu2fx3ncc.log"
-  source_check md62mmdz0m 2>&1 | tee "$ARTIFACTS/controls/source-md62mmdz0m.log"
   run_real_cancellation_control 2>&1 | tee "$ARTIFACTS/controls/real-cancellation.log"
   jq -n '{build:true,sourceDecode:true,referenceIntegrity:true,modelPreparation:true,
     realCancellation:true,failureClassification:true,artifactParsing:true,
@@ -207,8 +222,10 @@ write_metadata() {
     Sources/HighQualityASRWorker.swift Sources/HighQualityAlignmentSpeakerWorker.swift \
     Sources/HighQualityTranslationWorker.swift Sources/HeavyweightModelGate.swift \
     Sources/HighQualityForcedAlignerRuntime.swift Sources/HighQualitySpeakerKitRuntime.swift \
-    Sources/LocalMLXTranslator.swift Tests/HeavyweightModelGateTests.swift \
+    Sources/HighQualityTranslationIntegrity.swift Sources/LocalMLXTranslator.swift \
+    Sources/YouTubeAcquirer.swift Tests/HeavyweightModelGateTests.swift \
     Tests/HighQualityJobTests.swift Tests/HighQualityLocalTranslationTests.swift \
+    Tests/HighQualityTranslationIntegrityTests.swift \
     Tests/HighQualityAcceptanceTests.swift Tests/HighQualityASRWorkerTests.swift \
     Tests/HighQualityAlignmentSpeakerWorkerTests.swift \
     Tests/HighQualityTranslationWorkerTests.swift \
@@ -243,8 +260,39 @@ finalize_metadata() {
   jq --arg manifest "$(shasum -a 256 "$job/manifest.json" | awk '{print $1}')" \
     --arg raw "$(shasum -a 256 "$job/raw-asr.json" | awk '{print $1}')" \
     --arg provenance "$(shasum -a 256 "$provenance" | awk '{print $1}')" \
+    --arg reporter "$(shasum -a 256 Scripts/report_combined_offline_validation.py | awk '{print $1}')" \
+    --arg comet "$(shasum -a 256 Scripts/comet_score_compat.py | awk '{print $1}')" \
     '. + {rawArtifactSHA256:{"manifest.json":$manifest,"raw-asr.json":$raw},
-      modelProvenance:{path:"model-provenance.json",sha256:$provenance}}' \
+      modelProvenance:{path:"model-provenance.json",sha256:$provenance},
+      scoringImplementationSHA256:{
+        "Scripts/report_combined_offline_validation.py":$reporter,
+        "Scripts/comet_score_compat.py":$comet}}' \
+    "$directory/run-meta.json" >"$temporary"
+  mv "$temporary" "$directory/run-meta.json"
+}
+
+revalidate_candidate() {
+  local corpus="$1" directory="$ARTIFACTS/qwen-ja/$1"
+  local job="$directory/jobs/$(job_id "$1")" log="$directory/revalidation.log"
+  WHISPERASR_REVALIDATE_TRANSLATION_EVIDENCE="$job/raw-asr.json" \
+    xcrun swift test \
+      --filter HighQualityTranslationIntegrityTests/testRevalidatesRecordedTranslationEvidenceWhenOptedIn \
+      2>&1 | tee "$log"
+  local test_binary="$ROOT/.build/debug/WhisperASRPackageTests.xctest/Contents/MacOS/WhisperASRPackageTests"
+  local temporary="$(mktemp)" integrity job_hash test_hash
+  integrity="$(shasum -a 256 Sources/HighQualityTranslationIntegrity.swift | awk '{print $1}')"
+  job_hash="$(shasum -a 256 Sources/HighQualityJob.swift | awk '{print $1}')"
+  test_hash="$(shasum -a 256 Tests/HighQualityTranslationIntegrityTests.swift | awk '{print $1}')"
+  jq --arg raw "$(shasum -a 256 "$job/raw-asr.json" | awk '{print $1}')" \
+    --arg log "$(shasum -a 256 "$log" | awk '{print $1}')" \
+    --arg binary "$(shasum -a 256 "$test_binary" | awk '{print $1}')" \
+    --arg integrity "$integrity" --arg jobHash "$job_hash" --arg testHash "$test_hash" '
+      . + {revalidation:{kind:"current-code-raw-replay",rawArtifactSHA256:$raw,
+        implementationSHA256:{
+          "Sources/HighQualityTranslationIntegrity.swift":$integrity,
+          "Sources/HighQualityJob.swift":$jobHash,
+          "Tests/HighQualityTranslationIntegrityTests.swift":$testHash},
+        testBinarySHA256:$binary,testLogSHA256:$log}}' \
     "$directory/run-meta.json" >"$temporary"
   mv "$temporary" "$directory/run-meta.json"
 }
@@ -323,6 +371,7 @@ run_candidate() {
     echo "Reusing completed raw run: qwen-ja/$corpus"
     check_candidate "$corpus"
     finalize_metadata "$corpus"
+    revalidate_candidate "$corpus"
     return
   fi
   [[ ! -e "$job" ]] || { echo "Incomplete run retained at $job; move it aside before retrying." >&2; return 1; }
@@ -340,22 +389,31 @@ run_candidate() {
         --filter HighQualityAcceptanceTests/testRealFrozenWorkflowWhenOptedIn \
         2>&1 | tee "$directory/run.log"; then
     diagnose_failure "$corpus"
+    if [[ -f "$job/manifest.json" && -f "$job/raw-asr.json" ]]; then
+      finalize_metadata "$corpus"
+      retain_failure_evidence "$corpus"
+      report
+    fi
     return 1
   fi
   check_candidate "$corpus"
   finalize_metadata "$corpus"
+  revalidate_candidate "$corpus"
 }
 
 report() {
+  local scope="${1:-full}"
   python3 Scripts/report_combined_offline_validation.py "$ARTIFACTS" \
     --baseline-root "$BASELINE_ROOT" --json "$REPORT_JSON" --markdown "$REPORT_MD" \
     --quality-json "$QUALITY_JSON" --resources-json "$RESOURCES_JSON" \
-    --live-log "$LIVE_LOG"
+    --live-log "$LIVE_LOG" $([[ "$scope" == development ]] && echo --development-only)
 }
 
 prepare_score_inputs() {
+  local scope="${1:-full}"
   python3 Scripts/report_combined_offline_validation.py "$ARTIFACTS" \
-    --baseline-root "$BASELINE_ROOT" --prepare-scoring
+    --baseline-root "$BASELINE_ROOT" --prepare-scoring \
+    $([[ "$scope" == development ]] && echo --development-only)
 }
 
 score() {
@@ -376,7 +434,10 @@ retain_evidence() {
   local evidence="$ROOT/docs/japanese-live/experiments/evidence/E22" corpus job deliverable
   mkdir -p "$evidence"
   cp "$ARTIFACTS/corpus-preflight.tsv" "$ARTIFACTS/controls.json" \
-    "$ARTIFACTS/model-provenance.json" "$LIVE_LOG" "$evidence/"
+    "$ARTIFACTS/model-provenance.json" "$ARTIFACTS/control-provenance.json" \
+    "$ARTIFACTS/development-report.json" "$ARTIFACTS/holdout-opened.json" \
+    "$LIVE_LOG" "$evidence/"
+  cp "$ARTIFACTS/controls/"*.log "$evidence/"
   for corpus in qudu2fx3ncc md62mmdz0m; do
     job="$ARTIFACTS/qwen-ja/$corpus/jobs/$(job_id "$corpus")"
     gzip -n -c "$job/raw-asr.json" >"$evidence/$corpus-raw-asr.json.gz"
@@ -386,12 +447,72 @@ retain_evidence() {
       cp "$job/$deliverable" "$evidence/$corpus-$deliverable"
     done
     cp "$ARTIFACTS/qwen-ja/$corpus/run-meta.json" "$evidence/$corpus-run-meta.json"
+    cp "$ARTIFACTS/qwen-ja/$corpus/revalidation.log" \
+      "$evidence/$corpus-revalidation.log"
     gzip -n -c "$ARTIFACTS/qwen-ja/$corpus/run.log" >"$evidence/$corpus-run.log.gz"
     cp "$ARTIFACTS/metrics/$corpus/comet-score.json" "$evidence/$corpus-comet-score.json"
     cp "$ARTIFACTS/metrics/$corpus/comet-runtime.json" "$evidence/$corpus-comet-runtime.json"
     gzip -n -c "$ARTIFACTS/metrics/$corpus/comet-score.raw.txt" >"$evidence/$corpus-comet-score.raw.txt.gz"
   done
   cp "$ARTIFACTS/full-swift-test.log" "$evidence/"
+  retain_burnout_evidence "$evidence"
+}
+
+retain_burnout_evidence() {
+  local evidence="$1" directory path
+  for directory in "$ARTIFACTS"/experiments/burnout-targeted-*; do
+    [[ -d "$directory" ]] || continue
+    for path in "$directory"/*; do
+      [[ -f "$path" ]] || continue
+      gzip -n -c "$path" >"$evidence/burnout-targeted-$(basename "$path").gz"
+    done
+  done
+  for directory in "$ARTIFACTS"/attempts/qudu2fx3ncc-burnout-precanonicalization-*; do
+    [[ -d "$directory" ]] || continue
+    gzip -n -c "$directory/jobs/$(job_id qudu2fx3ncc)/raw-asr.json" \
+      >"$evidence/qudu2fx3ncc-precanonicalization-raw-asr.json.gz"
+    cp "$directory/jobs/$(job_id qudu2fx3ncc)/manifest.json" \
+      "$evidence/qudu2fx3ncc-precanonicalization-manifest.json"
+  done
+}
+
+retain_failure_evidence() {
+  local corpus="$1" evidence="$ROOT/docs/japanese-live/experiments/evidence/E22"
+  local directory="$ARTIFACTS/qwen-ja/$corpus" job="$directory/jobs/$(job_id "$corpus")"
+  local prior="$ARTIFACTS/attempts/qudu2fx3ncc-20260811T011611Z"
+  local window30="$ARTIFACTS/attempts/qudu2fx3ncc-window30-20260811T013745Z"
+  local experiment
+  mkdir -p "$evidence"
+  cp "$ARTIFACTS/corpus-preflight.tsv" "$ARTIFACTS/controls.json" \
+    "$ARTIFACTS/model-provenance.json" "$evidence/"
+  cp "$ARTIFACTS/controls/"*.log "$evidence/"
+  cp "$job/manifest.json" "$evidence/$corpus-manifest.json"
+  gzip -n -c "$job/raw-asr.json" >"$evidence/$corpus-raw-asr.json.gz"
+  cp "$directory/run-meta.json" "$directory/infrastructure-diagnostics.log" "$evidence/"
+  gzip -n -c "$directory/run.log" >"$evidence/$corpus-run.log.gz"
+  if [[ -f "$prior/jobs/$(job_id "$corpus")/manifest.json" && \
+        -f "$prior/jobs/$(job_id "$corpus")/raw-asr.json" ]]; then
+    cp "$prior/jobs/$(job_id "$corpus")/manifest.json" "$evidence/$corpus-prior-attempt-manifest.json"
+    gzip -n -c "$prior/jobs/$(job_id "$corpus")/raw-asr.json" \
+      >"$evidence/$corpus-prior-attempt-raw-asr.json.gz"
+  fi
+  if [[ -f "$window30/jobs/$(job_id "$corpus")/manifest.json" && \
+        -f "$window30/jobs/$(job_id "$corpus")/raw-asr.json" ]]; then
+    cp "$window30/jobs/$(job_id "$corpus")/manifest.json" \
+      "$evidence/$corpus-window30-manifest.json"
+    gzip -n -c "$window30/jobs/$(job_id "$corpus")/raw-asr.json" \
+      >"$evidence/$corpus-window30-raw-asr.json.gz"
+  fi
+  for experiment in dev-alignment-window-15 dev-alignment-window-20 \
+    dev-alignment-window-25 dev-alignment-window-20-owned-retry; do
+    [[ -f "$ARTIFACTS/experiments/$experiment.json" ]] || continue
+    gzip -n -c "$ARTIFACTS/experiments/$experiment.json" \
+      >"$evidence/$experiment.json.gz"
+    [[ ! -f "$ARTIFACTS/experiments/$experiment.log" ]] || \
+      gzip -n -c "$ARTIFACTS/experiments/$experiment.log" \
+        >"$evidence/$experiment.log.gz"
+  done
+  retain_burnout_evidence "$evidence"
 }
 
 run_preflight() {
@@ -421,12 +542,10 @@ run_preflight() {
   echo "Command: BENCHMARK_SLOT_GRANTED=77 bash Scripts/run_combined_offline_validation.sh full"
 }
 
-prepare_local_references
+prepare_local_references qudu2fx3ncc
 : >"$ARTIFACTS/corpus-preflight.tsv"
-for corpus in qudu2fx3ncc md62mmdz0m; do
-  verify_corpus "$corpus" >>"$ARTIFACTS/corpus-preflight.tsv"
-  verify_baseline "$corpus"
-done
+verify_corpus qudu2fx3ncc >>"$ARTIFACTS/corpus-preflight.tsv"
+verify_baseline qudu2fx3ncc
 
 if [[ "$MODE" == preflight ]]; then
   run_preflight
@@ -440,18 +559,26 @@ fi
 
 if [[ "$MODE" != final ]]; then run_controls; fi
 run_candidate qudu2fx3ncc
-prepare_score_inputs
+prepare_score_inputs development
 score qudu2fx3ncc
-report
+report development
 if ! jq -e '.developmentEligible' "$REPORT_JSON" >/dev/null; then
   echo "Development gates failed; untouched holdout remains closed."
   exit 1
 fi
+cp "$REPORT_JSON" "$ARTIFACTS/development-report.json"
 [[ "$MODE" != development ]] || { echo "Development gates passed; holdout remains untouched."; exit 0; }
 
+jq -n --arg report "$(shasum -a 256 "$ARTIFACTS/development-report.json" | awk '{print $1}')" \
+  --arg openedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  '{ticket:77,developmentReportSHA256:$report,openedAt:$openedAt}' \
+  >"$ARTIFACTS/holdout-opened.json"
+prepare_local_references md62mmdz0m
+verify_corpus md62mmdz0m >>"$ARTIFACTS/corpus-preflight.tsv"
+verify_baseline md62mmdz0m
 source_check md62mmdz0m
 run_candidate md62mmdz0m
-prepare_score_inputs
+prepare_score_inputs full
 score md62mmdz0m
 xcrun swift test --filter LiveCaptionTests 2>&1 | tee "$LIVE_LOG"
 xcrun swift test 2>&1 | tee "$ARTIFACTS/full-swift-test.log"
