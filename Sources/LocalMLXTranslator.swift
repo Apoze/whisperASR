@@ -91,9 +91,14 @@ actor LocalMLXTranslator {
 
     let candidate: Candidate
     private var container: ModelContainer?
+    private let clearCache: @Sendable () -> Void
 
-    init(candidate: Candidate = .productDefault) {
+    init(
+        candidate: Candidate = .productDefault,
+        clearCache: @escaping @Sendable () -> Void = { Memory.clearCache() }
+    ) {
         self.candidate = candidate
+        self.clearCache = clearCache
     }
 
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
@@ -114,7 +119,7 @@ actor LocalMLXTranslator {
         do {
             try Task.checkCancellation()
         } catch {
-            Memory.clearCache()
+            clearCache()
             throw error
         }
         container = loaded
@@ -122,6 +127,7 @@ actor LocalMLXTranslator {
     }
 
     func translate(_ batch: HighQualityTranslationBatch) async throws -> HighQualityTranslationExchange {
+        defer { clearCache() }
         guard let container else {
             throw HighQualityTranslationServiceError(
                 model: candidate.modelID,
@@ -285,11 +291,11 @@ actor LocalMLXTranslator {
 
     func unload() {
         container = nil
-        Memory.clearCache()
+        clearCache()
     }
 
     func handleMemoryWarning() {
-        Memory.clearCache()
+        clearCache()
     }
 
     static func frozenPrompt(for turn: HighQualityTranslationTurn) -> String {

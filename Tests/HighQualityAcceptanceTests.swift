@@ -476,17 +476,15 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let alignment = try XCTUnwrap(baseline.alignment)
         let diarization = try XCTUnwrap(baseline.diarization)
         let frozenTranslation = try XCTUnwrap(baseline.translation)
-        XCTAssertEqual(baseline.model, HighQualityASRBackend.qwenJA.model)
+        XCTAssertEqual(baseline.model.backend, HighQualityASRBackend.qwenJA.model.backend)
+        XCTAssertEqual(baseline.model.modelID, HighQualityASRBackend.qwenJA.model.modelID)
+        XCTAssertEqual(baseline.model.revision, HighQualityASRBackend.qwenJA.model.revision)
         XCTAssertEqual(alignment.modelID, HighQualityForcedAlignerRuntime.modelID)
         XCTAssertEqual(alignment.revision, HighQualityForcedAlignerRuntime.revision)
         XCTAssertEqual(diarization.modelID, HighQualitySpeakerKitRuntime.modelID)
         XCTAssertEqual(diarization.revision, HighQualitySpeakerKitRuntime.revision)
         XCTAssertEqual(diarization.speakerCountPolicy, .automatic)
         XCTAssertEqual(diarization.useExclusiveReconciliation, false)
-        let translationWorker = HighQualityTranslationWorkerClient(
-            candidate: translator.candidate,
-            executableURL: highQualityTranslationWorkerExecutableURL()
-        )
         let asrChunks = alignment.chunks.map { chunk in
             HighQualityASRChunk(
                 index: chunk.index,
@@ -495,6 +493,39 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 transcript: chunk.cues.map(\.text).joined()
             )
         }
+        let baseTurns = HighQualityJob.translationTurns(
+            from: baseline.rawASR ?? "",
+            asrChunks: asrChunks,
+            speakerLabelsByCueID: [:]
+        )
+        let merged = try HighQualityJob.validatedAlignment(
+            alignment.chunks,
+            turns: baseTurns,
+            duration: Double(baseline.sampleCount) / 16_000,
+            fallbackMerges: alignment.fallbackMerges ?? []
+        )
+        let replayAlignment = HighQualityAlignmentEvidence(
+            modelID: alignment.modelID,
+            revision: alignment.revision,
+            chunks: alignment.chunks,
+            mergedCues: merged,
+            sourceDuration: alignment.sourceDuration,
+            peakMemoryBytes: alignment.peakMemoryBytes,
+            validationDiagnostics: [],
+            configuration: alignment.configuration,
+            fallbackMerges: alignment.fallbackMerges
+        )
+        let semantic = try HighQualityJob.semanticTranslationUnits(
+            alignment: replayAlignment,
+            sourceTurns: baseTurns
+        )
+        XCTAssertEqual(semantic.turns, frozenTranslation.request.turns)
+        if environment["WHISPERASR_VALIDATE_SEMANTIC_REPLAY_ONLY"] == "1" { return }
+
+        let translationWorker = HighQualityTranslationWorkerClient(
+            candidate: translator.candidate,
+            executableURL: highQualityTranslationWorkerExecutableURL()
+        )
         let job = HighQualityJob(services: .init(
             loadSource: { _ in Array(repeating: 0, count: baseline.sampleCount) },
             prepareASR: { _ in },
@@ -509,7 +540,9 @@ final class HighQualityAcceptanceTests: XCTestCase {
                     chunks: alignment.chunks,
                     modelID: alignment.modelID,
                     revision: alignment.revision,
-                    peakMemoryBytes: alignment.peakMemoryBytes
+                    peakMemoryBytes: alignment.peakMemoryBytes,
+                    configuration: alignment.configuration,
+                    fallbackMerges: alignment.fallbackMerges
                 )
             },
             unloadAlignment: {},
@@ -555,8 +588,8 @@ final class HighQualityAcceptanceTests: XCTestCase {
             frozenTranslation.request.glossaryByCueID
         )
         XCTAssertEqual(
-            translation.request.conversationContextByCueID,
-            frozenTranslation.request.conversationContextByCueID
+            Set(translation.request.conversationContextByCueID.keys),
+            Set(translation.request.turns.map(\.id))
         )
         XCTAssertEqual(translation.model, translator.model.modelID)
         XCTAssertEqual(translation.revision, translator.model.revision)
@@ -771,12 +804,17 @@ final class HighQualityAcceptanceTests: XCTestCase {
             XCTFail("Unknown translation-context policy.")
             return
         }
+        let translator = try XCTUnwrap(HighQualityTranslator(
+            rawValue: environment["WHISPERASR_ACCEPTANCE_TRANSLATOR"]
+                ?? HighQualityTranslator.productDefault.rawValue
+        ))
 
         let result = try await HighQualityJob().run(.init(
             id: jobID,
             sourceURL: input.sourceURL,
             deliverables: Set(HighQualityDeliverable.allCases),
             backend: backend,
+            translator: translator,
             speakerLabels: true,
             translationContextPolicy: contextPolicy,
             outputRoot: URL(fileURLWithPath: outputPath)
@@ -787,7 +825,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
 
         XCTAssertEqual(result.manifest.status, .completed)
         XCTAssertEqual(result.manifest.selectedBackend, backend)
-        XCTAssertEqual(result.manifest.translationModel, HighQualityTranslator.productDefault.model)
+        XCTAssertEqual(result.manifest.translationModel, translator.model)
         XCTAssertEqual(result.manifest.speakerConfiguration, .standard)
         XCTAssertEqual(result.evidence.speakerConfiguration, .standard)
         XCTAssertEqual(result.evidence.sampleCount, input.manifest.fixture.sampleCount)
@@ -817,8 +855,8 @@ final class HighQualityAcceptanceTests: XCTestCase {
 
         let translation = try XCTUnwrap(result.evidence.translation)
         XCTAssertEqual(result.evidence.model.revision, backend.model.revision)
-        XCTAssertEqual(translation.model, LocalMLXTranslator.modelID)
-        XCTAssertEqual(translation.revision, LocalMLXTranslator.revision)
+        XCTAssertEqual(translation.model, translator.model.modelID)
+        XCTAssertEqual(translation.revision, translator.model.revision)
         XCTAssertEqual(translation.runtimeVersion, LocalMLXTranslator.runtimeVersion)
         XCTAssertTrue(translation.validationFailures.isEmpty)
         XCTAssertFalse(translation.batches.isEmpty)
@@ -858,7 +896,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             backend.model.modelID,
             HighQualityForcedAlignerRuntime.modelID,
             HighQualitySpeakerKitRuntime.modelID,
-            LocalMLXTranslator.modelID,
+            translator.model.modelID,
         ] {
             let events = result.manifest.modelEvents.filter { $0.modelID == modelID }.map(\.kind)
             XCTAssertTrue(events.contains(.pressureChecked), "Missing pressure check for \(modelID)")

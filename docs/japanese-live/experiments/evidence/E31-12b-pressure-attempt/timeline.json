@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "run": "12B/video1",
+  "timestampSource": "original worker exchange file mtimes mapped to the nearest retained native safety sample",
+  "measurementPolicy": {
+    "residentBytes": "sum of the guarded xctest process tree RSS",
+    "physicalFootprintBytes": "physical footprint of the largest-RSS process in that tree, not a per-PID sum",
+    "externalProcesses": "not sampled"
+  },
+  "upstreamShutdownMarkersPresent": true,
+  "upstreamWorkerExitAndCacheReleaseEventsPresent": false,
+  "events": [
+    {"kind": "asr-complete", "elapsedSeconds": 93},
+    {"kind": "alignment-complete", "elapsedSeconds": 130},
+    {"kind": "speakerkit-complete", "elapsedSeconds": 150},
+    {"kind": "translategemma-ready", "elapsedSeconds": 155},
+    {"kind": "translation-batch", "index": 1, "status": "completed", "elapsedSeconds": 159},
+    {"kind": "translation-batch", "index": 2, "status": "completed", "elapsedSeconds": 160},
+    {"kind": "translation-batch", "index": 3, "status": "completed", "elapsedSeconds": 162},
+    {"kind": "translation-batch", "index": 4, "status": "completed", "elapsedSeconds": 165},
+    {"kind": "translation-batch", "index": 5, "status": "completed", "elapsedSeconds": 169},
+    {"kind": "translation-batch", "index": 6, "status": "completed", "elapsedSeconds": 172},
+    {"kind": "translation-batch", "index": 7, "status": "completed", "elapsedSeconds": 178},
+    {"kind": "translation-batch", "index": 8, "status": "cancelled-native-warning", "elapsedSeconds": 179}
+  ]
+}

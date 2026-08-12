@@ -61,6 +61,7 @@ enum HeavyweightModelGateError: LocalizedError, Equatable, Sendable {
         reserveBytes: UInt64
     )
     case criticalMemoryPressure(modelID: String)
+    case memoryPressureDidNotRecover(modelID: String)
     case memoryNotReleased(modelID: String, currentBytes: UInt64, maximumBytes: UInt64)
 
     var errorDescription: String? {
@@ -79,6 +80,8 @@ enum HeavyweightModelGateError: LocalizedError, Equatable, Sendable {
             "Stopped \(modelID): process footprint reached \(current) bytes (maximum \(maximum)) while \(available) system bytes remained (reserve \(reserve))."
         case .criticalMemoryPressure(let modelID):
             "Stopped \(modelID) because macOS memory pressure became critical. Close other applications and retry; the failure is recoverable."
+        case .memoryPressureDidNotRecover(let modelID):
+            "Stopped \(modelID) because macOS memory pressure did not recover after clearing caches. Close other applications and retry; the failure is recoverable."
         case .memoryNotReleased(let modelID, let current, let maximum):
             "Stopped after unloading \(modelID): memory remained at \(current) bytes, above the safe handoff limit of \(maximum) bytes. The model gate remains closed; quit and reopen WhisperASR before starting Live or another offline model."
         }
@@ -95,6 +98,7 @@ actor HeavyweightModelGate {
         var phase: Phase
         var peakMemoryBytes: UInt64
         var minimumAvailableMemoryBytes: UInt64
+        var warningCleanupMemoryBytes: UInt64?
     }
 
     private let totalMemoryBytes: UInt64
@@ -106,6 +110,7 @@ actor HeavyweightModelGate {
     private let currentMemoryBytes: @Sendable () async -> UInt64
     private let currentAvailableMemoryBytes: @Sendable () async -> UInt64
     private let memoryPressure: MacMemoryPressureMonitor
+    private let cleanupMemory: @Sendable () -> Void
     private var activeWorkflow: HeavyweightWorkflowLease?
     private var activeModel: ActiveModel?
 
@@ -122,7 +127,8 @@ actor HeavyweightModelGate {
         currentAvailableMemoryBytes: @escaping @Sendable () async -> UInt64 = {
             HeavyweightModelGate.measuredSystemAvailableMemoryBytes()
         },
-        memoryPressure: MacMemoryPressureMonitor = .shared
+        memoryPressure: MacMemoryPressureMonitor = .shared,
+        cleanupMemory: @escaping @Sendable () -> Void = { Memory.clearCache() }
     ) {
         self.totalMemoryBytes = totalMemoryBytes
         self.reserveBytes = reserveBytes
@@ -133,6 +139,7 @@ actor HeavyweightModelGate {
         self.currentMemoryBytes = currentMemoryBytes
         self.currentAvailableMemoryBytes = currentAvailableMemoryBytes
         self.memoryPressure = memoryPressure
+        self.cleanupMemory = cleanupMemory
     }
 
     func beginWorkflow(_ workflow: HeavyweightModelWorkflow) throws -> HeavyweightWorkflowLease {
@@ -214,7 +221,8 @@ actor HeavyweightModelGate {
             lease: lease,
             phase: .loading,
             peakMemoryBytes: baselineMemoryBytes,
-            minimumAvailableMemoryBytes: availableMemoryBytes
+            minimumAvailableMemoryBytes: availableMemoryBytes,
+            warningCleanupMemoryBytes: nil
         )
         return lease
     }
@@ -276,19 +284,39 @@ actor HeavyweightModelGate {
             model.minimumAvailableMemoryBytes,
             availableBytes
         )
-        activeModel = model
         let maximumBytes = totalMemoryBytes - lease.reserveBytes
         if lease.reserveBytes == 0 {
             switch memoryPressure.level {
             case .normal:
+                if let baseline = model.warningCleanupMemoryBytes {
+                    let growth = currentBytes.subtractingReportingOverflow(baseline)
+                    guard growth.overflow || growth.partialValue <= totalMemoryBytes / 100 else {
+                        activeModel = model
+                        throw HeavyweightModelGateError.memoryPressureDidNotRecover(
+                            modelID: lease.modelID
+                        )
+                    }
+                    model.warningCleanupMemoryBytes = nil
+                }
+                activeModel = model
                 return
             case .warning:
-                Memory.clearCache()
+                guard model.warningCleanupMemoryBytes == nil else {
+                    activeModel = model
+                    throw HeavyweightModelGateError.memoryPressureDidNotRecover(
+                        modelID: lease.modelID
+                    )
+                }
+                model.warningCleanupMemoryBytes = currentBytes
+                activeModel = model
+                cleanupMemory()
                 return
             case .critical:
+                activeModel = model
                 throw HeavyweightModelGateError.criticalMemoryPressure(modelID: lease.modelID)
             }
         }
+        activeModel = model
         guard currentBytes <= maximumBytes, availableBytes >= lease.reserveBytes else {
             throw HeavyweightModelGateError.runtimeReserveViolated(
                 modelID: lease.modelID,

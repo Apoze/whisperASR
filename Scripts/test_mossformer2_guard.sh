@@ -6,6 +6,27 @@ TEMP="$(mktemp -d)"
 trap 'rm -rf "$TEMP"' EXIT
 source "$ROOT/Scripts/run_mossformer2_oracle_experiment.sh"
 
+WARNING_CLEANUP_MEMORY=""
+WARNING_CLEANUP_COUNT=0
+pressure_guard_decision warning 1000 100
+[[ "$PRESSURE_STOP_REASON" == native-pressure-warning ]]
+WARNING_CLEANUP_RETRY_ENABLED=true
+pressure_guard_decision warning 1000 100
+[[ -z "$PRESSURE_STOP_REASON" && "$WARNING_CLEANUP_MEMORY" == 1000 \
+  && "$WARNING_CLEANUP_COUNT" == 1 ]]
+pressure_guard_decision normal 900 100
+[[ -z "$PRESSURE_STOP_REASON" && -z "$WARNING_CLEANUP_MEMORY" ]]
+pressure_guard_decision warning 1000 100
+pressure_guard_decision warning 900 100
+[[ "$PRESSURE_STOP_REASON" == native-pressure-warning-persisted ]]
+WARNING_CLEANUP_MEMORY=""
+pressure_guard_decision warning 1000 100
+pressure_guard_decision normal 1200 100
+[[ "$PRESSURE_STOP_REASON" == post-warning-memory-growth ]]
+WARNING_CLEANUP_MEMORY=""
+pressure_guard_decision critical 1000 100
+[[ "$PRESSURE_STOP_REASON" == native-pressure-critical ]]
+
 RECOVERY_SAMPLE_DELAY_SECONDS=0
 SHUTDOWN_GRACE_SECONDS=1
 run_guarded "$TEMP/completed.json" "$TEMP/completed.log" 5 "" /bin/sleep 1

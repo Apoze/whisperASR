@@ -1,0 +1,34 @@
+{
+  "ticket": 106,
+  "status": "READY_FOR_HEAVY_BENCHMARK",
+  "commit": "ef32eb48d74af78401fd62f62fd71f0d076354df",
+  "command": "BENCHMARK_SLOT_GRANTED=106 bash Scripts/run_integrated_offline_validation.sh 4B_ONLY",
+  "estimatedDuration": "30-50 minutes",
+  "estimatedPeakMemory": "10-13 GiB",
+  "executionOrder": [
+    "4B/video1",
+    "4B/video2",
+    "COMET-if-local"
+  ],
+  "memoryPolicy": "native warning/critical cancellation + process-tree footprint, swap and post-load runaway guards; offline reserve=0",
+  "heavyModelsLoaded": false,
+  "modelProvenanceSHA256": "2ffa541459e1194029f0ae135f978d7c6559ed325bd028b7bc418ef4d397df59",
+  "inputPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "3b9771da40e93bdd72bafb2f2c197f00bb20faf92be08dbbaee13b7cc3ad744a",
+    "Sources/LocalMLXTranslator.swift": "88057870984c07b81b5374d6b3a0cf1654ed3c4c52b43e9da9578742bf771a51",
+    "Tests/HighQualityAcceptanceTests.swift": "bd05ef7937d9d86f78478496aa25627ac3b025598901813840f0fece668633ca",
+    "Scripts/run_integrated_offline_validation.sh": "4578cb20c1bc6f7732dbbc0e9149e6e154b69dc5c743b64681b247b68c9cf5d4",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "d2745ee8a5fc2be20879b094bccf8b0690bd3ca88b0194444f2337197594b23e",
+    "Scripts/test_mossformer2_guard.sh": "acd328de6ca3e2e2b413e5e95331535c1bf35e29292487d3eadb928aade687b4",
+    "Scripts/report_integrated_offline_validation.py": "91e79408738ce3465412ecf8731e2fa39c708995b0a922d2bdc753af5e73a6c6",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  }
+}

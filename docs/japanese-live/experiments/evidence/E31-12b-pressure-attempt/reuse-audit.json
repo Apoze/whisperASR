@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "purpose": "Historical 12B quality comparison only; none of these artifacts is presented as the interrupted #106 integrated run.",
+  "E21": {
+    "report": "docs/japanese-live/experiments/E21-translategemma-4b-vs-12b.md",
+    "reportSHA256": "d9ebba9d727bd0496c501e7261a9c36e5fcdf0182a1f112023ff258b476030e5",
+    "benchmarkCommit": "e248a12f9004c099ee234044d7b581d54b12f5c3",
+    "modelID": "mlx-community/translategemma-12b-it-4bit",
+    "modelRevision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+    "development": {
+      "fullTranslationJob": "pass",
+      "chrFPlusPlus": 46.50,
+      "COMET": 0.4844,
+      "translationSeconds": 442.9,
+      "workerPeakGiB": 12.17
+    },
+    "holdout": {
+      "fullTranslationJob": "pass",
+      "chrFPlusPlus": 50.12,
+      "COMET": 0.5854,
+      "translationSeconds": 364.9,
+      "workerPeakGiB": 11.13
+    },
+    "reuse": "summary-only",
+    "limits": [
+      "ASR was not rerun; both translators consumed content-identical frozen product inputs.",
+      "The report points to raw .build paths that are no longer retained in this worktree or the frozen repository.",
+      "It can contextualize translation quality and resource use, but cannot replace #106 raw integrated evidence."
+    ]
+  },
+  "E22": {
+    "modelProvenance": "docs/japanese-live/experiments/evidence/E22/model-provenance.json",
+    "modelProvenanceSHA256": "d199240ef0dbfcacc23c198de334f8eba58ae5d4db13f49aacdc0f9899bd5020",
+    "qualityReport": "docs/japanese-live/experiments/evidence/E22/quality-report.json",
+    "qualityReportSHA256": "820bd5f74ac5b369eccc3abcb182ebee8aecffaf84f6d2b401b1188361b98b01",
+    "inputHashesMatch106": true,
+    "modelRevisionMatches106": true,
+    "corpora": [
+      {
+        "corpusID": "qudu2fx3ncc",
+        "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+        "referenceArchiveSHA256": "8f1c4ed3836d5e0f627448f9ecc44ab064d8750cb4464c8849eafabbba401474",
+        "manifestSHA256": "a18fb08a8a2ef3ad60152d4d8fb12de6a7b6c384bb4905f1a64bc7bd6c144020",
+        "rawASRGzipSHA256": "1f5edc2fcb929c9abc2cb85256f326bbf2891a200ef66d1c1cb9a66a9c711ce8",
+        "englishTranscriptSHA256": "f7d85a26bb7fd427860fe7f69e50e64b82082fa27cb6ad45614ca3812a9c88aa",
+        "criticalProductImplementationMatches106": false,
+        "mismatch": "Sources/HighQualityJob.swift changed after this DEV raw artifact."
+      },
+      {
+        "corpusID": "md62mmdz0m",
+        "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+        "referenceArchiveSHA256": "a95e73422dd0b8628f6d8a5cb064e41deb4a64b5a0024e1e1a5a62450e5aff86",
+        "manifestSHA256": "1b9613c8601a6e0f0b8f56e3db06cddbf55aa27a90d89bbbc401536538f0da27",
+        "rawASRGzipSHA256": "7342245b925f074f8483883ed5571488af49a02bb1e479c8f64b7dba3d84f457",
+        "englishTranscriptSHA256": "488225327c2236d381d073b414870fabd286ba824753ed4e11c7b06a2add486e",
+        "criticalProductImplementationMatches106": true
+      }
+    ],
+    "reuse": "audit-grade historical baseline with per-corpus implementation caveat",
+    "limits": [
+      "E22 is a prior complete real HighQualityJob campaign, not the interrupted #106 run.",
+      "Later #96, #103 and #105 retained Qwen Standard, no overlap candidate and Standard cues; they do not convert E22 into fresh #106 evidence.",
+      "Only the holdout critical product implementation hashes match #106 exactly; DEV remains comparison-only."
+    ]
+  }
+}

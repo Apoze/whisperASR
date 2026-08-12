@@ -23,6 +23,8 @@ CATASTROPHIC_MEMORY_PERCENT=90
 DANGEROUS_SWAP_GROWTH_PERCENT=25
 RUNAWAY_GROWTH_PERCENT=25
 RUNAWAY_WINDOW_SAMPLES=30
+WARNING_RECOVERY_GROWTH_PERCENT=1
+WARNING_CLEANUP_RETRY_ENABLED=false
 SHUTDOWN_GRACE_SECONDS=15
 RECOVERY_SAMPLE_DELAY_SECONDS=5
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
@@ -147,6 +149,35 @@ handle_signal() {
   trap 'handle_signal TERM' TERM
 }
 
+pressure_guard_decision() {
+  local level="$1" current_memory="$2" growth_limit="$3"
+  PRESSURE_STOP_REASON=""
+  case "$level" in
+    critical)
+      PRESSURE_STOP_REASON="native-pressure-critical"
+      ;;
+    warning)
+      if [[ "$WARNING_CLEANUP_RETRY_ENABLED" != true ]]; then
+        PRESSURE_STOP_REASON="native-pressure-warning"
+      elif [[ -n "$WARNING_CLEANUP_MEMORY" ]]; then
+        PRESSURE_STOP_REASON="native-pressure-warning-persisted"
+      else
+        WARNING_CLEANUP_MEMORY="$current_memory"
+        WARNING_CLEANUP_COUNT=$((WARNING_CLEANUP_COUNT + 1))
+      fi
+      ;;
+    normal)
+      if [[ -n "$WARNING_CLEANUP_MEMORY" ]]; then
+        if ((current_memory - WARNING_CLEANUP_MEMORY > growth_limit)); then
+          PRESSURE_STOP_REASON="post-warning-memory-growth"
+        else
+          WARNING_CLEANUP_MEMORY=""
+        fi
+      fi
+      ;;
+  esac
+}
+
 run_guarded() {
   local safety="$1" log="$2" timeout_seconds="$3" ready_file="$4"
   shift 4
@@ -158,6 +189,7 @@ run_guarded() {
   local before_free before_swap before_pageouts after_free after_swap after_pageouts
   local swap_delta pageout_delta samples_sha pressure_levels
   local runaway_history=()
+  local WARNING_CLEANUP_MEMORY="" WARNING_CLEANUP_COUNT=0 PRESSURE_STOP_REASON=""
   physical_memory="$(/usr/sbin/sysctl -n hw.memsize)"
   catastrophic_limit="$((physical_memory * CATASTROPHIC_MEMORY_PERCENT / 100))"
   dangerous_swap_limit="$((physical_memory * DANGEROUS_SWAP_GROWTH_PERCENT / 100))"
@@ -209,6 +241,8 @@ run_guarded() {
       ((${#runaway_history[@]} <= RUNAWAY_WINDOW_SAMPLES)) \
         || runaway_history=("${runaway_history[@]:1}")
     fi
+    pressure_guard_decision "$SYSTEM_PRESSURE_LEVEL" "$current_memory" \
+      "$((physical_memory * WARNING_RECOVERY_GROWTH_PERCENT / 100))"
     jq -nc --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
       --arg pressure "$SYSTEM_PRESSURE_LEVEL" --argjson pressureRaw "$SYSTEM_PRESSURE_RAW" \
       --argjson elapsed "$elapsed" --argjson pid "$process" \
@@ -217,13 +251,15 @@ run_guarded() {
       --argjson swap "$SYSTEM_SWAP_BYTES" --argjson swapDelta "$swap_delta" \
       --argjson pageouts "$SYSTEM_PAGEOUTS" --argjson pageoutDelta "$pageout_delta" \
       --argjson modelLoaded "$model_loaded" \
+      --argjson warningCleanupPending "$([[ -n "$WARNING_CLEANUP_MEMORY" ]] && echo true || echo false)" \
       '{at:$at,phase:"running",elapsedSeconds:$elapsed,pid:$pid,residentBytes:$rss,
         physicalFootprintBytes:$footprint,reportedPeakPhysicalFootprintBytes:$footprintPeak,
         nativePressureLevel:$pressure,nativePressureRaw:$pressureRaw,
         freeMemoryPercent:$free,swapUsedBytes:$swap,swapUsedDeltaBytes:$swapDelta,
-        pageouts:$pageouts,pageoutDelta:$pageoutDelta,modelLoaded:$modelLoaded}' >>"$samples"
-    if [[ "$SYSTEM_PRESSURE_LEVEL" != normal ]]; then
-      reason="native-pressure-$SYSTEM_PRESSURE_LEVEL"
+        pageouts:$pageouts,pageoutDelta:$pageoutDelta,modelLoaded:$modelLoaded,
+        warningCleanupPending:$warningCleanupPending}' >>"$samples"
+    if [[ -n "$PRESSURE_STOP_REASON" ]]; then
+      reason="$PRESSURE_STOP_REASON"
     elif ((SYSTEM_FREE <= MIN_FREE_MEMORY_PERCENT)); then
       reason="free-memory-at-or-below-10-percent"
     elif ((current_memory >= catastrophic_limit)); then
@@ -290,6 +326,8 @@ run_guarded() {
     --argjson freeAfter "$after_free" --argjson modelLoaded "$model_loaded" \
     --argjson runawayGrowthPercent "$RUNAWAY_GROWTH_PERCENT" \
     --argjson runawayWindowSamples "$RUNAWAY_WINDOW_SAMPLES" \
+    --argjson warningRecoveryGrowthBytes "$((physical_memory * WARNING_RECOVERY_GROWTH_PERCENT / 100))" \
+    --argjson warningCleanupRequests "$WARNING_CLEANUP_COUNT" \
     --argjson forcedTermination "$stop_forced" --argjson exitStatus "$status" \
     '{schemaVersion:2,startedAt:$startedAt,exitedAt:$exitedAt,elapsedSeconds:$elapsedSeconds,
       timeoutSeconds:$timeoutSeconds,stopReason:$reason,exitStatus:$exitStatus,
@@ -303,6 +341,8 @@ run_guarded() {
         limitBytes:$dangerousSwapGrowthBytes},
       postLoadRunawayGuard:{modelLoadedObserved:$modelLoaded,
         growthPercent:$runawayGrowthPercent,windowSamples:$runawayWindowSamples},
+      warningRecoveryGuard:{cleanupRequests:$warningCleanupRequests,
+        growthLimitBytes:$warningRecoveryGrowthBytes},
       systemBefore:{freeMemoryPercent:$freeBefore,swapUsedBytes:$swapUsedBeforeBytes,
         pageouts:$pageoutsBefore},
       systemAfter:{freeMemoryPercent:$freeAfter,swapUsedBytes:$swapUsedAfterBytes,

@@ -3,6 +3,35 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityLocalTranslationTests: XCTestCase {
+    func testEveryTranslationRequestClearsCacheBeforeTheNextRequest() async throws {
+        let cleanups = LockedTranslationCounter()
+        let translator = LocalMLXTranslator(
+            candidate: .translateGemma4B,
+            clearCache: { cleanups.increment() }
+        )
+        let request = HighQualityTranslationBatch(
+            source: .init(
+                path: "/tmp/frozen.json",
+                fileName: "frozen.json",
+                byteCount: nil,
+                modifiedAt: nil,
+                sourceURL: nil,
+                youtube: nil
+            ),
+            turns: [],
+            glossary: []
+        )
+
+        for _ in 0..<3 {
+            do {
+                _ = try await translator.translate(request)
+                XCTFail("An unprepared translator must fail without loading a model.")
+            } catch is HighQualityTranslationServiceError {}
+        }
+
+        XCTAssertEqual(cleanups.value, 3)
+    }
+
     func testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract() throws {
         XCTAssertEqual(LocalMLXTranslator.Candidate.productDefault, .translateGemma12B)
         XCTAssertEqual(HighQualityTranslator.productDefault, .translateGemma12B)
@@ -1062,4 +1091,17 @@ private actor TranslationMemoryReading {
     private(set) var value: UInt64
     init(_ value: UInt64) { self.value = value }
     func set(_ value: UInt64) { self.value = value }
+}
+
+private final class LockedTranslationCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    var value: Int {
+        lock.withLock { count }
+    }
+
+    func increment() {
+        lock.withLock { count += 1 }
+    }
 }

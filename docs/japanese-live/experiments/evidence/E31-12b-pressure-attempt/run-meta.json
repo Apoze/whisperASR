@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "corpusID": "qudu2fx3ncc",
+  "translator": "translategemma-12b-it-4bit",
+  "translationModelID": "mlx-community/translategemma-12b-it-4bit",
+  "translationRevision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "commit": "ef32eb48d74af78401fd62f62fd71f0d076354df",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/1/Video1_reference_transcript_and_translation.zip",
+  "referenceArchiveSHA256": "8f1c4ed3836d5e0f627448f9ecc44ab064d8750cb4464c8849eafabbba401474",
+  "corpusManifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "corpusPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "localReferences": [
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/reference.csv",
+      "sha256": "df0bce85845cca243e0ed4ae3c5b885e519cc4f0aada9c6ddb1b169cb22f93ba"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/character-alignment.jsonl",
+      "sha256": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/speaker-map.json",
+      "sha256": "4e1326ac13fab5c76b07451600e6553c65e824b278a1b4c4ce7192e77a73497b"
+    }
+  ],
+  "decisionsSHA256": "711f2f72266abcca7916e72c81af6cef7b4360c03f62d34381538184809d46ab",
+  "modelProvenanceSHA256": "4e322ed71e2a76966999e5e37687ec9d7f4236d7d4e45e94f4fa75b47b52a03d",
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "3b9771da40e93bdd72bafb2f2c197f00bb20faf92be08dbbaee13b7cc3ad744a",
+    "Sources/LocalMLXTranslator.swift": "88057870984c07b81b5374d6b3a0cf1654ed3c4c52b43e9da9578742bf771a51",
+    "Tests/HighQualityAcceptanceTests.swift": "bd05ef7937d9d86f78478496aa25627ac3b025598901813840f0fece668633ca",
+    "Scripts/run_integrated_offline_validation.sh": "e7ec21bce58bae852c905d82d472488b6d47385da2222321a1404b4fc6a92ac1",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "d2745ee8a5fc2be20879b094bccf8b0690bd3ca88b0194444f2337197594b23e",
+    "Scripts/test_mossformer2_guard.sh": "acd328de6ca3e2e2b413e5e95331535c1bf35e29292487d3eadb928aade687b4",
+    "Scripts/report_integrated_offline_validation.py": "27c82405cb35f3a60326ce8af3dd86242abc006e6672eca853cba8cb70f5d12e",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "configuration": {
+    "ASR": "Qwen Standard",
+    "alignment": "Qwen3 Forced Aligner",
+    "diarization": "SpeakerKit Standard",
+    "cues": "Standard",
+    "overlapRecovery": null,
+    "translation": "translategemma-12b-it-4bit"
+  }
+}

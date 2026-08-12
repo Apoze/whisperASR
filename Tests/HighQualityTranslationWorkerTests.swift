@@ -218,6 +218,7 @@ final class HighQualityTranslationWorkerTests: XCTestCase {
     func testCriticalPressureReportedDuringPreparationIsRecoverable() async throws {
         let fixture = try WorkerFixture(script: """
         #!/bin/sh
+        trap 'exit 75' TERM
         directory="$2"
         printf '{"criticalMemoryPressure":true,"error":{"model":"fixture","attempts":[],"response":null,"batches":[],"peakMemoryBytes":0,"message":"cancelled"}}' > "$directory/ready.tmp"
         mv "$directory/ready.tmp" "$directory/ready.json"

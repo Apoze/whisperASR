@@ -211,6 +211,119 @@ final class HeavyweightModelGateTests: XCTestCase {
         try await gate.endWorkflow(workflow)
     }
 
+    func testWarningCleansOnceAndContinuesAfterRecovery() async throws {
+        let memory = MemoryReading(1_000)
+        let pressure = MacMemoryPressureMonitor(native: false)
+        let cleanups = SynchronousCounter()
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24_000,
+            reserveBytes: 8_000,
+            monitorPollInterval: .milliseconds(20),
+            currentMemoryBytes: { await memory.value },
+            memoryPressure: pressure,
+            cleanupMemory: { cleanups.increment() }
+        )
+        let workflow = try await gate.beginWorkflow(.offline(UUID()))
+        let lease = try await gate.acquireModel(
+            workflow: workflow,
+            modelID: "translator",
+            declaredPeakBytes: 8_000
+        )
+        let operation = Task {
+            try await gate.withMemoryGuard(lease) {
+                try await Task.sleep(for: .milliseconds(100))
+                return "completed"
+            }
+        }
+
+        pressure.record(.warning)
+        try await waitUntil { cleanups.value == 1 }
+        await memory.set(900)
+        pressure.record(.normal)
+
+        let result = try await operation.value
+        XCTAssertEqual(result, "completed")
+        XCTAssertEqual(cleanups.value, 1)
+        _ = try await gate.releaseModel(lease, unload: {})
+        try await gate.endWorkflow(workflow)
+    }
+
+    func testPersistentWarningStopsAfterOneCleanupSample() async throws {
+        let pressure = MacMemoryPressureMonitor(native: false)
+        let cleanups = SynchronousCounter()
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24_000,
+            reserveBytes: 8_000,
+            monitorPollInterval: .milliseconds(20),
+            currentMemoryBytes: { 1_000 },
+            memoryPressure: pressure,
+            cleanupMemory: { cleanups.increment() }
+        )
+        let workflow = try await gate.beginWorkflow(.offline(UUID()))
+        let lease = try await gate.acquireModel(
+            workflow: workflow,
+            modelID: "translator",
+            declaredPeakBytes: 8_000
+        )
+        let operation = Task {
+            try await gate.withMemoryGuard(lease) {
+                try await Task.sleep(for: .milliseconds(200))
+            }
+        }
+        pressure.record(.warning)
+
+        do {
+            try await operation.value
+            XCTFail("A warning that survives cleanup must stop the model.")
+        } catch let error as HeavyweightModelGateError {
+            XCTAssertEqual(error, .memoryPressureDidNotRecover(modelID: "translator"))
+        }
+        XCTAssertEqual(cleanups.value, 1)
+        pressure.record(.normal)
+        _ = try await gate.releaseModel(lease, unload: {})
+        try await gate.endWorkflow(workflow)
+    }
+
+    func testGrowthAfterWarningCleanupStopsTheModel() async throws {
+        let memory = MemoryReading(1_000)
+        let pressure = MacMemoryPressureMonitor(native: false)
+        let cleanups = SynchronousCounter()
+        let gate = HeavyweightModelGate(
+            totalMemoryBytes: 24_000,
+            reserveBytes: 8_000,
+            monitorPollInterval: .milliseconds(20),
+            currentMemoryBytes: { await memory.value },
+            memoryPressure: pressure,
+            cleanupMemory: { cleanups.increment() }
+        )
+        let workflow = try await gate.beginWorkflow(.offline(UUID()))
+        let lease = try await gate.acquireModel(
+            workflow: workflow,
+            modelID: "translator",
+            declaredPeakBytes: 8_000
+        )
+        let operation = Task {
+            try await gate.withMemoryGuard(lease) {
+                try await Task.sleep(for: .milliseconds(200))
+            }
+        }
+        pressure.record(.warning)
+        try await waitUntil { cleanups.value == 1 }
+        await memory.set(1_250)
+        pressure.record(.normal)
+
+        do {
+            try await operation.value
+            XCTFail("Post-cleanup growth must stop the model.")
+        } catch let error as HeavyweightModelGateError {
+            XCTAssertEqual(error, .memoryPressureDidNotRecover(modelID: "translator"))
+        }
+        pressure.record(.normal)
+        await memory.set(1_000)
+        _ = try await gate.releaseModel(lease, unload: {})
+        try await gate.endWorkflow(workflow)
+    }
+
     func testLiveAndOfflineWorkflowsAreMutuallyExclusive() async throws {
         let gate = HeavyweightModelGate(
             totalMemoryBytes: 24_000,
@@ -299,4 +412,27 @@ private actor MemoryReading {
 private actor Counter {
     private(set) var value = 0
     func increment() { value += 1 }
+}
+
+private final class SynchronousCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    var value: Int { lock.withLock { count } }
+
+    func increment() {
+        lock.withLock { count += 1 }
+    }
+}
+
+private func waitUntil(
+    timeout: Duration = .seconds(1),
+    _ predicate: @escaping @Sendable () -> Bool
+) async throws {
+    let clock = ContinuousClock()
+    let deadline = clock.now.advanced(by: timeout)
+    while !predicate(), clock.now < deadline {
+        try await Task.sleep(for: .milliseconds(1))
+    }
+    XCTAssertTrue(predicate())
 }
