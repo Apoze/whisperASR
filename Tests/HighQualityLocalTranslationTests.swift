@@ -3,6 +3,86 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityLocalTranslationTests: XCTestCase {
+    func testCueBoundaryClearsCacheAfterSuccessRetryFailureCancellationAndUnload() async throws {
+        let events = LockedTranslationEvents()
+        let translator = LocalMLXTranslator(
+            candidate: .translateGemma12B,
+            clearCache: { events.append("cleanup") },
+            cueGenerator: { turn, batch in
+                events.append("generate-\(turn.id)-\(batch.retryReasonCodes == nil ? "first" : "retry")")
+                if turn.id == "error" { throw TranslationTestError.failedLoad }
+                if turn.id == "cancel" { try await Task.sleep(for: .seconds(5)) }
+                let output = turn.id == "two" ? "Second" : "First"
+                return ("native-prompt", output, 8, 2, "stop")
+            }
+        )
+        let source = HighQualitySourceProvenance(
+            path: "/tmp/frozen.json",
+            fileName: "frozen.json",
+            byteCount: nil,
+            modifiedAt: nil,
+            sourceURL: nil,
+            youtube: nil
+        )
+        let turn: (String) -> HighQualityTranslationTurn = {
+            .init(
+                id: $0,
+                japanese: "日本語",
+                precedingJapanese: [],
+                followingJapanese: [],
+                speakerLabel: nil
+            )
+        }
+
+        let success = try await translator.translate(.init(
+            source: source,
+            turns: [turn("one"), turn("two")],
+            glossary: []
+        ))
+        XCTAssertEqual(success.batches.map(\.sanitizedOutput), ["First", "Second"])
+        _ = try await translator.translate(.init(
+            source: source,
+            turns: [turn("one")],
+            glossary: [],
+            retryReasonCodes: ["one": [.emptyOutput]]
+        ))
+
+        do {
+            _ = try await translator.translate(.init(
+                source: source,
+                turns: [turn("error")],
+                glossary: []
+            ))
+            XCTFail("The cue failure must cross the cleanup boundary.")
+        } catch is HighQualityTranslationServiceError {}
+
+        let cancelled = Task {
+            try await translator.translate(.init(
+                source: source,
+                turns: [turn("cancel")],
+                glossary: []
+            ))
+        }
+        while !events.values.contains("generate-cancel-first") {
+            try await Task.sleep(for: .milliseconds(1))
+        }
+        cancelled.cancel()
+        do {
+            _ = try await cancelled.value
+            XCTFail("Cancellation must cross the cleanup boundary.")
+        } catch is HighQualityTranslationServiceError {}
+
+        await translator.unload()
+        XCTAssertEqual(events.values, [
+            "generate-one-first", "cleanup",
+            "generate-two-first", "cleanup", "cleanup",
+            "generate-one-retry", "cleanup", "cleanup",
+            "generate-error-first", "cleanup", "cleanup",
+            "generate-cancel-first", "cleanup", "cleanup",
+            "cleanup",
+        ])
+    }
+
     func testEveryTranslationRequestClearsCacheBeforeTheNextRequest() async throws {
         let cleanups = LockedTranslationCounter()
         let translator = LocalMLXTranslator(
@@ -970,7 +1050,40 @@ final class HighQualityLocalTranslationTests: XCTestCase {
             HighQualityRawEvidence.self,
             from: Data(contentsOf: URL(fileURLWithPath: evidencePath))
         )
-        let request = try XCTUnwrap(baseline.translation?.request)
+        let frozenRequest: HighQualityTranslationBatch
+        if let requestPath = environment["WHISPERASR_DIRECT_TRANSLATION_REQUEST"] {
+            frozenRequest = try JSONDecoder().decode(
+                HighQualityTranslationBatch.self,
+                from: Data(contentsOf: URL(fileURLWithPath: requestPath))
+            )
+        } else {
+            frozenRequest = try XCTUnwrap(baseline.translation?.request)
+        }
+        let cueLimit = environment["WHISPERASR_DIRECT_TRANSLATION_CUE_LIMIT"]
+            .flatMap(Int.init) ?? frozenRequest.turns.count
+        guard (1...frozenRequest.turns.count).contains(cueLimit) else {
+            XCTFail("The direct translation cue limit must fit the frozen request.")
+            return
+        }
+        let turns = Array(frozenRequest.turns.prefix(cueLimit))
+        let cueIDs = Set(turns.map(\.id))
+        let request = HighQualityTranslationBatch(
+            source: frozenRequest.source,
+            turns: turns,
+            glossary: frozenRequest.glossary,
+            glossaryByCueID: frozenRequest.glossaryByCueID.filter {
+                cueIDs.contains($0.key)
+            },
+            conversationContextByCueID: frozenRequest.conversationContextByCueID.filter {
+                cueIDs.contains($0.key)
+            },
+            retryReasonCodes: frozenRequest.retryReasonCodes?.filter {
+                cueIDs.contains($0.key)
+            }
+        )
+        XCTAssertEqual(request.turns, Array(frozenRequest.turns.prefix(cueLimit)))
+        XCTAssertEqual(request.turns.count, cueLimit)
+        if environment["WHISPERASR_VALIDATE_DIRECT_TRANSLATION_ONLY"] == "1" { return }
         let translator = HighQualityTranslationWorkerClient(
             executableURL: highQualityTranslationWorkerExecutableURL()
         )
@@ -1103,5 +1216,18 @@ private final class LockedTranslationCounter: @unchecked Sendable {
 
     func increment() {
         lock.withLock { count += 1 }
+    }
+}
+
+private final class LockedTranslationEvents: @unchecked Sendable {
+    private let lock = NSLock()
+    private var events: [String] = []
+
+    var values: [String] {
+        lock.withLock { events }
+    }
+
+    func append(_ event: String) {
+        lock.withLock { events.append(event) }
     }
 }

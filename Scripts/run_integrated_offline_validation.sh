@@ -10,6 +10,8 @@ DEFAULT_ARTIFACTS="$VALIDATION_ROOT/.build/benchmarks/high-quality/integrated-va
   || DEFAULT_ARTIFACTS="$VALIDATION_ROOT/.build/benchmarks/high-quality/integrated-validation-106-translation-only-4b"
 [[ "$VALIDATION_MODE" != TRANSLATION_ONLY_12B ]] \
   || DEFAULT_ARTIFACTS="$VALIDATION_ROOT/.build/benchmarks/high-quality/integrated-validation-106-translation-only-12b"
+[[ "$VALIDATION_MODE" != TRANSLATION_SMOKE_12B_100 ]] \
+  || DEFAULT_ARTIFACTS="$VALIDATION_ROOT/.build/benchmarks/high-quality/integrated-validation-106-translation-smoke-12b-100"
 VALIDATION_ARTIFACTS="${WHISPERASR_INTEGRATED_ROOT:-$DEFAULT_ARTIFACTS}"
 
 # Reuse the native macOS pressure/swap/runaway guard proven by #102.
@@ -18,7 +20,8 @@ ROOT="$VALIDATION_ROOT"
 MODE="$VALIDATION_MODE"
 ARTIFACTS="$VALIDATION_ARTIFACTS"
 REPLAY_TRANSLATOR=translategemma-4b-it-4bit
-[[ "$MODE" != TRANSLATION_ONLY_12B ]] || REPLAY_TRANSLATOR=translategemma-12b-it-4bit
+[[ "$MODE" != TRANSLATION_ONLY_12B && "$MODE" != TRANSLATION_SMOKE_12B_100 ]] \
+  || REPLAY_TRANSLATOR=translategemma-12b-it-4bit
 VIDEO_ROOT="${JAPANESE_VIDEO_ROOT:-/Users/maz/Documents/videos/jap}"
 FROZEN_REPO="${WHISPERASR_FROZEN_REPO:-/Users/maz/Documents/projets/whisperASR}"
 COMET_PYTHON="${COMET_PYTHON:-$ROOT/.build/comet-venv/bin/python}"
@@ -42,7 +45,12 @@ if [[ "$VALIDATION_MODE" == TRANSLATION_ONLY_12B ]]; then
   REPORT_MD="$ROOT/docs/japanese-live/experiments/E31-translation-only-12b-replay.md"
   EVIDENCE="$ROOT/docs/japanese-live/experiments/evidence/E31-translation-only-12b"
 fi
+if [[ "$VALIDATION_MODE" == TRANSLATION_SMOKE_12B_100 ]]; then
+  EVIDENCE="$ROOT/docs/japanese-live/experiments/evidence/E31-translation-smoke-12b-100"
+fi
 BASELINE="$ROOT/docs/japanese-live/experiments/evidence/E22"
+SMOKE_12B_REQUEST="$ROOT/docs/japanese-live/experiments/evidence/E31-translation-only-12b-pressure-attempt/worker/request-1.json"
+SMOKE_12B_REQUEST_SHA256=526dc64c32131813d7b252aab2e270d3f84aa486850fbd7ab03dab07f853910f
 JOB_TIMEOUT_SECONDS="${WHISPERASR_INTEGRATED_JOB_TIMEOUT_SECONDS:-2400}"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
@@ -182,7 +190,7 @@ EOF
 verify_models() {
   local base="$BASELINE/model-provenance.json" item path expected four_root four_path
   [[ -f "$base" ]] || die "Missing E22 model provenance"
-  if [[ "$MODE" == TRANSLATION_ONLY_12B ]]; then
+  if [[ "$MODE" == TRANSLATION_ONLY_12B || "$MODE" == TRANSLATION_SMOKE_12B_100 ]]; then
     jq '.weights = [.weights[] | select(.modelID == "mlx-community/translategemma-12b-it-4bit")]' \
       "$base" >"$ARTIFACTS/model-provenance.json"
   elif [[ "$MODE" == TRANSLATION_ONLY_4B ]]; then
@@ -198,7 +206,7 @@ verify_models() {
     [[ -f "$path" && "$(sha256 "$path")" == "$expected" ]] \
       || die "Model provenance mismatch: $path"
   done < <(jq -c '.weights[]' "$ARTIFACTS/model-provenance.json")
-  [[ "$MODE" == TRANSLATION_ONLY_12B ]] && return 0
+  [[ "$MODE" == TRANSLATION_ONLY_12B || "$MODE" == TRANSLATION_SMOKE_12B_100 ]] && return 0
   four_root="${HF_HUB_CACHE:-/Users/maz/.cache/huggingface/hub}/models--mlx-community--translategemma-4b-it-4bit/snapshots/5788ec08c047f3f2e17808101b8d9566ac930d58"
   four_path="$four_root/model.safetensors"
   expected=113acb0c29997a3015af84bec2c8f967cb7b15f8959d1c26b9628b921e324c40
@@ -267,7 +275,8 @@ implementation_hashes() {
   for path in Sources/HighQualityJob.swift Sources/HighQualityJobView.swift \
     Sources/HighQualityWorkerProcess.swift Sources/HighQualityTranslationWorker.swift \
     Sources/HeavyweightModelGate.swift Sources/LocalMLXTranslator.swift \
-    Tests/HighQualityAcceptanceTests.swift Scripts/run_integrated_offline_validation.sh \
+    Tests/HighQualityAcceptanceTests.swift Tests/HighQualityLocalTranslationTests.swift \
+    Scripts/run_integrated_offline_validation.sh \
     Scripts/run_mossformer2_oracle_experiment.sh Scripts/test_mossformer2_guard.sh \
     Scripts/report_integrated_offline_validation.py Scripts/report_high_quality_acceptance.py \
     Scripts/report_local_translator_bakeoff.py Scripts/report_japanese_l7d.py \
@@ -453,6 +462,33 @@ verify_safe_4b_translation_replay() {
   done
 }
 
+verify_safe_12b_translation_smoke() {
+  local evidence="$ROOT/docs/japanese-live/experiments/evidence/E31-translation-smoke-12b-100"
+  local directory="$evidence/translategemma-12b-it-4bit/qudu2fx3ncc"
+  [[ -f "$evidence/sha256.tsv" && -f "$evidence/smoke-report.json" ]] \
+    || die "Missing completed 100-cue 12B smoke required before full 12B replay"
+  (cd "$evidence" && shasum -a 256 -c sha256.tsv >/dev/null) \
+    || die "12B smoke evidence hash verification failed"
+  jq -e '.runMode == "TRANSLATION_SMOKE_12B_100" and .status == "completed"
+    and .cueCount == 100 and .ticket106Concluded == false
+    and .memory.stopReason == "completed"
+    and .memory.peakSwapDeltaBytes == 0
+    and all(.memory.nativePressureLevels[]; . == "normal")' \
+    "$evidence/smoke-report.json" >/dev/null || die "12B smoke report is not safe"
+  jq -e --arg request "$SMOKE_12B_REQUEST_SHA256" '
+    .runMode == "TRANSLATION_SMOKE_12B_100" and .cueLimit == 100
+      and .frozenTranslationRequestSHA256 == $request' \
+    "$directory/run-meta.json" >/dev/null || die "12B smoke provenance gate failed"
+  jq -e '.stopReason == "completed" and .forcedTermination == false
+    and .postLoadRunawayGuard.modelLoadedObserved == true
+    and .peakSwapDeltaBytes == 0
+    and all(.nativePressureLevels[]; . == "normal")' \
+    "$directory/safety.json" >/dev/null || die "12B smoke safety gate failed"
+  jq -e '.resident == false and .unloadVerified == true
+    and .nativePressureLevel == "normal"' \
+    "$directory/cleanup.json" >/dev/null || die "12B smoke cleanup gate failed"
+}
+
 run_job() {
   local translator="$1" corpus="$2"
   local directory="$ARTIFACTS/$translator/$corpus"
@@ -551,6 +587,105 @@ record_translation_replay_cleanup() {
       resident:false,unloadVerified:true,nativePressureLevel:$pressure,
       nativePressureRaw:$raw,freeMemoryPercent:$free,swapUsedBytes:$swap,pageouts:$pageouts}' \
     >"$ARTIFACTS/$translator/$corpus/cleanup.json"
+}
+
+capture_translation_worker_raw() {
+  local marker="$1" destination="$2" ready worker file
+  ready="$(find "${TMPDIR:-/tmp}" -maxdepth 2 -type f -name ready.json \
+    -path '*/WhisperASR-TranslateGemma-*/*' -newer "$marker" -print 2>/dev/null \
+    | sort | tail -n 1)"
+  [[ -n "$ready" ]] || return 0
+  worker="$(dirname "$ready")"
+  mkdir -p "$destination"
+  while IFS= read -r file; do cp "$file" "$destination/"; done \
+    < <(find "$worker" -maxdepth 1 -type f -print | sort)
+}
+
+run_translation_smoke() {
+  local translator=translategemma-12b-it-4bit corpus=qudu2fx3ncc
+  local directory="$ARTIFACTS/$translator/$corpus" output="$ARTIFACTS/$translator/$corpus/smoke.json"
+  local log="$directory/run.log" ready="$directory/translation-loaded"
+  local marker="$directory/job-started" watcher status=0 pid
+  CURRENT_TRANSLATOR="$translator"; CURRENT_CORPUS="$corpus"; PHASE=translation-smoke
+  mkdir -p "$directory"
+  [[ ! -e "$output" ]] || die "Completed or partial smoke already exists; preserve it and choose a new artifact root"
+  write_metadata "$translator" "$corpus"
+  jq --arg mode "$MODE" --argjson cueLimit 100 \
+    --arg request "$SMOKE_12B_REQUEST" --arg requestHash "$SMOKE_12B_REQUEST_SHA256" \
+    '. + {runMode:$mode,cueLimit:$cueLimit,fullIntegratedRun:false,ticket106Concluded:false,
+      frozenTranslationRequestPath:$request,frozenTranslationRequestSHA256:$requestHash}' \
+    "$directory/run-meta.json" >"$directory/run-meta.updated.json"
+  mv "$directory/run-meta.updated.json" "$directory/run-meta.json"
+  touch "$marker"
+  (
+    trap - ERR
+    while [[ ! -f "$ready" ]]; do
+      translation_worker_ready_since "$marker" && { touch "$ready"; break; }
+      sleep 1
+    done
+  ) & watcher="$!"
+  WARNING_CLEANUP_RETRY_ENABLED=true
+  if run_guarded "$directory/safety.json" "$log" 900 "$ready" env \
+    WHISPERASR_RUN_DIRECT_TRANSLATION_EXPERIMENT=1 \
+    WHISPERASR_DIRECT_TRANSLATION_EVIDENCE="$ARTIFACTS/frozen/$corpus-raw-asr.json" \
+    WHISPERASR_DIRECT_TRANSLATION_REQUEST="$SMOKE_12B_REQUEST" \
+    WHISPERASR_DIRECT_TRANSLATION_OUTPUT="$output" \
+    WHISPERASR_DIRECT_TRANSLATION_CUE_LIMIT=100 \
+    xcrun swift test --skip-build \
+      --filter HighQualityLocalTranslationTests/testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn; then
+    status=0
+  else
+    status="$?"
+  fi
+  WARNING_CLEANUP_RETRY_ENABLED=false
+  kill "$watcher" 2>/dev/null || true
+  wait "$watcher" 2>/dev/null || true
+  capture_translation_worker_raw "$marker" "$directory/worker-raw"
+  find "$ARTIFACTS" -type f ! -name sha256.tsv -print0 | sort -z | \
+    xargs -0 shasum -a 256 >"$ARTIFACTS/sha256.tsv"
+  cat "$log"
+  [[ "$(jq -r .stopReason "$directory/safety.json")" == completed ]] \
+    || die "Translation smoke safety stop: $(jq -r .stopReason "$directory/safety.json")"
+  if ((status != 0)); then
+    diagnose_failure "$translator" "$corpus" "$status"
+    die "Translation smoke harness/model-output failure; no model quality verdict assigned"
+  fi
+  jq -e '
+    (.request.turns | length) == 100 and (.batches | length) == 100
+      and all(.batches[]; (.cueIDs | length) == 1 and .sanitizedOutput != "")
+      and .validationFailures == [] and .worker.exitStatus == 0
+      and .worker.forcedTermination == false
+  ' "$output" >/dev/null || die "Translation smoke output is incomplete"
+  pid="$(jq -er .worker.processIdentifier "$output")"
+  ! process_running "$pid" || die "Translation smoke worker $pid remains resident"
+  wait_for_normal_pressure
+  jq -n --argjson pid "$pid" --arg pressure "$SYSTEM_PRESSURE_LEVEL" \
+    --argjson raw "$SYSTEM_PRESSURE_RAW" --argjson free "$SYSTEM_FREE" \
+    --argjson swap "$SYSTEM_SWAP_BYTES" --argjson pageouts "$SYSTEM_PAGEOUTS" \
+    '{translationWorkerPID:$pid,resident:false,unloadVerified:true,
+      nativePressureLevel:$pressure,nativePressureRaw:$raw,freeMemoryPercent:$free,
+      swapUsedBytes:$swap,pageouts:$pageouts}' >"$directory/cleanup.json"
+  jq -n --arg mode "$MODE" --arg output "$(sha256 "$output")" \
+    --arg safety "$(sha256 "$directory/safety.json")" \
+    --arg samples "$(sha256 "$directory/safety.samples.jsonl")" \
+    --arg cleanup "$(sha256 "$directory/cleanup.json")" \
+    --argjson memory "$(jq '{elapsedSeconds,peakResidentBytes,peakPhysicalFootprintBytes,
+      minimumFreeMemoryPercent,nativePressureLevels,peakSwapDeltaBytes,stopReason,
+      warningRecoveryGuard,systemBefore,systemAfter}' "$directory/safety.json")" \
+    '{ticket:106,runMode:$mode,status:"completed",cueCount:100,
+      freshProcessPerRun:true,modelQualityVerdictAssigned:false,ticket106Concluded:false,
+      memory:$memory,sha256:{"smoke.json":$output,"safety.json":$safety,
+        "safety.samples.jsonl":$samples,"cleanup.json":$cleanup}}' \
+    >"$ARTIFACTS/smoke-report.json"
+  find "$ARTIFACTS" -type f ! -name sha256.tsv -print0 | sort -z | \
+    xargs -0 shasum -a 256 >"$ARTIFACTS/sha256.tsv"
+  [[ ! -e "$EVIDENCE" ]] || die "Retained 12B smoke evidence already exists; preserve it"
+  mkdir -p "$EVIDENCE"
+  cp -R "$ARTIFACTS"/. "$EVIDENCE"/
+  (cd "$EVIDENCE" && find . -type f ! -name sha256.tsv -print0 | sort -z | \
+    xargs -0 shasum -a 256 >sha256.tsv)
+  echo "Smoke report: $ARTIFACTS/smoke-report.json"
+  echo "Retained evidence: $EVIDENCE"
 }
 
 run_translation_replay() {
@@ -780,13 +915,14 @@ retain_evidence() {
 }
 
 preflight() {
-  local tool command duration memory order
+  local tool command duration memory order smoke_request_hash=""
   PHASE=preflight; CURRENT_TRANSLATOR=""; CURRENT_CORPUS=""
   mkdir -p "$ARTIFACTS" "$ARTIFACTS/controls"
   rm -f "$ARTIFACTS/benchmark-ready.json" "$ARTIFACTS/failure.json"
   for tool in jq ffmpeg shasum xcrun python3 pgrep footprint memory_pressure vm_stat; do
     command -v "$tool" >/dev/null || die "Missing tool: $tool"
   done
+  [[ "$MODE" != TRANSLATION_ONLY_12B ]] || verify_safe_12b_translation_smoke
   prepare_local_references qudu2fx3ncc
   prepare_local_references md62mmdz0m
   : >"$ARTIFACTS/corpus-preflight.tsv"
@@ -801,7 +937,8 @@ preflight() {
   if [[ "$MODE" == 4B_ONLY ]]; then
     [[ "$(declare -f four_b_only_run)" != *'run_job translategemma-12b-it-4bit'* ]] \
       || die "4B_ONLY execution graph contains a 12B job"
-  elif [[ "$MODE" == TRANSLATION_ONLY_4B || "$MODE" == TRANSLATION_ONLY_12B ]]; then
+  elif [[ "$MODE" == TRANSLATION_ONLY_4B || "$MODE" == TRANSLATION_ONLY_12B \
+      || "$MODE" == TRANSLATION_SMOKE_12B_100 ]]; then
     [[ "$MODE" != TRANSLATION_ONLY_12B ]] || verify_safe_4b_translation_replay
     prepare_translation_replay
     jq -e --arg model "$(model_id "$REPLAY_TRANSLATOR")" \
@@ -818,25 +955,44 @@ preflight() {
   python3 Scripts/report_integrated_offline_validation.py --self-test
   bash Scripts/test_mossformer2_guard.sh
   local corpus
-  for corpus in qudu2fx3ncc md62mmdz0m; do
-    WHISPERASR_RUN_SEMANTIC_TRANSLATION_EXPERIMENT=1 \
-    WHISPERASR_VALIDATE_SEMANTIC_REPLAY_ONLY=1 \
-    WHISPERASR_SEMANTIC_TRANSLATION_EVIDENCE="$ARTIFACTS/frozen/$corpus-raw-asr.json" \
-    WHISPERASR_SEMANTIC_TRANSLATION_OUTPUT="$ARTIFACTS/controls/replay-validation-$corpus" \
-    WHISPERASR_TRANSLATOR_CANDIDATE="$REPLAY_TRANSLATOR" \
-    WHISPERASR_TRANSLATOR_CORPUS="$corpus" \
-    WHISPERASR_TRANSLATOR_JOB_ID="$(job_id "$REPLAY_TRANSLATOR" "$corpus")" \
-    WHISPERASR_TRANSLATOR_ALLOW_HOLDOUT="$([[ "$corpus" == md62mmdz0m ]] && echo 1 || echo 0)" \
+  if [[ "$MODE" == TRANSLATION_SMOKE_12B_100 ]]; then
+    [[ "$(sha256 "$SMOKE_12B_REQUEST")" == "$SMOKE_12B_REQUEST_SHA256" ]] \
+      || die "Frozen 12B smoke request hash mismatch"
+    smoke_request_hash="$SMOKE_12B_REQUEST_SHA256"
+    WHISPERASR_RUN_DIRECT_TRANSLATION_EXPERIMENT=1 \
+    WHISPERASR_VALIDATE_DIRECT_TRANSLATION_ONLY=1 \
+    WHISPERASR_DIRECT_TRANSLATION_CUE_LIMIT=100 \
+    WHISPERASR_DIRECT_TRANSLATION_EVIDENCE="$ARTIFACTS/frozen/qudu2fx3ncc-raw-asr.json" \
+    WHISPERASR_DIRECT_TRANSLATION_REQUEST="$SMOKE_12B_REQUEST" \
+    WHISPERASR_DIRECT_TRANSLATION_OUTPUT="$ARTIFACTS/controls/smoke-validation.json" \
       xcrun swift test --filter \
-        HighQualityAcceptanceTests/testFrozenSemanticTranslationExperimentWhenOptedIn \
-        2>&1 | tee "$ARTIFACTS/controls/replay-validation-$corpus.log"
-  done
+        HighQualityLocalTranslationTests/testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn \
+        2>&1 | tee "$ARTIFACTS/controls/smoke-validation.log"
+  else
+    for corpus in qudu2fx3ncc md62mmdz0m; do
+      WHISPERASR_RUN_SEMANTIC_TRANSLATION_EXPERIMENT=1 \
+      WHISPERASR_VALIDATE_SEMANTIC_REPLAY_ONLY=1 \
+      WHISPERASR_SEMANTIC_TRANSLATION_EVIDENCE="$ARTIFACTS/frozen/$corpus-raw-asr.json" \
+      WHISPERASR_SEMANTIC_TRANSLATION_OUTPUT="$ARTIFACTS/controls/replay-validation-$corpus" \
+      WHISPERASR_TRANSLATOR_CANDIDATE="$REPLAY_TRANSLATOR" \
+      WHISPERASR_TRANSLATOR_CORPUS="$corpus" \
+      WHISPERASR_TRANSLATOR_JOB_ID="$(job_id "$REPLAY_TRANSLATOR" "$corpus")" \
+      WHISPERASR_TRANSLATOR_ALLOW_HOLDOUT="$([[ "$corpus" == md62mmdz0m ]] && echo 1 || echo 0)" \
+        xcrun swift test --filter \
+          HighQualityAcceptanceTests/testFrozenSemanticTranslationExperimentWhenOptedIn \
+          2>&1 | tee "$ARTIFACTS/controls/replay-validation-$corpus.log"
+    done
+  fi
   xcrun swift build 2>&1 | tee "$ARTIFACTS/controls/build.log"
   bash Scripts/build_mlx_metallib.sh debug
   xcrun swift test --filter \
-    'HighQualityLocalTranslationTests/testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract|HighQualityLocalTranslationTests/testEveryTranslationRequestClearsCacheBeforeTheNextRequest|HighQualityTranslationWorkerTests|HeavyweightModelGateTests|HighQualityJobTests/testSpeakerBetaControlsVisibilityAndSafeDefaults|HighQualityJobTests/testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend|HighQualityJobTests/testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface|HighQualityJobTests/testCancellationIsSafeForEveryOfflineBackend' \
+    'HighQualityLocalTranslationTests/testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract|HighQualityLocalTranslationTests/testEveryTranslationRequestClearsCacheBeforeTheNextRequest|HighQualityLocalTranslationTests/testCueBoundaryClearsCacheAfterSuccessRetryFailureCancellationAndUnload|HighQualityTranslationWorkerTests|HeavyweightModelGateTests|HighQualityJobTests/testSpeakerBetaControlsVisibilityAndSafeDefaults|HighQualityJobTests/testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend|HighQualityJobTests/testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface|HighQualityJobTests/testCancellationIsSafeForEveryOfflineBackend' \
     2>&1 | tee "$ARTIFACTS/controls/light-tests.log"
-  if [[ "$MODE" == TRANSLATION_ONLY_4B ]]; then
+  if [[ "$MODE" == TRANSLATION_SMOKE_12B_100 ]]; then
+    command='BENCHMARK_SLOT_GRANTED=106 bash Scripts/run_integrated_offline_validation.sh TRANSLATION_SMOKE_12B_100'
+    duration='5-8 minutes'; memory='8-12 GiB process tree'
+    order='["fresh 12B video1 first 100 cues","unload+native recovery","hash raw artifacts"]'
+  elif [[ "$MODE" == TRANSLATION_ONLY_4B ]]; then
     command='BENCHMARK_SLOT_GRANTED=106 bash Scripts/run_integrated_offline_validation.sh TRANSLATION_ONLY_4B'
     duration='12-18 minutes'; memory='5-6 GiB process tree'
     order='["fresh 4B replay/video1","unload+native recovery","fresh 4B replay/video2","unload+native recovery","COMET-if-local"]'
@@ -853,18 +1009,21 @@ preflight() {
     duration='60-90 minutes'; memory='18-20 GiB'
     order='["12B/video1","12B/video2","unload+native-pressure-handoff","4B/video1","4B/video2","COMET-if-local"]'
   fi
-  jq -n --arg commit "$(git rev-parse HEAD)" \
+  jq -n --arg commit "$(git rev-parse HEAD)" --arg mode "$MODE" \
     --arg command "$command" --arg duration "$duration" --arg memory "$memory" \
     --argjson order "$order" \
     --arg models "$(sha256 "$ARTIFACTS/model-provenance.json")" \
     --arg inputs "$(sha256 "$ARTIFACTS/corpus-preflight.tsv")" \
+    --arg smokeRequest "$smoke_request_hash" \
     --arg worker "$(sha256 "$WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE")" \
     --arg metallib "$(sha256 "$ROOT/.build/debug/mlx.metallib")" \
     --argjson implementation "$(implementation_hashes)" \
-    '{ticket:106,status:"READY_FOR_HEAVY_BENCHMARK",commit:$commit,command:$command,
+    '{ticket:106,status:"READY_FOR_HEAVY_BENCHMARK",commit:$commit,runMode:$mode,
+      smokeCueLimit:(if $mode == "TRANSLATION_SMOKE_12B_100" then 100 else null end),command:$command,
       estimatedDuration:$duration,estimatedPeakMemory:$memory,executionOrder:$order,
       memoryPolicy:"warning requests cache cleanup then one native re-sample; recovered warning continues; critical, persistent warning, post-cleanup growth, swap or runaway stops; offline reserve=0",
       heavyModelsLoaded:false,modelProvenanceSHA256:$models,inputPreflightSHA256:$inputs,
+      smokeRequestSHA256:(if $smokeRequest == "" then null else $smokeRequest end),
       implementationSHA256:$implementation,
       runtimeSHA256:{workerExecutable:$worker,mlxMetallib:$metallib}}' \
       >"$ARTIFACTS/benchmark-ready.json"
@@ -960,9 +1119,18 @@ translation_only_run() {
   echo "Report: $REPORT_MD"
 }
 
+translation_smoke_run() {
+  if [[ "${BENCHMARK_SLOT_GRANTED:-}" != 106 ]]; then
+    preflight
+    return
+  fi
+  preflight
+  run_translation_smoke
+}
+
 main() {
-  case "$MODE" in preflight|full|4B_ONLY|TRANSLATION_ONLY_4B|TRANSLATION_ONLY_12B) ;;
-    *) echo "usage: $0 [preflight|full|4B_ONLY|TRANSLATION_ONLY_4B|TRANSLATION_ONLY_12B]" >&2; exit 2 ;;
+  case "$MODE" in preflight|full|4B_ONLY|TRANSLATION_ONLY_4B|TRANSLATION_ONLY_12B|TRANSLATION_SMOKE_12B_100) ;;
+    *) echo "usage: $0 [preflight|full|4B_ONLY|TRANSLATION_ONLY_4B|TRANSLATION_ONLY_12B|TRANSLATION_SMOKE_12B_100]" >&2; exit 2 ;;
   esac
   cd "$ROOT"
   trap on_error ERR
@@ -974,6 +1142,7 @@ main() {
     full) full_run ;;
     4B_ONLY) four_b_only_run ;;
     TRANSLATION_ONLY_4B|TRANSLATION_ONLY_12B) translation_only_run ;;
+    TRANSLATION_SMOKE_12B_100) translation_smoke_run ;;
   esac
 }
 

@@ -9,6 +9,18 @@ import Tokenizers
 private typealias PromptMessage = [String: any Sendable]
 
 actor LocalMLXTranslator {
+    typealias CueGeneration = (
+        nativePrompt: String,
+        nativeOutput: String,
+        inputTokens: Int,
+        outputTokens: Int?,
+        finishReason: String?
+    )
+    typealias CueGenerator = @Sendable (
+        HighQualityTranslationTurn,
+        HighQualityTranslationBatch
+    ) async throws -> CueGeneration
+
     enum Candidate: String, CaseIterable, Codable, Sendable {
         case translateGemma12B = "translategemma-12b-it-4bit"
         case translateGemma4B = "translategemma-4b-it-4bit"
@@ -92,13 +104,16 @@ actor LocalMLXTranslator {
     let candidate: Candidate
     private var container: ModelContainer?
     private let clearCache: @Sendable () -> Void
+    private let cueGenerator: CueGenerator?
 
     init(
         candidate: Candidate = .productDefault,
-        clearCache: @escaping @Sendable () -> Void = { Memory.clearCache() }
+        clearCache: @escaping @Sendable () -> Void = { Memory.clearCache() },
+        cueGenerator: CueGenerator? = nil
     ) {
         self.candidate = candidate
         self.clearCache = clearCache
+        self.cueGenerator = cueGenerator
     }
 
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
@@ -128,7 +143,8 @@ actor LocalMLXTranslator {
 
     func translate(_ batch: HighQualityTranslationBatch) async throws -> HighQualityTranslationExchange {
         defer { clearCache() }
-        guard let container else {
+        let container = self.container
+        guard container != nil || cueGenerator != nil else {
             throw HighQualityTranslationServiceError(
                 model: candidate.modelID,
                 attempts: [],
@@ -143,74 +159,87 @@ actor LocalMLXTranslator {
         var inFlightTrace: HighQualityLocalTranslationBatch?
         do {
             for turn in batch.turns {
+                defer { clearCache() }
                 try Task.checkCancellation()
                 let unitStarted = Date()
                 let prompt = Self.frozenPrompt(for: turn)
                 let messages = messages(for: turn, in: batch)
-                let parameters = batch.retryReasonCodes == nil
-                    ? Self.generationParameters
-                    : Self.retryGenerationParameters
-                let nativePrompt = try batch.retryReasonCodes == nil
-                    ? Self.nativePrompt(messages)
-                    : Self.retryNativeInput(messages)
-                let tokenCount = try await Self.tokenCount(messages, using: container)
-                guard tokenCount <= Self.inputTokenLimit else {
-                    throw HighQualityTranslationServiceError(
-                        model: candidate.modelID,
-                        attempts: [],
-                        response: nil,
-                        message: "Cue \(turn.id) exceeds the frozen 2K input limit."
-                    )
-                }
-
-                inFlightTrace = .init(
-                    cueIDs: [turn.id],
-                    sanitizedPrompt: prompt,
-                    nativePrompt: nativePrompt,
-                    nativeOutput: "",
-                    model: candidate.modelID,
-                    revision: candidate.revision,
-                    sanitizedOutput: "",
-                    inputTokens: tokenCount,
-                    duration: 0,
-                    context: batch.context(for: turn)
-                )
-                let input = try await container.prepare(input: UserInput(
-                    prompt: .messages(messages),
-                    additionalContext: ["enable_thinking": false]
-                ))
-                let stream = try await container.generate(
-                    input: input,
-                    parameters: parameters
-                )
-                var output = ""
+                let nativePrompt: String
+                let tokenCount: Int
+                var output: String
                 var outputTokens: Int?
                 var finishReason: String?
-                for await generation in stream {
-                    try Task.checkCancellation()
-                    output += generation.chunk ?? ""
-                    if let info = generation.info {
-                        outputTokens = info.generationTokenCount
-                        finishReason = switch info.stopReason {
-                        case .stop: "stop"
-                        case .length: "length"
-                        case .cancelled: "cancelled"
-                        }
+                if let cueGenerator {
+                    let generated = try await cueGenerator(turn, batch)
+                    nativePrompt = generated.nativePrompt
+                    tokenCount = generated.inputTokens
+                    output = generated.nativeOutput
+                    outputTokens = generated.outputTokens
+                    finishReason = generated.finishReason
+                } else {
+                    guard let container else { preconditionFailure() }
+                    let parameters = batch.retryReasonCodes == nil
+                        ? Self.generationParameters
+                        : Self.retryGenerationParameters
+                    nativePrompt = try batch.retryReasonCodes == nil
+                        ? Self.nativePrompt(messages)
+                        : Self.retryNativeInput(messages)
+                    tokenCount = try await Self.tokenCount(messages, using: container)
+                    guard tokenCount <= Self.inputTokenLimit else {
+                        throw HighQualityTranslationServiceError(
+                            model: candidate.modelID,
+                            attempts: [],
+                            response: nil,
+                            message: "Cue \(turn.id) exceeds the frozen 2K input limit."
+                        )
                     }
+                    output = ""
                     inFlightTrace = .init(
                         cueIDs: [turn.id],
                         sanitizedPrompt: prompt,
                         nativePrompt: nativePrompt,
-                        nativeOutput: output,
+                        nativeOutput: "",
                         model: candidate.modelID,
                         revision: candidate.revision,
                         sanitizedOutput: "",
                         inputTokens: tokenCount,
-                        outputTokens: outputTokens,
-                        finishReason: finishReason,
-                        duration: Date().timeIntervalSince(unitStarted),
+                        duration: 0,
                         context: batch.context(for: turn)
                     )
+                    let input = try await container.prepare(input: UserInput(
+                        prompt: .messages(messages),
+                        additionalContext: ["enable_thinking": false]
+                    ))
+                    let stream = try await container.generate(
+                        input: input,
+                        parameters: parameters
+                    )
+                    for await generation in stream {
+                        try Task.checkCancellation()
+                        output += generation.chunk ?? ""
+                        if let info = generation.info {
+                            outputTokens = info.generationTokenCount
+                            finishReason = switch info.stopReason {
+                            case .stop: "stop"
+                            case .length: "length"
+                            case .cancelled: "cancelled"
+                            }
+                        }
+                        inFlightTrace = .init(
+                            cueIDs: [turn.id],
+                            sanitizedPrompt: prompt,
+                            nativePrompt: nativePrompt,
+                            nativeOutput: output,
+                            model: candidate.modelID,
+                            revision: candidate.revision,
+                            sanitizedOutput: "",
+                            inputTokens: tokenCount,
+                            outputTokens: outputTokens,
+                            finishReason: finishReason,
+                            duration: Date().timeIntervalSince(unitStarted),
+                            context: batch.context(for: turn)
+                        )
+                    }
                 }
                 try Task.checkCancellation()
                 let nativeOutput = output
