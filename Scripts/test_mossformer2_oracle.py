@@ -44,6 +44,8 @@ class MossFormer2OracleTests(unittest.TestCase):
             moss._source_matrix(np.zeros((3, 1, 8)), 6)
         with self.assertRaisesRegex(ValueError, "shorter"):
             moss._source_matrix(np.zeros((2, 1, 5)), 6)
+        with self.assertRaisesRegex(ValueError, "non-finite"):
+            moss._source_matrix(np.full((2, 1, 8), np.nan), 6)
 
     def test_diagnostics_do_not_invent_terms_or_meaning(self):
         plan = {"windows": [{"referenceTurns": [{

@@ -78,6 +78,8 @@ def _source_matrix(value, expected_samples: int):
         raise ValueError("MossFormer2 must produce exactly two sources")
     if outputs.shape[1] < expected_samples:
         raise ValueError("MossFormer2 source is shorter than its mixture")
+    if not np.isfinite(outputs).all():
+        raise ValueError("MossFormer2 source contains non-finite samples")
     return outputs[:, :expected_samples]
 
 
