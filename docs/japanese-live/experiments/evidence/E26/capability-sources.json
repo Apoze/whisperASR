@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "ticket": 92,
+  "inspectedAt": "2026-08-12",
+  "winner": {
+    "backend": "qwen-ja",
+    "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+    "selectionEvidence": "docs/japanese-live/experiments/evidence/E25/report.json"
+  },
+  "officialRuntime": {
+    "repository": "QwenLM/Qwen3-ASR",
+    "revision": "7c6daf77a2421100f5fb066495372c00129d39ff",
+    "path": "qwen_asr/inference/qwen3_asr.py",
+    "blobSHA": "d99b91512a5bbc1c15897d97752cfd86ea68d46e",
+    "lines": "448-465",
+    "url": "https://github.com/QwenLM/Qwen3-ASR/blob/7c6daf77a2421100f5fb066495372c00129d39ff/qwen_asr/inference/qwen3_asr.py#L448-L465",
+    "rawExcerpt": "primary-sources/qwen3_asr-context.py",
+    "apiScan": {
+      "artifact": "official-api-scan.json",
+      "scope": "complete pinned public inference wrapper",
+      "terms": ["hotword", "contextualbias", "logitbias", "logitsbias"],
+      "matches": []
+    },
+    "contextArgument": "context",
+    "contextPlacement": "system-message-content-before-chat-template",
+    "dedicatedHotwordParameter": false,
+    "decoderLogitBias": false,
+    "distinctFromPrompt": false
+  },
+  "localRuntime": {
+    "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/Qwen3ASR.swift",
+    "sha256": "45855a1a1a5d7bd1cb35272192bccd9826d70547399c1dd217ffb1b6deb57dbd",
+    "moduleTreeSHA256": "df435c57d45f24bd71042618bfc70acbd2a008c5a86cc66c4ed3cf707c576d43",
+    "productionWrapper": {
+      "path": "Sources/LocalEnglishModels.swift",
+      "sha256": "06c8eb7819ec542f94c72e729243e7ba03c8f2fcdcee4b9ee8e9f9186c2c8567"
+    },
+    "decodingOptionsLines": "18-79",
+    "singleDecodeLines": "384-390",
+    "batchDecodeLines": "873-902",
+    "negativeSearch": {
+      "scope": [
+        "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR",
+        "Sources/LocalEnglishModels.swift"
+      ],
+      "terms": ["hotword", "contextualbias", "logitbias", "logitsbias"],
+      "matches": []
+    },
+    "contextPlacement": "tokens-inside-system-message-before-audio",
+    "dedicatedHotwordParameter": false,
+    "decoderLogitBias": false,
+    "distinctFromPrompt": false
+  },
+  "localPromptHistory": {
+    "commit": "09b092b001e4d35cd193b9a5e3f4f7307d74821b",
+    "path": "docs/japanese-live/research-live-ja-en-2026.md",
+    "sha256": "5b4e9c0a83a56ce2eff63313b3d22f186b38dac119e8f49e6fd0f1135bae7645",
+    "lines": [74, 197, 204, 373],
+    "finding": "short prompt trials echoed the system prompt; Qwen was deliberately kept prompt-free"
+  },
+  "corroboration": [
+    {
+      "url": "https://github.com/QwenLM/Qwen3-ASR/issues/106",
+      "role": "non-authoritative-user-reproduction",
+      "finding": "context used as hot_word appeared verbatim in ASR output"
+    },
+    {
+      "url": "https://github.com/QwenLM/Qwen3-ASR/issues/157",
+      "role": "non-authoritative-capability-request",
+      "state": "closed-not-planned",
+      "finding": "request for a Fun-ASR-style hotwords parameter produced no dedicated upstream API"
+    }
+  ],
+  "conclusion": {
+    "nativeHotwordMechanismExposed": false,
+    "reason": "the only contextual input is ordinary system-prompt conditioning in both official and local runtimes",
+    "experimentApplicable": false
+  }
+}

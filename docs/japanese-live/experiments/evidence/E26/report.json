@@ -1,0 +1,317 @@
+{
+  "schemaVersion": 1,
+  "ticket": 92,
+  "decision": "INAPPLICABLE-NO-RUN-no-native-hotword-mechanism",
+  "corpusRole": "development",
+  "winningRecipe": {
+    "recipe": "E22 Standard Qwen with its current segmentation",
+    "backend": "qwen-ja",
+    "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+    "weightSHA256": {
+      "model.safetensors": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+    }
+  },
+  "capabilityGate": {
+    "rule": "run only if the winning backend exposes contextual biasing distinct from prompt conditioning",
+    "officialContextPlacement": "system-message-content-before-chat-template",
+    "localContextPlacement": "tokens-inside-system-message-before-audio",
+    "dedicatedHotwordParameter": false,
+    "decoderLogitBias": false,
+    "distinctFromPreviouslyTestedPrompt": false,
+    "eligible": false,
+    "reason": "the only contextual input is ordinary system-prompt conditioning in both official and local runtimes"
+  },
+  "experiment": {
+    "scoringStarted": false,
+    "catalog": null,
+    "encodedBudget": null,
+    "cueLocalSelection": null,
+    "matchingRules": null,
+    "offOutput": null,
+    "onOutput": null,
+    "falsePositives": null,
+    "concreteCandidateExamples": [],
+    "materialMeasurements": {
+      "criticalTermsRecovered": null,
+      "falseSubstitutions": null,
+      "speechLost": null,
+      "numbersLost": null,
+      "meaningLost": null,
+      "englishEffects": null
+    },
+    "reason": "the prerequisite failed before catalog construction or scoring"
+  },
+  "frozenBaselineEvidence": {
+    "speechRecoveredCharacters": 1697,
+    "speechLostCharacters": 1371,
+    "termsRecovered": 8,
+    "termsLost": 18,
+    "numbersRecovered": 6,
+    "numbersLost": 11,
+    "meaningRecovered": 7,
+    "meaningLost": 5,
+    "examples": [
+      {
+        "id": "cue-0118",
+        "start": 415.98,
+        "end": 422.38,
+        "referenceJapanese": "そうそうそう。いろいろあるんですよね、4回投げるまでに。早めに吐いて、このあとのゲージを溜めながら。そう思わせて、実",
+        "qwenJapanese": "この後の成長とかそう思って実はただ投げるバケって。",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 6,
+            "lostCharacters": 46,
+            "insertedOrSubstitutedCharacters": 18,
+            "referenceCharacters": 52
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "4"
+            ]
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": false,
+          "similarityPercent": 15.789473684210526
+        },
+        "nearASRBoundary": false
+      },
+      {
+        "id": "cue-0060-part-1",
+        "start": 228.66,
+        "end": 235.46,
+        "referenceJapanese": "ど！さあ、ここで甘結もか、すでに1セット勝かっこいいんだけど。完璧でした。",
+        "qwenJapanese": "このままはオーディシャッカーの時点で3番手",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 2,
+            "lostCharacters": 30,
+            "insertedOrSubstitutedCharacters": 19,
+            "referenceCharacters": 32
+          },
+          "terms": {
+            "recovered": [],
+            "lost": [
+              "甘結もか"
+            ]
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "1"
+            ]
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": false,
+          "similarityPercent": 7.547169811320755
+        },
+        "nearASRBoundary": true
+      },
+      {
+        "id": "cue-0082-part-2",
+        "start": 309.4,
+        "end": 317.4,
+        "referenceJapanese": "000だったはず。その1000、でかいの？いや、でもランクしてるとね、でかいなって",
+        "qwenJapanese": "1万だったその線でかいのランクしてるとねでかいなって思",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 23,
+            "lostCharacters": 13,
+            "insertedOrSubstitutedCharacters": 4,
+            "referenceCharacters": 36
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "000",
+              "1000"
+            ]
+          },
+          "meaning": {
+            "recovered": [
+              "でかい"
+            ],
+            "lost": [
+              "1000"
+            ]
+          },
+          "emptyTurn": false,
+          "similarityPercent": 73.01587301587301
+        },
+        "nearASRBoundary": true
+      },
+      {
+        "cueID": 32,
+        "start": 179.0,
+        "end": 185.0,
+        "referenceJapanese": "リーサルだー！ ドーーーン!!!",
+        "boundaryDistanceSeconds": 1.9799999999999898,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 11,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 11
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": [
+              "リーサル",
+              "ドーーーン"
+            ]
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      }
+    ]
+  },
+  "execution": {
+    "modelRunsLaunched": 0,
+    "candidateRuntimeSeconds": 0.0,
+    "candidatePeakMemoryBytes": null,
+    "heavyBenchmarkAuthorized": false,
+    "holdoutOpened": false
+  },
+  "controls": {
+    "sourceSHA256": {
+      "e25": "8fa4460e1d9b599e6d1dffa40af024e80223380e118f6164359cbbfd2f0f1330",
+      "history": "5b4e9c0a83a56ce2eff63313b3d22f186b38dac119e8f49e6fd0f1135bae7645",
+      "localRuntime": "45855a1a1a5d7bd1cb35272192bccd9826d70547399c1dd217ffb1b6deb57dbd",
+      "productionWrapper": "06c8eb7819ec542f94c72e729243e7ba03c8f2fcdcee4b9ee8e9f9186c2c8567",
+      "officialExcerpt": "b12b68288d9808d9fdac78325dc4e2f43a727f60c0b7ce1487317cfb95cf331e",
+      "officialScan": "49131ba06ee160da680d9c4059fb4709ba292f624ef798ad0983fa3b4e27b57f",
+      "testStability": "1454b47d67df120ace3744e6f34473ae4e717d89a63e2a4abd6c30de5bfd7a8b",
+      "sources": "c433e06ad423de13fa5543a0cc5a2616b7212ead5dd447e80ff9d95c4cc9c6f7",
+      "controls": "10fe5ad57e488834215648fd1fa492c8ed5acee19ecf709a7647be5ce7fa1f63",
+      "localRuntimeTree": "df435c57d45f24bd71042618bfc70acbd2a008c5a86cc66c4ed3cf707c576d43"
+    },
+    "verification": {
+      "schemaVersion": 1,
+      "ticket": 92,
+      "baseCommit": "d444bc6f6effa1f08f99d2f14bd6e4a4d4e32578",
+      "xcode": {
+        "version": "26.6 (17F113)",
+        "developerDir": "/Applications/Xcode.app/Contents/Developer"
+      },
+      "swift": {
+        "version": "6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)",
+        "target": "arm64-apple-macosx26.0"
+      },
+      "build": {
+        "command": "/usr/bin/time -p env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift build -c debug",
+        "passed": true,
+        "durationSeconds": 117.91
+      },
+      "metallib": {
+        "command": "/usr/bin/time -p env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash Scripts/build_mlx_metallib.sh debug",
+        "passed": true,
+        "durationSeconds": 139.17,
+        "path": ".build/debug/mlx.metallib",
+        "sha256": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+        "sizeBytes": 107367162,
+        "copiedIntoTestBundle": true
+      },
+      "tests": {
+        "command": "/usr/bin/time -p env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --skip-build",
+        "passed": true,
+        "executed": 425,
+        "skipped": 56,
+        "failed": 0,
+        "suiteDurationSeconds": 8.213,
+        "wallDurationSeconds": 11.7,
+        "stabilityEvidence": "test-stability.json",
+        "consecutivePassingReruns": 4
+      },
+      "failures": {
+        "runner": [
+          {
+            "phase": "metallib-precondition",
+            "durationSeconds": 0.0,
+            "error": "run swift build -c debug first",
+            "classification": "runner-order",
+            "modelReached": false
+          },
+          {
+            "phase": "sandbox-build-attempt",
+            "durationSeconds": 0.61,
+            "error": "Clang module cache was not writable inside the filesystem sandbox",
+            "classification": "runner-environment",
+            "modelReached": false
+          },
+          {
+            "phase": "sandbox-metallib-attempt",
+            "durationSeconds": 0.89,
+            "error": "Clang module cache was not writable inside the filesystem sandbox",
+            "classification": "runner-environment",
+            "modelReached": false
+          },
+          {
+            "phase": "initial-full-test",
+            "durationSeconds": 35.33,
+            "error": "swift test recreated the xctest bundle after metallib preparation, so MLX could not find its bundled metallib",
+            "classification": "runner-order",
+            "modelReached": false
+          }
+        ],
+        "build": [],
+        "model": []
+      },
+      "unresolvedObservations": [
+        {
+          "phase": "first-skip-build-test",
+          "durationSeconds": 12.95,
+          "result": "425 tests completed with one failure whose identity was truncated by the runner capture",
+          "classification": "unreproduced-test-observation",
+          "stabilityEvidence": "test-stability.json",
+          "modelReached": false
+        }
+      ],
+      "heavyBenchmarkAuthorized": false,
+      "modelRunsLaunched": 0,
+      "candidateRuntimeSeconds": 0.0,
+      "candidatePeakMemoryBytes": null,
+      "holdoutOpened": false
+    },
+    "classification": "capability-inapplicable-not-execution-failure"
+  },
+  "rawArtifacts": {
+    "officialRuntimeExcerpt": "primary-sources/qwen3_asr-context.py",
+    "officialAPIScan": "official-api-scan.json",
+    "capabilityManifest": "capability-sources.json",
+    "testStability": "test-stability.json",
+    "candidateOutput": null
+  },
+  "productChanges": "none",
+  "uiChanges": "none",
+  "standardDefaultsChanged": false,
+  "liveChanges": "none",
+  "postCorrectionAdded": false,
+  "provenance": {
+    "reporterSHA256": "c4f4da2a2cad417ec8074b3f8623c097ee7409ff4ca1851649e7a4773359dce9"
+  }
+}

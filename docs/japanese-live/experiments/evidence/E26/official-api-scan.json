@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "fetchedAt": "2026-08-12",
+  "source": {
+    "repository": "QwenLM/Qwen3-ASR",
+    "revision": "7c6daf77a2421100f5fb066495372c00129d39ff",
+    "path": "qwen_asr/inference/qwen3_asr.py",
+    "blobSHA": "d99b91512a5bbc1c15897d97752cfd86ea68d46e",
+    "lineCount": 830
+  },
+  "scan": {
+    "scope": "complete pinned public inference wrapper",
+    "equivalentCommand": "git grep -n -i -E 'hot.?word|contextual.?bias|logits?.?bias' 7c6daf77a2421100f5fb066495372c00129d39ff -- qwen_asr/inference/qwen3_asr.py",
+    "terms": [
+      "hotword",
+      "contextualbias",
+      "logitbias",
+      "logitsbias"
+    ],
+    "matches": []
+  },
+  "contextEvidence": [
+    {
+      "line": 300,
+      "text": "    def transcribe("
+    },
+    {
+      "line": 301,
+      "text": "        self,"
+    },
+    {
+      "line": 302,
+      "text": "        audio: Union[AudioLike, List[AudioLike]],"
+    },
+    {
+      "line": 303,
+      "text": "        context: Union[str, List[str]] = \"\","
+    },
+    {
+      "line": 304,
+      "text": "        language: Optional[Union[str, List[Optional[str]]]] = None,"
+    },
+    {
+      "line": 448,
+      "text": "    def _build_messages(self, context: str, audio_payload: Any) -> List[Dict[str, Any]]:"
+    },
+    {
+      "line": 449,
+      "text": "        return ["
+    },
+    {
+      "line": 450,
+      "text": "            {\"role\": \"system\", \"content\": context or \"\"},"
+    },
+    {
+      "line": 451,
+      "text": "            {\"role\": \"user\", \"content\": [{\"type\": \"audio\", \"audio\": audio_payload}]},"
+    },
+    {
+      "line": 452,
+      "text": "        ]"
+    },
+    {
+      "line": 453,
+      "text": ""
+    },
+    {
+      "line": 462,
+      "text": "        base = self.processor.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)"
+    }
+  ]
+}
