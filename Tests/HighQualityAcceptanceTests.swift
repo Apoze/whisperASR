@@ -700,7 +700,9 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let asr = HighQualityASRWorkerClient(backend: .qwenJA, executableURL: executableURL)
         var items: [PixITQwenItem] = []
         do {
-            try await asr.prepare { _, message in print("[issue-101][qwen] \(message)") }
+            try await asr.prepare { _, message in
+                print("[issue-\(input.ticket)][qwen] \(message)")
+            }
             for file in files {
                 let started = Date()
                 let samples = try await AudioLoader.loadSamples(url: URL(fileURLWithPath: file.path))

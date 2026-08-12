@@ -42,30 +42,12 @@ PIXIT_SEPARATOR_SHA256 = {
     "smoke": "0b4ad0f5277936f28fa14c6d28abd488d915d39280f40208645897dec1a5ca5a",
     "development": "d34d404c85c74f7781ead048a70c9572810846e7f49964f1f1b4c3b9c23d5e35",
 }
-RUNTIME_VERSIONS = {
-    "clearvoice": "0.1.2",
-    "einops": "0.8.1",
-    "gdown": "5.2.0",
-    "huggingface-hub": "0.26.2",
-    "joblib": "1.4.2",
-    "librosa": "0.10.2.post1",
-    "numpy": "1.26.4",
-    "opencv-python": "4.10.0.84",
-    "packaging": "24.1",
-    "pydub": "0.25.1",
-    "python_speech_features": "0.6",
-    "rotary-embedding-torch": "0.8.3",
-    "scenedetect": "0.6.6",
-    "scikit-learn": "1.5.1",
-    "scipy": "1.13.1",
-    "soundfile": "0.12.1",
-    "torch": "2.3.1",
-    "torchaudio": "2.3.1",
-    "torchinfo": "1.8.0",
-    "torchvision": "0.18.1",
-    "tqdm": "4.67.0",
-    "yamlargparse": "1.31.1",
-}
+RUNTIME_REQUIREMENTS = Path(__file__).with_name("mossformer2-oracle-requirements.txt")
+
+
+def _runtime_versions() -> dict[str, str]:
+    pins = dict(line.split("==", 1) for line in RUNTIME_REQUIREMENTS.read_text().splitlines())
+    return {"clearvoice": "0.1.2", **pins}
 
 
 def _source_matrix(value, expected_samples: int):
@@ -107,8 +89,9 @@ def _verify_runtime(source: Path, model: Path) -> dict[str, str]:
     marker = model.with_name("last_best_checkpoint")
     if shared.sha256(marker) != CHECKPOINT_MARKER_SHA256:
         raise ValueError("MossFormer2 checkpoint marker mismatch")
-    versions = {name: importlib.metadata.version(name) for name in RUNTIME_VERSIONS}
-    if versions != RUNTIME_VERSIONS:
+    expected_versions = _runtime_versions()
+    versions = {name: importlib.metadata.version(name) for name in expected_versions}
+    if versions != expected_versions:
         raise ValueError(f"runtime version mismatch: {versions}")
     return versions
 
@@ -279,6 +262,7 @@ def separate(args: argparse.Namespace) -> None:
         },
         "implementation": shared.artifact(Path(__file__).resolve()),
         "sharedScorer": shared.artifact(Path(shared.__file__).resolve()),
+        "runtimeRequirements": shared.artifact(RUNTIME_REQUIREMENTS),
         "runtimeFreeze": shared.artifact(runtime_freeze),
         "nativeMemoryPressure": shared.artifact(pressure_path),
         "worker": {

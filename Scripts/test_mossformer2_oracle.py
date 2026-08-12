@@ -24,6 +24,8 @@ class MossFormer2OracleTests(unittest.TestCase):
             moss.SHARED_SCORER_SHA256,
             "ad497825c03b59154fedf4c2012d9ef89180140743238c7a4b301f632d114541",
         )
+        self.assertEqual(moss._runtime_versions()["clearvoice"], "0.1.2")
+        self.assertEqual(moss._runtime_versions()["torch"], "2.3.1")
         self.assertEqual(
             moss.MODEL_SHA256,
             "00a3a48bda492db1e829b85dd443f8f43a43039a3e90f1a24962ea9caf14a11a",
