@@ -1,19 +1,52 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "ticket": 103,
   "result": "NO_RUN_NO_ADMISSIBLE_DEV_SEPARATOR",
   "supersedes": {
-    "dependencyResult": "NO_RUN_USER_DEFERRED_DEPENDENCY",
-    "recordedAtCommit": "ae489d980f8fa45904058431f182e5da9aa46b8a",
-    "reason": "La décision différée reste dans l'historique Git mais est supersédée par la vraie preuve DEV PixIT."
+    "dependencySnapshots": [
+      {
+        "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
+        "dependencyEvidenceCommit": "651e431f563a5bf16d653c9182e9bc2612099014",
+        "recordedAtCommit": "ae489d980f8fa45904058431f182e5da9aa46b8a"
+      },
+      {
+        "result": "NO_RUN_PIXIT_GATE_FAILED",
+        "dependencyEvidenceCommit": "1d3f927a20cf72362103ee4c20f2efe75d8be91d",
+        "recordedAtCommit": "ef20f3a78ce87c1c261771c1ef7e5beb4f98dc7e"
+      }
+    ],
+    "reason": "Les décisions précédentes restent dans l'historique Git et sont supersédées par la preuve finale #102."
   },
   "dependencyGate": {
     "ticket": 102,
-    "evidenceCommit": "1d3f927a20cf72362103ee4c20f2efe75d8be91d",
+    "evidenceCommit": "df36acb4383d3d43a1cdd6ba71f2563a145b49ba",
     "evidencePath": "docs/japanese-live/experiments/evidence/issue-102-no-run.json",
     "result": "NO_RUN_PIXIT_GATE_FAILED",
+    "scientificStatus": "INCONCLUSIVE_QUALITY_RUNTIME_MEMORY_PRESSURE",
     "admissibleDevelopmentSeparator": false,
-    "reason": "PixIT a été testé sur DEV mais échoue la porte qualité : distinctRecovery=false, 4 répliques récupérées contre 12 perdues. #102 n'a donc figé aucun séparateur admissible."
+    "pixit": {
+      "distinctRecovery": false,
+      "netRecoveredTurns": -8
+    },
+    "mossFormer2": {
+      "firstAttempt": "HARNESS_GUARD_TOO_CONSERVATIVE",
+      "firstAttemptQualityIgnored": true,
+      "retry": "STOPPED_BY_NATIVE_PRESSURE_WARNING",
+      "sameOracleWindow": true,
+      "elapsedSecondsIncludingRecovery": 23,
+      "peakResidentBytes": 6437715968,
+      "peakPhysicalFootprintBytes": 11477312704,
+      "nativePressureRaw": 2,
+      "swapAfterDeltaMiB": 288,
+      "pageoutDelta": 10,
+      "cleanup": "clean",
+      "outputCompleted": false,
+      "qwenStarted": false,
+      "qualityEvaluated": false,
+      "qualityNoGoAssigned": false,
+      "readyForDevelopment": false
+    },
+    "reason": "PixIT échoue la porte qualité DEV (net -8) et MossFormer2 ne produit aucune mesure qualité avant l'arrêt mémoire natif; aucun séparateur DEV n'est admissible."
   },
   "execution": {
     "automaticDetectorImplemented": false,
@@ -26,18 +59,19 @@
   },
   "scope": {
     "betaUIAdded": false,
+    "standardPreserved": true,
     "productCodeChanged": false,
     "liveCodeChanged": false,
     "productAndLiveByteIdenticalToDependencyCommit": true,
-    "verificationCommand": "git diff --exit-code 1d3f927a20cf72362103ee4c20f2efe75d8be91d -- Package.swift Sources"
+    "verificationCommand": "git diff --exit-code df36acb4383d3d43a1cdd6ba71f2563a145b49ba -- Package.swift Sources"
   },
   "decision": {
     "reason": "Le ticket #102 n'a figé aucun séparateur DEV admissible; conformément au premier critère de #103, le holdout reste fermé et aucune implémentation n'est produite."
   },
   "resume": {
-    "condition": "Une nouvelle preuve DEV #101 satisfait la porte distinctRecovery.",
+    "condition": "Un séparateur termine DEV et satisfait les portes d'admission.",
     "order": [101, 102, 103],
-    "action": "Réévaluer #102 et figer un séparateur DEV admissible, puis seulement réévaluer #103."
+    "action": "Figer ce séparateur sur DEV, puis seulement réévaluer #103."
   },
   "issue106": {
     "instruction": "Conserver le Standard sans candidat overlap."
