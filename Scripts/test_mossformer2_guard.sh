@@ -32,11 +32,12 @@ jq -e '.stopReason == "post-load-runaway" and
 
 RUNAWAY_GROWTH_PERCENT=25
 RUNAWAY_WINDOW_SAMPLES=30
+RECOVERY_SAMPLE_DELAY_SECONDS=3
 (
   trap cleanup_active_process EXIT
   trap 'handle_signal INT' INT
   trap 'handle_signal TERM' TERM
-  run_guarded "$TEMP/interrupted.json" "$TEMP/interrupted.log" 30 "" /bin/sleep 30
+  run_guarded "$TEMP/interrupted.json" "$TEMP/interrupted.log" 30 "" /usr/bin/true
 ) &
 guard="$!"
 sleep 1

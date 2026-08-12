@@ -303,8 +303,13 @@ run_guarded() {
         recoveredFreeMemoryPercentagePoints:($freeAfter-$minimumFreeMemoryPercent)},
       peakSwapDeltaBytes:$peakSwapDeltaBytes,
       rawSamples:{path:$samplesPath,sha256:$samplesSHA256}}' >"$safety"
+  if [[ -n "$INTERRUPTED_SIGNAL" && "$reason" == completed ]]; then
+    reason="runner-interrupted-$INTERRUPTED_SIGNAL"
+    jq --arg reason "$reason" '.stopReason = $reason' "$safety" >"$safety.part"
+    mv "$safety.part" "$safety"
+  fi
   GUARD_ACTIVE=false
-  [[ "$reason" == completed && "$status" == 0 ]]
+  [[ -z "$INTERRUPTED_SIGNAL" && "$reason" == completed && "$status" == 0 ]]
 }
 
 verify_pixit_inputs() {
