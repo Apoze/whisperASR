@@ -457,6 +457,14 @@ private actor HighQualityASRWorkerRuntime {
     }
 
     func transcribe(_ samples: [Float], anchored: Bool) async throws -> HighQualityASRExchange {
+        if backend == .whisperKit, !anchored {
+            let result = try await whisperKit.transcribeWithEvidence(audio: samples)
+            return .init(
+                rawTranscript: result.text,
+                chunks: [],
+                averageLogProbability: result.averageLogProbability
+            )
+        }
         let transcribe: @Sendable ([Float]) async throws -> String
         switch backend {
         case .qwenJA:

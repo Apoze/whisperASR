@@ -1,0 +1,190 @@
+{
+  "classification": "harness-reference-coverage-gap",
+  "decision": "INCONCLUSIVE_REFERENCE_HARNESS_NO_DOWNSTREAM",
+  "diagnostic": {
+    "correctedPreflightWouldRunWhisperKit": false,
+    "heavyRunOccurredBeforeCoverageGate": true,
+    "initialPreflightMissedReferenceCoverage": true,
+    "modelConclusion": null
+  },
+  "english": {
+    "candidateChrFPlusPlus": null,
+    "issue94ChrFPlusPlus": 45.874880077811724,
+    "qwenChrFPlusPlus": 46.4359351521226,
+    "reason": "Japanese impact is not evaluable with the partial DEV reference",
+    "run": false
+  },
+  "holdoutOpened": false,
+  "inputSHA256": {
+    "selection": "de7153afe53e3c54e03b980fdc316d89b1fcbc4c03de8bfbfa491174b48953a2",
+    "selectionReport": "680c739c9f1eebb63fd106b5fc6ef2dc39ffb5e477a4c99f8f96880c36b31b15",
+    "triggerReport": "efa147c6b7dfe0ee4e066a24df40aa3c13a57596f36898d1e22dca71183347b5",
+    "whisperKitRun": "e5903c6cde8d79b95f8cb375ceb3d867cd2ab3b07964e29bd4f39bfe450477d3"
+  },
+  "japanese": {
+    "badWhisperKitOverrides": null,
+    "candidateDimensions": null,
+    "candidateEdits": null,
+    "developmentEligible": false,
+    "examples": [
+      {
+        "averageLogProbability": -0.33380869030952454,
+        "baseBackend": "parakeet-ja",
+        "baseEdits": 10,
+        "block": 2,
+        "id": "segment-0095",
+        "parakeet": "ケージ使った技が使えない。",
+        "qwen": "はいはい、はい。はいあ、は、は。は、あ、あ。ははは、いや、はは。あ、いや。はあ、う、はあ。ああ、まあ、はや、はゆ、は難しい。ゲージ使ったわ。ズ、だ、しか使わ、ない、",
+        "referenceCoverage": {
+          "complete": false,
+          "coveredSeconds": 1.1200000000000045,
+          "ratio": 0.3414634146341506
+        },
+        "referenceJapanese": "ない。",
+        "whisperkit": "はいはいは難しい",
+        "whisperkitEdits": 8
+      },
+      {
+        "averageLogProbability": -0.14187458157539368,
+        "baseBackend": "qwen-ja",
+        "baseEdits": 16,
+        "block": 3,
+        "id": "segment-0127",
+        "parakeet": "えちょっと待ってやばいよ元気!",
+        "qwen": "ええええええ。ほほほ。わあ。",
+        "referenceCoverage": {
+          "complete": false,
+          "coveredSeconds": 2.519999999999982,
+          "ratio": 0.40514469453375734
+        },
+        "referenceJapanese": "やったー！や",
+        "whisperkit": "やばすぎる",
+        "whisperkitEdits": 8
+      }
+    ],
+    "gates": {
+      "atLeastOneWhisperKitOverride": true,
+      "completeReferenceCoverageForOverrides": false,
+      "holdoutClosed": true,
+      "improvesBestSingleQwen": true,
+      "improvesQwenParakeet": true,
+      "noAddedDuplicate": true,
+      "noAddedEmpty": true,
+      "noBadWhisperKitOverride": true,
+      "selectorCalibratedByBlocks": true,
+      "termsNumbersMeaningNotWorse": true,
+      "triggerCalibratedAndSparse": false,
+      "workerExitedCleanly": true
+    },
+    "issue94Dimensions": {
+      "meaning": 6,
+      "numbers": 11,
+      "terms": 7
+    },
+    "issue94Edits": 3229,
+    "productWinnerRemains": "qwen",
+    "provisionalBadWhisperKitOverrides": 0,
+    "provisionalCandidateDimensions": {
+      "meaning": 6,
+      "numbers": 11,
+      "terms": 7
+    },
+    "provisionalCandidateEdits": 3219,
+    "qwenDimensions": {
+      "meaning": 6,
+      "numbers": 11,
+      "terms": 7
+    },
+    "qwenEdits": 3273,
+    "whisperKitOverrides": 2
+  },
+  "productDefaultsChanged": false,
+  "promote": false,
+  "runtime": {
+    "allHeavyWorkersClean": true,
+    "combinedDevelopmentCommandSeconds": 748.2365228340495,
+    "fixedMemoryReserveBytes": 0,
+    "incrementalCommandSeconds": 98.07183720893227,
+    "incrementalPeakPhysicalFootprintBytes": 3537161768,
+    "issue94ASRWorkerSeconds": 130.6842601299286,
+    "priorIssue94CommandSeconds": 650.1646856251173,
+    "priorIssue94PeakPhysicalFootprintBytes": 11851782216,
+    "qwenASRWorkerSeconds": 84.46866202354431,
+    "whisperKitCommandSeconds": 98.07183720893227,
+    "whisperKitWorkerSeconds": 88.45128202438354
+  },
+  "schemaVersion": 1,
+  "ticket": 95,
+  "trigger": {
+    "count": 6,
+    "perFoldThreshold": [
+      0.25,
+      0.25,
+      0.25,
+      0.0,
+      0.25
+    ],
+    "rate": 0.03550295857988166,
+    "rawOnlyMeasurement": {
+      "candidateThresholds": [
+        {
+          "threshold": 0.0,
+          "triggerCount": 7
+        },
+        {
+          "threshold": 0.25,
+          "triggerCount": 6
+        },
+        {
+          "threshold": 0.5,
+          "triggerCount": 4
+        },
+        {
+          "threshold": 1.0,
+          "triggerCount": 1
+        }
+      ],
+      "measuredBeforeCalibrationLabels": true,
+      "windowCount": 169
+    },
+    "referenceEvaluability": {
+      "completeForEveryTriggeredWindow": false,
+      "completeWindowCount": 1,
+      "windowCount": 6,
+      "windows": {
+        "segment-0095": {
+          "complete": false,
+          "coveredSeconds": 1.1200000000000045,
+          "ratio": 0.3414634146341506
+        },
+        "segment-0125": {
+          "complete": false,
+          "coveredSeconds": 0,
+          "ratio": 0.0
+        },
+        "segment-0126": {
+          "complete": false,
+          "coveredSeconds": 0,
+          "ratio": 0.0
+        },
+        "segment-0127": {
+          "complete": false,
+          "coveredSeconds": 2.519999999999982,
+          "ratio": 0.40514469453375734
+        },
+        "segment-0167": {
+          "complete": false,
+          "coveredSeconds": 4.600000000000023,
+          "ratio": 0.8646616541353345
+        },
+        "segment-0168": {
+          "complete": true,
+          "coveredSeconds": 3.019999999999982,
+          "ratio": 1.0
+        }
+      }
+    },
+    "seconds": 27.96,
+    "threshold": 0.25
+  }
+}

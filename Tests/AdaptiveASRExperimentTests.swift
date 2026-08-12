@@ -60,6 +60,123 @@ final class AdaptiveASRExperimentTests: XCTestCase {
         let windows: [Window]
     }
 
+    private struct WhisperKitTriggerPlan: Decodable {
+        struct Window: Decodable {
+            let id: String
+            let startSample: Int
+            let endSample: Int
+        }
+
+        let ticket: Int
+        let sourceSHA256: String
+        let windows: [Window]
+    }
+
+    private struct WhisperKitWindow: Codable {
+        let id: String
+        let startSample: Int
+        let endSample: Int
+        let text: String
+        let averageLogProbability: Double
+    }
+
+    private struct WhisperKitRun: Encodable {
+        let schemaVersion = 1
+        let ticket = 95
+        let status: String
+        let sourceSHA256: String
+        let triggerPlanSHA256: String
+        let windows: [WhisperKitWindow]
+        let worker: HighQualityASRWorkerEvidence?
+        let failure: String?
+    }
+
+    func testWhisperKitConfidenceRoundTripsThroughASRExchange() throws {
+        let exchange = HighQualityASRExchange(
+            rawTranscript: "仮説",
+            chunks: [],
+            averageLogProbability: -0.42
+        )
+
+        let decoded = try JSONDecoder().decode(
+            HighQualityASRExchange.self,
+            from: JSONEncoder().encode(exchange)
+        )
+
+        XCTAssertEqual(decoded.rawTranscript, "仮説")
+        XCTAssertEqual(decoded.averageLogProbability, -0.42)
+    }
+
+    func testTargetedWhisperKitASRWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_TARGETED_WHISPERKIT_DEV"] == "1",
+              environment["BENCHMARK_SLOT_GRANTED"] == "95",
+              let audioPath = environment["WHISPERASR_TARGETED_WHISPERKIT_AUDIO"],
+              let planPath = environment["WHISPERASR_TARGETED_WHISPERKIT_PLAN"],
+              let outputPath = environment["WHISPERASR_TARGETED_WHISPERKIT_OUTPUT"],
+              let workerPath = environment["WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"] else {
+            throw XCTSkip("Grant benchmark slot #95 and set the frozen targeted inputs.")
+        }
+        let audioURL = URL(fileURLWithPath: audioPath)
+        let planURL = URL(fileURLWithPath: planPath)
+        let outputURL = URL(fileURLWithPath: outputPath)
+        let plan = try JSONDecoder().decode(
+            WhisperKitTriggerPlan.self,
+            from: Data(contentsOf: planURL)
+        )
+        let audioSHA256 = try JapaneseBenchmarkSupport.sha256(at: audioURL)
+        let planSHA256 = try JapaneseBenchmarkSupport.sha256(at: planURL)
+        XCTAssertEqual(plan.ticket, 95)
+        XCTAssertEqual(plan.sourceSHA256, audioSHA256)
+        XCTAssertEqual(plan.windows.count, 6)
+
+        let samples = try await AudioLoader.loadSamples(url: audioURL)
+        let worker = HighQualityASRWorkerClient(
+            backend: .whisperKit,
+            executableURL: URL(fileURLWithPath: workerPath)
+        )
+        var windows: [WhisperKitWindow] = []
+        do {
+            try await worker.prepare { _, message in print("[issue-95] \(message)") }
+            for window in plan.windows {
+                let exchange = try await worker.transcribe(
+                    Array(samples[window.startSample..<window.endSample]),
+                    anchored: false
+                )
+                let confidence = try XCTUnwrap(exchange.averageLogProbability)
+                XCTAssertTrue(confidence.isFinite)
+                windows.append(.init(
+                    id: window.id,
+                    startSample: window.startSample,
+                    endSample: window.endSample,
+                    text: exchange.rawTranscript,
+                    averageLogProbability: confidence
+                ))
+            }
+            await worker.unload()
+            try Self.write(WhisperKitRun(
+                status: "completed",
+                sourceSHA256: audioSHA256,
+                triggerPlanSHA256: planSHA256,
+                windows: windows,
+                worker: await worker.evidence,
+                failure: nil
+            ), to: outputURL)
+        } catch {
+            await worker.unload()
+            try Self.write(WhisperKitRun(
+                status: "failed",
+                sourceSHA256: audioSHA256,
+                triggerPlanSHA256: planSHA256,
+                windows: windows,
+                worker: await worker.evidence,
+                failure: error.localizedDescription
+            ), to: outputURL)
+            throw error
+        }
+        XCTAssertEqual(windows.count, plan.windows.count)
+    }
+
     func testDevelopmentASRWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_ADAPTIVE_ASR_DEV"] == "1",
@@ -135,7 +252,7 @@ final class AdaptiveASRExperimentTests: XCTestCase {
               let rawJobID = environment["WHISPERASR_ADAPTIVE_TRANSLATION_JOB_ID"],
               let jobID = UUID(uuidString: rawJobID),
               let workerPath = environment["WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"] else {
-            throw XCTSkip("Set the ticket #94 selected transcript and translation output.")
+            throw XCTSkip("Set the selected transcript and translation output.")
         }
         let selection = try JSONDecoder().decode(
             Selection.self,

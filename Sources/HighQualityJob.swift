@@ -305,15 +305,18 @@ struct HighQualityASRExchange: Codable, Equatable, Sendable {
     let rawTranscript: String
     let chunks: [HighQualityASRChunk]
     let characters: [HighQualityASRCharacter]?
+    let averageLogProbability: Double?
 
     init(
         rawTranscript: String,
         chunks: [HighQualityASRChunk],
-        characters: [HighQualityASRCharacter]? = nil
+        characters: [HighQualityASRCharacter]? = nil,
+        averageLogProbability: Double? = nil
     ) {
         self.rawTranscript = rawTranscript
         self.chunks = chunks
         self.characters = characters
+        self.averageLogProbability = averageLogProbability
     }
 }
 
