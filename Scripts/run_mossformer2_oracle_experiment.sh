@@ -30,6 +30,7 @@ export SWIFTPM_MODULECACHE_OVERRIDE="${SWIFTPM_MODULECACHE_OVERRIDE:-$ROOT/.buil
 PHASE="startup"
 ACTIVE_PROCESS=""
 INTERRUPTED_SIGNAL=""
+GUARD_ACTIVE=false
 
 sha256() { shasum -a 256 "$1" | awk '{print $1}'; }
 
@@ -118,7 +119,7 @@ stop_process() {
   STOP_FORCED=false
   terminate_tree "$process"
   while process_running "$process" && ((waited < SHUTDOWN_GRACE_SECONDS)); do
-    sleep 1
+    sleep 1 || true
     waited=$((waited + 1))
   done
   if process_running "$process"; then
@@ -134,7 +135,15 @@ cleanup_active_process() {
 
 handle_signal() {
   INTERRUPTED_SIGNAL="$1"
+  if [[ "$GUARD_ACTIVE" != true ]]; then
+    trap - INT TERM
+    [[ "$1" == INT ]] && exit 130
+    exit 143
+  fi
+  trap '' INT TERM
   cleanup_active_process
+  trap 'handle_signal INT' INT
+  trap 'handle_signal TERM' TERM
 }
 
 run_guarded() {
@@ -164,10 +173,15 @@ run_guarded() {
       freeMemoryPercent:$free,swapUsedBytes:$swap,pageouts:$pageouts}' >>"$samples"
   started="$(date +%s)"
   started_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  INTERRUPTED_SIGNAL=""
+  GUARD_ACTIVE=true
   "$@" >"$log" 2>&1 &
   process="$!"
   ACTIVE_PROCESS="$process"
-  INTERRUPTED_SIGNAL=""
+  if [[ -n "$INTERRUPTED_SIGNAL" ]]; then
+    stop_process "$process"
+    stop_forced="$STOP_FORCED"
+  fi
   while process_running "$process"; do
     elapsed="$(($(date +%s) - started))"
     if ! read_system_memory || ! read_process_memory "$process"; then
@@ -225,14 +239,14 @@ run_guarded() {
       stop_forced="$STOP_FORCED"
       break
     fi
-    sleep 1
+    sleep 1 || true
   done
   status=0
   wait "$process" 2>/dev/null || status="$?"
   ACTIVE_PROCESS=""
   [[ -z "$INTERRUPTED_SIGNAL" || "$reason" != completed ]] \
     || reason="runner-interrupted-$INTERRUPTED_SIGNAL"
-  sleep "$RECOVERY_SAMPLE_DELAY_SECONDS"
+  sleep "$RECOVERY_SAMPLE_DELAY_SECONDS" || true
   if read_system_memory; then
     after_free="$SYSTEM_FREE"
     after_swap="$SYSTEM_SWAP_BYTES"
@@ -289,6 +303,7 @@ run_guarded() {
         recoveredFreeMemoryPercentagePoints:($freeAfter-$minimumFreeMemoryPercent)},
       peakSwapDeltaBytes:$peakSwapDeltaBytes,
       rawSamples:{path:$samplesPath,sha256:$samplesSHA256}}' >"$safety"
+  GUARD_ACTIVE=false
   [[ "$reason" == completed && "$status" == 0 ]]
 }
 

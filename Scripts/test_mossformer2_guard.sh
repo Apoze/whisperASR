@@ -29,3 +29,18 @@ if run_guarded "$TEMP/runaway.json" "$TEMP/runaway.log" 5 \
 fi
 jq -e '.stopReason == "post-load-runaway" and
   .postLoadRunawayGuard.modelLoadedObserved == true' "$TEMP/runaway.json" >/dev/null
+
+RUNAWAY_GROWTH_PERCENT=25
+RUNAWAY_WINDOW_SAMPLES=30
+(
+  trap cleanup_active_process EXIT
+  trap 'handle_signal INT' INT
+  trap 'handle_signal TERM' TERM
+  run_guarded "$TEMP/interrupted.json" "$TEMP/interrupted.log" 30 "" /bin/sleep 30
+) &
+guard="$!"
+sleep 1
+kill -TERM "$guard"
+wait "$guard" 2>/dev/null || true
+jq -e '.stopReason == "runner-interrupted-TERM" and .exitStatus != 0' \
+  "$TEMP/interrupted.json" >/dev/null
