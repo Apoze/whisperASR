@@ -670,7 +670,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
         guard environment["WHISPERASR_RUN_PIXIT_ORACLE_QWEN"] == "1",
               let inputPath = environment["WHISPERASR_PIXIT_SEPARATOR_EVIDENCE"],
               let outputPath = environment["WHISPERASR_PIXIT_QWEN_EVIDENCE"] else {
-            throw XCTSkip("Set the ticket #101 PixIT separator and Qwen evidence paths.")
+            throw XCTSkip("Set the ticket #101/#102 separator and Qwen evidence paths.")
         }
         let inputURL = URL(fileURLWithPath: inputPath).standardizedFileURL
         let decoder = JSONDecoder()
@@ -679,7 +679,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             PixITSeparatorEvidence.self,
             from: Data(contentsOf: inputURL)
         )
-        XCTAssertEqual(input.ticket, 101)
+        XCTAssertTrue([101, 102].contains(input.ticket))
         XCTAssertEqual(input.corpusID, "qudu2fx3ncc")
         XCTAssertTrue(["smoke", "development"].contains(input.stage))
         XCTAssertFalse(input.files.isEmpty)
@@ -725,7 +725,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let workerEvidence = await asr.evidence
         let worker = try XCTUnwrap(workerEvidence)
         let evidence = PixITQwenEvidence(
-            ticket: 101,
+            ticket: input.ticket,
             stage: input.stage,
             corpusID: input.corpusID,
             inputSHA256: try JapaneseBenchmarkSupport.sha256(at: inputURL),

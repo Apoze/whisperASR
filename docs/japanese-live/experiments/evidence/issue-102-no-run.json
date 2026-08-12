@@ -1,7 +1,13 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "ticket": 102,
   "result": "NO_RUN_PIXIT_GATE_FAILED",
+  "status": "superseded_by_user_authorized_independent_test",
+  "supersededBy": {
+    "scope": "MossFormer2_SMOKE_then_DEV",
+    "reason": "L'utilisateur autorise explicitement le test indépendant de MossFormer2 malgré l'échec qualité de PixIT.",
+    "holdoutOpened": false
+  },
   "supersedes": {
     "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
     "recordedAtCommit": "651e431f563a5bf16d653c9182e9bc2612099014",
@@ -49,5 +55,5 @@
     "productChanged": false,
     "liveChanged": false
   },
-  "resume": "Réévaluer #102 seulement si une nouvelle preuve DEV #101 satisfait la porte distinctRecovery."
+  "resume": "Superseded : reprendre par le smoke MossFormer2 #102 explicitement autorisé, sans rouvrir le holdout."
 }
