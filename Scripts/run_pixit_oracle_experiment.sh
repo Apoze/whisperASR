@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MODE="${1:-preflight}"
@@ -7,6 +7,7 @@ ARTIFACTS="${WHISPERASR_PIXIT_ROOT:-$ROOT/.build/benchmarks/pixit-oracle-101}"
 FROZEN_REPO="${WHISPERASR_FROZEN_REPO:-/Users/maz/Documents/projets/whisperASR}"
 MANIFEST="$ROOT/docs/japanese-live/corpora/qudu2fx3ncc/manifest.json"
 AUDIO="${WHISPERASR_PIXIT_DEV_AUDIO:-$FROZEN_REPO/.build/benchmarks/japanese-live/corpora/qudu2fx3ncc/audio-16k-mono.wav}"
+SPEAKER_MAP="${WHISPERASR_PIXIT_DEV_SPEAKER_MAP:-$FROZEN_REPO/.build/benchmarks/japanese-live/corpora/qudu2fx3ncc/speaker-map.json}"
 PLAN="$ARTIFACTS/plan.json"
 VENV="$ARTIFACTS/python-3.11"
 PYTHON="${WHISPERASR_PIXIT_PYTHON:-/opt/homebrew/bin/python3.11}"
@@ -46,24 +47,30 @@ mkdir -p "$ARTIFACTS" "$CLANG_MODULE_CACHE_PATH" "$SWIFTPM_MODULECACHE_OVERRIDE"
 preflight() {
   rm -f "$ARTIFACTS/failure.json"
   PHASE="input-and-reference"
-  [[ -x "$PYTHON" && -f "$AUDIO" ]] || fail
+  [[ -x "$PYTHON" && -f "$AUDIO" && -f "$SPEAKER_MAP" ]] || fail
   PHASE="runner"
   "$PYTHON" Scripts/test_pixit_oracle.py
   PHASE="input-and-reference"
-  "$PYTHON" Scripts/pixit_oracle.py plan --manifest "$MANIFEST" --audio "$AUDIO" --output "$PLAN"
+  "$PYTHON" Scripts/pixit_oracle.py plan --manifest "$MANIFEST" --audio "$AUDIO" \
+    --speaker-map "$SPEAKER_MAP" --output "$PLAN"
   PHASE="build"
   xcrun swift test --filter HighQualityAcceptanceTests/testPixITOracleQwenSourcesWhenOptedIn \
     2>&1 | tee "$ARTIFACTS/preflight-swift.log"
+  bash Scripts/build_mlx_metallib.sh debug 2>&1 | tee "$ARTIFACTS/preflight-mlx.log"
   jq -n \
     --arg commit "$(git rev-parse HEAD)" \
     --arg base "$(git rev-parse codex/issue-86-frontier-base)" \
     --arg plan "$(shasum -a 256 "$PLAN" | awk '{print $1}')" \
+    --arg speakerMap "$(shasum -a 256 "$SPEAKER_MAP" | awk '{print $1}')" \
     --arg runner "$(shasum -a 256 Scripts/pixit_oracle.py | awk '{print $1}')" \
     --arg qwen "$(shasum -a 256 Tests/HighQualityAcceptanceTests.swift | awk '{print $1}')" \
+    --arg mlx "$(shasum -a 256 .build/debug/mlx.metallib | awk '{print $1}')" \
     --arg live "$(shasum -a 256 Sources/AppleLiveServices.swift | awk '{print $1}')" \
     '{ticket:101,scope:"development-oracle-only",commit:$commit,requiredBase:$base,
-      planSHA256:$plan,implementationSHA256:{"Scripts/pixit_oracle.py":$runner,
-      "Tests/HighQualityAcceptanceTests.swift":$qwen},liveImplementationSHA256:$live,
+      planSHA256:$plan,speakerMapSHA256:$speakerMap,
+      implementationSHA256:{"Scripts/pixit_oracle.py":$runner,
+      "Tests/HighQualityAcceptanceTests.swift":$qwen},mlxMetallibSHA256:$mlx,
+      liveImplementationSHA256:$live,
       lightTestsPassed:true,holdoutOpened:false}' >"$ARTIFACTS/preflight.json"
 }
 
@@ -89,7 +96,7 @@ run_stage() {
   PHASE="separator-runner"
   "$VENV/bin/python" Scripts/pixit_oracle.py separate \
     --plan "$PLAN" --output "$directory/separator" --cache "$ARTIFACTS/model-cache" \
-    --stage "$stage" "${window_args[@]}" 2>&1 | tee "$directory/pixit.log"
+    --stage "$stage" ${window_args[@]+"${window_args[@]}"} 2>&1 | tee "$directory/pixit.log"
   PHASE="qwen-runner"
   WHISPERASR_RUN_PIXIT_ORACLE_QWEN=1 \
   WHISPERASR_PIXIT_SEPARATOR_EVIDENCE="$directory/separator/separator-evidence.json" \

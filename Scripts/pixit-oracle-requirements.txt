@@ -6,3 +6,4 @@ scipy==1.13.1
 speechbrain==1.0.0
 torch==2.3.1
 torchaudio==2.3.1
+transformers==4.48.3

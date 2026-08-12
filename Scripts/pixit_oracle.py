@@ -10,7 +10,9 @@ import json
 import os
 import re
 import resource
+import subprocess
 import sys
+import threading
 import time
 import unicodedata
 from datetime import datetime, timezone
@@ -23,16 +25,19 @@ SAMPLE_RATE = 16_000
 PADDING_SAMPLES = SAMPLE_RATE // 2
 STARTING_SIMILARITY = 0.80
 SIMILARITY_CANDIDATES = (0.70, 0.75, 0.80, 0.85, 0.90, 0.95)
+PIXIT_MAX_SIMULTANEOUS_VOICES = 3
 MODEL_REVISIONS = {
     "pyannote/speech-separation-ami-1.0": "9486b106945ae0cc0784041a08bfcdba5edadfb9",
     "pyannote/separation-ami-1.0": "4d38e95cfd067c894b8b60b00761831fb01e4a8c",
     "speechbrain/spkrec-ecapa-voxceleb": "0f99f2d0ebe89ac095bcc5903c4dd8f72b367286",
+    "microsoft/wavlm-large": "c1423ed94bb01d80a3f5ce5bc39f6026a0f4828c",
     "pyannote/wespeaker-voxceleb-resnet34-LM": "837717ddb9ff5507820346191109dc79c958d614",
 }
 MODEL_LICENSES = {
     "pyannote/speech-separation-ami-1.0": "MIT",
     "pyannote/separation-ami-1.0": "MIT",
     "speechbrain/spkrec-ecapa-voxceleb": "Apache-2.0",
+    "microsoft/wavlm-large": "CC-BY-SA-3.0",
     "pyannote/wespeaker-voxceleb-resnet34-LM": "CC-BY-4.0",
 }
 RUNTIME_VERSIONS = {
@@ -44,6 +49,7 @@ RUNTIME_VERSIONS = {
     "speechbrain": "1.0.0",
     "torch": "2.3.1",
     "torchaudio": "2.3.1",
+    "transformers": "4.48.3",
 }
 RUNTIME_LICENSES = {
     "huggingface-hub": "Apache-2.0",
@@ -54,6 +60,7 @@ RUNTIME_LICENSES = {
     "speechbrain": "Apache-2.0",
     "torch": "BSD-3-Clause",
     "torchaudio": "BSD-2-Clause",
+    "transformers": "Apache-2.0",
 }
 
 
@@ -158,6 +165,35 @@ def _merge_spans(spans: list[tuple[int, int]]) -> list[list[int]]:
     return merged
 
 
+def reference_speaker_scope(manifest: dict, speaker_map: dict[str, str]) -> dict:
+    reference_labels = sorted({turn["speaker"] for turn in manifest["annotations"]["turns"]})
+    missing = sorted(set(reference_labels) - set(speaker_map))
+    pseudo_groups = sorted(
+        label for label in reference_labels
+        if speaker_map.get(label) == "Overlapping or group reaction"
+    )
+    identities = sorted(set(reference_labels) - set(pseudo_groups) - set(missing))
+    complete = manifest["annotations"].get("status") == "complete" and not missing
+    return {
+        "measurementStatus": "complete" if complete else "incomplete",
+        "globalIdentityCount": len(identities) if complete else None,
+        "globalIdentityLabels": identities,
+        "excludedPseudoGroupLabels": pseudo_groups,
+        "unclassifiedReferenceLabels": missing,
+    }
+
+
+def _maximum_simultaneous_voices(turns: list[dict], start: int, end: int) -> int | None:
+    boundaries = sorted({start, end} | {
+        turn[point] for turn in turns for point in ("startSample", "endSample")
+        if start < turn[point] < end
+    })
+    counts = [len({turn["speaker"] for turn in turns
+                   if turn["startSample"] < right and left < turn["endSample"]})
+              for left, right in zip(boundaries, boundaries[1:])]
+    return max(counts, default=None)
+
+
 def oracle_windows(manifest: dict) -> list[dict]:
     if manifest.get("corpusID") != CORPUS:
         raise ValueError("ticket #101 is restricted to the development corpus")
@@ -188,6 +224,9 @@ def oracle_windows(manifest: dict) -> list[dict]:
         turns = [turn for turn in manifest["annotations"]["turns"]
                  if turn["speaker"] in speakers
                  and turn["startSample"] < oracle_end and oracle_start < turn["endSample"]]
+        simultaneous = _maximum_simultaneous_voices(
+            manifest["annotations"]["turns"], oracle_start, oracle_end
+        )
         windows.append({
             "id": f"window-{index:02d}",
             "startSample": start,
@@ -196,6 +235,14 @@ def oracle_windows(manifest: dict) -> list[dict]:
             "oracleEndSample": oracle_end,
             "oracleSeconds": (oracle_end - oracle_start) / SAMPLE_RATE,
             "speakers": sorted(speakers),
+            "expectedSimultaneousVoiceCount": simultaneous,
+            "simultaneousVoiceMeasurementStatus": (
+                "complete" if simultaneous is not None else "incomplete"
+            ),
+            "withinPixITCapacity": (
+                simultaneous <= PIXIT_MAX_SIMULTANEOUS_VOICES
+                if simultaneous is not None else None
+            ),
             "referenceTurns": turns,
         })
     return windows
@@ -215,11 +262,22 @@ def iso8601(date: datetime) -> str:
 def make_plan(args: argparse.Namespace) -> None:
     manifest_path = Path(args.manifest).resolve()
     audio_path = Path(args.audio).resolve()
+    speaker_map_path = Path(args.speaker_map).resolve()
     manifest = json.loads(manifest_path.read_text())
     if manifest["annotations"].get("status") != "complete" or not manifest["annotations"].get("reviewedBy"):
         raise ValueError("development annotations are not authoritative")
     if sha256(audio_path) != manifest["fixture"]["sha256"]:
         raise ValueError("development mixture hash mismatch")
+    speaker_reference = next(
+        reference for reference in manifest["source"]["references"]
+        if reference["label"] == "speaker-map"
+    )
+    if sha256(speaker_map_path) != speaker_reference["sha256"]:
+        raise ValueError("development speaker map hash mismatch")
+    speaker_scope = reference_speaker_scope(
+        manifest, json.loads(speaker_map_path.read_text())
+    )
+    speaker_scope["provenance"] = artifact(speaker_map_path)
     windows = oracle_windows(manifest)
     if abs(sum(window["oracleSeconds"] for window in windows) - 25.5) > 1e-9:
         raise ValueError("authoritative DEV overlap duration changed")
@@ -230,6 +288,11 @@ def make_plan(args: argparse.Namespace) -> None:
         "corpusID": CORPUS,
         "manifest": artifact(manifest_path),
         "mixture": artifact(audio_path),
+        "referenceSpeakerScope": speaker_scope,
+        "pixitLimitations": {
+            "maximumSimultaneousVoices": PIXIT_MAX_SIMULTANEOUS_VOICES,
+            "resolvesGlobalSpeakerIdentity": False,
+        },
         "similarityCalibration": {
             "startingPoint": STARTING_SIMILARITY,
             "developmentCandidates": SIMILARITY_CANDIDATES,
@@ -238,6 +301,18 @@ def make_plan(args: argparse.Namespace) -> None:
         "modelPins": MODEL_REVISIONS,
         "windows": windows,
     })
+
+
+def _local_model_reference(value: str, repositories: dict[str, Path]) -> str:
+    model_id = value.split("@", 1)[0]
+    if model_id not in repositories:
+        return value
+    path = repositories[model_id]
+    if model_id == "pyannote/separation-ami-1.0":
+        path /= "pytorch_model.bin"
+    if not path.exists():
+        raise ValueError(f"missing pinned model path: {model_id}")
+    return str(path)
 
 
 def _patched_config(separator_directory: Path, repositories: dict[str, Path], output: Path) -> Path:
@@ -250,12 +325,13 @@ def _patched_config(separator_directory: Path, repositories: dict[str, Path], ou
             return {key: replace(item) for key, item in value.items()}
         if isinstance(value, list):
             return [replace(item) for item in value]
-        if isinstance(value, str) and value in repositories:
-            return str(repositories[value])
+        if isinstance(value, str):
+            return _local_model_reference(value, repositories)
         return value
 
     patched = replace(config)
-    unresolved = {value for value in _strings(patched) if re.fullmatch(r"[\w.-]+/[\w.-]+", value)}
+    unresolved = {value for value in _strings(patched)
+                  if re.fullmatch(r"[\w.-]+/[\w.-]+(?:@[\w.-]+)?", value)}
     if unresolved:
         raise ValueError(f"unpinned model references: {sorted(unresolved)}")
     path = output / "pinned-config.yaml"
@@ -281,6 +357,29 @@ def _inventory(paths: dict[str, Path]) -> list[dict]:
             if path.is_file():
                 files.append({"modelID": model_id, "relativePath": str(path.relative_to(root)), **artifact(path)})
     return files
+
+
+def _source_sample_bounds(actual: int, expected: int) -> tuple[int, int]:
+    if actual < expected:
+        raise ValueError(f"separated source is too short: {actual} < {expected}")
+    return 0, expected
+
+
+def _monitor_native_memory(path: Path, stop: threading.Event) -> None:
+    with path.open("w") as handle:
+        while True:
+            record = {"at": iso8601(datetime.now(timezone.utc))}
+            for key, command in (
+                ("memoryPressure", ["/usr/bin/memory_pressure", "-Q"]),
+                ("swapUsage", ["/usr/sbin/sysctl", "vm.swapusage"]),
+            ):
+                result = subprocess.run(command, capture_output=True, text=True, timeout=5)
+                record[key] = (result.stdout or result.stderr).strip()
+                record[f"{key}ExitStatus"] = result.returncode
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
+            handle.flush()
+            if stop.wait(1):
+                break
 
 
 def separate(args: argparse.Namespace) -> None:
@@ -318,6 +417,12 @@ def separate(args: argparse.Namespace) -> None:
 
     output = Path(args.output).resolve()
     output.mkdir(parents=True, exist_ok=True)
+    pressure_path = output / "native-memory-pressure.jsonl"
+    pressure_stop = threading.Event()
+    pressure_thread = threading.Thread(
+        target=_monitor_native_memory, args=(pressure_path, pressure_stop), daemon=True
+    )
+    pressure_thread.start()
     cache = Path(args.cache).resolve()
     cache.mkdir(parents=True, exist_ok=True)
     started = datetime.now(timezone.utc)
@@ -332,7 +437,10 @@ def separate(args: argparse.Namespace) -> None:
     # Download only transitive model IDs declared by the pinned separator configuration.
     import yaml
     raw_config = yaml.safe_load((repositories[separator_id] / "config.yaml").read_text())
-    referenced = {value for value in _strings(raw_config) if value in MODEL_REVISIONS}
+    referenced = {value.split("@", 1)[0] for value in _strings(raw_config)
+                  if value.split("@", 1)[0] in MODEL_REVISIONS}
+    if "pyannote/separation-ami-1.0" in referenced:
+        referenced.add("microsoft/wavlm-large")
     for model_id in sorted(referenced):
         repositories[model_id] = Path(snapshot_download(
             model_id, revision=MODEL_REVISIONS[model_id], token=token, cache_dir=cache
@@ -345,7 +453,21 @@ def separate(args: argparse.Namespace) -> None:
         "HF_HUB_DISABLE_TELEMETRY": "1",
         "PYANNOTE_METRICS_ENABLED": "0",
     })
-    separator = Pipeline.from_pretrained(str(config_path), use_auth_token=token, cache_dir=str(cache))
+    from transformers import AutoModel
+    original_from_pretrained = AutoModel.from_pretrained
+
+    def pinned_from_pretrained(model_id, *arguments, **keywords):
+        return original_from_pretrained(
+            _local_model_reference(model_id, repositories), *arguments, **keywords
+        )
+
+    AutoModel.from_pretrained = pinned_from_pretrained
+    try:
+        separator = Pipeline.from_pretrained(
+            str(config_path), use_auth_token=token, cache_dir=str(cache)
+        )
+    finally:
+        AutoModel.from_pretrained = original_from_pretrained
     separator.to(torch.device("cpu"))
     waveform, sample_rate = torchaudio.load(str(mixture_path))
     if sample_rate != SAMPLE_RATE or waveform.shape[0] != 1:
@@ -373,11 +495,16 @@ def separate(args: argparse.Namespace) -> None:
             **artifact(mixture_file),
         }]
         labels = list(diarization.labels())
+        source_start, source_end = _source_sample_bounds(
+            sources.data.shape[0], crop.shape[-1]
+        )
         for index in range(sources.data.shape[1]):
             source_file = output / f'{window["id"]}-source-{index + 1:02d}.wav'
             scipy.io.wavfile.write(source_file, SAMPLE_RATE, np.clip(
-                sources.data[:, index] * 32767, -32768, 32767
+                sources.data[source_start:source_end, index] * 32767, -32768, 32767
             ).astype(np.int16))
+            if scipy.io.wavfile.read(source_file)[1].shape[0] != crop.shape[-1]:
+                raise ValueError("separated source sample count mismatch")
             entries.append({
                 "windowID": window["id"], "kind": "source", "sourceIndex": index + 1,
                 "speakerLabel": labels[index] if index < len(labels) else None,
@@ -390,6 +517,14 @@ def separate(args: argparse.Namespace) -> None:
             "diarization": artifact(rttm), "files": entries,
         })
     del separator
+    pressure_stop.set()
+    pressure_thread.join()
+    pressure_records = [json.loads(line) for line in pressure_path.read_text().splitlines()]
+    if not pressure_records or any(
+        record["memoryPressureExitStatus"] or record["swapUsageExitStatus"]
+        for record in pressure_records
+    ):
+        raise ValueError("native memory pressure sampling failed")
     exited = datetime.now(timezone.utc)
     evidence = {
         "schemaVersion": 1,
@@ -405,6 +540,7 @@ def separate(args: argparse.Namespace) -> None:
                    for model_id in sorted(repositories)],
         "modelInventory": _inventory(repositories),
         "implementation": artifact(Path(__file__).resolve()),
+        "nativeMemoryPressure": artifact(pressure_path),
         "worker": {
             "startedAt": iso8601(started), "exitedAt": iso8601(exited),
             "elapsedSeconds": time.monotonic() - started_clock,
@@ -435,6 +571,40 @@ def _material_changes(window: dict, mixture: str, sources: list[str]) -> tuple[l
     return recovered, lost
 
 
+def speaker_analysis(plan: dict, window_reports: list[dict], threshold: float) -> dict:
+    evaluated = {window["windowID"]: window for window in window_reports}
+    windows = []
+    for reference in plan["windows"]:
+        result = evaluated.get(reference["id"])
+        accepted = result and result["thresholds"][str(threshold)]["accepted"]
+        transcripts = result["sourceTranscripts"] if result else []
+        windows.append({
+            "windowID": reference["id"],
+            "simultaneousVoiceMeasurementStatus": reference["simultaneousVoiceMeasurementStatus"],
+            "expectedSimultaneousVoiceCount": reference["expectedSimultaneousVoiceCount"],
+            "referenceContributorLabels": reference["speakers"],
+            "withinPixITCapacity": reference["withinPixITCapacity"],
+            "evaluationStatus": "evaluated" if result else "not-evaluated",
+            "producedPixITTrackCount": len(transcripts) if result else None,
+            "acceptedPixITTrackCount": len(transcripts) if accepted else (0 if result else None),
+            "distinctAcceptedTranscriptCount": (
+                len({normalize(text) for text in transcripts if normalize(text)})
+                if accepted else (0 if result else None)
+            ),
+            "distinctRecoveredReferenceUtteranceCount": (
+                len({item["turnID"] for item in result["recovered"]}) if result else None
+            ),
+            "distinctLostReferenceUtteranceCount": (
+                len({item["turnID"] for item in result["lost"]}) if result else None
+            ),
+        })
+    return {
+        "globalReference": plan["referenceSpeakerScope"],
+        "pixitLimitations": plan["pixitLimitations"],
+        "oracleWindows": windows,
+    }
+
+
 def report(args: argparse.Namespace) -> None:
     plan_path = Path(args.plan).resolve()
     plan = json.loads(plan_path.read_text())
@@ -447,6 +617,7 @@ def report(args: argparse.Namespace) -> None:
     if separator.get("stage") != args.stage or qwen.get("stage") != args.stage:
         raise ValueError("stage mismatch")
     verify_separator_plan(separator, plan_path)
+    verify_artifact(separator["nativeMemoryPressure"])
     if not qwen.get("strictlySequential"):
         raise ValueError("PixIT and Qwen workers overlapped")
     for record in separator["files"]:
@@ -500,8 +671,13 @@ def report(args: argparse.Namespace) -> None:
             "productConstant": False,
             "candidates": calibration,
         },
+        "speakerAnalysis": speaker_analysis(plan, window_reports, selected["threshold"]),
         "windows": window_reports,
-        "resources": {"pixit": separator["worker"], "qwen": qwen["worker"]},
+        "resources": {
+            "pixit": {**separator["worker"],
+                      "nativeMemoryPressure": separator["nativeMemoryPressure"]},
+            "qwen": qwen["worker"],
+        },
         "gates": {
             "rawArtifactsVerified": True,
             "workersSequential": True,
@@ -518,6 +694,7 @@ def main() -> None:
     plan = subparsers.add_parser("plan")
     plan.add_argument("--manifest", required=True)
     plan.add_argument("--audio", required=True)
+    plan.add_argument("--speaker-map", required=True)
     plan.add_argument("--output", required=True)
     plan.set_defaults(run=make_plan)
     run = subparsers.add_parser("separate")
