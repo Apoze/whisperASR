@@ -1,7 +1,13 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "ticket": 102,
   "result": "NO_RUN_PIXIT_GATE_FAILED",
+  "status": "superseded_by_user_authorized_independent_test",
+  "supersededBy": {
+    "scope": "MossFormer2_SMOKE_then_DEV",
+    "reason": "L'utilisateur autorise explicitement le test indépendant de MossFormer2 malgré l'échec qualité de PixIT.",
+    "holdoutOpened": false
+  },
   "supersedes": {
     "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
     "recordedAtCommit": "651e431f563a5bf16d653c9182e9bc2612099014",
@@ -35,9 +41,107 @@
     }
   },
   "execution": {
+    "status": "superseded-no-run-snapshot",
     "mossFormer2Downloaded": false,
     "mossFormer2Loaded": false,
     "separatorComparisonPerformed": false
+  },
+  "subsequentSmokeAttempt": {
+    "status": "HARNESS_GUARD_TOO_CONSERVATIVE",
+    "provenanceCommit": "8b1c37102ee7b09a74029db0debd2b02c3d62d4b",
+    "cause": "The old harness sent SIGTERM after sampled RSS crossed its fixed 8 GiB limit. All 41 native samples succeeded, free memory stayed above 10%, and the run stopped around 51 seconds instead of reaching its 600 second timeout.",
+    "resource": {
+      "rssLimitBytes": 8589934592,
+      "peakResidentBytes": null,
+      "residentBytesLowerBoundExclusive": 8589934592,
+      "peakPhysicalFootprintBytes": null,
+      "exactPeakStatus": "not-recorded-because-the-old-wait-path-triggered-ERR-before-safety-json",
+      "freeMemoryBeforePercent": 68,
+      "minimumFreeMemoryPercent": 33,
+      "freeMemoryAfterPercent": 74,
+      "nativePressure": "normal-no-critical-pressure-observed",
+      "durationSeconds": 51
+    },
+    "swap": {
+      "beforeMiB": 2690.75,
+      "peakMiB": 5238.88,
+      "peakDeltaMiB": 2548.13,
+      "afterMiB": 5182.88,
+      "afterDeltaMiB": 2492.13
+    },
+    "memoryRecovery": {
+      "recoveredFromMinimumPercentagePoints": 41,
+      "changeFromBaselinePercentagePoints": 6,
+      "mossFormer2ProcessesRemaining": 0
+    },
+    "quality": {
+      "evaluated": false,
+      "qwenStarted": false,
+      "separatorEvidenceCompleted": false,
+      "verdict": "not-assigned"
+    },
+    "rawEvidence": {
+      "runnerLog": ".build/benchmarks/mossformer2-oracle-102/smoke-attempt-2.raw.log",
+      "runnerLogSHA256": "57d6657336efb9aaed43b530e6fcf70046d5eec44e1eb6eaf484c29a75bd7321",
+      "failureSHA256": "aebdcedb5144f9544cc0b61dd2dc731bee19229a047903060460e64d7f8cff65",
+      "nativeSamples": ".build/benchmarks/mossformer2-oracle-102/smoke-attempt-2/separator/native-memory-pressure.jsonl",
+      "nativeSamplesSHA256": "1b695b4e7dfe287cc5872ee1ea840e9619795a810bf2da9abd318b3f871bdac9",
+      "pageoutBaselineStatus": "not-recorded-by-old-harness"
+    },
+    "holdoutOpened": false,
+    "developmentStarted": false
+  },
+  "smokeRetry": {
+    "status": "STOPPED_BY_NATIVE_PRESSURE_WARNING",
+    "provenanceCommit": "7a18475e3a271e864dd7447e0950ae4bd0c14964",
+    "download": "cached-and-hash-verified",
+    "runtime": "pinned-and-loaded",
+    "harness": {
+      "status": "guard-operated-as-specified",
+      "stopReason": "native-pressure-warning",
+      "nativePressureRaw": 2,
+      "exitStatus": 143,
+      "forcedTermination": false,
+      "elapsedSecondsIncludingRecovery": 23,
+      "timeoutSeconds": 600
+    },
+    "processMemory": {
+      "peakResidentBytes": 6437715968,
+      "peakPhysicalFootprintBytes": 11477312704,
+      "catastrophicLimitBytes": 23192823398,
+      "modelLoadedObserved": true
+    },
+    "systemMemory": {
+      "freeBeforePercent": 75,
+      "freeAtWarningPercent": 41,
+      "minimumNativeTraceFreePercent": 33,
+      "freeAfterPercent": 68,
+      "swapBeforeMiB": 5094.88,
+      "swapAtWarningMiB": 5094.88,
+      "swapAfterMiB": 5382.88,
+      "swapAfterDeltaMiB": 288,
+      "pageoutsBefore": 1773436,
+      "pageoutsAfter": 1773446,
+      "pageoutDelta": 10
+    },
+    "quality": {
+      "evaluated": false,
+      "compatibilityVerdict": "not-assigned",
+      "qwenStarted": false,
+      "separatorEvidenceCompleted": false,
+      "reportProduced": false
+    },
+    "rawEvidence": {
+      "failureSHA256": "a63a1f3bf1c7c375a421283194045cf58e97f7f6b0d78112ac00992690e9114a",
+      "safetySHA256": "4296352f80d1eb497d4b00e9291c031e2b4f45ce8f8de42d1d1165c1a812cfe2",
+      "safetySamplesSHA256": "143ec93193e5c9a9a4a6b5c6a4f69adaa60e10d0032bef0471b87d2555dd140e",
+      "nativeSamplesSHA256": "8be35ddddae6077f4502ac3ef23a5730ed866a2c6857afe45bad4d23bb5548e1",
+      "modelLoadedSHA256": "cddfbbb5d2b7315ccfc74bf8f3316ad905afb551393da8a387c88c1e61361b67",
+      "mixtureSHA256": "972326d278b5316fd07bb030866819c55e80f0010c3956b6e39717ed51609ffd"
+    },
+    "readyForDevelopment": false,
+    "developmentStarted": false,
+    "holdoutOpened": false
   },
   "decision": {
     "reason": "PixIT fonctionne techniquement mais échoue la porte qualité DEV : distinctRecovery=false et 4 répliques récupérées contre 12 perdues.",
@@ -49,5 +153,5 @@
     "productChanged": false,
     "liveChanged": false
   },
-  "resume": "Réévaluer #102 seulement si une nouvelle preuve DEV #101 satisfait la porte distinctRecovery."
+  "resume": "NOT_READY_FOR_DEVELOPMENT: the only authorized SMOKE_RETRY stopped cleanly on native pressure warning; no quality or compatibility verdict was produced and the holdout remains closed."
 }
