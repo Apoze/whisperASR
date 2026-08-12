@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "ticket": 103,
+  "result": "NO_RUN_NO_ADMISSIBLE_DEV_SEPARATOR",
+  "dependencyGate": {
+    "ticket": 102,
+    "evidenceCommit": "651e431f563a5bf16d653c9182e9bc2612099014",
+    "evidencePath": "docs/japanese-live/experiments/evidence/issue-102-no-run.json",
+    "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
+    "admissibleDevelopmentSeparator": false,
+    "reason": "L'utilisateur poursuit sans accès Hugging Face. PixIT n'a donc pas été exécuté ni évalué; ce statut n'est pas un échec qualité PixIT."
+  },
+  "execution": {
+    "automaticDetectorImplemented": false,
+    "calibrationPerformed": false,
+    "holdoutOpened": false,
+    "holdoutExecuted": false,
+    "modelAdded": false,
+    "modelDownloaded": false,
+    "modelLoaded": false
+  },
+  "scope": {
+    "betaUIAdded": false,
+    "productCodeChanged": false,
+    "liveCodeChanged": false,
+    "productAndLiveByteIdenticalToDependencyCommit": true,
+    "verificationCommand": "git diff --exit-code 651e431f563a5bf16d653c9182e9bc2612099014 -- Package.swift Sources"
+  },
+  "decision": {
+    "reason": "Le ticket #102 n'a figé aucun séparateur DEV admissible; conformément au premier critère de #103, le holdout reste fermé et aucune implémentation n'est produite."
+  },
+  "resume": {
+    "condition": "Accès Hugging Face disponible.",
+    "order": [101, 102, 103],
+    "action": "Reprendre #101 et obtenir une preuve DEV PixIT positive et non dupliquée; reprendre ensuite #102 et figer un séparateur DEV admissible; réévaluer #103 seulement après ces deux portes."
+  },
+  "issue106": {
+    "instruction": "N'intégrer aucun candidat overlap de la Lane C et conserver le Standard; #103 est un no-run faute de séparateur DEV admissible, pas un échec qualité PixIT. Après accès Hugging Face, reprendre #101 puis #102, et ne réévaluer #103 que si #102 fige un séparateur DEV admissible."
+  }
+}
