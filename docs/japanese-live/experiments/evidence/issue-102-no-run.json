@@ -1,23 +1,46 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "ticket": 102,
-  "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
+  "result": "NO_RUN_PIXIT_GATE_FAILED",
+  "supersedes": {
+    "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
+    "recordedAtCommit": "651e431f563a5bf16d653c9182e9bc2612099014",
+    "reason": "#101 dispose maintenant d'un résultat DEV réel ; la décision différée reste conservée dans l'historique Git."
+  },
   "dependencyGate": {
     "ticket": 101,
-    "status": "USER_DEFERRED_EXTERNAL_ACCESS",
-    "preparationCommit": "c86ed0265544d20dd2bd600713529fc404c5a675",
-    "preparationVerified": true,
-    "checkedBeforeModelAccess": true
+    "status": "PIXIT_GATE_FAILED",
+    "executedCommit": "d6ed51a6d609d4d84eef9509b04bf14437eb2fc7",
+    "verifiedBeforeMossFormer2Access": true,
+    "artifacts": {
+      "reportSHA256": "a8b204189c300b73ea26a157bd5ffeb0ced700c7095277309a8f92472c57b9b9",
+      "runProvenanceSHA256": "42c7c98aff2a24d0044932b9b28aaec0422d8029ded559d7961ab5f97a04ca8f",
+      "separatorSHA256": "d34d404c85c74f7781ead048a70c9572810846e7f49964f1f1b4c3b9c23d5e35",
+      "qwenSHA256": "25911215e49aa0d2c9b3a19f5b3f1c12c9e0a9af9a3782ff1cc089d90a4cab8d"
+    },
+    "developmentResult": {
+      "windows": 10,
+      "oracleSeconds": 25.5,
+      "acceptedWindows": 7,
+      "recoveredTurns": 4,
+      "lostTurns": 12,
+      "netRecoveredTurns": -8,
+      "mixtureEquivalentRejections": 3,
+      "distinctRecovery": false,
+      "elapsedSeconds": 69.28,
+      "pixitSeconds": 30.507190583040938,
+      "qwenSeconds": 22.851011991500854,
+      "memoryPressure": "normal",
+      "holdoutOpened": false
+    }
   },
   "execution": {
-    "pixitDownloaded": false,
-    "pixitLoaded": false,
     "mossFormer2Downloaded": false,
     "mossFormer2Loaded": false,
-    "qualityComparisonPerformed": false
+    "separatorComparisonPerformed": false
   },
   "decision": {
-    "reason": "La comparaison qualité n'a pas été réalisée car l'accès externe requis par PixIT est différé par l'utilisateur.",
+    "reason": "PixIT fonctionne techniquement mais échoue la porte qualité DEV : distinctRecovery=false et 4 répliques récupérées contre 12 perdues.",
     "separatorFrozenOnDevelopment": false
   },
   "scope": {
@@ -26,9 +49,5 @@
     "productChanged": false,
     "liveChanged": false
   },
-  "resume": {
-    "condition": "Accès Hugging Face disponible et porte DEV PixIT #101 positive.",
-    "fromCommit": "c86ed0265544d20dd2bd600713529fc404c5a675",
-    "action": "Reprendre #101 depuis sa préparation, puis rouvrir #102 seulement si PixIT récupère une parole superposée distincte."
-  }
+  "resume": "Réévaluer #102 seulement si une nouvelle preuve DEV #101 satisfait la porte distinctRecovery."
 }

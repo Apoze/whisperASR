@@ -1,14 +1,19 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "ticket": 103,
   "result": "NO_RUN_NO_ADMISSIBLE_DEV_SEPARATOR",
+  "supersedes": {
+    "dependencyResult": "NO_RUN_USER_DEFERRED_DEPENDENCY",
+    "recordedAtCommit": "ae489d980f8fa45904058431f182e5da9aa46b8a",
+    "reason": "La décision différée reste dans l'historique Git mais est supersédée par la vraie preuve DEV PixIT."
+  },
   "dependencyGate": {
     "ticket": 102,
-    "evidenceCommit": "651e431f563a5bf16d653c9182e9bc2612099014",
+    "evidenceCommit": "1d3f927a20cf72362103ee4c20f2efe75d8be91d",
     "evidencePath": "docs/japanese-live/experiments/evidence/issue-102-no-run.json",
-    "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
+    "result": "NO_RUN_PIXIT_GATE_FAILED",
     "admissibleDevelopmentSeparator": false,
-    "reason": "L'utilisateur poursuit sans accès Hugging Face. PixIT n'a donc pas été exécuté ni évalué; ce statut n'est pas un échec qualité PixIT."
+    "reason": "PixIT a été testé sur DEV mais échoue la porte qualité : distinctRecovery=false, 4 répliques récupérées contre 12 perdues. #102 n'a donc figé aucun séparateur admissible."
   },
   "execution": {
     "automaticDetectorImplemented": false,
@@ -24,17 +29,17 @@
     "productCodeChanged": false,
     "liveCodeChanged": false,
     "productAndLiveByteIdenticalToDependencyCommit": true,
-    "verificationCommand": "git diff --exit-code 651e431f563a5bf16d653c9182e9bc2612099014 -- Package.swift Sources"
+    "verificationCommand": "git diff --exit-code 1d3f927a20cf72362103ee4c20f2efe75d8be91d -- Package.swift Sources"
   },
   "decision": {
     "reason": "Le ticket #102 n'a figé aucun séparateur DEV admissible; conformément au premier critère de #103, le holdout reste fermé et aucune implémentation n'est produite."
   },
   "resume": {
-    "condition": "Accès Hugging Face disponible.",
+    "condition": "Une nouvelle preuve DEV #101 satisfait la porte distinctRecovery.",
     "order": [101, 102, 103],
-    "action": "Reprendre #101 et obtenir une preuve DEV PixIT positive et non dupliquée; reprendre ensuite #102 et figer un séparateur DEV admissible; réévaluer #103 seulement après ces deux portes."
+    "action": "Réévaluer #102 et figer un séparateur DEV admissible, puis seulement réévaluer #103."
   },
   "issue106": {
-    "instruction": "N'intégrer aucun candidat overlap de la Lane C et conserver le Standard; #103 est un no-run faute de séparateur DEV admissible, pas un échec qualité PixIT. Après accès Hugging Face, reprendre #101 puis #102, et ne réévaluer #103 que si #102 fige un séparateur DEV admissible."
+    "instruction": "Conserver le Standard sans candidat overlap."
   }
 }
