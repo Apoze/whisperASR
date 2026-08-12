@@ -218,7 +218,8 @@ prepare_model() {
 }
 
 run_stage() {
-  local stage="$1" window_id="${2:-}" directory="$ARTIFACTS/$stage"
+  local stage="$1" window_id="${2:-}"
+  local directory="$ARTIFACTS/$stage"
   local pixit_separator="$PIXIT_ROOT/$stage/separator/separator-evidence.json"
   local pixit_report="$PIXIT_ROOT/$stage/report.json"
   local moss_timeout=1800 qwen_timeout=1200
