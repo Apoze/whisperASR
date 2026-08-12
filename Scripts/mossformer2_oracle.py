@@ -10,6 +10,7 @@ import json
 import os
 import re
 import resource
+import signal
 import shutil
 import subprocess
 import sys
@@ -160,6 +161,12 @@ def separate(args: argparse.Namespace) -> None:
     )
     pressure_thread.start()
     separator = None
+    previous_sigterm = signal.getsignal(signal.SIGTERM)
+
+    def terminate(signum, _frame):
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, terminate)
     try:
         os.environ["HF_HUB_OFFLINE"] = "1"
         sys.path.insert(0, str(source / "clearvoice"))
@@ -171,6 +178,11 @@ def separate(args: argparse.Namespace) -> None:
             separator = ClearVoice(
                 task="speech_separation", model_names=["MossFormer2_SS_16K"]
             )
+            shared.write_json(output / "model-loaded.json", {
+                "at": shared.iso8601(datetime.now(timezone.utc)),
+                "modelID": MODEL_ID,
+                "processIdentifier": os.getpid(),
+            })
             files = []
             window_records = []
             for window in windows:
@@ -216,6 +228,7 @@ def separate(args: argparse.Namespace) -> None:
         finally:
             os.chdir(previous_directory)
     finally:
+        signal.signal(signal.SIGTERM, previous_sigterm)
         del separator
         gc.collect()
         pressure_stop.set()
