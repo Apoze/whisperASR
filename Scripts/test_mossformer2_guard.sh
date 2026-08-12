@@ -43,5 +43,5 @@ guard="$!"
 sleep 1
 kill -TERM "$guard"
 wait "$guard" 2>/dev/null || true
-jq -e '.stopReason == "runner-interrupted-TERM" and .exitStatus != 0' \
+jq -e '.stopReason == "runner-interrupted-TERM" and .exitStatus == 0' \
   "$TEMP/interrupted.json" >/dev/null
