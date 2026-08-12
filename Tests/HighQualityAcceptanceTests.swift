@@ -1100,7 +1100,22 @@ final class HighQualityAcceptanceTests: XCTestCase {
 
         let sourceURL = URL(fileURLWithPath: sourcePath)
         let archiveURL = URL(fileURLWithPath: archivePath)
-        try assertHash(sourceURL, label: "source-video", manifest: manifest)
+        if let experimentalHash = environment["WHISPERASR_ACCEPTANCE_SOURCE_SHA256"] {
+            let expected = "8df0e11d06510983dd66b3e0386c5562cf27a8c71bf3acfcf46eb6697b576411"
+            guard corpusID == "qudu2fx3ncc",
+                  environment["BENCHMARK_SLOT_GRANTED"] == "93",
+                  experimentalHash == expected else {
+                throw NSError(
+                    domain: "HighQualityAcceptanceTests",
+                    code: 93,
+                    userInfo: [NSLocalizedDescriptionKey:
+                        "Experimental audio must be the locked #93 DEV candidate."]
+                )
+            }
+            XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: sourceURL), expected)
+        } else {
+            try assertHash(sourceURL, label: "source-video", manifest: manifest)
+        }
         try assertHash(archiveURL, label: "reference-archive", manifest: manifest)
         for reference in manifest.source.references where URL(string: reference.locator)?.scheme == nil {
             let url = root.appendingPathComponent(reference.locator)
