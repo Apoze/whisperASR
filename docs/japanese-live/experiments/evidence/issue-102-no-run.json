@@ -91,6 +91,58 @@
     "holdoutOpened": false,
     "developmentStarted": false
   },
+  "smokeRetry": {
+    "status": "STOPPED_BY_NATIVE_PRESSURE_WARNING",
+    "provenanceCommit": "7a18475e3a271e864dd7447e0950ae4bd0c14964",
+    "download": "cached-and-hash-verified",
+    "runtime": "pinned-and-loaded",
+    "harness": {
+      "status": "guard-operated-as-specified",
+      "stopReason": "native-pressure-warning",
+      "nativePressureRaw": 2,
+      "exitStatus": 143,
+      "forcedTermination": false,
+      "elapsedSecondsIncludingRecovery": 23,
+      "timeoutSeconds": 600
+    },
+    "processMemory": {
+      "peakResidentBytes": 6437715968,
+      "peakPhysicalFootprintBytes": 11477312704,
+      "catastrophicLimitBytes": 23192823398,
+      "modelLoadedObserved": true
+    },
+    "systemMemory": {
+      "freeBeforePercent": 75,
+      "freeAtWarningPercent": 41,
+      "minimumNativeTraceFreePercent": 33,
+      "freeAfterPercent": 68,
+      "swapBeforeMiB": 5094.88,
+      "swapAtWarningMiB": 5094.88,
+      "swapAfterMiB": 5382.88,
+      "swapAfterDeltaMiB": 288,
+      "pageoutsBefore": 1773436,
+      "pageoutsAfter": 1773446,
+      "pageoutDelta": 10
+    },
+    "quality": {
+      "evaluated": false,
+      "compatibilityVerdict": "not-assigned",
+      "qwenStarted": false,
+      "separatorEvidenceCompleted": false,
+      "reportProduced": false
+    },
+    "rawEvidence": {
+      "failureSHA256": "a63a1f3bf1c7c375a421283194045cf58e97f7f6b0d78112ac00992690e9114a",
+      "safetySHA256": "4296352f80d1eb497d4b00e9291c031e2b4f45ce8f8de42d1d1165c1a812cfe2",
+      "safetySamplesSHA256": "143ec93193e5c9a9a4a6b5c6a4f69adaa60e10d0032bef0471b87d2555dd140e",
+      "nativeSamplesSHA256": "8be35ddddae6077f4502ac3ef23a5730ed866a2c6857afe45bad4d23bb5548e1",
+      "modelLoadedSHA256": "cddfbbb5d2b7315ccfc74bf8f3316ad905afb551393da8a387c88c1e61361b67",
+      "mixtureSHA256": "972326d278b5316fd07bb030866819c55e80f0010c3956b6e39717ed51609ffd"
+    },
+    "readyForDevelopment": false,
+    "developmentStarted": false,
+    "holdoutOpened": false
+  },
   "decision": {
     "reason": "PixIT fonctionne techniquement mais échoue la porte qualité DEV : distinctRecovery=false et 4 répliques récupérées contre 12 perdues.",
     "separatorFrozenOnDevelopment": false
@@ -101,5 +153,5 @@
     "productChanged": false,
     "liveChanged": false
   },
-  "resume": "READY_FOR_HEAVY_BENCHMARK #102 SMOKE_RETRY with a native-pressure-aware guard; a fresh benchmark slot is required and the holdout remains closed."
+  "resume": "NOT_READY_FOR_DEVELOPMENT: the only authorized SMOKE_RETRY stopped cleanly on native pressure warning; no quality or compatibility verdict was produced and the holdout remains closed."
 }
