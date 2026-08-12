@@ -239,6 +239,7 @@ run_stage() {
       ${window_args[@]+"${window_args[@]}"}
   cat "$directory/moss.log"
   PHASE="qwen-$stage"
+  mkdir -p "$directory/qwen"
   run_guarded "$directory/qwen-safety.json" "$directory/qwen.log" \
     "$qwen_timeout" 0 env \
       WHISPERASR_RUN_PIXIT_ORACLE_QWEN=1 \

@@ -75,12 +75,26 @@ class MossFormer2OracleTests(unittest.TestCase):
         )
 
     def test_separator_selection_is_smoke_bounded_and_dev_quality_gated(self):
-        failed = {"recoveredTurns": 4, "lostTurns": 12, "netRecoveredTurns": -8}
-        passed = {"recoveredTurns": 6, "lostTurns": 2, "netRecoveredTurns": 4}
+        failed = {
+            "acceptedWindows": 0,
+            "recoveredTurns": 4,
+            "lostTurns": 12,
+            "netRecoveredTurns": -8,
+        }
+        passed = {
+            "acceptedWindows": 1,
+            "recoveredTurns": 6,
+            "lostTurns": 2,
+            "netRecoveredTurns": 4,
+        }
 
         self.assertEqual(
             moss.select_separator("smoke", failed, passed),
             {"status": "SMOKE_PASSED_READY_FOR_DEVELOPMENT", "selected": None},
+        )
+        self.assertEqual(
+            moss.select_separator("smoke", passed, failed)["status"],
+            "SMOKE_REJECTED_NO_ACCEPTED_WINDOW",
         )
         self.assertEqual(
             moss.select_separator("development", failed, failed)["status"],

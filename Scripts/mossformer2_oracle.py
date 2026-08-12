@@ -379,6 +379,8 @@ def _selected_metrics(report: dict) -> dict:
 
 def select_separator(stage: str, pixit_metrics: dict, moss_metrics: dict) -> dict:
     if stage == "smoke":
+        if moss_metrics["acceptedWindows"] == 0:
+            return {"status": "SMOKE_REJECTED_NO_ACCEPTED_WINDOW", "selected": None}
         return {"status": "SMOKE_PASSED_READY_FOR_DEVELOPMENT", "selected": None}
     candidates = [
         ("pixit", pixit_metrics),
