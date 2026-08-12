@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "ticket": 96,
+  "baseCommit": "ad3d56feffec443e36af7adb68ce7fa9b3e4f32c",
+  "benchmarkSlotGranted": false,
+  "modelRunsLaunched": 0,
+  "holdoutOpened": false,
+  "reporterSelfTestPassed": true,
+  "sourcesTreeSHA256": "a11fc98669da14c30db3e3cea5c1e2a16342b84c970fbd2eae5277e0d6bb30e7",
+  "build": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift build",
+    "exitCode": 0,
+    "rawLog": "docs/japanese-live/experiments/evidence/E30/build.log",
+    "rawLogSHA256": "8ac9fcd38489f02330c86d05a001b23a80eb4f1e77568a7714680a03404efd93"
+  },
+  "initialTestFailure": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test",
+    "exitCode": 1,
+    "classification": "infrastructure-missing-metallib",
+    "modelReached": false,
+    "rawLog": "docs/japanese-live/experiments/evidence/E30/swift-test-missing-metallib.log",
+    "rawLogSHA256": "1cb75fe36522f939bb381693f4be35a69521a502f3eff50295bf229fa121dc79"
+  },
+  "metallib": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash Scripts/build_mlx_metallib.sh debug",
+    "passed": true,
+    "path": ".build/debug/mlx.metallib",
+    "sha256": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  },
+  "tests": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --skip-build",
+    "exitCode": 0,
+    "executed": 436,
+    "skippedOptIn": 60,
+    "failed": 0,
+    "rawLog": "docs/japanese-live/experiments/evidence/E30/swift-test.log",
+    "rawLogSHA256": "8bfdc2253a8957efa82f011533246db9a7b9966cb8ade6e282852681fd221dae"
+  },
+  "appLaunch": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift run &",
+    "processID": 39445,
+    "exitCode": 0,
+    "classification": "expected-single-instance-lock",
+    "existingProcessID": 87706,
+    "existingInstanceRemainedActive": true,
+    "rawLog": "docs/japanese-live/experiments/evidence/E30/app-launch.log",
+    "rawLogSHA256": "c111505f06813e7ffe98a31c5d4d369872c60185d984edfe6ae44ca11dfec88a"
+  }
+}
