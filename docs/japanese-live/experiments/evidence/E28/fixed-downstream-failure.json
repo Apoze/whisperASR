@@ -1,0 +1,229 @@
+{
+  "status": "failed",
+  "ticket": 94,
+  "holdoutOpened": false,
+  "inputAndReferencePreflightPassed": true,
+  "classification": "candidate-pipeline-failure",
+  "commandStatus": 1,
+  "runtime": {
+    "command": [
+      "xcrun",
+      "swift",
+      "test",
+      "--skip-build",
+      "--filter",
+      "AdaptiveASRExperimentTests/testSingleDownstreamTranslationWhenOptedIn"
+    ],
+    "elapsedSeconds": 449.62876904103905,
+    "exitCode": 1,
+    "rawLog": "/Users/maz/.codex/worktrees/4656/whisperASR/.build/benchmarks/issue-94/development/fixed-translation.log",
+    "timedOut": false,
+    "timeoutSeconds": 2400
+  },
+  "manifest": {
+    "deliverables": [
+      "english-translation-transcript",
+      "japanese-transcript"
+    ],
+    "dependencies": [
+      "source-normalization",
+      "japanese-asr",
+      "forced-alignment",
+      "llm-translation",
+      "export"
+    ],
+    "failures": [
+      {
+        "message": "English translation failed validation twice for unit-0054. No invalid Deliverable was published.",
+        "stage": "translation"
+      }
+    ],
+    "finishedAt": "2026-08-12T04:11:05Z",
+    "generatedFiles": [
+      {
+        "kind": "evidence",
+        "path": "raw-asr.json"
+      },
+      {
+        "kind": "manifest",
+        "path": "manifest.json"
+      }
+    ],
+    "jobID": "94000002-0000-4000-8000-000000000001",
+    "model": {
+      "backend": "qwen-ja",
+      "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+    },
+    "modelEvents": [
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "backend": "qwen-ja",
+        "kind": "load-started",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
+      },
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "backend": "qwen-ja",
+        "kind": "load-completed",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
+      },
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "backend": "qwen-ja",
+        "kind": "unload-completed",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
+      },
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "kind": "load-started",
+        "modelID": "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
+      },
+      {
+        "at": "2026-08-12T04:03:52Z",
+        "kind": "load-completed",
+        "modelID": "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
+      },
+      {
+        "at": "2026-08-12T04:04:16Z",
+        "kind": "unload-completed",
+        "modelID": "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
+      },
+      {
+        "at": "2026-08-12T04:04:16Z",
+        "kind": "load-started",
+        "modelID": "mlx-community/translategemma-12b-it-4bit"
+      },
+      {
+        "at": "2026-08-12T04:04:21Z",
+        "kind": "load-completed",
+        "modelID": "mlx-community/translategemma-12b-it-4bit"
+      },
+      {
+        "at": "2026-08-12T04:11:05Z",
+        "kind": "unload-completed",
+        "modelID": "mlx-community/translategemma-12b-it-4bit"
+      }
+    ],
+    "peakMemoryBytes": 2777745784,
+    "schemaVersion": 2,
+    "selectedBackend": "qwen-ja",
+    "source": {
+      "byteCount": 30630694,
+      "fileName": "audio-16k-mono.wav",
+      "modifiedAt": "2026-07-19T11:32:54Z",
+      "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/japanese-live/corpora/qudu2fx3ncc/audio-16k-mono.wav"
+    },
+    "speakerConfiguration": {
+      "countPolicy": {
+        "mode": "automatic"
+      },
+      "enhancedPrecision": false,
+      "sensitiveDetection": false
+    },
+    "speakerCountPolicy": {
+      "mode": "automatic"
+    },
+    "speakerLabels": false,
+    "stageDurations": [
+      "preparing-alignment",
+      2.6987050771713257,
+      "aligning",
+      24.794850945472717,
+      "translating",
+      408.7243239879608,
+      "preparing-asr",
+      0.0004849433898925781,
+      "normalizing-source",
+      0.0002779960632324219,
+      "transcribing",
+      0.07603800296783447
+    ],
+    "startedAt": "2026-08-12T04:03:49Z",
+    "status": "failed",
+    "translationModel": {
+      "modelID": "mlx-community/translategemma-12b-it-4bit",
+      "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "runtimeVersion": "3.31.4",
+      "translator": "translategemma-12b-it-4bit",
+      "weightSHA256": [
+        "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+        "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+      ]
+    }
+  },
+  "candidate": {
+    "failures": [
+      {
+        "message": "English translation failed validation twice for unit-0054. No invalid Deliverable was published.",
+        "stage": "translation"
+      }
+    ],
+    "modelEvents": [
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "backend": "qwen-ja",
+        "kind": "load-started",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
+      },
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "backend": "qwen-ja",
+        "kind": "load-completed",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
+      },
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "backend": "qwen-ja",
+        "kind": "unload-completed",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit"
+      },
+      {
+        "at": "2026-08-12T04:03:49Z",
+        "kind": "load-started",
+        "modelID": "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
+      },
+      {
+        "at": "2026-08-12T04:03:52Z",
+        "kind": "load-completed",
+        "modelID": "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
+      },
+      {
+        "at": "2026-08-12T04:04:16Z",
+        "kind": "unload-completed",
+        "modelID": "mlx-community/Qwen3-ForcedAligner-0.6B-4bit"
+      },
+      {
+        "at": "2026-08-12T04:04:16Z",
+        "kind": "load-started",
+        "modelID": "mlx-community/translategemma-12b-it-4bit"
+      },
+      {
+        "at": "2026-08-12T04:04:21Z",
+        "kind": "load-completed",
+        "modelID": "mlx-community/translategemma-12b-it-4bit"
+      },
+      {
+        "at": "2026-08-12T04:11:05Z",
+        "kind": "unload-completed",
+        "modelID": "mlx-community/translategemma-12b-it-4bit"
+      }
+    ],
+    "stageDurations": [
+      "preparing-alignment",
+      2.6987050771713257,
+      "aligning",
+      24.794850945472717,
+      "translating",
+      408.7243239879608,
+      "preparing-asr",
+      0.0004849433898925781,
+      "normalizing-source",
+      0.0002779960632324219,
+      "transcribing",
+      0.07603800296783447
+    ],
+    "peakMemoryBytes": 2777745784,
+    "translationPresent": true
+  }
+}

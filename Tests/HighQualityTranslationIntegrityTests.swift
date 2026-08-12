@@ -98,6 +98,23 @@ final class HighQualityTranslationIntegrityTests: XCTestCase {
         XCTAssertTrue(degenerate.reasons.contains { $0.code == .degenerateRepetition })
     }
 
+    func testAllowsSourceAttestedRepeatedAffirmation() {
+        let verdict = HighQualityTranslationIntegrityValidator.validate(
+            turns: [turn(
+                "unit-0054",
+                "な切るラインみたいなあそうそうそうそうそう切るラ"
+            )],
+            batches: [batch(
+                "unit-0054",
+                "That's right, right, right, right, right. It's like a cutting line."
+            )],
+            glossary: []
+        )[0]
+
+        XCTAssertEqual(verdict.verdict, .pass)
+        XCTAssertFalse(verdict.reasons.contains { $0.code == .degenerateRepetition })
+    }
+
     func testCanonicalizesAttestedBurnoutVariantsOnlyForApplicableCriticalTerm() throws {
         let term = HighQualityTranslationIntegrityGlossaryTerm(
             try XCTUnwrap(HighQualityGlossaryCatalog.terms.first { $0.id == "burnout" })

@@ -1,0 +1,213 @@
+{
+  "acceptedUnitsBeforeGate": 281,
+  "baselineSamePassage": {
+    "english": "“It’s about this length, isn't it? Make sure you don't cut it past this line. Yes, yes, yes. This is the line you need to be careful with.”",
+    "japanese": "いの長さみたいなねこれで死ぬな切るラインみたいなあそうそうそうそうそう切るラインこれはやったまみ",
+    "turnIDs": [
+      "unit-0061"
+    ]
+  },
+  "benchmarkSlotReleased": true,
+  "candidateSamePassage": {
+    "english": "That's right, right, right, right, right. It's like a cutting line.",
+    "japanese": "な切るラインみたいなあそうそうそうそうそう切るラ",
+    "turnIDs": [
+      "unit-0054"
+    ]
+  },
+  "classification": "validator-false-positive-source-attested-repetition",
+  "completionPlan": {
+    "acceptedAfterTarget": 228,
+    "acceptedBeforeTarget": 53,
+    "mergeAfterRetry": "281 retained outputs + unit-0054 retry",
+    "neverGeneratedUnits": 0,
+    "retainedAcceptedUnits": 281,
+    "totalUnits": 282,
+    "translateUnitIDs": [
+      "unit-0054"
+    ]
+  },
+  "counterfactualDiagnosticOnly": {
+    "baselineChrFPlusPlus": 46.4359351521226,
+    "candidateChrFPlusPlus": 45.874880077811724,
+    "delta": -0.5610550743108789,
+    "invalidDeliverablePublished": false,
+    "reconstructedFromRetainedRaw": true
+  },
+  "failedUnit": {
+    "attempts": [
+      {
+        "attemptNumber": 1,
+        "duration": 1.9519280195236206,
+        "finishReason": "stop",
+        "inputTokens": 89,
+        "nativeOutput": "That's right, right, right, right, right. It's like a cutting line.",
+        "nativePrompt": "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"な切るラインみたいなあそうそうそうそうそう切るラ\",\"type\":\"text\"}],\"role\":\"user\"}]",
+        "outputTokens": 21,
+        "sanitizedOutput": "That's right, right, right, right, right. It's like a cutting line.",
+        "sanitizedPrompt": "な切るラインみたいなあそうそうそうそうそう切るラ",
+        "terminalOutcome": "rejected",
+        "validationReasonCodes": [
+          "degenerate-repetition"
+        ]
+      },
+      {
+        "attemptNumber": 2,
+        "duration": 1.9345629215240479,
+        "finishReason": "stop",
+        "inputTokens": 91,
+        "nativeOutput": "That's right, right, right, right, right. It's like a cutting line.",
+        "nativePrompt": "{\"generation\":{\"max_tokens\":128,\"temperature\":0},\"messages\":[{\"content\":[{\"source_lang_code\":\"ja-JP\",\"target_lang_code\":\"en\",\"text\":\"な切るラインみたいなあそうそうそうそうそう切るラ\",\"type\":\"text\"}],\"role\":\"user\"}]}",
+        "outputTokens": 21,
+        "sanitizedOutput": "That's right, right, right, right, right. It's like a cutting line.",
+        "sanitizedPrompt": "な切るラインみたいなあそうそうそうそうそう切るラ",
+        "terminalOutcome": "failed",
+        "validationReasonCodes": [
+          "degenerate-repetition"
+        ]
+      }
+    ],
+    "followingJapanese": [
+      "頭って入りますか。"
+    ],
+    "id": "unit-0054",
+    "integrityVerdict": {
+      "cueID": "unit-0054",
+      "generatedOutput": "That's right, right, right, right, right. It's like a cutting line.",
+      "glossaryOpportunities": [],
+      "reasons": [
+        {
+          "code": "degenerate-repetition",
+          "matchedEvidence": [
+            "phrase=right",
+            "count>=4"
+          ],
+          "severity": "hard-failure"
+        }
+      ],
+      "testedSource": "な切るラインみたいなあそうそうそうそうそう切るラ",
+      "thresholdVersion": "translation-integrity-dev-v1",
+      "verdict": "hard-failure"
+    },
+    "japanese": "な切るラインみたいなあそうそうそうそうそう切るラ",
+    "precedingJapanese": [
+      "あ、もかちゃんに、このリハーサルの、なんか、のゲージは、"
+    ],
+    "sourceEnd": 201.5,
+    "sourceStart": 198.06,
+    "sourceWindow": {
+      "action": "abstain-qwen",
+      "endSample": 3258560,
+      "id": "segment-0036",
+      "index": 35,
+      "parakeet": "このぐらいの長さ見せてこれで死ぬなみたいな。",
+      "qwen": "このぐらいの長さみたいなやつでこれで死ぬな切るラインみたいなあそうそうそうそうそう切るラインこれはやっ",
+      "reasons": [
+        "insufficient-calibrated-margin"
+      ],
+      "selectedBackend": "qwen-ja",
+      "selectedText": "このぐらいの長さみたいなやつでこれで死ぬな切るラインみたいなあそうそうそうそうそう切るラインこれはやっ",
+      "signals": {
+        "disagreement": 0.5,
+        "parakeetWeakness": 0.0,
+        "qwenCriticalTokens": [],
+        "qwenCriticalTokensLostByParakeet": [],
+        "qwenWeakness": 0.0,
+        "weaknessMargin": 0.0
+      },
+      "startSample": 3131840
+    }
+  },
+  "generatedUnits": 282,
+  "holdoutOpened": false,
+  "issue95": "not-decided: Japanese value of #94 remains independently measurable",
+  "overrides": [
+    {
+      "baseline": {
+        "english": "It's difficult to handle. I used my gauge. It's quite direct. If you can hit with guard, it's a big advantage.",
+        "japanese": "対応難しい。 ゲージ使ったわ。 ズバつく。 ガードでインパクト打てると、バガー",
+        "turnIDs": [
+          "unit-0177",
+          "unit-0178",
+          "unit-0179",
+          "unit-0180"
+        ]
+      },
+      "baselineChrFPlusPlus": 38.6673357227064,
+      "candidate": {
+        "english": "It's not possible to use techniques that rely on a cage.",
+        "japanese": "ケージ使った技が使えない。",
+        "turnIDs": [
+          "unit-0157"
+        ]
+      },
+      "candidateChrFPlusPlus": 29.113219653281092,
+      "distanceFromFailureSeconds": 338.38,
+      "distanceFromFailureWindows": 59,
+      "end": 543.16,
+      "id": "segment-0095",
+      "index": 94,
+      "parakeet": "ケージ使った技が使えない。",
+      "qwen": "はいはい、はい。はいあ、は、は。は、あ、あ。ははは、いや、はは。あ、いや。はあ、う、はあ。ああ、まあ、はや、はゆ、は難しい。ゲージ使ったわ。ズ、だ、しか使わ、ない、",
+      "referenceEnglish": "It's a really bad state: you still take chip damage while guarding, you can't parry, and you can't use Drive Impact.",
+      "selectedJapanese": "ケージ使った技が使えない。",
+      "start": 539.88
+    },
+    {
+      "baseline": {
+        "english": "Well, really? It ends like this.",
+        "japanese": "さあ、マジか、最後はこう。",
+        "turnIDs": [
+          "unit-0236"
+        ]
+      },
+      "baselineChrFPlusPlus": null,
+      "candidate": {
+        "english": "Got it!",
+        "japanese": "濱家ボケ、やった!",
+        "turnIDs": [
+          "unit-0212"
+        ]
+      },
+      "candidateChrFPlusPlus": null,
+      "distanceFromFailureSeconds": 504.78,
+      "distanceFromFailureWindows": 90,
+      "end": 711.3,
+      "id": "segment-0126",
+      "index": 125,
+      "parakeet": "濱家ボケ、やった!",
+      "qwen": "あああ！ああ、ああ。",
+      "referenceEnglish": null,
+      "selectedJapanese": "濱家ボケ、やった!",
+      "start": 706.28
+    }
+  ],
+  "preflight": {
+    "build": "passed",
+    "checkpointAndHashes": "passed",
+    "input": "passed",
+    "reference": "passed",
+    "runtimeTimedOut": false
+  },
+  "runtime": {
+    "alignmentWorkerPeakBytes": 2777745784,
+    "commandSeconds": 449.62876904103905,
+    "forcedTermination": false,
+    "jobPeakMemoryBytes": 2777745784,
+    "minimumAvailableMemoryBytes": 3420995584,
+    "pressureTransitions": [],
+    "stages": {
+      "aligning": 24.794850945472717,
+      "normalizing-source": 0.0002779960632324219,
+      "preparing-alignment": 2.6987050771713257,
+      "preparing-asr": 0.0004849433898925781,
+      "transcribing": 0.07603800296783447,
+      "translating": 408.7243239879608
+    },
+    "swapDeltaBytes": -16777216,
+    "translationWorkerPeakBytes": 11851782216,
+    "translationWorkerSeconds": 408.7197849750519
+  },
+  "schemaVersion": 1,
+  "ticket": 94
+}

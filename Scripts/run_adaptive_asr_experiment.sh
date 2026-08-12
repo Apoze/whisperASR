@@ -31,6 +31,7 @@ PARAKEET_ROOT="/Users/maz/Library/Application Support/FluidAudio/Models/parakeet
 ALIGNER_WEIGHT="/Users/maz/.cache/huggingface/hub/models--mlx-community--Qwen3-ForcedAligner-0.6B-4bit/snapshots/2f652af86ae0c73fe189b9429225c908ce4bf020/model.safetensors"
 TRANSLATOR_ROOT="/Users/maz/.cache/huggingface/hub/models--mlx-community--translategemma-12b-it-4bit/snapshots/f3dcfd54df14672fbcf0731086fb47a797a943ae"
 WORKER="$ROOT/.build/debug/WhisperASR"
+TEST_WORKER="$ROOT/.build/debug/WhisperASRPackageTests.xctest/Contents/MacOS/WhisperASRPackageTests"
 PLAN="$ARTIFACTS/window-plan.json"
 REUSE="$ARTIFACTS/reuse-diagnostic.json"
 READY="$ARTIFACTS/READY_FOR_HEAVY_BENCHMARK.json"
@@ -45,13 +46,23 @@ TRANSLATION_OUTPUT="$DEV/translation"
 JOB_ID=94000001-0000-4000-8000-000000000001
 CANDIDATE="$TRANSLATION_OUTPUT/$JOB_ID"
 FIXED_READY="$ARTIFACTS/READY_FOR_FIXED_DOWNSTREAM_REPLAY.json"
+TARGETED="$DEV/targeted-translation-retry"
+TARGETED_READY="$ARTIFACTS/READY_FOR_TARGETED_TRANSLATION_RETRY.json"
+TARGETED_BASELINE="$TARGETED/baseline.json"
+TARGETED_VERDICTS="$TARGETED/verdicts.json"
+TARGETED_OUTPUT="$TARGETED/retry.json"
+TARGETED_RUNTIME="$TARGETED/runtime.json"
+TARGETED_LOG="$TARGETED/run.log"
+TARGETED_COMPLETION="$EVIDENCE/targeted-translation-completion.json"
+TRANSLATION_DIAGNOSTIC="$EVIDENCE/fixed-translation-diagnostic.json"
 FINAL_REPORT="$EVIDENCE/report.json"
 REPORT_MD="$ROOT/docs/japanese-live/experiments/E28-adaptive-asr-qwen-parakeet.md"
 
-case "$MODE" in preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay) ;;
-  *) echo "usage: $0 [preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay]" >&2; exit 2 ;;
+case "$MODE" in preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay|targeted-translation-ready|targeted-translation-retry|verify-targeted-translation-retry) ;;
+  *) echo "usage: $0 [preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay|targeted-translation-ready|targeted-translation-retry|verify-targeted-translation-retry]" >&2; exit 2 ;;
 esac
-if [[ "$MODE" == fixed-downstream-replay ]]; then
+if [[ "$MODE" == fixed-downstream-replay || "$MODE" == targeted-translation-ready \
+  || "$MODE" == targeted-translation-retry || "$MODE" == verify-targeted-translation-retry ]]; then
   TRANSLATION_RUNTIME="$DEV/fixed-translation-runtime.json"
   TRANSLATION_LOG="$DEV/fixed-translation.log"
   TRANSLATION_OUTPUT="$DEV/fixed-translation"
@@ -89,6 +100,8 @@ verify_inputs() {
   git merge-base --is-ancestor "$BASE_COMMIT" HEAD
   [[ "$MODE" == fixed-downstream-ready || "$MODE" == fixed-downstream-replay \
     || "$MODE" == verify-fixed-downstream-replay \
+    || "$MODE" == targeted-translation-ready || "$MODE" == targeted-translation-retry \
+    || "$MODE" == verify-targeted-translation-retry \
     || -z "$({ git diff --name-only "$BASE_COMMIT" -- Sources; \
     git ls-files --others --exclude-standard -- Sources; } | sort -u)" ]] || {
       echo "issue #94 must not change product Sources" >&2; return 1;
@@ -209,6 +222,26 @@ verify_fixed_downstream_ready() {
     and ([.windows[] | select(.selectedBackend == "qwen-ja")] | length) == 167
     and ([.windows[] | select(.selectedBackend == "parakeet-ja")] | length) == 2' \
     "$SELECTION" >/dev/null
+}
+
+verify_targeted_translation_ready() {
+  jq -e '.status == "READY_FOR_TARGETED_TRANSLATION_RETRY" and .ticket == 94
+    and .holdoutOpened == false and .modelPasses.asr == 0
+    and .modelPasses.alignment == 0 and .modelPasses.translation == 1
+    and .modelPasses.units == 1 and .targetUnitID == "unit-0054"' \
+    "$TARGETED_READY" >/dev/null
+  while IFS=$'\t' read -r path expected; do assert_hash "$ROOT/$path" "$expected"; done \
+    < <(jq -r '(.inputSHA256 + .implementationSHA256) | to_entries[]
+      | [.key,.value] | @tsv' "$TARGETED_READY")
+  jq -e '.classification == "validator-false-positive-source-attested-repetition"
+    and .benchmarkSlotReleased == true and .holdoutOpened == false
+    and .failedUnit.id == "unit-0054" and .acceptedUnitsBeforeGate == 281
+    and .generatedUnits == 282
+    and .completionPlan == {totalUnits:282,retainedAcceptedUnits:281,
+      acceptedBeforeTarget:53,acceptedAfterTarget:228,neverGeneratedUnits:0,
+      translateUnitIDs:["unit-0054"],
+      mergeAfterRetry:"281 retained outputs + unit-0054 retry"}' \
+    "$TRANSLATION_DIAGNOSTIC" >/dev/null
 }
 
 set_phase() {
@@ -349,6 +382,53 @@ write_fixed_downstream_ready() {
   write_evidence_ledger
 }
 
+write_targeted_translation_ready() {
+  jq -n --arg command \
+    'BENCHMARK_SLOT_GRANTED=94 bash Scripts/run_adaptive_asr_experiment.sh targeted-translation-retry' \
+    --arg raw "$(hash_file "$CANDIDATE/raw-asr.json")" \
+    --arg manifest "$(hash_file "$CANDIDATE/manifest.json")" \
+    --arg runtime "$(hash_file "$TRANSLATION_RUNTIME")" \
+    --arg selection "$(hash_file "$SELECTION")" \
+    --arg baseline "$(hash_file "$TARGETED_BASELINE")" \
+    --arg verdicts "$(hash_file "$TARGETED_VERDICTS")" \
+    --arg diagnostic "$(hash_file "$TRANSLATION_DIAGNOSTIC")" \
+    --arg validatorLog "$(hash_file "$EVIDENCE/targeted-validator-replay.log.gz")" \
+    --arg integrity "$(hash_file Sources/HighQualityTranslationIntegrity.swift)" \
+    --arg integrityTests "$(hash_file Tests/HighQualityTranslationIntegrityTests.swift)" \
+    --arg harness "$(hash_file Scripts/adaptive_asr_harness.py)" \
+    --arg runner "$(hash_file Scripts/run_adaptive_asr_experiment.sh)" \
+    --arg binary "$(hash_file "$WORKER")" \
+    --arg testBinary "$(hash_file "$TEST_WORKER")" \
+    '{status:"READY_FOR_TARGETED_TRANSLATION_RETRY",ticket:94,command:$command,
+      holdoutOpened:false,runtimeReference:false,targetUnitID:"unit-0054",
+      modelPasses:{asr:0,alignment:0,translation:1,units:1},strictlySequential:true,
+      reason:"validator false positive: source attests five そう and output has five right",
+      completeness:{totalUnits:282,reusedAcceptedUnits:281,acceptedBeforeTarget:53,
+        acceptedAfterTarget:228,neverGeneratedUnits:0,translateUnitIDs:["unit-0054"],
+        postRun:"merge retained outputs with the single validated retry"},
+      expected:{durationSeconds:15,hardTimeoutSeconds:300,peakRAMGiB:11.1,
+        incrementalDiskMiB:10},
+      memory:{nativePressure:true,runawayGuard:true,cancellation:true,fixedReserveBytes:0},
+      inputSHA256:{
+        ".build/benchmarks/issue-94/development/fixed-translation/94000002-0000-4000-8000-000000000001/raw-asr.json":$raw,
+        ".build/benchmarks/issue-94/development/fixed-translation/94000002-0000-4000-8000-000000000001/manifest.json":$manifest,
+        ".build/benchmarks/issue-94/development/fixed-translation-runtime.json":$runtime,
+        ".build/benchmarks/issue-94/development/selection.json":$selection,
+        ".build/benchmarks/issue-94/development/targeted-translation-retry/baseline.json":$baseline,
+        ".build/benchmarks/issue-94/development/targeted-translation-retry/verdicts.json":$verdicts,
+        "docs/japanese-live/experiments/evidence/E28/fixed-translation-diagnostic.json":$diagnostic,
+        "docs/japanese-live/experiments/evidence/E28/targeted-validator-replay.log.gz":$validatorLog},
+      implementationSHA256:{"Sources/HighQualityTranslationIntegrity.swift":$integrity,
+        "Tests/HighQualityTranslationIntegrityTests.swift":$integrityTests,
+        "Scripts/adaptive_asr_harness.py":$harness,
+        "Scripts/run_adaptive_asr_experiment.sh":$runner,
+        ".build/debug/WhisperASR":$binary,
+        ".build/debug/WhisperASRPackageTests.xctest/Contents/MacOS/WhisperASRPackageTests":$testBinary}}' \
+    >"$TARGETED_READY"
+  cp "$TARGETED_READY" "$EVIDENCE/"
+  write_evidence_ledger
+}
+
 write_evidence_ledger() {
   : >"$EVIDENCE/sha256.tsv"
   for file in "$EVIDENCE"/*; do
@@ -427,6 +507,64 @@ fixed_downstream_replay() {
   fi
   retain_fixed_evidence
   set_phase fixed-downstream-completed
+}
+
+retain_targeted_translation_evidence() {
+  cp "$TARGETED_READY" "$EVIDENCE/"
+  [[ ! -f "$TARGETED_OUTPUT" ]] || cp "$TARGETED_OUTPUT" "$EVIDENCE/targeted-translation-retry.json"
+  [[ ! -f "$TARGETED_RUNTIME" ]] || cp "$TARGETED_RUNTIME" "$EVIDENCE/targeted-translation-runtime.json"
+  [[ ! -f "$TARGETED_LOG" ]] || gzip -n -c "$TARGETED_LOG" \
+    >"$EVIDENCE/targeted-translation.log.gz"
+  write_evidence_ledger
+}
+
+targeted_translation_retry() {
+  [[ "${BENCHMARK_SLOT_GRANTED:-}" == 94 ]] || {
+    echo "refusing targeted translation without BENCHMARK_SLOT_GRANTED=94" >&2; return 2;
+  }
+  verify_inputs
+  verify_models
+  verify_targeted_translation_ready
+  [[ "$(jq -r .phase "$STATE")" == fixed-downstream-gate-red ]]
+  [[ ! -e "$TARGETED_OUTPUT" && ! -e "$TARGETED_RUNTIME" && ! -e "$TARGETED_LOG" \
+    && ! -e "$TARGETED_COMPLETION" ]] || {
+    echo "targeted translation evidence already exists; refusing rerun" >&2; return 1;
+  }
+  set_phase targeted-translation-running
+  if ! WHISPERASR_RUN_TRANSLATION_RETRY_EXPERIMENT=1 \
+    WHISPERASR_TRANSLATION_RETRY_CORPUS=development \
+    WHISPERASR_TRANSLATION_RETRY_BASELINE="$TARGETED_BASELINE" \
+    WHISPERASR_TRANSLATION_RETRY_VERDICTS="$TARGETED_VERDICTS" \
+    WHISPERASR_TRANSLATION_RETRY_OUTPUT="$TARGETED_OUTPUT" \
+      python3 Scripts/qwen_voice_music_harness.py run-command --timeout 300 \
+        --log "$TARGETED_LOG" --runtime "$TARGETED_RUNTIME" -- \
+        xcrun swift test --skip-build --filter \
+          HighQualityTranslationIntegrityTests/testRetriesFrozenRejectedUnitsWhenOptedIn; then
+    set_phase targeted-translation-gate-red
+    retain_targeted_translation_evidence
+    return 1
+  fi
+  if ! jq -e '.corpus == "development" and .rejectedCueIDs == ["unit-0054"]
+    and (.retry.request.turns | length) == 1
+    and .retry.request.turns[0].id == "unit-0054"
+    and (.retryVerdicts | length) == 1 and .retryVerdicts[0].verdict == "pass"
+    and .retry.worker.exitStatus == 0 and .retry.worker.forcedTermination == false' \
+      "$TARGETED_OUTPUT" >/dev/null; then
+    set_phase targeted-translation-gate-red
+    retain_targeted_translation_evidence
+    return 1
+  fi
+  if ! python3 Scripts/adaptive_asr_harness.py finalize-targeted-translation \
+      --candidate-raw "$CANDIDATE/raw-asr.json" --retry "$TARGETED_OUTPUT" \
+      --baseline-raw "$BASELINE_RAW" --manifest "$MANIFEST" --ready "$TARGETED_READY" \
+      --diagnostic "$TRANSLATION_DIAGNOSTIC" --runtime "$TARGETED_RUNTIME" \
+      --output "$TARGETED_COMPLETION"; then
+    set_phase targeted-report-red
+    retain_targeted_translation_evidence
+    return 1
+  fi
+  set_phase targeted-translation-completed
+  retain_targeted_translation_evidence
 }
 
 development() {
@@ -538,4 +676,31 @@ case "$MODE" in
     echo READY_FOR_FIXED_DOWNSTREAM_REPLAY_VALIDATED
     ;;
   fixed-downstream-replay) fixed_downstream_replay ;;
+  targeted-translation-ready)
+    [[ -f "$STATE" && "$(jq -r .phase "$STATE")" == fixed-downstream-gate-red ]]
+    verify_inputs
+    verify_models
+    verify_downstream_ready
+    mkdir -p "$TARGETED" "$ARTIFACTS/controls"
+    python3 Scripts/adaptive_asr_harness.py diagnose-translation-failure \
+      --candidate-raw "$CANDIDATE/raw-asr.json" --candidate-manifest "$CANDIDATE/manifest.json" \
+      --baseline-raw "$BASELINE_RAW" --manifest "$MANIFEST" --selection "$SELECTION" \
+      --translation-runtime "$TRANSLATION_RUNTIME" --output "$TRANSLATION_DIAGNOSTIC" \
+      --retry-baseline "$TARGETED_BASELINE" --retry-verdicts "$TARGETED_VERDICTS"
+    xcrun swift test --filter \
+      HighQualityTranslationIntegrityTests/testAllowsSourceAttestedRepeatedAffirmation \
+      2>&1 | tee "$ARTIFACTS/controls/targeted-validator-replay.log"
+    gzip -n -c "$ARTIFACTS/controls/targeted-validator-replay.log" \
+      >"$EVIDENCE/targeted-validator-replay.log.gz"
+    write_targeted_translation_ready
+    verify_targeted_translation_ready
+    echo READY_FOR_TARGETED_TRANSLATION_RETRY
+    ;;
+  verify-targeted-translation-retry)
+    verify_inputs
+    verify_models
+    verify_targeted_translation_ready
+    echo READY_FOR_TARGETED_TRANSLATION_RETRY_VALIDATED
+    ;;
+  targeted-translation-retry) targeted_translation_retry ;;
 esac

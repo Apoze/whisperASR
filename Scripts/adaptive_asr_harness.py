@@ -924,6 +924,263 @@ def failed_downstream_diagnostic(
     }
 
 
+def diagnose_translation_failure(args: argparse.Namespace) -> None:
+    candidate = read_json(args.candidate_raw)
+    candidate_manifest = read_json(args.candidate_manifest)
+    baseline = read_json(args.baseline_raw)
+    manifest = read_json(args.manifest)
+    selection = read_json(args.selection)
+    runtime = read_json(args.translation_runtime)
+    translation = candidate.get("translation") or {}
+    turns = translation.get("request", {}).get("turns", [])
+    turn_by_id = {turn["id"]: turn for turn in turns}
+    hard = [item for item in translation.get("integrityVerdicts", [])
+            if item.get("verdict") == "hard-failure"]
+    failed_batches = [batch for batch in translation.get("batches", [])
+                      if batch.get("cueIDs") == ["unit-0054"]]
+    alignment = candidate.get("alignment") or {}
+    if (candidate_manifest.get("status") != "failed"
+            or candidate_manifest.get("failures") != [{
+                "stage": "translation",
+                "message": ("English translation failed validation twice for unit-0054. "
+                            "No invalid Deliverable was published."),
+            }]
+            or candidate.get("asrWorker") is not None
+            or candidate.get("rawASR") != selection.get("rawTranscript")
+            or runtime.get("exitCode") != 1 or runtime.get("timedOut")
+            or any(cue["end"] <= cue["start"] for chunk in alignment.get("chunks", [])
+                   for cue in chunk.get("cues", []))
+            or alignment.get("configuration", {}).get("coarseTimingCueIDs") != "cue-0295"
+            or len(hard) != 1 or hard[0].get("cueID") != "unit-0054"
+            or [reason.get("code") for reason in hard[0].get("reasons", [])]
+               != ["degenerate-repetition"]
+            or len(failed_batches) != 2
+            or [batch.get("attemptNumber") for batch in failed_batches] != [1, 2]
+            or len({batch.get("sanitizedOutput") for batch in failed_batches}) != 1
+            or translation.get("worker", {}).get("exitStatus") != 0
+            or translation.get("worker", {}).get("forcedTermination")):
+        raise RuntimeError("fixed translation failure evidence is incomplete or mismatched")
+
+    failed_turn = turn_by_id["unit-0054"]
+    failed_output = failed_batches[-1]["sanitizedOutput"]
+    if ("そう" * 4 not in failed_turn["japanese"]
+            or len(re.findall(r"\bright\b", failed_output.lower())) < 4):
+        raise RuntimeError("unit-0054 is not the source-attested repetition false positive")
+
+    outputs = {
+        batch["cueIDs"][0]: batch["sanitizedOutput"]
+        for batch in translation["batches"]
+        if batch.get("selected") and len(batch.get("cueIDs", [])) == 1
+    }
+    accepted_count = len(outputs)
+    turn_ids = [turn["id"] for turn in turns]
+    failed_index = turn_ids.index("unit-0054")
+    accepted_before = sum(item in outputs for item in turn_ids[:failed_index])
+    accepted_after = sum(item in outputs for item in turn_ids[failed_index + 1:])
+    outputs["unit-0054"] = failed_output
+    if len(outputs) != len(turns) or set(outputs) != set(turn_by_id):
+        raise RuntimeError("raw translation outputs do not cover every semantic unit")
+    reconstructed = json.loads(json.dumps(candidate))
+    reconstructed["translation"]["response"] = json.dumps({
+        "translations": [{"id": turn["id"], "text": outputs[turn["id"]]}
+                         for turn in turns]
+    }, ensure_ascii=False)
+    baseline_rows = translation_rows(manifest, baseline)
+    candidate_rows = translation_rows(manifest, reconstructed)
+    reference = " ".join(row["reference"] for row in candidate_rows)
+    baseline_score = chrf_pp(" ".join(row["hypothesis"] for row in baseline_rows), reference)
+    candidate_score = chrf_pp(" ".join(row["hypothesis"] for row in candidate_rows), reference)
+    baseline_by_id = {row["id"]: row for row in baseline_rows}
+    candidate_by_id = {row["id"]: row for row in candidate_rows}
+
+    baseline_translation = baseline["translation"]
+    baseline_outputs = {item["id"]: item["text"] for item in
+                        json.loads(baseline_translation["response"])["translations"]}
+    baseline_turns = baseline_translation["request"]["turns"]
+
+    def passage(turns_value: list[dict], output: dict[str, str], start: float,
+                end: float) -> dict:
+        matching = [turn for turn in turns_value
+                    if turn.get("sourceStart") is not None
+                    and turn["sourceStart"] < end and start < turn["sourceEnd"]]
+        return {
+            "turnIDs": [turn["id"] for turn in matching],
+            "japanese": " ".join(turn["japanese"] for turn in matching),
+            "english": " ".join(output.get(turn["id"], "") for turn in matching),
+        }
+
+    override_rows = []
+    failed_window_index = next(index for index, row in enumerate(selection["windows"])
+                               if row["startSample"] / SAMPLE_RATE < failed_turn["sourceEnd"]
+                               and failed_turn["sourceStart"] < row["endSample"] / SAMPLE_RATE)
+    for index, window in enumerate(selection["windows"]):
+        if window["selectedBackend"] != "parakeet-ja":
+            continue
+        start = window["startSample"] / SAMPLE_RATE
+        end = window["endSample"] / SAMPLE_RATE
+        references = [item for item in manifest["annotations"]["turns"]
+                      if item["startSample"] / SAMPLE_RATE < end
+                      and start < item["endSample"] / SAMPLE_RATE]
+        ids = [str(item["id"]) for item in references]
+        baseline_english = " ".join(baseline_by_id[item]["hypothesis"] for item in ids)
+        candidate_english = " ".join(candidate_by_id[item]["hypothesis"] for item in ids)
+        reference_english = " ".join(item.get("english") or "" for item in references)
+        override_rows.append({
+            "index": index, "id": window["id"], "start": start, "end": end,
+            "qwen": window["qwen"], "parakeet": window["parakeet"],
+            "selectedJapanese": window["selectedText"],
+            "distanceFromFailureWindows": index - failed_window_index,
+            "distanceFromFailureSeconds": start - failed_turn["sourceEnd"],
+            "baseline": passage(baseline_turns, baseline_outputs, start, end),
+            "candidate": passage(turns, outputs, start, end),
+            "referenceEnglish": reference_english or None,
+            "baselineChrFPlusPlus": (chrf_pp(baseline_english, reference_english)
+                                     if reference_english else None),
+            "candidateChrFPlusPlus": (chrf_pp(candidate_english, reference_english)
+                                      if reference_english else None),
+        })
+
+    worker = translation["worker"]
+    diagnostic = {
+        "schemaVersion": 1, "ticket": 94,
+        "classification": "validator-false-positive-source-attested-repetition",
+        "holdoutOpened": False, "benchmarkSlotReleased": True,
+        "preflight": {"build": "passed", "input": "passed", "reference": "passed",
+                      "checkpointAndHashes": "passed", "runtimeTimedOut": False},
+        "failedUnit": {
+            "id": "unit-0054", "japanese": failed_turn["japanese"],
+            "sourceStart": failed_turn["sourceStart"], "sourceEnd": failed_turn["sourceEnd"],
+            "precedingJapanese": failed_turn.get("precedingJapanese", []),
+            "followingJapanese": failed_turn.get("followingJapanese", []),
+            "sourceWindow": {"index": failed_window_index,
+                             **selection["windows"][failed_window_index]},
+            "attempts": [{key: batch.get(key) for key in (
+                "attemptNumber", "nativePrompt", "sanitizedPrompt", "nativeOutput",
+                "sanitizedOutput", "validationReasonCodes", "finishReason",
+                "inputTokens", "outputTokens", "duration", "terminalOutcome")}
+                for batch in failed_batches],
+            "integrityVerdict": hard[0],
+        },
+        "baselineSamePassage": passage(
+            baseline_turns, baseline_outputs, failed_turn["sourceStart"], failed_turn["sourceEnd"]),
+        "candidateSamePassage": passage(
+            turns, outputs, failed_turn["sourceStart"], failed_turn["sourceEnd"]),
+        "acceptedUnitsBeforeGate": accepted_count,
+        "generatedUnits": len(turns),
+        "completionPlan": {
+            "totalUnits": len(turns),
+            "retainedAcceptedUnits": accepted_count,
+            "acceptedBeforeTarget": accepted_before,
+            "acceptedAfterTarget": accepted_after,
+            "neverGeneratedUnits": len(turns) - accepted_count - 1,
+            "translateUnitIDs": ["unit-0054"],
+            "mergeAfterRetry": "281 retained outputs + unit-0054 retry",
+        },
+        "counterfactualDiagnosticOnly": {
+            "invalidDeliverablePublished": False,
+            "reconstructedFromRetainedRaw": True,
+            "baselineChrFPlusPlus": baseline_score,
+            "candidateChrFPlusPlus": candidate_score,
+            "delta": candidate_score - baseline_score,
+        },
+        "overrides": override_rows,
+        "runtime": {
+            "commandSeconds": runtime["elapsedSeconds"],
+            "stages": named_durations(candidate_manifest["stageDurations"]),
+            "jobPeakMemoryBytes": candidate_manifest["peakMemoryBytes"],
+            "alignmentWorkerPeakBytes": alignment["worker"]["peakPhysicalFootprintBytes"],
+            "translationWorkerPeakBytes": worker["peakPhysicalFootprintBytes"],
+            "translationWorkerSeconds": worker["elapsedSeconds"],
+            "pressureTransitions": worker["pressureTransitions"],
+            "minimumAvailableMemoryBytes": min(item["availableMemoryBytes"]
+                                                for item in worker["availableMemorySamples"]),
+            "swapDeltaBytes": worker["swapUsedAfterBytes"] - worker["swapUsedBeforeBytes"],
+            "forcedTermination": worker["forcedTermination"],
+        },
+        "issue95": "not-decided: Japanese value of #94 remains independently measurable",
+    }
+    write_json(args.output, diagnostic)
+    write_json(args.retry_baseline, translation)
+    write_json(args.retry_verdicts, {
+        "schemaVersion": 1, "corpus": "development",
+        "sourceArtifact": str(args.candidate_raw),
+        "thresholds": {"version": "translation-integrity-dev-v1",
+                       "minimumLengthRatio": 0.5, "maximumLengthRatio": 6,
+                       "copiedOutputSimilarity": 0.8, "correspondingSourceSimilarity": 0.2,
+                       "minimumCopiedOutputWords": 3, "repetitionCount": 4},
+        "verdicts": hard,
+    })
+
+
+def finalize_targeted_translation(args: argparse.Namespace) -> None:
+    candidate = read_json(args.candidate_raw)
+    retry = read_json(args.retry)
+    baseline = read_json(args.baseline_raw)
+    manifest = read_json(args.manifest)
+    ready = read_json(args.ready)
+    diagnostic = read_json(args.diagnostic)
+    runtime = read_json(args.runtime)
+    translation = candidate["translation"]
+    turns = translation["request"]["turns"]
+    turn_ids = [turn["id"] for turn in turns]
+    selected = [batch for batch in translation["batches"] if batch.get("selected")]
+    outputs = {batch["cueIDs"][0]: batch["sanitizedOutput"] for batch in selected
+               if len(batch.get("cueIDs", [])) == 1}
+    retry_translation = retry.get("retry") or {}
+    retry_rows = json.loads(retry_translation.get("response", "{}")) \
+        .get("translations", [])
+    retry_verdicts = retry.get("retryVerdicts", [])
+    target_turn = turns[turn_ids.index("unit-0054")]
+    retry_worker = retry_translation.get("worker") or {}
+    if (ready.get("status") != "READY_FOR_TARGETED_TRANSLATION_RETRY"
+            or retry.get("rejectedCueIDs") != ["unit-0054"]
+            or [row.get("id") for row in retry_rows] != ["unit-0054"]
+            or len(retry_verdicts) != 1
+            or {key: retry_verdicts[0].get(key) for key in (
+                "cueID", "testedSource", "generatedOutput", "verdict", "reasons"
+            )} != {"cueID": "unit-0054", "testedSource": target_turn["japanese"],
+                   "generatedOutput": retry_rows[0].get("text") if retry_rows else None,
+                   "verdict": "pass", "reasons": []}
+            or retry_worker.get("exitStatus") != 0 or retry_worker.get("forcedTermination")
+            or len(turns) != 282 or len(outputs) != 281
+            or "unit-0054" in outputs
+            or turn_ids.index("unit-0054") != 53
+            or set(outputs) != set(turn_ids) - {"unit-0054"}
+            or runtime.get("exitCode") != 0 or runtime.get("timedOut")
+            or diagnostic.get("completionPlan", {}).get("acceptedAfterTarget") != 228):
+        raise RuntimeError("targeted retry cannot be merged into the retained translation")
+    outputs["unit-0054"] = retry_rows[0]["text"]
+    merged_rows = [{"id": turn["id"], "text": outputs[turn["id"]]} for turn in turns]
+    reconstructed = json.loads(json.dumps(candidate))
+    reconstructed["translation"]["response"] = json.dumps(
+        {"translations": merged_rows}, ensure_ascii=False)
+    baseline_rows = translation_rows(manifest, baseline)
+    candidate_rows = translation_rows(manifest, reconstructed)
+    reference = " ".join(row["reference"] for row in candidate_rows)
+    write_json(args.output, {
+        "schemaVersion": 1, "ticket": 94, "status": "completed",
+        "holdoutOpened": False, "invalidDeliverablePublished": False,
+        "completeness": {
+            "totalUnits": 282, "reusedAcceptedUnits": 281,
+            "retriedUnitIDs": ["unit-0054"], "acceptedBeforeTarget": 53,
+            "acceptedAfterTarget": 228, "neverGeneratedUnits": 0,
+        },
+        "translations": merged_rows,
+        "english": {
+            "baselineChrFPlusPlus": chrf_pp(
+                " ".join(row["hypothesis"] for row in baseline_rows), reference),
+            "candidateChrFPlusPlus": chrf_pp(
+                " ".join(row["hypothesis"] for row in candidate_rows), reference),
+        },
+        "targetedRetry": retry,
+        "runtime": runtime,
+        "inputSHA256": {
+            "candidateRaw": sha256(args.candidate_raw), "retry": sha256(args.retry),
+            "ready": sha256(args.ready), "diagnostic": sha256(args.diagnostic),
+        },
+    })
+
+
 def final_report(args: argparse.Namespace) -> dict:
     report = read_json(args.selection_report)
     selection = read_json(args.selection)
@@ -1283,6 +1540,15 @@ def parser() -> argparse.ArgumentParser:
         report.add_argument(f"--{name}", type=Path, required=True)
     for name in ("candidate-raw", "candidate-manifest", "translation-runtime"):
         report.add_argument(f"--{name}", type=Path)
+    failure = sub.add_parser("diagnose-translation-failure")
+    for name in ("candidate-raw", "candidate-manifest", "baseline-raw", "manifest",
+                 "selection", "translation-runtime", "output", "retry-baseline",
+                 "retry-verdicts"):
+        failure.add_argument(f"--{name}", type=Path, required=True)
+    finalize = sub.add_parser("finalize-targeted-translation")
+    for name in ("candidate-raw", "retry", "baseline-raw", "manifest", "ready",
+                 "diagnostic", "runtime", "output"):
+        finalize.add_argument(f"--{name}", type=Path, required=True)
     return result
 
 
@@ -1301,6 +1567,10 @@ def main() -> None:
         build_selection(args)
     elif args.command == "report":
         final_report(args)
+    elif args.command == "diagnose-translation-failure":
+        diagnose_translation_failure(args)
+    elif args.command == "finalize-targeted-translation":
+        finalize_targeted_translation(args)
 
 
 if __name__ == "__main__":

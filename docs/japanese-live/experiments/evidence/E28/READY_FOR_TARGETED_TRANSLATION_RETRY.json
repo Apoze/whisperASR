@@ -1,0 +1,57 @@
+{
+  "status": "READY_FOR_TARGETED_TRANSLATION_RETRY",
+  "ticket": 94,
+  "command": "BENCHMARK_SLOT_GRANTED=94 bash Scripts/run_adaptive_asr_experiment.sh targeted-translation-retry",
+  "holdoutOpened": false,
+  "runtimeReference": false,
+  "targetUnitID": "unit-0054",
+  "modelPasses": {
+    "asr": 0,
+    "alignment": 0,
+    "translation": 1,
+    "units": 1
+  },
+  "strictlySequential": true,
+  "reason": "validator false positive: source attests five そう and output has five right",
+  "completeness": {
+    "totalUnits": 282,
+    "reusedAcceptedUnits": 281,
+    "acceptedBeforeTarget": 53,
+    "acceptedAfterTarget": 228,
+    "neverGeneratedUnits": 0,
+    "translateUnitIDs": [
+      "unit-0054"
+    ],
+    "postRun": "merge retained outputs with the single validated retry"
+  },
+  "expected": {
+    "durationSeconds": 15,
+    "hardTimeoutSeconds": 300,
+    "peakRAMGiB": 11.1,
+    "incrementalDiskMiB": 10
+  },
+  "memory": {
+    "nativePressure": true,
+    "runawayGuard": true,
+    "cancellation": true,
+    "fixedReserveBytes": 0
+  },
+  "inputSHA256": {
+    ".build/benchmarks/issue-94/development/fixed-translation/94000002-0000-4000-8000-000000000001/raw-asr.json": "7c5cce5f95d3d68e3bebd53da92a0a38df770bed1f59bda11e7c39edc450b2b6",
+    ".build/benchmarks/issue-94/development/fixed-translation/94000002-0000-4000-8000-000000000001/manifest.json": "67b06ce55001574e02a5babf9bb878aba941e9c38227599412244561656e8775",
+    ".build/benchmarks/issue-94/development/fixed-translation-runtime.json": "6fe04702d1acab3f09bcfca74370ede9b9d7328485a15d1aa39a0580de9de90d",
+    ".build/benchmarks/issue-94/development/selection.json": "4279b6e2a187f5c8c0695b79c085af8c42b0e8fc294fdc0c0e07fffec4521a2f",
+    ".build/benchmarks/issue-94/development/targeted-translation-retry/baseline.json": "adeed2a0ad6ab234c583397b5827d9bc51b27ccb42b896f0da57713c67202d08",
+    ".build/benchmarks/issue-94/development/targeted-translation-retry/verdicts.json": "2fe8db88937e1287da0f4805fd72795a03c73f766af256aa6929a51aa5994575",
+    "docs/japanese-live/experiments/evidence/E28/fixed-translation-diagnostic.json": "8f8b09f4a63576809e6a7a494d88ab02611a04f8eb2c3a88548fe6598b6e5fe5",
+    "docs/japanese-live/experiments/evidence/E28/targeted-validator-replay.log.gz": "01f51a26cffa6b72021987f3600510dca75e0413ec379ae6c620b973777ef26a"
+  },
+  "implementationSHA256": {
+    "Sources/HighQualityTranslationIntegrity.swift": "af4295c0bd3b25378dc1e6a208d1fca256cbb7f73f6f590a9f9da05411b9dc5f",
+    "Tests/HighQualityTranslationIntegrityTests.swift": "2ba4eed2117d714351dc343461df8a717edcb97ffc47b224073c6294077f9c7c",
+    "Scripts/adaptive_asr_harness.py": "a4d6cf0f501a20f441f8fa2445019de96b1b8f10e2927feab90b4b2922122b2e",
+    "Scripts/run_adaptive_asr_experiment.sh": "e5dac3535b45b756a4836cd851357404a9aea339374aa82074dbac7bb007979c",
+    ".build/debug/WhisperASR": "5a633cd77505a94ef29790b3c6b9b17266d2ea3debb8de0538aedccb5436cb93",
+    ".build/debug/WhisperASRPackageTests.xctest/Contents/MacOS/WhisperASRPackageTests": "fde0b6dcd5115a73b81f8c256d137c923209c89b55c0d033af6efbb265cc5aea"
+  }
+}

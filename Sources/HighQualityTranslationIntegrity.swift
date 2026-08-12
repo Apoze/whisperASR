@@ -167,7 +167,7 @@ enum HighQualityTranslationIntegrityValidator {
                 reasons.append(reason(.truncatedOutput, .hardFailure, ["finish-reason=length"]))
             }
             if let repeated = repeatedPhrase(in: output, count: thresholds.repetitionCount),
-               !sourceAttestsLaughter(
+               !sourceAttestsRepetition(
                     item.turn.japanese,
                     repeatedPhrase: repeated,
                     count: thresholds.repetitionCount
@@ -322,14 +322,15 @@ enum HighQualityTranslationIntegrityValidator {
         return nil
     }
 
-    private static func sourceAttestsLaughter(
+    private static func sourceAttestsRepetition(
         _ source: String,
         repeatedPhrase: String,
         count: Int
     ) -> Bool {
         let phrase = repeatedPhrase.lowercased().filter(\.isLetter)
-        return ["ha", "haha", "heh", "hehe"].contains(phrase)
-            && source.filter { "ハは".contains($0) }.count >= count
+        return (["ha", "haha", "heh", "hehe"].contains(phrase)
+                && source.filter { "ハは".contains($0) }.count >= count)
+            || (phrase == "right" && source.contains(String(repeating: "そう", count: count)))
     }
 
     private static func copiedNeighbourEvidence(
