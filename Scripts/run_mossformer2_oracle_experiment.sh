@@ -20,6 +20,7 @@ MODEL_SHA256="00a3a48bda492db1e829b85dd443f8f43a43039a3e90f1a24962ea9caf14a11a"
 MODEL_SIZE=670353271
 MIN_FREE_MEMORY_PERCENT=10
 CATASTROPHIC_MEMORY_PERCENT=90
+DANGEROUS_SWAP_GROWTH_PERCENT=25
 RUNAWAY_GROWTH_PERCENT=25
 RUNAWAY_WINDOW_SAMPLES=30
 SHUTDOWN_GRACE_SECONDS=15
@@ -152,13 +153,14 @@ run_guarded() {
   local samples="${safety%.json}.samples.jsonl"
   local started started_iso process reason="completed" peak_rss=0 peak_footprint=0
   local peak_reported_footprint=0 min_free=100 peak_swap_delta=0 current_memory=0
-  local elapsed status exited_iso physical_memory catastrophic_limit model_loaded=false
+  local elapsed status exited_iso physical_memory catastrophic_limit dangerous_swap_limit model_loaded=false
   local stop_forced=false
   local before_free before_swap before_pageouts after_free after_swap after_pageouts
   local swap_delta pageout_delta samples_sha pressure_levels
   local runaway_history=()
   physical_memory="$(/usr/sbin/sysctl -n hw.memsize)"
   catastrophic_limit="$((physical_memory * CATASTROPHIC_MEMORY_PERCENT / 100))"
+  dangerous_swap_limit="$((physical_memory * DANGEROUS_SWAP_GROWTH_PERCENT / 100))"
   read_system_memory || return 1
   before_free="$SYSTEM_FREE"
   before_swap="$SYSTEM_SWAP_BYTES"
@@ -220,12 +222,14 @@ run_guarded() {
         nativePressureLevel:$pressure,nativePressureRaw:$pressureRaw,
         freeMemoryPercent:$free,swapUsedBytes:$swap,swapUsedDeltaBytes:$swapDelta,
         pageouts:$pageouts,pageoutDelta:$pageoutDelta,modelLoaded:$modelLoaded}' >>"$samples"
-    if [[ "$SYSTEM_PRESSURE_LEVEL" == critical ]]; then
-      reason="native-pressure-critical"
+    if [[ "$SYSTEM_PRESSURE_LEVEL" != normal ]]; then
+      reason="native-pressure-$SYSTEM_PRESSURE_LEVEL"
     elif ((SYSTEM_FREE <= MIN_FREE_MEMORY_PERCENT)); then
       reason="free-memory-at-or-below-10-percent"
     elif ((current_memory >= catastrophic_limit)); then
       reason="catastrophic-process-memory"
+    elif ((swap_delta >= dangerous_swap_limit)); then
+      reason="dangerous-swap-growth"
     elif [[ "$model_loaded" == true ]] \
       && ((${#runaway_history[@]} == RUNAWAY_WINDOW_SAMPLES)) \
       && ((current_memory - runaway_history[0] >= physical_memory * RUNAWAY_GROWTH_PERCENT / 100)); then
@@ -275,6 +279,8 @@ run_guarded() {
     --argjson timeoutSeconds "$timeout_seconds" --argjson physicalMemoryBytes "$physical_memory" \
     --argjson catastrophicMemoryPercent "$CATASTROPHIC_MEMORY_PERCENT" \
     --argjson catastrophicMemoryBytes "$catastrophic_limit" \
+    --argjson dangerousSwapGrowthPercent "$DANGEROUS_SWAP_GROWTH_PERCENT" \
+    --argjson dangerousSwapGrowthBytes "$dangerous_swap_limit" \
     --argjson peakResidentBytes "$peak_rss" --argjson peakPhysicalFootprintBytes "$peak_footprint" \
     --argjson reportedPeakPhysicalFootprintBytes "$peak_reported_footprint" \
     --argjson minimumFreeMemoryPercent "$min_free" --argjson pressureLevels "$pressure_levels" \
@@ -293,6 +299,8 @@ run_guarded() {
       minimumFreeMemoryPercent:$minimumFreeMemoryPercent,nativePressureLevels:$pressureLevels,
       catastrophicGuard:{physicalMemoryBytes:$physicalMemoryBytes,
         limitPercent:$catastrophicMemoryPercent,limitBytes:$catastrophicMemoryBytes},
+      swapGrowthGuard:{limitPercentOfPhysicalMemory:$dangerousSwapGrowthPercent,
+        limitBytes:$dangerousSwapGrowthBytes},
       postLoadRunawayGuard:{modelLoadedObserved:$modelLoaded,
         growthPercent:$runawayGrowthPercent,windowSamples:$runawayWindowSamples},
       systemBefore:{freeMemoryPercent:$freeBefore,swapUsedBytes:$swapUsedBeforeBytes,
