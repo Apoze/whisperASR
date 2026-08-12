@@ -7,6 +7,8 @@ import argparse
 import gzip
 import hashlib
 import json
+import re
+import tarfile
 from datetime import datetime
 from pathlib import Path
 
@@ -19,15 +21,24 @@ CORPUS = ROOT / "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json"
 BASELINE = ROOT / "docs/japanese-live/experiments/evidence/E22/qudu2fx3ncc-raw-asr.json.gz"
 SEGMENTS = ROOT / "docs/japanese-live/experiments/evidence/E23/segments.json"
 EVIDENCE = ROOT / "docs/japanese-live/experiments/evidence/ReazonK2V2"
+QUALITY_SIGNAL = EVIDENCE / "development-attempt-2-raw-asr.json.gz"
+FINAL_PROTOCOL = EVIDENCE / "development-worker-protocol.tar.gz"
+ATTEMPT_2_PROTOCOL = EVIDENCE / "development-attempt-2-worker-protocol.tar.gz"
 EXECUTION_IMPLEMENTATION_SHA256 = {
     "Sources/HighQualityASRWorker.swift":
-        "455c87399df2309e73030c47a3e51150be2e786b2faad999843ce12d63bae379",
+        "851ff7aacb590df73be1027100da375e61d61288ccdce89ff6dfd20b079157e8",
     "Sources/HighQualityJob.swift":
-        "b685d4b2cbb55efe88e4fddc17c54ad4d43e013acc6f6df81b8bbad561b9dc2f",
+        "c76e181834b2bba49887c677c7e31a5a397a891d0d48a4256c970b26281c192d",
     "Scripts/reazon_asr_worker.py":
         "493982ef89ca519c8246251f11ac12ed57b09cb5210fbc121058a1b33ed219ff",
     "Scripts/run_reazon_dev_experiment.sh":
-        "b66ebda1c0328faae0904e55b52a062d179fea478a09ac5776960558d12cf10b",
+        "5cfaf89f2c6cf4d03faba2662d7bb305a23d8ab75ab2154938f57f13859b491b",
+}
+POST_RUN_FIX_SHA256 = {
+    "Sources/HighQualityJob.swift":
+        "1a2a668bc3bb2a4d5bfa61f2387946757812af7e77e36745407cf1fa3296d495",
+    "Tests/HighQualityJobTests.swift":
+        "0e9f80957434b38eaffe7924990fb1837e5627a40bbedad2b29b5be29d401a1c",
 }
 MODEL = {
     "backend": "reazonspeech-k2-v2-int8",
@@ -51,12 +62,35 @@ def read(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def read_gzip(path: Path) -> dict:
+    with gzip.open(path, "rt", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def worker_protocol_audit(path: Path) -> dict:
+    with tarfile.open(path, "r:gz") as archive:
+        responses = sorted(
+            (member for member in archive.getmembers()
+             if Path(member.name).name.startswith("response-")),
+            key=lambda member: int(Path(member.name).stem.removeprefix("response-")),
+        )
+        canonical = b"\n".join(json.dumps(
+            json.load(archive.extractfile(member)), ensure_ascii=False,
+            sort_keys=True, separators=(",", ":")
+        ).encode("utf-8") for member in responses)
+    return {
+        "archiveSHA256": sha256(path),
+        "responseCount": len(responses),
+        "canonicalResponsesSHA256": hashlib.sha256(canonical).hexdigest(),
+    }
 
 
 def terms(unit: dict) -> list[str]:
@@ -102,7 +136,7 @@ def timestamp_audit(raw: dict) -> dict:
         "characterCount": len(characters),
         "oneUnicodeCharacterPerEntry": bool(characters)
             and all(len(item["text"]) == 1 for item in characters),
-        "completeText": by_chunk == lines,
+        "completeText": bool(characters) and bool(lines) and by_chunk == lines,
         "monotonic": all(left["sourceStart"] <= right["sourceStart"]
                          for left, right in zip(characters, characters[1:])),
         "bounded": bool(characters) and all(
@@ -111,6 +145,29 @@ def timestamp_audit(raw: dict) -> dict:
         "chunkIndexesComplete": bool(lines)
             and sorted(set(item["chunkIndex"] for item in characters)) == list(range(len(lines))),
     }
+
+
+def anchor_end_overflows(raw: dict) -> list[dict]:
+    chunks = raw.get("alignment", {}).get("chunks") or []
+    return [{
+        "text": item["text"],
+        "chunkIndex": item["chunkIndex"],
+        "sourceEnd": item["sourceEnd"],
+        "anchorEnd": chunks[item["chunkIndex"]]["sourceEnd"],
+        "overflowSeconds": item["sourceEnd"] - chunks[item["chunkIndex"]]["sourceEnd"],
+    } for item in raw.get("asrWorker", {}).get("characters") or []
+        if item["sourceEnd"] > chunks[item["chunkIndex"]]["sourceEnd"]]
+
+
+def normalized_timestamp_audit(raw: dict) -> dict:
+    chunks = raw["alignment"]["chunks"]
+    normalized = raw | {"asrWorker": raw["asrWorker"] | {"characters": [
+        item | {
+            "sourceStart": max(item["sourceStart"], chunks[item["chunkIndex"]]["sourceStart"]),
+            "sourceEnd": min(item["sourceEnd"], chunks[item["chunkIndex"]]["sourceEnd"]),
+        } for item in raw["asrWorker"]["characters"]
+    ]}}
+    return timestamp_audit(normalized)
 
 
 def counts(units: list[dict]) -> dict:
@@ -164,6 +221,13 @@ def stage_durations(raw: dict) -> dict[str, float]:
     return {values[index]: values[index + 1] for index in range(0, len(values), 2)}
 
 
+def test_elapsed_seconds() -> float | None:
+    with gzip.open(EVIDENCE / "development-run.log.gz", "rt", encoding="utf-8") as handle:
+        match = re.search(r"testRealFrozenWorkflowWhenOptedIn.*failed \(([0-9.]+) seconds\)",
+                          handle.read())
+    return float(match.group(1)) if match else None
+
+
 def failure_attribution(timestamps: dict, connector_valid: bool) -> str:
     return ("candidate-output-incompatible-with-frozen-alignment"
             if connector_valid and timestamps["completeText"]
@@ -176,12 +240,17 @@ def build(manifest_path: Path, raw_path: Path) -> dict:
     with gzip.open(BASELINE, "rt", encoding="utf-8") as handle:
         baseline = json.load(handle)
     frozen = read(SEGMENTS)["units"]
-    units = candidate_units(raw, frozen)
+    quality_raw = raw if raw.get("rawASR") else read_gzip(QUALITY_SIGNAL)
+    units = candidate_units(quality_raw, frozen)
     baseline_counts = counts(frozen)
     candidate_counts = counts(units)
     recovered = sum(max(0, unit["materialDeltaVsQwen"]) for unit in units)
     lost = sum(max(0, -unit["materialDeltaVsQwen"]) for unit in units)
     timestamps = timestamp_audit(raw)
+    quality_timestamps = timestamp_audit(quality_raw)
+    normalized_quality_timestamps = normalized_timestamp_audit(quality_raw)
+    final_protocol = worker_protocol_audit(FINAL_PROTOCOL)
+    attempt_2_protocol = worker_protocol_audit(ATTEMPT_2_PROTOCOL)
     lifecycle = raw["asrWorker"]["lifecycle"]
     stages = stage_durations(raw)
     common = {
@@ -194,11 +263,12 @@ def build(manifest_path: Path, raw_path: Path) -> dict:
             "qwen": cer("".join(turn["japanese"] for turn in corpus["annotations"]["turns"]),
                         baseline["rawASR"]),
             "reazon": cer("".join(turn["japanese"] for turn in corpus["annotations"]["turns"]),
-                          raw["rawASR"]),
+                          quality_raw["rawASR"]),
         },
         "resources": {
             "stageDurationsSeconds": stages,
             "totalStageSeconds": sum(stages.values()),
+            "testElapsedSeconds": test_elapsed_seconds(),
             "peakJobMemoryBytes": raw["peakMemoryBytes"],
             "worker": lifecycle,
             "alignmentWorker": raw.get("alignment", {}).get("worker"),
@@ -207,13 +277,72 @@ def build(manifest_path: Path, raw_path: Path) -> dict:
             "manifestSHA256": sha256(manifest_path), "rawASRSHA256": sha256(raw_path),
             "retainedRawASRGzipSHA256": sha256(EVIDENCE / "development-raw-asr.json.gz"),
             "retainedRunLogGzipSHA256": sha256(EVIDENCE / "development-run.log.gz"),
+            "qualitySignalRawASRGzipSHA256": sha256(QUALITY_SIGNAL),
+            "finalWorkerProtocolSHA256": final_protocol["archiveSHA256"],
+            "attempt2WorkerProtocolSHA256": attempt_2_protocol["archiveSHA256"],
             "baselineSHA256": sha256(BASELINE), "segmentsSHA256": sha256(SEGMENTS),
             "sourceSHA256": corpus["source"]["references"][0]["sha256"],
         },
         "manifestStatus": manifest["status"],
+        "executionCommit": "b5ee113edff79cc82d4de91d098a6bdb43fdba9c",
         "executionImplementationSHA256": EXECUTION_IMPLEMENTATION_SHA256,
+        "postRunFixSHA256": POST_RUN_FIX_SHA256,
         "generatedAt": datetime.now().astimezone().isoformat(),
     }
+    if manifest["status"] != "completed" and manifest["failures"][0]["stage"] == "asr":
+        qwen_examples = translation_rows(corpus, baseline)[:2]
+        overflows = anchor_end_overflows(quality_raw)
+        common.update({
+            "decision": "NO-GO",
+            "candidateVerdict": "NO-GO",
+            "gates": {
+                "modelPinned": raw["asrWorker"]["model"] == MODEL,
+                "finalAnchoredExchangeAccepted": False,
+                "qualitySignalComplete": quality_timestamps["completeText"],
+                "pipelineComplete": False,
+                "englishComparisonComplete": False,
+                "workerCleanExit": lifecycle["exitStatus"] == 0
+                    and not lifecycle["forcedTermination"],
+                "noCriticalPressure": not any(item["level"] == "critical"
+                                              for item in lifecycle["pressureTransitions"]),
+                "holdoutClosed": True,
+            },
+            "rootCause": {
+                "attribution": "numeric-harness-rounding-fixed-after-run",
+                "failure": manifest["failures"][0],
+                "persistedFinalCharacters": raw["asrWorker"]["characters"],
+                "anchorEndOverflowsFromQualitySignal": overflows,
+                "workerResponsesEquivalent": final_protocol["canonicalResponsesSHA256"]
+                    == attempt_2_protocol["canonicalResponsesSHA256"],
+                "explanation": "The final assembled exchange failed its audit. The retained "
+                    "135-character attempt isolates three one-ULP end overflows at anchor "
+                    "boundaries; these are harness rounding, not candidate errors, and are now "
+                    "clamped. No fourth ASR inference was run.",
+            },
+            "qualitySignal": {
+                "source": str(QUALITY_SIGNAL.relative_to(ROOT)),
+                "timestamps": quality_timestamps,
+                "normalizedTimestamps": normalized_quality_timestamps,
+                "characterCount": quality_timestamps["characterCount"],
+                "finalWorkerProtocol": final_protocol,
+                "attempt2WorkerProtocol": attempt_2_protocol,
+            },
+            "japaneseExamples": {
+                "worsened": sorted(units, key=lambda unit: unit["materialDeltaVsQwen"])[:6]
+            },
+            "english": {
+                "status": "not-produced",
+                "reason": "The fail-closed ASR audit stopped the frozen pipeline before alignment.",
+                "qwenBaselineExamples": qwen_examples,
+            },
+            "downstreamReplay": {
+                "status": "normalized-contract-pass-heavy-not-run",
+                "reason": "The persistent 135-character exchange passes complete, bounded, "
+                    "monotonic character timing after both anchor clamps. Heavy alignment and "
+                    "translation were not started outside the granted command.",
+            },
+        })
+        return common
     if manifest["status"] != "completed":
         chunk = next(chunk for chunk in raw["alignment"]["chunks"]
                      if any(cue["end"] <= cue["start"] for cue in chunk["cues"]))
@@ -312,6 +441,70 @@ def markdown(report: dict) -> str:
     if report["manifestStatus"] != "completed":
         root = report["rootCause"]
         worker = report["resources"]["worker"]
+        if root["failure"]["stage"] == "asr":
+            examples = report["japaneseExamples"]["worsened"][:3]
+            qwen = report["english"]["qwenBaselineExamples"]
+            overflows = root["anchorEndOverflowsFromQualitySignal"]
+            return "\n".join([
+                "# E24 — ReazonSpeech K2 v2 int8 sur DEV (#89)", "",
+                "Décision : **NO-GO qualité**. Qwen reste la baseline. Holdout fermé. "
+                "Aucune quatrième inférence ASR.", "",
+                "## FINAL_DEV", "",
+                f"- Statut : `{report['manifestStatus']}` — `{root['failure']['message']}`.",
+                f"- ASR : {worker['elapsedSeconds']:.3f} s ; pic "
+                f"{worker['peakPhysicalFootprintBytes'] / 2**30:.2f} Gio ; exit "
+                f"{worker['exitStatus']} ; pression={worker['pressureTransitions']} ; swap Δ="
+                f"{worker['swapUsedAfterBytes'] - worker['swapUsedBeforeBytes']} octet.",
+                "- Le `raw-asr.json` FINAL_DEV ne contient que la dernière réponse interne "
+                "(`うん`), mais les 55 réponses worker brutes ont été archivées.",
+                f"- Leurs JSON canoniques sont identiques au retry 135 caractères : "
+                f"`{report['qualitySignal']['finalWorkerProtocol']['canonicalResponsesSHA256']}`.", "",
+                "## Invariant numérique", "",
+                "- Le raw persistant à 135 caractères isole trois fins dépassant leur anchor "
+                "d'un ULP ; ce sont des arrondis du raccord, pas des erreurs candidat :",
+                *[f"- `{row['text']}` chunk {row['chunkIndex']} : "
+                  f"{row['sourceEnd']!r} > {row['anchorEnd']!r} "
+                  f"(Δ {row['overflowSeconds']:.3e} s)." for row in overflows],
+                "- Correction minimale : `sourceEnd = min(anchorEnd, globalEnd)` ; test "
+                "fail-closed ajouté. Aucun changement de l'aligneur ni du contrat.", "",
+                "## Verdict qualité vs Qwen", "",
+                f"- Japonais brut Reazon/Qwen : "
+                f"{report['qualitySignal']['characterCount']} / 4 396 caractères.",
+                f"- CER Reazon/Qwen : {report['CER']['reazon']['ratePercent']:.2f}% / "
+                f"{report['CER']['qwen']['ratePercent']:.2f}%.",
+                f"- Matériel récupéré/perdu vs Qwen : {report['material']['recovered']} / "
+                f"{report['material']['lost']}.",
+                *[f"- {row['id']} — réf. `{row['referenceJapanese']}` ; Qwen "
+                  f"`{row['qwenJapanese']}` ; Reazon `{row['reazonJapanese']}` ; "
+                  f"Δ {row['materialDeltaVsQwen']}." for row in examples], "",
+                "## Anglais et replay", "",
+                "- Anglais Reazon non produit ; pipeline arrêté avant alignement/traduction.",
+                f"- Replay downstream : {report['downstreamReplay']['status']} — "
+                f"{report['downstreamReplay']['reason']}",
+                *[f"- Baseline Qwen tour {row['id']} — réf. `{row['reference']}` ; "
+                  f"sortie `{row['hypothesis']}`." for row in qwen], "",
+                "## Preuves", "",
+                f"- FINAL_DEV : {report['resources']['totalStageSeconds']:.3f} s de stages ; "
+                f"{report['resources']['testElapsedSeconds']:.3f} s mur ; pic job "
+                f"{report['resources']['peakJobMemoryBytes'] / 2**30:.2f} Gio.",
+                f"- Hash manifeste FINAL_DEV : `{report['artifacts']['manifestSHA256']}`.",
+                f"- Hash raw FINAL_DEV : `{report['artifacts']['rawASRSHA256']}`.",
+                f"- Hash raw FINAL_DEV gzip : "
+                f"`{report['artifacts']['retainedRawASRGzipSHA256']}`.",
+                f"- Hash log FINAL_DEV gzip : "
+                f"`{report['artifacts']['retainedRunLogGzipSHA256']}`.",
+                f"- Hash signal 135 caractères : "
+                f"`{report['artifacts']['qualitySignalRawASRGzipSHA256']}`.",
+                f"- Hash protocole worker FINAL_DEV : "
+                f"`{report['artifacts']['finalWorkerProtocolSHA256']}`.",
+                f"- Hash protocole worker retry : "
+                f"`{report['artifacts']['attempt2WorkerProtocolSHA256']}`.",
+                f"- Commit exécuté : `{report['executionCommit']}`.",
+                *[f"- Exécuté `{path}` : `{digest}`."
+                  for path, digest in report["executionImplementationSHA256"].items()],
+                *[f"- Correctif post-run `{path}` : `{digest}`."
+                  for path, digest in report["postRunFixSHA256"].items()], "",
+            ])
         alignment = report["resources"]["alignmentWorker"]
         examples = report["japaneseExamples"]["worsened"][:3]
         qwen = report["english"]["qwenBaselineExamples"]
@@ -397,6 +590,10 @@ def self_test() -> None:
     audit = timestamp_audit(raw)
     audit["monotonic"] = False
     assert failure_attribution(audit, True) == "harness-timestamp-reconciliation-failure"
+    raw["alignment"] = {"chunks": [{"sourceStart": 0, "sourceEnd": 0.3}]}
+    raw["asrWorker"]["characters"][-1]["sourceEnd"] = 0.3 + 1e-15
+    assert len(anchor_end_overflows(raw)) == 1
+    assert normalized_timestamp_audit(raw)["bounded"]
 
 
 def main() -> int:

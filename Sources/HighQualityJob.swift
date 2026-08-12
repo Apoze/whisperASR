@@ -1397,7 +1397,10 @@ struct HighQualityJob: Sendable {
                                     sourceStart,
                                     Double(windowStart) / 16_000 + $0.sourceStart
                                 ),
-                                sourceEnd: Double(windowStart) / 16_000 + $0.sourceEnd
+                                sourceEnd: min(
+                                    sourceEnd,
+                                    Double(windowStart) / 16_000 + $0.sourceEnd
+                                )
                             )
                         }
                         if characters == nil { characters = [] }

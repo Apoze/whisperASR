@@ -941,7 +941,8 @@ final class HighQualityJobTests: XCTestCase {
                         chunkIndex: 0,
                         text: String(character),
                         sourceStart: Double(offset == 2 && text == "共通二" ? 1 : offset),
-                        sourceEnd: Double(offset + 1)
+                        sourceEnd: offset == 2 && text == "共通二"
+                            ? Double(offset + 1).nextUp : Double(offset + 1)
                     )
                 }
             )
@@ -952,6 +953,9 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.characters?.map(\.chunkIndex), [0, 0, 0, 1])
         XCTAssertEqual(result.characters?.last?.sourceStart, 20)
         XCTAssertEqual(result.characters?.last?.sourceEnd, 21)
+        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+            result, sampleCount: samples.count, anchored: true
+        ))
     }
 
     func testChunkedASRKeepsForcedAlignmentWindowsWithinTwentySeconds() async throws {
