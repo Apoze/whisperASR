@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "ticket": 91,
+  "developerDir": "/Applications/Xcode.app/Contents/Developer",
+  "xcode": {
+    "version": "26.6",
+    "buildVersion": "17F113"
+  },
+  "swift": {
+    "version": "6.3.3",
+    "target": "arm64-apple-macosx26.0"
+  },
+  "metallib": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash Scripts/build_mlx_metallib.sh debug",
+    "path": ".build/debug/mlx.metallib",
+    "sizeBytes": 107367162,
+    "sha256": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+    "passed": true
+  },
+  "tests": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test",
+    "executed": 425,
+    "passed": 369,
+    "skippedOptIn": 56,
+    "failed": 0,
+    "seconds": 11.198
+  },
+  "reporterSelfTest": {
+    "command": "python3 Scripts/report_firered_no_run.py --self-test",
+    "passed": true
+  },
+  "modelRunsLaunched": 0,
+  "holdoutOpened": false
+}

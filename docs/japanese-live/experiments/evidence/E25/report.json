@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "ticket": 91,
+  "decision": "NO-RUN-fireRed-ineligible",
+  "corpusRole": "development",
+  "selection": {
+    "rule": "promote a DEV candidate only after admissibility and material improvement; otherwise retain Qwen",
+    "selected": {
+      "recipe": "E22 Standard Qwen with its current segmentation",
+      "backend": "qwen-ja",
+      "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+      "weightSHA256": {
+        "model.safetensors": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+      },
+      "reason": "all three new candidates are NO-GO; Qwen is the specified fallback"
+    },
+    "candidates": [
+      {
+        "ticket": 88,
+        "name": "Fun-ASR Nano int8",
+        "eligible": false,
+        "decision": "NO-GO-unproven-upstream-provenance-and-smoke-generation-runaway",
+        "materialEvidence": {
+          "repeatedPhrase": "最低だな",
+          "repeatedPhraseCount": 77,
+          "rawTokenCounts": [
+            66,
+            245
+          ]
+        },
+        "harnessErrors": [
+          {
+            "kind": "missing-mlx-metallib",
+            "modelReached": false,
+            "artifact": "harness-missing-metallib.log.gz"
+          },
+          {
+            "kind": "unanchored-input-exceeded-kv-capacity",
+            "modelReached": true,
+            "artifact": "harness-unanchored-overflow.log.gz"
+          }
+        ]
+      },
+      {
+        "ticket": 89,
+        "name": "ReazonSpeech K2 v2 int8",
+        "eligible": false,
+        "decision": "NO-GO",
+        "materialEvidence": {
+          "recovered": 0,
+          "lost": 3391,
+          "qwen": {
+            "materialErrorScore": 1158,
+            "lostCharacters": 993,
+            "lostTerms": 18,
+            "lostNumbers": 10,
+            "lostMeaningAnchors": 3,
+            "emptyTurns": 0,
+            "duplicatedTurns": 1
+          },
+          "reazon": {
+            "materialErrorScore": 4549,
+            "lostCharacters": 2679,
+            "lostTerms": 26,
+            "lostNumbers": 16,
+            "lostMeaningAnchors": 10,
+            "emptyTurns": 161,
+            "duplicatedTurns": 0
+          }
+        },
+        "harnessAttribution": "numeric-harness-rounding-fixed-after-run"
+      },
+      {
+        "ticket": 90,
+        "name": "Qwen Anime/Galgame",
+        "eligible": false,
+        "decision": "no-go-license-non-eligible",
+        "licenseEligible": false,
+        "execution": {
+          "weightDownloaded": false,
+          "eightBitPrepared": false,
+          "runtimeBuilt": false,
+          "smokeRun": false,
+          "developmentRun": false,
+          "holdoutRun": false,
+          "heavyBenchmarkRequested": false,
+          "candidateRuntimeSeconds": 0.0
+        }
+      }
+    ]
+  },
+  "segmentationGate": {
+    "rule": "eligible only with >=3 boundary-loss units/fragments, >=60% near an edge, and >=1.5x enrichment over boundary exposure",
+    "lossUnitsOrUnassignedCueFragments": 206,
+    "boundaryLossUnitsOrFragments": 78,
+    "boundaryLossShare": 0.3786407766990291,
+    "boundaryExposureShare": 0.34375,
+    "concentrationRatio": 1.1015004413062666,
+    "eligible": false,
+    "decision": "ineligible-no-concentrated-boundary-loss",
+    "action": "no FireRed run and no segmentation comparison",
+    "candidateDeltas": null
+  },
+  "frozenBaselineEvidence": {
+    "speechRecoveredCharacters": 1697,
+    "speechLostCharacters": 1371,
+    "emptyTurns": 12,
+    "duplicatedTurns": 1,
+    "termsRecovered": 8,
+    "termsLost": 18,
+    "numbersRecovered": 6,
+    "numbersLost": 11,
+    "meaningRecovered": 7,
+    "meaningLost": 5,
+    "examples": [
+      {
+        "id": "cue-0118",
+        "start": 415.98,
+        "end": 422.38,
+        "referenceJapanese": "そうそうそう。いろいろあるんですよね、4回投げるまでに。早めに吐いて、このあとのゲージを溜めながら。そう思わせて、実",
+        "qwenJapanese": "この後の成長とかそう思って実はただ投げるバケって。",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 6,
+            "lostCharacters": 46,
+            "insertedOrSubstitutedCharacters": 18,
+            "referenceCharacters": 52
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "4"
+            ]
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": false,
+          "similarityPercent": 15.789473684210526
+        },
+        "nearASRBoundary": false
+      },
+      {
+        "id": "cue-0060-part-1",
+        "start": 228.66,
+        "end": 235.46,
+        "referenceJapanese": "ど！さあ、ここで甘結もか、すでに1セット勝かっこいいんだけど。完璧でした。",
+        "qwenJapanese": "このままはオーディシャッカーの時点で3番手",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 2,
+            "lostCharacters": 30,
+            "insertedOrSubstitutedCharacters": 19,
+            "referenceCharacters": 32
+          },
+          "terms": {
+            "recovered": [],
+            "lost": [
+              "甘結もか"
+            ]
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "1"
+            ]
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": false,
+          "similarityPercent": 7.547169811320755
+        },
+        "nearASRBoundary": true
+      },
+      {
+        "id": "cue-0082-part-2",
+        "start": 309.4,
+        "end": 317.4,
+        "referenceJapanese": "000だったはず。その1000、でかいの？いや、でもランクしてるとね、でかいなって",
+        "qwenJapanese": "1万だったその線でかいのランクしてるとねでかいなって思",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 23,
+            "lostCharacters": 13,
+            "insertedOrSubstitutedCharacters": 4,
+            "referenceCharacters": 36
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "000",
+              "1000"
+            ]
+          },
+          "meaning": {
+            "recovered": [
+              "でかい"
+            ],
+            "lost": [
+              "1000"
+            ]
+          },
+          "emptyTurn": false,
+          "similarityPercent": 73.01587301587301
+        },
+        "nearASRBoundary": true
+      },
+      {
+        "cueID": 32,
+        "start": 179.0,
+        "end": 185.0,
+        "referenceJapanese": "リーサルだー！ ドーーーン!!!",
+        "boundaryDistanceSeconds": 1.9799999999999898,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 11,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 11
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": [
+              "リーサル",
+              "ドーーーン"
+            ]
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      }
+    ],
+    "candidateEffects": "not measured because the prerequisite gate denied the run"
+  },
+  "execution": {
+    "modelRunsLaunched": 0,
+    "fireRedRuntimeSeconds": 0.0,
+    "fireRedPeakMemoryBytes": null,
+    "memoryReason": "no FireRed process was launched",
+    "reusedQwenPeakMemoryBytes": 18339289016,
+    "holdoutOpened": false,
+    "heavyBenchmarkAuthorized": false
+  },
+  "controls": {
+    "sourceReportsSHA256": {
+      "qwenDiagnostic": "0e43cbd5c7f4d6dd0b4706710fb9e473306a40dd7530f72ee2c4dc36a16e8c6a",
+      "funASR": "56deb9adbef7da757154e7c86bb598cfc90bf7dd232eb92ec298060888c446bc",
+      "reazon": "fdb32727c899c1ee0516ab9ab43bd11531ab789b5f4ab7914c8bd284e73b2ea4",
+      "qwenAnime": "e90c4bf6af835ff3eb181a91670b34aa54a8b714820873b4e45b657e6685513f"
+    },
+    "verifiedArtifactsSHA256": {
+      "manifest": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+      "rawE22": "1f5edc2fcb929c9abc2cb85256f326bbf2891a200ef66d1c1cb9a66a9c711ce8",
+      "e22Report": "7cb21ebab639fcbc290dc30d951e9a15864701a64fee5907f0b09da522ab6a13",
+      "source": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+      "audio": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+      "characterAlignment": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7",
+      "qwenWeight": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954",
+      "metallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+    },
+    "verification": {
+      "schemaVersion": 1,
+      "ticket": 91,
+      "developerDir": "/Applications/Xcode.app/Contents/Developer",
+      "xcode": {
+        "version": "26.6",
+        "buildVersion": "17F113"
+      },
+      "swift": {
+        "version": "6.3.3",
+        "target": "arm64-apple-macosx26.0"
+      },
+      "metallib": {
+        "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash Scripts/build_mlx_metallib.sh debug",
+        "path": ".build/debug/mlx.metallib",
+        "sizeBytes": 107367162,
+        "sha256": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+        "passed": true
+      },
+      "tests": {
+        "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test",
+        "executed": 425,
+        "passed": 369,
+        "skippedOptIn": 56,
+        "failed": 0,
+        "seconds": 11.198
+      },
+      "reporterSelfTest": {
+        "command": "python3 Scripts/report_firered_no_run.py --self-test",
+        "passed": true
+      },
+      "modelRunsLaunched": 0,
+      "holdoutOpened": false
+    },
+    "buildRunnerFailuresSeparated": true,
+    "noInventedMetrics": true
+  },
+  "timings": {
+    "reusedE22TotalSeconds": 1064.0,
+    "reusedE22TranscriptionSeconds": 68.12763202190399
+  },
+  "productChanges": "none",
+  "uiChanges": "none",
+  "standardDefaultsChanged": false,
+  "liveChanges": "none",
+  "provenance": {
+    "reporterSHA256": "8c3add1cd5ac86e019184627ed7ab8bb51057615cdcdf2c2e899c7cb82a1aa23"
+  }
+}
