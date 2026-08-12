@@ -1,0 +1,1709 @@
+{
+  "algorithm": {
+    "activeFrameDBFS": -42,
+    "boundary": "lowest-energy-frame-latest-tie",
+    "frameMilliseconds": 20,
+    "maximumSeconds": 8,
+    "minimumSeconds": 3
+  },
+  "audioSHA256": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "holdoutOpened": false,
+  "sampleCount": 15315325,
+  "sampleRate": 16000,
+  "schemaVersion": 1,
+  "ticket": 94,
+  "windows": [
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5344827586206896,
+        "rmsDBFS": -35.403553139681314
+      },
+      "durationSeconds": 4.64,
+      "endSample": 74240,
+      "id": "segment-0001",
+      "startSample": 0
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6534653465346535,
+        "rmsDBFS": -32.1529064866144
+      },
+      "durationSeconds": 6.06,
+      "endSample": 171200,
+      "id": "segment-0002",
+      "startSample": 74240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5807692307692308,
+        "rmsDBFS": -37.24187427227341
+      },
+      "durationSeconds": 5.2,
+      "endSample": 254400,
+      "id": "segment-0003",
+      "startSample": 171200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7048458149779736,
+        "rmsDBFS": -30.90206547066537
+      },
+      "durationSeconds": 4.54,
+      "endSample": 327040,
+      "id": "segment-0004",
+      "startSample": 254400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8905775075987842,
+        "rmsDBFS": -27.560503214400043
+      },
+      "durationSeconds": 6.58,
+      "endSample": 432320,
+      "id": "segment-0005",
+      "startSample": 327040
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8145454545454546,
+        "rmsDBFS": -30.642568782011285
+      },
+      "durationSeconds": 5.5,
+      "endSample": 520320,
+      "id": "segment-0006",
+      "startSample": 432320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7086092715231788,
+        "rmsDBFS": -34.223896471787086
+      },
+      "durationSeconds": 3.02,
+      "endSample": 568640,
+      "id": "segment-0007",
+      "startSample": 520320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6961325966850829,
+        "rmsDBFS": -35.375545859437445
+      },
+      "durationSeconds": 7.24,
+      "endSample": 684480,
+      "id": "segment-0008",
+      "startSample": 568640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7051282051282052,
+        "rmsDBFS": -33.97544823944719
+      },
+      "durationSeconds": 4.68,
+      "endSample": 759360,
+      "id": "segment-0009",
+      "startSample": 684480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9117647058823529,
+        "rmsDBFS": -26.02478748281174
+      },
+      "durationSeconds": 5.44,
+      "endSample": 846400,
+      "id": "segment-0010",
+      "startSample": 759360
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8446601941747572,
+        "rmsDBFS": -29.50191756653403
+      },
+      "durationSeconds": 6.18,
+      "endSample": 945280,
+      "id": "segment-0011",
+      "startSample": 846400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7610294117647058,
+        "rmsDBFS": -31.642264174181033
+      },
+      "durationSeconds": 5.44,
+      "endSample": 1032320,
+      "id": "segment-0012",
+      "startSample": 945280
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8266666666666667,
+        "rmsDBFS": -31.38018682454058
+      },
+      "durationSeconds": 4.5,
+      "endSample": 1104320,
+      "id": "segment-0013",
+      "startSample": 1032320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6971830985915493,
+        "rmsDBFS": -36.97656687028533
+      },
+      "durationSeconds": 5.68,
+      "endSample": 1195200,
+      "id": "segment-0014",
+      "startSample": 1104320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7272727272727273,
+        "rmsDBFS": -31.563515871121403
+      },
+      "durationSeconds": 7.04,
+      "endSample": 1307840,
+      "id": "segment-0015",
+      "startSample": 1195200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6395348837209303,
+        "rmsDBFS": -28.717446439778946
+      },
+      "durationSeconds": 6.88,
+      "endSample": 1417920,
+      "id": "segment-0016",
+      "startSample": 1307840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.30278884462151395,
+        "rmsDBFS": -38.93516453744689
+      },
+      "durationSeconds": 5.02,
+      "endSample": 1498240,
+      "id": "segment-0017",
+      "startSample": 1417920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.035,
+        "rmsDBFS": -48.87726198500128
+      },
+      "durationSeconds": 4.0,
+      "endSample": 1562240,
+      "id": "segment-0018",
+      "startSample": 1498240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.20256410256410257,
+        "rmsDBFS": -41.897673475732006
+      },
+      "durationSeconds": 7.8,
+      "endSample": 1687040,
+      "id": "segment-0019",
+      "startSample": 1562240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.248,
+        "rmsDBFS": -40.6932375109987
+      },
+      "durationSeconds": 7.5,
+      "endSample": 1807040,
+      "id": "segment-0020",
+      "startSample": 1687040
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.0729483282674772,
+        "rmsDBFS": -45.83138438138953
+      },
+      "durationSeconds": 6.58,
+      "endSample": 1912320,
+      "id": "segment-0021",
+      "startSample": 1807040
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.07954545454545454,
+        "rmsDBFS": -37.59126095358309
+      },
+      "durationSeconds": 3.52,
+      "endSample": 1968640,
+      "id": "segment-0022",
+      "startSample": 1912320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5547169811320755,
+        "rmsDBFS": -20.796455301974
+      },
+      "durationSeconds": 5.3,
+      "endSample": 2053440,
+      "id": "segment-0023",
+      "startSample": 1968640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.26344086021505375,
+        "rmsDBFS": -41.148367300240196
+      },
+      "durationSeconds": 7.44,
+      "endSample": 2172480,
+      "id": "segment-0024",
+      "startSample": 2053440
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.15139442231075698,
+        "rmsDBFS": -44.00106954106245
+      },
+      "durationSeconds": 5.02,
+      "endSample": 2252800,
+      "id": "segment-0025",
+      "startSample": 2172480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.01015228426395939,
+        "rmsDBFS": -49.82912660402229
+      },
+      "durationSeconds": 3.94,
+      "endSample": 2315840,
+      "id": "segment-0026",
+      "startSample": 2252800
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6333333333333333,
+        "rmsDBFS": -30.127358010733403
+      },
+      "durationSeconds": 7.8,
+      "endSample": 2440640,
+      "id": "segment-0027",
+      "startSample": 2315840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.29333333333333333,
+        "rmsDBFS": -39.32565632502966
+      },
+      "durationSeconds": 4.5,
+      "endSample": 2512640,
+      "id": "segment-0028",
+      "startSample": 2440640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4258064516129032,
+        "rmsDBFS": -37.80878745932291
+      },
+      "durationSeconds": 3.1,
+      "endSample": 2562240,
+      "id": "segment-0029",
+      "startSample": 2512640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5515151515151515,
+        "rmsDBFS": -31.799268291080686
+      },
+      "durationSeconds": 6.6,
+      "endSample": 2667840,
+      "id": "segment-0030",
+      "startSample": 2562240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6289752650176679,
+        "rmsDBFS": -33.79269758381769
+      },
+      "durationSeconds": 5.66,
+      "endSample": 2758400,
+      "id": "segment-0031",
+      "startSample": 2667840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.89453125,
+        "rmsDBFS": -26.317193866973607
+      },
+      "durationSeconds": 5.12,
+      "endSample": 2840320,
+      "id": "segment-0032",
+      "startSample": 2758400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7297297297297297,
+        "rmsDBFS": -19.543508729826996
+      },
+      "durationSeconds": 3.7,
+      "endSample": 2899520,
+      "id": "segment-0033",
+      "startSample": 2840320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8028571428571428,
+        "rmsDBFS": -20.220818900752064
+      },
+      "durationSeconds": 7.0,
+      "endSample": 3011520,
+      "id": "segment-0034",
+      "startSample": 2899520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7313829787234043,
+        "rmsDBFS": -31.061348122039263
+      },
+      "durationSeconds": 7.52,
+      "endSample": 3131840,
+      "id": "segment-0035",
+      "startSample": 3011520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9242424242424242,
+        "rmsDBFS": -24.937313177600622
+      },
+      "durationSeconds": 7.92,
+      "endSample": 3258560,
+      "id": "segment-0036",
+      "startSample": 3131840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4567901234567901,
+        "rmsDBFS": -32.09117079015827
+      },
+      "durationSeconds": 4.86,
+      "endSample": 3336320,
+      "id": "segment-0037",
+      "startSample": 3258560
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7542857142857143,
+        "rmsDBFS": -30.123893940908243
+      },
+      "durationSeconds": 7.0,
+      "endSample": 3448320,
+      "id": "segment-0038",
+      "startSample": 3336320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6802325581395349,
+        "rmsDBFS": -35.10436344654098
+      },
+      "durationSeconds": 3.44,
+      "endSample": 3503360,
+      "id": "segment-0039",
+      "startSample": 3448320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8957219251336899,
+        "rmsDBFS": -18.749414533832798
+      },
+      "durationSeconds": 7.48,
+      "endSample": 3623040,
+      "id": "segment-0040",
+      "startSample": 3503360
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8293413173652695,
+        "rmsDBFS": -23.862658354225843
+      },
+      "durationSeconds": 6.68,
+      "endSample": 3729920,
+      "id": "segment-0041",
+      "startSample": 3623040
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4980237154150198,
+        "rmsDBFS": -24.392649582921507
+      },
+      "durationSeconds": 5.06,
+      "endSample": 3810880,
+      "id": "segment-0042",
+      "startSample": 3729920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4648648648648649,
+        "rmsDBFS": -26.247389076314253
+      },
+      "durationSeconds": 7.4,
+      "endSample": 3929280,
+      "id": "segment-0043",
+      "startSample": 3810880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.49444444444444446,
+        "rmsDBFS": -34.034271705450266
+      },
+      "durationSeconds": 3.6,
+      "endSample": 3986880,
+      "id": "segment-0044",
+      "startSample": 3929280
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.17073170731707318,
+        "rmsDBFS": -43.25968174728801
+      },
+      "durationSeconds": 4.92,
+      "endSample": 4065600,
+      "id": "segment-0045",
+      "startSample": 3986880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6354166666666666,
+        "rmsDBFS": -20.902157617279382
+      },
+      "durationSeconds": 5.76,
+      "endSample": 4157760,
+      "id": "segment-0046",
+      "startSample": 4065600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7661538461538462,
+        "rmsDBFS": -27.607829915056108
+      },
+      "durationSeconds": 6.5,
+      "endSample": 4261760,
+      "id": "segment-0047",
+      "startSample": 4157760
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.924812030075188,
+        "rmsDBFS": -27.119972123856698
+      },
+      "durationSeconds": 5.32,
+      "endSample": 4346880,
+      "id": "segment-0048",
+      "startSample": 4261760
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5879828326180258,
+        "rmsDBFS": -34.27360283078288
+      },
+      "durationSeconds": 4.66,
+      "endSample": 4421440,
+      "id": "segment-0049",
+      "startSample": 4346880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8386167146974063,
+        "rmsDBFS": -21.329051763958383
+      },
+      "durationSeconds": 6.94,
+      "endSample": 4532480,
+      "id": "segment-0050",
+      "startSample": 4421440
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4281609195402299,
+        "rmsDBFS": -34.626976619576396
+      },
+      "durationSeconds": 6.96,
+      "endSample": 4643840,
+      "id": "segment-0051",
+      "startSample": 4532480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6746987951807228,
+        "rmsDBFS": -29.566342974079028
+      },
+      "durationSeconds": 4.98,
+      "endSample": 4723520,
+      "id": "segment-0052",
+      "startSample": 4643840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.868,
+        "rmsDBFS": -30.795532217264416
+      },
+      "durationSeconds": 5.0,
+      "endSample": 4803520,
+      "id": "segment-0053",
+      "startSample": 4723520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6461538461538462,
+        "rmsDBFS": -30.81078870119954
+      },
+      "durationSeconds": 5.2,
+      "endSample": 4886720,
+      "id": "segment-0054",
+      "startSample": 4803520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6313868613138686,
+        "rmsDBFS": -30.006109829704315
+      },
+      "durationSeconds": 5.48,
+      "endSample": 4974400,
+      "id": "segment-0055",
+      "startSample": 4886720
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5581395348837209,
+        "rmsDBFS": -29.91997886450575
+      },
+      "durationSeconds": 6.88,
+      "endSample": 5084480,
+      "id": "segment-0056",
+      "startSample": 4974400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.48823529411764705,
+        "rmsDBFS": -36.381887730363445
+      },
+      "durationSeconds": 3.4,
+      "endSample": 5138880,
+      "id": "segment-0057",
+      "startSample": 5084480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6329787234042553,
+        "rmsDBFS": -31.52360514334811
+      },
+      "durationSeconds": 7.52,
+      "endSample": 5259200,
+      "id": "segment-0058",
+      "startSample": 5138880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5048231511254019,
+        "rmsDBFS": -35.42669011368428
+      },
+      "durationSeconds": 6.22,
+      "endSample": 5358720,
+      "id": "segment-0059",
+      "startSample": 5259200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.913946587537092,
+        "rmsDBFS": -27.314589978649373
+      },
+      "durationSeconds": 6.74,
+      "endSample": 5466560,
+      "id": "segment-0060",
+      "startSample": 5358720
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9043062200956937,
+        "rmsDBFS": -26.792237792828423
+      },
+      "durationSeconds": 4.18,
+      "endSample": 5533440,
+      "id": "segment-0061",
+      "startSample": 5466560
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.40350877192982454,
+        "rmsDBFS": -36.94927237812119
+      },
+      "durationSeconds": 4.56,
+      "endSample": 5606400,
+      "id": "segment-0062",
+      "startSample": 5533440
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.49221183800623053,
+        "rmsDBFS": -32.0343503468968
+      },
+      "durationSeconds": 6.42,
+      "endSample": 5709120,
+      "id": "segment-0063",
+      "startSample": 5606400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.3072289156626506,
+        "rmsDBFS": -41.68190289986542
+      },
+      "durationSeconds": 3.32,
+      "endSample": 5762240,
+      "id": "segment-0064",
+      "startSample": 5709120
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5031446540880503,
+        "rmsDBFS": -35.973257360967736
+      },
+      "durationSeconds": 6.36,
+      "endSample": 5864000,
+      "id": "segment-0065",
+      "startSample": 5762240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.3406113537117904,
+        "rmsDBFS": -37.10729527617407
+      },
+      "durationSeconds": 4.58,
+      "endSample": 5937280,
+      "id": "segment-0066",
+      "startSample": 5864000
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5260416666666666,
+        "rmsDBFS": -25.452373183172043
+      },
+      "durationSeconds": 3.84,
+      "endSample": 5998720,
+      "id": "segment-0067",
+      "startSample": 5937280
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6412429378531074,
+        "rmsDBFS": -20.97463838312398
+      },
+      "durationSeconds": 7.08,
+      "endSample": 6112000,
+      "id": "segment-0068",
+      "startSample": 5998720
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.3037037037037037,
+        "rmsDBFS": -38.63995611779456
+      },
+      "durationSeconds": 5.4,
+      "endSample": 6198400,
+      "id": "segment-0069",
+      "startSample": 6112000
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9348534201954397,
+        "rmsDBFS": -18.180999476573604
+      },
+      "durationSeconds": 6.14,
+      "endSample": 6296640,
+      "id": "segment-0070",
+      "startSample": 6198400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8560411311053985,
+        "rmsDBFS": -19.547933916093182
+      },
+      "durationSeconds": 7.78,
+      "endSample": 6421120,
+      "id": "segment-0071",
+      "startSample": 6296640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6394557823129252,
+        "rmsDBFS": -31.556162586356816
+      },
+      "durationSeconds": 5.88,
+      "endSample": 6515200,
+      "id": "segment-0072",
+      "startSample": 6421120
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6655948553054662,
+        "rmsDBFS": -29.734808870697577
+      },
+      "durationSeconds": 6.22,
+      "endSample": 6614720,
+      "id": "segment-0073",
+      "startSample": 6515200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8391812865497076,
+        "rmsDBFS": -32.74561431084416
+      },
+      "durationSeconds": 6.84,
+      "endSample": 6724160,
+      "id": "segment-0074",
+      "startSample": 6614720
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5597014925373134,
+        "rmsDBFS": -29.39245918484694
+      },
+      "durationSeconds": 5.36,
+      "endSample": 6809920,
+      "id": "segment-0075",
+      "startSample": 6724160
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5625,
+        "rmsDBFS": -31.477350535599882
+      },
+      "durationSeconds": 6.4,
+      "endSample": 6912320,
+      "id": "segment-0076",
+      "startSample": 6809920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.36,
+        "rmsDBFS": -37.2593642651163
+      },
+      "durationSeconds": 6.0,
+      "endSample": 7008320,
+      "id": "segment-0077",
+      "startSample": 6912320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6893732970027248,
+        "rmsDBFS": -26.168478117742
+      },
+      "durationSeconds": 7.34,
+      "endSample": 7125760,
+      "id": "segment-0078",
+      "startSample": 7008320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8495821727019499,
+        "rmsDBFS": -25.66904374677808
+      },
+      "durationSeconds": 7.18,
+      "endSample": 7240640,
+      "id": "segment-0079",
+      "startSample": 7125760
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5032258064516129,
+        "rmsDBFS": -33.7219019451519
+      },
+      "durationSeconds": 6.2,
+      "endSample": 7339840,
+      "id": "segment-0080",
+      "startSample": 7240640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5052631578947369,
+        "rmsDBFS": -35.964556580971575
+      },
+      "durationSeconds": 3.8,
+      "endSample": 7400640,
+      "id": "segment-0081",
+      "startSample": 7339840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9045454545454545,
+        "rmsDBFS": -27.54363271552593
+      },
+      "durationSeconds": 4.4,
+      "endSample": 7471040,
+      "id": "segment-0082",
+      "startSample": 7400640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7122641509433962,
+        "rmsDBFS": -27.063550057057522
+      },
+      "durationSeconds": 4.24,
+      "endSample": 7538880,
+      "id": "segment-0083",
+      "startSample": 7471040
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7985865724381626,
+        "rmsDBFS": -28.825467830031858
+      },
+      "durationSeconds": 5.66,
+      "endSample": 7629440,
+      "id": "segment-0084",
+      "startSample": 7538880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.41914191419141916,
+        "rmsDBFS": -32.45733344279159
+      },
+      "durationSeconds": 6.06,
+      "endSample": 7726400,
+      "id": "segment-0085",
+      "startSample": 7629440
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.19887955182072828,
+        "rmsDBFS": -39.49053375519106
+      },
+      "durationSeconds": 7.14,
+      "endSample": 7840640,
+      "id": "segment-0086",
+      "startSample": 7726400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.0945945945945946,
+        "rmsDBFS": -45.28331487664181
+      },
+      "durationSeconds": 5.92,
+      "endSample": 7935360,
+      "id": "segment-0087",
+      "startSample": 7840640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4845360824742268,
+        "rmsDBFS": -35.94778247851103
+      },
+      "durationSeconds": 7.76,
+      "endSample": 8059520,
+      "id": "segment-0088",
+      "startSample": 7935360
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.33,
+        "rmsDBFS": -36.96389135807582
+      },
+      "durationSeconds": 8.0,
+      "endSample": 8187520,
+      "id": "segment-0089",
+      "startSample": 8059520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.23300970873786409,
+        "rmsDBFS": -42.188541277628666
+      },
+      "durationSeconds": 4.12,
+      "endSample": 8253440,
+      "id": "segment-0090",
+      "startSample": 8187520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7002583979328165,
+        "rmsDBFS": -25.415918898407583
+      },
+      "durationSeconds": 7.74,
+      "endSample": 8377280,
+      "id": "segment-0091",
+      "startSample": 8253440
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6815642458100558,
+        "rmsDBFS": -23.70767952876621
+      },
+      "durationSeconds": 7.16,
+      "endSample": 8491840,
+      "id": "segment-0092",
+      "startSample": 8377280
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6156462585034014,
+        "rmsDBFS": -33.38438428342702
+      },
+      "durationSeconds": 5.88,
+      "endSample": 8585920,
+      "id": "segment-0093",
+      "startSample": 8491840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8343558282208589,
+        "rmsDBFS": -26.120946231686467
+      },
+      "durationSeconds": 3.26,
+      "endSample": 8638080,
+      "id": "segment-0094",
+      "startSample": 8585920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5182926829268293,
+        "rmsDBFS": -37.124006774975975
+      },
+      "durationSeconds": 3.28,
+      "endSample": 8690560,
+      "id": "segment-0095",
+      "startSample": 8638080
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9186351706036745,
+        "rmsDBFS": -24.188002175958502
+      },
+      "durationSeconds": 7.62,
+      "endSample": 8812480,
+      "id": "segment-0096",
+      "startSample": 8690560
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9219330855018587,
+        "rmsDBFS": -20.537875875386725
+      },
+      "durationSeconds": 5.38,
+      "endSample": 8898560,
+      "id": "segment-0097",
+      "startSample": 8812480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8448275862068966,
+        "rmsDBFS": -17.6003667349346
+      },
+      "durationSeconds": 6.96,
+      "endSample": 9009920,
+      "id": "segment-0098",
+      "startSample": 8898560
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.789873417721519,
+        "rmsDBFS": -24.030780129435364
+      },
+      "durationSeconds": 7.9,
+      "endSample": 9136320,
+      "id": "segment-0099",
+      "startSample": 9009920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8141025641025641,
+        "rmsDBFS": -20.13702823926854
+      },
+      "durationSeconds": 3.12,
+      "endSample": 9186240,
+      "id": "segment-0100",
+      "startSample": 9136320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9640718562874252,
+        "rmsDBFS": -19.932474300054956
+      },
+      "durationSeconds": 6.68,
+      "endSample": 9293120,
+      "id": "segment-0101",
+      "startSample": 9186240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7752808988764045,
+        "rmsDBFS": -21.36017393085213
+      },
+      "durationSeconds": 3.56,
+      "endSample": 9350080,
+      "id": "segment-0102",
+      "startSample": 9293120
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.3806646525679758,
+        "rmsDBFS": -33.58059899673502
+      },
+      "durationSeconds": 6.62,
+      "endSample": 9456000,
+      "id": "segment-0103",
+      "startSample": 9350080
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6594594594594595,
+        "rmsDBFS": -19.07788939522394
+      },
+      "durationSeconds": 7.4,
+      "endSample": 9574400,
+      "id": "segment-0104",
+      "startSample": 9456000
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5853658536585366,
+        "rmsDBFS": -32.87210472485326
+      },
+      "durationSeconds": 7.38,
+      "endSample": 9692480,
+      "id": "segment-0105",
+      "startSample": 9574400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.449438202247191,
+        "rmsDBFS": -32.38845564654405
+      },
+      "durationSeconds": 7.12,
+      "endSample": 9806400,
+      "id": "segment-0106",
+      "startSample": 9692480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7159763313609467,
+        "rmsDBFS": -31.381397217106183
+      },
+      "durationSeconds": 3.38,
+      "endSample": 9860480,
+      "id": "segment-0107",
+      "startSample": 9806400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.612565445026178,
+        "rmsDBFS": -29.9929854108175
+      },
+      "durationSeconds": 3.82,
+      "endSample": 9921600,
+      "id": "segment-0108",
+      "startSample": 9860480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8288288288288288,
+        "rmsDBFS": -17.577925824031237
+      },
+      "durationSeconds": 4.44,
+      "endSample": 9992640,
+      "id": "segment-0109",
+      "startSample": 9921600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9193548387096774,
+        "rmsDBFS": -18.191875060742916
+      },
+      "durationSeconds": 7.44,
+      "endSample": 10111680,
+      "id": "segment-0110",
+      "startSample": 9992640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.49361702127659574,
+        "rmsDBFS": -28.35920850943358
+      },
+      "durationSeconds": 4.7,
+      "endSample": 10186880,
+      "id": "segment-0111",
+      "startSample": 10111680
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.2550607287449393,
+        "rmsDBFS": -41.759269387073125
+      },
+      "durationSeconds": 4.94,
+      "endSample": 10265920,
+      "id": "segment-0112",
+      "startSample": 10186880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5709090909090909,
+        "rmsDBFS": -28.122223631340777
+      },
+      "durationSeconds": 5.5,
+      "endSample": 10353920,
+      "id": "segment-0113",
+      "startSample": 10265920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8846153846153846,
+        "rmsDBFS": -27.40173815111817
+      },
+      "durationSeconds": 4.68,
+      "endSample": 10428800,
+      "id": "segment-0114",
+      "startSample": 10353920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8686868686868687,
+        "rmsDBFS": -27.297895198654118
+      },
+      "durationSeconds": 3.96,
+      "endSample": 10492160,
+      "id": "segment-0115",
+      "startSample": 10428800
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8614232209737828,
+        "rmsDBFS": -23.356109444776685
+      },
+      "durationSeconds": 5.34,
+      "endSample": 10577600,
+      "id": "segment-0116",
+      "startSample": 10492160
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7,
+        "rmsDBFS": -34.77367725063869
+      },
+      "durationSeconds": 3.8,
+      "endSample": 10638400,
+      "id": "segment-0117",
+      "startSample": 10577600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6551724137931034,
+        "rmsDBFS": -33.435003780643605
+      },
+      "durationSeconds": 5.22,
+      "endSample": 10721920,
+      "id": "segment-0118",
+      "startSample": 10638400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7620320855614974,
+        "rmsDBFS": -31.552849091920542
+      },
+      "durationSeconds": 7.48,
+      "endSample": 10841600,
+      "id": "segment-0119",
+      "startSample": 10721920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.40773809523809523,
+        "rmsDBFS": -34.7127576022534
+      },
+      "durationSeconds": 6.72,
+      "endSample": 10949120,
+      "id": "segment-0120",
+      "startSample": 10841600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4700854700854701,
+        "rmsDBFS": -37.502486510506515
+      },
+      "durationSeconds": 4.68,
+      "endSample": 11024000,
+      "id": "segment-0121",
+      "startSample": 10949120
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5681818181818182,
+        "rmsDBFS": -31.24636803227937
+      },
+      "durationSeconds": 4.4,
+      "endSample": 11094400,
+      "id": "segment-0122",
+      "startSample": 11024000
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7018633540372671,
+        "rmsDBFS": -33.54549351753785
+      },
+      "durationSeconds": 3.22,
+      "endSample": 11145920,
+      "id": "segment-0123",
+      "startSample": 11094400
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7192982456140351,
+        "rmsDBFS": -29.219321153271554
+      },
+      "durationSeconds": 4.56,
+      "endSample": 11218880,
+      "id": "segment-0124",
+      "startSample": 11145920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9725490196078431,
+        "rmsDBFS": -21.917727205339546
+      },
+      "durationSeconds": 5.1,
+      "endSample": 11300480,
+      "id": "segment-0125",
+      "startSample": 11218880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 1.0,
+        "rmsDBFS": -18.461478822452825
+      },
+      "durationSeconds": 5.02,
+      "endSample": 11380800,
+      "id": "segment-0126",
+      "startSample": 11300480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 1.0,
+        "rmsDBFS": -17.090862319340747
+      },
+      "durationSeconds": 6.22,
+      "endSample": 11480320,
+      "id": "segment-0127",
+      "startSample": 11380800
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5786802030456852,
+        "rmsDBFS": -24.816953635122267
+      },
+      "durationSeconds": 3.94,
+      "endSample": 11543360,
+      "id": "segment-0128",
+      "startSample": 11480320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7127659574468085,
+        "rmsDBFS": -23.72822485346914
+      },
+      "durationSeconds": 3.76,
+      "endSample": 11603520,
+      "id": "segment-0129",
+      "startSample": 11543360
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.991044776119403,
+        "rmsDBFS": -20.553214787193124
+      },
+      "durationSeconds": 6.7,
+      "endSample": 11710720,
+      "id": "segment-0130",
+      "startSample": 11603520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9494949494949495,
+        "rmsDBFS": -20.730690296058953
+      },
+      "durationSeconds": 3.96,
+      "endSample": 11774080,
+      "id": "segment-0131",
+      "startSample": 11710720
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8745980707395499,
+        "rmsDBFS": -21.392683667732104
+      },
+      "durationSeconds": 6.22,
+      "endSample": 11873600,
+      "id": "segment-0132",
+      "startSample": 11774080
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7387387387387387,
+        "rmsDBFS": -21.362663130842652
+      },
+      "durationSeconds": 4.44,
+      "endSample": 11944640,
+      "id": "segment-0133",
+      "startSample": 11873600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7824858757062146,
+        "rmsDBFS": -30.61457147752247
+      },
+      "durationSeconds": 7.08,
+      "endSample": 12057920,
+      "id": "segment-0134",
+      "startSample": 11944640
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6485148514851485,
+        "rmsDBFS": -27.958830664095913
+      },
+      "durationSeconds": 4.04,
+      "endSample": 12122560,
+      "id": "segment-0135",
+      "startSample": 12057920
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6883116883116883,
+        "rmsDBFS": -28.20821691952211
+      },
+      "durationSeconds": 4.62,
+      "endSample": 12196480,
+      "id": "segment-0136",
+      "startSample": 12122560
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.757396449704142,
+        "rmsDBFS": -29.47893946001186
+      },
+      "durationSeconds": 3.38,
+      "endSample": 12250560,
+      "id": "segment-0137",
+      "startSample": 12196480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7841409691629956,
+        "rmsDBFS": -21.736090921993366
+      },
+      "durationSeconds": 4.54,
+      "endSample": 12323200,
+      "id": "segment-0138",
+      "startSample": 12250560
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.8256410256410256,
+        "rmsDBFS": -24.84933548388788
+      },
+      "durationSeconds": 3.9,
+      "endSample": 12385600,
+      "id": "segment-0139",
+      "startSample": 12323200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7075208913649025,
+        "rmsDBFS": -29.542641012450282
+      },
+      "durationSeconds": 7.18,
+      "endSample": 12500480,
+      "id": "segment-0140",
+      "startSample": 12385600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.599009900990099,
+        "rmsDBFS": -32.65431193215641
+      },
+      "durationSeconds": 4.04,
+      "endSample": 12565120,
+      "id": "segment-0141",
+      "startSample": 12500480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.9183673469387755,
+        "rmsDBFS": -21.42466760730096
+      },
+      "durationSeconds": 6.86,
+      "endSample": 12674880,
+      "id": "segment-0142",
+      "startSample": 12565120
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4855769230769231,
+        "rmsDBFS": -36.61605071117427
+      },
+      "durationSeconds": 4.16,
+      "endSample": 12741440,
+      "id": "segment-0143",
+      "startSample": 12674880
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7361809045226131,
+        "rmsDBFS": -28.311691782871424
+      },
+      "durationSeconds": 7.96,
+      "endSample": 12868800,
+      "id": "segment-0144",
+      "startSample": 12741440
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.44836272040302266,
+        "rmsDBFS": -35.53319295648036
+      },
+      "durationSeconds": 7.94,
+      "endSample": 12995840,
+      "id": "segment-0145",
+      "startSample": 12868800
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.23220973782771537,
+        "rmsDBFS": -42.16052164389595
+      },
+      "durationSeconds": 5.34,
+      "endSample": 13081280,
+      "id": "segment-0146",
+      "startSample": 12995840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6901041666666666,
+        "rmsDBFS": -24.514228861212676
+      },
+      "durationSeconds": 7.68,
+      "endSample": 13204160,
+      "id": "segment-0147",
+      "startSample": 13081280
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4879032258064516,
+        "rmsDBFS": -37.78288706128345
+      },
+      "durationSeconds": 4.96,
+      "endSample": 13283520,
+      "id": "segment-0148",
+      "startSample": 13204160
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.47706422018348627,
+        "rmsDBFS": -36.33094117764736
+      },
+      "durationSeconds": 4.36,
+      "endSample": 13353280,
+      "id": "segment-0149",
+      "startSample": 13283520
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6280487804878049,
+        "rmsDBFS": -33.530908967037604
+      },
+      "durationSeconds": 6.56,
+      "endSample": 13458240,
+      "id": "segment-0150",
+      "startSample": 13353280
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7415730337078652,
+        "rmsDBFS": -31.701007737112516
+      },
+      "durationSeconds": 7.12,
+      "endSample": 13572160,
+      "id": "segment-0151",
+      "startSample": 13458240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.6127946127946128,
+        "rmsDBFS": -34.6935999275978
+      },
+      "durationSeconds": 5.94,
+      "endSample": 13667200,
+      "id": "segment-0152",
+      "startSample": 13572160
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.48333333333333334,
+        "rmsDBFS": -38.411302098415916
+      },
+      "durationSeconds": 6.0,
+      "endSample": 13763200,
+      "id": "segment-0153",
+      "startSample": 13667200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4439461883408072,
+        "rmsDBFS": -37.12298643274279
+      },
+      "durationSeconds": 4.46,
+      "endSample": 13834560,
+      "id": "segment-0154",
+      "startSample": 13763200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.40860215053763443,
+        "rmsDBFS": -36.80943729018148
+      },
+      "durationSeconds": 7.44,
+      "endSample": 13953600,
+      "id": "segment-0155",
+      "startSample": 13834560
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4624277456647399,
+        "rmsDBFS": -37.12834607110863
+      },
+      "durationSeconds": 3.46,
+      "endSample": 14008960,
+      "id": "segment-0156",
+      "startSample": 13953600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.3322784810126582,
+        "rmsDBFS": -36.22943903366925
+      },
+      "durationSeconds": 6.32,
+      "endSample": 14110080,
+      "id": "segment-0157",
+      "startSample": 14008960
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.625,
+        "rmsDBFS": -30.26815981915096
+      },
+      "durationSeconds": 4.64,
+      "endSample": 14184320,
+      "id": "segment-0158",
+      "startSample": 14110080
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7083333333333334,
+        "rmsDBFS": -27.01345097290063
+      },
+      "durationSeconds": 6.72,
+      "endSample": 14291840,
+      "id": "segment-0159",
+      "startSample": 14184320
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.7021857923497268,
+        "rmsDBFS": -33.428998147908466
+      },
+      "durationSeconds": 7.32,
+      "endSample": 14408960,
+      "id": "segment-0160",
+      "startSample": 14291840
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.538235294117647,
+        "rmsDBFS": -36.6286126942301
+      },
+      "durationSeconds": 6.8,
+      "endSample": 14517760,
+      "id": "segment-0161",
+      "startSample": 14408960
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.5955414012738853,
+        "rmsDBFS": -36.51851536659889
+      },
+      "durationSeconds": 6.28,
+      "endSample": 14618240,
+      "id": "segment-0162",
+      "startSample": 14517760
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.37566137566137564,
+        "rmsDBFS": -39.166524708348824
+      },
+      "durationSeconds": 7.56,
+      "endSample": 14739200,
+      "id": "segment-0163",
+      "startSample": 14618240
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.2571428571428571,
+        "rmsDBFS": -41.7818852023793
+      },
+      "durationSeconds": 5.6,
+      "endSample": 14828800,
+      "id": "segment-0164",
+      "startSample": 14739200
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.40106951871657753,
+        "rmsDBFS": -36.27955007777067
+      },
+      "durationSeconds": 7.48,
+      "endSample": 14948480,
+      "id": "segment-0165",
+      "startSample": 14828800
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4925,
+        "rmsDBFS": -35.8767227634784
+      },
+      "durationSeconds": 8.0,
+      "endSample": 15076480,
+      "id": "segment-0166",
+      "startSample": 14948480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.4699248120300752,
+        "rmsDBFS": -38.47806330614702
+      },
+      "durationSeconds": 5.32,
+      "endSample": 15161600,
+      "id": "segment-0167",
+      "startSample": 15076480
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.45695364238410596,
+        "rmsDBFS": -38.659711714081666
+      },
+      "durationSeconds": 3.02,
+      "endSample": 15209920,
+      "id": "segment-0168",
+      "startSample": 15161600
+    },
+    {
+      "acoustic": {
+        "activeFrameRatio": 0.696969696969697,
+        "rmsDBFS": -38.44087488452047
+      },
+      "durationSeconds": 6.5878125,
+      "endSample": 15315325,
+      "id": "segment-0169",
+      "startSample": 15209920
+    }
+  ]
+}
