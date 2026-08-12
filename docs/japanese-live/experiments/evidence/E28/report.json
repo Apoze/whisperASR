@@ -1209,9 +1209,259 @@
     "mappingFailure": false,
     "referenceHashMismatch": false
   },
-  "decision": "NO-GO-downstream-forced-alignment-gate",
+  "decision": "NO-GO-english-regression-stop-before-holdout",
   "developmentEligibleJapanese": true,
-  "downstreamFailure": {
+  "english": {
+    "COMET": null,
+    "baselineChrFPlusPlus": 46.4359351521226,
+    "baselineEmptyTurns": 7,
+    "candidateChrFPlusPlus": 45.874880077811724,
+    "candidateEmptyTurns": 7,
+    "completeness": {
+      "acceptedAfterTarget": 228,
+      "acceptedBeforeTarget": 53,
+      "neverGeneratedUnits": 0,
+      "retriedUnitIDs": [
+        "unit-0054"
+      ],
+      "reusedAcceptedUnits": 281,
+      "totalUnits": 282
+    },
+    "delta": -0.5610550743108789,
+    "effect": "Japanese edit gain did not improve aggregate English chrF++ on DEV",
+    "examples": [
+      {
+        "baselineEnglish": "It's difficult to handle. I used my gauge. It's quite direct. If you can hit with guard, it's a big advantage.",
+        "candidateEnglish": "It's not possible to use techniques that rely on a cage.",
+        "category": "override-scored",
+        "id": "segment-0095",
+        "referenceEnglish": "It's a really bad state: you still take chip damage while guarding, you can't parry, and you can't use Drive Impact."
+      },
+      {
+        "baselineEnglish": "Well, really? It ends like this.",
+        "candidateEnglish": "Got it!",
+        "category": "override-unscored",
+        "id": "segment-0126",
+        "referenceEnglish": "indisponible (non scoré)"
+      }
+    ],
+    "japaneseEditGain": 44,
+    "run": true,
+    "targetedRetry": {
+      "cleanExit": true,
+      "commandSeconds": 21.372141083003953,
+      "exchangePeakMemoryBytes": 6911789160,
+      "generationSeconds": 2.2793760299682617,
+      "minimumAvailableMemoryBytes": 5305532416,
+      "output": "That's right, right, right, right, right. It's like a cutting line.",
+      "pressureTransitions": [],
+      "reasonCodesAfterFix": [],
+      "swapDeltaBytes": 0,
+      "translationWeightSHA256": [
+        "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+        "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+      ],
+      "unitID": "unit-0054",
+      "workerPeakPhysicalFootprintBytes": 7325652824,
+      "workerSeconds": 8.713005065917969
+    }
+  },
+  "gates": {
+    "calibrationAdmissible": true,
+    "completeHypothesesOnly": true,
+    "costNotRunaway": true,
+    "englishNotWorse": false,
+    "everyChoiceLogged": true,
+    "fixedRuleWorstBlockNonRegressing": true,
+    "holdoutClosed": true,
+    "noAddedDuplicate": true,
+    "noAddedEmptySpeech": true,
+    "noMaterialThresholdVariation": true,
+    "runtimeSignalsPredictSafeGain": true,
+    "shortCommonAcousticWindows": true,
+    "strictlySequentialWorkers": true,
+    "termsNumbersMeaningNotWorse": true,
+    "timelineCompleteWithoutGapOrDuplication": true
+  },
+  "holdoutOpened": false,
+  "issue95": "not-decided: #94 Japanese gain remains independently measurable",
+  "japanese": {
+    "abstentionExplanation": {
+      "abstentionReasonHistogram": {
+        "insufficient-calibrated-margin": 123,
+        "insufficient-disagreement": 34,
+        "qwen-critical-token-lost": 11
+      },
+      "exclusiveReasonCombinations": {
+        "insufficient-calibrated-margin": 123,
+        "insufficient-disagreement": 33,
+        "insufficient-disagreement+qwen-critical-token-lost": 1,
+        "qwen-critical-token-lost": 10
+      },
+      "globalFailClosed": false,
+      "mappingCausedAbstentions": false,
+      "modalFoldThresholdDiagnosticOnly": {
+        "adaptiveEdits": 3229,
+        "badOverrides": 0,
+        "criticalChanges": {
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "goodOverrides": 1,
+        "netEditGain": 44,
+        "neutralOverrides": 1,
+        "proposedOverrides": 2,
+        "qwenEdits": 3273,
+        "reasonHistogram": {
+          "calibrated-margin-passed": 2,
+          "insufficient-calibrated-margin": 123,
+          "insufficient-disagreement": 34,
+          "qwen-critical-token-lost": 11
+        },
+        "rule": "select complete Parakeet hypothesis when deterministic vetoes pass and weaknessMargin > 0.5",
+        "threshold": 0.5
+      },
+      "parakeetChoiceReasonHistogram": {
+        "calibrated-margin-passed": 2
+      }
+    },
+    "blocks": [
+      {
+        "block": 0,
+        "oracleEdits": 550,
+        "parakeetEdits": 599,
+        "qwenEdits": 740,
+        "selectedEdits": 740
+      },
+      {
+        "block": 1,
+        "oracleEdits": 521,
+        "parakeetEdits": 554,
+        "qwenEdits": 733,
+        "selectedEdits": 733
+      },
+      {
+        "block": 2,
+        "oracleEdits": 480,
+        "parakeetEdits": 508,
+        "qwenEdits": 716,
+        "selectedEdits": 672
+      },
+      {
+        "block": 3,
+        "oracleEdits": 447,
+        "parakeetEdits": 497,
+        "qwenEdits": 619,
+        "selectedEdits": 619
+      },
+      {
+        "block": 4,
+        "oracleEdits": 387,
+        "parakeetEdits": 460,
+        "qwenEdits": 465,
+        "selectedEdits": 465
+      }
+    ],
+    "dimensionChanges": {
+      "meaning": {
+        "lostByParakeetVsQwen": [],
+        "recoveredByParakeetNotQwen": [
+          "前に行かない"
+        ]
+      },
+      "numbers": {
+        "lostByParakeetVsQwen": [
+          "3",
+          "280"
+        ],
+        "recoveredByParakeetNotQwen": [
+          "1",
+          "3"
+        ]
+      },
+      "terms": {
+        "lostByParakeetVsQwen": [],
+        "recoveredByParakeetNotQwen": [
+          "立川"
+        ]
+      }
+    },
+    "examples": [
+      {
+        "endSample": 8690560,
+        "id": "segment-0095",
+        "parakeet": "ケージ使った技が使えない。",
+        "parakeetEdits": 10,
+        "qwen": "はいはい、はい。はいあ、は、は。は、あ、あ。ははは、いや、はは。あ、いや。はあ、う、はあ。ああ、まあ、はや、はゆ、は難しい。ゲージ使ったわ。ズ、だ、しか使わ、ない、",
+        "qwenEdits": 54,
+        "referenceJapanese": "ない。",
+        "selectedBackend": "parakeet-ja",
+        "selectedEdits": 10,
+        "selectedText": "ケージ使った技が使えない。",
+        "startSample": 8638080
+      },
+      {
+        "endSample": 11873600,
+        "id": "segment-0132",
+        "parakeet": "ねえ分かる?",
+        "parakeetEdits": 50,
+        "qwen": "感動しました。え、マジで感動した。普通に涙出た。え、わかる。",
+        "qwenEdits": 31,
+        "referenceJapanese": "感動しました！けど、普通に！マジで感動しました！マジで感動した！普通に涙出た。マジで感動した！普通に涙出た。ね、わかる！さ",
+        "selectedBackend": "qwen-ja",
+        "selectedEdits": 31,
+        "selectedText": "感動しました。え、マジで感動した。普通に涙出た。え、わかる。",
+        "startSample": 11774080
+      }
+    ],
+    "maximumWindowSeconds": 8.0,
+    "oracleCompleteHypothesisEdits": 2385,
+    "oracleRelativeGainVsQwenPercent": 27.13107241063245,
+    "parakeetBetterEqualWorseWindows": {
+      "better": 99,
+      "equal": 21,
+      "worse": 49
+    },
+    "parakeetDimensions": {
+      "meaning": 7,
+      "numbers": 11,
+      "terms": 13
+    },
+    "parakeetEdits": 2618,
+    "parakeetEmpty": 0,
+    "parakeetRelativeGainVsQwenPercent": 20.012221203788574,
+    "parakeetSelections": 2,
+    "qwenAbstentions": 167,
+    "qwenDimensions": {
+      "meaning": 6,
+      "numbers": 11,
+      "terms": 7
+    },
+    "qwenDuplicates": 0,
+    "qwenEdits": 3273,
+    "qwenEmpty": 0,
+    "relativeGainPercent": 1.3443324167430493,
+    "selectedDimensions": {
+      "meaning": 6,
+      "numbers": 11,
+      "terms": 7
+    },
+    "selectedDuplicates": 0,
+    "selectedEdits": 3229,
+    "selectedEmpty": 0,
+    "windowCount": 169
+  },
+  "priorDownstreamFailure": {
     "adaptiveOverrideCausality": {
       "causedByOverrides": false,
       "conclusion": "generic downstream forced-aligner failure",
@@ -2280,208 +2530,6 @@
       "text": "うん。"
     }
   },
-  "english": {
-    "COMET": null,
-    "chrFPlusPlus": null,
-    "japaneseEditGainImpactMeasurable": false,
-    "reason": "Forced alignment gate failed before TranslateGemma loading",
-    "run": false
-  },
-  "gates": {
-    "calibrationAdmissible": true,
-    "completeHypothesesOnly": true,
-    "costNotRunaway": true,
-    "englishNotWorse": false,
-    "everyChoiceLogged": true,
-    "fixedRuleWorstBlockNonRegressing": true,
-    "holdoutClosed": true,
-    "noAddedDuplicate": true,
-    "noAddedEmptySpeech": true,
-    "noMaterialThresholdVariation": true,
-    "runtimeSignalsPredictSafeGain": true,
-    "shortCommonAcousticWindows": true,
-    "strictlySequentialWorkers": true,
-    "termsNumbersMeaningNotWorse": true,
-    "timelineCompleteWithoutGapOrDuplication": true
-  },
-  "holdoutOpened": false,
-  "issue95": "no-run: #94 has no eligible English candidate",
-  "japanese": {
-    "abstentionExplanation": {
-      "abstentionReasonHistogram": {
-        "insufficient-calibrated-margin": 123,
-        "insufficient-disagreement": 34,
-        "qwen-critical-token-lost": 11
-      },
-      "exclusiveReasonCombinations": {
-        "insufficient-calibrated-margin": 123,
-        "insufficient-disagreement": 33,
-        "insufficient-disagreement+qwen-critical-token-lost": 1,
-        "qwen-critical-token-lost": 10
-      },
-      "globalFailClosed": false,
-      "mappingCausedAbstentions": false,
-      "modalFoldThresholdDiagnosticOnly": {
-        "adaptiveEdits": 3229,
-        "badOverrides": 0,
-        "criticalChanges": {
-          "meaning": {
-            "lost": [],
-            "recovered": []
-          },
-          "numbers": {
-            "lost": [],
-            "recovered": []
-          },
-          "terms": {
-            "lost": [],
-            "recovered": []
-          }
-        },
-        "goodOverrides": 1,
-        "netEditGain": 44,
-        "neutralOverrides": 1,
-        "proposedOverrides": 2,
-        "qwenEdits": 3273,
-        "reasonHistogram": {
-          "calibrated-margin-passed": 2,
-          "insufficient-calibrated-margin": 123,
-          "insufficient-disagreement": 34,
-          "qwen-critical-token-lost": 11
-        },
-        "rule": "select complete Parakeet hypothesis when deterministic vetoes pass and weaknessMargin > 0.5",
-        "threshold": 0.5
-      },
-      "parakeetChoiceReasonHistogram": {
-        "calibrated-margin-passed": 2
-      }
-    },
-    "blocks": [
-      {
-        "block": 0,
-        "oracleEdits": 550,
-        "parakeetEdits": 599,
-        "qwenEdits": 740,
-        "selectedEdits": 740
-      },
-      {
-        "block": 1,
-        "oracleEdits": 521,
-        "parakeetEdits": 554,
-        "qwenEdits": 733,
-        "selectedEdits": 733
-      },
-      {
-        "block": 2,
-        "oracleEdits": 480,
-        "parakeetEdits": 508,
-        "qwenEdits": 716,
-        "selectedEdits": 672
-      },
-      {
-        "block": 3,
-        "oracleEdits": 447,
-        "parakeetEdits": 497,
-        "qwenEdits": 619,
-        "selectedEdits": 619
-      },
-      {
-        "block": 4,
-        "oracleEdits": 387,
-        "parakeetEdits": 460,
-        "qwenEdits": 465,
-        "selectedEdits": 465
-      }
-    ],
-    "dimensionChanges": {
-      "meaning": {
-        "lostByParakeetVsQwen": [],
-        "recoveredByParakeetNotQwen": [
-          "前に行かない"
-        ]
-      },
-      "numbers": {
-        "lostByParakeetVsQwen": [
-          "3",
-          "280"
-        ],
-        "recoveredByParakeetNotQwen": [
-          "1",
-          "3"
-        ]
-      },
-      "terms": {
-        "lostByParakeetVsQwen": [],
-        "recoveredByParakeetNotQwen": [
-          "立川"
-        ]
-      }
-    },
-    "examples": [
-      {
-        "endSample": 8690560,
-        "id": "segment-0095",
-        "parakeet": "ケージ使った技が使えない。",
-        "parakeetEdits": 10,
-        "qwen": "はいはい、はい。はいあ、は、は。は、あ、あ。ははは、いや、はは。あ、いや。はあ、う、はあ。ああ、まあ、はや、はゆ、は難しい。ゲージ使ったわ。ズ、だ、しか使わ、ない、",
-        "qwenEdits": 54,
-        "referenceJapanese": "ない。",
-        "selectedBackend": "parakeet-ja",
-        "selectedEdits": 10,
-        "selectedText": "ケージ使った技が使えない。",
-        "startSample": 8638080
-      },
-      {
-        "endSample": 11873600,
-        "id": "segment-0132",
-        "parakeet": "ねえ分かる?",
-        "parakeetEdits": 50,
-        "qwen": "感動しました。え、マジで感動した。普通に涙出た。え、わかる。",
-        "qwenEdits": 31,
-        "referenceJapanese": "感動しました！けど、普通に！マジで感動しました！マジで感動した！普通に涙出た。マジで感動した！普通に涙出た。ね、わかる！さ",
-        "selectedBackend": "qwen-ja",
-        "selectedEdits": 31,
-        "selectedText": "感動しました。え、マジで感動した。普通に涙出た。え、わかる。",
-        "startSample": 11774080
-      }
-    ],
-    "maximumWindowSeconds": 8.0,
-    "oracleCompleteHypothesisEdits": 2385,
-    "oracleRelativeGainVsQwenPercent": 27.13107241063245,
-    "parakeetBetterEqualWorseWindows": {
-      "better": 99,
-      "equal": 21,
-      "worse": 49
-    },
-    "parakeetDimensions": {
-      "meaning": 7,
-      "numbers": 11,
-      "terms": 13
-    },
-    "parakeetEdits": 2618,
-    "parakeetEmpty": 0,
-    "parakeetRelativeGainVsQwenPercent": 20.012221203788574,
-    "parakeetSelections": 2,
-    "qwenAbstentions": 167,
-    "qwenDimensions": {
-      "meaning": 6,
-      "numbers": 11,
-      "terms": 7
-    },
-    "qwenDuplicates": 0,
-    "qwenEdits": 3273,
-    "qwenEmpty": 0,
-    "relativeGainPercent": 1.3443324167430493,
-    "selectedDimensions": {
-      "meaning": 6,
-      "numbers": 11,
-      "terms": 7
-    },
-    "selectedDuplicates": 0,
-    "selectedEdits": 3229,
-    "selectedEmpty": 0,
-    "windowCount": 169
-  },
   "promote": false,
   "referenceMappingAudit": {
     "assignedCharacterCount": 3573,
@@ -2492,6 +2540,10 @@
     "method": "character-midpoint-to-acoustic-window; stable-cue-order-within-window",
     "overlappingCuesInterleaved": false,
     "unassignedCharacterCount": 0
+  },
+  "reporterImplementationSHA256": {
+    "Scripts/adaptive_asr_harness.py": "dc4d762a855e300ef27587436e1dfe197f4d7ed800ab94b9314bd5758a772aeb",
+    "Scripts/run_adaptive_asr_experiment.sh": "d6117aef572b1ddd1876e5c8e22bfd4a060cf03443e537eb6a8884942554bfe0"
   },
   "reuseDiagnostic": {
     "artifacts": {
@@ -3590,9 +3642,400 @@
       "preparing-asr": 0.0006940364837646484,
       "transcribing": 0.07544302940368652
     },
-    "peakPhysicalFootprintBytes": 9511507008,
-    "totalCommandSeconds": 179.16377550107427,
-    "totalModelWorkerSeconds": 155.13268613815308,
+    "fixedDownstreamCommandSeconds": 449.62876904103905,
+    "modelWorkerSeconds": {
+      "asr": 130.6842601299286,
+      "fixedAlignment": 27.433215022087097,
+      "fixedTranslation": 408.7197849750519,
+      "initialAlignment": 24.448426008224487,
+      "targetedTranslation": 8.713005065917969
+    },
+    "peakPhysicalFootprintBytes": 11851782216,
+    "targetedIncrementalCommandSeconds": 21.372141083003953,
+    "targetedTranslationCommand": {
+      "command": [
+        "xcrun",
+        "swift",
+        "test",
+        "--skip-build",
+        "--filter",
+        "HighQualityTranslationIntegrityTests/testRetriesFrozenRejectedUnitsWhenOptedIn"
+      ],
+      "elapsedSeconds": 21.372141083003953,
+      "exitCode": 0,
+      "rawLog": "/Users/maz/.codex/worktrees/4656/whisperASR/.build/benchmarks/issue-94/development/targeted-translation-retry/run.log",
+      "timedOut": false,
+      "timeoutSeconds": 300
+    },
+    "targetedTranslationWorker": {
+      "availableMemorySamples": [
+        {
+          "at": 808202576.732677,
+          "availableMemoryBytes": 9475702784
+        },
+        {
+          "at": 808202576.732761,
+          "availableMemoryBytes": 9475702784
+        },
+        {
+          "at": 808202576.837495,
+          "availableMemoryBytes": 9475031040
+        },
+        {
+          "at": 808202576.938682,
+          "availableMemoryBytes": 9486794752
+        },
+        {
+          "at": 808202577.039051,
+          "availableMemoryBytes": 9514926080
+        },
+        {
+          "at": 808202577.145846,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.250106,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.352677,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.459612,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.564296,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.670565,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.775342,
+          "availableMemoryBytes": 9510682624
+        },
+        {
+          "at": 808202577.877789,
+          "availableMemoryBytes": 9512206336
+        },
+        {
+          "at": 808202577.983025,
+          "availableMemoryBytes": 9529049088
+        },
+        {
+          "at": 808202578.087314,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.194056,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.300792,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.402587,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.503326,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.610172,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.710792,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.817644,
+          "availableMemoryBytes": 8860057600
+        },
+        {
+          "at": 808202578.920711,
+          "availableMemoryBytes": 8766013440
+        },
+        {
+          "at": 808202579.021666,
+          "availableMemoryBytes": 8588394496
+        },
+        {
+          "at": 808202579.123558,
+          "availableMemoryBytes": 8298479616
+        },
+        {
+          "at": 808202579.229713,
+          "availableMemoryBytes": 7983333376
+        },
+        {
+          "at": 808202579.336396,
+          "availableMemoryBytes": 7658930176
+        },
+        {
+          "at": 808202579.438894,
+          "availableMemoryBytes": 7470514176
+        },
+        {
+          "at": 808202579.542707,
+          "availableMemoryBytes": 7172423680
+        },
+        {
+          "at": 808202579.648075,
+          "availableMemoryBytes": 6895583232
+        },
+        {
+          "at": 808202579.748954,
+          "availableMemoryBytes": 6788710400
+        },
+        {
+          "at": 808202579.84918,
+          "availableMemoryBytes": 6787284992
+        },
+        {
+          "at": 808202579.949597,
+          "availableMemoryBytes": 6791053312
+        },
+        {
+          "at": 808202580.049948,
+          "availableMemoryBytes": 6794919936
+        },
+        {
+          "at": 808202580.150682,
+          "availableMemoryBytes": 6792183808
+        },
+        {
+          "at": 808202580.257471,
+          "availableMemoryBytes": 6789988352
+        },
+        {
+          "at": 808202580.36135,
+          "availableMemoryBytes": 6793625600
+        },
+        {
+          "at": 808202580.462471,
+          "availableMemoryBytes": 6791200768
+        },
+        {
+          "at": 808202580.562695,
+          "availableMemoryBytes": 6788677632
+        },
+        {
+          "at": 808202580.668019,
+          "availableMemoryBytes": 6788677632
+        },
+        {
+          "at": 808202580.770151,
+          "availableMemoryBytes": 6788677632
+        },
+        {
+          "at": 808202580.87033,
+          "availableMemoryBytes": 6776619008
+        },
+        {
+          "at": 808202580.975802,
+          "availableMemoryBytes": 6787809280
+        },
+        {
+          "at": 808202581.077686,
+          "availableMemoryBytes": 6777995264
+        },
+        {
+          "at": 808202581.182375,
+          "availableMemoryBytes": 6774685696
+        },
+        {
+          "at": 808202581.282874,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.387332,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.488455,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.592995,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.695897,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.797932,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.904668,
+          "availableMemoryBytes": 6780960768
+        },
+        {
+          "at": 808202582.006845,
+          "availableMemoryBytes": 6661849088
+        },
+        {
+          "at": 808202582.11359,
+          "availableMemoryBytes": 6662324224
+        },
+        {
+          "at": 808202582.219879,
+          "availableMemoryBytes": 6660243456
+        },
+        {
+          "at": 808202582.321212,
+          "availableMemoryBytes": 6659375104
+        },
+        {
+          "at": 808202582.427413,
+          "availableMemoryBytes": 6657687552
+        },
+        {
+          "at": 808202582.528198,
+          "availableMemoryBytes": 6656573440
+        },
+        {
+          "at": 808202582.631791,
+          "availableMemoryBytes": 6715670528
+        },
+        {
+          "at": 808202582.734937,
+          "availableMemoryBytes": 6711590912
+        },
+        {
+          "at": 808202582.838815,
+          "availableMemoryBytes": 6711590912
+        },
+        {
+          "at": 808202582.94562,
+          "availableMemoryBytes": 6702055424
+        },
+        {
+          "at": 808202583.052368,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.158671,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.260489,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.361224,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.461933,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.566767,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.67109,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.776416,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.880912,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.983953,
+          "availableMemoryBytes": 5560745984
+        },
+        {
+          "at": 808202584.089376,
+          "availableMemoryBytes": 5502763008
+        },
+        {
+          "at": 808202584.192415,
+          "availableMemoryBytes": 5477138432
+        },
+        {
+          "at": 808202584.293883,
+          "availableMemoryBytes": 5380014080
+        },
+        {
+          "at": 808202584.400674,
+          "availableMemoryBytes": 5375295488
+        },
+        {
+          "at": 808202584.505201,
+          "availableMemoryBytes": 5375623168
+        },
+        {
+          "at": 808202584.610673,
+          "availableMemoryBytes": 5376212992
+        },
+        {
+          "at": 808202584.717102,
+          "availableMemoryBytes": 5308399616
+        },
+        {
+          "at": 808202584.822122,
+          "availableMemoryBytes": 5308399616
+        },
+        {
+          "at": 808202584.927683,
+          "availableMemoryBytes": 5308399616
+        },
+        {
+          "at": 808202585.028866,
+          "availableMemoryBytes": 5305532416
+        },
+        {
+          "at": 808202585.129339,
+          "availableMemoryBytes": 5308039168
+        },
+        {
+          "at": 808202585.130925,
+          "availableMemoryBytes": 5308055552
+        },
+        {
+          "at": 808202585.233649,
+          "availableMemoryBytes": 5306187776
+        },
+        {
+          "at": 808202585.337713,
+          "availableMemoryBytes": 7903985664
+        }
+      ],
+      "command": [
+        "/Users/maz/.codex/worktrees/4656/whisperASR/.build/arm64-apple-macosx/debug/WhisperASR",
+        "--high-quality-translation-worker",
+        "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE",
+        "translategemma-12b-it-4bit"
+      ],
+      "elapsedSeconds": 8.713005065917969,
+      "exitStatus": 0,
+      "exitedAt": 808202585.442149,
+      "forcedTermination": false,
+      "peakPhysicalFootprintBytes": 7325652824,
+      "pressureTransitions": [],
+      "processIdentifier": 14159,
+      "rawLog": "",
+      "rawLogPath": "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE/worker.log",
+      "startedAt": 808202576.729144,
+      "swapUsedAfterBytes": 2586902528,
+      "swapUsedBeforeBytes": 2586902528,
+      "terminationReason": "exit"
+    },
+    "totalCommandSeconds": 650.1646856251173,
+    "totalModelWorkerSeconds": 599.99869120121,
     "translationCommand": {
       "command": [
         "xcrun",

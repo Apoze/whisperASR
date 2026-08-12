@@ -1157,7 +1157,21 @@ def finalize_targeted_translation(args: argparse.Namespace) -> None:
     baseline_rows = translation_rows(manifest, baseline)
     candidate_rows = translation_rows(manifest, reconstructed)
     reference = " ".join(row["reference"] for row in candidate_rows)
-    write_json(args.output, {
+    baseline_score = chrf_pp(
+        " ".join(row["hypothesis"] for row in baseline_rows), reference)
+    candidate_score = chrf_pp(
+        " ".join(row["hypothesis"] for row in candidate_rows), reference)
+    weight_hashes = [
+        "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+        "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89",
+    ]
+    worker = retry_translation["worker"]
+    reporter_hashes = {
+        "Scripts/adaptive_asr_harness.py": sha256(Path(__file__).resolve()),
+        "Scripts/run_adaptive_asr_experiment.sh": sha256(
+            Path(__file__).with_name("run_adaptive_asr_experiment.sh")),
+    }
+    completion = {
         "schemaVersion": 1, "ticket": 94, "status": "completed",
         "holdoutOpened": False, "invalidDeliverablePublished": False,
         "completeness": {
@@ -1167,18 +1181,102 @@ def finalize_targeted_translation(args: argparse.Namespace) -> None:
         },
         "translations": merged_rows,
         "english": {
-            "baselineChrFPlusPlus": chrf_pp(
-                " ".join(row["hypothesis"] for row in baseline_rows), reference),
-            "candidateChrFPlusPlus": chrf_pp(
-                " ".join(row["hypothesis"] for row in candidate_rows), reference),
+            "baselineChrFPlusPlus": baseline_score,
+            "candidateChrFPlusPlus": candidate_score,
+            "delta": candidate_score - baseline_score,
+            "COMET": None,
+            "overrides": diagnostic["overrides"],
         },
         "targetedRetry": retry,
-        "runtime": runtime,
+        "runtime": {
+            "command": runtime,
+            "worker": worker,
+            "generationSeconds": retry_translation["batches"][0]["duration"],
+            "exchangePeakMemoryBytes": retry_translation["peakMemoryBytes"],
+            "minimumAvailableMemoryBytes": min(
+                item["availableMemoryBytes"] for item in worker["availableMemorySamples"]),
+            "swapDeltaBytes": worker["swapUsedAfterBytes"] - worker["swapUsedBeforeBytes"],
+        },
+        "preflightVerifiedTranslationWeightSHA256": weight_hashes,
+        "reporterImplementationSHA256": reporter_hashes,
         "inputSHA256": {
             "candidateRaw": sha256(args.candidate_raw), "retry": sha256(args.retry),
             "ready": sha256(args.ready), "diagnostic": sha256(args.diagnostic),
         },
+    }
+
+    report = read_json(args.report)
+    prior_failure = report.pop("downstreamFailure", None) or report.get("priorDownstreamFailure")
+    override_examples = [{
+        "category": "override-scored" if row["referenceEnglish"] else "override-unscored",
+        "id": row["id"],
+        "referenceEnglish": row["referenceEnglish"] or "indisponible (non scoré)",
+        "baselineEnglish": row["baseline"]["english"],
+        "candidateEnglish": row["candidate"]["english"],
+    } for row in diagnostic["overrides"]]
+    report["priorDownstreamFailure"] = prior_failure
+    report["english"] = {
+        "run": True,
+        "baselineChrFPlusPlus": baseline_score,
+        "candidateChrFPlusPlus": candidate_score,
+        "delta": candidate_score - baseline_score,
+        "COMET": None,
+        "baselineEmptyTurns": sum(not row["hypothesis"] for row in baseline_rows),
+        "candidateEmptyTurns": sum(not row["hypothesis"] for row in candidate_rows),
+        "examples": override_examples,
+        "targetedRetry": {
+            "unitID": "unit-0054", "output": retry_rows[0]["text"],
+            "reasonCodesAfterFix": retry_verdicts[0]["reasons"],
+            "commandSeconds": runtime["elapsedSeconds"],
+            "workerSeconds": worker["elapsedSeconds"],
+            "generationSeconds": retry_translation["batches"][0]["duration"],
+            "workerPeakPhysicalFootprintBytes": worker["peakPhysicalFootprintBytes"],
+            "exchangePeakMemoryBytes": retry_translation["peakMemoryBytes"],
+            "minimumAvailableMemoryBytes": completion["runtime"]["minimumAvailableMemoryBytes"],
+            "pressureTransitions": worker["pressureTransitions"],
+            "swapDeltaBytes": completion["runtime"]["swapDeltaBytes"],
+            "cleanExit": worker["exitStatus"] == 0 and not worker["forcedTermination"],
+            "translationWeightSHA256": weight_hashes,
+        },
+        "completeness": completion["completeness"],
+        "japaneseEditGain": report["japanese"]["qwenEdits"]
+            - report["japanese"]["selectedEdits"],
+        "effect": "Japanese edit gain did not improve aggregate English chrF++ on DEV",
+    }
+    previous_command = report["runtime"]["translationCommand"]["elapsedSeconds"]
+    model_worker_seconds = {
+        "asr": report["runtime"]["ASRSeconds"],
+        "initialAlignment": prior_failure["worker"]["elapsedSeconds"],
+        "fixedAlignment": candidate["alignment"]["worker"]["elapsedSeconds"],
+        "fixedTranslation": translation["worker"]["elapsedSeconds"],
+        "targetedTranslation": worker["elapsedSeconds"],
+    }
+    report["runtime"].update({
+        "fixedDownstreamCommandSeconds": diagnostic["runtime"]["commandSeconds"],
+        "targetedTranslationCommand": runtime,
+        "targetedTranslationWorker": worker,
+        "targetedIncrementalCommandSeconds": runtime["elapsedSeconds"],
+        "totalCommandSeconds": report["runtime"]["ASRCommand"]["elapsedSeconds"]
+            + previous_command + diagnostic["runtime"]["commandSeconds"]
+            + runtime["elapsedSeconds"],
+        "modelWorkerSeconds": model_worker_seconds,
+        "totalModelWorkerSeconds": sum(model_worker_seconds.values()),
+        "peakPhysicalFootprintBytes": max(
+            report["runtime"]["peakPhysicalFootprintBytes"],
+            diagnostic["runtime"]["translationWorkerPeakBytes"],
+            worker["peakPhysicalFootprintBytes"],
+        ),
     })
+    report["gates"]["englishNotWorse"] = candidate_score >= baseline_score
+    report["decision"] = "NO-GO-english-regression-stop-before-holdout"
+    report["issue95"] = "not-decided: #94 Japanese gain remains independently measurable"
+    report["benchmarkSlotReleased"] = True
+    report["holdoutOpened"] = False
+    report["promote"] = False
+    report["reporterImplementationSHA256"] = reporter_hashes
+    write_json(args.report, report)
+    write_markdown(args.markdown, report)
+    write_json(args.output, completion)
 
 
 def final_report(args: argparse.Namespace) -> dict:
@@ -1417,6 +1515,30 @@ def write_markdown(path: Path, report: dict) -> None:
             f"{english['candidateChrFPlusPlus']:.2f} ({english['delta']:+.2f}) ; "
             f"vides {english['baselineEmptyTurns']}→{english['candidateEmptyTurns']}."
         )
+        if retry := english.get("targetedRetry"):
+            complete = english["completeness"]
+            lines += [
+                f"- Retry ciblé {retry['unitID']} : « {retry['output']} » ; "
+                f"reason codes après correctif {retry['reasonCodesAfterFix']}, sortie propre="
+                f"{str(retry['cleanExit']).lower()}.",
+                f"- Complétude : {complete['reusedAcceptedUnits']} réutilisées + "
+                f"{len(complete['retriedUnitIDs'])} retraduite = {complete['totalUnits']}/"
+                f"{complete['totalUnits']} ; aucune unité jamais générée.",
+                f"- Retry : commande {seconds(retry['commandSeconds'])}, worker "
+                f"{seconds(retry['workerSeconds'])}, génération {seconds(retry['generationSeconds'])}; "
+                f"pics worker {retry['workerPeakPhysicalFootprintBytes'] / 1024**3:.2f} Gio, "
+                f"exchange {retry['exchangePeakMemoryBytes'] / 1024**3:.2f} Gio, "
+                f"minimum disponible {retry['minimumAvailableMemoryBytes'] / 1024**3:.2f} Gio, "
+                f"pression {retry['pressureTransitions']}, swap Δ {retry['swapDeltaBytes']} octets.",
+                f"- Coût cumulé DEV : commandes {seconds(runtime['totalCommandSeconds'])}; "
+                f"workers modèles {seconds(runtime['totalModelWorkerSeconds'])}; "
+                f"incrément retry {seconds(runtime['targetedIncrementalCommandSeconds'])}; "
+                f"pic global {runtime['peakPhysicalFootprintBytes'] / 1024**3:.2f} Gio.",
+                f"- Poids TranslateGemma vérifiés au preflight : "
+                f"{retry['translationWeightSHA256']} (le raw worker conserve son champ vide).",
+                f"- Effet : +{english['japaneseEditGain']} edits JA évités, mais chrF++ EN "
+                f"{english['delta']:+.2f}; COMET indisponible. #95 reste indépendant.",
+            ]
     elif report.get("downstreamFailure"):
         failure = report["downstreamFailure"]
         cue = failure["zeroDurationCue"]
@@ -1547,7 +1669,7 @@ def parser() -> argparse.ArgumentParser:
         failure.add_argument(f"--{name}", type=Path, required=True)
     finalize = sub.add_parser("finalize-targeted-translation")
     for name in ("candidate-raw", "retry", "baseline-raw", "manifest", "ready",
-                 "diagnostic", "runtime", "output"):
+                 "diagnostic", "runtime", "output", "report", "markdown"):
         finalize.add_argument(f"--{name}", type=Path, required=True)
     return result
 

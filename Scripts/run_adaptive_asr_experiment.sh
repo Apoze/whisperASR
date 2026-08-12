@@ -58,11 +58,12 @@ TRANSLATION_DIAGNOSTIC="$EVIDENCE/fixed-translation-diagnostic.json"
 FINAL_REPORT="$EVIDENCE/report.json"
 REPORT_MD="$ROOT/docs/japanese-live/experiments/E28-adaptive-asr-qwen-parakeet.md"
 
-case "$MODE" in preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay|targeted-translation-ready|targeted-translation-retry|verify-targeted-translation-retry) ;;
-  *) echo "usage: $0 [preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay|targeted-translation-ready|targeted-translation-retry|verify-targeted-translation-retry]" >&2; exit 2 ;;
+case "$MODE" in preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay|targeted-translation-ready|targeted-translation-retry|targeted-translation-report|verify-targeted-translation-retry) ;;
+  *) echo "usage: $0 [preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay|targeted-translation-ready|targeted-translation-retry|targeted-translation-report|verify-targeted-translation-retry]" >&2; exit 2 ;;
 esac
 if [[ "$MODE" == fixed-downstream-replay || "$MODE" == targeted-translation-ready \
-  || "$MODE" == targeted-translation-retry || "$MODE" == verify-targeted-translation-retry ]]; then
+  || "$MODE" == targeted-translation-retry || "$MODE" == targeted-translation-report \
+  || "$MODE" == verify-targeted-translation-retry ]]; then
   TRANSLATION_RUNTIME="$DEV/fixed-translation-runtime.json"
   TRANSLATION_LOG="$DEV/fixed-translation.log"
   TRANSLATION_OUTPUT="$DEV/fixed-translation"
@@ -101,6 +102,7 @@ verify_inputs() {
   [[ "$MODE" == fixed-downstream-ready || "$MODE" == fixed-downstream-replay \
     || "$MODE" == verify-fixed-downstream-replay \
     || "$MODE" == targeted-translation-ready || "$MODE" == targeted-translation-retry \
+    || "$MODE" == targeted-translation-report \
     || "$MODE" == verify-targeted-translation-retry \
     || -z "$({ git diff --name-only "$BASE_COMMIT" -- Sources; \
     git ls-files --others --exclude-standard -- Sources; } | sort -u)" ]] || {
@@ -242,6 +244,14 @@ verify_targeted_translation_ready() {
       translateUnitIDs:["unit-0054"],
       mergeAfterRetry:"281 retained outputs + unit-0054 retry"}' \
     "$TRANSLATION_DIAGNOSTIC" >/dev/null
+}
+
+verify_targeted_translation_report_inputs() {
+  jq -e '.status == "READY_FOR_TARGETED_TRANSLATION_RETRY" and .ticket == 94
+    and .holdoutOpened == false and .targetUnitID == "unit-0054"' \
+    "$TARGETED_READY" >/dev/null
+  while IFS=$'\t' read -r path expected; do assert_hash "$ROOT/$path" "$expected"; done \
+    < <(jq -r '.inputSHA256 | to_entries[] | [.key,.value] | @tsv' "$TARGETED_READY")
 }
 
 set_phase() {
@@ -518,6 +528,14 @@ retain_targeted_translation_evidence() {
   write_evidence_ledger
 }
 
+finalize_targeted_translation_report() {
+  python3 Scripts/adaptive_asr_harness.py finalize-targeted-translation \
+    --candidate-raw "$CANDIDATE/raw-asr.json" --retry "$TARGETED_OUTPUT" \
+    --baseline-raw "$BASELINE_RAW" --manifest "$MANIFEST" --ready "$TARGETED_READY" \
+    --diagnostic "$TRANSLATION_DIAGNOSTIC" --runtime "$TARGETED_RUNTIME" \
+    --output "$TARGETED_COMPLETION" --report "$FINAL_REPORT" --markdown "$REPORT_MD"
+}
+
 targeted_translation_retry() {
   [[ "${BENCHMARK_SLOT_GRANTED:-}" == 94 ]] || {
     echo "refusing targeted translation without BENCHMARK_SLOT_GRANTED=94" >&2; return 2;
@@ -554,11 +572,7 @@ targeted_translation_retry() {
     retain_targeted_translation_evidence
     return 1
   fi
-  if ! python3 Scripts/adaptive_asr_harness.py finalize-targeted-translation \
-      --candidate-raw "$CANDIDATE/raw-asr.json" --retry "$TARGETED_OUTPUT" \
-      --baseline-raw "$BASELINE_RAW" --manifest "$MANIFEST" --ready "$TARGETED_READY" \
-      --diagnostic "$TRANSLATION_DIAGNOSTIC" --runtime "$TARGETED_RUNTIME" \
-      --output "$TARGETED_COMPLETION"; then
+  if ! finalize_targeted_translation_report; then
     set_phase targeted-report-red
     retain_targeted_translation_evidence
     return 1
@@ -703,4 +717,18 @@ case "$MODE" in
     echo READY_FOR_TARGETED_TRANSLATION_RETRY_VALIDATED
     ;;
   targeted-translation-retry) targeted_translation_retry ;;
+  targeted-translation-report)
+    [[ -f "$STATE" && "$(jq -r .phase "$STATE")" =~ ^targeted-(report-red|translation-completed)$ ]]
+    verify_inputs
+    verify_targeted_translation_report_inputs
+    [[ -f "$TARGETED_OUTPUT" && -f "$TARGETED_RUNTIME" && -f "$TARGETED_LOG" ]]
+    if ! finalize_targeted_translation_report; then
+      set_phase targeted-report-red
+      retain_targeted_translation_evidence
+      exit 1
+    fi
+    set_phase targeted-translation-completed
+    retain_targeted_translation_evidence
+    echo TARGETED_TRANSLATION_REPORT_REPLAYED
+    ;;
 esac
