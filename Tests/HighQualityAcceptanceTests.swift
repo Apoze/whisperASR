@@ -665,6 +665,84 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
     }
 
+    func testPixITOracleQwenSourcesWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_PIXIT_ORACLE_QWEN"] == "1",
+              let inputPath = environment["WHISPERASR_PIXIT_SEPARATOR_EVIDENCE"],
+              let outputPath = environment["WHISPERASR_PIXIT_QWEN_EVIDENCE"] else {
+            throw XCTSkip("Set the ticket #101 PixIT separator and Qwen evidence paths.")
+        }
+        let inputURL = URL(fileURLWithPath: inputPath).standardizedFileURL
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let input = try decoder.decode(
+            PixITSeparatorEvidence.self,
+            from: Data(contentsOf: inputURL)
+        )
+        XCTAssertEqual(input.ticket, 101)
+        XCTAssertEqual(input.corpusID, "qudu2fx3ncc")
+        XCTAssertTrue(["smoke", "development"].contains(input.stage))
+        XCTAssertFalse(input.files.isEmpty)
+        let root = inputURL.deletingLastPathComponent().standardizedFileURL.path + "/"
+        for file in input.files {
+            let url = URL(fileURLWithPath: file.path).standardizedFileURL
+            XCTAssertTrue(url.path.hasPrefix(root))
+            XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: url), file.sha256)
+        }
+        let files = input.files.sorted {
+            ($0.windowID, $0.kind == "mixture" ? 0 : 1, $0.sourceIndex ?? 0)
+                < ($1.windowID, $1.kind == "mixture" ? 0 : 1, $1.sourceIndex ?? 0)
+        }
+        let executableURL = environment["WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"]
+            .map(URL.init(fileURLWithPath:))
+            ?? Bundle.main.executableURL
+            ?? URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
+        let asr = HighQualityASRWorkerClient(backend: .qwenJA, executableURL: executableURL)
+        var items: [PixITQwenItem] = []
+        do {
+            try await asr.prepare { _, message in print("[issue-101][qwen] \(message)") }
+            for file in files {
+                let started = Date()
+                let samples = try await AudioLoader.loadSamples(url: URL(fileURLWithPath: file.path))
+                let exchange = try await asr.transcribe(samples, anchored: true)
+                items.append(.init(
+                    windowID: file.windowID,
+                    kind: file.kind,
+                    sourceIndex: file.sourceIndex,
+                    startSample: file.startSample,
+                    endSample: file.endSample,
+                    audioSHA256: file.sha256,
+                    transcript: exchange.rawTranscript,
+                    chunks: exchange.chunks,
+                    elapsedSeconds: Date().timeIntervalSince(started)
+                ))
+            }
+        } catch {
+            await asr.unload()
+            throw error
+        }
+        await asr.unload()
+        let workerEvidence = await asr.evidence
+        let worker = try XCTUnwrap(workerEvidence)
+        let evidence = PixITQwenEvidence(
+            ticket: 101,
+            stage: input.stage,
+            corpusID: input.corpusID,
+            inputSHA256: try JapaneseBenchmarkSupport.sha256(at: inputURL),
+            items: items,
+            worker: worker,
+            strictlySequential: input.worker.exitedAt <= worker.lifecycle.startedAt
+        )
+        XCTAssertTrue(evidence.strictlySequential)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(evidence).write(
+            to: URL(fileURLWithPath: outputPath),
+            options: .atomic
+        )
+    }
+
     func testRealFrozenWorkflowWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_HIGH_QUALITY_ACCEPTANCE"] == "1" else {
@@ -1076,6 +1154,46 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let zeroDurationCueCount: Int
         let rawItemCount: Int
         let zeroDurationRawItemCount: Int
+        let strictlySequential: Bool
+    }
+
+    private struct PixITSeparatorEvidence: Decodable {
+        struct Worker: Decodable { let exitedAt: Date }
+        struct File: Decodable {
+            let windowID: String
+            let kind: String
+            let sourceIndex: Int?
+            let startSample: Int
+            let endSample: Int
+            let path: String
+            let sha256: String
+        }
+        let ticket: Int
+        let stage: String
+        let corpusID: String
+        let worker: Worker
+        let files: [File]
+    }
+
+    private struct PixITQwenItem: Codable {
+        let windowID: String
+        let kind: String
+        let sourceIndex: Int?
+        let startSample: Int
+        let endSample: Int
+        let audioSHA256: String
+        let transcript: String
+        let chunks: [HighQualityASRChunk]
+        let elapsedSeconds: TimeInterval
+    }
+
+    private struct PixITQwenEvidence: Codable {
+        let ticket: Int
+        let stage: String
+        let corpusID: String
+        let inputSHA256: String
+        let items: [PixITQwenItem]
+        let worker: HighQualityASRWorkerEvidence
         let strictlySequential: Bool
     }
 
