@@ -390,6 +390,17 @@ def _selected_metrics(report: dict) -> dict:
     )
 
 
+def verify_safety(path: Path) -> dict:
+    safety = json.loads(path.read_text())
+    if safety.get("stopReason") != "completed" or safety.get("exitStatus") != 0:
+        raise ValueError("heavy worker safety gate failed")
+    raw = safety.get("rawSamples") or {}
+    raw_path = Path(raw.get("path", ""))
+    if not raw_path.is_file() or shared.sha256(raw_path) != raw.get("sha256"):
+        raise ValueError("heavy worker raw safety samples failed verification")
+    return safety
+
+
 def select_separator(stage: str, pixit_metrics: dict, moss_metrics: dict) -> dict:
     if stage == "smoke":
         if moss_metrics["acceptedWindows"] == 0:
@@ -436,9 +447,7 @@ def compare(args: argparse.Namespace) -> None:
     ):
         raise ValueError("candidates did not use the same pinned Qwen model")
     for safety_path in (args.moss_safety, args.qwen_safety):
-        safety = json.loads(Path(safety_path).read_text())
-        if safety.get("stopReason") != "completed" or safety.get("exitStatus") != 0:
-            raise ValueError("heavy worker safety gate failed")
+        verify_safety(Path(safety_path))
     required_gates = (
         moss_report["gates"]["rawArtifactsVerified"]
         and moss_report["gates"]["workersSequential"]

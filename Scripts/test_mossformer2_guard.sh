@@ -18,3 +18,14 @@ if run_guarded "$TEMP/stopped.json" "$TEMP/stopped.log" 5 "" /bin/sleep 30; then
 fi
 jq -e '.stopReason == "catastrophic-process-memory" and .exitStatus != 0 and
   .forcedTermination == false' "$TEMP/stopped.json" >/dev/null
+
+CATASTROPHIC_MEMORY_PERCENT=90
+RUNAWAY_GROWTH_PERCENT=0
+RUNAWAY_WINDOW_SAMPLES=2
+touch "$TEMP/model-loaded.json"
+if run_guarded "$TEMP/runaway.json" "$TEMP/runaway.log" 5 \
+  "$TEMP/model-loaded.json" /bin/sleep 30; then
+  exit 1
+fi
+jq -e '.stopReason == "post-load-runaway" and
+  .postLoadRunawayGuard.modelLoadedObserved == true' "$TEMP/runaway.json" >/dev/null

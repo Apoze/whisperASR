@@ -21,13 +21,15 @@ MODEL_SIZE=670353271
 MIN_FREE_MEMORY_PERCENT=10
 CATASTROPHIC_MEMORY_PERCENT=90
 RUNAWAY_GROWTH_PERCENT=25
-RUNAWAY_CONSECUTIVE_SAMPLES=30
+RUNAWAY_WINDOW_SAMPLES=30
 SHUTDOWN_GRACE_SECONDS=15
 RECOVERY_SAMPLE_DELAY_SECONDS=5
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-$ROOT/.build/clang-module-cache}"
 export SWIFTPM_MODULECACHE_OVERRIDE="${SWIFTPM_MODULECACHE_OVERRIDE:-$ROOT/.build/swiftpm-module-cache}"
 PHASE="startup"
+ACTIVE_PROCESS=""
+INTERRUPTED_SIGNAL=""
 
 sha256() { shasum -a 256 "$1" | awk '{print $1}'; }
 
@@ -125,6 +127,16 @@ stop_process() {
   fi
 }
 
+cleanup_active_process() {
+  [[ -z "$ACTIVE_PROCESS" ]] || ! process_running "$ACTIVE_PROCESS" \
+    || stop_process "$ACTIVE_PROCESS"
+}
+
+handle_signal() {
+  INTERRUPTED_SIGNAL="$1"
+  cleanup_active_process
+}
+
 run_guarded() {
   local safety="$1" log="$2" timeout_seconds="$3" ready_file="$4"
   shift 4
@@ -132,9 +144,10 @@ run_guarded() {
   local started started_iso process reason="completed" peak_rss=0 peak_footprint=0
   local peak_reported_footprint=0 min_free=100 peak_swap_delta=0 current_memory=0
   local elapsed status exited_iso physical_memory catastrophic_limit model_loaded=false
-  local previous_memory=0 runaway_start=0 runaway_samples=0 stop_forced=false
+  local stop_forced=false
   local before_free before_swap before_pageouts after_free after_swap after_pageouts
   local swap_delta pageout_delta samples_sha pressure_levels
+  local runaway_history=()
   physical_memory="$(/usr/sbin/sysctl -n hw.memsize)"
   catastrophic_limit="$((physical_memory * CATASTROPHIC_MEMORY_PERCENT / 100))"
   read_system_memory || return 1
@@ -153,6 +166,8 @@ run_guarded() {
   started_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   "$@" >"$log" 2>&1 &
   process="$!"
+  ACTIVE_PROCESS="$process"
+  INTERRUPTED_SIGNAL=""
   while process_running "$process"; do
     elapsed="$(($(date +%s) - started))"
     if ! read_system_memory || ! read_process_memory "$process"; then
@@ -174,15 +189,10 @@ run_guarded() {
     ((PROCESS_FOOTPRINT_BYTES > current_memory)) && current_memory="$PROCESS_FOOTPRINT_BYTES"
     [[ -n "$ready_file" && -f "$ready_file" ]] && model_loaded=true
     if [[ "$model_loaded" == true ]]; then
-      if ((previous_memory > 0 && current_memory > previous_memory)); then
-        ((runaway_samples == 0)) && runaway_start="$previous_memory"
-        runaway_samples=$((runaway_samples + 1))
-      else
-        runaway_start="$current_memory"
-        runaway_samples=0
-      fi
+      runaway_history+=("$current_memory")
+      ((${#runaway_history[@]} <= RUNAWAY_WINDOW_SAMPLES)) \
+        || runaway_history=("${runaway_history[@]:1}")
     fi
-    previous_memory="$current_memory"
     jq -nc --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
       --arg pressure "$SYSTEM_PRESSURE_LEVEL" --argjson pressureRaw "$SYSTEM_PRESSURE_RAW" \
       --argjson elapsed "$elapsed" --argjson pid "$process" \
@@ -203,8 +213,8 @@ run_guarded() {
     elif ((current_memory >= catastrophic_limit)); then
       reason="catastrophic-process-memory"
     elif [[ "$model_loaded" == true ]] \
-      && ((runaway_samples >= RUNAWAY_CONSECUTIVE_SAMPLES)) \
-      && ((current_memory - runaway_start >= physical_memory * RUNAWAY_GROWTH_PERCENT / 100)); then
+      && ((${#runaway_history[@]} == RUNAWAY_WINDOW_SAMPLES)) \
+      && ((current_memory - runaway_history[0] >= physical_memory * RUNAWAY_GROWTH_PERCENT / 100)); then
       reason="post-load-runaway"
     fi
     if [[ "$reason" == completed ]] && ((elapsed >= timeout_seconds)); then
@@ -219,6 +229,9 @@ run_guarded() {
   done
   status=0
   wait "$process" 2>/dev/null || status="$?"
+  ACTIVE_PROCESS=""
+  [[ -z "$INTERRUPTED_SIGNAL" || "$reason" != completed ]] \
+    || reason="runner-interrupted-$INTERRUPTED_SIGNAL"
   sleep "$RECOVERY_SAMPLE_DELAY_SECONDS"
   if read_system_memory; then
     after_free="$SYSTEM_FREE"
@@ -256,7 +269,7 @@ run_guarded() {
     --argjson pageoutsAfter "$after_pageouts" --argjson freeBefore "$before_free" \
     --argjson freeAfter "$after_free" --argjson modelLoaded "$model_loaded" \
     --argjson runawayGrowthPercent "$RUNAWAY_GROWTH_PERCENT" \
-    --argjson runawayConsecutiveSamples "$RUNAWAY_CONSECUTIVE_SAMPLES" \
+    --argjson runawayWindowSamples "$RUNAWAY_WINDOW_SAMPLES" \
     --argjson forcedTermination "$stop_forced" --argjson exitStatus "$status" \
     '{schemaVersion:2,startedAt:$startedAt,exitedAt:$exitedAt,elapsedSeconds:$elapsedSeconds,
       timeoutSeconds:$timeoutSeconds,stopReason:$reason,exitStatus:$exitStatus,
@@ -267,7 +280,7 @@ run_guarded() {
       catastrophicGuard:{physicalMemoryBytes:$physicalMemoryBytes,
         limitPercent:$catastrophicMemoryPercent,limitBytes:$catastrophicMemoryBytes},
       postLoadRunawayGuard:{modelLoadedObserved:$modelLoaded,
-        growthPercent:$runawayGrowthPercent,consecutiveSamples:$runawayConsecutiveSamples},
+        growthPercent:$runawayGrowthPercent,windowSamples:$runawayWindowSamples},
       systemBefore:{freeMemoryPercent:$freeBefore,swapUsedBytes:$swapUsedBeforeBytes,
         pageouts:$pageoutsBefore},
       systemAfter:{freeMemoryPercent:$freeAfter,swapUsedBytes:$swapUsedAfterBytes,
@@ -319,7 +332,7 @@ preflight() {
     --arg qwenSHA256 "$(sha256 Tests/HighQualityAcceptanceTests.swift)" \
     --arg mlxSHA256 "$(sha256 .build/debug/mlx.metallib)" \
     --arg priorProofSHA256 "$(sha256 docs/japanese-live/experiments/evidence/issue-102-no-run.json)" \
-    '{schemaVersion:1,ticket:102,status:"READY_FOR_HEAVY_BENCHMARK",stage:"SMOKE",
+    '{schemaVersion:1,ticket:102,status:"READY_FOR_HEAVY_BENCHMARK",stage:"SMOKE_RETRY",
       commit:$commit,scope:"development-oracle-only",planSHA256:$planSHA256,
       implementationSHA256:{runner:$runnerSHA256,sharedScorer:$scorerSHA256,qwen:$qwenSHA256},
       mlxMetallibSHA256:$mlxSHA256,priorProofSHA256:$priorProofSHA256,
@@ -427,6 +440,9 @@ main() {
     exit 2
   }
   trap failure_artifact ERR
+  trap cleanup_active_process EXIT
+  trap 'handle_signal INT' INT
+  trap 'handle_signal TERM' TERM
   cd "$ROOT"
   mkdir -p "$ARTIFACTS" "$CLANG_MODULE_CACHE_PATH" "$SWIFTPM_MODULECACHE_OVERRIDE"
   rm -f "$ARTIFACTS/failure.json"

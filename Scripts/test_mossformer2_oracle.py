@@ -2,6 +2,7 @@
 
 import os
 import sys
+import tempfile
 import unittest
 from unittest import mock
 from pathlib import Path
@@ -104,6 +105,23 @@ class MossFormer2OracleTests(unittest.TestCase):
             moss.select_separator("development", failed, passed)["selected"],
             "mossFormer2",
         )
+
+    def test_safety_requires_untampered_raw_samples(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            samples = root / "samples.jsonl"
+            samples.write_text("{}\n")
+            safety = root / "safety.json"
+            safety.write_text(moss.json.dumps({
+                "stopReason": "completed",
+                "exitStatus": 0,
+                "rawSamples": {"path": str(samples), "sha256": moss.shared.sha256(samples)},
+            }))
+
+            moss.verify_safety(safety)
+            samples.write_text("tampered\n")
+            with self.assertRaisesRegex(ValueError, "raw safety samples"):
+                moss.verify_safety(safety)
 
 
 if __name__ == "__main__":

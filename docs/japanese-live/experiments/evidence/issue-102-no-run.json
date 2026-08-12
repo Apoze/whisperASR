@@ -41,9 +41,55 @@
     }
   },
   "execution": {
+    "status": "superseded-no-run-snapshot",
     "mossFormer2Downloaded": false,
     "mossFormer2Loaded": false,
     "separatorComparisonPerformed": false
+  },
+  "subsequentSmokeAttempt": {
+    "status": "HARNESS_GUARD_TOO_CONSERVATIVE",
+    "provenanceCommit": "8b1c37102ee7b09a74029db0debd2b02c3d62d4b",
+    "cause": "The old harness sent SIGTERM after sampled RSS crossed its fixed 8 GiB limit. All 41 native samples succeeded, free memory stayed above 10%, and the run stopped around 51 seconds instead of reaching its 600 second timeout.",
+    "resource": {
+      "rssLimitBytes": 8589934592,
+      "peakResidentBytes": null,
+      "residentBytesLowerBoundExclusive": 8589934592,
+      "peakPhysicalFootprintBytes": null,
+      "exactPeakStatus": "not-recorded-because-the-old-wait-path-triggered-ERR-before-safety-json",
+      "freeMemoryBeforePercent": 68,
+      "minimumFreeMemoryPercent": 33,
+      "freeMemoryAfterPercent": 74,
+      "nativePressure": "normal-no-critical-pressure-observed",
+      "durationSeconds": 51
+    },
+    "swap": {
+      "beforeMiB": 2690.75,
+      "peakMiB": 5238.88,
+      "peakDeltaMiB": 2548.13,
+      "afterMiB": 5182.88,
+      "afterDeltaMiB": 2492.13
+    },
+    "memoryRecovery": {
+      "recoveredFromMinimumPercentagePoints": 41,
+      "changeFromBaselinePercentagePoints": 6,
+      "mossFormer2ProcessesRemaining": 0
+    },
+    "quality": {
+      "evaluated": false,
+      "qwenStarted": false,
+      "separatorEvidenceCompleted": false,
+      "verdict": "not-assigned"
+    },
+    "rawEvidence": {
+      "runnerLog": ".build/benchmarks/mossformer2-oracle-102/smoke-attempt-2.raw.log",
+      "runnerLogSHA256": "57d6657336efb9aaed43b530e6fcf70046d5eec44e1eb6eaf484c29a75bd7321",
+      "failureSHA256": "aebdcedb5144f9544cc0b61dd2dc731bee19229a047903060460e64d7f8cff65",
+      "nativeSamples": ".build/benchmarks/mossformer2-oracle-102/smoke-attempt-2/separator/native-memory-pressure.jsonl",
+      "nativeSamplesSHA256": "1b695b4e7dfe287cc5872ee1ea840e9619795a810bf2da9abd318b3f871bdac9",
+      "pageoutBaselineStatus": "not-recorded-by-old-harness"
+    },
+    "holdoutOpened": false,
+    "developmentStarted": false
   },
   "decision": {
     "reason": "PixIT fonctionne techniquement mais échoue la porte qualité DEV : distinctRecovery=false et 4 répliques récupérées contre 12 perdues.",
@@ -55,5 +101,5 @@
     "productChanged": false,
     "liveChanged": false
   },
-  "resume": "Superseded : reprendre par le smoke MossFormer2 #102 explicitement autorisé, sans rouvrir le holdout."
+  "resume": "READY_FOR_HEAVY_BENCHMARK #102 SMOKE_RETRY with a native-pressure-aware guard; a fresh benchmark slot is required and the holdout remains closed."
 }
