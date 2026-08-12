@@ -96,7 +96,7 @@ run_stage() {
   PHASE="separator-runner"
   "$VENV/bin/python" Scripts/pixit_oracle.py separate \
     --plan "$PLAN" --output "$directory/separator" --cache "$ARTIFACTS/model-cache" \
-    --stage "$stage" "${window_args[@]}" 2>&1 | tee "$directory/pixit.log"
+    --stage "$stage" ${window_args[@]+"${window_args[@]}"} 2>&1 | tee "$directory/pixit.log"
   PHASE="qwen-runner"
   WHISPERASR_RUN_PIXIT_ORACLE_QWEN=1 \
   WHISPERASR_PIXIT_SEPARATOR_EVIDENCE="$directory/separator/separator-evidence.json" \
