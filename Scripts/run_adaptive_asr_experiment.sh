@@ -40,15 +40,24 @@ SELECTION="$DEV/selection.json"
 SELECTION_REPORT="$DEV/selection-report.json"
 ASR_RUNTIME="$DEV/asr-runtime.json"
 TRANSLATION_RUNTIME="$DEV/translation-runtime.json"
+TRANSLATION_LOG="$DEV/translation.log"
 TRANSLATION_OUTPUT="$DEV/translation"
 JOB_ID=94000001-0000-4000-8000-000000000001
 CANDIDATE="$TRANSLATION_OUTPUT/$JOB_ID"
+FIXED_READY="$ARTIFACTS/READY_FOR_FIXED_DOWNSTREAM_REPLAY.json"
 FINAL_REPORT="$EVIDENCE/report.json"
 REPORT_MD="$ROOT/docs/japanese-live/experiments/E28-adaptive-asr-qwen-parakeet.md"
 
-case "$MODE" in preflight|development|resume|report|downstream-ready|verify-resume) ;;
-  *) echo "usage: $0 [preflight|development|resume|report|downstream-ready|verify-resume]" >&2; exit 2 ;;
+case "$MODE" in preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay) ;;
+  *) echo "usage: $0 [preflight|development|resume|report|downstream-ready|verify-resume|fixed-downstream-ready|fixed-downstream-replay|verify-fixed-downstream-replay]" >&2; exit 2 ;;
 esac
+if [[ "$MODE" == fixed-downstream-replay ]]; then
+  TRANSLATION_RUNTIME="$DEV/fixed-translation-runtime.json"
+  TRANSLATION_LOG="$DEV/fixed-translation.log"
+  TRANSLATION_OUTPUT="$DEV/fixed-translation"
+  JOB_ID=94000002-0000-4000-8000-000000000001
+  CANDIDATE="$TRANSLATION_OUTPUT/$JOB_ID"
+fi
 
 hash_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 assert_hash() {
@@ -78,7 +87,9 @@ verify_inputs() {
   assert_hash "$PARAKEET_JOB/raw-asr.json" 2ab8678481b4ad22a08c015a2332c25e85309e0e327158e127a3bd3351611c6d
   assert_hash "$PARAKEET_JOB/manifest.json" 13d517d82f1fe704196bce102817282e0a929ec5b7c0eb93e635774c8232d7fa
   git merge-base --is-ancestor "$BASE_COMMIT" HEAD
-  [[ -z "$({ git diff --name-only "$BASE_COMMIT" -- Sources; \
+  [[ "$MODE" == fixed-downstream-ready || "$MODE" == fixed-downstream-replay \
+    || "$MODE" == verify-fixed-downstream-replay \
+    || -z "$({ git diff --name-only "$BASE_COMMIT" -- Sources; \
     git ls-files --others --exclude-standard -- Sources; } | sort -u)" ]] || {
       echo "issue #94 must not change product Sources" >&2; return 1;
     }
@@ -178,6 +189,28 @@ verify_downstream_ready() {
     "$SELECTION" >/dev/null
 }
 
+verify_fixed_downstream_ready() {
+  jq -e '.status == "READY_FOR_FIXED_DOWNSTREAM_REPLAY" and .ticket == 94
+    and .holdoutOpened == false and .modelPasses.asr == 0
+    and .modelPasses.alignment == 1 and .modelPasses.translation == 1' \
+    "$FIXED_READY" >/dev/null
+  assert_hash "$ARTIFACTS/READY_FOR_DOWNSTREAM_RESUME.json" \
+    "$(jq -r .checkpointSHA256 "$FIXED_READY")"
+  while IFS=$'\t' read -r path expected; do assert_hash "$DEV/$path" "$expected"; done \
+    < <(jq -r '.reuseSHA256 | to_entries[] | [.key,.value] | @tsv' "$FIXED_READY")
+  while IFS=$'\t' read -r path expected; do assert_hash "$ROOT/$path" "$expected"; done \
+    < <(jq -r '.implementationSHA256 | to_entries[] | [.key,.value] | @tsv' "$FIXED_READY")
+  while IFS=$'\t' read -r path expected; do assert_hash "$ROOT/$path" "$expected"; done \
+    < <(jq -r '.diagnosticReplaySHA256 | to_entries[] | [.key,.value] | @tsv' "$FIXED_READY")
+  while IFS=$'\t' read -r path expected; do assert_hash "$ROOT/$path" "$expected"; done \
+    < <(jq -r '.pureReplaySHA256 | to_entries[] | [.key,.value] | @tsv' "$FIXED_READY")
+  jq -e '.developmentEligibleJapanese == true and .holdoutOpened == false
+    and .calibratedWeaknessMargin == 0.5
+    and ([.windows[] | select(.selectedBackend == "qwen-ja")] | length) == 167
+    and ([.windows[] | select(.selectedBackend == "parakeet-ja")] | length) == 2' \
+    "$SELECTION" >/dev/null
+}
+
 set_phase() {
   local temporary="$STATE.tmp"
   jq --arg phase "$1" '.phase=$phase' "$STATE" >"$temporary"
@@ -208,7 +241,7 @@ select_japanese() {
 }
 
 run_translation() {
-  [[ ! -e "$TRANSLATION_RUNTIME" && ! -e "$DEV/translation.log" ]] || {
+  [[ ! -e "$TRANSLATION_RUNTIME" && ! -e "$TRANSLATION_LOG" ]] || {
     echo "partial translation evidence exists; the failed heavy phase will not be rerun" >&2
     return 1
   }
@@ -219,7 +252,7 @@ run_translation() {
   WHISPERASR_ADAPTIVE_TRANSLATION_JOB_ID="$JOB_ID" \
   WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE="$WORKER" \
     python3 Scripts/qwen_voice_music_harness.py run-command --timeout 2400 \
-      --log "$DEV/translation.log" --runtime "$TRANSLATION_RUNTIME" -- \
+      --log "$TRANSLATION_LOG" --runtime "$TRANSLATION_RUNTIME" -- \
       xcrun swift test --skip-build \
         --filter AdaptiveASRExperimentTests/testSingleDownstreamTranslationWhenOptedIn \
       || return $?
@@ -251,11 +284,7 @@ retain_evidence() {
     cp "$CANDIDATE/manifest.json" "$TRANSLATION_RUNTIME" "$EVIDENCE/"
     gzip -c "$DEV/translation.log" >"$EVIDENCE/translation.log.gz"
   fi
-  : >"$EVIDENCE/sha256.tsv"
-  for file in "$EVIDENCE"/*; do
-    [[ "$file" == "$EVIDENCE/sha256.tsv" ]] || printf '%s\t%s\n' \
-      "$(hash_file "$file")" "$(basename "$file")" >>"$EVIDENCE/sha256.tsv"
-  done
+  write_evidence_ledger
 }
 
 write_downstream_ready() {
@@ -272,6 +301,132 @@ write_downstream_ready() {
       passes:["forced alignment on selected complete hypotheses",
         "one TranslateGemma translation"],strictlySequential:true}' >"$output"
   cp "$output" "$EVIDENCE/"
+}
+
+write_fixed_downstream_ready() {
+  jq -n --arg command \
+    'BENCHMARK_SLOT_GRANTED=94 bash Scripts/run_adaptive_asr_experiment.sh fixed-downstream-replay' \
+    --arg checkpoint "$(hash_file "$ARTIFACTS/READY_FOR_DOWNSTREAM_RESUME.json")" \
+    --arg asr "$(hash_file "$ASR_RUN")" \
+    --arg qwen "$(hash_file "$DEV/qwen-short-windows.json")" \
+    --arg parakeet "$(hash_file "$DEV/parakeet-short-windows.json")" \
+    --arg selection "$(hash_file "$SELECTION")" \
+    --arg aligner "$(hash_file Sources/HighQualityForcedAlignerRuntime.swift)" \
+    --arg job "$(hash_file Sources/HighQualityJob.swift)" \
+    --arg tests "$(hash_file Tests/HighQualityJobTests.swift)" \
+    --arg runner "$(hash_file Scripts/run_adaptive_asr_experiment.sh)" \
+    --arg binary "$(hash_file "$WORKER")" \
+    --arg e27 "$(hash_file "$ROOT/docs/japanese-live/experiments/evidence/E27/corrected-resume-failure-raw-asr.json.gz")" \
+    --arg e28 "$(hash_file "$EVIDENCE/candidate-raw-asr.json.gz")" \
+    --arg replayE27 "$(hash_file "$EVIDENCE/fixed-replay-e27.log.gz")" \
+    --arg replayE28 "$(hash_file "$EVIDENCE/fixed-replay-e28.log.gz")" \
+    '{status:"READY_FOR_FIXED_DOWNSTREAM_REPLAY",ticket:94,command:$command,
+      holdoutOpened:false,runtimeReference:false,rerunASR:false,
+      selection:{fixedThreshold:0.5,qwen:167,parakeet:2},
+      modelPasses:{asr:0,alignment:1,translation:1},strictlySequential:true,
+      fix:{cueID:"cue-0295",text:"うん。",sourceAnchor:[950.62,957.2078125],
+        rawPoint:957.18,policy:"single-zero-cue-asr-anchor-20cps",timingQuality:"coarse",
+        preservesRawItems:true,validatorRelaxed:false},
+      estimate:{alignmentSeconds:25,translationSeconds:950,totalMinutes:17,
+        hardTimeoutMinutes:40,peakRAMGiB:10,incrementalDiskMiB:250,
+        basis:"E28 alignment and E22 frozen TranslateGemma product run"},
+      memory:{nativePressure:true,runawayGuard:true,cancellation:true,fixedReserveBytes:0},
+      pureReplay:{modelsLoaded:0,e27:"fail-closed",e28:"cue-0295-valid"},
+      pureReplaySHA256:{
+        "docs/japanese-live/experiments/evidence/E28/fixed-replay-e27.log.gz":$replayE27,
+        "docs/japanese-live/experiments/evidence/E28/fixed-replay-e28.log.gz":$replayE28},
+      checkpointSHA256:$checkpoint,
+      reuseSHA256:{"asr-run.json":$asr,"qwen-short-windows.json":$qwen,
+        "parakeet-short-windows.json":$parakeet,"selection.json":$selection},
+      diagnosticReplaySHA256:{
+        "docs/japanese-live/experiments/evidence/E27/corrected-resume-failure-raw-asr.json.gz":$e27,
+        "docs/japanese-live/experiments/evidence/E28/candidate-raw-asr.json.gz":$e28},
+      implementationSHA256:{"Sources/HighQualityForcedAlignerRuntime.swift":$aligner,
+        "Sources/HighQualityJob.swift":$job,"Tests/HighQualityJobTests.swift":$tests,
+        "Scripts/run_adaptive_asr_experiment.sh":$runner,".build/debug/WhisperASR":$binary}}' \
+    >"$FIXED_READY"
+  cp "$FIXED_READY" "$EVIDENCE/"
+  write_evidence_ledger
+}
+
+write_evidence_ledger() {
+  : >"$EVIDENCE/sha256.tsv"
+  for file in "$EVIDENCE"/*; do
+    [[ "$file" == "$EVIDENCE/sha256.tsv" ]] || printf '%s\t%s\n' \
+      "$(hash_file "$file")" "$(basename "$file")" >>"$EVIDENCE/sha256.tsv"
+  done
+}
+
+retain_fixed_evidence() {
+  cp "$FIXED_READY" "$EVIDENCE/"
+  if [[ -f "$CANDIDATE/raw-asr.json" ]]; then
+    gzip -c "$CANDIDATE/raw-asr.json" >"$EVIDENCE/fixed-candidate-raw-asr.json.gz"
+  fi
+  if [[ -f "$CANDIDATE/manifest.json" ]]; then
+    cp "$CANDIDATE/manifest.json" "$EVIDENCE/fixed-manifest.json"
+  fi
+  if [[ -f "$TRANSLATION_RUNTIME" ]]; then
+    cp "$TRANSLATION_RUNTIME" "$EVIDENCE/fixed-translation-runtime.json"
+  fi
+  if [[ -f "$TRANSLATION_LOG" ]]; then
+    gzip -c "$TRANSLATION_LOG" >"$EVIDENCE/fixed-translation.log.gz"
+  fi
+  [[ ! -f "$DEV/fixed-downstream-failure.json" ]] || \
+    cp "$DEV/fixed-downstream-failure.json" "$EVIDENCE/"
+  write_evidence_ledger
+}
+
+record_fixed_downstream_failure() {
+  local runtime manifest raw classification
+  classification="${2:-}"
+  runtime="$(jq -c . "$TRANSLATION_RUNTIME" 2>/dev/null || printf null)"
+  manifest="$(jq -c . "$CANDIDATE/manifest.json" 2>/dev/null || printf null)"
+  raw="$(jq -c '{failures,modelEvents,stageDurations,peakMemoryBytes,
+    translationPresent:(.translation != null)}' "$CANDIDATE/raw-asr.json" \
+    2>/dev/null || printf null)"
+  jq -n --argjson commandStatus "$1" --arg classification "$classification" \
+    --argjson runtime "$runtime" \
+    --argjson manifest "$manifest" --argjson raw "$raw" \
+    '{status:"failed",ticket:94,holdoutOpened:false,inputAndReferencePreflightPassed:true,
+      classification:(if $classification != "" then $classification
+        elif $manifest.status == "failed" then "candidate-pipeline-failure"
+        elif $runtime != null then "runner-or-test-process-failure"
+        else "runner-failure-before-runtime-evidence" end),
+      commandStatus:$commandStatus,runtime:$runtime,manifest:$manifest,candidate:$raw}' \
+    >"$DEV/fixed-downstream-failure.json"
+}
+
+fixed_downstream_replay() {
+  [[ "${BENCHMARK_SLOT_GRANTED:-}" == 94 ]] || {
+    echo "refusing heavy run without BENCHMARK_SLOT_GRANTED=94" >&2; return 2;
+  }
+  verify_inputs
+  verify_models
+  verify_fixed_downstream_ready
+  [[ "$(jq -r .phase "$STATE")" == downstream-gate-red ]]
+  if run_translation; then
+    :
+  else
+    local status=$?
+    set_phase fixed-downstream-gate-red
+    record_fixed_downstream_failure "$status"
+    retain_fixed_evidence
+    return 1
+  fi
+  if [[ "$(jq -r '.status // empty' "$CANDIDATE/manifest.json" 2>/dev/null)" != completed ]]; then
+    set_phase fixed-downstream-gate-red
+    record_fixed_downstream_failure 1
+    retain_fixed_evidence
+    return 1
+  fi
+  if ! make_report; then
+    set_phase fixed-report-red
+    record_fixed_downstream_failure 1 reporter-failure
+    retain_fixed_evidence
+    return 1
+  fi
+  retain_fixed_evidence
+  set_phase fixed-downstream-completed
 }
 
 development() {
@@ -348,4 +503,39 @@ case "$MODE" in
     verify_downstream_ready
     echo READY_FOR_DOWNSTREAM_RESUME_VALIDATED
     ;;
+  fixed-downstream-ready)
+    [[ -f "$STATE" && "$(jq -r .phase "$STATE")" == downstream-gate-red ]]
+    verify_inputs
+    verify_models
+    verify_downstream_ready
+    mkdir -p "$ARTIFACTS/controls"
+    replay_root="$(mktemp -d)"
+    gzip -dc "$ROOT/docs/japanese-live/experiments/evidence/E27/corrected-resume-failure-raw-asr.json.gz" \
+      >"$replay_root/e27.json"
+    gzip -dc "$EVIDENCE/candidate-raw-asr.json.gz" >"$replay_root/e28.json"
+    WHISPERASR_FORCED_ALIGNMENT_EVIDENCE="$replay_root/e27.json" \
+    WHISPERASR_FORCED_ALIGNMENT_EXPECTATION=fail-closed \
+      xcrun swift test --filter \
+        HighQualityJobTests/testForcedAlignmentFallbackReplayEvidenceWhenOptedIn \
+        2>&1 | tee "$ARTIFACTS/controls/fixed-replay-e27.log"
+    WHISPERASR_FORCED_ALIGNMENT_EVIDENCE="$replay_root/e28.json" \
+    WHISPERASR_FORCED_ALIGNMENT_EXPECTATION=single-coarse-anchor \
+      xcrun swift test --skip-build --filter \
+        HighQualityJobTests/testForcedAlignmentFallbackReplayEvidenceWhenOptedIn \
+        2>&1 | tee "$ARTIFACTS/controls/fixed-replay-e28.log"
+    gzip -n -c "$ARTIFACTS/controls/fixed-replay-e27.log" \
+      >"$EVIDENCE/fixed-replay-e27.log.gz"
+    gzip -n -c "$ARTIFACTS/controls/fixed-replay-e28.log" \
+      >"$EVIDENCE/fixed-replay-e28.log.gz"
+    write_fixed_downstream_ready
+    verify_fixed_downstream_ready
+    echo READY_FOR_FIXED_DOWNSTREAM_REPLAY
+    ;;
+  verify-fixed-downstream-replay)
+    verify_inputs
+    verify_models
+    verify_fixed_downstream_ready
+    echo READY_FOR_FIXED_DOWNSTREAM_REPLAY_VALIDATED
+    ;;
+  fixed-downstream-replay) fixed_downstream_replay ;;
 esac

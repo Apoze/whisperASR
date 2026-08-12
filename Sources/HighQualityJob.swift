@@ -637,6 +637,27 @@ struct HighQualityAlignedCue: Codable, Equatable, Sendable {
     let text: String
     let start: TimeInterval
     let end: TimeInterval
+    let timingOrigin: String?
+    let timingPolicy: String?
+    let timingQuality: String?
+
+    init(
+        id: String,
+        text: String,
+        start: TimeInterval,
+        end: TimeInterval,
+        timingOrigin: String? = nil,
+        timingPolicy: String? = nil,
+        timingQuality: String? = nil
+    ) {
+        self.id = id
+        self.text = text
+        self.start = start
+        self.end = end
+        self.timingOrigin = timingOrigin
+        self.timingPolicy = timingPolicy
+        self.timingQuality = timingQuality
+    }
 }
 
 struct HighQualityAlignmentItem: Codable, Equatable, Sendable {
@@ -3670,6 +3691,38 @@ struct HighQualityJob: Sendable {
             }
             for cue in chunk.cues {
                 let text = cue.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                let cueRawItems = chunk.rawItems.filter { $0.cueID == cue.id }
+                if cue.timingOrigin != nil || cue.timingPolicy != nil
+                    || cue.timingQuality != nil {
+                    let coarseDuration = Double(text.count)
+                        / HighQualityForcedAlignerRuntime.maximumFallbackCharactersPerSecond
+                    let anchor = cueRawItems.first?.start ?? .nan
+                    let lowerBound = max(previousEnd, chunk.sourceStart)
+                    let coarseStart = min(
+                        max(anchor - coarseDuration, lowerBound),
+                        chunk.sourceEnd - coarseDuration
+                    )
+                    guard cue.timingOrigin == "asr-window-anchor",
+                          cue.timingPolicy == "single-zero-cue-asr-anchor-20cps",
+                          cue.timingQuality == "coarse",
+                          chunk.cues.count == 1,
+                          text.count <= HighQualityForcedAlignerRuntime.maximumCoarseAnchorCharacters,
+                          !cueRawItems.isEmpty,
+                          cueRawItems.count == chunk.rawItems.count,
+                          cueRawItems.allSatisfy({
+                              $0.start == $0.end
+                                  && $0.start == anchor
+                                  && $0.start >= cue.start
+                                  && $0.end <= cue.end
+                          }),
+                          coarseDuration <= chunk.sourceEnd - lowerBound,
+                          cue.start == coarseStart,
+                          cue.end == coarseStart + coarseDuration else {
+                        throw HighQualityTranslationValidationError(
+                            message: "Alignment cue \(cue.id) has invalid coarse timing evidence."
+                        )
+                    }
+                }
                 guard expectedIDs.contains(cue.id) else {
                     throw HighQualityTranslationValidationError(
                         message: "Alignment contains unknown cue \(cue.id)."
