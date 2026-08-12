@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "ticket": 102,
+  "result": "NO_RUN_USER_DEFERRED_DEPENDENCY",
+  "dependencyGate": {
+    "ticket": 101,
+    "status": "USER_DEFERRED_EXTERNAL_ACCESS",
+    "preparationCommit": "c86ed0265544d20dd2bd600713529fc404c5a675",
+    "preparationVerified": true,
+    "checkedBeforeModelAccess": true
+  },
+  "execution": {
+    "pixitDownloaded": false,
+    "pixitLoaded": false,
+    "mossFormer2Downloaded": false,
+    "mossFormer2Loaded": false,
+    "qualityComparisonPerformed": false
+  },
+  "decision": {
+    "reason": "La comparaison qualité n'a pas été réalisée car l'accès externe requis par PixIT est différé par l'utilisateur.",
+    "separatorFrozenOnDevelopment": false
+  },
+  "scope": {
+    "holdoutOpened": false,
+    "uiChanged": false,
+    "productChanged": false,
+    "liveChanged": false
+  },
+  "resume": {
+    "condition": "Accès Hugging Face disponible et porte DEV PixIT #101 positive.",
+    "fromCommit": "c86ed0265544d20dd2bd600713529fc404c5a675",
+    "action": "Reprendre #101 depuis sa préparation, puis rouvrir #102 seulement si PixIT récupère une parole superposée distincte."
+  }
+}
