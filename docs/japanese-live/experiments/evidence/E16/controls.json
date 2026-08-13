@@ -1,0 +1,22 @@
+{
+  "buildAndJobTests": true,
+  "cancellationTests": true,
+  "memoryGateTests": true,
+  "translationTests": true,
+  "liveTests": true,
+  "artifactReporterSelfTest": true,
+  "rawLogs": {
+    "buildRoute": {
+      "path": "docs/japanese-live/experiments/evidence/E16/control-build-route.log",
+      "sha256": "4b54676d10a0002372c4c451ec27089999175748465de3d888f08c257086ae34"
+    },
+    "lightTests": {
+      "path": "docs/japanese-live/experiments/evidence/E16/control-light-tests.log",
+      "sha256": "9a574e868d8af9b604ecce13d36c3df8e9790e9da27cc597eca843f8f05563a4"
+    },
+    "mlxMetallib": {
+      "path": "docs/japanese-live/experiments/evidence/E16/control-mlx-metallib.log",
+      "sha256": "6730b7668288f1ab70d0c15b327fa092ccc018be3bacb367a6f09409890e43c0"
+    }
+  }
+}

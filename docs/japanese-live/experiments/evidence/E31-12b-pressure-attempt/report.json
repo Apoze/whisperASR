@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "corpusID": "qudu2fx3ncc",
+  "translator": "translategemma-12b-it-4bit",
+  "classification": "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE",
+  "modelQualityVerdictAssigned": false,
+  "integratedRunComplete": false,
+  "observedStages": {
+    "sourcePreparation": {
+      "status": "completed",
+      "startedAt": "2026-08-12T21:13:19Z",
+      "completedAt": "2026-08-12T21:13:24Z",
+      "observedSeconds": 5
+    },
+    "ASR": {
+      "status": "completed",
+      "startedAt": "2026-08-12T21:13:24Z",
+      "readyAt": "2026-08-12T21:13:30Z",
+      "completedAt": "2026-08-12T21:14:51Z",
+      "observedSeconds": 87,
+      "chunks": 55,
+      "rawCharacters": 4878
+    },
+    "alignment": {
+      "status": "completed",
+      "startedAt": "2026-08-12T21:14:51Z",
+      "readyAt": "2026-08-12T21:14:53Z",
+      "completedAt": "2026-08-12T21:15:29Z",
+      "observedSeconds": 38,
+      "chunks": 55,
+      "reportedPeakMemoryBytes": 2181390576
+    },
+    "SpeakerKit": {
+      "status": "completed",
+      "startedAt": "2026-08-12T21:15:29Z",
+      "readyAt": "2026-08-12T21:15:35Z",
+      "completedAt": "2026-08-12T21:15:49Z",
+      "observedSeconds": 20,
+      "spans": 498,
+      "reportedPeakMemoryBytes": 709936568,
+      "exclusiveReconciliation": false
+    },
+    "translation": {
+      "status": "partial-cancelled-on-native-warning",
+      "startedAt": "2026-08-12T21:15:49Z",
+      "readyAt": "2026-08-12T21:15:54Z",
+      "stoppedAt": "2026-08-12T21:16:19Z",
+      "observedSeconds": 30,
+      "successfulBatches": 7,
+      "cancelledBatch": 1,
+      "successfulOutputCharacters": 748,
+      "validationReasonCounts": {},
+      "reportedPeakMemoryBytes": 7393556066
+    }
+  },
+  "safety": {
+    "elapsedSeconds": 185,
+    "stopReason": "native-pressure-warning",
+    "processExitStatus": 143,
+    "forcedTermination": false,
+    "peakResidentBytes": 5268062208,
+    "peakPhysicalFootprintBytes": 11889334152,
+    "minimumFreeMemoryPercent": 27,
+    "nativePressureRawAtStop": 2,
+    "nativePressureLevels": ["normal", "warning"],
+    "swapUsedBeforeBytes": 5166134723,
+    "swapUsedAfterBytes": 5149357507,
+    "swapDeltaBytes": -16777216,
+    "peakSwapGrowthBytes": 0,
+    "pageoutsBefore": 1777345,
+    "pageoutsAfter": 1777767,
+    "pageoutDelta": 422,
+    "freeMemoryPercentAfterCleanup": 70,
+    "recoveredFreeMemoryPercentagePoints": 43,
+    "modelLoadedMarkerObservedByOuterGuard": false,
+    "modelWasActuallyReady": true,
+    "noWorkerRemainingAfterCleanup": true
+  },
+  "artifactCompleteness": {
+    "jobManifest": false,
+    "jobRawASR": false,
+    "finalJapaneseTranscript": false,
+    "finalEnglishTranscript": false,
+    "finalSubtitles": false,
+    "stageRequestsAndResponses": true,
+    "outerSafetySamples": true,
+    "inputAndReferenceHashes": true,
+    "reason": "The native warning cancelled the HighQualityJob before its final manifest/raw export. Completed stage exchanges and all available translation batches are retained. The 61 MB derived PCM copy is omitted because the original source video is already content-hashed."
+  }
+}

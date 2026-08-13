@@ -38,6 +38,9 @@ public struct Qwen3DecodingOptions: Sendable {
     /// Gumbel-max. Higher = more random.
     public var temperature: Float = 0.0
 
+    /// Stops token generation when requested. The default preserves existing callers.
+    public var cancellationCheck: @Sendable () -> Bool = { false }
+
     /// Adaptive decoding threshold. When the input audio is longer than this
     /// many seconds AND the caller has left `noRepeatNgramSize` at 0 (the
     /// default greedy path), the public `transcribe(...)` entry points
@@ -60,6 +63,7 @@ public struct Qwen3DecodingOptions: Sendable {
         repetitionPenalty: Float = 1.0,
         noRepeatNgramSize: Int = 0,
         temperature: Float = 0.0,
+        cancellationCheck: @escaping @Sendable () -> Bool = { false },
         longInputThresholdSeconds: Double = 15.0,
         longInputNoRepeatNgramSize: Int = 3
     ) {
@@ -69,6 +73,7 @@ public struct Qwen3DecodingOptions: Sendable {
         self.repetitionPenalty = repetitionPenalty
         self.noRepeatNgramSize = noRepeatNgramSize
         self.temperature = temperature
+        self.cancellationCheck = cancellationCheck
         self.longInputThresholdSeconds = longInputThresholdSeconds
         self.longInputNoRepeatNgramSize = longInputNoRepeatNgramSize
     }
@@ -445,7 +450,8 @@ public class Qwen3ASRModel {
                 textDecoder: textDecoder,
                 initialLogits: logits,
                 cache: cache!,
-                maxTokens: maxTokens
+                maxTokens: maxTokens,
+                cancellationCheck: decodingOptions.cancellationCheck
             )
         } else {
             generatedTokens = Self.generateSlow(
@@ -544,7 +550,8 @@ public class Qwen3ASRModel {
         textDecoder: QuantizedTextModel,
         initialLogits: MLXArray,
         cache initialCache: [(MLXArray, MLXArray)],
-        maxTokens: Int
+        maxTokens: Int,
+        cancellationCheck: @Sendable () -> Bool = { false }
     ) -> [Int32] {
         var generatedTokens: [Int32] = []
         guard maxTokens > 0 else { return generatedTokens }
@@ -568,6 +575,7 @@ public class Qwen3ASRModel {
         let eosToken = Int32(Qwen3ASRTokens.eosTokenId)
 
         for step in 0..<maxTokens {
+            if cancellationCheck() { break }
             // Stage N+1's graph BEFORE syncing N. embedTokens expects a
             // [batch, seq] int32 tensor; nextTokenArr is 0-D so we expand
             // twice to [1, 1].
@@ -949,7 +957,7 @@ public class Qwen3ASRModel {
         options: Qwen3DecodingOptions
     ) -> [Int32] {
         var generatedTokens: [Int32] = []
-        guard maxTokens > 0 else { return generatedTokens }
+        guard maxTokens > 0, !options.cancellationCheck() else { return generatedTokens }
         var cache: [(MLXArray, MLXArray)]? = initialCache
 
         var nextToken = Self.pickNextToken(
@@ -960,6 +968,7 @@ public class Qwen3ASRModel {
         generatedTokens.append(nextToken)
 
         for _ in 1..<maxTokens {
+            if options.cancellationCheck() { break }
             if nextToken == Int32(Qwen3ASRTokens.eosTokenId) { break }
 
             let tokenEmbeds = textDecoder.embedTokens(

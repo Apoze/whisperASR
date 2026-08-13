@@ -32,7 +32,7 @@ enum CoherePrototypeQuantization: String, Sendable {
     }
 }
 
-private enum PrototypeRevisionGate {
+enum PrototypeRevisionGate {
     static func verify(modelID: String, expectedRevision: String) async throws {
         let key = "verifiedPrototypeRevision.\(modelID)"
         let data: Data
@@ -121,7 +121,7 @@ private actor FireRedVADRuntime {
     func unload() { model = nil }
 }
 
-private actor QwenRuntime {
+actor QwenRuntime {
     private var model: Qwen3ASR.Qwen3ASRModel?
 
     func prepare(progress: @escaping @Sendable (Double, String) -> Void) async throws {
@@ -148,25 +148,35 @@ private actor QwenRuntime {
         model = loaded
     }
 
-    func transcribe(audio: [Float], language: String) throws -> String {
+    func transcribe(
+        audio: [Float],
+        language: String,
+        preserveRawOutput: Bool = false,
+        cancellable: Bool = false
+    ) throws -> String {
         guard let model else { throw LocalPrototypeError.modelNotLoaded("Qwen3-ASR") }
         var options = Qwen3DecodingOptions(
             maxTokens: 448,
             language: language,
+            cancellationCheck: { cancellable && Task.isCancelled },
             longInputThresholdSeconds: 20
         )
-        let transcript = model.transcribe(
+        let rawTranscript = model.transcribe(
             audio: audio,
             sampleRate: 16_000,
             options: options
-        ).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard SubtitleRepetitionDetector.hasRepeatedTail(transcript) else { return transcript }
+        )
+        let transcript = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard SubtitleRepetitionDetector.hasRepeatedTail(transcript) else {
+            return preserveRawOutput ? rawTranscript : transcript
+        }
         options.noRepeatNgramSize = 3
-        return model.transcribe(
+        let retry = model.transcribe(
             audio: audio,
             sampleRate: 16_000,
             options: options
-        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        return preserveRawOutput ? retry : retry.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func unload() {
@@ -361,6 +371,9 @@ final class LocalEnglishModelManager {
     @ObservationIgnored private let voxtral = VoxtralRuntime()
     @ObservationIgnored private let voxtralHelper = VoxtralHelperRuntime()
     @ObservationIgnored private let cohere = CohereRuntime()
+    @ObservationIgnored private let heavyweightGate = HeavyweightModelGate.shared
+    @ObservationIgnored private var heavyweightWorkflowLease: HeavyweightWorkflowLease?
+    @ObservationIgnored private var heavyweightModelLease: HeavyweightModelLease?
     nonisolated init() {}
 
     func phase(for engine: LocalEnglishEngine) -> LocalModelPhase {
@@ -382,6 +395,13 @@ final class LocalEnglishModelManager {
             }
         }
         do {
+            let workflow = try await heavyweightGate.beginWorkflow(.live)
+            heavyweightWorkflowLease = workflow
+            heavyweightModelLease = try await heavyweightGate.acquireModel(
+                workflow: workflow,
+                modelID: "live:\(engine.rawValue)",
+                declaredPeakBytes: 10 * 1_024 * 1_024 * 1_024
+            )
             try await vad.prepare(progress: update)
             switch engine {
             case .whisperTurboApple, .whisperLargeV3Direct:
@@ -432,12 +452,15 @@ final class LocalEnglishModelManager {
             memoryWarning = resident > 8 * 1_024 * 1_024 * 1_024
                 ? "Process memory is above the 8 GB live-caption target."
                 : nil
+            if let heavyweightModelLease {
+                try await heavyweightGate.markLoaded(heavyweightModelLease)
+            }
             loadedEngine = engine
             phases[engine] = .ready(residentBytes: resident)
         } catch {
-            await unloadRuntimes()
+            await releaseHeavyweightLease()
             loadedEngine = nil
-            memoryWarning = nil
+            if heavyweightModelLease == nil { memoryWarning = nil }
             phases[engine] = .failed(error.localizedDescription)
             throw error
         }
@@ -540,15 +563,39 @@ final class LocalEnglishModelManager {
     }
 
     func unload() async {
-        await unloadRuntimes()
+        await releaseHeavyweightLease()
         if let loadedEngine { phases[loadedEngine] = .absent }
         loadedEngine = nil
-        memoryWarning = nil
+        if heavyweightModelLease == nil { memoryWarning = nil }
     }
 
     func shutdown() async {
-        await unloadRuntimes()
+        await releaseHeavyweightLease()
         loadedEngine = nil
+    }
+
+    private func releaseHeavyweightLease() async {
+        if let lease = heavyweightModelLease {
+            do {
+                _ = try await heavyweightGate.releaseModel(lease) { [weak self] in
+                    await self?.unloadRuntimes()
+                }
+                heavyweightModelLease = nil
+            } catch {
+                memoryWarning = error.localizedDescription
+                return
+            }
+        } else {
+            await unloadRuntimes()
+        }
+        if let workflow = heavyweightWorkflowLease {
+            do {
+                try await heavyweightGate.endWorkflow(workflow)
+                heavyweightWorkflowLease = nil
+            } catch {
+                memoryWarning = error.localizedDescription
+            }
+        }
     }
 
     private func unloadRuntimes() async {
@@ -559,7 +606,7 @@ final class LocalEnglishModelManager {
         await cohere.unload()
     }
 
-    private static func measuredMemoryBytes() -> UInt64 {
+    nonisolated static func measuredMemoryBytes() -> UInt64 {
         let mlx = Memory.snapshot()
         let mlxCurrent = UInt64(max(0, mlx.activeMemory + mlx.cacheMemory))
         let mlxPeak = UInt64(max(0, mlx.peakMemory))

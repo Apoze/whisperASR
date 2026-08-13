@@ -1,0 +1,28 @@
+Another instance of SwiftPM (PID: 34485) is already running using '/private/tmp/whisperASR-ticket60.i9xvoa/.build', waiting until that process has finished execution...[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /private/tmp/whisperASR-ticket60.i9xvoa/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /private/tmp/whisperASR-ticket60.i9xvoa/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (9.85s)
+Test Suite 'Selected tests' started at 2026-08-10 11:16:59.907.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 11:16:59.908.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-10 11:16:59.908.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenSpeakerKitThresholdWhenOptedIn]' started.
+/private/tmp/whisperASR-ticket60.i9xvoa/Tests/HighQualityAcceptanceTests.swift:18: -[WhisperASRTests.HighQualityAcceptanceTests testFrozenSpeakerKitThresholdWhenOptedIn] : Test skipped - Set the frozen inputs, output, job ID and threshold for ticket #60.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenSpeakerKitThresholdWhenOptedIn]' skipped (0.001 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-10 11:16:59.910.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-10 11:16:59.910.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'Selected tests' passed at 2026-08-10 11:16:59.910.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.002) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

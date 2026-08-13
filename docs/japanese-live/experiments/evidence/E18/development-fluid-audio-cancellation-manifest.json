@@ -1,0 +1,157 @@
+{
+  "deliverables" : [
+    "english-subtitles",
+    "english-translation-transcript",
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "forced-alignment",
+    "speaker-diarization",
+    "llm-translation",
+    "export"
+  ],
+  "failures" : [
+    {
+      "message" : "Job cancelled.",
+      "stage" : "cancelled"
+    }
+  ],
+  "finishedAt" : "2026-08-10T11:21:10Z",
+  "generatedFiles" : [
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "61000001-0000-4000-8000-000000000003",
+  "model" : {
+    "backend" : "qwen-ja",
+    "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "backend" : "qwen-ja",
+      "kind" : "reserve-checked",
+      "message" : "peak=7516192768 reserve=8589934592 total=25769803776",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-started",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "backend" : "qwen-ja",
+      "kind" : "unload-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "backend" : "qwen-ja",
+      "kind" : "memory-release-checked",
+      "message" : "memory=140542816",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "reserve-checked",
+      "message" : "peak=4294967296 reserve=8589934592 total=25769803776",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=142066528",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "reserve-checked",
+      "message" : "peak=4294967296 reserve=8589934592 total=25769803776",
+      "modelID" : "FluidInference\/speaker-diarization-coreml\/offline"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "load-started",
+      "modelID" : "FluidInference\/speaker-diarization-coreml\/offline"
+    },
+    {
+      "at" : "2026-08-10T11:21:04Z",
+      "kind" : "load-completed",
+      "modelID" : "FluidInference\/speaker-diarization-coreml\/offline"
+    },
+    {
+      "at" : "2026-08-10T11:21:10Z",
+      "kind" : "unload-completed",
+      "modelID" : "FluidInference\/speaker-diarization-coreml\/offline"
+    },
+    {
+      "at" : "2026-08-10T11:21:10Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=53003344",
+      "modelID" : "FluidInference\/speaker-diarization-coreml\/offline"
+    }
+  ],
+  "peakMemoryBytes" : 2148058464,
+  "schemaVersion" : 1,
+  "selectedBackend" : "qwen-ja",
+  "source" : {
+    "byteCount" : 386867452,
+    "fileName" : "Video1.webm",
+    "modifiedAt" : "2026-07-18T19:42:51Z",
+    "path" : "\/Users\/maz\/Documents\/videos\/jap\/1\/Video1.webm"
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : true,
+  "stageDurations" : [
+    "preparing-asr",
+    8.702278137207031e-05,
+    "transcribing",
+    0.0013660192489624023,
+    "preparing-alignment",
+    2.300739288330078e-05,
+    "preparing-diarization",
+    0.3447079658508301,
+    "normalizing-source",
+    1.9041370153427124,
+    "aligning",
+    0.05236101150512695,
+    "diarizing",
+    6.15752100944519
+  ],
+  "startedAt" : "2026-08-10T11:21:02Z",
+  "status" : "cancelled"
+}

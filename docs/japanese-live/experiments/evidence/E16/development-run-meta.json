@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E16-speakerkit-precision",
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "corpusManifestPath": "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json",
+  "corpusManifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "frozenUpstreamEvidencePath": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/principal-speaker-attribution/development-pass2/24714AB0-F273-44A3-9828-67B54766070D/raw-asr.json",
+  "frozenUpstreamEvidenceSHA256": "9cddd5574529e654d1480107c23ba87d3fb9e72782765ce3efe7d6e0afc2cc53",
+  "jobs": {
+    "baseline": "58000001-0000-4000-8000-000000000001",
+    "candidate": "58000001-0000-4000-8000-000000000002"
+  },
+  "baseCommit": "0faf0caa1074ae94d064e449107f73f5e120c5d3",
+  "speakerKit": {
+    "modelID": "argmaxinc/speakerkit-coreml",
+    "revision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+    "packageRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+    "downloadPatterns": {
+      "baseline": [
+        "speaker_segmenter/pyannote-v3/W8A16/*",
+        "speaker_embedder/pyannote-v3/W8A16/*",
+        "speaker_clusterer/pyannote-v4/W32A32/*"
+      ],
+      "candidate": [
+        "speaker_segmenter/pyannote-v3/W32A32/*",
+        "speaker_embedder/pyannote-v3/W16A16/*",
+        "speaker_clusterer/pyannote-v4/W32A32/*"
+      ]
+    }
+  },
+  "settings": {
+    "baseline": {
+      "precision": "quantized",
+      "segmenterVariant": "W8A16",
+      "embedderVariant": "W8A16",
+      "useExclusiveReconciliation": false,
+      "principalAttribution": "longest-overlap-stable-label-span",
+      "numberOfSpeakers": null,
+      "minActiveOffset": null,
+      "clusterDistanceThreshold": null,
+      "minClusterSize": null,
+      "fullRedundancy": true,
+      "centroidSource": "finalAssignment",
+      "clipTimestamps": []
+    },
+    "candidate": {
+      "precision": "full",
+      "segmenterVariant": "W32A32",
+      "embedderVariant": "W16A16",
+      "useExclusiveReconciliation": false,
+      "principalAttribution": "longest-overlap-stable-label-span",
+      "numberOfSpeakers": null,
+      "minActiveOffset": null,
+      "clusterDistanceThreshold": null,
+      "minClusterSize": null,
+      "fullRedundancy": true,
+      "centroidSource": "finalAssignment",
+      "clipTimestamps": []
+    }
+  },
+  "costPolicy": {
+    "qualityFirst": true,
+    "maximumObservedMemoryBytes": 17179869184,
+    "reason": "Any strict holdout speaker-quality gain is acceptable only if the 8 GiB reserve, completion, and memory-release gates pass."
+  },
+  "failurePolicy": {
+    "candidateAttribution": "withheld until build, source, input, artifact, load, cancellation and memory-release diagnostics pass"
+  },
+  "executionImplementationSHA256": {
+    "Sources/HighQualityJob.swift": "8fd6abe5341ec9af5976f01bbd14b2b1e4b57f3adca1526f195bb87300f9e8f1",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "5adcacda8b1b00332a84a0128d5bbd7fbcd52321f1fb7ed619cbfcc5dc63d205",
+    "Tests/HighQualityAcceptanceTests.swift": "37479f168046876bf0517b8cd0b9161f4fde40935d43b616b5addd93fe62c39a",
+    "Tests/HighQualityJobTests.swift": "4499c586361ec554fa582b9f6ea8f2485886c4ba59f7eecd2b65e5db70891ff4",
+    "Scripts/run_speakerkit_precision_experiment.sh": "c9f9a09c8b07e5f97b0fcaab35a8ae0de48265413e5533c9fa762aeeb4073b5e",
+    "Scripts/report_speakerkit_precision.py": "f194812efe35a941c0c3de69fc4632136445ab8c1b8b060a2b113cc271022a36",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd"
+  },
+  "reviewedImplementationSHA256": {
+    "Sources/HighQualityJob.swift": "8fd6abe5341ec9af5976f01bbd14b2b1e4b57f3adca1526f195bb87300f9e8f1",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "5adcacda8b1b00332a84a0128d5bbd7fbcd52321f1fb7ed619cbfcc5dc63d205",
+    "Tests/HighQualityAcceptanceTests.swift": "37479f168046876bf0517b8cd0b9161f4fde40935d43b616b5addd93fe62c39a",
+    "Tests/HighQualityJobTests.swift": "4499c586361ec554fa582b9f6ea8f2485886c4ba59f7eecd2b65e5db70891ff4",
+    "Scripts/run_speakerkit_precision_experiment.sh": "f211beea0737f45549dfc45a288a166a8050ce61b5307de4af0749c56760a9ed",
+    "Scripts/report_speakerkit_precision.py": "0d5cc562dd9a3711a8755413adcf2283cc67241659df14d606e0bf6bd7110f5b",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd"
+  },
+  "unchangedImplementations": {
+    "Sources/AppleLiveServices.swift": {
+      "baseSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6",
+      "candidateSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6"
+    },
+    "Sources/HighQualityTranslationIntegrity.swift": {
+      "baseSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278",
+      "candidateSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278"
+    },
+    "Sources/LiveRecoveryStore.swift": {
+      "baseSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94",
+      "candidateSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94"
+    },
+    "Sources/LocalMLXTranslator.swift": {
+      "baseSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9",
+      "candidateSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9"
+    },
+    "Sources/QwenPseudoLiveCoordinator.swift": {
+      "baseSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202",
+      "candidateSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202"
+    },
+    "Sources/TranslationService.swift": {
+      "baseSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26",
+      "candidateSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26"
+    }
+  },
+  "modelInventoryPath": "docs/japanese-live/experiments/evidence/E16/model-cache-manifest.json",
+  "modelInventorySHA256": "f9ba71fea1d5b62937fa73ca63720d727fe40ce77b4a37202bd401ef9395051b",
+  "artifactSHA256": {
+    "baseline": {
+      "japanese-transcript.txt": "9761854c74c4a1b5217a0109d270449a5762f0967570bcdf6c43501db2a49ccf",
+      "english-translation-transcript.txt": "df3ebb5df13cc635725196edde3fb4964ca721b54a1c54cb2a9f9e701b614948",
+      "english-subtitles.vtt": "a95e0e7baaf1dea32d8c243d5f5ac5cd389122bb17bca0322e8b2e42e3eb9922",
+      "english-subtitles.srt": "a9360c8a04b1e28d80f5d236be75f3fd10a2794e063d0ae520f1c3f276552e08",
+      "raw-asr.json": "8154e211b851eae901e20ee2713dbfc5a2581c64db75418a826a7b8abc26c800",
+      "manifest.json": "c4df37bc1cc59d39573d5b4383475ebe0d2cf4bdb2d6687b3c0fc30b25025ead"
+    },
+    "candidate": {
+      "japanese-transcript.txt": "09a460ffd13642f6e9c301e43c45cae2c0b5b767e96d4b17bf99b0aeba82e395",
+      "english-translation-transcript.txt": "8ff68341b7bdefc5e68743967fb531140d1401fe95c1b887390cacc0899153bc",
+      "english-subtitles.vtt": "c44ab39b47d635235543c86dbcdce96764b007cf2cfaa1f2eedbfda82752e46e",
+      "english-subtitles.srt": "3970f0883ec33997d177b970da464dbe77f41a3bf4af745c5a38707653821ae5",
+      "raw-asr.json": "b8b946bcd89dc7e331c0658b511a6d0cd23ab700f34564c935d62b6512c83037",
+      "manifest.json": "9b26ca104f061594601e0f66c95e854de15e150a141b6d4430e0f5f6776b61cf"
+    }
+  },
+  "executionScorerSnapshotPath": "docs/japanese-live/experiments/evidence/E16/execution-report_speakerkit_precision.py",
+  "executionScorerSHA256": "f194812efe35a941c0c3de69fc4632136445ab8c1b8b060a2b113cc271022a36",
+  "reportGenerationHistory": [
+    {
+      "status": "failed",
+      "classification": "runner-reporter",
+      "candidateAttribution": "withheld",
+      "modelsRerun": false,
+      "error": "Reporter expected baseline.log while the frozen runner retained quantized.log."
+    },
+    {
+      "status": "completed",
+      "classification": "scorer-only-regeneration",
+      "modelsRerun": false,
+      "scorerSHA256": "bebe71378c8aecf1c5c3e3b9d0feb7dcc8be8313240f5cc3e1d18a0e6bf3a9c3"
+    }
+  ],
+  "scorerCorrection": {
+    "executionSHA256": "f194812efe35a941c0c3de69fc4632136445ab8c1b8b060a2b113cc271022a36",
+    "reviewedSHA256": "0d5cc562dd9a3711a8755413adcf2283cc67241659df14d606e0bf6bd7110f5b",
+    "rawArtifactsChanged": false,
+    "modelsRerun": false
+  },
+  "controlEvidencePath": "docs/japanese-live/experiments/evidence/E16/controls.json",
+  "controlEvidenceSHA256": "c941b8a2c5f441c97ae23103628775d8376bb1394d1b2d279e8543f3e5c29f50",
+  "runLogSHA256": {
+    "baseline": "55f2a15968876820ecd344b72c2b8b597442448f3df1533030ba3f3636ee87ec",
+    "candidate": "3344f0a5b18a69f5d621c96e89fbb77c39f7c163554009f46734426616a7ac2d"
+  },
+  "executionSourceSnapshots": {
+    "Scripts/report_speakerkit_precision.py": "docs/japanese-live/experiments/evidence/E16/execution-report_speakerkit_precision.py",
+    "Scripts/run_speakerkit_precision_experiment.sh": "docs/japanese-live/experiments/evidence/E16/execution-run_speakerkit_precision.sh"
+  },
+  "evidenceCorrection": {
+    "reason": "Archive and hash raw control logs; require complete deliverables; retain repository-relative evidence paths.",
+    "rawArtifactsChanged": false,
+    "modelsRerun": false
+  }
+}

@@ -1,0 +1,16 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-11 08:25:17.496.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-11 08:25:17.497.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-11 08:25:17.497.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenSourceDecodesThroughTheProductLoaderWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenSourceDecodesThroughTheProductLoaderWhenOptedIn]' passed (2.156 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-11 08:25:19.654.
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.156 (2.157) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-11 08:25:19.654.
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.156 (2.157) seconds
+Test Suite 'Selected tests' passed at 2026-08-11 08:25:19.654.
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.156 (2.158) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "corpusID": "qudu2fx3ncc",
+  "referenceSHA256": "df0bce85845cca243e0ed4ae3c5b885e519cc4f0aada9c6ddb1b169cb22f93ba",
+  "expectedTermIDs": [
+    "amayui-moka"
+  ],
+  "selectedTermIDs": [
+    "amayui-moka"
+  ],
+  "negativeTermCount": 15,
+  "falseSelectedTermCount": 0,
+  "metrics": {
+    "specializedTermPrecision": 1,
+    "specializedTermRecall": 1,
+    "specializedTermF1": 1,
+    "glossaryAccuracy": 1,
+    "falseCorrectionRisk": 0
+  }
+}

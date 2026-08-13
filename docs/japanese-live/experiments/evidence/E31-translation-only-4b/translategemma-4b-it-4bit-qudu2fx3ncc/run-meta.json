@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "corpusID": "qudu2fx3ncc",
+  "translator": "translategemma-4b-it-4bit",
+  "translationModelID": "mlx-community/translategemma-4b-it-4bit",
+  "translationRevision": "5788ec08c047f3f2e17808101b8d9566ac930d58",
+  "commit": "ef32eb48d74af78401fd62f62fd71f0d076354df",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/1/Video1_reference_transcript_and_translation.zip",
+  "referenceArchiveSHA256": "8f1c4ed3836d5e0f627448f9ecc44ab064d8750cb4464c8849eafabbba401474",
+  "corpusManifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "corpusPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "localReferences": [
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/reference.csv",
+      "sha256": "df0bce85845cca243e0ed4ae3c5b885e519cc4f0aada9c6ddb1b169cb22f93ba"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/character-alignment.jsonl",
+      "sha256": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/speaker-map.json",
+      "sha256": "4e1326ac13fab5c76b07451600e6553c65e824b278a1b4c4ce7192e77a73497b"
+    }
+  ],
+  "decisionsSHA256": "711f2f72266abcca7916e72c81af6cef7b4360c03f62d34381538184809d46ab",
+  "modelProvenanceSHA256": "cfc3b9599ba14c2f5181809285a049b95fe12d801e2d989b78499eb3bc56fab9",
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "bf58409dc3aeab5abaf67c3302a947e00348b8dcf5ac72f04beab34c6fe058ae",
+    "Sources/LocalMLXTranslator.swift": "4952c333cc84f59d03e6177307cb51e297b340d00b2af7b0c8910bae8d7ceaf4",
+    "Tests/HighQualityAcceptanceTests.swift": "d75781e169eed88906559da1d61cfc8f068640dd14fc30c7792af4871656d084",
+    "Scripts/run_integrated_offline_validation.sh": "5a4c7d1fb9d0cb370baa22448bc9f0533617cdb7246cd3354231f6a86e2f1ecd",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "6316686c049f6b90a27b3eab2b63acc46d3d72710828b1e6eda16f04498489b5",
+    "Scripts/test_mossformer2_guard.sh": "865316ad8868ed9ddb259b65a2debafcb94c8976de497c63177e1d5b70ee3569",
+    "Scripts/report_integrated_offline_validation.py": "a20f927f64d22173278ab1a75ba802296196992a000c750dbef31a4e1e4cac67",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "runtimeSHA256": {
+    "workerExecutable": "038945ce4f79ab97294022efc364ad2bbc9b1767243ed1e0edd4f87916356303",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  },
+  "configuration": {
+    "ASR": "Qwen Standard",
+    "alignment": "Qwen3 Forced Aligner",
+    "diarization": "SpeakerKit Standard",
+    "cues": "Standard",
+    "overlapRecovery": null,
+    "translation": "translategemma-4b-it-4bit"
+  },
+  "runMode": "TRANSLATION_ONLY_4B",
+  "fullIntegratedRun": false,
+  "ticket106Concluded": false,
+  "frozenUpstreamPath": "/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/high-quality/integrated-validation-106-translation-only-4b/frozen/qudu2fx3ncc-raw-asr.json",
+  "frozenUpstreamSHA256": "6060f830c8c3b8febb186c540e992f3d70375a674adb4d48087f77e1ce97c2b2",
+  "translationReplaySourceSHA256": "0c132b530bc4579a265ab5af674fd6b65b5dd30c6ff9af935cacc645e0a8c330",
+  "resultRoute": "model-quality-rejection",
+  "rawArtifactSHA256": {
+    "manifest.json": "d64d4739f603e8ae2be1ca995331aa98ab616544e9ae0fc5bcecbc82e1ff18b1",
+    "raw-asr.json": "3c920867055a7228d468964fa9d48feac02249bee29e429071ca32600cbbaf6d"
+  },
+  "safetySHA256": {
+    "safety.json": "186207d53563b3a690e7efdf9166210adad1631b6dc2fbbfcf6b4476290bf900",
+    "safety.samples.jsonl": "8093d83d09abde72d952ad21905604c1298f641ee30fcdd4ec9351866b0aebb3"
+  },
+  "harnessRecovery": {
+    "reason": "post-run comparison included model-dependent English context",
+    "runtimeImplementationUnchanged": true,
+    "validatorImplementationSHA256": {
+      "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+      "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+      "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+      "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+      "Sources/HeavyweightModelGate.swift": "bf58409dc3aeab5abaf67c3302a947e00348b8dcf5ac72f04beab34c6fe058ae",
+      "Sources/LocalMLXTranslator.swift": "4952c333cc84f59d03e6177307cb51e297b340d00b2af7b0c8910bae8d7ceaf4",
+      "Tests/HighQualityAcceptanceTests.swift": "b4a24911d5546755cec0bd40f971e79a3c4e42108910f9dd79916f9bf898a153",
+      "Scripts/run_integrated_offline_validation.sh": "914c815232f79ade338dd06af4ab6bf9bae57fcd23544e07e9b46778e5039f74",
+      "Scripts/run_mossformer2_oracle_experiment.sh": "6316686c049f6b90a27b3eab2b63acc46d3d72710828b1e6eda16f04498489b5",
+      "Scripts/test_mossformer2_guard.sh": "865316ad8868ed9ddb259b65a2debafcb94c8976de497c63177e1d5b70ee3569",
+      "Scripts/report_integrated_offline_validation.py": "80d120ab7e6d5d8baea88e0c0f63a82b6e4a8768c097e3326e67661e9e6e1dc8",
+      "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+      "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+      "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+      "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+    }
+  }
+}

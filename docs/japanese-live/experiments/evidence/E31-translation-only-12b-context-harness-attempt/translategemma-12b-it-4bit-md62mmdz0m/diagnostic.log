@@ -1,0 +1,17 @@
+ticket=106 translator=translategemma-12b-it-4bit corpus=md62mmdz0m exit=1 route=application
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/da40/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/da40/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/6] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (3.90s)
+md62mmdz0m	source-video	a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d	/Users/maz/Documents/videos/jap/2/Video2.webm
+md62mmdz0m	reference-archive	a95e73422dd0b8628f6d8a5cb064e41deb4a64b5a0024e1e1a5a62450e5aff86	/Users/maz/Documents/videos/jap/2/Video2_final_readable_transcript_pack.zip
+md62mmdz0m	local-reference	c1f08461fb393d40cc3e82dc22c3f3befd066b3dd091b6522547228db86996df	/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/japanese-live/corpora/md62mmdz0m/reference.jsonl
+md62mmdz0m	local-reference	446e7a00ad003b904e3de90786ef65f1829cc063217638535b134c084f2db925	/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/japanese-live/corpora/md62mmdz0m/character-alignment.tsv

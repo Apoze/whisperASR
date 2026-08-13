@@ -1,0 +1,308 @@
+SPEAKER_01: Sweet Moka = Amayui Moka
+The next target is Sweet Moka and Tachikawa.
+SPEAKER_01: I'm here.
+SPEAKER_03: "Moka, you can do it! Keep going! Keep going!"
+SPEAKER_01: Earlier, Tachikawa showed his professionalism and pride.
+SPEAKER_00: Someone in GTA was looking at people's faces. I really hope they get banned.
+SPEAKER_00: That's incredibly unfair to me and Kuroki.
+SPEAKER_00: I can't accept that you're focusing on the appearance of someone's underwear. You'd probably lose if you focused on something so trivial.
+SPEAKER_00: Have we met before? Do you remember?
+SPEAKER_00: I saw a cutout of Mr. Tachikawa, and it reminded me of something. It looked like Mr. Katami, maybe from five years ago? Something came up.
+SPEAKER_00: They were talking about having someone else moderate the livestream, just the two of them.
+SPEAKER_00: Apparently, they were saying something like, "There's a VTuber who's really good at handling difficult situations. Let's have them do it."
+SPEAKER_00: It really was Ronnie, someone with a bad reputation, someone who attracts trouble and negativity.
+SPEAKER_00: Then they sent a message like, "Want to play Portal together?" or something like that.
+SPEAKER_00: ...or something like, "It's probably best if you do it," or "You should probably do it."
+SPEAKER_03: They're getting along really well, aren't they?
+SPEAKER_00: Splashing.
+SPEAKER_02: The combination of Gok and Shinanoimai is genuinely funny, though.
+SPEAKER_02: And Tachikawa is probably a modern [style of] guitar.
+SPEAKER_00: That's nice, that kind of encounter.
+SPEAKER_00: It's a modern [style of] guitar, and that's where I started playing.
+SPEAKER_00: That's funny.
+SPEAKER_02: It's not good.
+SPEAKER_02: There's also a lot of overlap with the "Riwon" button.
+SPEAKER_00: That's not good.
+SPEAKER_01: That's not good.
+SPEAKER_01: Okay, we're ready.
+SPEAKER_01: It's raining, but let's move on to the highly anticipated match. Please proceed.
+SPEAKER_01: Tachikawa is actively pursuing an aggressive strategy.
+SPEAKER_01: However, the rain isn't causing any apparent concern.
+SPEAKER_02: "Break their momentum with a strong rush. Do your best!"
+SPEAKER_01: "Move forward by using a powerful push and outmaneuver [the opponent/competition]."
+SPEAKER_01: "You have a lot of power/strength over there."
+SPEAKER_02: "It's okay."
+SPEAKER_02: "I came from the front to recover the driver's position."
+SPEAKER_01: "Really?"
+SPEAKER_01: "Both drivers need to get out of there."
+SPEAKER_01: "Okay."
+SPEAKER_01: "Keep both feet firmly planted."
+SPEAKER_01: "Alright."
+SPEAKER_01: "After a long rally, they moved forward, but the attempt was unsuccessful."
+SPEAKER_02: "That's a measure that can be taken if the scale is large enough."
+SPEAKER_02: "Avoiding with a vertical jump during a long rally is one option, but it's a response to dealing with the lingering emptiness after a forward jump."
+SPEAKER_02: "This is difficult to deal with."
+SPEAKER_01: "A very cautious and measured approach."
+SPEAKER_01: "A rain cover with ample driving visibility."
+SPEAKER_00: "It's quite slow, isn't it?"
+SPEAKER_01: "Bodywork."
+SPEAKER_02: "I bet she has an incredible amount of free time."
+SPEAKER_02: "She has a very aggressive driving style, and that makes it dangerous to challenge her."
+SPEAKER_02: "She takes good care of herself. It's almost like she's trying to charm people, because she's quick to connect with anyone she meets."
+SPEAKER_00: "Well, that's enough. I'm stopping now."
+SPEAKER_02: "We have very limited time available."
+SPEAKER_00: "Oh, so you have time as well."
+SPEAKER_01: "This will take 20 seconds."
+SPEAKER_00: "Within this timeframe, there's an unbelievable amount of various things that we can't even imagine."
+SPEAKER_02: "I start to think about it."
+SPEAKER_02: "I read it aloud, and these three people stopped."
+SPEAKER_02: "Lee."
+SPEAKER_00: The monkey… it’s definitely the final round with the lethal team. It feels like this will decide it, just those four of them.
+SPEAKER_00: We need to make sure this doesn't happen again. And Moca, Lisa's... that troublesome Muka, Lisa's gauge is about this much.
+SPEAKER_00: “It’s about this length, isn't it? Make sure you don't cut it past this line. Yes, yes, yes. This is the line you need to be careful with.”
+SPEAKER_02: “You can get them, so your positioning on the front line will become stronger. Yes, it’s really noticeable. It’s stopping.”
+SPEAKER_00: That's amazing.
+SPEAKER_00: "You're getting emotionally attached to the error, but you were really paying close attention."
+SPEAKER_00: "They're still making progress towards the goal."
+SPEAKER_00: "That's right."
+SPEAKER_00: "It's an incredible match."
+SPEAKER_00: "It's amazing, isn't it? Amazing."
+SPEAKER_00: "It's incredible. It's just too amazing."
+SPEAKER_01: Sigh.
+SPEAKER_01: This way, we're currently in third place for the Audishacker, but it was perfect.
+SPEAKER_02: So, we've already won one set. Alright, Gamagard, this is intense.
+SPEAKER_02: High power, oh, Audica, your guard is decreasing.
+SPEAKER_01: Wow, quite the attack.
+SPEAKER_01: And a great victory.
+SPEAKER_01: A significant lead.
+SPEAKER_01: However, a hostile away crowd.
+SPEAKER_02: Indeed, it was less than the away crowd's current engagement level.
+SPEAKER_02: Amazing.
+SPEAKER_02: Daggy wants to throw Daggy to recover quickly.
+SPEAKER_00: It looks simple, and easy to do.
+SPEAKER_00: It definitely seems that way, doesn't it? It looks simple, and easy. Seriously, it's not like Beijing, or something.
+SPEAKER_01: It makes you feel that way, doesn't it? It definitely does. And it absolutely won't tolerate anything. There are monkeys here, you see.
+SPEAKER_01: That's incredible. It's really intense.
+SPEAKER_02: I made sure to respond to that thoroughly.
+SPEAKER_02: It's okay.
+SPEAKER_02: Good luck.
+SPEAKER_02: If you engage the overdrive function, it seems to respond quite well, yes.
+SPEAKER_02: That's right.
+SPEAKER_02: It showcases a sweet and skillful technique.
+SPEAKER_02: By the way, Goki has less HP than the other characters.
+SPEAKER_02: Indeed, you're quite impressive.
+SPEAKER_02: Oh, so this is spicy.
+SPEAKER_03: There's no benefit to using this weapon, and it only causes damage.
+SPEAKER_03: It's 9000, and I believe the default setting is that.
+SPEAKER_03: It was 10,000, and they ranked it based on that line.
+SPEAKER_03: When you use it, it feels so powerful. When you land a combo, it feels amazing – it hits really well and deals a lot of damage.
+SPEAKER_03: As you get to this level, it probably won't be easy to do. By the way, who speaks during Tachikawa-san's "Twema" events?
+SPEAKER_00: "As Mr. Tachikawa said, but there's no need to speak."
+SPEAKER_00: Not really.
+SPEAKER_00: "I wonder if they'll think for themselves."
+SPEAKER_00: "It's not about them thinking for themselves; it's about coaching them."
+SPEAKER_00: "She's so cute."
+SPEAKER_00: "You seemed to agree."
+SPEAKER_03: "Oh, Jasper."
+SPEAKER_02: "Kachika-san looks really serious."
+SPEAKER_02: "He's truly skilled in how he handles situations with the department head."
+SPEAKER_02: "Even among professionals, there are a lot of people who can't do that well."
+SPEAKER_02: "He's that good."
+SPEAKER_01: "Is this as good as it gets?"
+SPEAKER_01: "A significant lead against Tachika."
+SPEAKER_01: "The same thing as before."
+SPEAKER_01: "Delicious."
+SPEAKER_01: "Please put Taro at the edge of the screen."
+SPEAKER_01: Delicious.
+SPEAKER_01: "Respond from the edge of the screen as well."
+SPEAKER_01: Wow.
+SPEAKER_01: "I want to bring something to life on the edge of the screen."
+SPEAKER_03: "Seriously, isn't it moving too fast somehow?"
+SPEAKER_03: "It's flying, after all."
+SPEAKER_02: "Hello. You're cute."
+SPEAKER_01: "And the situation on the edge of the screen."
+SPEAKER_01: Wait.
+SPEAKER_01: "But we still have a stamina advantage, so there are still opportunities to attack."
+SPEAKER_00: "Oh no, this is bad."
+SPEAKER_00: "I said."
+SPEAKER_00: "Tatsukawa's style is modern, but it's just so different from my own."
+SPEAKER_00: "And even starting from that one opportunity, it's hard to believe it's the same kind of modern style."
+SPEAKER_03: "It really feels like I've mastered this seemingly simple four-throw combination."
+SPEAKER_01: "And there are various things there."
+SPEAKER_00: "It will likely come before I start throwing it four times."
+SPEAKER_00: "I'm thinking about the potential for future growth, or something like that."
+SPEAKER_02: "And actually, it's just a bucket for throwing things."
+SPEAKER_02: "The background music is really great."
+SPEAKER_03: "I think, well, you probably don't listen to the background music much, do you?"
+SPEAKER_01: "While continuing development, we need to move quickly, really quickly."
+SPEAKER_01: "The edge of the screen now reflects how Mr. Tatsu kawa is carrying it."
+SPEAKER_01: "Tatsu kawa, pushing forward."
+SPEAKER_01: "This is Risalta."
+SPEAKER_01: This is intense. It's like this. How kind. Even in a close round, they're still professionals. True professionals.
+SPEAKER_02: That's truly professional. They're so skilled. And they're once again portraying a SAG Award-worthy character.
+SPEAKER_02: They're competing against professionals.
+SPEAKER_02: I really like it.
+SPEAKER_00: I understand.
+SPEAKER_00: What was it?
+SPEAKER_00: Experience it from above.
+SPEAKER_00: Someone's behind me, arms crossed, watching.
+SPEAKER_03: It feels like someone's standing behind a game machine at the arcade, watching.
+SPEAKER_01: It's not over here.
+SPEAKER_01: That's nice.
+SPEAKER_03: I want to watch from behind.
+SPEAKER_01: Drive is in the lead.
+SPEAKER_01: Rush.
+SPEAKER_01: I'm feeling nostalgic.
+SPEAKER_01: Shagapooma's.
+SPEAKER_02: I saw their face.
+SPEAKER_01: They consistently took significant damage from the red area.
+SPEAKER_00: Isn't this a Reverse Cyber song? It's so fun.
+SPEAKER_01: I could only deal damage, but you're right.
+SPEAKER_01: I was watching.
+SPEAKER_01: But I handled it properly.
+SPEAKER_00: It looks like it will work well.
+SPEAKER_01: Is it okay to go now?
+SPEAKER_00: The water flows gently.
+SPEAKER_01: The accuracy of the walk-through security system is also very high, and the security checks are certainly strict.
+SPEAKER_02: I managed to catch it.
+SPEAKER_03: I'm Burnout.
+SPEAKER_03: I'm experiencing burnout.
+SPEAKER_02: If you're going to do that, I think it's okay to Burnout.
+SPEAKER_03: I Burnout.
+SPEAKER_02: No, just one genre.
+SPEAKER_03: It's good to be experiencing burnout.
+SPEAKER_03: It doesn't seem like [they] have it, but what's wrong?
+SPEAKER_03: Even when you're on guard, you still take damage.
+SPEAKER_03: Damage was taken.
+SPEAKER_03: I can't parry, I can't land a solid hit, and I can't deliver a powerful attack.
+SPEAKER_02: It's difficult to handle.
+SPEAKER_02: I used my gauge.
+SPEAKER_02: It's quite direct.
+SPEAKER_03: If you can hit with guard, it's a big advantage.
+SPEAKER_01: It's quite playful.
+SPEAKER_01: Reduce it as much as possible.
+SPEAKER_01: That's good.
+SPEAKER_00: Memo, congratulations.
+SPEAKER_00: Wow, you must be tired.
+SPEAKER_02: Everyone, Nina, that's incredible!
+SPEAKER_00: No, this is without V-Sai.
+SPEAKER_00: I don't have a partner.
+SPEAKER_00: I can't let this out.
+SPEAKER_00: I don't have anyone.
+SPEAKER_00: I managed it.
+SPEAKER_01: The first round is against the winning team.
+SPEAKER_01: Wow, these 100 teams... it's all about luck.
+SPEAKER_02: I let my pride get the better of me.
+SPEAKER_02: I managed to get one back.
+They're following along at the edges of the screen. They're there.
+SPEAKER_01: And I'm going to start typing.
+SPEAKER_01: I typed in front of the shadow.
+SPEAKER_01: Now, the Drive team is battling with a red mocha.
+SPEAKER_02: You skillfully used Paris to recover, didn't you?
+SPEAKER_02: They turned it around.
+SPEAKER_02: Oh, they missed.
+SPEAKER_02: They haven't caught it.
+SPEAKER_02: If it fails under pressure, it will end up behind.
+SPEAKER_01: Oh, that's boring.
+SPEAKER_01: See, they're stuck together.
+SPEAKER_02: Isn't that right? / Don't you think so?
+SPEAKER_02: Various things, roughly speaking, around 2800.
+SPEAKER_00: Oh no, Eva. / That's bad, Eva.
+SPEAKER_02: What should I do? If I take this, it's going to be bad.
+SPEAKER_01: Wow, next. Uh, this is the countermeasure. It means we shouldn't go forward.
+SPEAKER_01: It was a supernova, and it was a supernova, wasn't it, Sasuke?
+SPEAKER_01: This is your chance to jump to it. Oh my, oh my, oh my, my heart is racing.
+SPEAKER_00: With ease, with ease. Ah, Eris! Uh, wow! It's Tekker's Full Round Breath.
+SPEAKER_01: This is bad, wait, it's about to start.
+SPEAKER_01: Here, is this Hyakuen's Taiyou Misuriku, showing off Hyakuen's professionalism, Tachikawa?
+SPEAKER_01: This is dangerous too.
+SPEAKER_01: I'm going to add more to see.
+SPEAKER_01: Now, wait here.
+SPEAKER_01: It's S2, isn't it?
+SPEAKER_02: It's the S2 team from the soba division, isn't it? That's right.
+SPEAKER_02: And the decision to take the drive.
+SPEAKER_01: The drive didn't work out.
+SPEAKER_04: This steering feels really good.
+SPEAKER_01: I pressed the button.
+SPEAKER_01: And, Katsu is just Katsu.
+SPEAKER_01: Look back.
+SPEAKER_01: Should I take the ball away from Katsu?
+SPEAKER_01: I'll give it a try.
+SPEAKER_02: You're really good.
+SPEAKER_02: I recovered the drive.
+SPEAKER_01: I miss home.
+SPEAKER_01: Declining birthrate.
+SPEAKER_01: But this, this is a cage.
+SPEAKER_02: As a charm, or as a way to handle things, it's just about being careful, or just doing this.
+SPEAKER_02: Well, really? It ends like this.
+SPEAKER_00: Really? Yes, that's right.
+SPEAKER_02: Wow, that's incredible.
+SPEAKER_02: Wow, it's making me tear up, seriously.
+SPEAKER_00: Wow, I'm really moved.
+SPEAKER_00: Wow, I'm really touched.
+SPEAKER_00: I understand.
+SPEAKER_02: Okay, so with that, let's move on to the V-selection.
+SPEAKER_02: Wow, a perfect score! That's amazing.
+SPEAKER_00: Congratulations! That's incredible. Congratulations!
+SPEAKER_00: Wow, everyone won! That's amazing. This is what it means to be a real professional. Seriously, you can really become a pro.
+SPEAKER_00: Moca, you can become a pro.
+SPEAKER_01: From now on, Moca, you should soar to the world.
+SPEAKER_00: Wow, that's amazing.
+SPEAKER_00: It's really making me cry.
+SPEAKER_00: I was deeply moved.
+SPEAKER_02: I'm worried about the next team.
+SPEAKER_00: It's really moving.
+SPEAKER_02: He's an incredible soccer player, truly amazing.
+SPEAKER_02: Really.
+SPEAKER_02: I was truly moved.
+SPEAKER_02: I think it showed my ability to adapt, and perhaps it highlighted the trust I've built with the coach.
+SPEAKER_02: This is our game.
+SPEAKER_00: It was the first time I've seen someone get emotional watching my play, and honestly, it was incredible. It wasn't just that they were good; it was something more.
+SPEAKER_02: It was a player who, just watching them, made me feel a sense of awe.
+SPEAKER_03: Thinking about all the effort I put in to overcome an opponent like this, it really hits differently.
+SPEAKER_01: So, and here's the number one player, sent from the commentary booth.
+SPEAKER_01: Mr. Hirayama, from the stage, please go ahead.
+SPEAKER_04: It finishes somewhat if you don't initiate conversation first, but Tasika-san,
+SPEAKER_04: How was it, losing in the third round?
+SPEAKER_04: I wish it had been in the third round.
+SPEAKER_02: How would you describe Hamai's skill?
+SPEAKER_02: Yes, indeed.
+SPEAKER_02: In San-gen, the stronger player wins.
+SPEAKER_02: We can definitely handle it and win.
+SPEAKER_02: Let me be the one who handles it.
+SPEAKER_02: I was starting to wonder if they might be competing in a higher league. Maybe they're really that good.
+SPEAKER_02: And then there was Bon, appearing and disappearing, which was tough. There was a sense of mystery about them. Seriously, I'm so happy right now. Please, Chan, tell me everything.
+SPEAKER_02: There were 34 of them, it seemed.
+SPEAKER_02: I really felt affected by how they appeared and disappeared. It also showed a bit of the coach's skill, I think.
+SPEAKER_04: No, well, Mr. Tanaka is saying that, but Ms. Moka, was that really the case there?
+SPEAKER_04: The coach's movements, the way they adapted...
+SPEAKER_03: Yes, that's right.
+SPEAKER_03: People often tell me I look quite similar, so...
+SPEAKER_03: I'll work hard to look even more alike.
+SPEAKER_02: Yes.
+SPEAKER_02: Well, it's kind of like this, you know.
+SPEAKER_02: Next year's Cup Competition is being held here.
+SPEAKER_04: It's really quite nice, you know.
+SPEAKER_02: And they definitely want you to come.
+SPEAKER_02: Um, and regarding that,
+SPEAKER_02: I'm working hard, receiving guidance from Amaii-san again, starting from the very beginning.
+SPEAKER_02: I would like to continue to do my best.
+SPEAKER_04: Thank you for your continued support.
+SPEAKER_04: Yes, thank you very much, Mr./Ms. Tsubaki.
+SPEAKER_04: Well, that was a remarkable victory for Mr. Konmoto. As for you, Coach, how was it for Bon?
+SPEAKER_05: Wow, things really got heated, didn't they?
+SPEAKER_05: The cheering was incredible, too.
+Wow.
+SPEAKER_05: But it's really going according to plan.
+SPEAKER_05: How's the movement?
+SPEAKER_05: It's when that really shows, and it leads to wins, that you feel like, "We really did good practice together."
+SPEAKER_05: Seeing those results like this is truly the most rewarding.
+SPEAKER_05: They really seemed determined to win.
+SPEAKER_05: Moko, well...
+SPEAKER_05: While it wasn't ideal for us to lose, let's say Moko won this time. I think we'll have other opportunities to compete again.
+SPEAKER_05: And that's that.
+SPEAKER_05: I hope we can have another good match next time.
+SPEAKER_05: There's still a ways to go, so please do your best.
+SPEAKER_04: Yes, thank you very much.
+SPEAKER_04: There's still another match coming up, so...
+Yes.

@@ -1,0 +1,16 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-11 08:25:23.598.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-11 08:25:23.599.
+Test Suite 'HighQualityJobTests' started at 2026-08-11 08:25:23.599.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRealOfflineBackendFunctionalGateWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRealOfflineBackendFunctionalGateWhenOptedIn]' passed (48.415 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-11 08:26:12.014.
+	 Executed 1 test, with 0 failures (0 unexpected) in 48.415 (48.415) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-11 08:26:12.014.
+	 Executed 1 test, with 0 failures (0 unexpected) in 48.415 (48.415) seconds
+Test Suite 'Selected tests' passed at 2026-08-11 08:26:12.014.
+	 Executed 1 test, with 0 failures (0 unexpected) in 48.415 (48.416) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

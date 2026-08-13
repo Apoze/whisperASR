@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "ticket": 71,
+  "baseCommit": "9768f968d0cc042f884f499951a06b4415c9f2b1",
+  "branch": "codex/issue-71-pressure-worker",
+  "testToolchain": "/Applications/Xcode.app/Contents/Developer",
+  "metallibCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer Scripts/build_mlx_metallib.sh debug",
+  "liveResourceTestCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --filter LiveCaptionTests/testCoherePrototypeQuantizationCanBeSelectedWithoutLoadingModels",
+  "fullTestCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test",
+  "fullTestResult": {
+    "executed": 386,
+    "skipped": 48,
+    "failures": 2,
+    "durationSeconds": 4.604,
+    "rawLog": "docs/japanese-live/experiments/evidence/E20-worker/final-full-tests.log",
+    "rawLogSHA256": "2d7400cd7c4e161f94f2c865e3fa3b79554bfcc9949d2840eccf0cbf546e68f6",
+    "knownBaseFailure": "E13 contextBytes is stale by 32 bytes for development and holdout after conversationContextByCueID was added before base 9768f96"
+  },
+  "lightTestCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --skip-build --filter '(HeavyweightModelGateTests|HighQualityJobTests|HighQualityLocalTranslationTests|HighQualityTranslationIntegrityTests|HighQualityTranslationWorkerTests)'",
+  "lightTestResult": {
+    "executed": 73,
+    "skipped": 6,
+    "failures": 0,
+    "durationSeconds": 3.525,
+    "rawLog": "docs/japanese-live/experiments/evidence/E20-worker/final-light-tests.log",
+    "rawLogSHA256": "daec9e4edaed6a80c97e56b4c2a591dbeca7565d647f435d7a0f75d8e1a8a2bd"
+  },
+  "heavyTestCommand": "BENCHMARK_SLOT_GRANTED=71 WHISPERASR_RUN_TRANSLATEGEMMA_WORKER_SMOKE=1 WHISPERASR_TRANSLATEGEMMA_SMOKE_INPUT=/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/raw-asr.json WHISPERASR_TRANSLATEGEMMA_SMOKE_OUTPUT=/Users/maz/.codex/worktrees/79b9/whisperASR/docs/japanese-live/experiments/evidence/E20-worker/worker-smoke.json DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --filter HighQualityLocalTranslationTests/testRealTranslateGemmaWorkerMemorySmokeWhenOptedIn",
+  "developmentInput": {
+    "role": "development",
+    "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/raw-asr.json",
+    "sha256": "b7281fdd3226930a4dc59758eb5e192642747ad6f9d18d942b850288ad42a394",
+    "cueCount": 8
+  },
+  "holdoutOpened": false,
+  "reviewResult": {
+    "standards": "no residual findings",
+    "spec": "no residual findings"
+  },
+  "heavyRunStatus": "passed",
+  "heavyTestResult": {
+    "executed": 1,
+    "failures": 0,
+    "xctestDurationSeconds": 27.494,
+    "workerDurationSeconds": 27.433130979537964,
+    "processIdentifier": 31191,
+    "exitStatus": 0,
+    "forcedTermination": false,
+    "runtimePeakMemoryBytes": 10663466936,
+    "modelReportedPeakMemoryBytes": 7348101954,
+    "minimumAvailableMemoryBytes": 5657083904,
+    "pressureTransitions": [],
+    "swapUsedBeforeBytes": 2975334400,
+    "swapUsedAfterBytes": 2975334400,
+    "uniqueCueCount": 8,
+    "nonemptyOutputCount": 8,
+    "evidence": "docs/japanese-live/experiments/evidence/E20-worker/worker-smoke.json",
+    "evidenceSHA256": "b3899675171d2b662b5ac42203f883aa1845c09ff5df40f02dfa827133e47d95",
+    "rawWorkerLog": "docs/japanese-live/experiments/evidence/E20-worker/worker-runtime/worker.log",
+    "rawWorkerLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

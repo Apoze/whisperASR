@@ -1,0 +1,68 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TEMP="$(mktemp -d)"
+trap 'rm -rf "$TEMP"' EXIT
+source "$ROOT/Scripts/run_mossformer2_oracle_experiment.sh"
+
+WARNING_CLEANUP_MEMORY=""
+WARNING_CLEANUP_COUNT=0
+pressure_guard_decision warning 1000 100
+[[ "$PRESSURE_STOP_REASON" == native-pressure-warning ]]
+WARNING_CLEANUP_RETRY_ENABLED=true
+pressure_guard_decision warning 1000 100
+[[ -z "$PRESSURE_STOP_REASON" && "$WARNING_CLEANUP_MEMORY" == 1000 \
+  && "$WARNING_CLEANUP_COUNT" == 1 ]]
+pressure_guard_decision normal 900 100
+[[ -z "$PRESSURE_STOP_REASON" && -z "$WARNING_CLEANUP_MEMORY" ]]
+pressure_guard_decision warning 1000 100
+pressure_guard_decision warning 900 100
+[[ "$PRESSURE_STOP_REASON" == native-pressure-warning-persisted ]]
+WARNING_CLEANUP_MEMORY=""
+pressure_guard_decision warning 1000 100
+pressure_guard_decision normal 1200 100
+[[ "$PRESSURE_STOP_REASON" == post-warning-memory-growth ]]
+WARNING_CLEANUP_MEMORY=""
+pressure_guard_decision critical 1000 100
+[[ "$PRESSURE_STOP_REASON" == native-pressure-critical ]]
+
+RECOVERY_SAMPLE_DELAY_SECONDS=0
+SHUTDOWN_GRACE_SECONDS=1
+run_guarded "$TEMP/completed.json" "$TEMP/completed.log" 5 "" /bin/sleep 1
+jq -e '.stopReason == "completed" and .exitStatus == 0 and
+  .rawSamples.sha256 != null' "$TEMP/completed.json" >/dev/null
+
+CATASTROPHIC_MEMORY_PERCENT=0
+if run_guarded "$TEMP/stopped.json" "$TEMP/stopped.log" 5 "" /bin/sleep 30; then
+  exit 1
+fi
+jq -e '.stopReason == "catastrophic-process-memory" and .exitStatus != 0 and
+  .forcedTermination == false' "$TEMP/stopped.json" >/dev/null
+
+CATASTROPHIC_MEMORY_PERCENT=90
+RUNAWAY_GROWTH_PERCENT=0
+RUNAWAY_WINDOW_SAMPLES=2
+touch "$TEMP/model-loaded.json"
+if run_guarded "$TEMP/runaway.json" "$TEMP/runaway.log" 5 \
+  "$TEMP/model-loaded.json" /bin/sleep 30; then
+  exit 1
+fi
+jq -e '.stopReason == "post-load-runaway" and
+  .postLoadRunawayGuard.modelLoadedObserved == true' "$TEMP/runaway.json" >/dev/null
+
+RUNAWAY_GROWTH_PERCENT=25
+RUNAWAY_WINDOW_SAMPLES=30
+RECOVERY_SAMPLE_DELAY_SECONDS=3
+(
+  trap cleanup_active_process EXIT
+  trap 'handle_signal INT' INT
+  trap 'handle_signal TERM' TERM
+  run_guarded "$TEMP/interrupted.json" "$TEMP/interrupted.log" 30 "" /usr/bin/true
+) &
+guard="$!"
+sleep 1
+kill -TERM "$guard"
+wait "$guard" 2>/dev/null || true
+jq -e '.stopReason == "runner-interrupted-TERM" and .exitStatus == 0' \
+  "$TEMP/interrupted.json" >/dev/null

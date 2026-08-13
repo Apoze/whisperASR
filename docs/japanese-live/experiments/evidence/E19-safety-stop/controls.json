@@ -1,0 +1,11 @@
+{
+  "build": true,
+  "sourceDecode": true,
+  "referenceIntegrity": true,
+  "modelPreparation": true,
+  "realCancellation": true,
+  "failureClassification": true,
+  "artifactParsing": true,
+  "selectableBackends": true,
+  "paidAPIAbsent": true
+}

@@ -1,0 +1,26 @@
+ticket=62
+classification=infrastructure-preflight
+heavyModelStarted=false
+
+attempt=1
+result=failed-before-model
+reason=worktree COMET venv absent
+requestedPath=/tmp/whisperASR-ticket62.T0MjTn/.build/comet-venv/bin/python
+verifiedFallback=/Users/maz/Documents/projets/whisperASR/.build/comet-venv/bin/python
+verifiedCOMETVersion=2.2.7
+verifiedTorchVersion=2.13.0
+verifiedMPSAvailable=true
+resolution=fallback limited to verified principal-repository venv
+
+attempt=2
+result=failed-before-model
+reason=derived local reference locators absent in isolated worktree
+resolution=symlink only each missing locator to its existing principal-repository file; normal manifest SHA-256 verification remained mandatory
+qudu2fx3ncc/reference.csv=df0bce85845cca243e0ed4ae3c5b885e519cc4f0aada9c6ddb1b169cb22f93ba
+qudu2fx3ncc/character-alignment.jsonl=abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7
+qudu2fx3ncc/speaker-map.json=4e1326ac13fab5c76b07451600e6553c65e824b278a1b4c4ce7192e77a73497b
+md62mmdz0m/reference.jsonl=c1f08461fb393d40cc3e82dc22c3f3befd066b3dd091b6522547228db86996df
+md62mmdz0m/character-alignment.tsv=446e7a00ad003b904e3de90786ef65f1829cc063217638535b134c084f2db925
+verification=see corpus-preflight.tsv
+
+qualityConclusion=none

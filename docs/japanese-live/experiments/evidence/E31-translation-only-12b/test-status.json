@@ -1,0 +1,8 @@
+{
+  "livePassed": true,
+  "fullSwiftPassed": true,
+  "sha256": {
+    "live-tests.log": "67ff672a6f9fff96679983db191f0474a42a290ae842f2c47ed08bf908e347ed",
+    "full-swift-test.log": "f9fd2d5ddafa869c2c0da32f7742df68b8f2766db22b2b4dd2f55a6b557b2243"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "recordedBeforeScoring": true,
+  "ticket": 56,
+  "model": {
+    "id": "google/metricx-24-hybrid-large-v2p6-bfloat16",
+    "revision": "febb720e29a059df2e8af3ffd71dcdc9e0a24910",
+    "license": "Apache-2.0",
+    "modelCard": "https://huggingface.co/google/metricx-24-hybrid-large-v2p6-bfloat16",
+    "weight": {
+      "file": "pytorch_model.bin",
+      "bytes": 2459348101,
+      "gitBlobOID": "9de31d966b258310857433bc21ce75497eb4a81e",
+      "sha256": "b1f2c03ab5ec5318a55b90b42eefa22431daa7b1a8e28a97a6aef23d18a24278",
+      "dtype": "bfloat16"
+    }
+  },
+  "tokenizer": {
+    "id": "google/mt5-xl",
+    "revision": "63fc6450d80515b48e026b69ef2fbbd426433e84"
+  },
+  "runtimeSource": {
+    "repository": "https://github.com/google-research/metricx",
+    "revision": "fc4978eb064670f7cc33e93ea4f52d38396b8ae6",
+    "modelClass": "metricx24.models.MT5ForRegression",
+    "officialMaximumInputTokens": 1536,
+    "officialScoreRange": [
+      0,
+      25
+    ],
+    "scoreDirection": "lower-is-better",
+    "mode": "reference-free-qe",
+    "appleSilicon": "The official predictor falls back to PyTorch CPU when CUDA is absent. E15 freezes that native arm64 CPU path; it does not claim unsupported MPS execution. Exact runtime versions are captured by each run.",
+    "experimentRequirements": "Scripts/metricx_24_requirements.txt"
+  },
+  "exclusions": [
+    "COMETKiwi",
+    "XCOMET",
+    "paid APIs",
+    "hosted quality estimation",
+    "translation rewriting"
+  ]
+}

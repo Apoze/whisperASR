@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E17-speaker-count",
+  "corpusID": "md62mmdz0m",
+  "corpusRole": "untouched-holdout",
+  "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+  "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+  "corpusManifestPath": "docs/japanese-live/corpora/md62mmdz0m/manifest.json",
+  "corpusManifestSHA256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc",
+  "frozenUpstreamEvidencePath": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/principal-speaker-attribution/holdout/88088247-41D7-4780-94F1-7EC7630DD312/raw-asr.json",
+  "frozenUpstreamEvidenceSHA256": "bf6dca09b8686d353c63035d43747c0778dd7b61adf880e3b8e1d57df775bc1f",
+  "priorAutoEvidencePath": "docs/japanese-live/experiments/evidence/E16/holdout-quantized-raw-asr.json.gz",
+  "priorAutoEvidenceSHA256": "8682c66080ff86234c49c09acbb35d9d7ca065205587504d1760d43149e7ae7f",
+  "expectedSpeakerCount": 3,
+  "expectedCountProvenance": "3 unique named Speakers in the authoritative annotations",
+  "jobs": {
+    "baseline": "59000002-0000-4000-8000-000000000001",
+    "candidate": "59000002-0000-4000-8000-000000000002"
+  },
+  "baseCommit": "72fabb14eb29268be7a1f959d52d8dd156138867",
+  "settings": {
+    "baseline": {
+      "precision": "quantized",
+      "useExclusiveReconciliation": false,
+      "principalAttribution": "longest-overlap-stable-label-span",
+      "speakerCountPolicy": "automatic",
+      "numberOfSpeakers": null,
+      "clusterDistanceThreshold": null,
+      "fullRedundancy": true
+    },
+    "candidate": {
+      "precision": "quantized",
+      "useExclusiveReconciliation": false,
+      "principalAttribution": "longest-overlap-stable-label-span",
+      "speakerCountPolicy": "expected",
+      "numberOfSpeakers": 3,
+      "clusterDistanceThreshold": null,
+      "fullRedundancy": true
+    }
+  },
+  "failurePolicy": {
+    "candidateAttribution": "withheld until build, source, input, artifact, model-load and memory-release controls pass"
+  },
+  "executionImplementationSHA256": {
+    "Sources/HighQualityJob.swift": "4af6bed01967f7ff751023d0a476dfe235d97a8379c73e41cfad1212ca1ec2ad",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "8d69c054ac91dbe3e945bf4ff2170df19722cd6905222022ea57b5e0ef30e389",
+    "Tests/HighQualityAcceptanceTests.swift": "c956d3cbfaee770d402537843054f792cd71a741d32edcd48a79a768aca1cd33",
+    "Tests/HighQualityJobTests.swift": "35ef98cf6053c1d2ba168e521548a2306c1a126f8e67814bcd173f409e311037",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66"
+  },
+  "reviewedImplementationSHA256": {
+    "Sources/HighQualityJob.swift": "4af6bed01967f7ff751023d0a476dfe235d97a8379c73e41cfad1212ca1ec2ad",
+    "Sources/HighQualityJobView.swift": "8440505edf876e4b36026fe77974bab8ce85bd6b050acaee753a1aeae9273416",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "8d69c054ac91dbe3e945bf4ff2170df19722cd6905222022ea57b5e0ef30e389",
+    "Tests/HighQualityAcceptanceTests.swift": "c956d3cbfaee770d402537843054f792cd71a741d32edcd48a79a768aca1cd33",
+    "Tests/HighQualityJobTests.swift": "35ef98cf6053c1d2ba168e521548a2306c1a126f8e67814bcd173f409e311037",
+    "Scripts/run_speaker_count_experiment.sh": "081c72b94c79cda05df614092cc5fe11328f8c00fe880871808a7d5821327372",
+    "Scripts/report_speaker_count.py": "c7c1caf36dd773dbe2a9a2de5b458ad48584035af4f573a989a24ecd6ab0fac2",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66"
+  },
+  "scoringImplementationSHA256": {
+    "Scripts/report_speaker_count.py": "c7c1caf36dd773dbe2a9a2de5b458ad48584035af4f573a989a24ecd6ab0fac2",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66"
+  },
+  "supersededScoringImplementationSHA256": {
+    "Scripts/report_speaker_count.py": "fa28bf85cc0ee703b48fe0bc53b7c80fbb754128e39be478daa6004fdf23ffd8"
+  },
+  "scoringCorrection": "Raw model artifacts were reused; initial, holdout-authorization and current scorer hashes are retained separately.",
+  "unchangedImplementations": {
+    "Sources/AppleLiveServices.swift": {
+      "baseSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6",
+      "candidateSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6"
+    },
+    "Sources/HighQualityForcedAlignerRuntime.swift": {
+      "baseSHA256": "62fc210589ae02f3b691e815b47bbe07527d03c03e1c5c026d35f463f577d47c",
+      "candidateSHA256": "62fc210589ae02f3b691e815b47bbe07527d03c03e1c5c026d35f463f577d47c"
+    },
+    "Sources/HighQualityTranslationIntegrity.swift": {
+      "baseSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278",
+      "candidateSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278"
+    },
+    "Sources/LocalMLXTranslator.swift": {
+      "baseSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9",
+      "candidateSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9"
+    },
+    "Sources/QwenPseudoLiveCoordinator.swift": {
+      "baseSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202",
+      "candidateSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202"
+    },
+    "Sources/TranslationService.swift": {
+      "baseSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26",
+      "candidateSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26"
+    },
+    "Sources/HighQualityJobView.swift": {
+      "baseSHA256": "8440505edf876e4b36026fe77974bab8ce85bd6b050acaee753a1aeae9273416",
+      "candidateSHA256": "8440505edf876e4b36026fe77974bab8ce85bd6b050acaee753a1aeae9273416"
+    },
+    "Sources/AppState.swift": {
+      "baseSHA256": "999533f83e3a6667f990698ffd7eb888eb65269e366bc2813152ccc35376e311",
+      "candidateSHA256": "999533f83e3a6667f990698ffd7eb888eb65269e366bc2813152ccc35376e311"
+    },
+    "Sources/LiveRecoveryStore.swift": {
+      "baseSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94",
+      "candidateSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94"
+    },
+    "Sources/LocalCaptionPipeline.swift": {
+      "baseSHA256": "77029cf5d723e1c6d2ea87fa8b7dc3654c5646f9447aef89e0664377e8942634",
+      "candidateSHA256": "77029cf5d723e1c6d2ea87fa8b7dc3654c5646f9447aef89e0664377e8942634"
+    },
+    "Sources/LocalDiarizationShadow.swift": {
+      "baseSHA256": "757cd7f4064779b60546c11801f8571f689240d30299277ef2d6a9efb59f6631",
+      "candidateSHA256": "757cd7f4064779b60546c11801f8571f689240d30299277ef2d6a9efb59f6631"
+    },
+    "Sources/RecordingView.swift": {
+      "baseSHA256": "b530ff863f010bd38b2ea0863dc34d79263c495ddb9249d926147b73104a0c1f",
+      "candidateSHA256": "b530ff863f010bd38b2ea0863dc34d79263c495ddb9249d926147b73104a0c1f"
+    }
+  },
+  "artifactSHA256": {
+    "baseline": {
+      "japanese-transcript.txt": "931431b0fdf0ea3b19271aa7e6d54cad5365dd79d7d6c2112848e78c465606bc",
+      "english-translation-transcript.txt": "90612f54b6f4f65ec2d8a29c0f8c8766512637db4a00c7e0718da6524436a368",
+      "english-subtitles.vtt": "e5ac8806a25c32530cced457ae2120375db75cf1799f002443a4ea1fd701f750",
+      "english-subtitles.srt": "4463daf220b008f4973985f6bf703ce6e4065d445aca0f8528e18a2365ed3279",
+      "raw-asr.json": "53b9f3f07b7645ce07b3466073a6a846c529878097b250e5d7f79ddd5a76527d",
+      "manifest.json": "0afea19f438863d968cbc19df47760f3db3ae5731aeb8d572d2df45b85533b46"
+    },
+    "candidate": {
+      "japanese-transcript.txt": "931431b0fdf0ea3b19271aa7e6d54cad5365dd79d7d6c2112848e78c465606bc",
+      "english-translation-transcript.txt": "90612f54b6f4f65ec2d8a29c0f8c8766512637db4a00c7e0718da6524436a368",
+      "english-subtitles.vtt": "e5ac8806a25c32530cced457ae2120375db75cf1799f002443a4ea1fd701f750",
+      "english-subtitles.srt": "4463daf220b008f4973985f6bf703ce6e4065d445aca0f8528e18a2365ed3279",
+      "raw-asr.json": "a9097c8f4ec810ba8fcbe2acdf7cbc8b7796feb51e7f5db1c620f74afda40010",
+      "manifest.json": "fcdb2b2aa3c85f359e7d092a54536ab1532b5492f1487ac23b7a5578af84b750"
+    }
+  },
+  "executionOrchestratorSHA256": {
+    "Scripts/run_speaker_count_experiment.sh": "014abf4afc249585c3cdb4fea707959ae210bff7cba591e14ed8259119542073"
+  },
+  "scoringHistory": [
+    {
+      "role": "initial-development-report",
+      "sha256": "3035dde51b8a5206627c518e413b45c11216cfafb13751a586bc1f3d65db7ec0",
+      "decision": "development-gates-failed"
+    },
+    {
+      "role": "holdout-authorization",
+      "sha256": "fa28bf85cc0ee703b48fe0bc53b7c80fbb754128e39be478daa6004fdf23ffd8",
+      "reportPath": "docs/japanese-live/experiments/evidence/E17/pre-holdout-report.json",
+      "reportSHA256": "325cc263c984e25ecf83b502f2111a67d03f8a9242ea25c62dd9d6fa48320561"
+    },
+    {
+      "role": "current-report",
+      "sha256": "c7c1caf36dd773dbe2a9a2de5b458ad48584035af4f573a989a24ecd6ab0fac2",
+      "reportPath": "docs/japanese-live/experiments/evidence/E17/report.json"
+    }
+  ]
+}

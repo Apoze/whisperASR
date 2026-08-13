@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E16-speakerkit-precision",
+  "primaryMetric": "speaker-attributed Japanese error rate",
+  "developmentPromotionEligible": true,
+  "holdoutRun": true,
+  "promote": false,
+  "decision": "do not promote; untouched holdout did not confirm every gate",
+  "rows": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "role": "development",
+      "baseline": {
+        "DERPercent": 108.46221378765807,
+        "JERPercent": 84.74678985341754,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 6,
+        "speakerCountAbsoluteError": 6,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2706,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 91.75991861648016,
+          "unattributedCharacterCount": 2803
+        },
+        "overlap": {
+          "precisionPercent": 12.572840537928329,
+          "recallPercent": 21.743761997917225,
+          "f1Percent": 15.932862351913657,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 161.52812600135803,
+          "matchedSeconds": 20.30867370605469,
+          "missedSeconds": 73.09132629394531,
+          "falseAlarmSeconds": 141.21945229530334
+        },
+        "activityFalseAlarmSeconds": 166.46592742919927,
+        "crossSpeakerOverlapSeconds": 161.52812600135803,
+        "runtimeSeconds": 12.301220059394836,
+        "preparationSeconds": 19.97310495376587,
+        "peakMemoryBytes": 705955328
+      },
+      "candidate": {
+        "DERPercent": 104.3372738755357,
+        "JERPercent": 79.59194535421797,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 8,
+        "speakerCountAbsoluteError": 4,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2603,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 88.26720922346558,
+          "unattributedCharacterCount": 2799
+        },
+        "overlap": {
+          "precisionPercent": 12.734964313152334,
+          "recallPercent": 21.71621775984509,
+          "f1Percent": 16.054906772272066,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 159.26976227760315,
+          "matchedSeconds": 20.282947387695316,
+          "missedSeconds": 73.11705261230469,
+          "falseAlarmSeconds": 138.98681488990783
+        },
+        "activityFalseAlarmSeconds": 169.52517730712896,
+        "crossSpeakerOverlapSeconds": 159.26976227760315,
+        "runtimeSeconds": 14.059501051902771,
+        "preparationSeconds": 18.4220370054245,
+        "peakMemoryBytes": 758531608
+      },
+      "gates": {
+        "provenance": true,
+        "oneVariable": true,
+        "frozenASRAlignment": true,
+        "sameSpeakerKitRevision": true,
+        "downloadAndProgressEvidence": true,
+        "completeDiarizationEvidence": true,
+        "validDeliverables": true,
+        "translationUnchanged": true,
+        "lifecycleAndMemoryRelease": true,
+        "runtimeAndMemoryMeasured": true,
+        "zeroDuplication": true,
+        "speakerAttributedJapaneseGain": true,
+        "noSpokenContentLoss": true,
+        "declaredSpeakerMetricsDoNotRegress": true,
+        "translationAndLiveUnchanged": true,
+        "deterministicControls": true
+      },
+      "eligible": true,
+      "rawArtifacts": {
+        "baseline": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E16/development-quantized-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E16/development-quantized-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E16/development-quantized.log"
+        },
+        "candidate": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E16/development-full-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E16/development-full-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E16/development-full.log"
+        },
+        "runMetadata": "docs/japanese-live/experiments/evidence/E16/development-run-meta.json",
+        "modelInventory": "docs/japanese-live/experiments/evidence/E16/model-cache-manifest.json",
+        "controls": "docs/japanese-live/experiments/evidence/E16/controls.json"
+      }
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "role": "untouched-holdout",
+      "baseline": {
+        "DERPercent": 58.91197519861313,
+        "JERPercent": 52.275026922457776,
+        "referenceSpeakerCount": 3,
+        "candidateSpeakerCount": 3,
+        "speakerCountAbsoluteError": 0,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2247,
+          "referenceCharacterCount": 3756,
+          "ratePercent": 59.82428115015974,
+          "unattributedCharacterCount": 1005
+        },
+        "overlap": {
+          "precisionPercent": 0.7137316471213452,
+          "recallPercent": 11.698045494699713,
+          "f1Percent": 1.3453778912771313,
+          "referenceSeconds": 5.659999999999968,
+          "candidateSeconds": 92.76727151870728,
+          "matchedSeconds": 0.662109375,
+          "missedSeconds": 4.997890624999968,
+          "falseAlarmSeconds": 92.10516214370728
+        },
+        "activityFalseAlarmSeconds": 88.58141273498529,
+        "crossSpeakerOverlapSeconds": 92.76727151870728,
+        "runtimeSeconds": 8.314209938049316,
+        "preparationSeconds": 0.14949798583984375,
+        "peakMemoryBytes": 735495680
+      },
+      "candidate": {
+        "DERPercent": 58.56119756989127,
+        "JERPercent": 52.56839931296644,
+        "referenceSpeakerCount": 3,
+        "candidateSpeakerCount": 3,
+        "speakerCountAbsoluteError": 0,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2229,
+          "referenceCharacterCount": 3756,
+          "ratePercent": 59.34504792332268,
+          "unattributedCharacterCount": 1008
+        },
+        "overlap": {
+          "precisionPercent": 0.757396908278879,
+          "recallPercent": 11.698045494699713,
+          "f1Percent": 1.4226814598688904,
+          "referenceSeconds": 5.659999999999968,
+          "candidateSeconds": 87.41907548904419,
+          "matchedSeconds": 0.662109375,
+          "missedSeconds": 4.997890624999968,
+          "falseAlarmSeconds": 86.75696611404419
+        },
+        "activityFalseAlarmSeconds": 87.67603820800775,
+        "crossSpeakerOverlapSeconds": 87.41907548904419,
+        "runtimeSeconds": 10.741623997688293,
+        "preparationSeconds": 0.15240299701690674,
+        "peakMemoryBytes": 768706024
+      },
+      "gates": {
+        "provenance": true,
+        "oneVariable": true,
+        "frozenASRAlignment": true,
+        "sameSpeakerKitRevision": true,
+        "downloadAndProgressEvidence": true,
+        "completeDiarizationEvidence": true,
+        "validDeliverables": true,
+        "translationUnchanged": true,
+        "lifecycleAndMemoryRelease": true,
+        "runtimeAndMemoryMeasured": true,
+        "zeroDuplication": true,
+        "speakerAttributedJapaneseGain": true,
+        "noSpokenContentLoss": false,
+        "declaredSpeakerMetricsDoNotRegress": false,
+        "translationAndLiveUnchanged": true,
+        "deterministicControls": true
+      },
+      "eligible": false,
+      "rawArtifacts": {
+        "baseline": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E16/holdout-quantized-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E16/holdout-quantized-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E16/holdout-quantized.log"
+        },
+        "candidate": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E16/holdout-full-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E16/holdout-full-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E16/holdout-full.log"
+        },
+        "runMetadata": "docs/japanese-live/experiments/evidence/E16/holdout-run-meta.json",
+        "modelInventory": "docs/japanese-live/experiments/evidence/E16/model-cache-manifest.json",
+        "controls": "docs/japanese-live/experiments/evidence/E16/controls.json"
+      }
+    }
+  ]
+}

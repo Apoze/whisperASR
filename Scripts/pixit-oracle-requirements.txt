@@ -1,0 +1,9 @@
+huggingface-hub==0.24.7
+lightning==2.3.3
+numpy==1.26.4
+pyannote.audio[separation]==3.3.2
+scipy==1.13.1
+speechbrain==1.0.0
+torch==2.3.1
+torchaudio==2.3.1
+transformers==4.48.3

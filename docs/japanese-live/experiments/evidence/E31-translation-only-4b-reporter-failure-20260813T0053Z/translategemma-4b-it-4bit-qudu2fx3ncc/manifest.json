@@ -1,0 +1,152 @@
+{
+  "deliverables" : [
+    "english-subtitles",
+    "english-translation-transcript",
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "forced-alignment",
+    "speaker-diarization",
+    "llm-translation",
+    "export"
+  ],
+  "failures" : [
+    {
+      "message" : "English translation failed validation twice for unit-0018, unit-0138, unit-0187. No invalid Deliverable was published.",
+      "stage" : "translation"
+    }
+  ],
+  "finishedAt" : "2026-08-12T22:33:47Z",
+  "generatedFiles" : [
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "10600003-0000-4000-8000-000000000001",
+  "model" : {
+    "backend" : "qwen-ja",
+    "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-12T22:28:43Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-started",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-12T22:28:43Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-12T22:28:43Z",
+      "backend" : "qwen-ja",
+      "kind" : "unload-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-12T22:28:43Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-12T22:28:43Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-12T22:28:44Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-12T22:28:44Z",
+      "kind" : "load-started",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-12T22:28:44Z",
+      "kind" : "load-completed",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-12T22:28:44Z",
+      "kind" : "unload-completed",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-12T22:28:44Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/translategemma-4b-it-4bit"
+    },
+    {
+      "at" : "2026-08-12T22:28:49Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/translategemma-4b-it-4bit"
+    },
+    {
+      "at" : "2026-08-12T22:33:47Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/translategemma-4b-it-4bit"
+    }
+  ],
+  "peakMemoryBytes" : 2166382840,
+  "schemaVersion" : 2,
+  "selectedBackend" : "qwen-ja",
+  "source" : {
+    "byteCount" : 5064208,
+    "fileName" : "qudu2fx3ncc-raw-asr.json",
+    "modifiedAt" : "2026-08-12T22:27:40Z",
+    "path" : "\/Users\/maz\/.codex\/worktrees\/da40\/whisperASR\/.build\/benchmarks\/high-quality\/integrated-validation-106-translation-only-4b\/frozen\/qudu2fx3ncc-raw-asr.json"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : true,
+  "stageDurations" : [
+    "diarizing",
+    0.6603620052337646,
+    "translating",
+    302.869952917099,
+    "preparing-asr",
+    5.805492401123047e-05,
+    "transcribing",
+    0.0015369653701782227,
+    "preparing-diarization",
+    4.303455352783203e-05,
+    "aligning",
+    0.04931199550628662,
+    "preparing-alignment",
+    1.0013580322265625e-05,
+    "normalizing-source",
+    0.019632935523986816
+  ],
+  "startedAt" : "2026-08-12T22:28:43Z",
+  "status" : "failed",
+  "translationModel" : {
+    "modelID" : "mlx-community\/translategemma-4b-it-4bit",
+    "revision" : "5788ec08c047f3f2e17808101b8d9566ac930d58",
+    "runtimeVersion" : "3.31.4",
+    "translator" : "translategemma-4b-it-4bit",
+    "weightSHA256" : [
+      "113acb0c29997a3015af84bec2c8f967cb7b15f8959d1c26b9628b921e324c40"
+    ]
+  }
+}

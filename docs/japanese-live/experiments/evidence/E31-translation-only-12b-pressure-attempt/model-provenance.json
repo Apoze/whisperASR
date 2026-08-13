@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "weights": [
+    {
+      "modelID": "mlx-community/translategemma-12b-it-4bit",
+      "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "file": "model-00001-of-00002.safetensors",
+      "sourcePath": "/Users/maz/.cache/huggingface/hub/models--mlx-community--translategemma-12b-it-4bit/snapshots/f3dcfd54df14672fbcf0731086fb47a797a943ae/model-00001-of-00002.safetensors",
+      "sizeBytes": 76,
+      "sha256": "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af"
+    },
+    {
+      "modelID": "mlx-community/translategemma-12b-it-4bit",
+      "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "file": "model-00002-of-00002.safetensors",
+      "sourcePath": "/Users/maz/.cache/huggingface/hub/models--mlx-community--translategemma-12b-it-4bit/snapshots/f3dcfd54df14672fbcf0731086fb47a797a943ae/model-00002-of-00002.safetensors",
+      "sizeBytes": 76,
+      "sha256": "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+    }
+  ]
+}

@@ -1,0 +1,2394 @@
+{
+    "/Users/maz/.codex/worktrees/4edc/whisperASR/.build/benchmarks/standard-offline-validation-77/metrics/qudu2fx3ncc/frozen-product-baseline.en.txt": [
+        {
+            "src": "続いての大将戦ですが、甘結もか、そして立川。",
+            "mt": "In all the battles, it's all about sweet mocha and Tachikawa. Moka, please do your best.",
+            "ref": "Next up is the anchor match: Amayui Moka versus Tachikawa.",
+            "COMET": 0.537109375
+        },
+        {
+            "src": "もかさん、頑張れ！ 頑張れ！",
+            "mt": "Speaker 01: I'm here.  [Transition]  Moka, do your best! I'm counting on you. Moka. Come on, Kasan! Do your best! Rely on yourself! Please. Soon. \"Well, Tachikawa... as a professional...\"",
+            "ref": "Moka, you've got this! Go! Go!",
+            "COMET": 0.60205078125
+        },
+        {
+            "src": "立川も、プロとしての意地を見せます。",
+            "mt": "Soon. \"Well, Tachikawa... as a professional...\" Yes. \"Show them your resolve. Do it again.\" Show them your resolve; do it again.",
+            "ref": "Tachikawa says he will show his pride as a pro.",
+            "COMET": 0.52001953125
+        },
+        {
+            "src": "VCR GTAで人のパンツ覗いてきた人のことなんか、ボコボコにしてくれ。",
+            "mt": "\"Show them your resolve. Do it again.\" Show them your resolve; do it again. G He was looking at people's private information in GTA and reporting it to others. Really?",
+            "ref": "He peeked at people's underwear in VCR GTA—beat him to a pulp for us.",
+            "COMET": 0.56396484375
+        },
+        {
+            "src": "え？ そうなの？ 最低だな。",
+            "mt": "Yes, certainly. Really?",
+            "ref": "What? He did? That's the worst.",
+            "COMET": 0.5751953125
+        },
+        {
+            "src": "私とくろむさんのパンツ覗いてきたから、立川さん（笑）。",
+            "mt": "I can't forgive them for looking at Los Angeles.",
+            "ref": "Tachikawa peeked at my and Kuromu's underwear, you know. [laughs]",
+            "COMET": 0.345703125
+        },
+        {
+            "src": "なんか立川さんの切り抜きで上がってたの見たんだけどさ。なんか立川さんがめっちゃ前、5年前とかだっけ？",
+            "mt": "Takashikawa-san, perhaps? But the very beginning...",
+            "ref": "I saw a clip of Tachikawa, and it was from ages ago—like five years ago, maybe?",
+            "COMET": 0.51220703125
+        },
+        {
+            "src": "肩に鳥乗っけてるVTuberいるから、こいつにしようぜ、みたいな感じで（笑）。",
+            "mt": "I'm following Kuro. Let's try R. It feels almost natural. Really?",
+            "ref": "There was a VTuber with a bird on her shoulder, so he was like, “Let's pick this one.” [laughs]",
+            "COMET": 0.455322265625
+        },
+        {
+            "src": "［短い発話・不明瞭］",
+            "mt": "It feels almost natural. Really?",
+            "ref": "[Brief utterance unclear.]",
+            "COMET": 0.41943359375
+        },
+        {
+            "src": "ガラの悪い人の絡みみたいな（笑）。",
+            "mt": "And Tachiya, too. Tachiya",
+            "ref": "It was like watching some rough-looking guys hassle someone. [laughs]",
+            "COMET": 0.3076171875
+        },
+        {
+            "src": "（笑）怖っ。",
+            "mt": "And Tachiya, too.",
+            "ref": "[laughs] That's scary.",
+            "COMET": 0.461181640625
+        },
+        {
+            "src": "そっからなんか、「Portal 2、二人でしませんか」みたいなチャットを送って、蓮くんが……［末尾不明瞭］。",
+            "mt": "It seems like they were sending messages to each other, just the two of them. It was something like, \"It's definitely you, Ren, right?\" or \"It has to be you.\"",
+            "ref": "Then he sent a message like, “Want to play Portal 2 together?” and Ren-kun replied… [ending unclear].",
+            "COMET": 0.5556640625
+        },
+        {
+            "src": "めっちゃ仲良くなってるやん。",
+            "mt": "It was something like, \"It's definitely you, Ren, right?\" or \"It has to be you.\" We're really close. Speaker 03: Me.",
+            "ref": "They've become really close.",
+            "COMET": 0.54248046875
+        },
+        {
+            "src": "そっから仲良くなってんの、おもろい。",
+            "mt": "I think Tachikawa would probably go with a modern style. Right? Yes. It's a fleeting encounter. Modern, huh? We get along. Hmm, I see. We get along.",
+            "ref": "It's hilarious that that's how they became friends.",
+            "COMET": 0.50830078125
+        },
+        {
+            "src": "［複数話者が重なり不明瞭］",
+            "mt": "It is. Speaker 02: That's nice, that kind of encounter. ... It's not quite right. Really? Speaker 02: Really?  Speaker 02: That's interesting.  Speaker 02: There's a system here that responds with a single button, a kind of ultimate technique. Against Han's ultimate technique... In response to the technique... About how to handle it, What about how we handle it? Speaker 00: Well, that's not good. ... Now, let's get ready. Speaker 00: That's not right. Speaker 00: Now, let's get ready.",
+            "ref": "[Several speakers overlap; unclear.]",
+            "COMET": 0.44287109375
+        },
+        {
+            "src": "さあ、準備ができたようです。",
+            "mt": "Yes. Alright, let's get ready. Let's talk about \"amai imo\" and introduce what's currently trending in Tachikawa.",
+            "ref": "It looks like they're ready.",
+            "COMET": 0.5185546875
+        },
+        {
+            "src": "注目のマッチアップ、見ていきましょう。お願いします。",
+            "mt": "Let's talk about \"amai imo\" and introduce what's currently trending in Tachikawa. Please. Let's proactively challenge the department head.",
+            "ref": "Let's watch this highly anticipated matchup. Here we go.",
+            "COMET": 0.48779296875
+        },
+        {
+            "src": "焦りません。",
+            "mt": "I don't have any sweet potatoes. Waves crashing.",
+            "ref": "No panic.",
+            "COMET": 0.34912109375
+        },
+        {
+            "src": "頑張れ。立ちで前に行く。",
+            "mt": "Resilient. I believe Tachida went ahead.",
+            "ref": "Come on. Walk forward on the ground.",
+            "COMET": 0.49169921875
+        },
+        {
+            "src": "［短い反応・不明瞭］",
+            "mt": "Silence. I took it first to help with Medolab's recovery.",
+            "ref": "[Brief reaction unclear.]",
+            "COMET": 0.401123046875
+        },
+        {
+            "src": "ドライブを回復するために、先跳びからいきました。",
+            "mt": "I took it first to help with Medolab's recovery.",
+            "ref": "She went for a preemptive jump to recover her Drive Gauge.",
+            "COMET": 0.466796875
+        },
+        {
+            "src": "牽制。落ち着いて、両者距離を取ります。",
+            "mt": "Remaining calm. I'll take responsibility. \"Now.\"",
+            "ref": "A check in neutral. Both players calmly create some distance.",
+            "COMET": 0.486083984375
+        },
+        {
+            "src": "うまい。",
+            "mt": "Ma. Ma. Ode. Is it excessively long, or is it getting stuck somewhere?",
+            "ref": "Nice.",
+            "COMET": 0.448974609375
+        },
+        {
+            "src": "OD百鬼襲から前に詰めてくるところに、ジャンプから……。",
+            "mt": "Ode. Is it excessively long, or is it getting stuck somewhere? Please dismantle the remaining stock.",
+            "ref": "As Akuma closes in behind OD Hyakki Shu—Demon Raid—she answers from a jump…",
+            "COMET": 0.3896484375
+        },
+        {
+            "src": "モダンならできる対策ですね。",
+            "mt": "Please dismantle the remaining stock. That's a measure we can take.",
+            "ref": "That's an answer you can pull off with Modern controls.",
+            "COMET": 0.56982421875
+        },
+        {
+            "src": "垂直ジャンプで回避するという手なんですけど、前ジャンプ中の空対空での対応。これは対応しづらい。",
+            "mt": "That's a measure we can take. We could try avoiding it with a vertical amplifier and a bypass, but it's a matter of dealing with the remaining inventory. Here. It's difficult to counter.",
+            "ref": "A neutral jump is one way to evade it, but she answers the forward jump with an air-to-air. That's difficult to respond to.",
+            "COMET": 0.5263671875
+        },
+        {
+            "src": "かなり慎重な両者。",
+            "mt": "Speaker 02: Yes.  [Transition to:] The American mocha, which offers a satisfying driving experience, feels a bit slow. Speaker 02: Careful.  [Transition to:] The American mocha, which is great for driving, feels a little slow. Careful consideration.",
+            "ref": "Both players are being extremely cautious.",
+            "COMET": 0.385986328125
+        },
+        {
+            "src": "時間もかなり少ない状況です。",
+            "mt": "Speaker 02: Yes. ー",
+            "ref": "There is very little time left.",
+            "COMET": 0.3671875
+        },
+        {
+            "src": "そっか、時間もあるのか。",
+            "mt": "Desire. Yes. Not much time, either. Time.",
+            "ref": "Oh, right—the clock matters too.",
+            "COMET": 0.447998046875
+        },
+        {
+            "src": "この間合いで、僕たちには考えられない、とんでもない量のいろんなこと考えてんの？",
+            "mt": "Okay. Here, the colors of thought... And the colors... Thinking.",
+            "ref": "At this spacing, are they processing an unbelievable number of things that we can't even imagine?",
+            "COMET": 0.402099609375
+        },
+        {
+            "src": "さあ、成功。3ゲージ残っています。",
+            "mt": "Hmm. Hmm. Three people stopped. Person",
+            "ref": "And it works. Three bars remain.",
+            "COMET": 0.39404296875
+        },
+        {
+            "src": "リーサルだー！ ドーーーン!!!",
+            "mt": "Yes. Yes. Yes.",
+            "ref": "It's lethal! BAAAM!!!",
+            "COMET": 0.39013671875
+        },
+        {
+            "src": "あ、もかちゃんが「リーサルのゲージはこのぐらいの長さ」みたいなこと言ってた。",
+            "mt": "Yes. Yes. Yes. Yes. Yes. Yes.",
+            "ref": "Oh, Moka said something like, “When the gauge is about this long, it's lethal.”",
+            "COMET": 0.300048828125
+        },
+        {
+            "src": "キルラインみたいな感じ？",
+            "mt": "Yes. Yes. Yes. Yes. Yes. Yes. Yes.",
+            "ref": "Like a kill-range threshold?",
+            "COMET": 0.281982421875
+        },
+        {
+            "src": "「これはやったな」みたいな。",
+            "mt": "Yes. Yes. Yes.",
+            "ref": "Like, “She's got this.”",
+            "COMET": 0.44677734375
+        },
+        {
+            "src": "待って、これ普通に観戦してるけど、相手プロだからな。",
+            "mt": "Yes. Seed. Seed. The walls, too. You can even climb walls.",
+            "ref": "Wait—we're watching this like it's normal, but her opponent is a pro.",
+            "COMET": 0.35009765625
+        },
+        {
+            "src": "そうなんだよね。",
+            "mt": "The walls, too. You can even climb walls. Speaker 00: Yes.  Speaker 00: It was quite a match.",
+            "ref": "Exactly.",
+            "COMET": 0.37939453125
+        },
+        {
+            "src": "すごいよね。",
+            "mt": "Speaker 00: Yes.  Speaker 00: It was quite a match. Okay. Great. Speaker 00: It was an amazing match. It really was. It was amazing. As of this point,",
+            "ref": "It's incredible.",
+            "COMET": 0.5029296875
+        },
+        {
+            "src": "えっ……えーっ！ 一本取ったよ！",
+            "mt": "As of this point, Ah. Yes.",
+            "ref": "What… No way! She took a game!",
+            "COMET": 0.499267578125
+        },
+        {
+            "src": "すごい！ はぁーっ！",
+            "mt": "Yes.",
+            "ref": "Amazing! Whew!",
+            "COMET": 0.5732421875
+        },
+        {
+            "src": "え、普通に感動するんだけど！",
+            "mt": "It's absolutely perfect. Perfect. Perfect.",
+            "ref": "This is honestly moving me!",
+            "COMET": 0.55712890625
+        },
+        {
+            "src": "さあ、ここで甘結もか、すでに1セット勝利。",
+            "mt": "It's absolutely perfect. Perfect. Perfect. Yes. A sweet move, securing one victory. Oh no.",
+            "ref": "And now Amayui Moka already has one set on the board.",
+            "COMET": 0.45263671875
+        },
+        {
+            "src": "かっこいいんだけど。",
+            "mt": "It's absolutely perfect. Perfect. Perfect.",
+            "ref": "That is so cool.",
+            "COMET": 0.55615234375
+        },
+        {
+            "src": "完璧でした。",
+            "mt": "Yes.",
+            "ref": "That was perfect.",
+            "COMET": 0.61767578125
+        },
+        {
+            "src": "［実況不明瞭］ガード。",
+            "mt": "Oh no. Oh no. Oh dear. De. Speaker 01: Oh dear. My defenses are decreasing. Speaker 02: Oh dear. My defenses are decreasing.",
+            "ref": "[Commentary unclear.] Guard.",
+            "COMET": 0.406982421875
+        },
+        {
+            "src": "おお、すごい攻めですね。",
+            "mt": "Speaker 02: Yes.",
+            "ref": "Oh, that's excellent pressure.",
+            "COMET": 0.44384765625
+        },
+        {
+            "src": "大きく体力リード。しかし、甘結もかが追いついた。",
+            "mt": "Yes. Yes. Yes. R.",
+            "ref": "A substantial life lead—but Amayui Moka has caught up.",
+            "COMET": 0.3115234375
+        },
+        {
+            "src": "すごい！ やばっ！",
+            "mt": "",
+            "ref": "Amazing! That's wild!",
+            "COMET": 0.39404296875
+        },
+        {
+            "src": "大丈夫よ、頑張れー！",
+            "mt": "",
+            "ref": "You're okay—keep going!",
+            "COMET": 0.420166015625
+        },
+        {
+            "src": "OD百鬼襲を打つとかなり対応されているので、そうではなく打撃戦に持ち込んで。",
+            "mt": "I returned it, my lord! Oh, a powerful challenge! A counterattack, a skillful move! Let's see what happens next! It's even better than G's! \"Ooh,\" I'll try a Dica challenge attack. Oh, really?",
+            "ref": "Her OD Hyakki Shu is being answered consistently, so instead she takes it into a direct striking battle.",
+            "COMET": 0.529296875
+        },
+        {
+            "src": "おもろい（笑）。",
+            "mt": "I returned it, my lord! Oh, a powerful challenge! A counterattack, a skillful move! Let's see what happens next! It's even better than G's! \"Ooh,\" I'll try a Dica challenge attack. Oh, really?",
+            "ref": "This is so fun. [laughs]",
+            "COMET": 0.415283203125
+        },
+        {
+            "src": "ちなみに豪鬼は、他のキャラよりもHPが少ない。",
+            "mt": "I returned it, my lord! Oh, a powerful challenge! A counterattack, a skillful move! Let's see what happens next! It's even better than G's! Their HP is lower than mine, even with Go's. Well, that's quite impressive, I suppose. Um, careful.",
+            "ref": "By the way, Akuma has less health than the other characters.",
+            "COMET": 0.465087890625
+        },
+        {
+            "src": "え、そうなんだ。そうそうそう。",
+            "mt": "Well, that's quite impressive, I suppose. Um, careful. Speaker 03: Ah.  [Context: The attack is 9000, and the default value was probably 10,000.] Speaker 04: Huh.  Speaker 04: (Pause)  Speaker 04: The attack is 9000, and the default was probably 10,000. Speaker 04: Wow.  Speaker 04: Yes. Speaker 03: Wow.  Speaker 03: Yes.",
+            "ref": "Oh, really? Yeah, exactly.",
+            "COMET": 0.476318359375
+        },
+        {
+            "src": "その分のメリットないの？",
+            "mt": "That's a lie. Speaker 02: Yes, yes. That's a unique advantage that's come out.",
+            "ref": "Doesn't he get some advantage in exchange?",
+            "COMET": 0.45263671875
+        },
+        {
+            "src": "ダメージがでかい。",
+            "mt": "That's a unique advantage that's come out. Benefit. Benefit.",
+            "ref": "His damage is huge.",
+            "COMET": 0.45263671875
+        },
+        {
+            "src": "豪鬼が9000で、デフォルトが10000だったはず。",
+            "mt": "That's a unique advantage that's come out. SPEAKER_ID: SPEAKER_03 CONTEXT_BEFORE: And from that great victory, we gained a significant lead, but there's a tendency to get complacent. Oh, wow, you're right, even now, Moka's drive gauge was a little lower. That's amazing! Daggy is so smooth in the Daggy corner, it looks so easy, doesn't it? You're right. Games often look easy, don't they? Seriously, they look easy. It makes you feel like you can't even do it. Yeah, that's true. And, of course, it won't tolerate any mistakes. There's Susanor here. This Dissolva is incredible! Wow! It was a solid counter. It's okay! Oh! Audica is challenging. It's being quite effectively countered. Yes, that's right. It's an incredibly intense battle, and Moka is unleashing her techniques. Next, Gokki has less HP than other characters, as expected. Oh, yes, she's so cute! Yes, yes, yes. But that means there's a drawback – she needs to deal a lot of damage. Yes SPEAKER_ID: SPEAKER_03 CONTEXT_BEFORE: And after that great victory, we gained a significant lead, but she's being a bit spoiled, isn't she? Ah, yes, right now, her drive gauge was a little lower. That's amazing! Daggy was so smooth around the Daggy corner, it looks so easy, doesn't it? Urotte, games often look easy, right? Seriously, they look easy. It makes you feel like, \"You can't possibly do that!\" Yes, that's true. And she won't tolerate any air breaks. Susanor is here. This disolver is incredible! That was a solid counter. It's okay, it's okay. She's challenging with Audica. She's being quite well countered, so yes. That's amazing. She's diving into a fierce battle, bringing out Moka's techniques. Next, Gokki has less HP than other characters, as expected. Ah, yes, she's so cute. Yes, yes, yes. But that gives her a disadvantage; she needs to deal more damage. Yes, she has... <<<CURRENT:cue-",
+            "ref": "Akuma has 9,000 health; I think the default is 10,000.",
+            "COMET": 0.4990234375
+        },
+        {
+            "src": "その1000、でかいの？",
+            "mt": "That line, regarding... When it's there, I think it's impressive.",
+            "ref": "Does that 1,000-point difference matter much?",
+            "COMET": 0.53369140625
+        },
+        {
+            "src": "いや、でもランクしてるとね、でかいなって思う。",
+            "mt": "When it's there, I think it's impressive.",
+            "ref": "Yeah—when you're playing ranked, you really notice the difference.",
+            "COMET": 0.58984375
+        },
+        {
+            "src": "豪鬼にコンボ刺さると、めっちゃ気持ちいいよ。めっちゃ入るから。",
+            "mt": "When it connects, it feels incredibly good. Really getting in.",
+            "ref": "Landing a combo on Akuma feels amazing because it takes off so much health.",
+            "COMET": 0.57275390625
+        },
+        {
+            "src": "ゴリゴリ削れる？",
+            "mt": "Really getting in. It really chips away. When it gets to a really abrasive level, it's probably best to keep it simple. Really rough.",
+            "ref": "You can really shred his health?",
+            "COMET": 0.467529296875
+        },
+        {
+            "src": "このレベルになってくると、それもたぶん簡単にはできない。",
+            "mt": "It really chips away. When it gets to a really abrasive level, it's probably best to keep it simple. Really rough. Standing.",
+            "ref": "At this level, even that probably isn't easy to do.",
+            "COMET": 0.47607421875
+        },
+        {
+            "src": "うん、めっちゃゴリゴリ削れる。",
+            "mt": "When it gets to a really abrasive level, it's probably best to keep it simple. Really rough.",
+            "ref": "Yeah, his health melts.",
+            "COMET": 0.458251953125
+        },
+        {
+            "src": "立川さん、タイムアウトの時は誰がしゃべるんだろう。",
+            "mt": "Who's talking about the river, Tamuato? Is it Mr. Tachikawa who explains it? I'll explain. Hmm. Yes. Yes. Yes? Speaking. Speaking. He is. He is. Is it...? Who is Rikukawa teaching? And... Could he be thinking for himself?",
+            "ref": "Who talks to Tachikawa during the timeout, I wonder?",
+            "COMET": 0.45751953125
+        },
+        {
+            "src": "自分で考えるんじゃない？",
+            "mt": "Understood. Perhaps.  Perhaps I can think for myself.",
+            "ref": "Maybe he just works it out himself.",
+            "COMET": 0.609375
+        },
+        {
+            "src": "コーチングする側の顔だ。",
+            "mt": "Perhaps.  Perhaps I can think for myself. Can they think for themselves? Facial expression: tense. \"Look at your face.\" Stand. Tateyama",
+            "ref": "He looks like the one who should be doing the coaching.",
+            "COMET": 0.463134765625
+        },
+        {
+            "src": "やっぱり、相手の選択肢に対する対応が本当にうまくて。プロでもこれぐらいできない人のほうが多いです。",
+            "mt": "Yes. Yes. Yes. Well... Her ability to respond to people's expressions is truly remarkable. There are many things we can do. Yes, indeed. Yes. Yes. \"Spoiling things, perhaps?\" Standing.",
+            "ref": "Her responses to the opponent's options are genuinely excellent. Even among pros, more players than not cannot do this at this level.",
+            "COMET": 0.4677734375
+        },
+        {
+            "src": "うまっ。",
+            "mt": "",
+            "ref": "So good.",
+            "COMET": 0.626953125
+        },
+        {
+            "src": "ああっ！",
+            "mt": "",
+            "ref": "Ah!",
+            "COMET": 0.681640625
+        },
+        {
+            "src": "立川さん、モダンなのに全然自分と違うんだけど。",
+            "mt": "",
+            "ref": "Tachikawa uses Modern controls too, but he plays nothing like me.",
+            "COMET": 0.375732421875
+        },
+        {
+            "src": "同じモダンとは思えない。読み勝ったな。この簡単そうに見える4回投げも。",
+            "mt": "",
+            "ref": "I can't believe we're using the same Modern controls. He won the read—even those four throws that look so simple.",
+            "COMET": 0.357177734375
+        },
+        {
+            "src": "そうそうそう。いろいろあるんですよね、4回投げるまでに。",
+            "mt": "",
+            "ref": "Right, right. A lot has to happen before you can land four throws.",
+            "COMET": 0.376220703125
+        },
+        {
+            "src": "早めに吐いて、このあとのゲージを溜めながら。",
+            "mt": "",
+            "ref": "Spend it early, then start rebuilding gauge for what comes next.",
+            "COMET": 0.406982421875
+        },
+        {
+            "src": "そう思わせて、実はただ投げるだけっていう。そう、そうですからね。",
+            "mt": "",
+            "ref": "You make them expect all of that, and then you simply throw them. Right—that's the idea.",
+            "COMET": 0.36279296875
+        },
+        {
+            "src": "BGMめっちゃ良いな。",
+            "mt": "",
+            "ref": "This background music is so good.",
+            "COMET": 0.378173828125
+        },
+        {
+            "src": "ね。なんかBGM、あんま聞かないよね。",
+            "mt": "",
+            "ref": "Yeah. You don't usually get to hear the music much, do you?",
+            "COMET": 0.34130859375
+        },
+        {
+            "src": "うん。うん。",
+            "mt": "",
+            "ref": "Yeah. Mm-hm.",
+            "COMET": 0.436767578125
+        },
+        {
+            "src": "［実況不明瞭］画面端は……。",
+            "mt": "",
+            "ref": "[Commentary unclear.] At the corner…",
+            "COMET": 0.482421875
+        },
+        {
+            "src": "立川が背負う形になりました。",
+            "mt": "",
+            "ref": "Tachikawa is the one backed into the corner.",
+            "COMET": 0.37548828125
+        },
+        {
+            "src": "立川、押し込んだ。",
+            "mt": "",
+            "ref": "Tachikawa pushes in.",
+            "COMET": 0.41845703125
+        },
+        {
+            "src": "リーサルだ！",
+            "mt": "",
+            "ref": "It's lethal!",
+            "COMET": 0.544921875
+        },
+        {
+            "src": "うわ、こんな感じなんだ。",
+            "mt": "",
+            "ref": "Whoa—so this is what it looks like.",
+            "COMET": 0.398193359375
+        },
+        {
+            "src": "さすがに強いな（笑）。",
+            "mt": "",
+            "ref": "Okay, he really is strong. [laughs]",
+            "COMET": 0.375
+        },
+        {
+            "src": "やはりプロ。さすがです。",
+            "mt": "",
+            "ref": "He is a pro, after all. Impressive.",
+            "COMET": 0.416259765625
+        },
+        {
+            "src": "プロと戦ってるのがすごすぎるんだよ。",
+            "mt": "It seems like a battle is taking place on the modern screen. It's happening, isn't it? It feels sluggish, like a heavy arm.",
+            "ref": "The fact that she's fighting a pro at all is incredible.",
+            "COMET": 0.486328125
+        },
+        {
+            "src": "どんだけ夢の世界にいるのって感じ（笑）。",
+            "mt": "It's happening, isn't it? It feels sluggish, like a heavy arm. It feels like it's on.",
+            "ref": "It feels like we're living in an absolute dream. [laughs]",
+            "COMET": 0.431396484375
+        },
+        {
+            "src": "うん。",
+            "mt": "It feels sluggish, like a heavy arm. It feels like it's on.",
+            "ref": "Yeah.",
+            "COMET": 0.376953125
+        },
+        {
+            "src": "なんか後ろで腕組んで見てるの、なんかゲーセンでさ、ゲーム機の後ろで見てるみたいな構図じゃない？ いいな、私も後ろで見たい。",
+            "mt": "It feels sluggish, like a heavy arm. Look at the back of the arm. Are you watching the center machine as well? Everyone, but I want to see it. I'd like to see it, though. Yes, Ah, is it...?",
+            "ref": "With him standing behind her with his arms crossed, doesn't it look like an arcade—like he's watching from behind the cabinet? That's so cool. I want to watch from back there too.",
+            "COMET": 0.4765625
+        },
+        {
+            "src": "ラッシュは……カウンター。",
+            "mt": "",
+            "ref": "The Drive Rush… counter-hit.",
+            "COMET": 0.47265625
+        },
+        {
+            "src": "カウンターの技が……細かいところからダメージをしっかり取ってきました。",
+            "mt": "",
+            "ref": "That counter-hit move… she is reliably taking damage wherever she can.",
+            "COMET": 0.369384765625
+        },
+        {
+            "src": "あ、これ逆転裁判の曲じゃん。",
+            "mt": "",
+            "ref": "Oh, this is the music from Ace Attorney.",
+            "COMET": 0.420166015625
+        },
+        {
+            "src": "おもろいな。コメントで流れて知ったけど。あ、そうなんや。",
+            "mt": "",
+            "ref": "That's fun. I only found out because chat mentioned it. Oh, really.",
+            "COMET": 0.4169921875
+        },
+        {
+            "src": "［実況不明瞭］",
+            "mt": "",
+            "ref": "[Commentary unclear.]",
+            "COMET": 0.4912109375
+        },
+        {
+            "src": "異議あり？",
+            "mt": "",
+            "ref": "“Objection”?",
+            "COMET": 0.54296875
+        },
+        {
+            "src": "そうそう。",
+            "mt": "",
+            "ref": "Exactly.",
+            "COMET": 0.611328125
+        },
+        {
+            "src": "［実況不明瞭］",
+            "mt": "",
+            "ref": "[Commentary unclear.]",
+            "COMET": 0.4912109375
+        },
+        {
+            "src": "ガードの精度も非常に高い。ドライブは立川、厳しい。",
+            "mt": "",
+            "ref": "Her guarding is also extremely precise. Tachikawa is in trouble on Drive Gauge.",
+            "COMET": 0.382568359375
+        },
+        {
+            "src": "おお！ 投げが通りました！",
+            "mt": "",
+            "ref": "Oh! The throw lands!",
+            "COMET": 0.428466796875
+        },
+        {
+            "src": "バーンアウトだ！ バーンアウトしちゃった！",
+            "mt": "",
+            "ref": "Burnout! She's gone into Burnout!",
+            "COMET": 0.360107421875
+        },
+        {
+            "src": "ワンチャンある！",
+            "mt": "",
+            "ref": "There's still a chance!",
+            "COMET": 0.478271484375
+        },
+        {
+            "src": "ゲージ使った技が使えないってこと？",
+            "mt": "",
+            "ref": "So she can't use moves that spend gauge?",
+            "COMET": 0.395751953125
+        },
+        {
+            "src": "よくなさそうなんですけど、ガードしててもダメージ入っちゃうし、パリィできないし、インパクト打てない。",
+            "mt": "",
+            "ref": "It's a really bad state: you still take chip damage while guarding, you can't parry, and you can't use Drive Impact.",
+            "COMET": 0.33203125
+        },
+        {
+            "src": "分かった！",
+            "mt": "",
+            "ref": "Got it!",
+            "COMET": 0.5546875
+        },
+        {
+            "src": "残ったー！",
+            "mt": "",
+            "ref": "She survived!",
+            "COMET": 0.465576171875
+        },
+        {
+            "src": "でも？",
+            "mt": "",
+            "ref": "But—?",
+            "COMET": 0.5654296875
+        },
+        {
+            "src": "パーフェクトー!!!",
+            "mt": "",
+            "ref": "Perfect!",
+            "COMET": 0.62841796875
+        },
+        {
+            "src": "うわー！",
+            "mt": "",
+            "ref": "Whoa!",
+            "COMET": 0.623046875
+        },
+        {
+            "src": "え、2対2やん！ 2対2！",
+            "mt": "",
+            "ref": "Wait, it's two-two! Two-two!",
+            "COMET": 0.331787109375
+        },
+        {
+            "src": "ま!?",
+            "mt": "",
+            "ref": "No way!?",
+            "COMET": 0.469970703125
+        },
+        {
+            "src": "やばくね!?",
+            "mt": "",
+            "ref": "Isn't this insane!?",
+            "COMET": 0.33349609375
+        },
+        {
+            "src": "いや、これはV最いないわ。",
+            "mt": "",
+            "ref": "No—there's nobody for her in V-Saikyo.",
+            "COMET": 0.42626953125
+        },
+        {
+            "src": "相手いないわ！",
+            "mt": "",
+            "ref": "She has no opponent at that level!",
+            "COMET": 0.384521484375
+        },
+        {
+            "src": "これは出せねえわ！",
+            "mt": "",
+            "ref": "You can't put her in that tournament!",
+            "COMET": 0.358642578125
+        },
+        {
+            "src": "相手がいません！",
+            "mt": "",
+            "ref": "There is nobody for her to face!",
+            "COMET": 0.390380859375
+        },
+        {
+            "src": "ライバルチーム1組目、大将戦です。",
+            "mt": "",
+            "ref": "This is the first rival team's anchor match.",
+            "COMET": 0.4091796875
+        },
+        {
+            "src": "［実況一部不明瞭］ついに実りました。",
+            "mt": "",
+            "ref": "[Part of the commentary is unclear.] It has finally paid off.",
+            "COMET": 0.42529296875
+        },
+        {
+            "src": "いった！",
+            "mt": "",
+            "ref": "There it is!",
+            "COMET": 0.45751953125
+        },
+        {
+            "src": "返したー!!!",
+            "mt": "",
+            "ref": "She answered back!",
+            "COMET": 0.51171875
+        },
+        {
+            "src": "画面端もついてくる。出る、到達。",
+            "mt": "",
+            "ref": "The corner pressure follows as well—she gets there.",
+            "COMET": 0.448486328125
+        },
+        {
+            "src": "そして打っていく。さあ、ドライブは……。ただ、パリィをうまく使って回復しましたね。",
+            "mt": "But… But… It's red. Yes, it is.",
+            "ref": "And she commits to the attack. The Drive Gauge is… but she recovers it well by using parry.",
+            "COMET": 0.408935546875
+        },
+        {
+            "src": "逆転した。",
+            "mt": "Yes.",
+            "ref": "She has taken the lead.",
+            "COMET": 0.5146484375
+        },
+        {
+            "src": "ミスが出た。つながっていない。",
+            "mt": "Wait.",
+            "ref": "A mistake— the combo does not connect.",
+            "COMET": 0.45458984375
+        },
+        {
+            "src": "ピンチ、もか。",
+            "mt": "Hmm.",
+            "ref": "Moka is in trouble.",
+            "COMET": 0.55517578125
+        },
+        {
+            "src": "後ろ投げが来れば……。",
+            "mt": "Hmm.",
+            "ref": "If the back throw comes…",
+            "COMET": 0.5341796875
+        },
+        {
+            "src": "頑張れ。",
+            "mt": "Hmm. Hmm.",
+            "ref": "Come on.",
+            "COMET": 0.55126953125
+        },
+        {
+            "src": "いろいろある。ほんと。",
+            "mt": "Hmm. Hmm. Hmm.",
+            "ref": "There are so many layers to this. Seriously.",
+            "COMET": 0.392822265625
+        },
+        {
+            "src": "当てた！ 2800！",
+            "mt": "Hmm.",
+            "ref": "It hit! 2,800 damage!",
+            "COMET": 0.46875
+        },
+        {
+            "src": "おお、やった！",
+            "mt": "Hmm. Hmm.",
+            "ref": "Oh, she got it!",
+            "COMET": 0.481689453125
+        },
+        {
+            "src": "やばい！ どうしよう、これ取ったらやばい！",
+            "mt": "Hmm. Hmm. Hmm. Hmm. Hmm. Hmm. Hmm.",
+            "ref": "This is crazy! What do we do—if she takes this, it'll be unbelievable!",
+            "COMET": 0.283203125
+        },
+        {
+            "src": "頑張って、頑張れ！",
+            "mt": "Hmm. Hmm.",
+            "ref": "Keep going—come on!",
+            "COMET": 0.470947265625
+        },
+        {
+            "src": "すごすぎ！ すごい、すごい！",
+            "mt": "Hmm. Hmm.",
+            "ref": "This is too amazing! Incredible, incredible!",
+            "COMET": 0.382080078125
+        },
+        {
+            "src": "前に行かないという判断。バックステップで距離を取る。一気に立川、チャンスです！",
+            "mt": "Hmm. Hmm. Hmm. Hmm.",
+            "ref": "She chooses not to advance and creates distance with a backstep. Suddenly, this is Tachikawa's chance!",
+            "COMET": 0.2900390625
+        },
+        {
+            "src": "ガード！",
+            "mt": "Hmm. Hmm.",
+            "ref": "Guard!",
+            "COMET": 0.499267578125
+        },
+        {
+            "src": "やばいやばいやばい！",
+            "mt": "Hmm. Hmm.",
+            "ref": "Oh no, oh no, oh no!",
+            "COMET": 0.476318359375
+        },
+        {
+            "src": "心臓痛くなってきた（笑）。",
+            "mt": "Hmm. Hmm. Hmm. Hmm.",
+            "ref": "My heart is starting to hurt. [laughs]",
+            "COMET": 0.32177734375
+        },
+        {
+            "src": "［実況不明瞭］",
+            "mt": "Hmm. Hmm.",
+            "ref": "[Commentary unclear.]",
+            "COMET": 0.5029296875
+        },
+        {
+            "src": "うおー！",
+            "mt": "Hmm. Hmm.",
+            "ref": "Whoa!",
+            "COMET": 0.68603515625
+        },
+        {
+            "src": "フルラウンド、フルセット。ラスト1ラウンドです！",
+            "mt": "Hmm. Hmm. Hmm.",
+            "ref": "Full rounds, full set. This is the final round!",
+            "COMET": 0.333740234375
+        },
+        {
+            "src": "勝負が決まる！",
+            "mt": "Hmm. Hmm.",
+            "ref": "This round decides it!",
+            "COMET": 0.419921875
+        },
+        {
+            "src": "やばい、待って！",
+            "mt": "Hmm. Hmm.",
+            "ref": "This is insane—wait!",
+            "COMET": 0.410888671875
+        },
+        {
+            "src": "ここでも対応を見せる。プロとしての意地を見せる立川ですが。",
+            "mt": "Hmm. Hmm.",
+            "ref": "Tachikawa finds the answer here too, showing his pride as a professional.",
+            "COMET": 0.3857421875
+        },
+        {
+            "src": "甘結もかも、皆さんの期待に応えたい。",
+            "mt": "Hmm. Hmm.",
+            "ref": "But Amayui Moka wants to live up to everyone's expectations too.",
+            "COMET": 0.412841796875
+        },
+        {
+            "src": "［実況不明瞭］さあ、ここで……。",
+            "mt": "Hmm. Hmm. Hmm.",
+            "ref": "[Commentary unclear.] And now…",
+            "COMET": 0.4609375
+        },
+        {
+            "src": "ドライブを奪っていくという判断。",
+            "mt": "Hmm. Hmm. Uh oh. Zuya.",
+            "ref": "She makes the decision to drain his Drive Gauge.",
+            "COMET": 0.318115234375
+        },
+        {
+            "src": "もう少しで後ろに……。",
+            "mt": "SPEAKER_ID: SPEAKER_01 CONTEXT_BEFORE: Amazing, next, wow, it's like, \"don't go forward,\" yes, \"baxse,\" a little \"baxse,\" that's right. This is a great chance to quickly turn things around. Guard, oh no, oh no, my heart, weak, weak, weak, easily, easily, easily, Gauge Lisa, wow! Wow, wow, full round set, it's a one-shot opportunity. Oh, oh, it's so dangerous, so dangerous, stop, stop, doing it, stopping, yab, yamu, yan, you, yaku, yaki, yake, yaco, yaka, yasa, yaso, yashi, yas, yase, yatsu, yato, yatto, yaro, yare, yeru, yara, yarare, yarareru, yana, yane, yano, yami, yamo, yamou, yamoshi, yasuru, yaku, yaku, yaku, yaku, yaku, yaku, yaku, yaku, yaku, yaku, yaku, yaku Also, Tachika. Do. Ticca.",
+            "ref": "Just a little farther back…",
+            "COMET": 0.326416015625
+        },
+        {
+            "src": "うまいですね。",
+            "mt": "Road driver bazooka. Let's go. \"Really?\" Um... Speaker 02: Yes, that's right.  Speaker 02: I drove. It has a dry cake flavor. Oh. Otsuyoi. Yes.",
+            "ref": "Excellent.",
+            "COMET": 0.45068359375
+        },
+        {
+            "src": "このゲージを保険にしておくって感じですね、立川としては。",
+            "mt": "Yes. Just a little. It feels like it's maintaining its form, doesn't it? Just to be sure, are you saying you'll be careful?",
+            "ref": "For Tachikawa, it feels like he is keeping this meter in reserve as insurance.",
+            "COMET": 0.483154296875
+        },
+        {
+            "src": "やったー！",
+            "mt": "Speaker 00: It's incredible. But... It was moving during the merge.",
+            "ref": "She did it!",
+            "COMET": 0.3994140625
+        },
+        {
+            "src": "やるー！",
+            "mt": "Speaker 00: It's incredible. But... It was moving during the merge. Yes.",
+            "ref": "What a play!",
+            "COMET": 0.491943359375
+        },
+        {
+            "src": "えーーー！",
+            "mt": "",
+            "ref": "No way!",
+            "COMET": 0.56103515625
+        },
+        {
+            "src": "マジか、最後はもう……。",
+            "mt": "Yes?",
+            "ref": "Seriously? At the very end…",
+            "COMET": 0.4384765625
+        },
+        {
+            "src": "えーーー！ えーーー！",
+            "mt": "Yes?",
+            "ref": "No way! No way!",
+            "COMET": 0.52685546875
+        },
+        {
+            "src": "え、すごすぎる！",
+            "mt": "",
+            "ref": "That was incredible!",
+            "COMET": 0.495361328125
+        },
+        {
+            "src": "えーーー！",
+            "mt": "",
+            "ref": "No way!",
+            "COMET": 0.560546875
+        },
+        {
+            "src": "え、泣けるんだけど、普通に！",
+            "mt": "",
+            "ref": "I'm genuinely about to cry!",
+            "COMET": 0.3896484375
+        },
+        {
+            "src": "マジで感動しました！",
+            "mt": "",
+            "ref": "That genuinely moved me!",
+            "COMET": 0.448486328125
+        },
+        {
+            "src": "え、泣けるんだけど、普通に！",
+            "mt": "",
+            "ref": "I'm honestly about to cry!",
+            "COMET": 0.38916015625
+        },
+        {
+            "src": "マジで感動しました！",
+            "mt": "",
+            "ref": "I was genuinely moved!",
+            "COMET": 0.452880859375
+        },
+        {
+            "src": "マジで感動した！",
+            "mt": "",
+            "ref": "That genuinely moved me!",
+            "COMET": 0.4453125
+        },
+        {
+            "src": "普通に涙出た。",
+            "mt": "",
+            "ref": "I actually started crying.",
+            "COMET": 0.416015625
+        },
+        {
+            "src": "マジで感動した！",
+            "mt": "",
+            "ref": "That genuinely moved me!",
+            "COMET": 0.4453125
+        },
+        {
+            "src": "普通に涙出た。",
+            "mt": "",
+            "ref": "I actually started crying.",
+            "COMET": 0.416015625
+        },
+        {
+            "src": "ね、わかる！",
+            "mt": "",
+            "ref": "Right? I know!",
+            "COMET": 0.489501953125
+        },
+        {
+            "src": "さあ、ということで、これでVSPO!チーム全勝！ おめでとうございます！",
+            "mt": "",
+            "ref": "And with that, Team VSPO! completes a clean sweep! Congratulations!",
+            "COMET": 0.3779296875
+        },
+        {
+            "src": "いや、すごい。",
+            "mt": "",
+            "ref": "That was incredible.",
+            "COMET": 0.485595703125
+        },
+        {
+            "src": "すごい、おめでとう！",
+            "mt": "",
+            "ref": "Amazing—congratulations!",
+            "COMET": 0.418212890625
+        },
+        {
+            "src": "やばい、これが本当の「プロになれ」やん！",
+            "mt": "",
+            "ref": "This is seriously a true “go pro already!” moment!",
+            "COMET": 0.41064453125
+        },
+        {
+            "src": "マジでプロになれ。",
+            "mt": "",
+            "ref": "Seriously, go pro.",
+            "COMET": 0.50830078125
+        },
+        {
+            "src": "もか、お前はプロになれ。",
+            "mt": "",
+            "ref": "Moka, you need to become a pro.",
+            "COMET": 0.424560546875
+        },
+        {
+            "src": "もか、お前は世界にはばたけ！",
+            "mt": "",
+            "ref": "Moka, go take on the world!",
+            "COMET": 0.421875
+        },
+        {
+            "src": "え、すごい。本当に泣ける。感動した。",
+            "mt": "",
+            "ref": "That was incredible. I could honestly cry. It moved me.",
+            "COMET": 0.337890625
+        },
+        {
+            "src": "次のチーム、大丈夫か？",
+            "mt": "",
+            "ref": "Is the next team going to be okay after this?",
+            "COMET": 0.399169921875
+        },
+        {
+            "src": "マジで泣ける。",
+            "mt": "",
+            "ref": "This genuinely makes me cry.",
+            "COMET": 0.4375
+        },
+        {
+            "src": "また、その3先っていうのが……。",
+            "mt": "",
+            "ref": "And the fact that it was a first-to-three…",
+            "COMET": 0.380126953125
+        },
+        {
+            "src": "やばすぎる！ すごすぎる！",
+            "mt": "",
+            "ref": "That was insane! Absolutely incredible!",
+            "COMET": 0.33349609375
+        },
+        {
+            "src": "本当に感動をもらった。対応力、そしてコーチとの信頼関係。そういうところが出たのかなと思います。",
+            "mt": "I wonder if a sense of trust began to emerge.",
+            "ref": "That was truly inspiring. I think we saw her adaptability and the trust she has with her coach come through.",
+            "COMET": 0.58837890625
+        },
+        {
+            "src": "うち、人のゲームプレイ見て泣くの初めてなんだけど（笑）。",
+            "mt": "Huh. Yes. It's the first time I'm crying while watching someone else's gameplay, but it's amazing.",
+            "ref": "I think this is the first time I've ever cried watching someone play a game. [laughs]",
+            "COMET": 0.77685546875
+        },
+        {
+            "src": "え、マジですごい。",
+            "mt": "It's the first time I'm crying while watching someone else's gameplay, but it's amazing. Yes.  Well, I was doing plays that were just, you know, skillful – the kind of plays I would do myself. But when you think about the effort this incredible opponent has put in to get to where they are, it really makes you want to cry. Speaker 02: Yes. Well, I was doing plays that were just, you know, skillful – the kind of plays I would do myself. But when you think about the effort this incredible opponent had put in to get to where they are, it really made me want to cry. Yes. It's wonderful, isn't it?",
+            "ref": "That was seriously incredible.",
+            "COMET": 0.54638671875
+        },
+        {
+            "src": "ただただ、うまいっていう。",
+            "mt": "Yes. It's wonderful, isn't it?",
+            "ref": "It was simply pure skill.",
+            "COMET": 0.52978515625
+        },
+        {
+            "src": "すごすぎて、すごい。ほれぼれするようなプレー。",
+            "mt": "It's wonderful, isn't it? Well, I used to play games myself, you see.",
+            "ref": "It was so incredible that “incredible” is all I can say—play that was a joy to watch.",
+            "COMET": 0.54296875
+        },
+        {
+            "src": "このすごい相手に勝つまでやってきた努力を考えたら、マジで泣ける。",
+            "mt": "I used to play games myself, you see. And considering the strength it took to come all the way to victory against their opponent, it's truly incredible. Well, Well,",
+            "ref": "When I think about how hard she worked to become good enough to beat an opponent this strong, it genuinely makes me cry.",
+            "COMET": 0.61865234375
+        },
+        {
+            "src": "それでは一度、こちら実況席からお送りしました。ステージの平岩さん、お願いします。",
+            "mt": "Yes.",
+            "ref": "That concludes our coverage from the commentary desk. Hira-iwa-san on stage, over to you.",
+            "COMET": 0.441650390625
+        },
+        {
+            "src": "話しかけづらさも多少あるんですが、立川さん。3先での敗北ということで、いかがでしたか？",
+            "mt": "Let me start by speaking. It's hard to start a conversation. What about the previous defeat? Two games. Against [someone/them].",
+            "ref": "This may be a slightly awkward moment to ask, Tachikawa-san, but how do you feel after losing the first-to-three?",
+            "COMET": 0.55419921875
+        },
+        {
+            "src": "2先にしてほしかったですね。（笑）",
+            "mt": "Are you quite skilled?",
+            "ref": "I wish it had been a first-to-two. [laughs]",
+            "COMET": 0.47998046875
+        },
+        {
+            "src": "実際、甘結さんの腕前、いかがでした？",
+            "mt": "Are you quite skilled? Ama.",
+            "ref": "What did you think of Amayui-san's actual level of play?",
+            "COMET": 0.474853515625
+        },
+        {
+            "src": "そうですね。3先って、強いほうが勝つんですよ、絶対に。対応して勝てる。",
+            "mt": "Exactly. The stronger player wins, of course. Wins against absolute strength.",
+            "ref": "Well, in a first-to-three, the stronger player wins—absolutely. You have time to adapt and win.",
+            "COMET": 0.66455078125
+        },
+        {
+            "src": "ちょっとリーグとか出てるんじゃないかと思っちゃいましたね、もしかしたら。",
+            "mt": "Um... I thought they might be participating in a league or something like that.",
+            "ref": "I honestly started wondering whether she might already be playing in a league or something.",
+            "COMET": 0.76220703125
+        },
+        {
+            "src": "いや、本当にそれぐらいうまくて。あと、途中で見え隠れするボンさんがきつかったっす。",
+            "mt": "Maybe you're a bit more advanced than I initially thought. But, compared to the books, you're quite a bit higher level. I could sense someone lurking and being elusive. Ah. Speaker 04: Ah.  [Following segment] Seriously, during the match, there were probably three or four instances where it felt like Coach was directly instructing Bon. I felt like I was quite affected by those moments where he would appear and disappear. That really highlighted the coach's skill, I guess. As Tashikawa-san mentioned, Moka-san, did you feel that as well? Were there moments where it felt like he was completely absorbed in the coach's movements?",
+            "ref": "She really was that good. And seeing Bon-san's influence peeking through during the match was rough for me.",
+            "COMET": 0.58935546875
+        },
+        {
+            "src": "マジで試合してて、「これ絶対ボンちゃん教えてる」みたいなのが3、4個あって。",
+            "mt": "There was a take. We had a good run. Seriously, in the actual match... Seriously, there were three instances during the match where I absolutely taught them a lesson. And seeing how much they struggled next to me, it really showed how outstanding I am.",
+            "ref": "While we were playing, there were three or four moments where I thought, “Bonchan definitely taught her that.”",
+            "COMET": 0.53466796875
+        },
+        {
+            "src": "ちょっとやっぱ、コーチの差も出てましたね。",
+            "mt": "Seriously, there were three instances during the match where I absolutely taught them a lesson. And seeing how much they struggled next to me, it really showed how outstanding I am.",
+            "ref": "I think the difference in coaching showed a little too.",
+            "COMET": 0.638671875
+        },
+        {
+            "src": "いやー、ちょっとね。立川さん、そう言ってますが、もかさん、そこはやっぱりありましたか？ コーチの動きが乗り移ってるところが。",
+            "mt": "Well, she said it was a bit expensive, but did Moka-san definitely have it? There was a place where she seemed to be riding it. Her movements...",
+            "ref": "Well, there you have it. Moka-san, Tachikawa says he could see your coach's movement coming through in your play. Was that something you felt too?",
+            "COMET": 0.489501953125
+        },
+        {
+            "src": "そうですね。なんか、よく似てるって言ってもらえるから、もっと似れるように頑張ります。",
+            "mt": "Yes, that's right. That's right.         We get along well.         Yes. Speaker 03: Yes, if you tell me. Yes, certainly.",
+            "ref": "Yes. People often tell me that our play looks similar, so I'll work hard to become even more like him.",
+            "COMET": 0.450439453125
+        },
+        {
+            "src": "はい。まあでも、あのー……。",
+            "mt": "Yes. Yes. Um... Next year, we'll be at this location again. See you.",
+            "ref": "Right. Well, um…",
+            "COMET": 0.5087890625
+        },
+        {
+            "src": "コーチを務めていただいたボンちゃん、いかがでしたか？",
+            "mt": "Speaker 04: Thank you, Mr. Ichikawa. Nemo-san achieved a wonderful victory, but Coach, you really pushed Bon-chan, didn't you? [Transition] Wow, that really got heated.",
+            "ref": "Bonchan, who served as her coach, what did you think?",
+            "COMET": 0.50341796875
+        },
+        {
+            "src": "いやー、熱入っちゃいましたね、応援に。もう、すごかったですよ。",
+            "mt": "That was intense! A response. Speaker 04: Yes, I really got into it. [Response] Wow, that's incredible. Response Speaker 04: Well, I really got into it. ... Wow, that's incredible. Speaker 00: It really got to me, didn't it? But it was amazing.  Speaker 00: Wow, it was incredible. No.",
+            "ref": "I really got carried away cheering for her. She was amazing.",
+            "COMET": 0.48193359375
+        },
+        {
+            "src": "いや、でもやっぱね、練習どおりやれてる動きですから。",
+            "mt": "No. Yas. Yes. It turns out we can do it the way Mr. Shuto does. Movement, you mean?",
+            "ref": "But really, those were the movements we had practiced.",
+            "COMET": 0.52294921875
+        },
+        {
+            "src": "それがやっぱ反映されて、勝ちにつながってる時に、やっぱなんか「いい練習したんだな」っていうのが、結果でこうやって出たのが本当に……。",
+            "mt": "Movement, you mean? That's likely being countered, but it's leading to a win, and sometimes... \"It really shows that we both practiced, and that's the result. That's truly the most rewarding part.\"",
+            "ref": "Seeing that practice reflected in her play and turn into a win—seeing the results prove that we had trained well—really meant a lot.",
+            "COMET": 0.6572265625
+        },
+        {
+            "src": "本当にやっぱ勝ちたそうにしてたんで、もかさんがね。まあ立川には悪いけど、ちょっと今回はもかさんの勝ちということで。またいろいろやる機会はあると思うので、その時にまたいい試合が見られればなと思います。残りもあるんでね、頑張ってください。",
+            "mt": "It really seemed like Moka would win. Even though it might seem a little unfair, I'm happy that Moka won this time. Again. I don't think there will be many more opportunities like this. \"I think there are still opportunities to try.\" Keep going and do your best.",
+            "ref": "Moka really wanted this win. I feel a little bad for Tachikawa, but this time the victory goes to Moka. I'm sure there will be more opportunities for them to play, and I hope we get another great match then. There is still more to come today, so keep it up.",
+            "COMET": 0.6953125
+        },
+        {
+            "src": "はい、ありがとうございます。",
+            "mt": "Keep going and do your best. Thank you very much.  (Still, we have the next match ahead of us.)",
+            "ref": "Yes—thank you very much.",
+            "COMET": 0.59521484375
+        },
+        {
+            "src": "まだね、次の試合ありますから。",
+            "mt": "Thank you very much.  (Still, we have the next match ahead of us.) Yes, thank you. We'll try the next one.",
+            "ref": "There is still another match coming up.",
+            "COMET": 0.66796875
+        }
+    ],
+    "/Users/maz/.codex/worktrees/4edc/whisperASR/.build/benchmarks/standard-offline-validation-77/metrics/qudu2fx3ncc/combined-candidate.en.txt": [
+        {
+            "src": "続いての大将戦ですが、甘結もか、そして立川。",
+            "mt": "Sweet Moka = Amayui Moka The next target is Sweet Moka and Tachikawa.",
+            "ref": "Next up is the anchor match: Amayui Moka versus Tachikawa.",
+            "COMET": 0.60546875
+        },
+        {
+            "src": "もかさん、頑張れ！ 頑張れ！",
+            "mt": "I'm here. \"Moka, you can do it! Keep going! Keep going!\"",
+            "ref": "Moka, you've got this! Go! Go!",
+            "COMET": 0.79833984375
+        },
+        {
+            "src": "立川も、プロとしての意地を見せます。",
+            "mt": "\"Moka, you can do it! Keep going! Keep going!\" Earlier, Tachikawa showed his professionalism and pride.",
+            "ref": "Tachikawa says he will show his pride as a pro.",
+            "COMET": 0.68505859375
+        },
+        {
+            "src": "VCR GTAで人のパンツ覗いてきた人のことなんか、ボコボコにしてくれ。",
+            "mt": "Earlier, Tachikawa showed his professionalism and pride. Someone in GTA was looking at people's faces. I really hope they get banned.",
+            "ref": "He peeked at people's underwear in VCR GTA—beat him to a pulp for us.",
+            "COMET": 0.5380859375
+        },
+        {
+            "src": "え？ そうなの？ 最低だな。",
+            "mt": "That's incredibly unfair to me and Kuroki.",
+            "ref": "What? He did? That's the worst.",
+            "COMET": 0.5830078125
+        },
+        {
+            "src": "私とくろむさんのパンツ覗いてきたから、立川さん（笑）。",
+            "mt": "That's incredibly unfair to me and Kuroki. I can't accept that you're focusing on the appearance of someone's underwear. You'd probably lose if you focused on something so trivial.",
+            "ref": "Tachikawa peeked at my and Kuromu's underwear, you know. [laughs]",
+            "COMET": 0.51611328125
+        },
+        {
+            "src": "なんか立川さんの切り抜きで上がってたの見たんだけどさ。なんか立川さんがめっちゃ前、5年前とかだっけ？",
+            "mt": "I saw a cutout of Mr. Tachikawa, and it reminded me of something. It looked like Mr. Katami, maybe from five years ago? Something came up. They were talking about having someone else moderate the livestream, just the two of them.",
+            "ref": "I saw a clip of Tachikawa, and it was from ages ago—like five years ago, maybe?",
+            "COMET": 0.640625
+        },
+        {
+            "src": "肩に鳥乗っけてるVTuberいるから、こいつにしようぜ、みたいな感じで（笑）。",
+            "mt": "Apparently, they were saying something like, \"There's a VTuber who's really good at handling difficult situations. Let's have them do it.\"",
+            "ref": "There was a VTuber with a bird on her shoulder, so he was like, “Let's pick this one.” [laughs]",
+            "COMET": 0.64697265625
+        },
+        {
+            "src": "［短い発話・不明瞭］",
+            "mt": "Apparently, they were saying something like, \"There's a VTuber who's really good at handling difficult situations. Let's have them do it.\"",
+            "ref": "[Brief utterance unclear.]",
+            "COMET": 0.402099609375
+        },
+        {
+            "src": "ガラの悪い人の絡みみたいな（笑）。",
+            "mt": "It really was Ronnie, someone with a bad reputation, someone who attracts trouble and negativity. Then they sent a message like, \"Want to play Portal together?\" or something like that.",
+            "ref": "It was like watching some rough-looking guys hassle someone. [laughs]",
+            "COMET": 0.6318359375
+        },
+        {
+            "src": "（笑）怖っ。",
+            "mt": "Then they sent a message like, \"Want to play Portal together?\" or something like that.",
+            "ref": "[laughs] That's scary.",
+            "COMET": 0.5048828125
+        },
+        {
+            "src": "そっからなんか、「Portal 2、二人でしませんか」みたいなチャットを送って、蓮くんが……［末尾不明瞭］。",
+            "mt": "Then they sent a message like, \"Want to play Portal together?\" or something like that. ...or something like, \"It's probably best if you do it,\" or \"You should probably do it.\"",
+            "ref": "Then he sent a message like, “Want to play Portal 2 together?” and Ren-kun replied… [ending unclear].",
+            "COMET": 0.6103515625
+        },
+        {
+            "src": "めっちゃ仲良くなってるやん。",
+            "mt": "...or something like, \"It's probably best if you do it,\" or \"You should probably do it.\" They're getting along really well, aren't they?",
+            "ref": "They've become really close.",
+            "COMET": 0.52587890625
+        },
+        {
+            "src": "そっから仲良くなってんの、おもろい。",
+            "mt": "And Tachikawa is probably a modern [style of] guitar. That's nice, that kind of encounter. It's a modern [style of] guitar, and that's where I started playing.",
+            "ref": "It's hilarious that that's how they became friends.",
+            "COMET": 0.44287109375
+        },
+        {
+            "src": "［複数話者が重なり不明瞭］",
+            "mt": "That's funny. It's not good. There's also a lot of overlap with the \"Riwon\" button. That's not good. That's not good. Okay, we're ready.",
+            "ref": "[Several speakers overlap; unclear.]",
+            "COMET": 0.466064453125
+        },
+        {
+            "src": "さあ、準備ができたようです。",
+            "mt": "Okay, we're ready. It's raining, but let's move on to the highly anticipated match. Please proceed.",
+            "ref": "It looks like they're ready.",
+            "COMET": 0.6767578125
+        },
+        {
+            "src": "注目のマッチアップ、見ていきましょう。お願いします。",
+            "mt": "It's raining, but let's move on to the highly anticipated match. Please proceed. Tachikawa is actively pursuing an aggressive strategy.",
+            "ref": "Let's watch this highly anticipated matchup. Here we go.",
+            "COMET": 0.6337890625
+        },
+        {
+            "src": "焦りません。",
+            "mt": "However, the rain isn't causing any apparent concern. \"Break their momentum with a strong rush. Do your best!\"",
+            "ref": "No panic.",
+            "COMET": 0.5341796875
+        },
+        {
+            "src": "頑張れ。立ちで前に行く。",
+            "mt": "\"Break their momentum with a strong rush. Do your best!\" \"Move forward by using a powerful push and outmaneuver [the opponent/competition].\"",
+            "ref": "Come on. Walk forward on the ground.",
+            "COMET": 0.468505859375
+        },
+        {
+            "src": "［短い反応・不明瞭］",
+            "mt": "\"You have a lot of power/strength over there.\" \"It's okay.\"",
+            "ref": "[Brief reaction unclear.]",
+            "COMET": 0.47119140625
+        },
+        {
+            "src": "ドライブを回復するために、先跳びからいきました。",
+            "mt": "\"It's okay.\" \"I came from the front to recover the driver's position.\"",
+            "ref": "She went for a preemptive jump to recover her Drive Gauge.",
+            "COMET": 0.5302734375
+        },
+        {
+            "src": "牽制。落ち着いて、両者距離を取ります。",
+            "mt": "\"Both drivers need to get out of there.\" \"Okay.\" \"Keep both feet firmly planted.\"",
+            "ref": "A check in neutral. Both players calmly create some distance.",
+            "COMET": 0.51416015625
+        },
+        {
+            "src": "うまい。",
+            "mt": "\"Keep both feet firmly planted.\" \"Alright.\" \"After a long rally, they moved forward, but the attempt was unsuccessful.\"",
+            "ref": "Nice.",
+            "COMET": 0.488037109375
+        },
+        {
+            "src": "OD百鬼襲から前に詰めてくるところに、ジャンプから……。",
+            "mt": "\"After a long rally, they moved forward, but the attempt was unsuccessful.\"",
+            "ref": "As Akuma closes in behind OD Hyakki Shu—Demon Raid—she answers from a jump…",
+            "COMET": 0.45263671875
+        },
+        {
+            "src": "モダンならできる対策ですね。",
+            "mt": "\"After a long rally, they moved forward, but the attempt was unsuccessful.\" \"That's a measure that can be taken if the scale is large enough.\"",
+            "ref": "That's an answer you can pull off with Modern controls.",
+            "COMET": 0.560546875
+        },
+        {
+            "src": "垂直ジャンプで回避するという手なんですけど、前ジャンプ中の空対空での対応。これは対応しづらい。",
+            "mt": "\"That's a measure that can be taken if the scale is large enough.\" \"Avoiding with a vertical jump during a long rally is one option, but it's a response to dealing with the lingering emptiness after a forward jump.\" \"This is difficult to deal with.\"",
+            "ref": "A neutral jump is one way to evade it, but she answers the forward jump with an air-to-air. That's difficult to respond to.",
+            "COMET": 0.61572265625
+        },
+        {
+            "src": "かなり慎重な両者。",
+            "mt": "\"A very cautious and measured approach.\" \"A rain cover with ample driving visibility.\"",
+            "ref": "Both players are being extremely cautious.",
+            "COMET": 0.470458984375
+        },
+        {
+            "src": "時間もかなり少ない状況です。",
+            "mt": "\"Well, that's enough. I'm stopping now.\" \"We have very limited time available.\"",
+            "ref": "There is very little time left.",
+            "COMET": 0.63232421875
+        },
+        {
+            "src": "そっか、時間もあるのか。",
+            "mt": "\"We have very limited time available.\" \"Oh, so you have time as well.\" \"This will take 20 seconds.\"",
+            "ref": "Oh, right—the clock matters too.",
+            "COMET": 0.52197265625
+        },
+        {
+            "src": "この間合いで、僕たちには考えられない、とんでもない量のいろんなこと考えてんの？",
+            "mt": "\"This will take 20 seconds.\" \"Within this timeframe, there's an unbelievable amount of various things that we can't even imagine.\" \"I start to think about it.\"",
+            "ref": "At this spacing, are they processing an unbelievable number of things that we can't even imagine?",
+            "COMET": 0.7099609375
+        },
+        {
+            "src": "さあ、成功。3ゲージ残っています。",
+            "mt": "\"I start to think about it.\" \"I read it aloud, and these three people stopped.\" \"Lee.\"",
+            "ref": "And it works. Three bars remain.",
+            "COMET": 0.430419921875
+        },
+        {
+            "src": "リーサルだー！ ドーーーン!!!",
+            "mt": "",
+            "ref": "It's lethal! BAAAM!!!",
+            "COMET": 0.4384765625
+        },
+        {
+            "src": "あ、もかちゃんが「リーサルのゲージはこのぐらいの長さ」みたいなこと言ってた。",
+            "mt": "The monkey… it’s definitely the final round with the lethal team. It feels like this will decide it, just those four of them. We need to make sure this doesn't happen again. And Moca, Lisa's... that troublesome Muka, Lisa's gauge is about this much. “It’s about this length, isn't it? Make sure you don't cut it past this line. Yes, yes, yes. This is the line you need to be careful with.”",
+            "ref": "Oh, Moka said something like, “When the gauge is about this long, it's lethal.”",
+            "COMET": 0.5537109375
+        },
+        {
+            "src": "キルラインみたいな感じ？",
+            "mt": "“It’s about this length, isn't it? Make sure you don't cut it past this line. Yes, yes, yes. This is the line you need to be careful with.”",
+            "ref": "Like a kill-range threshold?",
+            "COMET": 0.467041015625
+        },
+        {
+            "src": "「これはやったな」みたいな。",
+            "mt": "“It’s about this length, isn't it? Make sure you don't cut it past this line. Yes, yes, yes. This is the line you need to be careful with.” “You can get them, so your positioning on the front line will become stronger. Yes, it’s really noticeable. It’s stopping.”",
+            "ref": "Like, “She's got this.”",
+            "COMET": 0.4189453125
+        },
+        {
+            "src": "待って、これ普通に観戦してるけど、相手プロだからな。",
+            "mt": "That's amazing. \"You're getting emotionally attached to the error, but you were really paying close attention.\" \"They're still making progress towards the goal.\"",
+            "ref": "Wait—we're watching this like it's normal, but her opponent is a pro.",
+            "COMET": 0.55517578125
+        },
+        {
+            "src": "そうなんだよね。",
+            "mt": "\"They're still making progress towards the goal.\" \"That's right.\" \"It's an incredible match.\"",
+            "ref": "Exactly.",
+            "COMET": 0.53173828125
+        },
+        {
+            "src": "すごいよね。",
+            "mt": "\"It's an incredible match.\" \"It's amazing, isn't it? Amazing.\" \"It's incredible. It's just too amazing.\"",
+            "ref": "It's incredible.",
+            "COMET": 0.70068359375
+        },
+        {
+            "src": "えっ……えーっ！ 一本取ったよ！",
+            "mt": "",
+            "ref": "What… No way! She took a game!",
+            "COMET": 0.425537109375
+        },
+        {
+            "src": "すごい！ はぁーっ！",
+            "mt": "",
+            "ref": "Amazing! Whew!",
+            "COMET": 0.44970703125
+        },
+        {
+            "src": "え、普通に感動するんだけど！",
+            "mt": "Sigh. This way, we're currently in third place for the Audishacker, but it was perfect.",
+            "ref": "This is honestly moving me!",
+            "COMET": 0.370849609375
+        },
+        {
+            "src": "さあ、ここで甘結もか、すでに1セット勝利。",
+            "mt": "This way, we're currently in third place for the Audishacker, but it was perfect.",
+            "ref": "And now Amayui Moka already has one set on the board.",
+            "COMET": 0.444091796875
+        },
+        {
+            "src": "かっこいいんだけど。",
+            "mt": "This way, we're currently in third place for the Audishacker, but it was perfect.",
+            "ref": "That is so cool.",
+            "COMET": 0.384765625
+        },
+        {
+            "src": "完璧でした。",
+            "mt": "This way, we're currently in third place for the Audishacker, but it was perfect.",
+            "ref": "That was perfect.",
+            "COMET": 0.470458984375
+        },
+        {
+            "src": "［実況不明瞭］ガード。",
+            "mt": "This way, we're currently in third place for the Audishacker, but it was perfect. So, we've already won one set. Alright, Gamagard, this is intense.",
+            "ref": "[Commentary unclear.] Guard.",
+            "COMET": 0.40966796875
+        },
+        {
+            "src": "おお、すごい攻めですね。",
+            "mt": "So, we've already won one set. Alright, Gamagard, this is intense. High power, oh, Audica, your guard is decreasing. Wow, quite the attack. And a great victory.",
+            "ref": "Oh, that's excellent pressure.",
+            "COMET": 0.59326171875
+        },
+        {
+            "src": "大きく体力リード。しかし、甘結もかが追いついた。",
+            "mt": "And a great victory. A significant lead. However, a hostile away crowd. Indeed, it was less than the away crowd's current engagement level.",
+            "ref": "A substantial life lead—but Amayui Moka has caught up.",
+            "COMET": 0.46337890625
+        },
+        {
+            "src": "すごい！ やばっ！",
+            "mt": "I made sure to respond to that thoroughly.",
+            "ref": "Amazing! That's wild!",
+            "COMET": 0.45751953125
+        },
+        {
+            "src": "大丈夫よ、頑張れー！",
+            "mt": "I made sure to respond to that thoroughly. It's okay. Good luck. If you engage the overdrive function, it seems to respond quite well, yes.",
+            "ref": "You're okay—keep going!",
+            "COMET": 0.51611328125
+        },
+        {
+            "src": "OD百鬼襲を打つとかなり対応されているので、そうではなく打撃戦に持ち込んで。",
+            "mt": "If you engage the overdrive function, it seems to respond quite well, yes. That's right. It showcases a sweet and skillful technique.",
+            "ref": "Her OD Hyakki Shu is being answered consistently, so instead she takes it into a direct striking battle.",
+            "COMET": 0.5234375
+        },
+        {
+            "src": "おもろい（笑）。",
+            "mt": "That's right. It showcases a sweet and skillful technique.",
+            "ref": "This is so fun. [laughs]",
+            "COMET": 0.5361328125
+        },
+        {
+            "src": "ちなみに豪鬼は、他のキャラよりもHPが少ない。",
+            "mt": "It showcases a sweet and skillful technique. By the way, Goki has less HP than the other characters. Indeed, you're quite impressive.",
+            "ref": "By the way, Akuma has less health than the other characters.",
+            "COMET": 0.66748046875
+        },
+        {
+            "src": "え、そうなんだ。そうそうそう。",
+            "mt": "Indeed, you're quite impressive. Oh, so this is spicy.",
+            "ref": "Oh, really? Yeah, exactly.",
+            "COMET": 0.45458984375
+        },
+        {
+            "src": "その分のメリットないの？",
+            "mt": "There's no benefit to using this weapon, and it only causes damage.",
+            "ref": "Doesn't he get some advantage in exchange?",
+            "COMET": 0.55859375
+        },
+        {
+            "src": "ダメージがでかい。",
+            "mt": "There's no benefit to using this weapon, and it only causes damage.",
+            "ref": "His damage is huge.",
+            "COMET": 0.662109375
+        },
+        {
+            "src": "豪鬼が9000で、デフォルトが10000だったはず。",
+            "mt": "There's no benefit to using this weapon, and it only causes damage. It's 9000, and I believe the default setting is that. It was 10,000, and they ranked it based on that line.",
+            "ref": "Akuma has 9,000 health; I think the default is 10,000.",
+            "COMET": 0.62109375
+        },
+        {
+            "src": "その1000、でかいの？",
+            "mt": "It was 10,000, and they ranked it based on that line.",
+            "ref": "Does that 1,000-point difference matter much?",
+            "COMET": 0.52783203125
+        },
+        {
+            "src": "いや、でもランクしてるとね、でかいなって思う。",
+            "mt": "It was 10,000, and they ranked it based on that line. When you use it, it feels so powerful. When you land a combo, it feels amazing – it hits really well and deals a lot of damage.",
+            "ref": "Yeah—when you're playing ranked, you really notice the difference.",
+            "COMET": 0.53369140625
+        },
+        {
+            "src": "豪鬼にコンボ刺さると、めっちゃ気持ちいいよ。めっちゃ入るから。",
+            "mt": "When you use it, it feels so powerful. When you land a combo, it feels amazing – it hits really well and deals a lot of damage.",
+            "ref": "Landing a combo on Akuma feels amazing because it takes off so much health.",
+            "COMET": 0.625
+        },
+        {
+            "src": "ゴリゴリ削れる？",
+            "mt": "When you use it, it feels so powerful. When you land a combo, it feels amazing – it hits really well and deals a lot of damage.",
+            "ref": "You can really shred his health?",
+            "COMET": 0.466796875
+        },
+        {
+            "src": "このレベルになってくると、それもたぶん簡単にはできない。",
+            "mt": "When you use it, it feels so powerful. When you land a combo, it feels amazing – it hits really well and deals a lot of damage. As you get to this level, it probably won't be easy to do. By the way, who speaks during Tachikawa-san's \"Twema\" events?",
+            "ref": "At this level, even that probably isn't easy to do.",
+            "COMET": 0.55029296875
+        },
+        {
+            "src": "うん、めっちゃゴリゴリ削れる。",
+            "mt": "When you use it, it feels so powerful. When you land a combo, it feels amazing – it hits really well and deals a lot of damage. As you get to this level, it probably won't be easy to do. By the way, who speaks during Tachikawa-san's \"Twema\" events?",
+            "ref": "Yeah, his health melts.",
+            "COMET": 0.49267578125
+        },
+        {
+            "src": "立川さん、タイムアウトの時は誰がしゃべるんだろう。",
+            "mt": "As you get to this level, it probably won't be easy to do. By the way, who speaks during Tachikawa-san's \"Twema\" events? \"As Mr. Tachikawa said, but there's no need to speak.\" Not really.",
+            "ref": "Who talks to Tachikawa during the timeout, I wonder?",
+            "COMET": 0.5703125
+        },
+        {
+            "src": "自分で考えるんじゃない？",
+            "mt": "Not really. \"I wonder if they'll think for themselves.\" \"It's not about them thinking for themselves; it's about coaching them.\"",
+            "ref": "Maybe he just works it out himself.",
+            "COMET": 0.603515625
+        },
+        {
+            "src": "コーチングする側の顔だ。",
+            "mt": "\"It's not about them thinking for themselves; it's about coaching them.\" \"She's so cute.\" \"You seemed to agree.\"",
+            "ref": "He looks like the one who should be doing the coaching.",
+            "COMET": 0.60595703125
+        },
+        {
+            "src": "やっぱり、相手の選択肢に対する対応が本当にうまくて。プロでもこれぐらいできない人のほうが多いです。",
+            "mt": "\"Oh, Jasper.\" \"Kachika-san looks really serious.\" \"He's truly skilled in how he handles situations with the department head.\" \"Even among professionals, there are a lot of people who can't do that well.\" \"He's that good.\" \"Is this as good as it gets?\" \"A significant lead against Tachika.\"",
+            "ref": "Her responses to the opponent's options are genuinely excellent. Even among pros, more players than not cannot do this at this level.",
+            "COMET": 0.62646484375
+        },
+        {
+            "src": "うまっ。",
+            "mt": "\"The same thing as before.\" \"Delicious.\" \"Please put Taro at the edge of the screen.\" Delicious. \"Respond from the edge of the screen as well.\" Wow. \"I want to bring something to life on the edge of the screen.\"",
+            "ref": "So good.",
+            "COMET": 0.476318359375
+        },
+        {
+            "src": "ああっ！",
+            "mt": "\"Oh no, this is bad.\"",
+            "ref": "Ah!",
+            "COMET": 0.68701171875
+        },
+        {
+            "src": "立川さん、モダンなのに全然自分と違うんだけど。",
+            "mt": "\"Oh no, this is bad.\" \"I said.\" \"Tatsukawa's style is modern, but it's just so different from my own.\" \"And even starting from that one opportunity, it's hard to believe it's the same kind of modern style.\"",
+            "ref": "Tachikawa uses Modern controls too, but he plays nothing like me.",
+            "COMET": 0.54931640625
+        },
+        {
+            "src": "同じモダンとは思えない。読み勝ったな。この簡単そうに見える4回投げも。",
+            "mt": "\"And even starting from that one opportunity, it's hard to believe it's the same kind of modern style.\" \"It really feels like I've mastered this seemingly simple four-throw combination.\" \"And there are various things there.\"",
+            "ref": "I can't believe we're using the same Modern controls. He won the read—even those four throws that look so simple.",
+            "COMET": 0.63671875
+        },
+        {
+            "src": "そうそうそう。いろいろあるんですよね、4回投げるまでに。",
+            "mt": "\"I'm thinking about the potential for future growth, or something like that.\"",
+            "ref": "Right, right. A lot has to happen before you can land four throws.",
+            "COMET": 0.51513671875
+        },
+        {
+            "src": "早めに吐いて、このあとのゲージを溜めながら。",
+            "mt": "\"And actually, it's just a bucket for throwing things.\"",
+            "ref": "Spend it early, then start rebuilding gauge for what comes next.",
+            "COMET": 0.457275390625
+        },
+        {
+            "src": "そう思わせて、実はただ投げるだけっていう。そう、そうですからね。",
+            "mt": "\"And actually, it's just a bucket for throwing things.\"",
+            "ref": "You make them expect all of that, and then you simply throw them. Right—that's the idea.",
+            "COMET": 0.55615234375
+        },
+        {
+            "src": "BGMめっちゃ良いな。",
+            "mt": "\"The background music is really great.\" \"I think, well, you probably don't listen to the background music much, do you?\"",
+            "ref": "This background music is so good.",
+            "COMET": 0.58642578125
+        },
+        {
+            "src": "ね。なんかBGM、あんま聞かないよね。",
+            "mt": "\"I think, well, you probably don't listen to the background music much, do you?\" \"While continuing development, we need to move quickly, really quickly.\"",
+            "ref": "Yeah. You don't usually get to hear the music much, do you?",
+            "COMET": 0.62841796875
+        },
+        {
+            "src": "うん。うん。",
+            "mt": "\"While continuing development, we need to move quickly, really quickly.\"",
+            "ref": "Yeah. Mm-hm.",
+            "COMET": 0.4306640625
+        },
+        {
+            "src": "［実況不明瞭］画面端は……。",
+            "mt": "\"While continuing development, we need to move quickly, really quickly.\" \"The edge of the screen now reflects how Mr. Tatsu kawa is carrying it.\"",
+            "ref": "[Commentary unclear.] At the corner…",
+            "COMET": 0.48486328125
+        },
+        {
+            "src": "立川が背負う形になりました。",
+            "mt": "\"The edge of the screen now reflects how Mr. Tatsu kawa is carrying it.\" \"Tatsu kawa, pushing forward.\"",
+            "ref": "Tachikawa is the one backed into the corner.",
+            "COMET": 0.51220703125
+        },
+        {
+            "src": "立川、押し込んだ。",
+            "mt": "\"The edge of the screen now reflects how Mr. Tatsu kawa is carrying it.\" \"Tatsu kawa, pushing forward.\" \"This is Risalta.\"",
+            "ref": "Tachikawa pushes in.",
+            "COMET": 0.470703125
+        },
+        {
+            "src": "リーサルだ！",
+            "mt": "",
+            "ref": "It's lethal!",
+            "COMET": 0.544921875
+        },
+        {
+            "src": "うわ、こんな感じなんだ。",
+            "mt": "",
+            "ref": "Whoa—so this is what it looks like.",
+            "COMET": 0.398193359375
+        },
+        {
+            "src": "さすがに強いな（笑）。",
+            "mt": "This is intense. It's like this. How kind. Even in a close round, they're still professionals. True professionals.",
+            "ref": "Okay, he really is strong. [laughs]",
+            "COMET": 0.483642578125
+        },
+        {
+            "src": "やはりプロ。さすがです。",
+            "mt": "This is intense. It's like this. How kind. Even in a close round, they're still professionals. True professionals. That's truly professional. They're so skilled. And they're once again portraying a SAG Award-worthy character.",
+            "ref": "He is a pro, after all. Impressive.",
+            "COMET": 0.57568359375
+        },
+        {
+            "src": "プロと戦ってるのがすごすぎるんだよ。",
+            "mt": "That's truly professional. They're so skilled. And they're once again portraying a SAG Award-worthy character. They're competing against professionals. I really like it. I understand. What was it?",
+            "ref": "The fact that she's fighting a pro at all is incredible.",
+            "COMET": 0.61865234375
+        },
+        {
+            "src": "どんだけ夢の世界にいるのって感じ（笑）。",
+            "mt": "I understand. What was it? Experience it from above. Someone's behind me, arms crossed, watching.",
+            "ref": "It feels like we're living in an absolute dream. [laughs]",
+            "COMET": 0.5341796875
+        },
+        {
+            "src": "うん。",
+            "mt": "Experience it from above. Someone's behind me, arms crossed, watching.",
+            "ref": "Yeah.",
+            "COMET": 0.441650390625
+        },
+        {
+            "src": "なんか後ろで腕組んで見てるの、なんかゲーセンでさ、ゲーム機の後ろで見てるみたいな構図じゃない？ いいな、私も後ろで見たい。",
+            "mt": "Someone's behind me, arms crossed, watching. It feels like someone's standing behind a game machine at the arcade, watching. It's not over here. That's nice. I want to watch from behind.",
+            "ref": "With him standing behind her with his arms crossed, doesn't it look like an arcade—like he's watching from behind the cabinet? That's so cool. I want to watch from back there too.",
+            "COMET": 0.74658203125
+        },
+        {
+            "src": "ラッシュは……カウンター。",
+            "mt": "Rush. I'm feeling nostalgic. Shagapooma's. I saw their face.",
+            "ref": "The Drive Rush… counter-hit.",
+            "COMET": 0.46533203125
+        },
+        {
+            "src": "カウンターの技が……細かいところからダメージをしっかり取ってきました。",
+            "mt": "I saw their face. They consistently took significant damage from the red area. Isn't this a Reverse Cyber song? It's so fun.",
+            "ref": "That counter-hit move… she is reliably taking damage wherever she can.",
+            "COMET": 0.51708984375
+        },
+        {
+            "src": "あ、これ逆転裁判の曲じゃん。",
+            "mt": "Isn't this a Reverse Cyber song? It's so fun.",
+            "ref": "Oh, this is the music from Ace Attorney.",
+            "COMET": 0.5810546875
+        },
+        {
+            "src": "おもろいな。コメントで流れて知ったけど。あ、そうなんや。",
+            "mt": "Isn't this a Reverse Cyber song? It's so fun. I could only deal damage, but you're right.",
+            "ref": "That's fun. I only found out because chat mentioned it. Oh, really.",
+            "COMET": 0.54443359375
+        },
+        {
+            "src": "［実況不明瞭］",
+            "mt": "I was watching. But I handled it properly. It looks like it will work well.",
+            "ref": "[Commentary unclear.]",
+            "COMET": 0.45703125
+        },
+        {
+            "src": "異議あり？",
+            "mt": "It looks like it will work well.",
+            "ref": "“Objection”?",
+            "COMET": 0.3876953125
+        },
+        {
+            "src": "そうそう。",
+            "mt": "It looks like it will work well.",
+            "ref": "Exactly.",
+            "COMET": 0.50146484375
+        },
+        {
+            "src": "［実況不明瞭］",
+            "mt": "The water flows gently. The accuracy of the walk-through security system is also very high, and the security checks are certainly strict.",
+            "ref": "[Commentary unclear.]",
+            "COMET": 0.458251953125
+        },
+        {
+            "src": "ガードの精度も非常に高い。ドライブは立川、厳しい。",
+            "mt": "The accuracy of the walk-through security system is also very high, and the security checks are certainly strict.",
+            "ref": "Her guarding is also extremely precise. Tachikawa is in trouble on Drive Gauge.",
+            "COMET": 0.57275390625
+        },
+        {
+            "src": "おお！ 投げが通りました！",
+            "mt": "I managed to catch it. I'm Burnout.",
+            "ref": "Oh! The throw lands!",
+            "COMET": 0.45166015625
+        },
+        {
+            "src": "バーンアウトだ！ バーンアウトしちゃった！",
+            "mt": "I'm Burnout. I'm experiencing burnout. If you're going to do that, I think it's okay to Burnout. I Burnout. No, just one genre.",
+            "ref": "Burnout! She's gone into Burnout!",
+            "COMET": 0.56103515625
+        },
+        {
+            "src": "ワンチャンある！",
+            "mt": "No, just one genre.",
+            "ref": "There's still a chance!",
+            "COMET": 0.5625
+        },
+        {
+            "src": "ゲージ使った技が使えないってこと？",
+            "mt": "It doesn't seem like [they] have it, but what's wrong? Even when you're on guard, you still take damage.",
+            "ref": "So she can't use moves that spend gauge?",
+            "COMET": 0.5166015625
+        },
+        {
+            "src": "よくなさそうなんですけど、ガードしててもダメージ入っちゃうし、パリィできないし、インパクト打てない。",
+            "mt": "Even when you're on guard, you still take damage. Damage was taken. I can't parry, I can't land a solid hit, and I can't deliver a powerful attack. It's difficult to handle.",
+            "ref": "It's a really bad state: you still take chip damage while guarding, you can't parry, and you can't use Drive Impact.",
+            "COMET": 0.74365234375
+        },
+        {
+            "src": "分かった！",
+            "mt": "That's good.",
+            "ref": "Got it!",
+            "COMET": 0.65869140625
+        },
+        {
+            "src": "残ったー！",
+            "mt": "That's good. Memo, congratulations.",
+            "ref": "She survived!",
+            "COMET": 0.38623046875
+        },
+        {
+            "src": "でも？",
+            "mt": "Memo, congratulations.",
+            "ref": "But—?",
+            "COMET": 0.52294921875
+        },
+        {
+            "src": "パーフェクトー!!!",
+            "mt": "Memo, congratulations.",
+            "ref": "Perfect!",
+            "COMET": 0.6025390625
+        },
+        {
+            "src": "うわー！",
+            "mt": "Wow, you must be tired.",
+            "ref": "Whoa!",
+            "COMET": 0.583984375
+        },
+        {
+            "src": "え、2対2やん！ 2対2！",
+            "mt": "Wow, you must be tired. Everyone, Nina, that's incredible! No, this is without V-Sai.",
+            "ref": "Wait, it's two-two! Two-two!",
+            "COMET": 0.3876953125
+        },
+        {
+            "src": "ま!?",
+            "mt": "No, this is without V-Sai.",
+            "ref": "No way!?",
+            "COMET": 0.469970703125
+        },
+        {
+            "src": "やばくね!?",
+            "mt": "No, this is without V-Sai.",
+            "ref": "Isn't this insane!?",
+            "COMET": 0.37841796875
+        },
+        {
+            "src": "いや、これはV最いないわ。",
+            "mt": "No, this is without V-Sai. I don't have a partner.",
+            "ref": "No—there's nobody for her in V-Saikyo.",
+            "COMET": 0.56884765625
+        },
+        {
+            "src": "相手いないわ！",
+            "mt": "I don't have a partner.",
+            "ref": "She has no opponent at that level!",
+            "COMET": 0.476806640625
+        },
+        {
+            "src": "これは出せねえわ！",
+            "mt": "I don't have a partner. I can't let this out. I don't have anyone.",
+            "ref": "You can't put her in that tournament!",
+            "COMET": 0.468017578125
+        },
+        {
+            "src": "相手がいません！",
+            "mt": "I don't have anyone. I managed it.",
+            "ref": "There is nobody for her to face!",
+            "COMET": 0.529296875
+        },
+        {
+            "src": "ライバルチーム1組目、大将戦です。",
+            "mt": "The first round is against the winning team. Wow, these 100 teams... it's all about luck.",
+            "ref": "This is the first rival team's anchor match.",
+            "COMET": 0.587890625
+        },
+        {
+            "src": "［実況一部不明瞭］ついに実りました。",
+            "mt": "Wow, these 100 teams... it's all about luck. I let my pride get the better of me.",
+            "ref": "[Part of the commentary is unclear.] It has finally paid off.",
+            "COMET": 0.49267578125
+        },
+        {
+            "src": "いった！",
+            "mt": "I managed to get one back.",
+            "ref": "There it is!",
+            "COMET": 0.51025390625
+        },
+        {
+            "src": "返したー!!!",
+            "mt": "I managed to get one back. They're following along at the edges of the screen. They're there.",
+            "ref": "She answered back!",
+            "COMET": 0.416259765625
+        },
+        {
+            "src": "画面端もついてくる。出る、到達。",
+            "mt": "They're following along at the edges of the screen. They're there.",
+            "ref": "The corner pressure follows as well—she gets there.",
+            "COMET": 0.49951171875
+        },
+        {
+            "src": "そして打っていく。さあ、ドライブは……。ただ、パリィをうまく使って回復しましたね。",
+            "mt": "And I'm going to start typing. I typed in front of the shadow. Now, the Drive team is battling with a red mocha. You skillfully used Paris to recover, didn't you?",
+            "ref": "And she commits to the attack. The Drive Gauge is… but she recovers it well by using parry.",
+            "COMET": 0.533203125
+        },
+        {
+            "src": "逆転した。",
+            "mt": "They turned it around. Oh, they missed.",
+            "ref": "She has taken the lead.",
+            "COMET": 0.412841796875
+        },
+        {
+            "src": "ミスが出た。つながっていない。",
+            "mt": "Oh, they missed. They haven't caught it.",
+            "ref": "A mistake— the combo does not connect.",
+            "COMET": 0.5185546875
+        },
+        {
+            "src": "ピンチ、もか。",
+            "mt": "They haven't caught it. If it fails under pressure, it will end up behind.",
+            "ref": "Moka is in trouble.",
+            "COMET": 0.4306640625
+        },
+        {
+            "src": "後ろ投げが来れば……。",
+            "mt": "If it fails under pressure, it will end up behind.",
+            "ref": "If the back throw comes…",
+            "COMET": 0.492919921875
+        },
+        {
+            "src": "頑張れ。",
+            "mt": "Oh, that's boring. See, they're stuck together.",
+            "ref": "Come on.",
+            "COMET": 0.471435546875
+        },
+        {
+            "src": "いろいろある。ほんと。",
+            "mt": "Isn't that right? / Don't you think so? Various things, roughly speaking, around 2800.",
+            "ref": "There are so many layers to this. Seriously.",
+            "COMET": 0.3974609375
+        },
+        {
+            "src": "当てた！ 2800！",
+            "mt": "Various things, roughly speaking, around 2800.",
+            "ref": "It hit! 2,800 damage!",
+            "COMET": 0.44580078125
+        },
+        {
+            "src": "おお、やった！",
+            "mt": "Various things, roughly speaking, around 2800. Oh no, Eva. / That's bad, Eva.",
+            "ref": "Oh, she got it!",
+            "COMET": 0.385009765625
+        },
+        {
+            "src": "やばい！ どうしよう、これ取ったらやばい！",
+            "mt": "Oh no, Eva. / That's bad, Eva.",
+            "ref": "This is crazy! What do we do—if she takes this, it'll be unbelievable!",
+            "COMET": 0.406005859375
+        },
+        {
+            "src": "頑張って、頑張れ！",
+            "mt": "Oh no, Eva. / That's bad, Eva. What should I do? If I take this, it's going to be bad.",
+            "ref": "Keep going—come on!",
+            "COMET": 0.4404296875
+        },
+        {
+            "src": "すごすぎ！ すごい、すごい！",
+            "mt": "Wow, next. Uh, this is the countermeasure. It means we shouldn't go forward.",
+            "ref": "This is too amazing! Incredible, incredible!",
+            "COMET": 0.393798828125
+        },
+        {
+            "src": "前に行かないという判断。バックステップで距離を取る。一気に立川、チャンスです！",
+            "mt": "Wow, next. Uh, this is the countermeasure. It means we shouldn't go forward. It was a supernova, and it was a supernova, wasn't it, Sasuke? This is your chance to jump to it. Oh my, oh my, oh my, my heart is racing.",
+            "ref": "She chooses not to advance and creates distance with a backstep. Suddenly, this is Tachikawa's chance!",
+            "COMET": 0.436279296875
+        },
+        {
+            "src": "ガード！",
+            "mt": "This is your chance to jump to it. Oh my, oh my, oh my, my heart is racing.",
+            "ref": "Guard!",
+            "COMET": 0.3251953125
+        },
+        {
+            "src": "やばいやばいやばい！",
+            "mt": "This is your chance to jump to it. Oh my, oh my, oh my, my heart is racing.",
+            "ref": "Oh no, oh no, oh no!",
+            "COMET": 0.4228515625
+        },
+        {
+            "src": "心臓痛くなってきた（笑）。",
+            "mt": "This is your chance to jump to it. Oh my, oh my, oh my, my heart is racing.",
+            "ref": "My heart is starting to hurt. [laughs]",
+            "COMET": 0.49951171875
+        },
+        {
+            "src": "［実況不明瞭］",
+            "mt": "With ease, with ease. Ah, Eris! Uh, wow! It's Tekker's Full Round Breath.",
+            "ref": "[Commentary unclear.]",
+            "COMET": 0.347412109375
+        },
+        {
+            "src": "うおー！",
+            "mt": "With ease, with ease. Ah, Eris! Uh, wow! It's Tekker's Full Round Breath.",
+            "ref": "Whoa!",
+            "COMET": 0.425537109375
+        },
+        {
+            "src": "フルラウンド、フルセット。ラスト1ラウンドです！",
+            "mt": "With ease, with ease. Ah, Eris! Uh, wow! It's Tekker's Full Round Breath.",
+            "ref": "Full rounds, full set. This is the final round!",
+            "COMET": 0.4248046875
+        },
+        {
+            "src": "勝負が決まる！",
+            "mt": "This is bad, wait, it's about to start.",
+            "ref": "This round decides it!",
+            "COMET": 0.4990234375
+        },
+        {
+            "src": "やばい、待って！",
+            "mt": "This is bad, wait, it's about to start.",
+            "ref": "This is insane—wait!",
+            "COMET": 0.609375
+        },
+        {
+            "src": "ここでも対応を見せる。プロとしての意地を見せる立川ですが。",
+            "mt": "This is bad, wait, it's about to start. Here, is this Hyakuen's Taiyou Misuriku, showing off Hyakuen's professionalism, Tachikawa? This is dangerous too.",
+            "ref": "Tachikawa finds the answer here too, showing his pride as a professional.",
+            "COMET": 0.4951171875
+        },
+        {
+            "src": "甘結もかも、皆さんの期待に応えたい。",
+            "mt": "This is dangerous too. I'm going to add more to see. Now, wait here.",
+            "ref": "But Amayui Moka wants to live up to everyone's expectations too.",
+            "COMET": 0.44384765625
+        },
+        {
+            "src": "［実況不明瞭］さあ、ここで……。",
+            "mt": "Now, wait here. It's S2, isn't it?",
+            "ref": "[Commentary unclear.] And now…",
+            "COMET": 0.481689453125
+        },
+        {
+            "src": "ドライブを奪っていくという判断。",
+            "mt": "It's the S2 team from the soba division, isn't it? That's right. And the decision to take the drive. The drive didn't work out. This steering feels really good.",
+            "ref": "She makes the decision to drain his Drive Gauge.",
+            "COMET": 0.439453125
+        },
+        {
+            "src": "もう少しで後ろに……。",
+            "mt": "This steering feels really good. I pressed the button. And, Katsu is just Katsu. Look back. Should I take the ball away from Katsu?",
+            "ref": "Just a little farther back…",
+            "COMET": 0.412109375
+        },
+        {
+            "src": "うまいですね。",
+            "mt": "Should I take the ball away from Katsu? I'll give it a try. You're really good. I recovered the drive. I miss home.",
+            "ref": "Excellent.",
+            "COMET": 0.4365234375
+        },
+        {
+            "src": "このゲージを保険にしておくって感じですね、立川としては。",
+            "mt": "I miss home. Declining birthrate. But this, this is a cage. As a charm, or as a way to handle things, it's just about being careful, or just doing this.",
+            "ref": "For Tachikawa, it feels like he is keeping this meter in reserve as insurance.",
+            "COMET": 0.461181640625
+        },
+        {
+            "src": "やったー！",
+            "mt": "Well, really? It ends like this.",
+            "ref": "She did it!",
+            "COMET": 0.466552734375
+        },
+        {
+            "src": "やるー！",
+            "mt": "Well, really? It ends like this.",
+            "ref": "What a play!",
+            "COMET": 0.54150390625
+        },
+        {
+            "src": "えーーー！",
+            "mt": "Well, really? It ends like this.",
+            "ref": "No way!",
+            "COMET": 0.5458984375
+        },
+        {
+            "src": "マジか、最後はもう……。",
+            "mt": "Well, really? It ends like this.",
+            "ref": "Seriously? At the very end…",
+            "COMET": 0.7041015625
+        },
+        {
+            "src": "えーーー！ えーーー！",
+            "mt": "Well, really? It ends like this. Really? Yes, that's right. Wow, that's incredible. Wow, it's making me tear up, seriously.",
+            "ref": "No way! No way!",
+            "COMET": 0.490234375
+        },
+        {
+            "src": "え、すごすぎる！",
+            "mt": "Wow, it's making me tear up, seriously.",
+            "ref": "That was incredible!",
+            "COMET": 0.56689453125
+        },
+        {
+            "src": "えーーー！",
+            "mt": "Wow, it's making me tear up, seriously.",
+            "ref": "No way!",
+            "COMET": 0.46240234375
+        },
+        {
+            "src": "え、泣けるんだけど、普通に！",
+            "mt": "Wow, it's making me tear up, seriously.",
+            "ref": "I'm genuinely about to cry!",
+            "COMET": 0.81005859375
+        },
+        {
+            "src": "マジで感動しました！",
+            "mt": "Wow, it's making me tear up, seriously. Wow, I'm really moved. Wow, I'm really touched.",
+            "ref": "That genuinely moved me!",
+            "COMET": 0.7421875
+        },
+        {
+            "src": "え、泣けるんだけど、普通に！",
+            "mt": "Wow, it's making me tear up, seriously. Wow, I'm really moved. Wow, I'm really touched.",
+            "ref": "I'm honestly about to cry!",
+            "COMET": 0.740234375
+        },
+        {
+            "src": "マジで感動しました！",
+            "mt": "Wow, I'm really touched. I understand.",
+            "ref": "I was genuinely moved!",
+            "COMET": 0.84375
+        },
+        {
+            "src": "マジで感動した！",
+            "mt": "Wow, I'm really touched. I understand.",
+            "ref": "That genuinely moved me!",
+            "COMET": 0.81494140625
+        },
+        {
+            "src": "普通に涙出た。",
+            "mt": "Wow, I'm really touched. I understand.",
+            "ref": "I actually started crying.",
+            "COMET": 0.58984375
+        },
+        {
+            "src": "マジで感動した！",
+            "mt": "Wow, I'm really touched. I understand.",
+            "ref": "That genuinely moved me!",
+            "COMET": 0.81494140625
+        },
+        {
+            "src": "普通に涙出た。",
+            "mt": "",
+            "ref": "I actually started crying.",
+            "COMET": 0.416015625
+        },
+        {
+            "src": "ね、わかる！",
+            "mt": "",
+            "ref": "Right? I know!",
+            "COMET": 0.489501953125
+        },
+        {
+            "src": "さあ、ということで、これでVSPO!チーム全勝！ おめでとうございます！",
+            "mt": "Okay, so with that, let's move on to the V-selection. Wow, a perfect score! That's amazing.",
+            "ref": "And with that, Team VSPO! completes a clean sweep! Congratulations!",
+            "COMET": 0.64306640625
+        },
+        {
+            "src": "いや、すごい。",
+            "mt": "Wow, a perfect score! That's amazing.",
+            "ref": "That was incredible.",
+            "COMET": 0.740234375
+        },
+        {
+            "src": "すごい、おめでとう！",
+            "mt": "Wow, a perfect score! That's amazing.",
+            "ref": "Amazing—congratulations!",
+            "COMET": 0.66845703125
+        },
+        {
+            "src": "やばい、これが本当の「プロになれ」やん！",
+            "mt": "Congratulations! That's incredible. Congratulations! Wow, everyone won! That's amazing. This is what it means to be a real professional. Seriously, you can really become a pro.",
+            "ref": "This is seriously a true “go pro already!” moment!",
+            "COMET": 0.6845703125
+        },
+        {
+            "src": "マジでプロになれ。",
+            "mt": "Wow, everyone won! That's amazing. This is what it means to be a real professional. Seriously, you can really become a pro. Moca, you can become a pro.",
+            "ref": "Seriously, go pro.",
+            "COMET": 0.6259765625
+        },
+        {
+            "src": "もか、お前はプロになれ。",
+            "mt": "Moca, you can become a pro. From now on, Moca, you should soar to the world.",
+            "ref": "Moka, you need to become a pro.",
+            "COMET": 0.626953125
+        },
+        {
+            "src": "もか、お前は世界にはばたけ！",
+            "mt": "From now on, Moca, you should soar to the world. Wow, that's amazing. It's really making me cry.",
+            "ref": "Moka, go take on the world!",
+            "COMET": 0.6015625
+        },
+        {
+            "src": "え、すごい。本当に泣ける。感動した。",
+            "mt": "It's really making me cry. I was deeply moved.",
+            "ref": "That was incredible. I could honestly cry. It moved me.",
+            "COMET": 0.86767578125
+        },
+        {
+            "src": "次のチーム、大丈夫か？",
+            "mt": "I was deeply moved. I'm worried about the next team.",
+            "ref": "Is the next team going to be okay after this?",
+            "COMET": 0.5947265625
+        },
+        {
+            "src": "マジで泣ける。",
+            "mt": "I'm worried about the next team. It's really moving.",
+            "ref": "This genuinely makes me cry.",
+            "COMET": 0.493896484375
+        },
+        {
+            "src": "また、その3先っていうのが……。",
+            "mt": "It's really moving. He's an incredible soccer player, truly amazing.",
+            "ref": "And the fact that it was a first-to-three…",
+            "COMET": 0.50732421875
+        },
+        {
+            "src": "やばすぎる！ すごすぎる！",
+            "mt": "He's an incredible soccer player, truly amazing. Really. I was truly moved.",
+            "ref": "That was insane! Absolutely incredible!",
+            "COMET": 0.69580078125
+        },
+        {
+            "src": "本当に感動をもらった。対応力、そしてコーチとの信頼関係。そういうところが出たのかなと思います。",
+            "mt": "I was truly moved. I think it showed my ability to adapt, and perhaps it highlighted the trust I've built with the coach.",
+            "ref": "That was truly inspiring. I think we saw her adaptability and the trust she has with her coach come through.",
+            "COMET": 0.83203125
+        },
+        {
+            "src": "うち、人のゲームプレイ見て泣くの初めてなんだけど（笑）。",
+            "mt": "This is our game. It was the first time I've seen someone get emotional watching my play, and honestly, it was incredible. It wasn't just that they were good; it was something more.",
+            "ref": "I think this is the first time I've ever cried watching someone play a game. [laughs]",
+            "COMET": 0.64697265625
+        },
+        {
+            "src": "え、マジですごい。",
+            "mt": "It was the first time I've seen someone get emotional watching my play, and honestly, it was incredible. It wasn't just that they were good; it was something more.",
+            "ref": "That was seriously incredible.",
+            "COMET": 0.6494140625
+        },
+        {
+            "src": "ただただ、うまいっていう。",
+            "mt": "It was the first time I've seen someone get emotional watching my play, and honestly, it was incredible. It wasn't just that they were good; it was something more.",
+            "ref": "It was simply pure skill.",
+            "COMET": 0.62060546875
+        },
+        {
+            "src": "すごすぎて、すごい。ほれぼれするようなプレー。",
+            "mt": "It was a player who, just watching them, made me feel a sense of awe.",
+            "ref": "It was so incredible that “incredible” is all I can say—play that was a joy to watch.",
+            "COMET": 0.64697265625
+        },
+        {
+            "src": "このすごい相手に勝つまでやってきた努力を考えたら、マジで泣ける。",
+            "mt": "It was a player who, just watching them, made me feel a sense of awe. Thinking about all the effort I put in to overcome an opponent like this, it really hits differently.",
+            "ref": "When I think about how hard she worked to become good enough to beat an opponent this strong, it genuinely makes me cry.",
+            "COMET": 0.66259765625
+        },
+        {
+            "src": "それでは一度、こちら実況席からお送りしました。ステージの平岩さん、お願いします。",
+            "mt": "Thinking about all the effort I put in to overcome an opponent like this, it really hits differently. So, and here's the number one player, sent from the commentary booth. Mr. Hirayama, from the stage, please go ahead.",
+            "ref": "That concludes our coverage from the commentary desk. Hira-iwa-san on stage, over to you.",
+            "COMET": 0.59716796875
+        },
+        {
+            "src": "話しかけづらさも多少あるんですが、立川さん。3先での敗北ということで、いかがでしたか？",
+            "mt": "It finishes somewhat if you don't initiate conversation first, but Tasika-san, How was it, losing in the third round? I wish it had been in the third round.",
+            "ref": "This may be a slightly awkward moment to ask, Tachikawa-san, but how do you feel after losing the first-to-three?",
+            "COMET": 0.61572265625
+        },
+        {
+            "src": "2先にしてほしかったですね。（笑）",
+            "mt": "How would you describe Hamai's skill?",
+            "ref": "I wish it had been a first-to-two. [laughs]",
+            "COMET": 0.521484375
+        },
+        {
+            "src": "実際、甘結さんの腕前、いかがでした？",
+            "mt": "How would you describe Hamai's skill?",
+            "ref": "What did you think of Amayui-san's actual level of play?",
+            "COMET": 0.7490234375
+        },
+        {
+            "src": "そうですね。3先って、強いほうが勝つんですよ、絶対に。対応して勝てる。",
+            "mt": "Yes, indeed. In San-gen, the stronger player wins. We can definitely handle it and win.",
+            "ref": "Well, in a first-to-three, the stronger player wins—absolutely. You have time to adapt and win.",
+            "COMET": 0.70849609375
+        },
+        {
+            "src": "ちょっとリーグとか出てるんじゃないかと思っちゃいましたね、もしかしたら。",
+            "mt": "I was starting to wonder if they might be competing in a higher league. Maybe they're really that good.",
+            "ref": "I honestly started wondering whether she might already be playing in a league or something.",
+            "COMET": 0.7578125
+        },
+        {
+            "src": "いや、本当にそれぐらいうまくて。あと、途中で見え隠れするボンさんがきつかったっす。",
+            "mt": "I was starting to wonder if they might be competing in a higher league. Maybe they're really that good. And then there was Bon, appearing and disappearing, which was tough. There was a sense of mystery about them. Seriously, I'm so happy right now. Please, Chan, tell me everything.",
+            "ref": "She really was that good. And seeing Bon-san's influence peeking through during the match was rough for me.",
+            "COMET": 0.63818359375
+        },
+        {
+            "src": "マジで試合してて、「これ絶対ボンちゃん教えてる」みたいなのが3、4個あって。",
+            "mt": "And then there was Bon, appearing and disappearing, which was tough. There was a sense of mystery about them. Seriously, I'm so happy right now. Please, Chan, tell me everything. There were 34 of them, it seemed.",
+            "ref": "While we were playing, there were three or four moments where I thought, “Bonchan definitely taught her that.”",
+            "COMET": 0.51123046875
+        },
+        {
+            "src": "ちょっとやっぱ、コーチの差も出てましたね。",
+            "mt": "I really felt affected by how they appeared and disappeared. It also showed a bit of the coach's skill, I think.",
+            "ref": "I think the difference in coaching showed a little too.",
+            "COMET": 0.7490234375
+        },
+        {
+            "src": "いやー、ちょっとね。立川さん、そう言ってますが、もかさん、そこはやっぱりありましたか？ コーチの動きが乗り移ってるところが。",
+            "mt": "No, well, Mr. Tanaka is saying that, but Ms. Moka, was that really the case there? The coach's movements, the way they adapted...",
+            "ref": "Well, there you have it. Moka-san, Tachikawa says he could see your coach's movement coming through in your play. Was that something you felt too?",
+            "COMET": 0.66162109375
+        },
+        {
+            "src": "そうですね。なんか、よく似てるって言ってもらえるから、もっと似れるように頑張ります。",
+            "mt": "Yes, that's right. People often tell me I look quite similar, so... I'll work hard to look even more alike.",
+            "ref": "Yes. People often tell me that our play looks similar, so I'll work hard to become even more like him.",
+            "COMET": 0.71630859375
+        },
+        {
+            "src": "はい。まあでも、あのー……。",
+            "mt": "Yes. Well, it's kind of like this, you know.",
+            "ref": "Right. Well, um…",
+            "COMET": 0.6708984375
+        },
+        {
+            "src": "コーチを務めていただいたボンちゃん、いかがでしたか？",
+            "mt": "Well, that was a remarkable victory for Mr. Konmoto. As for you, Coach, how was it for Bon?",
+            "ref": "Bonchan, who served as her coach, what did you think?",
+            "COMET": 0.61376953125
+        },
+        {
+            "src": "いやー、熱入っちゃいましたね、応援に。もう、すごかったですよ。",
+            "mt": "Wow, things really got heated, didn't they? The cheering was incredible, too. Wow.",
+            "ref": "I really got carried away cheering for her. She was amazing.",
+            "COMET": 0.7216796875
+        },
+        {
+            "src": "いや、でもやっぱね、練習どおりやれてる動きですから。",
+            "mt": "Wow. But it's really going according to plan. How's the movement?",
+            "ref": "But really, those were the movements we had practiced.",
+            "COMET": 0.548828125
+        },
+        {
+            "src": "それがやっぱ反映されて、勝ちにつながってる時に、やっぱなんか「いい練習したんだな」っていうのが、結果でこうやって出たのが本当に……。",
+            "mt": "How's the movement? It's when that really shows, and it leads to wins, that you feel like, \"We really did good practice together.\" Seeing those results like this is truly the most rewarding.",
+            "ref": "Seeing that practice reflected in her play and turn into a win—seeing the results prove that we had trained well—really meant a lot.",
+            "COMET": 0.72705078125
+        },
+        {
+            "src": "本当にやっぱ勝ちたそうにしてたんで、もかさんがね。まあ立川には悪いけど、ちょっと今回はもかさんの勝ちということで。またいろいろやる機会はあると思うので、その時にまたいい試合が見られればなと思います。残りもあるんでね、頑張ってください。",
+            "mt": "They really seemed determined to win. Moko, well... While it wasn't ideal for us to lose, let's say Moko won this time. I think we'll have other opportunities to compete again. And that's that. I hope we can have another good match next time. There's still a ways to go, so please do your best.",
+            "ref": "Moka really wanted this win. I feel a little bad for Tachikawa, but this time the victory goes to Moka. I'm sure there will be more opportunities for them to play, and I hope we get another great match then. There is still more to come today, so keep it up.",
+            "COMET": 0.77001953125
+        },
+        {
+            "src": "はい、ありがとうございます。",
+            "mt": "Yes, thank you very much.",
+            "ref": "Yes—thank you very much.",
+            "COMET": 0.96923828125
+        },
+        {
+            "src": "まだね、次の試合ありますから。",
+            "mt": "Yes, thank you very much. There's still another match coming up, so...",
+            "ref": "There is still another match coming up.",
+            "COMET": 0.78564453125
+        }
+    ]
+}

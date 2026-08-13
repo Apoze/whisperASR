@@ -1,0 +1,28 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /private/tmp/whisperASR-ticket61.Nj9kJd/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /private/tmp/whisperASR-ticket61.Nj9kJd/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (3.56s)
+Test Suite 'Selected tests' started at 2026-08-10 13:20:18.889.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 13:20:18.890.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-10 13:20:18.890.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenDiarizerEngineWhenOptedIn]' started.
+/private/tmp/whisperASR-ticket61.Nj9kJd/Tests/HighQualityAcceptanceTests.swift:111: -[WhisperASRTests.HighQualityAcceptanceTests testFrozenDiarizerEngineWhenOptedIn] : Test skipped - Set the frozen inputs, engine, output, job ID and model cache for ticket #61.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenDiarizerEngineWhenOptedIn]' skipped (0.001 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-10 13:20:18.892.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-10 13:20:18.892.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'Selected tests' passed at 2026-08-10 13:20:18.892.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.003) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

@@ -1,0 +1,37 @@
+{
+  "baseCommit": "ad3d56feffec443e36af7adb68ce7fa9b3e4f32c",
+  "sourceReportsSHA256": {
+    "qwenDiagnostic": "0e43cbd5c7f4d6dd0b4706710fb9e473306a40dd7530f72ee2c4dc36a16e8c6a",
+    "funASR": "56deb9adbef7da757154e7c86bb598cfc90bf7dd232eb92ec298060888c446bc",
+    "reazon": "fdb32727c899c1ee0516ab9ab43bd11531ab789b5f4ab7914c8bd284e73b2ea4",
+    "qwenAnime": "e90c4bf6af835ff3eb181a91670b34aa54a8b714820873b4e45b657e6685513f",
+    "fireRed": "8fa4460e1d9b599e6d1dffa40af024e80223380e118f6164359cbbfd2f0f1330",
+    "hotwords": "a065bfcfcc9260660cb4fe00f4c788de37c428febd8f9067e77b69571aebd518",
+    "voiceMusic": "fe0e73831af465a3c526639973b78e8cd65cc61f8a86771fb610289c3323816b",
+    "adaptive": "25d38a79db2673a9baac37be0d376a70cfe0abbb74d8c35f4729696f248a4fee",
+    "whisperKit": "5871c72dc44a7ac1bac93e7815cf612adc0a896344950aff0bf7abd85164c863"
+  },
+  "rawArtifactsSHA256": {
+    "voiceMusicCandidateRaw": "dcf8b3d4cab5976010fbfcc44aa51b4c8ef06840674f8e89d9bf94d02d8e6eb8",
+    "adaptiveCandidateRaw": "51e9e3fc7a9833711b659526d221dbe97a5edb89d74fa6bff345d2f5bd2e68a9",
+    "adaptiveTranslationLog": "2f2a933138c8000d3166affd43d0411bd17659e7c88f2e0a2880fedfd6cf85b6",
+    "whisperKitRun": "e5903c6cde8d79b95f8cb375ceb3d867cd2ab3b07964e29bd4f39bfe450477d3",
+    "whisperKitLog": "1c815658f60feacae28fb20d7ec31fc2c22a4aa1fb4a442e4043d381b24912ea",
+    "whisperKitSelection": "680c739c9f1eebb63fd106b5fc6ef2dc39ffb5e477a4c99f8f96880c36b31b15",
+    "whisperKitTriggerPlan": "fcefb0d8a543e572a5356b76ed98833cdf247049e547079bdf8e788502c70b16"
+  },
+  "reporterSHA256": "05f2759e828589f539a22c4d3bb6796048c6ed1ca7dad20294140a60fd743618",
+  "controlsSHA256": "d2a7f4a615396cd8107c1d6be08c3a211f0d55404faac21042c9b8f1685c44d0",
+  "controlArtifactsSHA256": {
+    "buildLog": "8ac9fcd38489f02330c86d05a001b23a80eb4f1e77568a7714680a03404efd93",
+    "initialTestFailureLog": "1cb75fe36522f939bb381693f4be35a69521a502f3eff50295bf229fa121dc79",
+    "testsLog": "8bfdc2253a8957efa82f011533246db9a7b9966cb8ade6e282852681fd221dae",
+    "appLaunchLog": "c111505f06813e7ffe98a31c5d4d369872c60185d984edfe6ae44ca11dfec88a",
+    "metallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  },
+  "productSourcesTreeSHA256": "a11fc98669da14c30db3e3cea5c1e2a16342b84c970fbd2eae5277e0d6bb30e7",
+  "packageSHA256": {
+    "Package.swift": "ab6236f33ff99c10d6caaa51da856735cd3a6f93d7b3e9fa28d939edf0719c36",
+    "Package.resolved": "71d9161262d1962dd6775c3f9aacf0a9a677d8dfc042e2dfa8c49669e885e41f"
+  }
+}

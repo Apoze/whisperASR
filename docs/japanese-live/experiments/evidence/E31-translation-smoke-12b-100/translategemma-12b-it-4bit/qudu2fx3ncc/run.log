@@ -1,0 +1,16 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-13 02:00:49.797.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-13 02:00:49.798.
+Test Suite 'HighQualityLocalTranslationTests' started at 2026-08-13 02:00:49.798.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn]' passed (159.116 seconds).
+Test Suite 'HighQualityLocalTranslationTests' passed at 2026-08-13 02:03:28.915.
+	 Executed 1 test, with 0 failures (0 unexpected) in 159.116 (159.117) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-13 02:03:28.915.
+	 Executed 1 test, with 0 failures (0 unexpected) in 159.116 (159.117) seconds
+Test Suite 'Selected tests' passed at 2026-08-13 02:03:28.915.
+	 Executed 1 test, with 0 failures (0 unexpected) in 159.116 (159.118) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

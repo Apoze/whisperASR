@@ -1,0 +1,9 @@
+{
+  "ticket": 106,
+  "status": "failed",
+  "route": "translation-replay",
+  "detail": "Translation replay safety stop: native-pressure-warning-persisted",
+  "translator": "translategemma-12b-it-4bit",
+  "corpusID": "qudu2fx3ncc",
+  "modelVerdictAssigned": false
+}

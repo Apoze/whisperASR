@@ -1,0 +1,64 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/4edc/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/4edc/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (3.65s)
+Test Suite 'Selected tests' started at 2026-08-11 07:22:05.471.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-11 07:22:05.471.
+Test Suite 'HeavyweightModelGateTests' started at 2026-08-11 07:22:05.471.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCriticalPressureCancelsOfflineModelWithRecoverableFailure]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCriticalPressureCancelsOfflineModelWithRecoverableFailure]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testOfflineAdmissionUsesMemoryPressureInsteadOfFixedReserve]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testOfflineAdmissionUsesMemoryPressureInsteadOfFixedReserve]' passed (0.012 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testWarningBlocksNextOfflineModelUntilPressureReturnsToNormal]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testWarningBlocksNextOfflineModelUntilPressureReturnsToNormal]' passed (0.011 seconds).
+Test Suite 'HeavyweightModelGateTests' passed at 2026-08-11 07:22:05.497.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.025 (0.026) seconds
+Test Suite 'HighQualityAlignmentSpeakerWorkerTests' started at 2026-08-11 07:22:05.497.
+Test Case '-[WhisperASRTests.HighQualityAlignmentSpeakerWorkerTests testIndependentBetaSettingsCrossWorkerBoundary]' started.
+Test Case '-[WhisperASRTests.HighQualityAlignmentSpeakerWorkerTests testIndependentBetaSettingsCrossWorkerBoundary]' passed (0.328 seconds).
+Test Suite 'HighQualityAlignmentSpeakerWorkerTests' passed at 2026-08-11 07:22:05.825.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.328 (0.328) seconds
+Test Suite 'HighQualityJobTests' started at 2026-08-11 07:22:05.825.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesAlignTranslateMergeAndExportBothFormats]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesAlignTranslateMergeAndExportBothFormats]' passed (0.013 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidCuesAndRetainAlignmentDiagnostics]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidCuesAndRetainAlignmentDiagnostics]' passed (0.010 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidRawAlignmentTiming]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidRawAlignmentTiming]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend]' passed (0.016 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence]' passed (0.022 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerBetaControlsVisibilityAndSafeDefaults]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerBetaControlsVisibilityAndSafeDefaults]' passed (0.000 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-11 07:22:05.888.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.062 (0.063) seconds
+Test Suite 'HighQualityLocalTranslationTests' started at 2026-08-11 07:22:05.888.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract]' passed (0.001 seconds).
+Test Suite 'HighQualityLocalTranslationTests' passed at 2026-08-11 07:22:05.889.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-11 07:22:05.889.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.416 (0.417) seconds
+Test Suite 'Selected tests' passed at 2026-08-11 07:22:05.889.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.416 (0.418) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

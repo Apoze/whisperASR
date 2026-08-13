@@ -1,0 +1,13 @@
+{
+  "ticket": 106,
+  "route": "reporter",
+  "classification": "INCONCLUSIVE_HARNESS_PATH_RESOLUTION",
+  "modelVerdictAssigned": false,
+  "modelWasNotRerun": true,
+  "reporterSHA256": {
+    "executed": "f58fadf88791ec489bf2556dbba93a54da3a09863a0e40580a1c1fa967822f55",
+    "recovered": "8ad743ee8dedef508fff520309182ff39de54278edce3854b0fbb6cbff432abd"
+  },
+  "failureSHA256": "1d81330c1629dc2a58982dc3ca9f3c14442f5097f76c81707208d6c95a1a5072",
+  "finalFailClosedGateAdded": true
+}

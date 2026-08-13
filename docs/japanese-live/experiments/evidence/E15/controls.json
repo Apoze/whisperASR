@@ -1,0 +1,8 @@
+{
+  "buildAndJobTests": true,
+  "baselinePrincipalReplay": true,
+  "cancellationAndRenameTests": true,
+  "translationTests": true,
+  "liveTests": true,
+  "artifactReporterSelfTest": true
+}

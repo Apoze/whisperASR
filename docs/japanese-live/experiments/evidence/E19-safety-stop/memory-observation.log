@@ -1,0 +1,47 @@
+ticket=62
+split=development
+holdoutOpened=false
+runnerPID=69942
+xctestPID=71903
+xctestLaunch=2026-08-10T13:49:53+0200
+
+command=ps -p 71903 -o pid=,etime=,rss=,%cpu=,state=,command=
+71903 04:32 5276480  96.9 R    /Applications/Xcode.app/Contents/Developer/usr/bin/xctest -XCTest WhisperASRTests.HighQualityAcceptanceTests/testRealFrozenWorkflowWhenOptedIn /private/tmp/whisperASR-ticket62.T0MjTn/.build/arm64-apple-macosx/debug/WhisperASRPackageTests.xctest
+
+command=vmmap -summary 71903
+Date/Time:       2026-08-10 13:54:54.490 +0200
+Launch Time:     2026-08-10 13:49:53.062 +0200
+Physical footprint:         17.2G
+Physical footprint (peak):  17.3G
+IOAccelerator (graphics): size=16.9G resident=16.9G dirty=15.9G swapped=1.0G nonvolatile=16.9G
+
+command=sysctl -n hw.memsize
+25769803776
+
+command=memory_pressure (during run, retained output tail)
+Pages decompressed: 1520500160
+Pages compressed: 1802552173
+File I/O:
+Pageins: 460764069
+Pageouts: 738999
+System-wide memory free percentage: 8%
+
+action=STOP_GRACEFULLY
+signal=SIGINT
+runnerExit=130
+xctestStillRunning=false
+runnerStillRunning=false
+manifestSerialized=false
+manifestAbsenceReason=xctest exited on SIGINT before HighQualityJob catch/finalization emitted manifest.json
+
+command=memory_pressure (after stop)
+timestamp=2026-08-10T11:56:54Z
+physicalMemoryBytes=25769803776
+pagesFree=1066425
+pagesActive=95080
+pagesInactive=87597
+pagesSpeculative=6287
+pagesThrottled=0
+pagesWired=168236
+pagesUsedByCompressor=80588
+System-wide memory free percentage: 82%

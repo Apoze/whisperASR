@@ -1,0 +1,46 @@
+{
+  "assessment": {
+    "correctAttribution": "not-assessable",
+    "duplication": "not-assessable",
+    "durationSeconds": null,
+    "incorrectAttribution": "not-assessable",
+    "metrics": null,
+    "overlap": "not-assessable",
+    "peakMemoryBytes": null,
+    "unattributedSpeech": "not-assessable"
+  },
+  "disposition": "not-promoted",
+  "experiment": "E26-moss-promotion-decision",
+  "holdout": {
+    "attempted": false,
+    "configuration": null,
+    "opened": false,
+    "passes": 0,
+    "reason": "The DEV promotion gate is closed."
+  },
+  "issue": 100,
+  "product": {
+    "existingSpeakerKitOptionsChanged": false,
+    "liveChanged": false,
+    "mossDefaultAdded": false,
+    "mossRuntimeAdded": false,
+    "mossUIOptionAdded": false,
+    "speakerKitStandardRemainsDefault": true
+  },
+  "promotionGate": {
+    "blockingEvidence": "#98 Metal OOM before first token; #99 conditional no-run",
+    "checked": true,
+    "observed": "bestMOSS=null; decision=no-admissible-candidate",
+    "open": false,
+    "required": "one frozen MOSS winner on complete development video"
+  },
+  "provenance": {
+    "baseCommit": "7988ead17293c0a8aad8dbc57a5b5ea1496745d1",
+    "jointDecisionSHA256": "38eca9a058c0dc95421fb3b7591cb73f7460db9d52c53947b761b2ef9b226052",
+    "jointVerifierSHA256": "83355239003f209546a7a90224004653870b9b175997a64d32c3c7ea07e9844a",
+    "upstreamIssue": 99,
+    "verifierSHA256": "cd81ddc4173694af7f24a6afa94618cbaf63065ef9ee5ff32f7f874685996b07"
+  },
+  "schemaVersion": 1,
+  "verdict": "NO-PROMOTION: aucun gagnant MOSS sur DEV; holdout fermé"
+}

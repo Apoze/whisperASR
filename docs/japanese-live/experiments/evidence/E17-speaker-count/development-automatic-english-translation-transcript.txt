@@ -1,0 +1,313 @@
+SPEAKER_01: Amayui Moka English 1
+SPEAKER_01: English 2
+SPEAKER_03: English 3
+SPEAKER_01: English 1
+SPEAKER_00: English 2
+SPEAKER_00: English 6
+English 7
+SPEAKER_00: English 3
+SPEAKER_00: English 9
+SPEAKER_00: English 10
+SPEAKER_00: English 4
+SPEAKER_00: English 12
+SPEAKER_02: English 13
+SPEAKER_00: English 14
+SPEAKER_00: English 5
+SPEAKER_00: English 16
+SPEAKER_00: English 6
+English 18
+SPEAKER_00: English 7
+SPEAKER_00: English 8
+SPEAKER_03: English 21
+SPEAKER_02: English 9
+SPEAKER_02: English 23
+SPEAKER_00: English 24
+SPEAKER_00: English 25
+SPEAKER_00: English 26
+SPEAKER_02: English 27
+SPEAKER_02: English 10
+SPEAKER_01: English 29
+SPEAKER_01: English 30
+SPEAKER_01: English 11
+SPEAKER_01: English 32
+SPEAKER_01: English 33
+SPEAKER_01: English 34
+SPEAKER_02: English 35
+SPEAKER_01: English 36
+SPEAKER_01: English 37
+English 38
+English 39
+English 40
+SPEAKER_02: English 12
+SPEAKER_01: English 42
+English 43
+SPEAKER_01: English 44
+SPEAKER_01: English 45
+SPEAKER_01: English 13
+SPEAKER_02: English 47
+SPEAKER_02: English 14
+SPEAKER_02: English 49
+SPEAKER_02: English 50
+SPEAKER_01: English 51
+SPEAKER_01: English 15
+SPEAKER_01: English 53
+SPEAKER_01: English 54
+SPEAKER_02: English 16
+SPEAKER_02: English 56
+SPEAKER_00: English 57
+SPEAKER_00: English 58
+SPEAKER_02: English 59
+SPEAKER_00: English 60
+English 61
+SPEAKER_01: English 62
+SPEAKER_00: English 17
+SPEAKER_00: English 64
+SPEAKER_02: English 65
+English 66
+English 67
+English 68
+English 18
+English 19
+English 71
+English 72
+English 73
+English 74
+English 75
+English 76
+SPEAKER_00: English 20
+SPEAKER_00: English 78
+SPEAKER_00: English 79
+SPEAKER_00: English 80
+SPEAKER_00: English 81
+English 82
+English 83
+English 84
+SPEAKER_00: English 85
+English 86
+SPEAKER_01: English 87
+SPEAKER_01: English 88
+English 89
+SPEAKER_01: English 90
+SPEAKER_01: English 91
+SPEAKER_02: English 92
+English 93
+English 21
+English 22
+English 23
+SPEAKER_01: English 24
+SPEAKER_01: English 98
+SPEAKER_02: English 25
+SPEAKER_02: English 26
+SPEAKER_02: English 101
+SPEAKER_03: English 27
+SPEAKER_03: English 103
+SPEAKER_03: English 104
+SPEAKER_03: English 105
+SPEAKER_03: English 106
+SPEAKER_03: English 107
+SPEAKER_03: English 28
+SPEAKER_03: English 29
+SPEAKER_00: English 110
+SPEAKER_00: English 111
+SPEAKER_00: English 112
+SPEAKER_00: English 113
+SPEAKER_00: English 114
+SPEAKER_00: English 115
+SPEAKER_03: English 30
+SPEAKER_02: English 117
+SPEAKER_02: English 118
+SPEAKER_01: English 119
+SPEAKER_01: English 120
+English 121
+English 31
+English 123
+English 124
+English 125
+English 126
+English 127
+English 128
+English 129
+English 32
+English 33
+English 132
+English 34
+English 134
+English 135
+English 136
+English 137
+English 138
+English 139
+English 35
+English 36
+English 37
+SPEAKER_02: English 38
+SPEAKER_03: English 39
+SPEAKER_01: English 40
+SPEAKER_01: English 146
+English 147
+English 148
+English 41
+English 150
+English 151
+English 152
+English 153
+English 154
+English 155
+English 156
+English 157
+English 158
+English 159
+English 160
+English 161
+English 162
+English 163
+English 164
+English 165
+English 166
+English 167
+English 168
+English 169
+English 170
+English 42
+English 172
+English 173
+English 174
+English 175
+English 176
+English 177
+English 178
+English 179
+English 180
+English 43
+English 182
+English 183
+English 184
+English 185
+English 186
+English 187
+Thanks for your hard work English 188
+English 189
+English 190
+English 191
+English 192
+English 193
+English 194
+English 195
+English 196
+English 44
+English 198
+English 199
+English 200
+English 201
+English 202
+English 203
+SPEAKER_02: English 204
+SPEAKER_02: English 205
+English 206
+English 207
+English 208
+English 209
+SPEAKER_02: English 210
+English 211
+English 45
+English 213
+English 46
+English 47
+English 48
+English 217
+English 49
+English 50
+English 51
+English 52
+English 53
+English 54
+SPEAKER_02: English 55
+SPEAKER_01: English 225
+SPEAKER_01: English 226
+SPEAKER_01: English 227
+SPEAKER_02: English 228
+SPEAKER_02: English 229
+SPEAKER_01: English 230
+SPEAKER_02: English 56
+SPEAKER_02: English 57
+SPEAKER_00: English 233
+SPEAKER_00: English 234
+English 235
+SPEAKER_00: English 236
+English 237
+SPEAKER_00: English 238
+SPEAKER_02: English 239
+English 240
+English 241
+English 242
+English 243
+English 244
+English 245
+English 246
+English 247
+English 248
+English 249
+English 250
+English 251
+English 252
+English 253
+English 254
+English 255
+English 256
+English 257
+English 258
+English 259
+English 260
+English 261
+English 262
+English 263
+SPEAKER_02: English 264
+SPEAKER_00: English 265
+SPEAKER_00: English 58
+SPEAKER_02: English 267
+SPEAKER_03: English 59
+SPEAKER_03: English 269
+SPEAKER_03: English 60
+English 271
+SPEAKER_01: English 272
+SPEAKER_04: English 61
+SPEAKER_04: English 274
+SPEAKER_02: English 275
+SPEAKER_02: English 276
+SPEAKER_02: English 277
+SPEAKER_02: English 278
+SPEAKER_02: English 62
+SPEAKER_02: English 280
+SPEAKER_02: English 63
+SPEAKER_02: English 282
+SPEAKER_02: English 64
+SPEAKER_02: English 65
+SPEAKER_04: English 66
+SPEAKER_03: English 286
+SPEAKER_03: English 287
+SPEAKER_03: English 288
+SPEAKER_03: English 289
+SPEAKER_02: English 290
+SPEAKER_02: English 291
+SPEAKER_02: English 292
+SPEAKER_04: English 293
+SPEAKER_02: English 294
+SPEAKER_02: English 67
+SPEAKER_02: English 296
+SPEAKER_04: Thank you in advance English 297
+SPEAKER_04: English 298
+SPEAKER_04: English 299
+SPEAKER_04: English 68
+SPEAKER_05: English 301
+SPEAKER_05: English 302
+SPEAKER_00: English 303
+SPEAKER_05: English 304
+SPEAKER_05: English 305
+SPEAKER_05: English 69
+SPEAKER_05: English 70
+SPEAKER_05: English 71
+SPEAKER_05: English 72
+SPEAKER_05: English 310
+SPEAKER_05: English 311
+SPEAKER_04: English 312
+SPEAKER_04: English 313

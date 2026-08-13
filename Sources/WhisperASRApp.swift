@@ -2,7 +2,6 @@ import SwiftUI
 import AppKit
 import ScreenCaptureKit
 
-@main
 struct WhisperASRApp: App {
     @State private var appState = AppState()
     @State private var audioPlayer = AudioPlayerManager()
@@ -53,9 +52,48 @@ struct WhisperASRApp: App {
         .windowResizability(.contentSize)
         .windowStyle(.hiddenTitleBar)
 
+        Window("High-quality Japanese Transcript", id: "high-quality-job") {
+            HighQualityJobView()
+        }
+        .defaultSize(width: 680, height: 600)
+
         Settings {
             SettingsView()
         }
+    }
+}
+
+@main
+enum WhisperASREntryPoint {
+    static func main() async {
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.count == 4,
+           arguments[1] == HighQualityASRWorkerCommand.argument,
+           let backend = HighQualityASRBackend(rawValue: arguments[2]) {
+            exit(await HighQualityASRWorkerCommand.run(
+                backend: backend,
+                directory: URL(fileURLWithPath: arguments[3], isDirectory: true)
+            ))
+        }
+        if arguments.count > 1,
+           arguments[1] == HighQualityTranslationWorkerCommand.argument {
+            guard arguments.count == 4,
+                  let candidate = LocalMLXTranslator.Candidate(rawValue: arguments[3]) else {
+                exit(64)
+            }
+            exit(await HighQualityTranslationWorkerCommand.run(
+                directory: URL(fileURLWithPath: arguments[2], isDirectory: true),
+                candidate: candidate
+            ))
+        }
+        if arguments.count == 3,
+           let stage = HighQualityAlignmentSpeakerWorkerCommand.stage(for: arguments[1]) {
+            exit(await HighQualityAlignmentSpeakerWorkerCommand.run(
+                stage: stage,
+                directory: URL(fileURLWithPath: arguments[2], isDirectory: true)
+            ))
+        }
+        WhisperASRApp.main()
     }
 }
 

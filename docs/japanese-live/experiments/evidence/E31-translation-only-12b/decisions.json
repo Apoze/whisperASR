@@ -1,0 +1,22 @@
+[
+  {
+    "ticket": 96,
+    "result": "QWEN_STANDARD",
+    "sha256": "df3a597dff59158046af177d5f02086df603b6f2d755d9e21284ae4e547a030d"
+  },
+  {
+    "ticket": 100,
+    "result": "NO_MOSS_PRODUCT",
+    "sha256": "85842b2868ae56c5d276ad674b406b8b58e9d0a79faf474509fd6322dc54df34"
+  },
+  {
+    "ticket": 103,
+    "result": "NO_RUN_NO_ADMISSIBLE_DEV_SEPARATOR",
+    "sha256": "01acb827394129c8c2f86c61b6afc5ab6b5f5085bbe5b9999f38b87d73896ae0"
+  },
+  {
+    "ticket": 105,
+    "result": "STANDARD_CUES",
+    "sha256": "cae3fa45cbe506d9f5edf49b0ed0c482c2dc0d1bfffbf18d57fb3862dda0c593"
+  }
+]

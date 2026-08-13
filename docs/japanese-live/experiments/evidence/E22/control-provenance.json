@@ -1,0 +1,10 @@
+{
+  "kind": "current-code-youtube-control",
+  "implementationSHA256": {
+    "Sources/YouTubeAcquirer.swift": "5f455efb9e6c8f8a3a80e8889ae3111405c47748c5ec5bcc78c371e3a4d8d26b",
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Tests/HighQualityJobTests.swift": "95f135062d39a8e6a05d3669aca5e5597e562623e993663ead11f9f984bfc1b6"
+  },
+  "testBinarySHA256": "d5c9e7e6779d72eb3df6573f2843dc7599a8896edb29736a9b5f3a72cbe1a743",
+  "testLogSHA256": "2f0ca40955a5d32b827636e5eeae0ba02a529320fadb212f5283e13c32bcfbd6"
+}

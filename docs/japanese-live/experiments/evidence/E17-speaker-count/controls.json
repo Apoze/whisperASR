@@ -1,0 +1,8 @@
+{
+  "buildAndJobTests": true,
+  "cancellationTests": true,
+  "memoryGateTests": true,
+  "translationTests": true,
+  "liveTests": true,
+  "artifactReporterSelfTest": true
+}

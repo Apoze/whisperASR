@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "classification": "validation-only/no-worker",
+  "implementationSHA256": {
+    "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef"
+  },
+  "runtimeSHA256": {
+    "WhisperASRPackageTests.xctest": "92732701f4b48fb00da09b5cda0bceefcf20e41a46097a593d18264b57e13a04"
+  },
+  "checks": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "cueCount": 307,
+      "jobPolicy": "productDefault",
+      "resolvedPolicy": "previous-accepted-v1",
+      "semanticTurnsMatched": true,
+      "frozenUpstreamSHA256": "6060f830c8c3b8febb186c540e992f3d70375a674adb4d48087f77e1ce97c2b2",
+      "frozenSemanticRequestSHA256": "f717bb2eaa5ae758ec85bfab64e9601deee51794e0d267c249d330eb2d0e39f4",
+      "validationLogSHA256": "5271f4ce454a50bcfe10fe468ed61a005ac8d9cc6f0da62ea6677b7b36279648",
+      "workerCreated": false
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "cueCount": 260,
+      "jobPolicy": "productDefault",
+      "resolvedPolicy": "previous-accepted-v1",
+      "semanticTurnsMatched": true,
+      "frozenUpstreamSHA256": "85819a6e40930529c8e4206850d8fc107491e78c7600e5cabd259145d7991891",
+      "frozenSemanticRequestSHA256": "06b93ab3d082b6bb8144e0da1beec167e0a355652a7315d724c471c69882b2cc",
+      "validationLogSHA256": "790ee0edebd7e849b879177291dde18b15de0df77a97370744145eaa7729e903",
+      "workerCreated": false
+    }
+  ],
+  "priorMismatch": {
+    "classification": "INCONCLUSIVE_HARNESS_INPUT_MISMATCH",
+    "retainedManifestSHA256": "949b9c7d9fcf13ab6a0c5942cb064361f2eb9e58f0102ae0558ede1ea934a2a0",
+    "reusedAsModelVerdict": false
+  }
+}

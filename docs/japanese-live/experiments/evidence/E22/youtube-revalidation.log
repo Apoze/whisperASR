@@ -1,0 +1,29 @@
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.26s)
+Test Suite 'Selected tests' started at 2026-08-11 08:25:11.166.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-11 08:25:11.167.
+Test Suite 'HighQualityJobTests' started at 2026-08-11 08:25:11.167.
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeAcquirerTerminatesItsProcessWhenCancelled]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeAcquirerTerminatesItsProcessWhenCancelled]' passed (0.025 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeAcquirerUsesDeterministicExecutable]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeAcquirerUsesDeterministicExecutable]' passed (0.366 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeDownloadFailureRetainsVersionAndDiagnostics]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeDownloadFailureRetainsVersionAndDiagnostics]' passed (0.257 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeSourceUsesAcquiredAudioAndRetainsAcquisitionEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeSourceUsesAcquiredAudioAndRetainsAcquisitionEvidence]' passed (0.011 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeValidationAndAcquisitionFailuresStopBeforeModels]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testYouTubeValidationAndAcquisitionFailuresStopBeforeModels]' passed (0.003 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-11 08:25:11.829.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.662 (0.662) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-11 08:25:11.829.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.662 (0.662) seconds
+Test Suite 'Selected tests' passed at 2026-08-11 08:25:11.829.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.662 (0.663) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

@@ -64,7 +64,7 @@ enum BackupService {
             targetLanguage: d.string(forKey: "targetLanguage"),
             translationEndpoint: d.string(forKey: "translationEndpoint"),
             translationModel: d.string(forKey: "translationModel"),
-            translationAPIKey: d.string(forKey: "translationAPIKey"),
+            translationAPIKey: nil,
             liveTranslationPref: d.object(forKey: "liveTranslationPref") == nil
                 ? nil : d.bool(forKey: "liveTranslationPref"),
             liveCaptionMode: d.string(forKey: LiveCaptionMode.storageKey),
@@ -131,7 +131,9 @@ enum BackupService {
         set(c.targetLanguage, "targetLanguage")
         set(c.translationEndpoint, "translationEndpoint")
         set(c.translationModel, "translationModel")
-        set(c.translationAPIKey, "translationAPIKey")
+        if let apiKey = c.translationAPIKey {
+            try? TranslationCredentialStore.setAPIKey(apiKey)
+        }
         if let pref = c.liveTranslationPref { d.set(pref, forKey: "liveTranslationPref") }
         if let mode = c.liveCaptionMode {
             d.set(mode, forKey: LiveCaptionMode.storageKey)

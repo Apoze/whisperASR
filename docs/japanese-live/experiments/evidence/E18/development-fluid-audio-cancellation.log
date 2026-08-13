@@ -1,0 +1,54 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-10 13:21:02.409.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 13:21:02.410.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-10 13:21:02.410.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFluidAudioCancellationWhenOptedIn]' started.
+[13:21:04.542] [INFO] [FluidAudio.OfflineDiarizerModels] Loading offline diarization models from /tmp/whisperASR-ticket61.Nj9kJd/.build/benchmarks/fluid-audio-offline/fluid-audio-model-cache
+[13:21:04.542] [INFO] [FluidAudio.DownloadUtils] Host environment: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:21:04.543] [INFO] [FluidAudio.DownloadUtils] Found speaker-diarization locally, no download needed
+[13:21:04.604] [INFO] [FluidAudio.DownloadUtils] Compiled model Segmentation.mlmodelc in 61.07 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:21:04.621] [INFO] [FluidAudio.DownloadUtils] Compiled model Embedding.mlmodelc in 16.89 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:21:04.630] [INFO] [FluidAudio.DownloadUtils] Compiled model PldaRho.mlmodelc in 9.01 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:21:04.630] [INFO] [FluidAudio.DownloadUtils] Found speaker-diarization locally, no download needed
+[13:21:04.639] [INFO] [FluidAudio.DownloadUtils] Compiled model FBank.mlmodelc in 8.82 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:21:04.639] [INFO] [FluidAudio.OfflineDiarizerModels] Offline diarization models ready (compile: 0.098s, computeUnits: segmentation/embedding/plda=.all, fbank=.cpuOnly)
+[13:21:04.639] [INFO] [FluidAudio.OfflineDiarizer] Offline diarizer models initialized
+[13:21:04.708] [DEBUG] [FluidAudio.OfflineDiarizer] Segmentation model prewarmed in 0.069s
+[13:21:04.708] [DEBUG] [FluidAudio.OfflineEmbedding] Offline embedding configured with FBANK input audio[1×1×160000] → fbank_features; embedding consumes fbank_features + weights[1×589] (frames=589), maxBatch=32, output=embedding
+[Profiling] Embedding timings: fbankTotal=3.39ms (perWindow=3.393ms), maskPrepTotal=0.00ms (perEval=0.004ms), resampleTotal=0.20ms (perValid=0.198ms), embeddingTotal=4.29ms (perValid=4.289ms), pldaTotal=0.77ms (perValid=0.772ms), batches(fbank=1, plda=1)
+[13:21:04.746] [DEBUG] [FluidAudio.OfflineEmbedding] Embedding masks generated: 1 (meanActiveFrames=1.00, fallbackMasks=0, emptyMasks=0)
+[13:21:04.746] [DEBUG] [FluidAudio.OfflineEmbedding] Embedding timings: fbankTotal=3.39ms (perWindow=3.393ms), maskPrepTotal=0.00ms (perEval=0.004ms), resampleTotal=0.20ms (perValid=0.198ms), embeddingTotal=4.29ms (perValid=4.289ms), pldaTotal=0.77ms (perValid=0.772ms), batches(fbank=1, plda=1)
+[13:21:04.746] [DEBUG] [FluidAudio.OfflineDiarizer] Embedding stack prewarmed in 0.038s
+[13:21:04.746] [INFO] [FluidAudio.OfflineDiarizer] Offline diarizer models loaded from /tmp/whisperASR-ticket61.Nj9kJd/.build/benchmarks/fluid-audio-offline/fluid-audio-model-cache
+[13:21:04.746] [DEBUG] [FluidAudio.OfflineSegmentation] Offline segmentation: chunkSize=160000, stepSize=32000, totalSamples=15315325
+[13:21:04.746] [DEBUG] [FluidAudio.OfflineEmbedding] Offline embedding configured with FBANK input audio[1×1×160000] → fbank_features; embedding consumes fbank_features + weights[1×589] (frames=589), maxBatch=32, output=embedding
+[13:21:04.866] [DEBUG] [FluidAudio.OfflineSegmentation] Chunk 0 speaker frame counts: [0, 349, 239]
+[13:21:08.117] [DEBUG] [FluidAudio.OfflineSegmentation] Segmentation histogram: speechFrames=224672 totalFrames=282131 speechRatio=0.796 avgNonSpeechProb=0.186
+[Profiling] Segmentation timings: windows=479 prepareTotal=25.36ms (perWindow=0.0529ms) predictionTotal=1590.76ms (perWindow=3.3210ms)
+[13:21:08.117] [DEBUG] [FluidAudio.OfflineSegmentation] Segmentation mask speech frames = 238257 / 282131 (ratio=0.844, speechSeconds≈4045.1s)
+[13:21:08.117] [DEBUG] [FluidAudio.OfflineSegmentation] Winning speaker probability stats: count=224672, avg=0.622, min=0.171, max=1.000
+[13:21:08.117] [DEBUG] [FluidAudio.OfflineSegmentation] Winning probability distribution ≥0.500:142532, ≥0.700:85669, ≥0.800:62115, ≥0.900:40421, ≥0.950:25923, ≥0.980:14422, ≥0.990:9491, ≥0.995:5884, ≥0.999:1410
+[13:21:08.117] [DEBUG] [FluidAudio.OfflineSegmentation] Empty-class probability on speech frames: avg=0.059
+[13:21:08.117] [DEBUG] [FluidAudio.OfflineSegmentation] Segmentation timings: windows=479 prepareTotal=25.36ms (perWindow=0.0529ms) predictionTotal=1590.76ms (perWindow=3.3210ms)
+[Profiling] Embedding timings: fbankTotal=557.09ms (perWindow=1.163ms), maskPrepTotal=84.27ms (perEval=0.059ms), resampleTotal=0.26ms (perValid=0.000ms), embeddingTotal=4184.77ms (perValid=6.928ms), pldaTotal=17.13ms (perValid=0.028ms), batches(fbank=15, plda=19)
+[13:21:10.154] [DEBUG] [FluidAudio.OfflineEmbedding] Embedding masks generated: 604 (meanActiveFrames=247.42, fallbackMasks=0, emptyMasks=833)
+[13:21:10.154] [DEBUG] [FluidAudio.OfflineEmbedding] Embedding timings: fbankTotal=557.09ms (perWindow=1.163ms), maskPrepTotal=84.27ms (perEval=0.059ms), resampleTotal=0.26ms (perValid=0.000ms), embeddingTotal=4184.77ms (perValid=6.928ms), pldaTotal=17.13ms (perValid=0.028ms), batches(fbank=15, plda=19)
+[13:21:10.154] [DEBUG] [FluidAudio.OfflineDiarizer] Segmentation completed in 3.370939016342163s (async)
+[13:21:10.154] [DEBUG] [FluidAudio.OfflineDiarizer] Embedding extraction produced 604 vectors in 5.408359050750732s (async)
+[13:21:10.174] [DEBUG] [FluidAudio.OfflineDiarizer] Clustering will use 604/604 embeddings (NaN filtered)
+[13:21:10.439] [DEBUG] [FluidAudio.OfflineVBx] VBx warm start clusters: 37 histogram: [28: 1, 2: 1, 15: 1, 8: 1, 31: 1, 13: 1, 9: 5, 16: 1, 22: 1, 23: 4, 20: 5, 18: 4, 27: 5, 0: 511, 32: 1, 12: 1, 5: 5, 19: 1, 25: 2, 35: 4, 36: 3, 26: 3, 29: 2, 3: 1, 10: 1, 7: 1, 4: 3, 24: 3, 6: 2, 11: 3, 14: 1, 33: 7, 34: 4, 30: 3, 17: 5, 21: 2, 1: 4]
+[13:21:10.449] [DEBUG] [FluidAudio.OfflineVBx] VBx mixture weights – min: 2.07532323318036e-14, max: 0.9999999999992532, count: 37
+[13:21:10.451] [DEBUG] [FluidAudio.OfflineDiarizer] Clustering completed in 0.2871299982070923s with 1 centroids (assignment histogram: [0: 604])
+[13:21:10.789] [DEBUG] [FluidAudio.OfflineReconstruction] Speaker-count histogram 0:11305, 1:45592
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFluidAudioCancellationWhenOptedIn]' passed (8.537 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-10 13:21:10.947.
+	 Executed 1 test, with 0 failures (0 unexpected) in 8.537 (8.537) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-10 13:21:10.947.
+	 Executed 1 test, with 0 failures (0 unexpected) in 8.537 (8.537) seconds
+Test Suite 'Selected tests' passed at 2026-08-10 13:21:10.947.
+	 Executed 1 test, with 0 failures (0 unexpected) in 8.537 (8.538) seconds
+[fluid-audio-cancellation] retained=true
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

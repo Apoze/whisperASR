@@ -1,0 +1,3069 @@
+{
+  "asrWorker" : {
+    "backend" : "qwen-ja",
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-13T03:52:56Z",
+          "availableMemoryBytes" : 10781638656
+        },
+        {
+          "at" : "2026-08-13T03:52:56Z",
+          "availableMemoryBytes" : 10781638656
+        },
+        {
+          "at" : "2026-08-13T03:52:56Z",
+          "availableMemoryBytes" : 10782818304
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10780508160
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10777051136
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10777051136
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10777051136
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10777051136
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10777051136
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10777051136
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10777051136
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10790830080
+        },
+        {
+          "at" : "2026-08-13T03:52:57Z",
+          "availableMemoryBytes" : 10787782656
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10792058880
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10786029568
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10612555776
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10612555776
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10612555776
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10612555776
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10612555776
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 10612555776
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:58Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9547694080
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:52:59Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 9389424640
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 7617052672
+        },
+        {
+          "at" : "2026-08-13T03:53:00Z",
+          "availableMemoryBytes" : 7218610176
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 6866485248
+        },
+        {
+          "at" : "2026-08-13T03:53:01Z",
+          "availableMemoryBytes" : 7089963008
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7160348672
+        },
+        {
+          "at" : "2026-08-13T03:53:02Z",
+          "availableMemoryBytes" : 7730724864
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7743864832
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7789674496
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7594885120
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7594885120
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7594885120
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7594885120
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7594885120
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7594885120
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 7594885120
+        },
+        {
+          "at" : "2026-08-13T03:53:03Z",
+          "availableMemoryBytes" : 6638501888
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6509395968
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6195019776
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6191742976
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6191939584
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6191939584
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6191939584
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6191939584
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6191939584
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 6191939584
+        },
+        {
+          "at" : "2026-08-13T03:53:04Z",
+          "availableMemoryBytes" : 5954764800
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5925404672
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932056576
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932449792
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932449792
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932449792
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932449792
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932449792
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932449792
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5932449792
+        },
+        {
+          "at" : "2026-08-13T03:53:05Z",
+          "availableMemoryBytes" : 5326700544
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5305401344
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5303697408
+        },
+        {
+          "at" : "2026-08-13T03:53:06Z",
+          "availableMemoryBytes" : 5021859840
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:07Z",
+          "availableMemoryBytes" : 4743102464
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4913397760
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4910628864
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912791552
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912168960
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912168960
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912168960
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912168960
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912168960
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912168960
+        },
+        {
+          "at" : "2026-08-13T03:53:08Z",
+          "availableMemoryBytes" : 4912168960
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4962697216
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955045888
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:09Z",
+          "availableMemoryBytes" : 4955799552
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4970528768
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4944314368
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4941479936
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4939268096
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4939268096
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4939268096
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4939268096
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4939268096
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4939268096
+        },
+        {
+          "at" : "2026-08-13T03:53:10Z",
+          "availableMemoryBytes" : 4939268096
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:11Z",
+          "availableMemoryBytes" : 4956602368
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4957896704
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4966694912
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4955422720
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4954472448
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4955095040
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4955095040
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4955095040
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4955095040
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4955095040
+        },
+        {
+          "at" : "2026-08-13T03:53:12Z",
+          "availableMemoryBytes" : 4955095040
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4604477440
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:13Z",
+          "availableMemoryBytes" : 4955258880
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4826152960
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4949852160
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4951834624
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4953128960
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4953128960
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4953128960
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4953128960
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4953128960
+        },
+        {
+          "at" : "2026-08-13T03:53:14Z",
+          "availableMemoryBytes" : 4953128960
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4953128960
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4934696960
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4941660160
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4932763648
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4931911680
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4931911680
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4930568192
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4930568192
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4930568192
+        },
+        {
+          "at" : "2026-08-13T03:53:15Z",
+          "availableMemoryBytes" : 4930568192
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4930568192
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4998479872
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4983652352
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:16Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 4915363840
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5023580160
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:17Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 5022629888
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 5050335232
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 5073715200
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:18Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 4975165440
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 5001281536
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 4998922240
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 4989353984
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 5050580992
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 5050580992
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 5050580992
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 5050580992
+        },
+        {
+          "at" : "2026-08-13T03:53:19Z",
+          "availableMemoryBytes" : 5050580992
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 5050580992
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 5050580992
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4967464960
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4952555520
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:20Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4954734592
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 5048860672
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4794859520
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:21Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 4794023936
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 4998430720
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:22Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 5007245312
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4897816576
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:23Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 4915036160
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 4996399104
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 5009276928
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:24Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5003362304
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5027020800
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5025939456
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:25Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5039734784
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5100994560
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5120409600
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5120278528
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5125636096
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5125013504
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5125013504
+        },
+        {
+          "at" : "2026-08-13T03:53:26Z",
+          "availableMemoryBytes" : 5125013504
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5125013504
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5125013504
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5125013504
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5169315840
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 4999036928
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 4956651520
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5133844480
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5133844480
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5133844480
+        },
+        {
+          "at" : "2026-08-13T03:53:27Z",
+          "availableMemoryBytes" : 5133844480
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5133844480
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5133844480
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5133844480
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5137186816
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5132107776
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:28Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5131141120
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5113888768
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5115396096
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5105434624
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5093572608
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5082464256
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5082464256
+        },
+        {
+          "at" : "2026-08-13T03:53:29Z",
+          "availableMemoryBytes" : 5082464256
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5082464256
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5082464256
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5082464256
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5066342400
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5047058432
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 4805541888
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5042241536
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5063753728
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5063753728
+        },
+        {
+          "at" : "2026-08-13T03:53:30Z",
+          "availableMemoryBytes" : 5063753728
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5063753728
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5063753728
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5063753728
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5076811776
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:31Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5088182272
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5205000192
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:32Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5214322688
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5159698432
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5159944192
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:33Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5170872320
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5150703616
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5150703616
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:34Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5230886912
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5160058880
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5152620544
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5191811072
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5180637184
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5180637184
+        },
+        {
+          "at" : "2026-08-13T03:53:35Z",
+          "availableMemoryBytes" : 5180637184
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5180637184
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5180637184
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5180637184
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5180637184
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5290672128
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5294407680
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5282136064
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5318017024
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5315592192
+        },
+        {
+          "at" : "2026-08-13T03:53:36Z",
+          "availableMemoryBytes" : 5315592192
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5315592192
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5315592192
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5315592192
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5315592192
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5330026496
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5332828160
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5333303296
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5333073920
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5386567680
+        },
+        {
+          "at" : "2026-08-13T03:53:37Z",
+          "availableMemoryBytes" : 5386567680
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5386567680
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5386567680
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5386567680
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5386567680
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5316558848
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5323571200
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5324488704
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5325160448
+        },
+        {
+          "at" : "2026-08-13T03:53:38Z",
+          "availableMemoryBytes" : 5325766656
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5325766656
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5325766656
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5325766656
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5325766656
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5325766656
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5090852864
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5146312704
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:39Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5331419136
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5383159808
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5214633984
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:40Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5091721216
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5393235968
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:41Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5403869184
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5355552768
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5406883840
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5407473664
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5072420864
+        },
+        {
+          "at" : "2026-08-13T03:53:42Z",
+          "availableMemoryBytes" : 5072420864
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5072420864
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5072420864
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5072420864
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5072420864
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5072420864
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5344034816
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5407129600
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5405491200
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5304336384
+        },
+        {
+          "at" : "2026-08-13T03:53:43Z",
+          "availableMemoryBytes" : 5304336384
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5304336384
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5304336384
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5304336384
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5304336384
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5304336384
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:44Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5340119040
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5339381760
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5338136576
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5345443840
+        },
+        {
+          "at" : "2026-08-13T03:53:45Z",
+          "availableMemoryBytes" : 5346394112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5346394112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5346394112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5346394112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5346394112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5346394112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5346394112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5409882112
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5301878784
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5333270528
+        },
+        {
+          "at" : "2026-08-13T03:53:46Z",
+          "availableMemoryBytes" : 5320310784
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5320310784
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5320310784
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5320310784
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5320310784
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5320310784
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5320310784
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5342871552
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5338529792
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5354979328
+        },
+        {
+          "at" : "2026-08-13T03:53:47Z",
+          "availableMemoryBytes" : 5352964096
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5352964096
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5352964096
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5352964096
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5352964096
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5352964096
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5352964096
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5294080000
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5352079360
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5348622336
+        },
+        {
+          "at" : "2026-08-13T03:53:48Z",
+          "availableMemoryBytes" : 5345230848
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 4972052480
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 4972052480
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 4972052480
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 4972052480
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 4972052480
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 4972052480
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 5084905472
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 5092212736
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 5104943104
+        },
+        {
+          "at" : "2026-08-13T03:53:49Z",
+          "availableMemoryBytes" : 5104320512
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5104320512
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5104320512
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5104320512
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5104320512
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5104320512
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5104320512
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5257625600
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5357371392
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:50Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5475467264
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5415911424
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5407866880
+        },
+        {
+          "at" : "2026-08-13T03:53:51Z",
+          "availableMemoryBytes" : 5414682624
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5393547264
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5398609920
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5389680640
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5389680640
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5389680640
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5389680640
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5389680640
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5479628800
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5495242752
+        },
+        {
+          "at" : "2026-08-13T03:53:52Z",
+          "availableMemoryBytes" : 5444812800
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5444976640
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5444976640
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5444976640
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5444976640
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5444976640
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5444976640
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5444976640
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5425643520
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5417861120
+        },
+        {
+          "at" : "2026-08-13T03:53:53Z",
+          "availableMemoryBytes" : 5416992768
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5433098240
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5433098240
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5433098240
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5433098240
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5433098240
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5433098240
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5433098240
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5408391168
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5391826944
+        },
+        {
+          "at" : "2026-08-13T03:53:54Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5406457856
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5452759040
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5453660160
+        },
+        {
+          "at" : "2026-08-13T03:53:55Z",
+          "availableMemoryBytes" : 5447958528
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5448548352
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5448548352
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5448548352
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5448548352
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5448548352
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5448548352
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5448548352
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5432360960
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5440913408
+        },
+        {
+          "at" : "2026-08-13T03:53:56Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5439422464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5470142464
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5482807296
+        },
+        {
+          "at" : "2026-08-13T03:53:57Z",
+          "availableMemoryBytes" : 5472796672
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5471338496
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5471338496
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5471338496
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5471338496
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5471338496
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5471338496
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5471338496
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5432082432
+        },
+        {
+          "at" : "2026-08-13T03:53:58Z",
+          "availableMemoryBytes" : 5439062016
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5432279040
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5431934976
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5431934976
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5431934976
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5431934976
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5431934976
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5431934976
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5431934976
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5499273216
+        },
+        {
+          "at" : "2026-08-13T03:53:59Z",
+          "availableMemoryBytes" : 5222088704
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5436768256
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5272977408
+        },
+        {
+          "at" : "2026-08-13T03:54:00Z",
+          "availableMemoryBytes" : 5282250752
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5284872192
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5424611328
+        },
+        {
+          "at" : "2026-08-13T03:54:01Z",
+          "availableMemoryBytes" : 5481431040
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5481742336
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5487214592
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5487214592
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5487214592
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5487214592
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5487214592
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5487214592
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5487214592
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5517115392
+        },
+        {
+          "at" : "2026-08-13T03:54:02Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5505925120
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:03Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5592285184
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5655117824
+        },
+        {
+          "at" : "2026-08-13T03:54:04Z",
+          "availableMemoryBytes" : 5669273600
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5569806336
+        },
+        {
+          "at" : "2026-08-13T03:54:05Z",
+          "availableMemoryBytes" : 5616402432
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5664391168
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5653151744
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5548064768
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5548064768
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5548064768
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5548064768
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5548064768
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5548064768
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5548064768
+        },
+        {
+          "at" : "2026-08-13T03:54:06Z",
+          "availableMemoryBytes" : 5581733888
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5584846848
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5502877696
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498503168
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498519552
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498519552
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498519552
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498519552
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498519552
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498519552
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 5498519552
+        },
+        {
+          "at" : "2026-08-13T03:54:07Z",
+          "availableMemoryBytes" : 11433918464
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/da40\/whisperASR\/.build\/debug\/WhisperASR",
+        "--high-quality-asr-worker",
+        "qwen-ja",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-qwen-ja-A1F6DC1C-1318-45BF-952E-12AA19CD954B"
+      ],
+      "elapsedSeconds" : 71.23294508457184,
+      "exitStatus" : 0,
+      "exitedAt" : "2026-08-13T03:54:08Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 10286453848,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 27837,
+      "rawLog" : "Loaded 62 added tokens from tokenizer_config.json\nLoaded tokenizer with 151705 tokens, 151291 merges\nFound 1 safetensor files\nLoading: model.safetensors\nApplied weights to audio encoder (24 layers, 397 tensors)\nApplied weights to text decoder (28 layers, 704 tensors)\n",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-qwen-ja-A1F6DC1C-1318-45BF-952E-12AA19CD954B\/worker.log",
+      "startedAt" : "2026-08-13T03:52:56Z",
+      "swapUsedAfterBytes" : 4889313280,
+      "swapUsedBeforeBytes" : 4889313280,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "qwen-ja",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+      "weightSHA256" : {
+        "model.safetensors" : "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+      }
+    }
+  },
+  "deliverables" : [
+    "english-subtitles",
+    "english-translation-transcript",
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "forced-alignment",
+    "speaker-diarization",
+    "llm-translation",
+    "export"
+  ],
+  "failures" : [
+
+  ],
+  "finishedAt" : "2026-08-13T04:07:23Z",
+  "generatedFiles" : [
+    {
+      "kind" : "deliverable",
+      "path" : "japanese-transcript.txt"
+    },
+    {
+      "kind" : "deliverable",
+      "path" : "english-translation-transcript.txt"
+    },
+    {
+      "kind" : "deliverable",
+      "path" : "english-subtitles.vtt"
+    },
+    {
+      "kind" : "deliverable",
+      "path" : "english-subtitles.srt"
+    },
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "10600002-0000-4000-8000-000000000001",
+  "model" : {
+    "backend" : "qwen-ja",
+    "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+    "weightSHA256" : {
+      "model.safetensors" : "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+    }
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-13T03:52:56Z",
+      "backend" : "qwen-ja",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=7516192768 reserve=0 total=25769803776 available=10781376512 baseline=488817840",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T03:52:56Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-started",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T03:53:02Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:08Z",
+      "backend" : "qwen-ja",
+      "kind" : "unload-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:08Z",
+      "backend" : "qwen-ja",
+      "kind" : "memory-release-checked",
+      "message" : "memory=256345240 runtimePeak=489161904 minimumAvailable=4603445248 maximum=25769803776 reserve=0",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:08Z",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=4294967296 reserve=0 total=25769803776 available=13797703680 baseline=256476312",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:08Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:09Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:29Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:29Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=134431848 runtimePeak=256640152 minimumAvailable=10571268096 maximum=25769803776 reserve=0",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:29Z",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=4294967296 reserve=0 total=25769803776 available=10622468096 baseline=134431848",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-13T03:54:29Z",
+      "kind" : "load-started",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-13T03:54:35Z",
+      "kind" : "load-completed",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-13T03:54:43Z",
+      "kind" : "unload-completed",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-13T03:54:43Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=134644840 runtimePeak=134464616 minimumAvailable=10622468096 maximum=25769803776 reserve=0",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-13T03:54:43Z",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=8589934592 reserve=0 total=25769803776 available=13774225408 baseline=135201896",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:43Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-13T03:54:48Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-13T04:07:23Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-13T04:07:23Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=79660088 runtimePeak=135857256 minimumAvailable=4807753728 maximum=25769803776 reserve=0",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    }
+  ],
+  "peakMemoryBytes" : 10286453848,
+  "schemaVersion" : 2,
+  "selectedBackend" : "qwen-ja",
+  "source" : {
+    "byteCount" : 356459381,
+    "fileName" : "Video2.webm",
+    "modifiedAt" : "2026-07-18T19:43:03Z",
+    "path" : "\/Users\/maz\/Documents\/videos\/jap\/2\/Video2.webm"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : true,
+  "stageDurations" : [
+    "exporting",
+    0.06250607967376709,
+    "diarizing",
+    8.609786033630371,
+    "transcribing",
+    65.10537505149841,
+    "translating",
+    759.283569931984,
+    "preparing-diarization",
+    5.937536001205444,
+    "preparing-asr",
+    6.155458927154541,
+    "preparing-alignment",
+    1.4220080375671387,
+    "normalizing-source",
+    1.6501680612564087,
+    "aligning",
+    19.779297947883606
+  ],
+  "startedAt" : "2026-08-13T03:52:55Z",
+  "status" : "completed",
+  "translationModel" : {
+    "modelID" : "mlx-community\/translategemma-12b-it-4bit",
+    "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+    "runtimeVersion" : "3.31.4",
+    "translator" : "translategemma-12b-it-4bit",
+    "weightSHA256" : [
+      "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+      "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+    ]
+  }
+}

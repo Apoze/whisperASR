@@ -1,0 +1,68 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-10 12:51:13.990.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 12:51:13.991.
+Test Suite 'HeavyweightModelGateTests' started at 2026-08-10 12:51:13.991.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCapacityAndMemoryReleaseChecksFailClosed]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCapacityAndMemoryReleaseChecksFailClosed]' passed (0.011 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' passed (0.000 seconds).
+Test Suite 'HeavyweightModelGateTests' passed at 2026-08-10 12:51:14.003.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+Test Suite 'HighQualityJobTests' started at 2026-08-10 12:51:14.003.
+Test Case '-[WhisperASRTests.HighQualityJobTests testAutoAndExpectedSpeakerCountsReachSpeakerKitAndRawEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testAutoAndExpectedSpeakerCountsReachSpeakerKitAndRawEvidence]' passed (0.017 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testBackupNeverContainsTranslationAPIKey]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testBackupNeverContainsTranslationAPIKey]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationAfterYouTubeAcquisitionPreservesCompletedSourceEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationAfterYouTubeAcquisitionPreservesCompletedSourceEvidence]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringModelPreparationIsClassifiedAsCancellation]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringModelPreparationIsClassifiedAsCancellation]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringSpeakerKitReleasesDiarizationRuntime]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringSpeakerKitReleasesDiarizationRuntime]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationIsSafeForEveryOfflineBackend]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationIsSafeForEveryOfflineBackend]' passed (0.081 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellingYouTubeAcquisitionRemovesIncompleteDownload]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellingYouTubeAcquisitionRemovesIncompleteDownload]' passed (0.023 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testChunkedASRMovesCutsToSilenceAndCoversTheSourceExactlyOnce]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testChunkedASRMovesCutsToSilenceAndCoversTheSourceExactlyOnce]' passed (0.014 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testChunkedASROverlapsAndReconcilesWhenNoSilenceExists]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testChunkedASROverlapsAndReconcilesWhenNoSilenceExists]' passed (0.012 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface]' passed (0.009 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishOnlyJobTranslatesContextualStableCuesAndExportsOnlyEnglish]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishOnlyJobTranslatesContextualStableCuesAndExportsOnlyEnglish]' passed (0.012 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesAlignTranslateMergeAndExportBothFormats]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesAlignTranslateMergeAndExportBothFormats]' passed (0.006 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidCuesAndRetainAlignmentDiagnostics]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidCuesAndRetainAlignmentDiagnostics]' passed (0.008 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidRawAlignmentTiming]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesRejectInvalidRawAlignmentTiming]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend]' passed (0.015 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEveryOfflineBackendUsesTheSameJobInterfaceAndWritesCompleteArtifacts]' passed (0.015 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testExclusiveSpeakerReconciliationIsAuditableAndKeepsOneTranslationPerUnit]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testExclusiveSpeakerReconciliationIsAuditableAndKeepsOneTranslationPerUnit]' passed (0.006 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testForcedAlignmentTimesStayInsideTheirAudioWindow]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testForcedAlignmentTimesStayInsideTheirAudioWindow]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testInvalidOrDisabledExpectedSpeakerCountFailsBeforeModelPreparation]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testInvalidOrDisabledExpectedSpeakerCountFailsBeforeModelPreparation]' passed (0.003 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testJobSelectsSourceRelevantGlossaryAndPreservesRawASR]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testJobSelectsSourceRelevantGlossaryAndPreservesRawASR]' passed (0.008 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testMalformedTranslationsFailAndRetainSanitizedEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testMalformedTranslationsFailAndRetainSanitizedEvidence]' passed (0.019 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testPeakMemoryIsSampledDuringASRStages]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testPeakMemoryIsSampledDuringASRStages]' passed (0.273 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testRealOfflineBackendFunctionalGateWhenOptedIn]' started.
+/private/tmp/whisperASR-ticket61.Nj9kJd/Tests/HighQualityJobTests.swift:1652: -[WhisperASRTests.HighQualityJobTests testRealOfflineBackendFunctionalGateWhenOptedIn] : Test skipped - Set WHISPERASR_HIGH_QUALITY_ASR_FIXTURE and its SHA-256 to a long Japanese fixture.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRealOfflineBackendFunctionalGateWhenOptedIn]' skipped (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testRejectsJobWithoutDeliverableBeforeProcessing]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRejectsJobWithoutDeliverableBeforeProcessing]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSemanticTranslationUnitsIgnoreDiarizationAndPreserveAlignedJapanese]' started.
+Test Case '-[WhisperASRTe

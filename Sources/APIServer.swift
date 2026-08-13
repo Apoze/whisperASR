@@ -415,7 +415,7 @@ private struct OpenAITranscriptionAPI: Sendable {
         for (i, seg) in segments.enumerated() {
             let line = seg.text.trimmingCharacters(in: .whitespacesAndNewlines)
             out += "\(i + 1)\n"
-            out += "\(srtTime(seg.start)) --> \(srtTime(seg.end ?? seg.start))\n"
+            out += "\(SubtitleTimecode.srt(seg.start)) --> \(SubtitleTimecode.srt(seg.end ?? seg.start))\n"
             out += "\(line)\n\n"
         }
         return out
@@ -425,25 +425,10 @@ private struct OpenAITranscriptionAPI: Sendable {
         var out = "WEBVTT\n\n"
         for seg in segments {
             let line = seg.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            out += "\(vttTime(seg.start)) --> \(vttTime(seg.end ?? seg.start))\n"
+            out += "\(SubtitleTimecode.webVTT(seg.start)) --> \(SubtitleTimecode.webVTT(seg.end ?? seg.start))\n"
             out += "\(line)\n\n"
         }
         return out
-    }
-
-    private static func clockParts(_ t: Double) -> (h: Int, m: Int, s: Int, ms: Int) {
-        let total = Int((max(0, t) * 1000).rounded())
-        return (total / 3_600_000, (total % 3_600_000) / 60_000, (total % 60_000) / 1000, total % 1000)
-    }
-
-    static func srtTime(_ t: Double) -> String {
-        let p = clockParts(t)
-        return String(format: "%02d:%02d:%02d,%03d", p.h, p.m, p.s, p.ms)
-    }
-
-    static func vttTime(_ t: Double) -> String {
-        let p = clockParts(t)
-        return String(format: "%02d:%02d:%02d.%03d", p.h, p.m, p.s, p.ms)
     }
 
     // MARK: Upload extension inference

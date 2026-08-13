@@ -1,0 +1,3258 @@
+{
+    "/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/high-quality/integrated-validation-106-translation-only-12b/metrics/md62mmdz0m/e22-standard.en.txt": [
+        {
+            "src": "えなんか2人かっこいいのついてるわ背中に あついてない感じか分かんないそれあちゃー",
+            "mt": "Something's on their backs, and it looks good on both of them. I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "You two have something cool-looking on your backs.",
+            "COMET": 0.64794921875
+        },
+        {
+            "src": "あついてない感じか分かんないそれあちゃー",
+            "mt": "I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "Oh, so it looks like I don't have it?",
+            "COMET": 0.52001953125
+        },
+        {
+            "src": "あついてない感じか分かんないそれあちゃー",
+            "mt": "I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "I don't know what that is.",
+            "COMET": 0.599609375
+        },
+        {
+            "src": "あついてない感じか分かんないそれあちゃー",
+            "mt": "I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "Oof.",
+            "COMET": 0.46630859375
+        },
+        {
+            "src": "あちゃーこの中からミラージュの今勢のポーズも合います。",
+            "mt": "\"Hmm, within this [selection/group], there are also poses that would suit Mirage's current popularity.\"",
+            "ref": "Like... where are you pointing? Where are you pointing?",
+            "COMET": 0.4287109375
+        },
+        {
+            "src": "あちゃーこの中からミラージュの今勢のポーズも合います。 ちょっと確かにあちゃーってポーズしてる。",
+            "mt": "\"Hmm, within this [selection/group], there are also poses that would suit Mirage's current popularity.\" She's definitely striking a pose that says \"wow\" or \"amazing.\"",
+            "ref": "And with Reid's Mirage pose on top of that, it's kind of...",
+            "COMET": 0.60986328125
+        },
+        {
+            "src": "ちょっと確かにあちゃーってポーズしてる。 こっちの画面では多分レイドさんの画面は胸張ってるけどな。",
+            "mt": "She's definitely striking a pose that says \"wow\" or \"amazing.\" \"On this screen, it looks like Reid's screen shows her with her chest prominent.\"",
+            "ref": "It really does look like he's saying, “Oh no.” On my screen, he's doing an “oh no” pose.",
+            "COMET": 0.56494140625
+        },
+        {
+            "src": "こっちの画面では多分レイドさんの画面は胸張ってるけどな。 なんかマジで口に手当ててあちゃーってしてるよね。",
+            "mt": "\"On this screen, it looks like Reid's screen shows her with her chest prominent.\" \"She's really putting her hand to her mouth and saying 'wow' or 'amazing,' isn't she?\"",
+            "ref": "I bet on Reid's screen he's puffing his chest out, though.",
+            "COMET": 0.61767578125
+        },
+        {
+            "src": "なんかマジで口に手当ててあちゃーってしてるよね。",
+            "mt": "\"She's really putting her hand to her mouth and saying 'wow' or 'amazing,' isn't she?\"",
+            "ref": "He's seriously got a hand to his mouth like, “Oh no,” right?",
+            "COMET": 0.68505859375
+        },
+        {
+            "src": "レジェンドに行けばいいのかこれ。",
+            "mt": "\"Should we aim for Legend with this?\"",
+            "ref": "I know.",
+            "COMET": 0.413330078125
+        },
+        {
+            "src": "レジェンドに行けばいいのかこれ。 そうレジェンドで、あ、本当だ。",
+            "mt": "\"Should we aim for Legend with this?\" \"Right, in Legend. Oh, you're right.\"",
+            "ref": "Do I go to Legends for this? Yeah, under Legends.",
+            "COMET": 0.6982421875
+        },
+        {
+            "src": "そうレジェンドで、あ、本当だ。 何これ、オーラ。",
+            "mt": "\"Right, in Legend. Oh, you're right.\" \"What's this, an aura?\"",
+            "ref": "You're right—what is this?",
+            "COMET": 0.7431640625
+        },
+        {
+            "src": "何これ、オーラ。 これ、お、シルバー。",
+            "mt": "\"What's this, an aura?\" \"Oh, it's silver.\"",
+            "ref": "This aura?",
+            "COMET": 0.65234375
+        },
+        {
+            "src": "これ、お、シルバー。",
+            "mt": "\"Oh, it's silver.\"",
+            "ref": "Oh, Silver.",
+            "COMET": 0.85205078125
+        },
+        {
+            "src": "シルバーなんだか。",
+            "mt": "\"It feels like silver.\"",
+            "ref": "It says Silver, though.",
+            "COMET": 0.72998046875
+        },
+        {
+            "src": "大丈夫、俺なんか知んないけど、ずっと反映されなくて ルーキーだったから。 だってユイピもルーキーじゃん。",
+            "mt": "\"It's okay, I don't really know anything about it, but it hasn't been updated at all.\" \"Because I was a rookie.\" \"After all, Yui is a rookie too, isn't she?\"",
+            "ref": "Is that okay? Mine wasn't updating for some reason, so it kept showing Rookie.",
+            "COMET": 0.58740234375
+        },
+        {
+            "src": "だってユイピもルーキーじゃん。",
+            "mt": "\"After all, Yui is a rookie too, isn't she?\"",
+            "ref": "Wait, Yui-pi is Rookie too.",
+            "COMET": 0.67822265625
+        },
+        {
+            "src": "あれ、ルーキーやん。",
+            "mt": "\"Oh, she's a rookie.\"",
+            "ref": "I'm Rookie too.",
+            "COMET": 0.6845703125
+        },
+        {
+            "src": "これルーキーなの？",
+            "mt": "\"Is this person a rookie?\"",
+            "ref": "Wait, this is Rookie?",
+            "COMET": 0.68603515625
+        },
+        {
+            "src": "ルーキーだろ。",
+            "mt": "\"She's a rookie, isn't she?\"",
+            "ref": "That's Rookie.",
+            "COMET": 0.56640625
+        },
+        {
+            "src": "これ白いのいじる場合じゃないの。",
+            "mt": "\"This isn't the time to be messing with white things.\"",
+            "ref": "Wait, it's white—doesn't that mean Silver?",
+            "COMET": 0.60986328125
+        },
+        {
+            "src": "いやいやいや、もう三角1個しかついてないやん。 バグってるよ。",
+            "mt": "\"No, no, no, there's only one triangle left.\" \"It's bugged.\"",
+            "ref": "No, no—you've only got one triangle.",
+            "COMET": 0.796875
+        },
+        {
+            "src": "バグってるよ。",
+            "mt": "\"It's bugged.\"",
+            "ref": "It's bugged.",
+            "COMET": 0.94921875
+        },
+        {
+            "src": "しょぼすぎ。",
+            "mt": "\"That's so small.\"",
+            "ref": "That's so pathetic.",
+            "COMET": 0.60888671875
+        },
+        {
+            "src": "しかもユイピさん、左上のレベル2じゃない。",
+            "mt": "\"And also, Yui-san isn't at level 2 in the top left corner.\"",
+            "ref": "And Yui-pi, doesn't it say Level 2 in the top left?",
+            "COMET": 0.74609375
+        },
+        {
+            "src": "何がどこ。",
+            "mt": "\"What and where?\"",
+            "ref": "What? Where?",
+            "COMET": 0.89111328125
+        },
+        {
+            "src": "本当だ。 レベル2やん。",
+            "mt": "\"That's right.\" \"It's level two.\"",
+            "ref": "Oh, you're right. It says Level 2.",
+            "COMET": 0.83349609375
+        },
+        {
+            "src": "バグり散らかしてない。",
+            "mt": "\"It's not glitching all over the place.\"",
+            "ref": "Huh?",
+            "COMET": 0.36376953125
+        },
+        {
+            "src": "バグり散らかしてない。",
+            "mt": "\"It's not glitching all over the place.\"",
+            "ref": "Isn't it completely bugged out?",
+            "COMET": 0.68408203125
+        },
+        {
+            "src": "バグり散らかしてない。 だから何もわからないサブアカやめてください。",
+            "mt": "\"It's not glitching all over the place.\" \"Please stop using an account where you don't understand anything.\"",
+            "ref": "See? I don't understand any of this.",
+            "COMET": 0.501953125
+        },
+        {
+            "src": "だから何もわからないサブアカやめてください。",
+            "mt": "\"Please stop using an account where you don't understand anything.\"",
+            "ref": "Please stop using a smurf account.",
+            "COMET": 0.74365234375
+        },
+        {
+            "src": "本箱でやるとランク下がりそうだからサブアカ持ってきたタイプでしょ。 これやば。",
+            "mt": "\"You brought a secondary account because you thought you'd lose rank if you played on your main account, right?\" \"This is crazy.\"",
+            "ref": "This looks like the kind of thing where you brought a smurf because you were afraid your main account's rank would drop.",
+            "COMET": 0.69482421875
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "That's bad.",
+            "COMET": 0.56982421875
+        },
+        {
+            "src": "公開で終わってる。 公開で持ってきた。 見だもんな。 いやマジで今日タイトルに何もわからないって書いててサムネにも何もわからないっていう保険張りながら",
+            "mt": "\"It's publicly available.\" \"I brought it publicly.\" \"I see.\" \"Seriously, today I put 'I don't know anything about the title' and even put 'I don't know anything' in the thumbnail, just to be safe.\"",
+            "ref": "I'm finished. I'm acting like I've got nothing left to lose. Seriously.",
+            "COMET": 0.423583984375
+        },
+        {
+            "src": "いやマジで今日タイトルに何もわからないって書いててサムネにも何もわからないっていう保険張りながら 来てます。",
+            "mt": "\"Seriously, today I put 'I don't know anything about the title' and even put 'I don't know anything' in the thumbnail, just to be safe.\" \"They're coming.\"",
+            "ref": "Today I put “I don't understand anything” in the title, and even wrote it on the thumbnail as a disclaimer before coming here.",
+            "COMET": 0.65869140625
+        },
+        {
+            "src": "誘惑にめっちゃ聞いたの。 うち本当にエペできないけどいいのって誘ってもらったけど、 大丈夫、うち本当に分かんないよってめっちゃ聞いて、大丈夫っていう言われてきてるから。",
+            "mt": "\"I was really swayed by the temptation.\" \"They asked if it was okay even though we're not really good at it, but...\" \"They're really asking if I understand, and they're saying it's okay, so...\"",
+            "ref": "I asked Tasomaru over and over: “I seriously can't play Apex—is that okay?” She invited me, but I kept asking, “Are you sure? I genuinely don't know what I'm doing.” She said, “It's fine!” so that's why I'm here.",
+            "COMET": 0.60888671875
+        },
+        {
+            "src": "大丈夫、うち本当に分かんないよってめっちゃ聞いて、大丈夫っていう言われてきてるから。 だってこのメンバーだよ。",
+            "mt": "\"They're really asking if I understand, and they're saying it's okay, so...\" \"It's because it's this group.\"",
+            "ref": "Look who the group is.",
+            "COMET": 0.53662109375
+        },
+        {
+            "src": "まあ大丈夫でしょ。",
+            "mt": "\"Well, it should be fine, right?\"",
+            "ref": "We'll be fine.",
+            "COMET": 0.7919921875
+        },
+        {
+            "src": "全然関係ないんですけど、ずっ",
+            "mt": "\"It has absolutely nothing to do with it, but...\"",
+            "ref": "This is completely unrelated, but...",
+            "COMET": 0.6005859375
+        },
+        {
+            "src": "全然関係ないんですけど、ずっ",
+            "mt": "\"It has absolutely nothing to do with it, but...\"",
+            "ref": "Mm-hm.",
+            "COMET": 0.367431640625
+        },
+        {
+            "src": "と何年間ぐらいだろう。 67年間ぐらいiPhone10R使ってて、画面もバキバキのまま頑張って使ってたんですけど、ついに",
+            "mt": "\"And how many years has it been, roughly?\" \"I've been using an iPhone 10R for about 67 years, and even though the screen was completely cracked, I kept using it. But finally...\"",
+            "ref": "For—how many years was it?—I used an iPhone XR for about six or seven years.",
+            "COMET": 0.70263671875
+        },
+        {
+            "src": "67年間ぐらいiPhone10R使ってて、画面もバキバキのまま頑張って使ってたんですけど、ついに",
+            "mt": "\"I've been using an iPhone 10R for about 67 years, and even though the screen was completely cracked, I kept using it. But finally...\"",
+            "ref": "Oh, an XR.",
+            "COMET": 0.498291015625
+        },
+        {
+            "src": "67年間ぐらいiPhone10R使ってて、画面もバキバキのまま頑張って使ってたんですけど、ついに 17Pro Maxになりまして、うわー、一番いいやつやん。",
+            "mt": "\"I've been using an iPhone 10R for about 67 years, and even though the screen was completely cracked, I kept using it. But finally...\" \"I upgraded to the 17 Pro Max, and wow, this is the best one.\"",
+            "ref": "I kept using it even though the screen and camera were both completely cracked, but I've finally upgraded to a 17 Pro Max.",
+            "COMET": 0.8095703125
+        },
+        {
+            "src": "17Pro Maxになりまして、うわー、一番いいやつやん。",
+            "mt": "\"I upgraded to the 17 Pro Max, and wow, this is the best one.\"",
+            "ref": "Whoa, that's the top-of-the-line one.",
+            "COMET": 0.65380859375
+        },
+        {
+            "src": "Pro Maxってでかいやつ？",
+            "mt": "\"Is the Pro Max a large model?\"",
+            "ref": "Is the Pro Max the big one?",
+            "COMET": 0.85693359375
+        },
+        {
+            "src": "えそうなんかよくわかんないから一番名前凄そうなやつに待ってでかいやつなんだしかもプロマックスだか",
+            "mt": "\"Yeah, I guess so. Honestly, I don't really understand, so I just chose the one with the most impressive-sounding name. It's a big one, and apparently it's the Pro Max too.\"",
+            "ref": "Yeah. I didn't really understand the options, so I picked the one with the most impressive-sounding name.",
+            "COMET": 0.7109375
+        },
+        {
+            "src": "えそうなんかよくわかんないから一番名前凄そうなやつに待ってでかいやつなんだしかもプロマックスだか",
+            "mt": "\"Yeah, I guess so. Honestly, I don't really understand, so I just chose the one with the most impressive-sounding name. It's a big one, and apparently it's the Pro Max too.\"",
+            "ref": "Wait—so you got the huge one too?",
+            "COMET": 0.57861328125
+        },
+        {
+            "src": "えそうなんかよくわかんないから一番名前凄そうなやつに待ってでかいやつなんだしかもプロマックスだか らでかいじゃないプロ17",
+            "mt": "\"Yeah, I guess so. Honestly, I don't really understand, so I just chose the one with the most impressive-sounding name. It's a big one, and apparently it's the Pro Max too.\" \"It's not large, it's the Pro 17.\"",
+            "ref": "It's a Pro Max, so isn't it the big one?",
+            "COMET": 0.662109375
+        },
+        {
+            "src": "らでかいじゃないプロ17 プロ17プロマックスがあって",
+            "mt": "\"It's not large, it's the Pro 17.\" \"There's the Pro 17 and the Pro Max.\"",
+            "ref": "There are the 17, 17 Pro, and 17 Pro Max.",
+            "COMET": 0.60888671875
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "Yeah.",
+            "COMET": 0.79345703125
+        },
+        {
+            "src": "なんかよくわかんないから一番いいやつくださいって言って",
+            "mt": "\"I said something like, 'I don't really understand, so please just give me the best one.'\"",
+            "ref": "I didn't know, so I went with the one that sounded powerful. The powerful one.",
+            "COMET": 0.64794921875
+        },
+        {
+            "src": "この店で一番いいやつください プロマックスプロマックスにして",
+            "mt": "\"Please give me the best one here.\" \"Get me the Pro Max, the Pro Max.\"",
+            "ref": "So you basically said, “Give me the best one in the store,” and got a Pro Max?",
+            "COMET": 0.6689453125
+        },
+        {
+            "src": "プロマックスプロマックスにして なんか容量もわかんないから寺は一一番でげえやつにしてください。",
+            "mt": "\"Get me the Pro Max, the Pro Max.\" \"I'm not sure about the storage capacity, so please just give me the one with the highest capacity.\"",
+            "ref": "Yeah, I chose the Pro Max. I didn't understand the storage options either, so I got, like, 1 TB. I just said, “Give me the biggest one.”",
+            "COMET": 0.6953125
+        },
+        {
+            "src": "やばい、もう不合法の買い方やん。 なんか分かんなくて。",
+            "mt": "\"This is bad, this is an illegal way to buy something.\" \"I'm not sure.\"",
+            "ref": "That's wild—that's how a tycoon shops.",
+            "COMET": 0.5888671875
+        },
+        {
+            "src": "なんか分かんなくて。",
+            "mt": "\"I'm not sure.\"",
+            "ref": "I just didn't understand it.",
+            "COMET": 0.54638671875
+        },
+        {
+            "src": "でも私も去年買い替えたんだけど、それまずっと11プロ使ってたわ。",
+            "mt": "\"But I also replaced mine last year, and I was using the 11 Pro the whole time.\"",
+            "ref": "I upgraded last year too, but before that I'd been using an 11 Pro the whole time.",
+            "COMET": 0.8427734375
+        },
+        {
+            "src": "今16？ 今15かな。",
+            "mt": "\"Are you 16 now?\" \"I'm probably 15 now.\"",
+            "ref": "I think mine's a 15 now.",
+            "COMET": 0.798828125
+        },
+        {
+            "src": "だから、俺も去年10から16に変えたよええじゃあ結",
+            "mt": "\"So, I changed mine to 16 last year too. Well, Yuki...\"",
+            "ref": "I upgraded from an iPhone X to a 16 last year too.",
+            "COMET": 0.4873046875
+        },
+        {
+            "src": "だから、俺も去年10から16に変えたよええじゃあ結 構近いから結構みんな使ってたみんな結構近い",
+            "mt": "\"So, I changed mine to 16 last year too. Well, Yuki...\" \"Since it was so close, quite a few people used it. Everyone was quite close.\"",
+            "ref": "Oh! So we were pretty close, then. [laughs]",
+            "COMET": 0.482421875
+        },
+        {
+            "src": "構近いから結構みんな使ってたみんな結構近い",
+            "mt": "\"Since it was so close, quite a few people used it. Everyone was quite close.\"",
+            "ref": "We were all pretty close. Really close.",
+            "COMET": 0.61962890625
+        },
+        {
+            "src": "や別にね10でね別にいけるからねそうなんだよ変えれた俺画面も割れてなかったしなんだ私も割れてない",
+            "mt": "\"Well, it was fine with 10, really. It worked perfectly. That's right, I was able to change it. And my screen wasn't cracked either, you know. I haven't cracked mine either.\"",
+            "ref": "Honestly, the X was still fine. You can keep using it.",
+            "COMET": 0.6044921875
+        },
+        {
+            "src": "や別にね10でね別にいけるからねそうなんだよ変えれた俺画面も割れてなかったしなんだ私も割れてない",
+            "mt": "\"Well, it was fine with 10, really. It worked perfectly. That's right, I was able to change it. And my screen wasn't cracked either, you know. I haven't cracked mine either.\"",
+            "ref": "It was fine. My screen wasn't even cracked.",
+            "COMET": 0.6298828125
+        },
+        {
+            "src": "や別にね10でね別にいけるからねそうなんだよ変えれた俺画面も割れてなかったしなんだ私も割れてない",
+            "mt": "\"Well, it was fine with 10, really. It worked perfectly. That's right, I was able to change it. And my screen wasn't cracked either, you know. I haven't cracked mine either.\"",
+            "ref": "Mine wasn't cracked either.",
+            "COMET": 0.6162109375
+        },
+        {
+            "src": "もうさ1週間ぐらいなんだけどまだうんもうちょっと全体にひび入っちゃって",
+            "mt": "\"It's been about a week now, but there are still some cracks appearing across the whole thing.\"",
+            "ref": "I've only had this one for about a week, and I've already put a crack in the screen protector.",
+            "COMET": 0.62353515625
+        },
+        {
+            "src": "なんでなんで使い手に問題があるよなこういうの落とした落と",
+            "mt": "\"It's probably a problem with the user, isn't it? Something like this happens when you drop it.\"",
+            "ref": "How? Why?",
+            "COMET": 0.375244140625
+        },
+        {
+            "src": "なんでなんで使い手に問題があるよなこういうの落とした落と",
+            "mt": "\"It's probably a problem with the user, isn't it? Something like this happens when you drop it.\"",
+            "ref": "In cases like this, the user is clearly the problem.",
+            "COMET": 0.56396484375
+        },
+        {
+            "src": "なんでなんで使い手に問題があるよなこういうの落とした落と",
+            "mt": "\"It's probably a problem with the user, isn't it? Something like this happens when you drop it.\"",
+            "ref": "Did you drop it?",
+            "COMET": 0.50927734375
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "I did. [laughs]",
+            "COMET": 0.403564453125
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "I drop mine a lot too, but the actual screen doesn't crack.",
+            "COMET": 0.685546875
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "Seriously?",
+            "COMET": 0.362548828125
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "The protector cracks, though.",
+            "COMET": 0.63916015625
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ ルターそうフィルターが割れた画面はまだ切れないはずこういう人のためにあるんだなフィルターとかって",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\" \"It looks like the filter cracked. The screen itself hasn't broken, though. I guess these things exist for people like me, you know, for screen protectors.\"",
+            "ref": "Right, right. It's the protector that cracked. The screen itself should still be okay.",
+            "COMET": 0.65576171875
+        },
+        {
+            "src": "ルターそうフィルターが割れた画面はまだ切れないはずこういう人のためにあるんだなフィルターとかって いやフィルターないと怖いで使うの俺フィルターつけてないし、",
+            "mt": "\"It looks like the filter cracked. The screen itself hasn't broken, though. I guess these things exist for people like me, you know, for screen protectors.\" \"Yeah, it's scary without a filter. I don't even have a screen protector on mine.\"",
+            "ref": "So screen protectors really are made for people like you.",
+            "COMET": 0.62451171875
+        },
+        {
+            "src": "いやフィルターないと怖いで使うの俺フィルターつけてないし、",
+            "mt": "\"Yeah, it's scary without a filter. I don't even have a screen protector on mine.\"",
+            "ref": "I'd be scared to use a phone without one.",
+            "COMET": 0.66259765625
+        },
+        {
+            "src": "いやフィルターないと怖いで使うの俺フィルターつけてないし、 カバーもつけてない。",
+            "mt": "\"Yeah, it's scary without a filter. I don't even have a screen protector on mine.\" \"I don't have a case on it either.\"",
+            "ref": "Really? I don't use a screen protector—or even a case.",
+            "COMET": 0.76708984375
+        },
+        {
+            "src": "カバーもつけてない。 え、怖い。",
+            "mt": "\"I don't have a case on it either.\" \"Oh, that's scary.\"",
+            "ref": "What?!",
+            "COMET": 0.439208984375
+        },
+        {
+            "src": "え、怖い。",
+            "mt": "\"Oh, that's scary.\"",
+            "ref": "That's terrifying!",
+            "COMET": 0.9189453125
+        },
+        {
+            "src": "それ、つるって落としたらバリっていきますよ。",
+            "mt": "\"If you drop that, it's going to shatter.\"",
+            "ref": "If it slips out of your hand, it'll shatter.",
+            "COMET": 0.73876953125
+        },
+        {
+            "src": "落とさないもん。 そもそも私ガチで落とす。",
+            "mt": "\"I'm not going to drop it.\" \"I'm actually going to drop it.\"",
+            "ref": "I don't drop it in the first place.",
+            "COMET": 0.55712890625
+        },
+        {
+            "src": "そもそも私ガチで落とす。",
+            "mt": "\"I'm actually going to drop it.\"",
+            "ref": "I seriously drop mine all the time.",
+            "COMET": 0.61376953125
+        },
+        {
+            "src": "え、わかる。 手滑るよね。",
+            "mt": "\"Oh, I understand.\" \"It's going to slip, isn't it?\"",
+            "ref": "I get it. Your hand just slips.",
+            "COMET": 0.6806640625
+        },
+        {
+            "src": "うん、の、もう悪力が。",
+            "mt": "\"Yeah, well, it's already too late.\"",
+            "ref": "My grip strength is already...",
+            "COMET": 0.477783203125
+        },
+        {
+            "src": "も、お茶もめっちゃこぼすんよな。",
+            "mt": "\"You're going to spill the tea, aren't you?\"",
+            "ref": "I spill cups and tea all the time too.",
+            "COMET": 0.54541015625
+        },
+        {
+            "src": "エマバー、マジでバーさん。 エマバー、マジでバーさんなんだよ。",
+            "mt": "\"Emma, you're really something.\" \"Emma, you really are something.\"",
+            "ref": "Grandma Ema. You're seriously an old lady. Grandma Ema.",
+            "COMET": 0.615234375
+        },
+        {
+            "src": "エマバー、マジでバーさんなんだよ。",
+            "mt": "\"Emma, you really are something.\"",
+            "ref": "I really am an old lady.",
+            "COMET": 0.55419921875
+        },
+        {
+            "src": "カップは落とさないかも。 もう何回配信ビアでお茶ぶちまけたか。",
+            "mt": "\"I might not drop the cup.\" \"How many times have I spilled tea during my streams?\"",
+            "ref": "I might not actually drop cups.",
+            "COMET": 0.5732421875
+        },
+        {
+            "src": "もう何回配信ビアでお茶ぶちまけたか。",
+            "mt": "\"How many times have I spilled tea during my streams?\"",
+            "ref": "But I've lost count of how many times I've spilled tea all over my streaming room.",
+            "COMET": 0.58837890625
+        },
+        {
+            "src": "もう何回配信ビアでお茶ぶちまけたか。 うち最近口もという風に言うんだよな。",
+            "mt": "\"How many times have I spilled tea during my streams?\" \"Lately, people say it like 'kuchi,' you know?\"",
+            "ref": "My mouth's been getting loose lately.",
+            "COMET": 0.412841796875
+        },
+        {
+            "src": "待ってわかる。 口も柔い。 ユイバ。",
+            "mt": "\"I understand; just wait.\" \"They're gentle too.\" \"Yuiwa.\"",
+            "ref": "I know. Mine is too.",
+            "COMET": 0.50146484375
+        },
+        {
+            "src": "ユイバ。",
+            "mt": "\"Yuiwa.\"",
+            "ref": "Grandma Yui!",
+            "COMET": 0.72119140625
+        },
+        {
+            "src": "口からお茶飛び出る。 水こぼれる。",
+            "mt": "\"Tea spilled out of their mouth.\" \"Water spilled.\"",
+            "ref": "Tea just comes flying out of my mouth.",
+            "COMET": 0.66552734375
+        },
+        {
+            "src": "水こぼれる。 なんか嫌だよ。",
+            "mt": "\"Water spilled.\" \"I don't really like it.\"",
+            "ref": "I know. Water just spills out somehow.",
+            "COMET": 0.489990234375
+        },
+        {
+            "src": "なんか嫌だよ。",
+            "mt": "\"I don't really like it.\"",
+            "ref": "I hate that.",
+            "COMET": 0.771484375
+        },
+        {
+            "src": "退化してんだよねもうそうなんだよねまあ人間最終的に赤ちゃんに戻っていくって言うからね",
+            "mt": "\"It's like we're deteriorating, you know? I mean, humans ultimately revert to being like babies, right?\"",
+            "ref": "We're already regressing.",
+            "COMET": 0.57568359375
+        },
+        {
+            "src": "退化してんだよねもうそうなんだよねまあ人間最終的に赤ちゃんに戻っていくって言うからね",
+            "mt": "\"It's like we're deteriorating, you know? I mean, humans ultimately revert to being like babies, right?\"",
+            "ref": "Exactly.",
+            "COMET": 0.44677734375
+        },
+        {
+            "src": "退化してんだよねもうそうなんだよねまあ人間最終的に赤ちゃんに戻っていくって言うからね",
+            "mt": "\"It's like we're deteriorating, you know? I mean, humans ultimately revert to being like babies, right?\"",
+            "ref": "They say humans eventually go back to being babies.",
+            "COMET": 0.7197265625
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "You've already started turning back?",
+            "COMET": 0.41796875
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "Yeah. Pretty early, right?",
+            "COMET": 0.39013671875
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "Way too early.",
+            "COMET": 0.39453125
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "I guess if you don't use things—if you don't keep moving—they really do deteriorate.",
+            "COMET": 0.58447265625
+        },
+        {
+            "src": "やでも別に口元 だけは一番動かしてるだろう。 むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"But it's nothing specific to the mouth, really.\" \"That's probably the one thing I'm using the most.\" \"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "But your mouth is probably the part you move the most.",
+            "COMET": 0.51611328125
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "True.",
+            "COMET": 0.451171875
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "More than the average person, even.",
+            "COMET": 0.5087890625
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "True.",
+            "COMET": 0.451171875
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "If that starts deteriorating, it's all over.",
+            "COMET": 0.7314453125
+        },
+        {
+            "src": "確かに気づいたらハマピス出てくる。",
+            "mt": "\"Sure enough, you start noticing the 'ham-peace' stuff.\"",
+            "ref": "True.",
+            "COMET": 0.480712890625
+        },
+        {
+            "src": "確かに気づいたらハマピス出てくる。",
+            "mt": "\"Sure enough, you start noticing the 'ham-peace' stuff.\"",
+            "ref": "The second I let my guard down, my nose starts running.",
+            "COMET": 0.44287109375
+        },
+        {
+            "src": "え、",
+            "mt": "\"Huh?\"",
+            "ref": "Huh? A runny nose?",
+            "COMET": 0.70166015625
+        },
+        {
+            "src": "鼻水、気を抜いたら鼻水出るからティッシュ詰めるわ。 うわ、よくないよ。",
+            "mt": "\"I'm going to stuff tissues up my nose, because if I let my guard down, I'll start having a runny nose.\" \"Oh, that's not good.\"",
+            "ref": "My nose runs whenever I relax, so I'm stuffing tissue in it.",
+            "COMET": 0.728515625
+        },
+        {
+            "src": "うわ、よくないよ。 逆流するよ。",
+            "mt": "\"Oh, that's not good.\" \"It's going to come back up.\"",
+            "ref": "That's not good. It'll flow back.",
+            "COMET": 0.76318359375
+        },
+        {
+            "src": "逆流したらよくないの？",
+            "mt": "\"Wouldn't that be bad if it flows back up?\"",
+            "ref": "Is it bad if it flows back?",
+            "COMET": 0.8203125
+        },
+        {
+            "src": "逆流して喉がただれる。",
+            "mt": "\"It's flowing back up, and my throat is getting sore.\"",
+            "ref": "It'll run back and irritate your throat.",
+            "COMET": 0.80859375
+        },
+        {
+            "src": "ああ、そういうこと。",
+            "mt": "\"Oh, I see.\"",
+            "ref": "Oh, that's what you mean?",
+            "COMET": 0.73486328125
+        },
+        {
+            "src": "でも、ちっちゃい頃めっちゃずるずる吸ってたな。",
+            "mt": "\"But, I used to really gulp it down a lot when I was little.\"",
+            "ref": "I used to sniff it back constantly when I was little.",
+            "COMET": 0.7197265625
+        },
+        {
+            "src": "わかる。 やめなさい、あんた。",
+            "mt": "\"I understand.\" \"Stop it, you.\"",
+            "ref": "I know. They'd say, “Stop that, you.”",
+            "COMET": 0.814453125
+        },
+        {
+            "src": "言われる、言われる。 噛む。 さ、噛みすぎるとさ、耳がいかれない。",
+            "mt": "\"I'm being told, I'm being told.\" \"Chewing.\" \"If you chew too much, you know, your ears start to hurt.\"",
+            "ref": "Did they tell you that too? “Blow your nose.”",
+            "COMET": 0.53564453125
+        },
+        {
+            "src": "さ、噛みすぎるとさ、耳がいかれない。",
+            "mt": "\"If you chew too much, you know, your ears start to hurt.\"",
+            "ref": "But if you blow your nose too much, doesn't it mess up your ears?",
+            "COMET": 0.6025390625
+        },
+        {
+            "src": "え、それ、噛むの下手やね。",
+            "mt": "\"Oh, you're really bad at chewing.\"",
+            "ref": "Then you're bad at blowing your nose.",
+            "COMET": 0.70654296875
+        },
+        {
+            "src": "鼻の、下赤くなるえでももうだってる私鼻の下鼻の下赤くなるはまあしょうがない",
+            "mt": "\"My nose is getting red, and it's probably because I have a cold. It's probably just the redness around my nose; it's nothing to worry about.\"",
+            "ref": "The skin under your nose gets red.",
+            "COMET": 0.6083984375
+        },
+        {
+            "src": "鼻の、下赤くなるえでももうだってる私鼻の下鼻の下赤くなるはまあしょうがない",
+            "mt": "\"My nose is getting red, and it's probably because I have a cold. It's probably just the redness around my nose; it's nothing to worry about.\"",
+            "ref": "Mine already is—under my nose.",
+            "COMET": 0.49462890625
+        },
+        {
+            "src": "鼻の、下赤くなるえでももうだってる私鼻の下鼻の下赤くなるはまあしょうがない",
+            "mt": "\"My nose is getting red, and it's probably because I have a cold. It's probably just the redness around my nose; it's nothing to worry about.\"",
+            "ref": "You can't really avoid the skin under your nose getting red.",
+            "COMET": 0.6220703125
+        },
+        {
+            "src": "あとうち両方の鼻にティッシュ詰めるけど詰めてる",
+            "mt": "\"I'm stuffing tissues up both my nostrils, and I'm still stuffing them.\"",
+            "ref": "I stuff tissue into both nostrils, though.",
+            "COMET": 0.654296875
+        },
+        {
+            "src": "あとうち両方の鼻にティッシュ詰めるけど詰めてる 今ねえ配信中に鼻に詰めないのティッシュあんたえ、それきつくない？",
+            "mt": "\"I'm stuffing tissues up both my nostrils, and I'm still stuffing them.\" \"Are you stuffing tissues up your nose right now during the broadcast? Doesn't that hurt?\"",
+            "ref": "I have it stuffed in right now.",
+            "COMET": 0.5380859375
+        },
+        {
+            "src": "今ねえ配信中に鼻に詰めないのティッシュあんたえ、それきつくない？",
+            "mt": "\"Are you stuffing tissues up your nose right now during the broadcast? Doesn't that hurt?\"",
+            "ref": "Hey! Don't stuff tissue in your nose while you're streaming!",
+            "COMET": 0.7236328125
+        },
+        {
+            "src": "今ねえ配信中に鼻に詰めないのティッシュあんたえ、それきつくない？ 喋りながら口呼吸してんの。 今そうだよ。",
+            "mt": "\"Are you stuffing tissues up your nose right now during the broadcast? Doesn't that hurt?\" \"You're breathing through your mouth while you're talking.\" \"Yes, I am right now.\"",
+            "ref": "Isn't that rough? Are you breathing through your mouth while talking right now?",
+            "COMET": 0.7421875
+        },
+        {
+            "src": "今そうだよ。",
+            "mt": "\"Yes, I am right now.\"",
+            "ref": "Yeah.",
+            "COMET": 0.63037109375
+        },
+        {
+            "src": "え、つらねえ。",
+            "mt": "\"Ugh, it's tough.\"",
+            "ref": "That sounds miserable.",
+            "COMET": 0.66552734375
+        },
+        {
+            "src": "つら。",
+            "mt": "\"It's rough.\"",
+            "ref": "That's rough.",
+            "COMET": 0.8994140625
+        },
+        {
+            "src": "つら。 今回のチャンピオンも。 清掃はやりませんよ。 そんなこと。",
+            "mt": "\"It's rough.\" \"This time, too.\" \"I'm not going to clean.\" \"That kind of thing.\"",
+            "ref": "A seiso girl wouldn't do that.",
+            "COMET": 0.4208984375
+        },
+        {
+            "src": "だってもうつまは垂れてくるから。",
+            "mt": "\"Because my socks are starting to get wet.\"",
+            "ref": "But otherwise it just keeps dripping out.",
+            "COMET": 0.495361328125
+        },
+        {
+            "src": "だってもうつまは垂れてくるから。 あ、ビクエさん、もう清掃はしてたんですか。 違う違う。",
+            "mt": "\"Because my socks are starting to get wet.\" \"Oh, Mr. Bique, have you already finished cleaning?\" \"No, no.\"",
+            "ref": "Oh, you scared me. I thought you said, “I've already given up on being seiso.”",
+            "COMET": 0.475341796875
+        },
+        {
+            "src": "違う違う。 サラサラすぎて、どっちとの花水と清掃、",
+            "mt": "\"No, no.\" \"It's so clear that it's hard to tell which is the water and which is the cleaning solution.\"",
+            "ref": "No, no. It's just too watery.",
+            "COMET": 0.6650390625
+        },
+        {
+            "src": "サラサラすぎて、どっちとの花水と清掃、",
+            "mt": "\"It's so clear that it's hard to tell which is the water and which is the cleaning solution.\"",
+            "ref": "Which are you choosing: the runny nose or your seiso image?",
+            "COMET": 0.5078125
+        },
+        {
+            "src": "結局の結局の清掃、えでもどう、花水垂れ流しながらエイペックスやってる清掃どうよ、じゃあいや別に、",
+            "mt": "\"So, ultimately, about the cleaning... I mean, how about this cleaning while they're just pouring out the flower-infused water and doing Apex? I mean, it's not like it's a big deal, really.\"",
+            "ref": "Well... what do you think of a seiso girl playing Apex while her nose runs freely?",
+            "COMET": 0.4599609375
+        },
+        {
+            "src": "結局の結局の清掃、えでもどう、花水垂れ流しながらエイペックスやってる清掃どうよ、じゃあいや別に、 度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか",
+            "mt": "\"So, ultimately, about the cleaning... I mean, how about this cleaning while they're just pouring out the flower-infused water and doing Apex? I mean, it's not like it's a big deal, really.\" \"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\"",
+            "ref": "Stop. Just blow your nose every so often.",
+            "COMET": 0.41455078125
+        },
+        {
+            "src": "度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか",
+            "mt": "\"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\"",
+            "ref": "“Running freely”...",
+            "COMET": 0.416259765625
+        },
+        {
+            "src": "度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか",
+            "mt": "\"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\"",
+            "ref": "Why is it always zero or a hundred with you?",
+            "COMET": 0.460693359375
+        },
+        {
+            "src": "度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか ティッシュ詰めてるダダ漏れは嫌だティッシュ詰めてるかどっちがいいのよ",
+            "mt": "\"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\" \"I hate the feeling of it leaking out. Is it better to stuff tissues, or to just let it leak?\"",
+            "ref": "Either I let it pour out or I stuff tissue in my nose. I don't want it pouring out. So which one would you prefer?",
+            "COMET": 0.59033203125
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "I don't like either option either, if we're being honest.",
+            "COMET": 0.5283203125
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "Both are a problem.",
+            "COMET": 0.4931640625
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "This is bad—my eyes haven't adjusted to Apex.",
+            "COMET": 0.54931640625
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "They can't keep up.",
+            "COMET": 0.5166015625
+        },
+        {
+            "src": "でも昨日やってました。",
+            "mt": "\"But I did it yesterday.\"",
+            "ref": "Your eyes?",
+            "COMET": 0.48583984375
+        },
+        {
+            "src": "でも昨日やってました。",
+            "mt": "\"But I did it yesterday.\"",
+            "ref": "This is bad.",
+            "COMET": 0.4833984375
+        },
+        {
+            "src": "でも昨日やってました。 がなやってたけど起動も追いついてなかったね。",
+            "mt": "\"But I did it yesterday.\" \"I was trying to do it, but even that wasn't working, and I couldn't keep up.\"",
+            "ref": "But you were playing yesterday, weren't you?",
+            "COMET": 0.54638671875
+        },
+        {
+            "src": "がなやってたけど起動も追いついてなかったね。",
+            "mt": "\"I was trying to do it, but even that wasn't working, and I couldn't keep up.\"",
+            "ref": "I was, but they couldn't keep up yesterday either.",
+            "COMET": 0.6806640625
+        },
+        {
+            "src": "俺も鼻に詰まってる。 ティッシュが気になって喋 れん。 ごめん。",
+            "mt": "\"I feel congested too.\" \"I can't talk properly because I'm worried about the tissue.\" \"Len.\" \"I'm sorry.\"",
+            "ref": "Ah, no. I can't talk anymore because the tissue in my nose is distracting me. Sorry. This is too much.",
+            "COMET": 0.6572265625
+        },
+        {
+            "src": "代わりにで行こうね。",
+            "mt": "\"Let's do it my way instead.\"",
+            "ref": "[muffled, unintelligible muttering]",
+            "COMET": 0.3671875
+        },
+        {
+            "src": "絵写真送ろうか。",
+            "mt": "\"Should I send you the picture?\"",
+            "ref": "Want me to send you a picture?",
+            "COMET": 0.8466796875
+        },
+        {
+            "src": "いいいい。 本当に本当にやめて。",
+            "mt": "\"That's good.\" \"Please, really stop it.\"",
+            "ref": "No, no, no. Seriously. Please don't.",
+            "COMET": 0.6796875
+        },
+        {
+            "src": "ピザに聞いたらどうしよう。 待ってます。",
+            "mt": "\"What if we asked the pizza?\" \"I'm waiting.\"",
+            "ref": "What if she sends one doing a peace sign like, “Yay!”",
+            "COMET": 0.479736328125
+        },
+        {
+            "src": "砕けすぎじゃない？",
+            "mt": "\"Aren't you being too casual?\"",
+            "ref": "“Got tissue stuffed in!”",
+            "COMET": 0.432861328125
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "Isn't this unbelievably stupid?",
+            "COMET": 0.260498046875
+        },
+        {
+            "src": "えでもうちも2人には穴詰めて送れるわ。",
+            "mt": "\"Well, I can also send two more.\"",
+            "ref": "I could send both of you a picture with tissue in my nose too.",
+            "COMET": 0.49072265625
+        },
+        {
+            "src": "本当に本当にやめよう。",
+            "mt": "\"Let's really, really stop.\"",
+            "ref": "Seriously.",
+            "COMET": 0.56982421875
+        },
+        {
+            "src": "本当に本当にやめよう。 一番困るの冷凍サンド。 別にいいよ。",
+            "mt": "\"Let's really, really stop.\" \"Frozen sandwiches are the most troublesome.\" \"It's fine.\"",
+            "ref": "Let's seriously not do this. Reid would be the one most uncomfortable. [laughs]",
+            "COMET": 0.587890625
+        },
+        {
+            "src": "別にいいよ。 したら俺も送るんだ。",
+            "mt": "\"It's fine.\" \"Then I'll send something too.\"",
+            "ref": "Fine. Then I'll send one too—like, “How's this?” I'll send it.",
+            "COMET": 0.76220703125
+        },
+        {
+            "src": "じゃあ加工してスリショットみたいにする。",
+            "mt": "\"Then I'll edit it to look like a slr photo.\"",
+            "ref": "Then should I edit them into a three-person shot?",
+            "COMET": 0.685546875
+        },
+        {
+            "src": "そうだね。",
+            "mt": "\"Yes, that's right.\"",
+            "ref": "Gross.",
+            "COMET": 0.583984375
+        },
+        {
+            "src": "なんか一時、あんちがいるだけでいてみたいな時代なかった。",
+            "mt": "\"It felt like there was a time when you just wanted to be home, without really wanting anything else.\"",
+            "ref": "Wasn't there a period when just being outside the safe zone made you go, “Ow!”?",
+            "COMET": 0.625
+        },
+        {
+            "src": "あった。 あんちがい対極棒できませんみたいな。 あ、そうそうそうそう。",
+            "mt": "\"There was.\" \"It felt like you couldn't really connect with anyone.\" \"Oh, yes, yes, yes.\"",
+            "ref": "There was! Like, “Anchi-gai taikyū—I can't do this anymore!”",
+            "COMET": 0.498291015625
+        },
+        {
+            "src": "あ、そうそうそうそう。",
+            "mt": "\"Oh, yes, yes, yes.\"",
+            "ref": "Right, exactly.",
+            "COMET": 0.583984375
+        },
+        {
+            "src": "あ、そうそうそうそう。 今いけんだ。",
+            "mt": "\"Oh, yes, yes, yes.\" \"Can I go now?\"",
+            "ref": "So you can survive it now.",
+            "COMET": 0.498291015625
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "Oh, there they are.",
+            "COMET": 0.471435546875
+        },
+        {
+            "src": "外すわ安",
+            "mt": "\"I'll decline, thank you.\"",
+            "ref": "I missed.",
+            "COMET": 0.5283203125
+        },
+        {
+            "src": "定が担保持って決まったよみたいな感じ決まったよね悪意があるだろうその場での仕方わかりますよちょっ",
+            "mt": "\"It feels like a decision has been made, and it's clear there's an underlying motive. I understand the situation, and I see what's happening.\"",
+            "ref": "There really was a time when people were like, “I can't tank the ring anymore,” right?",
+            "COMET": 0.4931640625
+        },
+        {
+            "src": "定が担保持って決まったよみたいな感じ決まったよね悪意があるだろうその場での仕方わかりますよちょっ",
+            "mt": "\"It feels like a decision has been made, and it's clear there's an underlying motive. I understand the situation, and I see what's happening.\"",
+            "ref": "That impression is so mean-spirited.",
+            "COMET": 0.54150390625
+        },
+        {
+            "src": "定が担保持って決まったよみたいな感じ決まったよね悪意があるだろうその場での仕方わかりますよちょっ",
+            "mt": "\"It feels like a decision has been made, and it's clear there's an underlying motive. I understand the situation, and I see what's happening.\"",
+            "ref": "[brief unclear reaction]",
+            "COMET": 0.479248046875
+        },
+        {
+            "src": "とオタクが出てる僕もこの時期は嫌いでした赤いあり",
+            "mt": "\"I used to dislike this time of year, too, when you see so many people interested in those kinds of things.\"",
+            "ref": "Your nerd side is showing a little.",
+            "COMET": 0.509765625
+        },
+        {
+            "src": "とオタクが出てる僕もこの時期は嫌いでした赤いあり",
+            "mt": "\"I used to dislike this time of year, too, when you see so many people interested in those kinds of things.\"",
+            "ref": "I hated that phase too.",
+            "COMET": 0.60009765625
+        },
+        {
+            "src": "とオタクが出てる僕もこの時期は嫌いでした赤いあり すぎでしょちょっと寄ってる",
+            "mt": "\"I used to dislike this time of year, too, when you see so many people interested in those kinds of things.\" \"It's a bit much, isn't it? It's getting a little close.\"",
+            "ref": "That's way too malicious. [laughs]",
+            "COMET": 0.439697265625
+        },
+        {
+            "src": "すぎでしょちょっと寄ってる",
+            "mt": "\"It's a bit much, isn't it? It's getting a little close.\"",
+            "ref": "It's a little too close to the real thing.",
+            "COMET": 0.53955078125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "Right? Aren't you adding too much of your own spin?",
+            "COMET": 0.58837890625
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "He definitely added his own spin.",
+            "COMET": 0.51220703125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "That's basically what it sounded like, though.",
+            "COMET": 0.57861328125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "I can't hit anything.",
+            "COMET": 0.51611328125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "What should I do?",
+            "COMET": 0.5927734375
+        },
+        {
+            "src": "気まぐれってみるかマジで",
+            "mt": "\"Maybe I'll try being unpredictable. Seriously.\"",
+            "ref": "Maybe I should seriously try kī-mau—keyboard and mouse.",
+            "COMET": 0.488037109375
+        },
+        {
+            "src": "ありよりのありありやね。",
+            "mt": "\"It's really, really good, isn't it?\"",
+            "ref": "That's genuinely a solid option.",
+            "COMET": 0.57568359375
+        },
+        {
+            "src": "ありよりのありありやね。",
+            "mt": "\"It's really, really good, isn't it?\"",
+            "ref": "Yeah, that could work.",
+            "COMET": 0.52294921875
+        },
+        {
+            "src": "マジで当たんない。",
+            "mt": "\"It's really not hitting the mark.\"",
+            "ref": "I seriously can't hit anything.",
+            "COMET": 0.63037109375
+        },
+        {
+            "src": "え、でも絶対視点移動間に合わない。",
+            "mt": "\"Wait, there's absolutely no way I'll be able to switch perspectives in time.\"",
+            "ref": "But I definitely won't be able to turn the camera fast enough.",
+            "COMET": 0.6171875
+        },
+        {
+            "src": "どうしようかな。",
+            "mt": "\"What should I do?\"",
+            "ref": "What should I do?",
+            "COMET": 0.94482421875
+        },
+        {
+            "src": "めっちゃカウント開ける。",
+            "mt": "\"I'm opening a lot of notifications.\"",
+            "ref": "Crank the sensitivity way up.",
+            "COMET": 0.51123046875
+        },
+        {
+            "src": "バカの発想。",
+            "mt": "\"That's a ridiculous idea.\"",
+            "ref": "That's idiot logic.",
+            "COMET": 0.8388671875
+        },
+        {
+            "src": "それはそうなんだけどね。",
+            "mt": "\"That's true, but...\"",
+            "ref": "I mean, you're not wrong.",
+            "COMET": 0.65625
+        },
+        {
+            "src": "して間に合わない。 感度上げる。 玉当ったんで感度下げてる。 して間に合わない。 感度上げる。",
+            "mt": "\"It's not possible to do it in time.\" \"Increase the sensitivity.\" \"I hit a jackpot, so I'm lowering the sensitivity.\" \"It's not possible to do it in time.\" \"Increase the sensitivity.\"",
+            "ref": "“I can't turn fast enough—raise the sensitivity. I can't hit my shots—lower it. I can't turn fast enough—raise it.”",
+            "COMET": 0.59130859375
+        },
+        {
+            "src": "感度上げる。 勝てね。 やめる。",
+            "mt": "\"Increase the sensitivity.\" \"I can't win.\" \"I'm stopping.\"",
+            "ref": "“I can't win—I quit.”",
+            "COMET": 0.6875
+        },
+        {
+            "src": "もうやめる。",
+            "mt": "\"I'm quitting now.\"",
+            "ref": "Then I just quit Apex.",
+            "COMET": 0.69775390625
+        },
+        {
+            "src": "詰めようかな。 鼻にティッシュ。 詰めるわ。",
+            "mt": "\"I think I'll give it one last try.\" \"A tissue to the nose.\" \"I'll pack it.\"",
+            "ref": "Can I stuff it in? Maybe I'll put tissue in my nose too.",
+            "COMET": 0.638671875
+        },
+        {
+            "src": "詰めるわ。 詰まってないけど詰めようかな。",
+            "mt": "\"I'll pack it.\" \"It's not full yet, but I think I'll pack it.\"",
+            "ref": "Maybe I will too, even though my nose isn't blocked.",
+            "COMET": 0.438720703125
+        },
+        {
+            "src": "特にティッシュがなくて除菌シートですかね。",
+            "mt": "\"I guess I'll need to get some disinfectant wipes, since I don't have any tissues.\"",
+            "ref": "I don't have tissues nearby—only disinfecting wipes.",
+            "COMET": 0.81005859375
+        },
+        {
+            "src": "除菌シート詰めようじゃもうしょうがないから。",
+            "mt": "\"I guess I have to get some disinfectant wipes; there's really no other option.\"",
+            "ref": "Then use the disinfecting wipe. No other choice.",
+            "COMET": 0.73388671875
+        },
+        {
+            "src": "いいじゃん。 スースーしそうで。",
+            "mt": "\"That's good.\" \"I feel like I'm going to start coughing.\"",
+            "ref": "Sounds good—it'll probably feel nice and cool.",
+            "COMET": 0.57080078125
+        },
+        {
+            "src": "これでいけるでしょ。",
+            "mt": "\"Will this work?\"",
+            "ref": "This should work.",
+            "COMET": 0.7919921875
+        },
+        {
+            "src": "これで行けますよ。",
+            "mt": "\"This should be enough.\"",
+            "ref": "There we go.",
+            "COMET": 0.60400390625
+        },
+        {
+            "src": "これで行けますよ。 待って、うちも受験シートする。",
+            "mt": "\"This should be enough.\" \"Wait, I need to fill out my application form too.\"",
+            "ref": "Wait, I'll use a disinfecting wipe too.",
+            "COMET": 0.6279296875
+        },
+        {
+            "src": "いや、苦しい。",
+            "mt": "\"No, I'm struggling.\"",
+            "ref": "No, this is hard to breathe through.",
+            "COMET": 0.58935546875
+        },
+        {
+            "src": "口で息してみな。 できる？",
+            "mt": "\"Try breathing through your mouth.\" \"Can you do it?\"",
+            "ref": "Try breathing through your mouth. Can you?",
+            "COMET": 0.88818359375
+        },
+        {
+            "src": "すごい上手。",
+            "mt": "\"You're really good.\"",
+            "ref": "Wow, you're so good at it.",
+            "COMET": 0.76904296875
+        },
+        {
+            "src": "黙れよ。",
+            "mt": "\"Shut up.\"",
+            "ref": "Shut up. [laughs]",
+            "COMET": 0.802734375
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "It'll fly out when you laugh.",
+            "COMET": 0.35498046875
+        },
+        {
+            "src": "笑うと飛んできますよ。 そうですよね。",
+            "mt": "\"You'll fly away if you laugh.\" \"You're right.\"",
+            "ref": "That's true.",
+            "COMET": 0.5439453125
+        },
+        {
+            "src": "飛んでいく。",
+            "mt": "\"It's flying away.\"",
+            "ref": "This actually feels nice.",
+            "COMET": 0.5146484375
+        },
+        {
+            "src": "飛んでいく。 普通に笑ったらさ大丈夫なんだけど、冷笑することもでわかる。",
+            "mt": "\"It's flying away.\" \"Smiling normally is fine, but I can tell you're being sarcastic.\"",
+            "ref": "A dry little laugh makes it fly out. A full-on laugh is okay, but a scoffing laugh sends it flying.",
+            "COMET": 0.62744140625
+        },
+        {
+            "src": "普通に笑ったらさ大丈夫なんだけど、冷笑することもでわかる。",
+            "mt": "\"Smiling normally is fine, but I can tell you're being sarcastic.\"",
+            "ref": "It flew out! [laughs] It popped right out.",
+            "COMET": 0.468994140625
+        },
+        {
+            "src": "あんまりないんですよ。",
+            "mt": "\"It's not very common.\"",
+            "ref": "Hey—careful.",
+            "COMET": 0.572265625
+        },
+        {
+            "src": "みたいな、あの、冷笑だと飛んでるんですよ。",
+            "mt": "\"It's like, or rather, when you give that sarcastic smile, it comes across as dismissive.\"",
+            "ref": "A dry little “heh” makes it fly out.",
+            "COMET": 0.5048828125
+        },
+        {
+            "src": "鼻で笑うと飛びますよ。",
+            "mt": "\"It will be taken as ridicule.\"",
+            "ref": "If you snort-laugh, it'll fly out. [laughs]",
+            "COMET": 0.50390625
+        },
+        {
+            "src": "気をつけてね。 飛んでったの？",
+            "mt": "\"Please be careful.\" \"Did it fly away?\"",
+            "ref": "Be careful.",
+            "COMET": 0.6552734375
+        },
+        {
+            "src": "飛んでったの？",
+            "mt": "\"Did it fly away?\"",
+            "ref": "Did it fly away?",
+            "COMET": 0.91552734375
+        },
+        {
+            "src": "ってこないって言ってたの。 そんな通ってない。",
+            "mt": "\"They said they weren't coming.\" \"That's not the way to go.\"",
+            "ref": "You have to go pick it up.",
+            "COMET": 0.48828125
+        },
+        {
+            "src": "ないですよ。",
+            "mt": "\"It's not.\"",
+            "ref": "It didn't go that far. [laughs]",
+            "COMET": 0.48193359375
+        },
+        {
+            "src": "ないですよ。",
+            "mt": "\"It's not.\"",
+            "ref": "That's gross.",
+            "COMET": 0.57666015625
+        },
+        {
+            "src": "あ、おやだ、おやだ、おやだ、",
+            "mt": "\"Oh dear, oh dear, oh dear.\"",
+            "ref": "My stomach hurts from laughing.",
+            "COMET": 0.370361328125
+        },
+        {
+            "src": "鼻にティッシュ詰めて飛んでったらもういいこと1個もないけどね。",
+            "mt": "\"Putting tissues in my nose and flying around wouldn't lead to anything good, would it?\"",
+            "ref": "If the tissue flies out while it's stuffed in your nose, there's literally no upside left.",
+            "COMET": 0.67578125
+        },
+        {
+            "src": "確かに鼻水も飛んでいくし、ティッ",
+            "mt": "\"It's true that the runny nose would fly away, too...\"",
+            "ref": "It takes the snot with it.",
+            "COMET": 0.572265625
+        },
+        {
+            "src": "シュも飛んでいくし。",
+            "mt": "\"…and the sniffles would fly away, too.\"",
+            "ref": "And it takes the tissue away too.",
+            "COMET": 0.53857421875
+        },
+        {
+            "src": "悪いとこ取り。",
+            "mt": "\"Taking the best parts.\"",
+            "ref": "That's the worst of both worlds.",
+            "COMET": 0.420654296875
+        },
+        {
+            "src": "ねねね。 例えば、多そうさ、全然話変わるんだけどさ。",
+            "mt": "\"Sleepy.\" \"For example, it seems like there's a lot, but actually, the conversation is changing completely.\"",
+            "ref": "Hey, hey, hey.",
+            "COMET": 0.363525390625
+        },
+        {
+            "src": "例えば、多そうさ、全然話変わるんだけどさ。 多そう、ラブタイプ診断みたいなやつやった？",
+            "mt": "\"For example, it seems like there's a lot, but actually, the conversation is changing completely.\" \"Did you take one of those 'love type' quizzes, or something like that?\"",
+            "ref": "Taso, totally changing the subject—did you take that Love Type test?",
+            "COMET": 0.61669921875
+        },
+        {
+            "src": "やったよ。",
+            "mt": "\"Yes, I did.\"",
+            "ref": "I did.",
+            "COMET": 0.845703125
+        },
+        {
+            "src": "え、何だったの？",
+            "mt": "\"Oh, what was it?\"",
+            "ref": "What did you get?",
+            "COMET": 0.7099609375
+        },
+        {
+            "src": "私、最後の恋人。",
+            "mt": "\"I'm the last one.\"",
+            "ref": "I got Saigo no Koibito—“The Last Lover.”",
+            "COMET": 0.467529296875
+        },
+        {
+            "src": "え、",
+            "mt": "\"Oh.\"",
+            "ref": "What?!",
+            "COMET": 0.71435546875
+        },
+        {
+            "src": "なんかいいね。",
+            "mt": "\"It's nice.\"",
+            "ref": "That sounds kind of nice.",
+            "COMET": 0.7041015625
+        },
+        {
+            "src": "何？なんで？ ユピは？",
+            "mt": "\"What? Why?\" \"What about Yupi?\"",
+            "ref": "What? Why? What did you get, Yui-pi?",
+            "COMET": 0.796875
+        },
+        {
+            "src": "え、なんかっぽいなって。",
+            "mt": "\"Oh, it's a bit strange.\"",
+            "ref": "It just sounds like you.",
+            "COMET": 0.716796875
+        },
+        {
+            "src": "え、うちなんだっけ、え、うちなんだっけ、う ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、",
+            "mt": "\"Wait, what was it? Um, what was it?\" \"What was it again? Oh, Chakkari Rabbit. It's cute.\"",
+            "ref": "Wait, what was mine again? Everyone, what did I get?",
+            "COMET": 0.56787109375
+        },
+        {
+            "src": "ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、",
+            "mt": "\"What was it again? Oh, Chakkari Rabbit. It's cute.\"",
+            "ref": "Oh—Chakkari Usagi, the “Shrewd/Resourceful Rabbit.”",
+            "COMET": 0.59814453125
+        },
+        {
+            "src": "ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、",
+            "mt": "\"What was it again? Oh, Chakkari Rabbit. It's cute.\"",
+            "ref": "That's cute.",
+            "COMET": 0.611328125
+        },
+        {
+            "src": "ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、 なんかレイドさん、なんとかなんか赤ちゃんみたいなやつになったみたいな、なんかどこかで見た切り抜き で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"What was it again? Oh, Chakkari Rabbit. It's cute.\" \"It's like, Raid-san looks like a baby somehow, or something. I think I saw a similar picture somewhere before.\" \"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "I think Reid got some kind of baby-type result. I saw it somewhere—in a highlight clip.",
+            "COMET": 0.5615234375
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "A baby?",
+            "COMET": 0.494140625
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "Was there one like that? Not “baby” exactly—what was it? Something like “Hidden Baby.”",
+            "COMET": 0.65087890625
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "Apparently I'm compatible with Boss Neko—“Boss Cat.”",
+            "COMET": 0.58642578125
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな んかじゃあ結構えまあついていけないよみたいなタイプといいってことわ",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\" \"So, it seems like it's good to be with someone who's a bit... difficult to follow, or someone who needs a lot of support, right?\"",
+            "ref": "So does that mean you're suited to someone who says, “Ema, just follow me”?",
+            "COMET": 0.486328125
+        },
+        {
+            "src": "かんない",
+            "mt": "\"Really?\"",
+            "ref": "I don't know.",
+            "COMET": 0.5146484375
+        },
+        {
+            "src": "ボス猫がわからないボス猫がわからないボスの猫男ならそうなんじゃないのなんか私は男を立てるタイプな",
+            "mt": "\"I don't quite understand, but if you're talking about a man who's like a boss, or a leader, then maybe that's it. I tend to support men, anyway.\"",
+            "ref": "I don't know what “Boss Cat” means either. But if it's literally a boss-like cat, then maybe?",
+            "COMET": 0.68115234375
+        },
+        {
+            "src": "ボス猫がわからないボス猫がわからないボスの猫男ならそうなんじゃないのなんか私は男を立てるタイプな のかもしれん最後の恋人は何系なのどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジ一途",
+            "mt": "\"I don't quite understand, but if you're talking about a man who's like a boss, or a leader, then maybe that's it. I tend to support men, anyway.\" \"Maybe. What ethnicity was your last relationship? What was he like? Your last boyfriend... he was really devoted, I guess. Really, really devoted.\"",
+            "ref": "Maybe I'm the type who supports a man and lets him shine.",
+            "COMET": 0.56396484375
+        },
+        {
+            "src": "のかもしれん最後の恋人は何系なのどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジ一途",
+            "mt": "\"Maybe. What ethnicity was your last relationship? What was he like? Your last boyfriend... he was really devoted, I guess. Really, really devoted.\"",
+            "ref": "What kind of type is “The Last Lover”? What's it like?",
+            "COMET": 0.595703125
+        },
+        {
+            "src": "のかもしれん最後の恋人は何系なのどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジ一途 やでいいみたいな",
+            "mt": "\"Maybe. What ethnicity was your last relationship? What was he like? Your last boyfriend... he was really devoted, I guess. Really, really devoted.\" \"That's fine, isn't it?\"",
+            "ref": "“The Last Lover” is basically super devoted. Seriously. That's the whole vibe—completely faithful.",
+            "COMET": 0.62158203125
+        },
+        {
+            "src": "エレートさん赤ちゃんみたいなやつですよね。",
+            "mt": "\"Eretto-san is that character who looks like a baby, isn't he?\"",
+            "ref": "Reid, yours was the baby-like one, right?",
+            "COMET": 0.712890625
+        },
+        {
+            "src": "抱かれて、えええ、え、ハハハ、ハ、えハハ。ハハッ、ハッハッ。",
+            "mt": "\"Hugging... oh, yes, uh, ha ha, ha, oh ha ha. Ha ha, ha ha.\"",
+            "ref": "Kakure Baby—“Hidden Baby.”",
+            "COMET": 0.399658203125
+        },
+        {
+            "src": "抱かれて、えええ、え、ハハハ、ハ、えハハ。ハハッ、ハッハッ。 ハッタ、ハサバル最後の恋人らしい。",
+            "mt": "\"Hugging... oh, yes, uh, ha ha, ha, oh ha ha. Ha ha, ha ha.\" \"Hatta seems to be Sabu's last lover, apparently.\"",
+            "ref": "Tasomaru got “The Last Lover.”",
+            "COMET": 0.50146484375
+        },
+        {
+            "src": "わ、っぽい。 いや、私もっぽいなって読んで思う。",
+            "mt": "\"It seems so.\" \"No, I too feel that it gives off that impression.\"",
+            "ref": "Wow, that fits.",
+            "COMET": 0.53857421875
+        },
+        {
+            "src": "いや、私もっぽいなって読んで思う。 たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"No, I too feel that it gives off that impression.\" \"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "I read the description and thought it really did sound like me.",
+            "COMET": 0.471435546875
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Faithful? Like, absolutely devoted to that one person and no one else?",
+            "COMET": 0.6123046875
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Seriously devoted. I am faithful.",
+            "COMET": 0.6162109375
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Hmm.",
+            "COMET": 0.459228515625
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Hmm. Is that so?",
+            "COMET": 0.4599609375
+        },
+        {
+            "src": "お2人はどどういうあれなの知らないけど隠 れベイビーとかわかんない。",
+            "mt": "\"I don't know what's going on between them, but they're hiding something.\" \"I don't understand 'baby' or anything like that.\"",
+            "ref": "What are your types supposed to be? I don't really know. Like “Hidden Baby”—what does the baby part mean?",
+            "COMET": 0.63818359375
+        },
+        {
+            "src": "れベイビーとかわかんない。 赤ちゃんマジでわかんない。",
+            "mt": "\"I don't understand 'baby' or anything like that.\" \"I really don't understand babies.\"",
+            "ref": "I don't know. I genuinely don't understand the baby thing.",
+            "COMET": 0.74072265625
+        },
+        {
+            "src": "ちゃんと調べるわ。 赤ちゃんに見られてないけど実は赤ちゃんってこと？",
+            "mt": "\"I'll make sure to check properly.\" \"Am I actually a baby, even though it doesn't look like one?\"",
+            "ref": "I'll look it up later. Does it mean you don't look like a baby, but secretly you are one?",
+            "COMET": 0.71435546875
+        },
+        {
+            "src": "え、バブバブしたいってことじゃない？",
+            "mt": "\"Wait, you're not saying you want to babble, are you?\"",
+            "ref": "Maybe it means you want to go babu-babu—use baby talk and be babied.",
+            "COMET": 0.53173828125
+        },
+        {
+            "src": "え、俺だけ性癖の話なの？ 良くない？ 恋愛診断なのに。",
+            "mt": "\"Wait, are you only talking about sexual preferences with me?\" \"Isn't that good?\" \"It's supposed to be a love compatibility test.\"",
+            "ref": "Wait, am I the only one whose result is about a kink? Isn't that unfair? This is supposed to be a romance test.",
+            "COMET": 0.76513671875
+        },
+        {
+            "src": "でも隠れベイビーなそういうことってこと。",
+            "mt": "\"But it's about those kinds of things, you know, being discreet about it.\"",
+            "ref": "But if it's “Hidden Baby,” doesn't that imply exactly that?",
+            "COMET": 0.56103515625
+        },
+        {
+            "src": "まあその可能性はある。",
+            "mt": "\"Well, that's certainly a possibility.\"",
+            "ref": "Well, it's possible.",
+            "COMET": 0.88427734375
+        },
+        {
+            "src": "だから隠れベイビーだから本当はバブバブしたいけど だができないみたいな。 そうですね。",
+            "mt": "\"That's why she's a 'stealth baby,' so she really wants to babble, but...\" \"But it seems like she can't.\" \"That's right.\"",
+            "ref": "Since you're a “Hidden Baby,” maybe you secretly want to act all babu-babu, but you can't show it. Yeah, that's it. That's rough.",
+            "COMET": 0.72265625
+        },
+        {
+            "src": "多分超甘えたい部分を持ってるけど、恋人の前だけバブバブダブダブしてんだ。",
+            "mt": "\"It seems like she has a strong need for affection, but she only acts that way with her partner.\"",
+            "ref": "You secretly have a side that wants affection, and only go babu-babu in front of your partner.",
+            "COMET": 0.67138671875
+        },
+        {
+            "src": "多分超甘えたい部分を持ってるけど、恋人の前だけバブバブダブダブしてんだ。",
+            "mt": "\"It seems like she has a strong need for affection, but she only acts that way with her partner.\"",
+            "ref": "So you do go all babu-babu.",
+            "COMET": 0.48095703125
+        },
+        {
+            "src": "想像に任せますね。 でもそこはユーピーのなんかウサギちゃんは何なの。",
+            "mt": "\"I'll leave that to your imagination.\" \"But what's with Youpee's little bunny?\"",
+            "ref": "That's what it means. I'll leave that part to your imagination.",
+            "COMET": 0.6806640625
+        },
+        {
+            "src": "でもそこはユーピーのなんかウサギちゃんは何なの。",
+            "mt": "\"But what's with Youpee's little bunny?\"",
+            "ref": "What does Chakkari Usagi mean?",
+            "COMET": 0.44970703125
+        },
+        {
+            "src": "あ、チャッカリウサギはなんかうちも結構一途みたいな感じなんだけど、ただその人を一途に愛するより本 当に大丈夫かみたいなのをこちゃんと分析するらしい。",
+            "mt": "\"Ah, the Chakkari rabbit feels quite devoted, but it's not necessarily about loving one person; it's more about...\" \"Apparently, she's carefully analyzing whether it's really okay.\"",
+            "ref": "Chakkari Usagi is apparently pretty devoted too, but rather than blindly loving one person, it carefully analyzes whether that person is really a good choice.",
+            "COMET": 0.6533203125
+        },
+        {
+            "src": "あ、来た。 チャッカリウサギ来た。 チャッカリウサギだから。",
+            "mt": "\"Ah, here it is.\" \"Here comes the clever rabbit.\" \"That's just because it's a clever rabbit.\"",
+            "ref": "There it is—the shrewd-rabbit side came out. That's why I'm a Chakkari Usagi.",
+            "COMET": 0.64013671875
+        },
+        {
+            "src": "ちなみにチャッカリウサギと、隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。",
+            "mt": "\"Apparently, clever rabbits and shy individuals tend to have relationships that lead to happy marriages.\"",
+            "ref": "So you actually think it through.",
+            "COMET": 0.495849609375
+        },
+        {
+            "src": "ちなみにチャッカリウサギと、隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。 やった、一発勝",
+            "mt": "\"Apparently, clever rabbits and shy individuals tend to have relationships that lead to happy marriages.\" \"Yes! A clean win.\"",
+            "ref": "Apparently, by the way, Chakkari Usagi and Kakure Baby are romance types likely to have happy marriages.",
+            "COMET": 0.6005859375
+        },
+        {
+            "src": "やった、一発勝",
+            "mt": "\"Yes! A clean win.\"",
+            "ref": "Yes!",
+            "COMET": 0.7822265625
+        },
+        {
+            "src": "やった、一発勝 負。 待って、最後の恋人はなんか苦労しそうじゃない？",
+            "mt": "\"Yes! A clean win.\" \"Lost.\" \"Wait, doesn't the last love interest seem like they're going through a tough time?\"",
+            "ref": "Wait—doesn't “The Last Lover” sound like the type that suffers?",
+            "COMET": 0.654296875
+        },
+        {
+            "src": "最後の恋人は多分重すぎて苦労する。",
+            "mt": "\"The last love interest is probably too much to handle, and will likely struggle.\"",
+            "ref": "“The Last Lover” probably suffers because they're too emotionally intense.",
+            "COMET": 0.6357421875
+        },
+        {
+            "src": "重くないよ。",
+            "mt": "\"It's not that heavy.\"",
+            "ref": "I'm not intense.",
+            "COMET": 0.6435546875
+        },
+        {
+            "src": "私でも重いのかな。",
+            "mt": "\"Am I too much?\"",
+            "ref": "...Or maybe I am.",
+            "COMET": 0.556640625
+        }
+    ],
+    "/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/high-quality/integrated-validation-106-translation-only-12b/metrics/md62mmdz0m/translategemma-12b-it-4bit.en.txt": [
+        {
+            "src": "えなんか2人かっこいいのついてるわ背中に あついてない感じか分かんないそれあちゃー",
+            "mt": "Something's on their backs, and it looks good on both of them. I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "You two have something cool-looking on your backs.",
+            "COMET": 0.64794921875
+        },
+        {
+            "src": "あついてない感じか分かんないそれあちゃー",
+            "mt": "I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "Oh, so it looks like I don't have it?",
+            "COMET": 0.52001953125
+        },
+        {
+            "src": "あついてない感じか分かんないそれあちゃー",
+            "mt": "I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "I don't know what that is.",
+            "COMET": 0.599609375
+        },
+        {
+            "src": "あついてない感じか分かんないそれあちゃー",
+            "mt": "I'm not sure if it's cool or not... well, it's kind of interesting.",
+            "ref": "Oof.",
+            "COMET": 0.46630859375
+        },
+        {
+            "src": "あちゃーこの中からミラージュの今勢のポーズも合います。",
+            "mt": "\"Hmm, within this [selection/group], there are also poses that would suit Mirage's current popularity.\"",
+            "ref": "Like... where are you pointing? Where are you pointing?",
+            "COMET": 0.4287109375
+        },
+        {
+            "src": "あちゃーこの中からミラージュの今勢のポーズも合います。 ちょっと確かにあちゃーってポーズしてる。",
+            "mt": "\"Hmm, within this [selection/group], there are also poses that would suit Mirage's current popularity.\" She's definitely striking a pose that says \"wow\" or \"amazing.\"",
+            "ref": "And with Reid's Mirage pose on top of that, it's kind of...",
+            "COMET": 0.60986328125
+        },
+        {
+            "src": "ちょっと確かにあちゃーってポーズしてる。 こっちの画面では多分レイドさんの画面は胸張ってるけどな。",
+            "mt": "She's definitely striking a pose that says \"wow\" or \"amazing.\" \"On this screen, it looks like Reid's screen shows her with her chest prominent.\"",
+            "ref": "It really does look like he's saying, “Oh no.” On my screen, he's doing an “oh no” pose.",
+            "COMET": 0.56494140625
+        },
+        {
+            "src": "こっちの画面では多分レイドさんの画面は胸張ってるけどな。 なんかマジで口に手当ててあちゃーってしてるよね。",
+            "mt": "\"On this screen, it looks like Reid's screen shows her with her chest prominent.\" \"She's really putting her hand to her mouth and saying 'wow' or 'amazing,' isn't she?\"",
+            "ref": "I bet on Reid's screen he's puffing his chest out, though.",
+            "COMET": 0.61767578125
+        },
+        {
+            "src": "なんかマジで口に手当ててあちゃーってしてるよね。",
+            "mt": "\"She's really putting her hand to her mouth and saying 'wow' or 'amazing,' isn't she?\"",
+            "ref": "He's seriously got a hand to his mouth like, “Oh no,” right?",
+            "COMET": 0.68505859375
+        },
+        {
+            "src": "レジェンドに行けばいいのかこれ。",
+            "mt": "\"Should we aim for Legend with this?\"",
+            "ref": "I know.",
+            "COMET": 0.413330078125
+        },
+        {
+            "src": "レジェンドに行けばいいのかこれ。 そうレジェンドで、あ、本当だ。",
+            "mt": "\"Should we aim for Legend with this?\" \"Right, in Legend. Oh, you're right.\"",
+            "ref": "Do I go to Legends for this? Yeah, under Legends.",
+            "COMET": 0.6982421875
+        },
+        {
+            "src": "そうレジェンドで、あ、本当だ。 何これ、オーラ。",
+            "mt": "\"Right, in Legend. Oh, you're right.\" \"What's this, an aura?\"",
+            "ref": "You're right—what is this?",
+            "COMET": 0.7431640625
+        },
+        {
+            "src": "何これ、オーラ。 これ、お、シルバー。",
+            "mt": "\"What's this, an aura?\" \"Oh, it's silver.\"",
+            "ref": "This aura?",
+            "COMET": 0.65234375
+        },
+        {
+            "src": "これ、お、シルバー。",
+            "mt": "\"Oh, it's silver.\"",
+            "ref": "Oh, Silver.",
+            "COMET": 0.85205078125
+        },
+        {
+            "src": "シルバーなんだか。",
+            "mt": "\"It feels like silver.\"",
+            "ref": "It says Silver, though.",
+            "COMET": 0.72998046875
+        },
+        {
+            "src": "大丈夫、俺なんか知んないけど、ずっと反映されなくて ルーキーだったから。 だってユイピもルーキーじゃん。",
+            "mt": "\"It's okay, I don't really know anything about it, but it hasn't been updated at all.\" \"Because I was a rookie.\" \"After all, Yui is a rookie too, isn't she?\"",
+            "ref": "Is that okay? Mine wasn't updating for some reason, so it kept showing Rookie.",
+            "COMET": 0.58740234375
+        },
+        {
+            "src": "だってユイピもルーキーじゃん。",
+            "mt": "\"After all, Yui is a rookie too, isn't she?\"",
+            "ref": "Wait, Yui-pi is Rookie too.",
+            "COMET": 0.67822265625
+        },
+        {
+            "src": "あれ、ルーキーやん。",
+            "mt": "\"Oh, she's a rookie.\"",
+            "ref": "I'm Rookie too.",
+            "COMET": 0.6845703125
+        },
+        {
+            "src": "これルーキーなの？",
+            "mt": "\"Is this person a rookie?\"",
+            "ref": "Wait, this is Rookie?",
+            "COMET": 0.68603515625
+        },
+        {
+            "src": "ルーキーだろ。",
+            "mt": "\"She's a rookie, isn't she?\"",
+            "ref": "That's Rookie.",
+            "COMET": 0.56640625
+        },
+        {
+            "src": "これ白いのいじる場合じゃないの。",
+            "mt": "\"This isn't the time to be messing with white things.\"",
+            "ref": "Wait, it's white—doesn't that mean Silver?",
+            "COMET": 0.60986328125
+        },
+        {
+            "src": "いやいやいや、もう三角1個しかついてないやん。 バグってるよ。",
+            "mt": "\"No, no, no, there's only one triangle left.\" \"It's bugged.\"",
+            "ref": "No, no—you've only got one triangle.",
+            "COMET": 0.796875
+        },
+        {
+            "src": "バグってるよ。",
+            "mt": "\"It's bugged.\"",
+            "ref": "It's bugged.",
+            "COMET": 0.94921875
+        },
+        {
+            "src": "しょぼすぎ。",
+            "mt": "\"That's so small.\"",
+            "ref": "That's so pathetic.",
+            "COMET": 0.60888671875
+        },
+        {
+            "src": "しかもユイピさん、左上のレベル2じゃない。",
+            "mt": "\"And also, Yui-san isn't at level 2 in the top left corner.\"",
+            "ref": "And Yui-pi, doesn't it say Level 2 in the top left?",
+            "COMET": 0.74609375
+        },
+        {
+            "src": "何がどこ。",
+            "mt": "\"What and where?\"",
+            "ref": "What? Where?",
+            "COMET": 0.89111328125
+        },
+        {
+            "src": "本当だ。 レベル2やん。",
+            "mt": "\"That's right.\" \"It's level two.\"",
+            "ref": "Oh, you're right. It says Level 2.",
+            "COMET": 0.83349609375
+        },
+        {
+            "src": "バグり散らかしてない。",
+            "mt": "\"It's not glitching all over the place.\"",
+            "ref": "Huh?",
+            "COMET": 0.36376953125
+        },
+        {
+            "src": "バグり散らかしてない。",
+            "mt": "\"It's not glitching all over the place.\"",
+            "ref": "Isn't it completely bugged out?",
+            "COMET": 0.68408203125
+        },
+        {
+            "src": "バグり散らかしてない。 だから何もわからないサブアカやめてください。",
+            "mt": "\"It's not glitching all over the place.\" \"Please stop using an account where you don't understand anything.\"",
+            "ref": "See? I don't understand any of this.",
+            "COMET": 0.501953125
+        },
+        {
+            "src": "だから何もわからないサブアカやめてください。",
+            "mt": "\"Please stop using an account where you don't understand anything.\"",
+            "ref": "Please stop using a smurf account.",
+            "COMET": 0.74365234375
+        },
+        {
+            "src": "本箱でやるとランク下がりそうだからサブアカ持ってきたタイプでしょ。 これやば。",
+            "mt": "\"You brought a secondary account because you thought you'd lose rank if you played on your main account, right?\" \"This is crazy.\"",
+            "ref": "This looks like the kind of thing where you brought a smurf because you were afraid your main account's rank would drop.",
+            "COMET": 0.69482421875
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "That's bad.",
+            "COMET": 0.56982421875
+        },
+        {
+            "src": "公開で終わってる。 公開で持ってきた。 見だもんな。 いやマジで今日タイトルに何もわからないって書いててサムネにも何もわからないっていう保険張りながら",
+            "mt": "\"It's publicly available.\" \"I brought it publicly.\" \"I see.\" \"Seriously, today I put 'I don't know anything about the title' and even put 'I don't know anything' in the thumbnail, just to be safe.\"",
+            "ref": "I'm finished. I'm acting like I've got nothing left to lose. Seriously.",
+            "COMET": 0.423583984375
+        },
+        {
+            "src": "いやマジで今日タイトルに何もわからないって書いててサムネにも何もわからないっていう保険張りながら 来てます。",
+            "mt": "\"Seriously, today I put 'I don't know anything about the title' and even put 'I don't know anything' in the thumbnail, just to be safe.\" \"They're coming.\"",
+            "ref": "Today I put “I don't understand anything” in the title, and even wrote it on the thumbnail as a disclaimer before coming here.",
+            "COMET": 0.65869140625
+        },
+        {
+            "src": "誘惑にめっちゃ聞いたの。 うち本当にエペできないけどいいのって誘ってもらったけど、 大丈夫、うち本当に分かんないよってめっちゃ聞いて、大丈夫っていう言われてきてるから。",
+            "mt": "\"I was really swayed by the temptation.\" \"They asked if it was okay even though we're not really good at it, but...\" \"They're really asking if I understand, and they're saying it's okay, so...\"",
+            "ref": "I asked Tasomaru over and over: “I seriously can't play Apex—is that okay?” She invited me, but I kept asking, “Are you sure? I genuinely don't know what I'm doing.” She said, “It's fine!” so that's why I'm here.",
+            "COMET": 0.60888671875
+        },
+        {
+            "src": "大丈夫、うち本当に分かんないよってめっちゃ聞いて、大丈夫っていう言われてきてるから。 だってこのメンバーだよ。",
+            "mt": "\"They're really asking if I understand, and they're saying it's okay, so...\" \"It's because it's this group.\"",
+            "ref": "Look who the group is.",
+            "COMET": 0.53662109375
+        },
+        {
+            "src": "まあ大丈夫でしょ。",
+            "mt": "\"Well, it should be fine, right?\"",
+            "ref": "We'll be fine.",
+            "COMET": 0.7919921875
+        },
+        {
+            "src": "全然関係ないんですけど、ずっ",
+            "mt": "\"It has absolutely nothing to do with it, but...\"",
+            "ref": "This is completely unrelated, but...",
+            "COMET": 0.6005859375
+        },
+        {
+            "src": "全然関係ないんですけど、ずっ",
+            "mt": "\"It has absolutely nothing to do with it, but...\"",
+            "ref": "Mm-hm.",
+            "COMET": 0.367431640625
+        },
+        {
+            "src": "と何年間ぐらいだろう。 67年間ぐらいiPhone10R使ってて、画面もバキバキのまま頑張って使ってたんですけど、ついに",
+            "mt": "\"And how many years has it been, roughly?\" \"I've been using an iPhone 10R for about 67 years, and even though the screen was completely cracked, I kept using it. But finally...\"",
+            "ref": "For—how many years was it?—I used an iPhone XR for about six or seven years.",
+            "COMET": 0.70263671875
+        },
+        {
+            "src": "67年間ぐらいiPhone10R使ってて、画面もバキバキのまま頑張って使ってたんですけど、ついに",
+            "mt": "\"I've been using an iPhone 10R for about 67 years, and even though the screen was completely cracked, I kept using it. But finally...\"",
+            "ref": "Oh, an XR.",
+            "COMET": 0.498291015625
+        },
+        {
+            "src": "67年間ぐらいiPhone10R使ってて、画面もバキバキのまま頑張って使ってたんですけど、ついに 17Pro Maxになりまして、うわー、一番いいやつやん。",
+            "mt": "\"I've been using an iPhone 10R for about 67 years, and even though the screen was completely cracked, I kept using it. But finally...\" \"I upgraded to the 17 Pro Max, and wow, this is the best one.\"",
+            "ref": "I kept using it even though the screen and camera were both completely cracked, but I've finally upgraded to a 17 Pro Max.",
+            "COMET": 0.8095703125
+        },
+        {
+            "src": "17Pro Maxになりまして、うわー、一番いいやつやん。",
+            "mt": "\"I upgraded to the 17 Pro Max, and wow, this is the best one.\"",
+            "ref": "Whoa, that's the top-of-the-line one.",
+            "COMET": 0.65380859375
+        },
+        {
+            "src": "Pro Maxってでかいやつ？",
+            "mt": "\"Is the Pro Max a large model?\"",
+            "ref": "Is the Pro Max the big one?",
+            "COMET": 0.85693359375
+        },
+        {
+            "src": "えそうなんかよくわかんないから一番名前凄そうなやつに待ってでかいやつなんだしかもプロマックスだか",
+            "mt": "\"Yeah, I guess so. Honestly, I don't really understand, so I just chose the one with the most impressive-sounding name. It's a big one, and apparently it's the Pro Max too.\"",
+            "ref": "Yeah. I didn't really understand the options, so I picked the one with the most impressive-sounding name.",
+            "COMET": 0.7109375
+        },
+        {
+            "src": "えそうなんかよくわかんないから一番名前凄そうなやつに待ってでかいやつなんだしかもプロマックスだか",
+            "mt": "\"Yeah, I guess so. Honestly, I don't really understand, so I just chose the one with the most impressive-sounding name. It's a big one, and apparently it's the Pro Max too.\"",
+            "ref": "Wait—so you got the huge one too?",
+            "COMET": 0.57861328125
+        },
+        {
+            "src": "えそうなんかよくわかんないから一番名前凄そうなやつに待ってでかいやつなんだしかもプロマックスだか らでかいじゃないプロ17",
+            "mt": "\"Yeah, I guess so. Honestly, I don't really understand, so I just chose the one with the most impressive-sounding name. It's a big one, and apparently it's the Pro Max too.\" \"It's not large, it's the Pro 17.\"",
+            "ref": "It's a Pro Max, so isn't it the big one?",
+            "COMET": 0.662109375
+        },
+        {
+            "src": "らでかいじゃないプロ17 プロ17プロマックスがあって",
+            "mt": "\"It's not large, it's the Pro 17.\" \"There's the Pro 17 and the Pro Max.\"",
+            "ref": "There are the 17, 17 Pro, and 17 Pro Max.",
+            "COMET": 0.60888671875
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "Yeah.",
+            "COMET": 0.79345703125
+        },
+        {
+            "src": "なんかよくわかんないから一番いいやつくださいって言って",
+            "mt": "\"I said something like, 'I don't really understand, so please just give me the best one.'\"",
+            "ref": "I didn't know, so I went with the one that sounded powerful. The powerful one.",
+            "COMET": 0.64794921875
+        },
+        {
+            "src": "この店で一番いいやつください プロマックスプロマックスにして",
+            "mt": "\"Please give me the best one here.\" \"Get me the Pro Max, the Pro Max.\"",
+            "ref": "So you basically said, “Give me the best one in the store,” and got a Pro Max?",
+            "COMET": 0.6689453125
+        },
+        {
+            "src": "プロマックスプロマックスにして なんか容量もわかんないから寺は一一番でげえやつにしてください。",
+            "mt": "\"Get me the Pro Max, the Pro Max.\" \"I'm not sure about the storage capacity, so please just give me the one with the highest capacity.\"",
+            "ref": "Yeah, I chose the Pro Max. I didn't understand the storage options either, so I got, like, 1 TB. I just said, “Give me the biggest one.”",
+            "COMET": 0.6953125
+        },
+        {
+            "src": "やばい、もう不合法の買い方やん。 なんか分かんなくて。",
+            "mt": "\"This is bad, this is an illegal way to buy something.\" \"I'm not sure.\"",
+            "ref": "That's wild—that's how a tycoon shops.",
+            "COMET": 0.5888671875
+        },
+        {
+            "src": "なんか分かんなくて。",
+            "mt": "\"I'm not sure.\"",
+            "ref": "I just didn't understand it.",
+            "COMET": 0.54638671875
+        },
+        {
+            "src": "でも私も去年買い替えたんだけど、それまずっと11プロ使ってたわ。",
+            "mt": "\"But I also replaced mine last year, and I was using the 11 Pro the whole time.\"",
+            "ref": "I upgraded last year too, but before that I'd been using an 11 Pro the whole time.",
+            "COMET": 0.8427734375
+        },
+        {
+            "src": "今16？ 今15かな。",
+            "mt": "\"Are you 16 now?\" \"I'm probably 15 now.\"",
+            "ref": "I think mine's a 15 now.",
+            "COMET": 0.798828125
+        },
+        {
+            "src": "だから、俺も去年10から16に変えたよええじゃあ結",
+            "mt": "\"So, I changed mine to 16 last year too. Well, Yuki...\"",
+            "ref": "I upgraded from an iPhone X to a 16 last year too.",
+            "COMET": 0.4873046875
+        },
+        {
+            "src": "だから、俺も去年10から16に変えたよええじゃあ結 構近いから結構みんな使ってたみんな結構近い",
+            "mt": "\"So, I changed mine to 16 last year too. Well, Yuki...\" \"Since it was so close, quite a few people used it. Everyone was quite close.\"",
+            "ref": "Oh! So we were pretty close, then. [laughs]",
+            "COMET": 0.482421875
+        },
+        {
+            "src": "構近いから結構みんな使ってたみんな結構近い",
+            "mt": "\"Since it was so close, quite a few people used it. Everyone was quite close.\"",
+            "ref": "We were all pretty close. Really close.",
+            "COMET": 0.61962890625
+        },
+        {
+            "src": "や別にね10でね別にいけるからねそうなんだよ変えれた俺画面も割れてなかったしなんだ私も割れてない",
+            "mt": "\"Well, it was fine with 10, really. It worked perfectly. That's right, I was able to change it. And my screen wasn't cracked either, you know. I haven't cracked mine either.\"",
+            "ref": "Honestly, the X was still fine. You can keep using it.",
+            "COMET": 0.6044921875
+        },
+        {
+            "src": "や別にね10でね別にいけるからねそうなんだよ変えれた俺画面も割れてなかったしなんだ私も割れてない",
+            "mt": "\"Well, it was fine with 10, really. It worked perfectly. That's right, I was able to change it. And my screen wasn't cracked either, you know. I haven't cracked mine either.\"",
+            "ref": "It was fine. My screen wasn't even cracked.",
+            "COMET": 0.6298828125
+        },
+        {
+            "src": "や別にね10でね別にいけるからねそうなんだよ変えれた俺画面も割れてなかったしなんだ私も割れてない",
+            "mt": "\"Well, it was fine with 10, really. It worked perfectly. That's right, I was able to change it. And my screen wasn't cracked either, you know. I haven't cracked mine either.\"",
+            "ref": "Mine wasn't cracked either.",
+            "COMET": 0.6162109375
+        },
+        {
+            "src": "もうさ1週間ぐらいなんだけどまだうんもうちょっと全体にひび入っちゃって",
+            "mt": "\"It's been about a week now, but there are still some cracks appearing across the whole thing.\"",
+            "ref": "I've only had this one for about a week, and I've already put a crack in the screen protector.",
+            "COMET": 0.62353515625
+        },
+        {
+            "src": "なんでなんで使い手に問題があるよなこういうの落とした落と",
+            "mt": "\"It's probably a problem with the user, isn't it? Something like this happens when you drop it.\"",
+            "ref": "How? Why?",
+            "COMET": 0.375244140625
+        },
+        {
+            "src": "なんでなんで使い手に問題があるよなこういうの落とした落と",
+            "mt": "\"It's probably a problem with the user, isn't it? Something like this happens when you drop it.\"",
+            "ref": "In cases like this, the user is clearly the problem.",
+            "COMET": 0.56396484375
+        },
+        {
+            "src": "なんでなんで使い手に問題があるよなこういうの落とした落と",
+            "mt": "\"It's probably a problem with the user, isn't it? Something like this happens when you drop it.\"",
+            "ref": "Did you drop it?",
+            "COMET": 0.50927734375
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "I did. [laughs]",
+            "COMET": 0.403564453125
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "I drop mine a lot too, but the actual screen doesn't crack.",
+            "COMET": 0.685546875
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "Seriously?",
+            "COMET": 0.362548828125
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\"",
+            "ref": "The protector cracks, though.",
+            "COMET": 0.63916015625
+        },
+        {
+            "src": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ ルターそうフィルターが割れた画面はまだ切れないはずこういう人のためにあるんだなフィルターとかって",
+            "mt": "\"I dropped it too, but I never crack the screen. It's amazing. The screen protector, though, breaks easily. Oh, right, the filter...\" \"It looks like the filter cracked. The screen itself hasn't broken, though. I guess these things exist for people like me, you know, for screen protectors.\"",
+            "ref": "Right, right. It's the protector that cracked. The screen itself should still be okay.",
+            "COMET": 0.65576171875
+        },
+        {
+            "src": "ルターそうフィルターが割れた画面はまだ切れないはずこういう人のためにあるんだなフィルターとかって いやフィルターないと怖いで使うの俺フィルターつけてないし、",
+            "mt": "\"It looks like the filter cracked. The screen itself hasn't broken, though. I guess these things exist for people like me, you know, for screen protectors.\" \"Yeah, it's scary without a filter. I don't even have a screen protector on mine.\"",
+            "ref": "So screen protectors really are made for people like you.",
+            "COMET": 0.62451171875
+        },
+        {
+            "src": "いやフィルターないと怖いで使うの俺フィルターつけてないし、",
+            "mt": "\"Yeah, it's scary without a filter. I don't even have a screen protector on mine.\"",
+            "ref": "I'd be scared to use a phone without one.",
+            "COMET": 0.66259765625
+        },
+        {
+            "src": "いやフィルターないと怖いで使うの俺フィルターつけてないし、 カバーもつけてない。",
+            "mt": "\"Yeah, it's scary without a filter. I don't even have a screen protector on mine.\" \"I don't have a case on it either.\"",
+            "ref": "Really? I don't use a screen protector—or even a case.",
+            "COMET": 0.76708984375
+        },
+        {
+            "src": "カバーもつけてない。 え、怖い。",
+            "mt": "\"I don't have a case on it either.\" \"Oh, that's scary.\"",
+            "ref": "What?!",
+            "COMET": 0.439208984375
+        },
+        {
+            "src": "え、怖い。",
+            "mt": "\"Oh, that's scary.\"",
+            "ref": "That's terrifying!",
+            "COMET": 0.9189453125
+        },
+        {
+            "src": "それ、つるって落としたらバリっていきますよ。",
+            "mt": "\"If you drop that, it's going to shatter.\"",
+            "ref": "If it slips out of your hand, it'll shatter.",
+            "COMET": 0.73876953125
+        },
+        {
+            "src": "落とさないもん。 そもそも私ガチで落とす。",
+            "mt": "\"I'm not going to drop it.\" \"I'm actually going to drop it.\"",
+            "ref": "I don't drop it in the first place.",
+            "COMET": 0.55712890625
+        },
+        {
+            "src": "そもそも私ガチで落とす。",
+            "mt": "\"I'm actually going to drop it.\"",
+            "ref": "I seriously drop mine all the time.",
+            "COMET": 0.61376953125
+        },
+        {
+            "src": "え、わかる。 手滑るよね。",
+            "mt": "\"Oh, I understand.\" \"It's going to slip, isn't it?\"",
+            "ref": "I get it. Your hand just slips.",
+            "COMET": 0.6806640625
+        },
+        {
+            "src": "うん、の、もう悪力が。",
+            "mt": "\"Yeah, well, it's already too late.\"",
+            "ref": "My grip strength is already...",
+            "COMET": 0.477783203125
+        },
+        {
+            "src": "も、お茶もめっちゃこぼすんよな。",
+            "mt": "\"You're going to spill the tea, aren't you?\"",
+            "ref": "I spill cups and tea all the time too.",
+            "COMET": 0.54541015625
+        },
+        {
+            "src": "エマバー、マジでバーさん。 エマバー、マジでバーさんなんだよ。",
+            "mt": "\"Emma, you're really something.\" \"Emma, you really are something.\"",
+            "ref": "Grandma Ema. You're seriously an old lady. Grandma Ema.",
+            "COMET": 0.615234375
+        },
+        {
+            "src": "エマバー、マジでバーさんなんだよ。",
+            "mt": "\"Emma, you really are something.\"",
+            "ref": "I really am an old lady.",
+            "COMET": 0.55419921875
+        },
+        {
+            "src": "カップは落とさないかも。 もう何回配信ビアでお茶ぶちまけたか。",
+            "mt": "\"I might not drop the cup.\" \"How many times have I spilled tea during my streams?\"",
+            "ref": "I might not actually drop cups.",
+            "COMET": 0.5732421875
+        },
+        {
+            "src": "もう何回配信ビアでお茶ぶちまけたか。",
+            "mt": "\"How many times have I spilled tea during my streams?\"",
+            "ref": "But I've lost count of how many times I've spilled tea all over my streaming room.",
+            "COMET": 0.58837890625
+        },
+        {
+            "src": "もう何回配信ビアでお茶ぶちまけたか。 うち最近口もという風に言うんだよな。",
+            "mt": "\"How many times have I spilled tea during my streams?\" \"Lately, people say it like 'kuchi,' you know?\"",
+            "ref": "My mouth's been getting loose lately.",
+            "COMET": 0.412841796875
+        },
+        {
+            "src": "待ってわかる。 口も柔い。 ユイバ。",
+            "mt": "\"I understand; just wait.\" \"They're gentle too.\" \"Yuiwa.\"",
+            "ref": "I know. Mine is too.",
+            "COMET": 0.50146484375
+        },
+        {
+            "src": "ユイバ。",
+            "mt": "\"Yuiwa.\"",
+            "ref": "Grandma Yui!",
+            "COMET": 0.72119140625
+        },
+        {
+            "src": "口からお茶飛び出る。 水こぼれる。",
+            "mt": "\"Tea spilled out of their mouth.\" \"Water spilled.\"",
+            "ref": "Tea just comes flying out of my mouth.",
+            "COMET": 0.66552734375
+        },
+        {
+            "src": "水こぼれる。 なんか嫌だよ。",
+            "mt": "\"Water spilled.\" \"I don't really like it.\"",
+            "ref": "I know. Water just spills out somehow.",
+            "COMET": 0.489990234375
+        },
+        {
+            "src": "なんか嫌だよ。",
+            "mt": "\"I don't really like it.\"",
+            "ref": "I hate that.",
+            "COMET": 0.771484375
+        },
+        {
+            "src": "退化してんだよねもうそうなんだよねまあ人間最終的に赤ちゃんに戻っていくって言うからね",
+            "mt": "\"It's like we're deteriorating, you know? I mean, humans ultimately revert to being like babies, right?\"",
+            "ref": "We're already regressing.",
+            "COMET": 0.57568359375
+        },
+        {
+            "src": "退化してんだよねもうそうなんだよねまあ人間最終的に赤ちゃんに戻っていくって言うからね",
+            "mt": "\"It's like we're deteriorating, you know? I mean, humans ultimately revert to being like babies, right?\"",
+            "ref": "Exactly.",
+            "COMET": 0.44677734375
+        },
+        {
+            "src": "退化してんだよねもうそうなんだよねまあ人間最終的に赤ちゃんに戻っていくって言うからね",
+            "mt": "\"It's like we're deteriorating, you know? I mean, humans ultimately revert to being like babies, right?\"",
+            "ref": "They say humans eventually go back to being babies.",
+            "COMET": 0.7197265625
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "You've already started turning back?",
+            "COMET": 0.41796875
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "Yeah. Pretty early, right?",
+            "COMET": 0.39013671875
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "Way too early.",
+            "COMET": 0.39453125
+        },
+        {
+            "src": "もう切り返したのかそう早いやろ早すぎやろやっぱね使わないとてか動かないと退化していくんだなってい",
+            "mt": "\"It's been cut off, hasn't it? That's so fast. I guess if you don't use it, or if it doesn't work, you start to deteriorate.\"",
+            "ref": "I guess if you don't use things—if you don't keep moving—they really do deteriorate.",
+            "COMET": 0.58447265625
+        },
+        {
+            "src": "やでも別に口元 だけは一番動かしてるだろう。 むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"But it's nothing specific to the mouth, really.\" \"That's probably the one thing I'm using the most.\" \"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "But your mouth is probably the part you move the most.",
+            "COMET": 0.51611328125
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "True.",
+            "COMET": 0.451171875
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "More than the average person, even.",
+            "COMET": 0.5087890625
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "True.",
+            "COMET": 0.451171875
+        },
+        {
+            "src": "むしろ確かにその辺の人間より、そこで劣化し始めたらもう終わりよ。",
+            "mt": "\"Actually, it's probably worse than with ordinary people. Once it starts degrading there, it's over.\"",
+            "ref": "If that starts deteriorating, it's all over.",
+            "COMET": 0.7314453125
+        },
+        {
+            "src": "確かに気づいたらハマピス出てくる。",
+            "mt": "\"Sure enough, you start noticing the 'ham-peace' stuff.\"",
+            "ref": "True.",
+            "COMET": 0.480712890625
+        },
+        {
+            "src": "確かに気づいたらハマピス出てくる。",
+            "mt": "\"Sure enough, you start noticing the 'ham-peace' stuff.\"",
+            "ref": "The second I let my guard down, my nose starts running.",
+            "COMET": 0.44287109375
+        },
+        {
+            "src": "え、",
+            "mt": "\"Huh?\"",
+            "ref": "Huh? A runny nose?",
+            "COMET": 0.70166015625
+        },
+        {
+            "src": "鼻水、気を抜いたら鼻水出るからティッシュ詰めるわ。 うわ、よくないよ。",
+            "mt": "\"I'm going to stuff tissues up my nose, because if I let my guard down, I'll start having a runny nose.\" \"Oh, that's not good.\"",
+            "ref": "My nose runs whenever I relax, so I'm stuffing tissue in it.",
+            "COMET": 0.728515625
+        },
+        {
+            "src": "うわ、よくないよ。 逆流するよ。",
+            "mt": "\"Oh, that's not good.\" \"It's going to come back up.\"",
+            "ref": "That's not good. It'll flow back.",
+            "COMET": 0.76318359375
+        },
+        {
+            "src": "逆流したらよくないの？",
+            "mt": "\"Wouldn't that be bad if it flows back up?\"",
+            "ref": "Is it bad if it flows back?",
+            "COMET": 0.8203125
+        },
+        {
+            "src": "逆流して喉がただれる。",
+            "mt": "\"It's flowing back up, and my throat is getting sore.\"",
+            "ref": "It'll run back and irritate your throat.",
+            "COMET": 0.80859375
+        },
+        {
+            "src": "ああ、そういうこと。",
+            "mt": "\"Oh, I see.\"",
+            "ref": "Oh, that's what you mean?",
+            "COMET": 0.73486328125
+        },
+        {
+            "src": "でも、ちっちゃい頃めっちゃずるずる吸ってたな。",
+            "mt": "\"But, I used to really gulp it down a lot when I was little.\"",
+            "ref": "I used to sniff it back constantly when I was little.",
+            "COMET": 0.7197265625
+        },
+        {
+            "src": "わかる。 やめなさい、あんた。",
+            "mt": "\"I understand.\" \"Stop it, you.\"",
+            "ref": "I know. They'd say, “Stop that, you.”",
+            "COMET": 0.814453125
+        },
+        {
+            "src": "言われる、言われる。 噛む。 さ、噛みすぎるとさ、耳がいかれない。",
+            "mt": "\"I'm being told, I'm being told.\" \"Chewing.\" \"If you chew too much, you know, your ears start to hurt.\"",
+            "ref": "Did they tell you that too? “Blow your nose.”",
+            "COMET": 0.53564453125
+        },
+        {
+            "src": "さ、噛みすぎるとさ、耳がいかれない。",
+            "mt": "\"If you chew too much, you know, your ears start to hurt.\"",
+            "ref": "But if you blow your nose too much, doesn't it mess up your ears?",
+            "COMET": 0.6025390625
+        },
+        {
+            "src": "え、それ、噛むの下手やね。",
+            "mt": "\"Oh, you're really bad at chewing.\"",
+            "ref": "Then you're bad at blowing your nose.",
+            "COMET": 0.70654296875
+        },
+        {
+            "src": "鼻の、下赤くなるえでももうだってる私鼻の下鼻の下赤くなるはまあしょうがない",
+            "mt": "\"My nose is getting red, and it's probably because I have a cold. It's probably just the redness around my nose; it's nothing to worry about.\"",
+            "ref": "The skin under your nose gets red.",
+            "COMET": 0.6083984375
+        },
+        {
+            "src": "鼻の、下赤くなるえでももうだってる私鼻の下鼻の下赤くなるはまあしょうがない",
+            "mt": "\"My nose is getting red, and it's probably because I have a cold. It's probably just the redness around my nose; it's nothing to worry about.\"",
+            "ref": "Mine already is—under my nose.",
+            "COMET": 0.49462890625
+        },
+        {
+            "src": "鼻の、下赤くなるえでももうだってる私鼻の下鼻の下赤くなるはまあしょうがない",
+            "mt": "\"My nose is getting red, and it's probably because I have a cold. It's probably just the redness around my nose; it's nothing to worry about.\"",
+            "ref": "You can't really avoid the skin under your nose getting red.",
+            "COMET": 0.6220703125
+        },
+        {
+            "src": "あとうち両方の鼻にティッシュ詰めるけど詰めてる",
+            "mt": "\"I'm stuffing tissues up both my nostrils, and I'm still stuffing them.\"",
+            "ref": "I stuff tissue into both nostrils, though.",
+            "COMET": 0.654296875
+        },
+        {
+            "src": "あとうち両方の鼻にティッシュ詰めるけど詰めてる 今ねえ配信中に鼻に詰めないのティッシュあんたえ、それきつくない？",
+            "mt": "\"I'm stuffing tissues up both my nostrils, and I'm still stuffing them.\" \"Are you stuffing tissues up your nose right now during the broadcast? Doesn't that hurt?\"",
+            "ref": "I have it stuffed in right now.",
+            "COMET": 0.5380859375
+        },
+        {
+            "src": "今ねえ配信中に鼻に詰めないのティッシュあんたえ、それきつくない？",
+            "mt": "\"Are you stuffing tissues up your nose right now during the broadcast? Doesn't that hurt?\"",
+            "ref": "Hey! Don't stuff tissue in your nose while you're streaming!",
+            "COMET": 0.7236328125
+        },
+        {
+            "src": "今ねえ配信中に鼻に詰めないのティッシュあんたえ、それきつくない？ 喋りながら口呼吸してんの。 今そうだよ。",
+            "mt": "\"Are you stuffing tissues up your nose right now during the broadcast? Doesn't that hurt?\" \"You're breathing through your mouth while you're talking.\" \"Yes, I am right now.\"",
+            "ref": "Isn't that rough? Are you breathing through your mouth while talking right now?",
+            "COMET": 0.7421875
+        },
+        {
+            "src": "今そうだよ。",
+            "mt": "\"Yes, I am right now.\"",
+            "ref": "Yeah.",
+            "COMET": 0.63037109375
+        },
+        {
+            "src": "え、つらねえ。",
+            "mt": "\"Ugh, it's tough.\"",
+            "ref": "That sounds miserable.",
+            "COMET": 0.66552734375
+        },
+        {
+            "src": "つら。",
+            "mt": "\"It's rough.\"",
+            "ref": "That's rough.",
+            "COMET": 0.8994140625
+        },
+        {
+            "src": "つら。 今回のチャンピオンも。 清掃はやりませんよ。 そんなこと。",
+            "mt": "\"It's rough.\" \"This time, too.\" \"I'm not going to clean.\" \"That kind of thing.\"",
+            "ref": "A seiso girl wouldn't do that.",
+            "COMET": 0.4208984375
+        },
+        {
+            "src": "だってもうつまは垂れてくるから。",
+            "mt": "\"Because my socks are starting to get wet.\"",
+            "ref": "But otherwise it just keeps dripping out.",
+            "COMET": 0.495361328125
+        },
+        {
+            "src": "だってもうつまは垂れてくるから。 あ、ビクエさん、もう清掃はしてたんですか。 違う違う。",
+            "mt": "\"Because my socks are starting to get wet.\" \"Oh, Mr. Bique, have you already finished cleaning?\" \"No, no.\"",
+            "ref": "Oh, you scared me. I thought you said, “I've already given up on being seiso.”",
+            "COMET": 0.475341796875
+        },
+        {
+            "src": "違う違う。 サラサラすぎて、どっちとの花水と清掃、",
+            "mt": "\"No, no.\" \"It's so clear that it's hard to tell which is the water and which is the cleaning solution.\"",
+            "ref": "No, no. It's just too watery.",
+            "COMET": 0.6650390625
+        },
+        {
+            "src": "サラサラすぎて、どっちとの花水と清掃、",
+            "mt": "\"It's so clear that it's hard to tell which is the water and which is the cleaning solution.\"",
+            "ref": "Which are you choosing: the runny nose or your seiso image?",
+            "COMET": 0.5078125
+        },
+        {
+            "src": "結局の結局の清掃、えでもどう、花水垂れ流しながらエイペックスやってる清掃どうよ、じゃあいや別に、",
+            "mt": "\"So, ultimately, about the cleaning... I mean, how about this cleaning while they're just pouring out the flower-infused water and doing Apex? I mean, it's not like it's a big deal, really.\"",
+            "ref": "Well... what do you think of a seiso girl playing Apex while her nose runs freely?",
+            "COMET": 0.4599609375
+        },
+        {
+            "src": "結局の結局の清掃、えでもどう、花水垂れ流しながらエイペックスやってる清掃どうよ、じゃあいや別に、 度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか",
+            "mt": "\"So, ultimately, about the cleaning... I mean, how about this cleaning while they're just pouring out the flower-infused water and doing Apex? I mean, it's not like it's a big deal, really.\" \"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\"",
+            "ref": "Stop. Just blow your nose every so often.",
+            "COMET": 0.41455078125
+        },
+        {
+            "src": "度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか",
+            "mt": "\"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\"",
+            "ref": "“Running freely”...",
+            "COMET": 0.416259765625
+        },
+        {
+            "src": "度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか",
+            "mt": "\"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\"",
+            "ref": "Why is it always zero or a hundred with you?",
+            "COMET": 0.460693359375
+        },
+        {
+            "src": "度に噛みながらでええやんそれはダダ漏れなんで000なんダダ漏れか ティッシュ詰めてるダダ漏れは嫌だティッシュ詰めてるかどっちがいいのよ",
+            "mt": "\"It's fine if you pause occasionally while you're doing it. It's just pouring out, isn't it? It's just leaking everywhere.\" \"I hate the feeling of it leaking out. Is it better to stuff tissues, or to just let it leak?\"",
+            "ref": "Either I let it pour out or I stuff tissue in my nose. I don't want it pouring out. So which one would you prefer?",
+            "COMET": 0.59033203125
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "I don't like either option either, if we're being honest.",
+            "COMET": 0.5283203125
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "Both are a problem.",
+            "COMET": 0.4931640625
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "This is bad—my eyes haven't adjusted to Apex.",
+            "COMET": 0.54931640625
+        },
+        {
+            "src": "どっちも嫌だよそれって言ったら困っちゃうなやばいエペック薬適応できてない目が追いつかない。",
+            "mt": "\"I don't like either option. Saying that... it's awkward, isn't it? It's a serious issue. The medication isn't working, and I can't even keep up with what's happening.\"",
+            "ref": "They can't keep up.",
+            "COMET": 0.5166015625
+        },
+        {
+            "src": "でも昨日やってました。",
+            "mt": "\"But I did it yesterday.\"",
+            "ref": "Your eyes?",
+            "COMET": 0.48583984375
+        },
+        {
+            "src": "でも昨日やってました。",
+            "mt": "\"But I did it yesterday.\"",
+            "ref": "This is bad.",
+            "COMET": 0.4833984375
+        },
+        {
+            "src": "でも昨日やってました。 がなやってたけど起動も追いついてなかったね。",
+            "mt": "\"But I did it yesterday.\" \"I was trying to do it, but even that wasn't working, and I couldn't keep up.\"",
+            "ref": "But you were playing yesterday, weren't you?",
+            "COMET": 0.54638671875
+        },
+        {
+            "src": "がなやってたけど起動も追いついてなかったね。",
+            "mt": "\"I was trying to do it, but even that wasn't working, and I couldn't keep up.\"",
+            "ref": "I was, but they couldn't keep up yesterday either.",
+            "COMET": 0.6806640625
+        },
+        {
+            "src": "俺も鼻に詰まってる。 ティッシュが気になって喋 れん。 ごめん。",
+            "mt": "\"I feel congested too.\" \"I can't talk properly because I'm worried about the tissue.\" \"Len.\" \"I'm sorry.\"",
+            "ref": "Ah, no. I can't talk anymore because the tissue in my nose is distracting me. Sorry. This is too much.",
+            "COMET": 0.6572265625
+        },
+        {
+            "src": "代わりにで行こうね。",
+            "mt": "\"Let's do it my way instead.\"",
+            "ref": "[muffled, unintelligible muttering]",
+            "COMET": 0.3671875
+        },
+        {
+            "src": "絵写真送ろうか。",
+            "mt": "\"Should I send you the picture?\"",
+            "ref": "Want me to send you a picture?",
+            "COMET": 0.8466796875
+        },
+        {
+            "src": "いいいい。 本当に本当にやめて。",
+            "mt": "\"That's good.\" \"Please, really stop it.\"",
+            "ref": "No, no, no. Seriously. Please don't.",
+            "COMET": 0.6796875
+        },
+        {
+            "src": "ピザに聞いたらどうしよう。 待ってます。",
+            "mt": "\"What if we asked the pizza?\" \"I'm waiting.\"",
+            "ref": "What if she sends one doing a peace sign like, “Yay!”",
+            "COMET": 0.479736328125
+        },
+        {
+            "src": "砕けすぎじゃない？",
+            "mt": "\"Aren't you being too casual?\"",
+            "ref": "“Got tissue stuffed in!”",
+            "COMET": 0.432861328125
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "Isn't this unbelievably stupid?",
+            "COMET": 0.260498046875
+        },
+        {
+            "src": "えでもうちも2人には穴詰めて送れるわ。",
+            "mt": "\"Well, I can also send two more.\"",
+            "ref": "I could send both of you a picture with tissue in my nose too.",
+            "COMET": 0.49072265625
+        },
+        {
+            "src": "本当に本当にやめよう。",
+            "mt": "\"Let's really, really stop.\"",
+            "ref": "Seriously.",
+            "COMET": 0.56982421875
+        },
+        {
+            "src": "本当に本当にやめよう。 一番困るの冷凍サンド。 別にいいよ。",
+            "mt": "\"Let's really, really stop.\" \"Frozen sandwiches are the most troublesome.\" \"It's fine.\"",
+            "ref": "Let's seriously not do this. Reid would be the one most uncomfortable. [laughs]",
+            "COMET": 0.587890625
+        },
+        {
+            "src": "別にいいよ。 したら俺も送るんだ。",
+            "mt": "\"It's fine.\" \"Then I'll send something too.\"",
+            "ref": "Fine. Then I'll send one too—like, “How's this?” I'll send it.",
+            "COMET": 0.76220703125
+        },
+        {
+            "src": "じゃあ加工してスリショットみたいにする。",
+            "mt": "\"Then I'll edit it to look like a slr photo.\"",
+            "ref": "Then should I edit them into a three-person shot?",
+            "COMET": 0.685546875
+        },
+        {
+            "src": "そうだね。",
+            "mt": "\"Yes, that's right.\"",
+            "ref": "Gross.",
+            "COMET": 0.583984375
+        },
+        {
+            "src": "なんか一時、あんちがいるだけでいてみたいな時代なかった。",
+            "mt": "\"It felt like there was a time when you just wanted to be home, without really wanting anything else.\"",
+            "ref": "Wasn't there a period when just being outside the safe zone made you go, “Ow!”?",
+            "COMET": 0.625
+        },
+        {
+            "src": "あった。 あんちがい対極棒できませんみたいな。 あ、そうそうそうそう。",
+            "mt": "\"There was.\" \"It felt like you couldn't really connect with anyone.\" \"Oh, yes, yes, yes.\"",
+            "ref": "There was! Like, “Anchi-gai taikyū—I can't do this anymore!”",
+            "COMET": 0.498291015625
+        },
+        {
+            "src": "あ、そうそうそうそう。",
+            "mt": "\"Oh, yes, yes, yes.\"",
+            "ref": "Right, exactly.",
+            "COMET": 0.583984375
+        },
+        {
+            "src": "あ、そうそうそうそう。 今いけんだ。",
+            "mt": "\"Oh, yes, yes, yes.\" \"Can I go now?\"",
+            "ref": "So you can survive it now.",
+            "COMET": 0.498291015625
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "Oh, there they are.",
+            "COMET": 0.471435546875
+        },
+        {
+            "src": "外すわ安",
+            "mt": "\"I'll decline, thank you.\"",
+            "ref": "I missed.",
+            "COMET": 0.5283203125
+        },
+        {
+            "src": "定が担保持って決まったよみたいな感じ決まったよね悪意があるだろうその場での仕方わかりますよちょっ",
+            "mt": "\"It feels like a decision has been made, and it's clear there's an underlying motive. I understand the situation, and I see what's happening.\"",
+            "ref": "There really was a time when people were like, “I can't tank the ring anymore,” right?",
+            "COMET": 0.4931640625
+        },
+        {
+            "src": "定が担保持って決まったよみたいな感じ決まったよね悪意があるだろうその場での仕方わかりますよちょっ",
+            "mt": "\"It feels like a decision has been made, and it's clear there's an underlying motive. I understand the situation, and I see what's happening.\"",
+            "ref": "That impression is so mean-spirited.",
+            "COMET": 0.54150390625
+        },
+        {
+            "src": "定が担保持って決まったよみたいな感じ決まったよね悪意があるだろうその場での仕方わかりますよちょっ",
+            "mt": "\"It feels like a decision has been made, and it's clear there's an underlying motive. I understand the situation, and I see what's happening.\"",
+            "ref": "[brief unclear reaction]",
+            "COMET": 0.479248046875
+        },
+        {
+            "src": "とオタクが出てる僕もこの時期は嫌いでした赤いあり",
+            "mt": "\"I used to dislike this time of year, too, when you see so many people interested in those kinds of things.\"",
+            "ref": "Your nerd side is showing a little.",
+            "COMET": 0.509765625
+        },
+        {
+            "src": "とオタクが出てる僕もこの時期は嫌いでした赤いあり",
+            "mt": "\"I used to dislike this time of year, too, when you see so many people interested in those kinds of things.\"",
+            "ref": "I hated that phase too.",
+            "COMET": 0.60009765625
+        },
+        {
+            "src": "とオタクが出てる僕もこの時期は嫌いでした赤いあり すぎでしょちょっと寄ってる",
+            "mt": "\"I used to dislike this time of year, too, when you see so many people interested in those kinds of things.\" \"It's a bit much, isn't it? It's getting a little close.\"",
+            "ref": "That's way too malicious. [laughs]",
+            "COMET": 0.439697265625
+        },
+        {
+            "src": "すぎでしょちょっと寄ってる",
+            "mt": "\"It's a bit much, isn't it? It's getting a little close.\"",
+            "ref": "It's a little too close to the real thing.",
+            "COMET": 0.53955078125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "Right? Aren't you adding too much of your own spin?",
+            "COMET": 0.58837890625
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "He definitely added his own spin.",
+            "COMET": 0.51220703125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "That's basically what it sounded like, though.",
+            "COMET": 0.57861328125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "I can't hit anything.",
+            "COMET": 0.51611328125
+        },
+        {
+            "src": "ねなんかアレンジ入れすぎじゃないアレンジ入ってるそんな感じだったけどな当たらないぜどうしよう",
+            "mt": "\"It felt like there was too much going on, too many changes. But it didn't really work out. What should I do?\"",
+            "ref": "What should I do?",
+            "COMET": 0.5927734375
+        },
+        {
+            "src": "気まぐれってみるかマジで",
+            "mt": "\"Maybe I'll try being unpredictable. Seriously.\"",
+            "ref": "Maybe I should seriously try kī-mau—keyboard and mouse.",
+            "COMET": 0.488037109375
+        },
+        {
+            "src": "ありよりのありありやね。",
+            "mt": "\"It's really, really good, isn't it?\"",
+            "ref": "That's genuinely a solid option.",
+            "COMET": 0.57568359375
+        },
+        {
+            "src": "ありよりのありありやね。",
+            "mt": "\"It's really, really good, isn't it?\"",
+            "ref": "Yeah, that could work.",
+            "COMET": 0.52294921875
+        },
+        {
+            "src": "マジで当たんない。",
+            "mt": "\"It's really not hitting the mark.\"",
+            "ref": "I seriously can't hit anything.",
+            "COMET": 0.63037109375
+        },
+        {
+            "src": "え、でも絶対視点移動間に合わない。",
+            "mt": "\"Wait, there's absolutely no way I'll be able to switch perspectives in time.\"",
+            "ref": "But I definitely won't be able to turn the camera fast enough.",
+            "COMET": 0.6171875
+        },
+        {
+            "src": "どうしようかな。",
+            "mt": "\"What should I do?\"",
+            "ref": "What should I do?",
+            "COMET": 0.94482421875
+        },
+        {
+            "src": "めっちゃカウント開ける。",
+            "mt": "\"I'm opening a lot of notifications.\"",
+            "ref": "Crank the sensitivity way up.",
+            "COMET": 0.51123046875
+        },
+        {
+            "src": "バカの発想。",
+            "mt": "\"That's a ridiculous idea.\"",
+            "ref": "That's idiot logic.",
+            "COMET": 0.8388671875
+        },
+        {
+            "src": "それはそうなんだけどね。",
+            "mt": "\"That's true, but...\"",
+            "ref": "I mean, you're not wrong.",
+            "COMET": 0.65625
+        },
+        {
+            "src": "して間に合わない。 感度上げる。 玉当ったんで感度下げてる。 して間に合わない。 感度上げる。",
+            "mt": "\"It's not possible to do it in time.\" \"Increase the sensitivity.\" \"I hit a jackpot, so I'm lowering the sensitivity.\" \"It's not possible to do it in time.\" \"Increase the sensitivity.\"",
+            "ref": "“I can't turn fast enough—raise the sensitivity. I can't hit my shots—lower it. I can't turn fast enough—raise it.”",
+            "COMET": 0.59130859375
+        },
+        {
+            "src": "感度上げる。 勝てね。 やめる。",
+            "mt": "\"Increase the sensitivity.\" \"I can't win.\" \"I'm stopping.\"",
+            "ref": "“I can't win—I quit.”",
+            "COMET": 0.6875
+        },
+        {
+            "src": "もうやめる。",
+            "mt": "\"I'm quitting now.\"",
+            "ref": "Then I just quit Apex.",
+            "COMET": 0.69775390625
+        },
+        {
+            "src": "詰めようかな。 鼻にティッシュ。 詰めるわ。",
+            "mt": "\"I think I'll give it one last try.\" \"A tissue to the nose.\" \"I'll pack it.\"",
+            "ref": "Can I stuff it in? Maybe I'll put tissue in my nose too.",
+            "COMET": 0.638671875
+        },
+        {
+            "src": "詰めるわ。 詰まってないけど詰めようかな。",
+            "mt": "\"I'll pack it.\" \"It's not full yet, but I think I'll pack it.\"",
+            "ref": "Maybe I will too, even though my nose isn't blocked.",
+            "COMET": 0.438720703125
+        },
+        {
+            "src": "特にティッシュがなくて除菌シートですかね。",
+            "mt": "\"I guess I'll need to get some disinfectant wipes, since I don't have any tissues.\"",
+            "ref": "I don't have tissues nearby—only disinfecting wipes.",
+            "COMET": 0.81005859375
+        },
+        {
+            "src": "除菌シート詰めようじゃもうしょうがないから。",
+            "mt": "\"I guess I have to get some disinfectant wipes; there's really no other option.\"",
+            "ref": "Then use the disinfecting wipe. No other choice.",
+            "COMET": 0.73388671875
+        },
+        {
+            "src": "いいじゃん。 スースーしそうで。",
+            "mt": "\"That's good.\" \"I feel like I'm going to start coughing.\"",
+            "ref": "Sounds good—it'll probably feel nice and cool.",
+            "COMET": 0.57080078125
+        },
+        {
+            "src": "これでいけるでしょ。",
+            "mt": "\"Will this work?\"",
+            "ref": "This should work.",
+            "COMET": 0.7919921875
+        },
+        {
+            "src": "これで行けますよ。",
+            "mt": "\"This should be enough.\"",
+            "ref": "There we go.",
+            "COMET": 0.60400390625
+        },
+        {
+            "src": "これで行けますよ。 待って、うちも受験シートする。",
+            "mt": "\"This should be enough.\" \"Wait, I need to fill out my application form too.\"",
+            "ref": "Wait, I'll use a disinfecting wipe too.",
+            "COMET": 0.6279296875
+        },
+        {
+            "src": "いや、苦しい。",
+            "mt": "\"No, I'm struggling.\"",
+            "ref": "No, this is hard to breathe through.",
+            "COMET": 0.58935546875
+        },
+        {
+            "src": "口で息してみな。 できる？",
+            "mt": "\"Try breathing through your mouth.\" \"Can you do it?\"",
+            "ref": "Try breathing through your mouth. Can you?",
+            "COMET": 0.88818359375
+        },
+        {
+            "src": "すごい上手。",
+            "mt": "\"You're really good.\"",
+            "ref": "Wow, you're so good at it.",
+            "COMET": 0.76904296875
+        },
+        {
+            "src": "黙れよ。",
+            "mt": "\"Shut up.\"",
+            "ref": "Shut up. [laughs]",
+            "COMET": 0.802734375
+        },
+        {
+            "src": "",
+            "mt": "",
+            "ref": "It'll fly out when you laugh.",
+            "COMET": 0.35498046875
+        },
+        {
+            "src": "笑うと飛んできますよ。 そうですよね。",
+            "mt": "\"You'll fly away if you laugh.\" \"You're right.\"",
+            "ref": "That's true.",
+            "COMET": 0.5439453125
+        },
+        {
+            "src": "飛んでいく。",
+            "mt": "\"It's flying away.\"",
+            "ref": "This actually feels nice.",
+            "COMET": 0.5146484375
+        },
+        {
+            "src": "飛んでいく。 普通に笑ったらさ大丈夫なんだけど、冷笑することもでわかる。",
+            "mt": "\"It's flying away.\" \"Smiling normally is fine, but I can tell you're being sarcastic.\"",
+            "ref": "A dry little laugh makes it fly out. A full-on laugh is okay, but a scoffing laugh sends it flying.",
+            "COMET": 0.62744140625
+        },
+        {
+            "src": "普通に笑ったらさ大丈夫なんだけど、冷笑することもでわかる。",
+            "mt": "\"Smiling normally is fine, but I can tell you're being sarcastic.\"",
+            "ref": "It flew out! [laughs] It popped right out.",
+            "COMET": 0.468994140625
+        },
+        {
+            "src": "あんまりないんですよ。",
+            "mt": "\"It's not very common.\"",
+            "ref": "Hey—careful.",
+            "COMET": 0.572265625
+        },
+        {
+            "src": "みたいな、あの、冷笑だと飛んでるんですよ。",
+            "mt": "\"It's like, or rather, when you give that sarcastic smile, it comes across as dismissive.\"",
+            "ref": "A dry little “heh” makes it fly out.",
+            "COMET": 0.5048828125
+        },
+        {
+            "src": "鼻で笑うと飛びますよ。",
+            "mt": "\"It will be taken as ridicule.\"",
+            "ref": "If you snort-laugh, it'll fly out. [laughs]",
+            "COMET": 0.50390625
+        },
+        {
+            "src": "気をつけてね。 飛んでったの？",
+            "mt": "\"Please be careful.\" \"Did it fly away?\"",
+            "ref": "Be careful.",
+            "COMET": 0.6552734375
+        },
+        {
+            "src": "飛んでったの？",
+            "mt": "\"Did it fly away?\"",
+            "ref": "Did it fly away?",
+            "COMET": 0.91552734375
+        },
+        {
+            "src": "ってこないって言ってたの。 そんな通ってない。",
+            "mt": "\"They said they weren't coming.\" \"That's not the way to go.\"",
+            "ref": "You have to go pick it up.",
+            "COMET": 0.48828125
+        },
+        {
+            "src": "ないですよ。",
+            "mt": "\"It's not.\"",
+            "ref": "It didn't go that far. [laughs]",
+            "COMET": 0.48193359375
+        },
+        {
+            "src": "ないですよ。",
+            "mt": "\"It's not.\"",
+            "ref": "That's gross.",
+            "COMET": 0.57666015625
+        },
+        {
+            "src": "あ、おやだ、おやだ、おやだ、",
+            "mt": "\"Oh dear, oh dear, oh dear.\"",
+            "ref": "My stomach hurts from laughing.",
+            "COMET": 0.370361328125
+        },
+        {
+            "src": "鼻にティッシュ詰めて飛んでったらもういいこと1個もないけどね。",
+            "mt": "\"Putting tissues in my nose and flying around wouldn't lead to anything good, would it?\"",
+            "ref": "If the tissue flies out while it's stuffed in your nose, there's literally no upside left.",
+            "COMET": 0.67578125
+        },
+        {
+            "src": "確かに鼻水も飛んでいくし、ティッ",
+            "mt": "\"It's true that the runny nose would fly away, too...\"",
+            "ref": "It takes the snot with it.",
+            "COMET": 0.572265625
+        },
+        {
+            "src": "シュも飛んでいくし。",
+            "mt": "\"…and the sniffles would fly away, too.\"",
+            "ref": "And it takes the tissue away too.",
+            "COMET": 0.53857421875
+        },
+        {
+            "src": "悪いとこ取り。",
+            "mt": "\"Taking the best parts.\"",
+            "ref": "That's the worst of both worlds.",
+            "COMET": 0.420654296875
+        },
+        {
+            "src": "ねねね。 例えば、多そうさ、全然話変わるんだけどさ。",
+            "mt": "\"Sleepy.\" \"For example, it seems like there's a lot, but actually, the conversation is changing completely.\"",
+            "ref": "Hey, hey, hey.",
+            "COMET": 0.363525390625
+        },
+        {
+            "src": "例えば、多そうさ、全然話変わるんだけどさ。 多そう、ラブタイプ診断みたいなやつやった？",
+            "mt": "\"For example, it seems like there's a lot, but actually, the conversation is changing completely.\" \"Did you take one of those 'love type' quizzes, or something like that?\"",
+            "ref": "Taso, totally changing the subject—did you take that Love Type test?",
+            "COMET": 0.61669921875
+        },
+        {
+            "src": "やったよ。",
+            "mt": "\"Yes, I did.\"",
+            "ref": "I did.",
+            "COMET": 0.845703125
+        },
+        {
+            "src": "え、何だったの？",
+            "mt": "\"Oh, what was it?\"",
+            "ref": "What did you get?",
+            "COMET": 0.7099609375
+        },
+        {
+            "src": "私、最後の恋人。",
+            "mt": "\"I'm the last one.\"",
+            "ref": "I got Saigo no Koibito—“The Last Lover.”",
+            "COMET": 0.467529296875
+        },
+        {
+            "src": "え、",
+            "mt": "\"Oh.\"",
+            "ref": "What?!",
+            "COMET": 0.71435546875
+        },
+        {
+            "src": "なんかいいね。",
+            "mt": "\"It's nice.\"",
+            "ref": "That sounds kind of nice.",
+            "COMET": 0.7041015625
+        },
+        {
+            "src": "何？なんで？ ユピは？",
+            "mt": "\"What? Why?\" \"What about Yupi?\"",
+            "ref": "What? Why? What did you get, Yui-pi?",
+            "COMET": 0.796875
+        },
+        {
+            "src": "え、なんかっぽいなって。",
+            "mt": "\"Oh, it's a bit strange.\"",
+            "ref": "It just sounds like you.",
+            "COMET": 0.716796875
+        },
+        {
+            "src": "え、うちなんだっけ、え、うちなんだっけ、う ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、",
+            "mt": "\"Wait, what was it? Um, what was it?\" \"What was it again? Oh, Chakkari Rabbit. It's cute.\"",
+            "ref": "Wait, what was mine again? Everyone, what did I get?",
+            "COMET": 0.56787109375
+        },
+        {
+            "src": "ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、",
+            "mt": "\"What was it again? Oh, Chakkari Rabbit. It's cute.\"",
+            "ref": "Oh—Chakkari Usagi, the “Shrewd/Resourceful Rabbit.”",
+            "COMET": 0.59814453125
+        },
+        {
+            "src": "ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、",
+            "mt": "\"What was it again? Oh, Chakkari Rabbit. It's cute.\"",
+            "ref": "That's cute.",
+            "COMET": 0.611328125
+        },
+        {
+            "src": "ちなんだっけ、みんなあ、チャッカリウサギ、え、可愛い、 なんかレイドさん、なんとかなんか赤ちゃんみたいなやつになったみたいな、なんかどこかで見た切り抜き で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"What was it again? Oh, Chakkari Rabbit. It's cute.\" \"It's like, Raid-san looks like a baby somehow, or something. I think I saw a similar picture somewhere before.\" \"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "I think Reid got some kind of baby-type result. I saw it somewhere—in a highlight clip.",
+            "COMET": 0.5615234375
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "A baby?",
+            "COMET": 0.494140625
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "Was there one like that? Not “baby” exactly—what was it? Something like “Hidden Baby.”",
+            "COMET": 0.65087890625
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\"",
+            "ref": "Apparently I'm compatible with Boss Neko—“Boss Cat.”",
+            "COMET": 0.58642578125
+        },
+        {
+            "src": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな んかじゃあ結構えまあついていけないよみたいなタイプといいってことわ",
+            "mt": "\"And, um, it's not exactly a baby, but what was it... something like a 'hidden baby'? Apparently, it's a good match with me, the boss cat. Eina.\" \"So, it seems like it's good to be with someone who's a bit... difficult to follow, or someone who needs a lot of support, right?\"",
+            "ref": "So does that mean you're suited to someone who says, “Ema, just follow me”?",
+            "COMET": 0.486328125
+        },
+        {
+            "src": "かんない",
+            "mt": "\"Really?\"",
+            "ref": "I don't know.",
+            "COMET": 0.5146484375
+        },
+        {
+            "src": "ボス猫がわからないボス猫がわからないボスの猫男ならそうなんじゃないのなんか私は男を立てるタイプな",
+            "mt": "\"I don't quite understand, but if you're talking about a man who's like a boss, or a leader, then maybe that's it. I tend to support men, anyway.\"",
+            "ref": "I don't know what “Boss Cat” means either. But if it's literally a boss-like cat, then maybe?",
+            "COMET": 0.68115234375
+        },
+        {
+            "src": "ボス猫がわからないボス猫がわからないボスの猫男ならそうなんじゃないのなんか私は男を立てるタイプな のかもしれん最後の恋人は何系なのどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジ一途",
+            "mt": "\"I don't quite understand, but if you're talking about a man who's like a boss, or a leader, then maybe that's it. I tend to support men, anyway.\" \"Maybe. What ethnicity was your last relationship? What was he like? Your last boyfriend... he was really devoted, I guess. Really, really devoted.\"",
+            "ref": "Maybe I'm the type who supports a man and lets him shine.",
+            "COMET": 0.56396484375
+        },
+        {
+            "src": "のかもしれん最後の恋人は何系なのどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジ一途",
+            "mt": "\"Maybe. What ethnicity was your last relationship? What was he like? Your last boyfriend... he was really devoted, I guess. Really, really devoted.\"",
+            "ref": "What kind of type is “The Last Lover”? What's it like?",
+            "COMET": 0.595703125
+        },
+        {
+            "src": "のかもしれん最後の恋人は何系なのどうどういう感じなの最後の恋人はもうマジ一途みたいな感じマジ一途 やでいいみたいな",
+            "mt": "\"Maybe. What ethnicity was your last relationship? What was he like? Your last boyfriend... he was really devoted, I guess. Really, really devoted.\" \"That's fine, isn't it?\"",
+            "ref": "“The Last Lover” is basically super devoted. Seriously. That's the whole vibe—completely faithful.",
+            "COMET": 0.62158203125
+        },
+        {
+            "src": "エレートさん赤ちゃんみたいなやつですよね。",
+            "mt": "\"Eretto-san is that character who looks like a baby, isn't he?\"",
+            "ref": "Reid, yours was the baby-like one, right?",
+            "COMET": 0.712890625
+        },
+        {
+            "src": "抱かれて、えええ、え、ハハハ、ハ、えハハ。ハハッ、ハッハッ。",
+            "mt": "\"Hugging... oh, yes, uh, ha ha, ha, oh ha ha. Ha ha, ha ha.\"",
+            "ref": "Kakure Baby—“Hidden Baby.”",
+            "COMET": 0.399658203125
+        },
+        {
+            "src": "抱かれて、えええ、え、ハハハ、ハ、えハハ。ハハッ、ハッハッ。 ハッタ、ハサバル最後の恋人らしい。",
+            "mt": "\"Hugging... oh, yes, uh, ha ha, ha, oh ha ha. Ha ha, ha ha.\" \"Hatta seems to be Sabu's last lover, apparently.\"",
+            "ref": "Tasomaru got “The Last Lover.”",
+            "COMET": 0.50146484375
+        },
+        {
+            "src": "わ、っぽい。 いや、私もっぽいなって読んで思う。",
+            "mt": "\"It seems so.\" \"No, I too feel that it gives off that impression.\"",
+            "ref": "Wow, that fits.",
+            "COMET": 0.53857421875
+        },
+        {
+            "src": "いや、私もっぽいなって読んで思う。 たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"No, I too feel that it gives off that impression.\" \"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "I read the description and thought it really did sound like me.",
+            "COMET": 0.471435546875
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Faithful? Like, absolutely devoted to that one person and no one else?",
+            "COMET": 0.6123046875
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Seriously devoted. I am faithful.",
+            "COMET": 0.6162109375
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Hmm.",
+            "COMET": 0.459228515625
+        },
+        {
+            "src": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "mt": "\"She's so devoted, it's like she's only focused on that one person. Seriously, she's incredibly devoted. Hmm, hmm.\"",
+            "ref": "Hmm. Is that so?",
+            "COMET": 0.4599609375
+        },
+        {
+            "src": "お2人はどどういうあれなの知らないけど隠 れベイビーとかわかんない。",
+            "mt": "\"I don't know what's going on between them, but they're hiding something.\" \"I don't understand 'baby' or anything like that.\"",
+            "ref": "What are your types supposed to be? I don't really know. Like “Hidden Baby”—what does the baby part mean?",
+            "COMET": 0.63818359375
+        },
+        {
+            "src": "れベイビーとかわかんない。 赤ちゃんマジでわかんない。",
+            "mt": "\"I don't understand 'baby' or anything like that.\" \"I really don't understand babies.\"",
+            "ref": "I don't know. I genuinely don't understand the baby thing.",
+            "COMET": 0.74072265625
+        },
+        {
+            "src": "ちゃんと調べるわ。 赤ちゃんに見られてないけど実は赤ちゃんってこと？",
+            "mt": "\"I'll make sure to check properly.\" \"Am I actually a baby, even though it doesn't look like one?\"",
+            "ref": "I'll look it up later. Does it mean you don't look like a baby, but secretly you are one?",
+            "COMET": 0.71435546875
+        },
+        {
+            "src": "え、バブバブしたいってことじゃない？",
+            "mt": "\"Wait, you're not saying you want to babble, are you?\"",
+            "ref": "Maybe it means you want to go babu-babu—use baby talk and be babied.",
+            "COMET": 0.53173828125
+        },
+        {
+            "src": "え、俺だけ性癖の話なの？ 良くない？ 恋愛診断なのに。",
+            "mt": "\"Wait, are you only talking about sexual preferences with me?\" \"Isn't that good?\" \"It's supposed to be a love compatibility test.\"",
+            "ref": "Wait, am I the only one whose result is about a kink? Isn't that unfair? This is supposed to be a romance test.",
+            "COMET": 0.76513671875
+        },
+        {
+            "src": "でも隠れベイビーなそういうことってこと。",
+            "mt": "\"But it's about those kinds of things, you know, being discreet about it.\"",
+            "ref": "But if it's “Hidden Baby,” doesn't that imply exactly that?",
+            "COMET": 0.56103515625
+        },
+        {
+            "src": "まあその可能性はある。",
+            "mt": "\"Well, that's certainly a possibility.\"",
+            "ref": "Well, it's possible.",
+            "COMET": 0.88427734375
+        },
+        {
+            "src": "だから隠れベイビーだから本当はバブバブしたいけど だができないみたいな。 そうですね。",
+            "mt": "\"That's why she's a 'stealth baby,' so she really wants to babble, but...\" \"But it seems like she can't.\" \"That's right.\"",
+            "ref": "Since you're a “Hidden Baby,” maybe you secretly want to act all babu-babu, but you can't show it. Yeah, that's it. That's rough.",
+            "COMET": 0.72265625
+        },
+        {
+            "src": "多分超甘えたい部分を持ってるけど、恋人の前だけバブバブダブダブしてんだ。",
+            "mt": "\"It seems like she has a strong need for affection, but she only acts that way with her partner.\"",
+            "ref": "You secretly have a side that wants affection, and only go babu-babu in front of your partner.",
+            "COMET": 0.67138671875
+        },
+        {
+            "src": "多分超甘えたい部分を持ってるけど、恋人の前だけバブバブダブダブしてんだ。",
+            "mt": "\"It seems like she has a strong need for affection, but she only acts that way with her partner.\"",
+            "ref": "So you do go all babu-babu.",
+            "COMET": 0.48095703125
+        },
+        {
+            "src": "想像に任せますね。 でもそこはユーピーのなんかウサギちゃんは何なの。",
+            "mt": "\"I'll leave that to your imagination.\" \"But what's with Youpee's little bunny?\"",
+            "ref": "That's what it means. I'll leave that part to your imagination.",
+            "COMET": 0.6806640625
+        },
+        {
+            "src": "でもそこはユーピーのなんかウサギちゃんは何なの。",
+            "mt": "\"But what's with Youpee's little bunny?\"",
+            "ref": "What does Chakkari Usagi mean?",
+            "COMET": 0.44970703125
+        },
+        {
+            "src": "あ、チャッカリウサギはなんかうちも結構一途みたいな感じなんだけど、ただその人を一途に愛するより本 当に大丈夫かみたいなのをこちゃんと分析するらしい。",
+            "mt": "\"Ah, the Chakkari rabbit feels quite devoted, but it's not necessarily about loving one person; it's more about...\" \"Apparently, she's carefully analyzing whether it's really okay.\"",
+            "ref": "Chakkari Usagi is apparently pretty devoted too, but rather than blindly loving one person, it carefully analyzes whether that person is really a good choice.",
+            "COMET": 0.6533203125
+        },
+        {
+            "src": "あ、来た。 チャッカリウサギ来た。 チャッカリウサギだから。",
+            "mt": "\"Ah, here it is.\" \"Here comes the clever rabbit.\" \"That's just because it's a clever rabbit.\"",
+            "ref": "There it is—the shrewd-rabbit side came out. That's why I'm a Chakkari Usagi.",
+            "COMET": 0.64013671875
+        },
+        {
+            "src": "ちなみにチャッカリウサギと、隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。",
+            "mt": "\"Apparently, clever rabbits and shy individuals tend to have relationships that lead to happy marriages.\"",
+            "ref": "So you actually think it through.",
+            "COMET": 0.495849609375
+        },
+        {
+            "src": "ちなみにチャッカリウサギと、隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。 やった、一発勝",
+            "mt": "\"Apparently, clever rabbits and shy individuals tend to have relationships that lead to happy marriages.\" \"Yes! A clean win.\"",
+            "ref": "Apparently, by the way, Chakkari Usagi and Kakure Baby are romance types likely to have happy marriages.",
+            "COMET": 0.6005859375
+        },
+        {
+            "src": "やった、一発勝",
+            "mt": "\"Yes! A clean win.\"",
+            "ref": "Yes!",
+            "COMET": 0.7822265625
+        },
+        {
+            "src": "やった、一発勝 負。 待って、最後の恋人はなんか苦労しそうじゃない？",
+            "mt": "\"Yes! A clean win.\" \"Lost.\" \"Wait, doesn't the last love interest seem like they're going through a tough time?\"",
+            "ref": "Wait—doesn't “The Last Lover” sound like the type that suffers?",
+            "COMET": 0.654296875
+        },
+        {
+            "src": "最後の恋人は多分重すぎて苦労する。",
+            "mt": "\"The last love interest is probably too much to handle, and will likely struggle.\"",
+            "ref": "“The Last Lover” probably suffers because they're too emotionally intense.",
+            "COMET": 0.6357421875
+        },
+        {
+            "src": "重くないよ。",
+            "mt": "\"It's not that heavy.\"",
+            "ref": "I'm not intense.",
+            "COMET": 0.6435546875
+        },
+        {
+            "src": "私でも重いのかな。",
+            "mt": "\"Am I too much?\"",
+            "ref": "...Or maybe I am.",
+            "COMET": 0.556640625
+        }
+    ]
+}

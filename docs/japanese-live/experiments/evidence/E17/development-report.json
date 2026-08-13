@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E17-speakerkit-clustering-threshold",
+  "primaryMetric": "speaker-attributed Japanese error rate",
+  "selectionRule": [
+    "strict speaker-attributed Japanese gain versus 0.60",
+    "no spoken-content, DER, JER, speaker-count, duplication or integrity veto",
+    "lexicographic speaker JA error, JER, DER, count error, threshold"
+  ],
+  "development": {
+    "corpusID": "qudu2fx3ncc",
+    "role": "development",
+    "referenceAnnotations": {
+      "pseudoSpeakers": {
+        "SPEAKER_13": "group-reaction/overlap annotation; not one acoustic identity"
+      },
+      "uncertainty": "SPEAKER_13 is a group-reaction/overlap pseudo-speaker excluded from acoustic identity scoring; timing remains reference-limited."
+    },
+    "oneVariable": true,
+    "allRunsValid": true,
+    "rows": [
+      {
+        "threshold": 0.45,
+        "metrics": {
+          "DERPercent": 100.4511517724413,
+          "JERPercent": 79.1675880227298,
+          "referenceSpeakerCount": 12,
+          "candidateSpeakerCount": 7,
+          "speakerCountAbsoluteError": 5,
+          "duplicationCount": 0,
+          "speakerAttributedJapaneseError": {
+            "editDistance": 2637,
+            "referenceCharacterCount": 2949,
+            "ratePercent": 89.42014242115971,
+            "unattributedCharacterCount": 2822
+          },
+          "overlap": {
+            "precisionPercent": 11.436357067796914,
+            "recallPercent": 18.348060624247193,
+            "f1Percent": 14.090251820268145,
+            "referenceSeconds": 93.4,
+            "candidateSeconds": 149.8474428653717,
+            "matchedSeconds": 17.13708862304688,
+            "missedSeconds": 76.26291137695313,
+            "falseAlarmSeconds": 132.71035424232483
+          },
+          "activityFalseAlarmSeconds": 163.2773879241944,
+          "crossSpeakerOverlapSeconds": 149.8474428653717,
+          "runtimeSeconds": 16.945248007774353,
+          "preparationSeconds": 18.677425026893616,
+          "peakMemoryBytes": 672286208
+        },
+        "gates": {
+          "provenance": true,
+          "declaredSettingObserved": true,
+          "frozenASRAlignmentTranslation": true,
+          "speakerKitFrozen": true,
+          "completeDiarizationEvidence": true,
+          "validDeliverables": true,
+          "lifecycleAndMemoryRelease": true,
+          "runtimeAndMemoryMeasured": true,
+          "zeroDuplication": true,
+          "translationAndLiveUnchanged": true
+        },
+        "vetoesVersusDefault": {
+          "strictSpeakerAttributedJapaneseGain": true,
+          "noSpokenContentLoss": false,
+          "DERDoesNotRegress": true,
+          "JERDoesNotRegress": true,
+          "speakerCountErrorDoesNotRegress": true
+        },
+        "eligibleCandidate": false,
+        "rawArtifacts": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E17/development-0p45-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E17/development-0p45-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E17/development-0p45.log",
+          "scorerInput": "docs/japanese-live/experiments/evidence/E17/development-0p45-scorer-input.json.gz"
+        }
+      },
+      {
+        "threshold": 0.5,
+        "metrics": {
+          "DERPercent": 100.38861491358001,
+          "JERPercent": 79.10431222957732,
+          "referenceSpeakerCount": 12,
+          "candidateSpeakerCount": 7,
+          "speakerCountAbsoluteError": 5,
+          "duplicationCount": 0,
+          "speakerAttributedJapaneseError": {
+            "editDistance": 2628,
+            "referenceCharacterCount": 2949,
+            "ratePercent": 89.11495422177009,
+            "unattributedCharacterCount": 2823
+          },
+          "overlap": {
+            "precisionPercent": 11.432415260791707,
+            "recallPercent": 18.638892490297113,
+            "f1Percent": 14.17215112253395,
+            "referenceSeconds": 93.4,
+            "candidateSeconds": 152.27513337135315,
+            "matchedSeconds": 17.408725585937503,
+            "missedSeconds": 75.9912744140625,
+            "falseAlarmSeconds": 134.86640778541565
+          },
+          "activityFalseAlarmSeconds": 163.31135589599614,
+          "crossSpeakerOverlapSeconds": 152.27513337135315,
+          "runtimeSeconds": 15.425353050231934,
+          "preparationSeconds": 0.1546030044555664,
+          "peakMemoryBytes": 757073384
+        },
+        "gates": {
+          "provenance": true,
+          "declaredSettingObserved": true,
+          "frozenASRAlignmentTranslation": true,
+          "speakerKitFrozen": true,
+          "completeDiarizationEvidence": true,
+          "validDeliverables": true,
+          "lifecycleAndMemoryRelease": true,
+          "runtimeAndMemoryMeasured": true,
+          "zeroDuplication": true,
+          "translationAndLiveUnchanged": true
+        },
+        "vetoesVersusDefault": {
+          "strictSpeakerAttributedJapaneseGain": true,
+          "noSpokenContentLoss": false,
+          "DERDoesNotRegress": true,
+          "JERDoesNotRegress": true,
+          "speakerCountErrorDoesNotRegress": true
+        },
+        "eligibleCandidate": false,
+        "rawArtifacts": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E17/development-0p50-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E17/development-0p50-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E17/development-0p50.log",
+          "scorerInput": "docs/japanese-live/experiments/evidence/E17/development-0p50-scorer-input.json.gz"
+        }
+      },
+      {
+        "threshold": 0.55,
+        "metrics": {
+          "DERPercent": 98.91704398210327,
+          "JERPercent": 76.21259331550145,
+          "referenceSpeakerCount": 12,
+          "candidateSpeakerCount": 8,
+          "speakerCountAbsoluteError": 4,
+          "duplicationCount": 0,
+          "speakerAttributedJapaneseError": {
+            "editDistance": 2583,
+            "referenceCharacterCount": 2949,
+            "ratePercent": 87.58901322482197,
+            "unattributedCharacterCount": 2803
+          },
+          "overlap": {
+            "precisionPercent": 13.78043070322211,
+            "recallPercent": 22.732528261760578,
+            "f1Percent": 17.15906019671875,
+            "referenceSeconds": 93.4,
+            "candidateSeconds": 154.07487511634827,
+            "matchedSeconds": 21.23218139648438,
+            "missedSeconds": 72.16781860351563,
+            "falseAlarmSeconds": 132.8426937198639
+          },
+          "activityFalseAlarmSeconds": 164.73253791809088,
+          "crossSpeakerOverlapSeconds": 154.07487511634827,
+          "runtimeSeconds": 14.068528056144714,
+          "preparationSeconds": 0.1517179012298584,
+          "peakMemoryBytes": 763004416
+        },
+        "gates": {
+          "provenance": true,
+          "declaredSettingObserved": true,
+          "frozenASRAlignmentTranslation": true,
+          "speakerKitFrozen": true,
+          "completeDiarizationEvidence": true,
+          "validDeliverables": true,
+          "lifecycleAndMemoryRelease": true,
+          "runtimeAndMemoryMeasured": true,
+          "zeroDuplication": true,
+          "translationAndLiveUnchanged": true
+        },
+        "vetoesVersusDefault": {
+          "strictSpeakerAttributedJapaneseGain": true,
+          "noSpokenContentLoss": true,
+          "DERDoesNotRegress": true,
+          "JERDoesNotRegress": true,
+          "speakerCountErrorDoesNotRegress": true
+        },
+        "eligibleCandidate": true,
+        "rawArtifacts": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E17/development-0p55-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E17/development-0p55-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E17/development-0p55.log",
+          "scorerInput": "docs/japanese-live/experiments/evidence/E17/development-0p55-scorer-input.json.gz"
+        }
+      },
+      {
+        "threshold": 0.6,
+        "metrics": {
+          "DERPercent": 108.46221378765807,
+          "JERPercent": 84.74678985341754,
+          "referenceSpeakerCount": 12,
+          "candidateSpeakerCount": 6,
+          "speakerCountAbsoluteError": 6,
+          "duplicationCount": 0,
+          "speakerAttributedJapaneseError": {
+            "editDistance": 2706,
+            "referenceCharacterCount": 2949,
+            "ratePercent": 91.75991861648016,
+            "unattributedCharacterCount": 2803
+          },
+          "overlap": {
+            "precisionPercent": 12.572840537928329,
+            "recallPercent": 21.743761997917225,
+            "f1Percent": 15.932862351913657,
+            "referenceSeconds": 93.4,
+            "candidateSeconds": 161.52812600135803,
+            "matchedSeconds": 20.30867370605469,
+            "missedSeconds": 73.09132629394531,
+            "falseAlarmSeconds": 141.21945229530334
+          },
+          "activityFalseAlarmSeconds": 166.46592742919927,
+          "crossSpeakerOverlapSeconds": 161.52812600135803,
+          "runtimeSeconds": 12.786032915115356,
+          "preparationSeconds": 0.14937007427215576,
+          "peakMemoryBytes": 757122536
+        },
+        "gates": {
+          "provenance": true,
+          "declaredSettingObserved": true,
+          "frozenASRAlignmentTranslation": true,
+          "speakerKitFrozen": true,
+          "completeDiarizationEvidence": true,
+          "validDeliverables": true,
+          "lifecycleAndMemoryRelease": true,
+          "runtimeAndMemoryMeasured": true,
+          "zeroDuplication": true,
+          "translationAndLiveUnchanged": true
+        },
+        "vetoesVersusDefault": {
+          "strictSpeakerAttributedJapaneseGain": false,
+          "noSpokenContentLoss": true,
+          "DERDoesNotRegress": true,
+          "JERDoesNotRegress": true,
+          "speakerCountErrorDoesNotRegress": true
+        },
+        "eligibleCandidate": false,
+        "rawArtifacts": {
+          "rawASR": "docs/japanese-live/experiments/evidence/E17/development-0p60-raw-asr.json.gz",
+          "manifest": "docs/japanese-live/experiments/evidence/E17/development-0p60-manifest.json",
+          "log": "docs/japanese-live/experiments/evidence/E17/development-0p60.log",
+          "scorerInput": "docs/japanese-live/experiments/evidence/E17/development-0p60-scorer-input.json.gz"
+        }
+      }
+    ],
+    "selectedThreshold": 0.55,
+    "developmentPromotionEligible": true
+  },
+  "holdout": null,
+  "holdoutRun": false,
+  "promote": false,
+  "decision": "development selected 0.55; holdout remains closed",
+  "limitedEvidence": "two supplied videos; no universal domain-quality claim"
+}
