@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "issue": 98,
+  "classification": "preflight",
+  "result": "pass",
+  "corpusRole": "development",
+  "holdoutOpened": false,
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "manifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "baselineSHA256": "6060f830c8c3b8febb186c540e992f3d70375a674adb4d48087f77e1ce97c2b2",
+  "runnerSHA256": "ccc542e611d9d7a65b1f05502d0628194f4d7053dbba25abb7a45f6f4941a807",
+  "modelSHA256": "ed6c35d0d527c5d03171c3eb448e2150a42c76a51e3e73aa821e351c3da8307c"
+}

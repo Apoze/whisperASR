@@ -1,0 +1,1137 @@
+{
+  "schemaVersion": 1,
+  "scope": "benchmark-code-config-assets",
+  "treeSHA256": "7385d01d9e1e5e7cf67bd2d17a422a21d1e2fd863e08c77cb00790b0eaa5f44f",
+  "files": [
+    {
+      "path": "Assets/screenshot.png",
+      "size": 79526,
+      "sha256": "4684bc07c38450fc3b873c4587f65768c024f7fe2a26e9ba50d2019417d6b826"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/Info.plist",
+      "size": 759,
+      "sha256": "f5facd8a4d37742a8ebd6749a5e3b07a0cf2488cf97224a1fd5a753a806bca84"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/ggml-alloc.h",
+      "size": 3624,
+      "sha256": "3793a2175be355619cc426982706b7fa94ad801b66d2aeef4b95e68c434ba0ef"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/ggml-backend.h",
+      "size": 21053,
+      "sha256": "3774c77515070f40f7dfb0aefdcb36f940537730e5891431dfeea338723923d5"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/ggml-cpp.h",
+      "size": 1652,
+      "sha256": "bc15ba002c68685df23faae42df0d2b3d58032011f88b649021ab92485862c72"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/ggml-cpu.h",
+      "size": 7696,
+      "sha256": "1aafe97e576ea38c0da57517fb2492955d0b69c1a799842481fc069d6d9d28ef"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/ggml-metal.h",
+      "size": 2141,
+      "sha256": "322f36cd30f3e9e7aad7b5b9bc63078012fd0b7706ac4e24f5721b604f3d8980"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/ggml-opt.h",
+      "size": 14039,
+      "sha256": "2919321813be96e0f5d6ba36e7ed634a518de0fbe834902ad8f5a402f906e302"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/ggml.h",
+      "size": 103247,
+      "sha256": "a036182d5c5d49f581bd9418432bb6bf492dd697495129597bc14b503b569303"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/gguf.h",
+      "size": 10224,
+      "sha256": "d2eec8b938aa04ccec9bc4ce8a6a6dcf70d942c37d2bb3113e426d9307d51385"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/module.modulemap",
+      "size": 76,
+      "sha256": "4f14f5890151b1d4f952b5e547963450cdcf2439b1abfbc643d59fffa4c32654"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/Headers/whisper.h",
+      "size": 35157,
+      "sha256": "0525b758571ab71c00ddd8ea2845f74af7c62dfa5100c5586655f75bdc5ef4be"
+    },
+    {
+      "path": "Frameworks/CWhisper.xcframework/macos-arm64/libwhisper_all.a",
+      "size": 3214664,
+      "sha256": "358986f0ac0f2669a015e6e832047089053081d41387383223afa69e7c2b7d90"
+    },
+    {
+      "path": "Package.resolved",
+      "size": 5481,
+      "sha256": "71d9161262d1962dd6775c3f9aacf0a9a677d8dfc042e2dfa8c49669e885e41f"
+    },
+    {
+      "path": "Package.swift",
+      "size": 3750,
+      "sha256": "270f5f8c76e6ba24c2a5b93febcbbee605414b49e3b75d85f2a0e792f4c8cf1c"
+    },
+    {
+      "path": "Scripts/aggregate_japanese_l7b.py",
+      "size": 13629,
+      "sha256": "cabcf02224a43c185d8e5da4b07fe78518cacbc3b858e6f7266272818339e3fc"
+    },
+    {
+      "path": "Scripts/aggregate_japanese_l7c.py",
+      "size": 46652,
+      "sha256": "2404953453f758357b2d6e4ccfaee7f27ceef8248de4f1ec556c07544d245903"
+    },
+    {
+      "path": "Scripts/build_mlx_metallib.sh",
+      "size": 2203,
+      "sha256": "2e555267b9d48e327828cfd2bba40314c003f4eb8843887261dd30de1f52d1d1"
+    },
+    {
+      "path": "Scripts/build_release.sh",
+      "size": 8091,
+      "sha256": "7eaa91ae66564a5e6f0bf846770b2645110abd1728e700f113c3601601f0acc4"
+    },
+    {
+      "path": "Scripts/build_whisper_lib.sh",
+      "size": 3078,
+      "sha256": "e24c41095d1535ad540ca1d0ffd4c3fbee56508014cb06698e0bc341c7a2dbfa"
+    },
+    {
+      "path": "Scripts/comet_score_compat.py",
+      "size": 461,
+      "sha256": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+    },
+    {
+      "path": "Scripts/convert_model.sh",
+      "size": 2380,
+      "sha256": "1f963866a9b5eaf226ec9b9d00e4581d0670873b75d6ce8d963b825f19a6ccf4"
+    },
+    {
+      "path": "Scripts/japanese_external_asr.py",
+      "size": 15031,
+      "sha256": "5088f5fb8cc16f8ca0efe0c5f489f4f6a3f6a432f7e7718dddeee0de6bc207a5"
+    },
+    {
+      "path": "Scripts/metricx_24_requirements.txt",
+      "size": 73,
+      "sha256": "b161eeda7d4bf7762fc491dd1f52595422b5d460ab51204871d1e7c31afece41"
+    },
+    {
+      "path": "Scripts/prepare_japanese_bakeoff.sh",
+      "size": 4535,
+      "sha256": "53c8c4cc3c700b29d88849dfd93f93be5bc88e8ae6937945fd3321ab54ff836d"
+    },
+    {
+      "path": "Scripts/prepare_japanese_l5_tools.sh",
+      "size": 3406,
+      "sha256": "1384bd5a325d12399704d0cf42ae3f33c3be092230102eb84d413cf9d844aeb1"
+    },
+    {
+      "path": "Scripts/prepare_japanese_video_corpora.py",
+      "size": 14646,
+      "sha256": "42da147ac63546f2dde2f494d5e0ca26498599384ff3d4d82564080f9ba59bee"
+    },
+    {
+      "path": "Scripts/prepare_whisperlivekit_l6.sh",
+      "size": 2745,
+      "sha256": "bc66ec7cf37e8fd5ff21ef5d7b713899424fbae9fdbb8079b07bd3985b1c1f9e"
+    },
+    {
+      "path": "Scripts/release.sh",
+      "size": 1542,
+      "sha256": "42eeb92441bc942b52e42b56e89870a4afae3632b07277c810a507a81da7d560"
+    },
+    {
+      "path": "Scripts/report_combined_offline_validation.py",
+      "size": 80004,
+      "sha256": "1b9a5e338dfdd23934aa4d02eb840080b0997eef9b9c85b1d81133202f15dd77"
+    },
+    {
+      "path": "Scripts/report_conversation_context.py",
+      "size": 17027,
+      "sha256": "b274e41709fb1cfd7bbb3534d9ce74ffbc418612f6235ebf64cf6409eafe813d"
+    },
+    {
+      "path": "Scripts/report_direct_translation.py",
+      "size": 10700,
+      "sha256": "2407ccb99f57fcce6b85329ac4cfb7d679dfc189510f2eac0797d4ac2578ef8e"
+    },
+    {
+      "path": "Scripts/report_exclusive_reconciliation.py",
+      "size": 17002,
+      "sha256": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66"
+    },
+    {
+      "path": "Scripts/report_fluid_audio_offline.py",
+      "size": 24069,
+      "sha256": "0a95bcf9d0155ec68496237216abf6c3ee194135d6c856cb7930abcea4c54f46"
+    },
+    {
+      "path": "Scripts/report_high_quality_acceptance.py",
+      "size": 30179,
+      "sha256": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd"
+    },
+    {
+      "path": "Scripts/report_japanese_e1.py",
+      "size": 8889,
+      "sha256": "2152681e16e704d9bd1741aeb0a673dbc9288418646ea9d09258f603cf48b638"
+    },
+    {
+      "path": "Scripts/report_japanese_l7d.py",
+      "size": 26529,
+      "sha256": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f"
+    },
+    {
+      "path": "Scripts/report_local_translator_bakeoff.py",
+      "size": 31358,
+      "sha256": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5"
+    },
+    {
+      "path": "Scripts/report_metricx_reranking.py",
+      "size": 30901,
+      "sha256": "3f66e1c4f132ead7673ebe9fa4285464b0b39f8911077d4be323681cd41a2d92"
+    },
+    {
+      "path": "Scripts/report_speaker_count.py",
+      "size": 15889,
+      "sha256": "c7c1caf36dd773dbe2a9a2de5b458ad48584035af4f573a989a24ecd6ab0fac2"
+    },
+    {
+      "path": "Scripts/report_speakerkit_precision.py",
+      "size": 20927,
+      "sha256": "0d5cc562dd9a3711a8755413adcf2283cc67241659df14d606e0bf6bd7110f5b"
+    },
+    {
+      "path": "Scripts/report_speakerkit_threshold.py",
+      "size": 21825,
+      "sha256": "9c4b66520e7b51be3fef9e1b1a98e01b00f0503d191fe9932ab24d2323f98c87"
+    },
+    {
+      "path": "Scripts/report_translation_integrity.py",
+      "size": 6669,
+      "sha256": "98e669837d669fd03c1141f9ee305f68d41cf5b195ea9b4c905c6dda5ca9273b"
+    },
+    {
+      "path": "Scripts/report_translation_retry.py",
+      "size": 7407,
+      "sha256": "79140965bc8f0650e16b6b33c20cde75791b5b603587c252361ff0663f0d1b17"
+    },
+    {
+      "path": "Scripts/report_voxtral_l8a.py",
+      "size": 14223,
+      "sha256": "151c1777b70b4f2d009d9ed42b80b49d295eaecad34d51f629c92b4c475d23e1"
+    },
+    {
+      "path": "Scripts/report_voxtral_l8b2.py",
+      "size": 16390,
+      "sha256": "9b90df489f50bb93afe5c9d26d009c8348186886668644123b065156b3c8e414"
+    },
+    {
+      "path": "Scripts/run_combined_offline_validation.sh",
+      "size": 32495,
+      "sha256": "a4da72f4cbea4a7a155c6a841dad1fb1e68c76d87b9cda105201c5fc566c1b10"
+    },
+    {
+      "path": "Scripts/run_conversation_context_experiment.sh",
+      "size": 3249,
+      "sha256": "cc54f905e8c9fecc0b212bd606051bde533eec86e11835c301b3a0890d8ab42d"
+    },
+    {
+      "path": "Scripts/run_direct_translation_experiment.sh",
+      "size": 3187,
+      "sha256": "75640272bb09a15b4828955186f4477f6a4dd0178345fcd83f09349c3fc7f32a"
+    },
+    {
+      "path": "Scripts/run_exclusive_reconciliation_experiment.sh",
+      "size": 15556,
+      "sha256": "99afc19297916f1dfe339053d409d38b8e826a14012442b24482960f037112b8"
+    },
+    {
+      "path": "Scripts/run_fluid_audio_offline_experiment.sh",
+      "size": 31978,
+      "sha256": "958ee79e0b1ac1a6f8aebc095c46c685f3ececfa900ce7a758d1581883a8d315"
+    },
+    {
+      "path": "Scripts/run_high_quality_acceptance.sh",
+      "size": 12554,
+      "sha256": "8e6e141054f67c6ae45aa102adeb1a9dbdfc43b98f0691bdb26d95f0ec37194e"
+    },
+    {
+      "path": "Scripts/run_japanese_bakeoff.sh",
+      "size": 2832,
+      "sha256": "58e4d8d4b90f8968c84af877c4876612e18db1d6fe4c126dd0f15a94d1cf6038"
+    },
+    {
+      "path": "Scripts/run_japanese_direct_smoke.sh",
+      "size": 1073,
+      "sha256": "9ba3d3701c5668a51e7f8a1bb4bcb81ba107f650e4bb037d0af52792429e638f"
+    },
+    {
+      "path": "Scripts/run_japanese_english_bakeoff.sh",
+      "size": 1516,
+      "sha256": "ee9585b3af2154c98b79f3bb392fc0ca301523b1e4c96b14922c23c28db99990"
+    },
+    {
+      "path": "Scripts/run_japanese_firefox_bakeoff.sh",
+      "size": 30176,
+      "sha256": "47b30b2f9e7e31e6aff21d3bc6723fe42fe0a143fdc708075c36133d2c0febfa"
+    },
+    {
+      "path": "Scripts/run_japanese_l5_bakeoff.sh",
+      "size": 2182,
+      "sha256": "db4ed77d72c97af531d94cac163b5bce58c5ad79d6e0e5bab5475b80386eac59"
+    },
+    {
+      "path": "Scripts/run_japanese_l7b_replay.sh",
+      "size": 4161,
+      "sha256": "a8045502281a181dac4f1aaa7c83b851aee051d38ec3a2844bbfc02aec7a9e27"
+    },
+    {
+      "path": "Scripts/run_japanese_l7c_replay.sh",
+      "size": 8541,
+      "sha256": "408dc0141191259811f872581ebf612949fed33a95719b0d9c1e80e75f4b63ad"
+    },
+    {
+      "path": "Scripts/run_japanese_live_replay.sh",
+      "size": 6372,
+      "sha256": "57b730af673c7a1fcb76e049085ba653f66cae5df8d6c05d101b0bf9694e842d"
+    },
+    {
+      "path": "Scripts/run_japanese_offline_evaluation.sh",
+      "size": 1035,
+      "sha256": "e265cc4e4cdd4aa230f7230627e20e9881d2ef007186d45b2b795f1f02da13c5"
+    },
+    {
+      "path": "Scripts/run_local_benchmark.sh",
+      "size": 3361,
+      "sha256": "5ddcf95d7068ec45723d2882d02572a4ebf8f339dc932ab865f448af421bedd0"
+    },
+    {
+      "path": "Scripts/run_local_translator_bakeoff.sh",
+      "size": 11328,
+      "sha256": "daa147aa8d78fb069398e019f2fa41260c7e583b25cb7bdd0e21075edde03cea"
+    },
+    {
+      "path": "Scripts/run_metricx_24_qe.py",
+      "size": 19377,
+      "sha256": "6b58481caa8cc369081172b9187a9c92b7cad1cfd8ab63b5de13ee14bdad2e6c"
+    },
+    {
+      "path": "Scripts/run_metricx_reranking_experiment.sh",
+      "size": 6286,
+      "sha256": "43b3b9ca8b62298dc17e8814582ef4c5763da10de3142a49b3199c46360e10b0"
+    },
+    {
+      "path": "Scripts/run_moss_q8_smoke.sh",
+      "size": 9518,
+      "sha256": "1199b3bfe98f3689ab479b25d2097a50cc0972a1132743da1c38a577c77b9b93"
+    },
+    {
+      "path": "Scripts/run_moss_q8_worker.sh",
+      "size": 238,
+      "sha256": "7ceb022ef6fd58b02571d93a0e1a448ca11cae7495f798ddcac993c1700e81d1"
+    },
+    {
+      "path": "Scripts/run_speaker_count_experiment.sh",
+      "size": 15452,
+      "sha256": "081c72b94c79cda05df614092cc5fe11328f8c00fe880871808a7d5821327372"
+    },
+    {
+      "path": "Scripts/run_speakerkit_precision_experiment.sh",
+      "size": 17793,
+      "sha256": "f211beea0737f45549dfc45a288a166a8050ce61b5307de4af0749c56760a9ed"
+    },
+    {
+      "path": "Scripts/run_speakerkit_threshold_experiment.sh",
+      "size": 22127,
+      "sha256": "c33dff9075551e400d5c767a4bdc7b70b1041188acfdeba492b056731117367c"
+    },
+    {
+      "path": "Scripts/run_stereo_bakeoff.sh",
+      "size": 897,
+      "sha256": "079d802aa4f17c1973990fcfa5e3e3f6cbd77a3e3038329d5ce7b0f4e0dbe571"
+    },
+    {
+      "path": "Scripts/run_translation_integrity_experiment.sh",
+      "size": 2878,
+      "sha256": "765dbb2896e8c4bc138f470a4bbb62adf55489e71c3b75052c5218b844bd18b0"
+    },
+    {
+      "path": "Scripts/run_translation_retry_experiment.sh",
+      "size": 2954,
+      "sha256": "b73c4bdc63405da3a1342f9b316097dce0686cc03e74b8c92e3beb25ddf219d0"
+    },
+    {
+      "path": "Scripts/run_voxtral_configuration_bakeoff.sh",
+      "size": 2693,
+      "sha256": "61291622495d3fba0400cc880b19f8e0d02a0f423cefad3b3ffe1788ebc59cf2"
+    },
+    {
+      "path": "Scripts/run_voxtral_l8a.sh",
+      "size": 3800,
+      "sha256": "f9f05fe96b4ff170080ad8b7af566c2f00c1fc13a7a841b63cdaa05c20c33da4"
+    },
+    {
+      "path": "Scripts/run_voxtral_l8b2.sh",
+      "size": 3706,
+      "sha256": "43db16ea2e60328c57684828093c81261d30b32d101a03aa30984c7c8d3205cc"
+    },
+    {
+      "path": "Scripts/runtime_provenance.py",
+      "size": 3289,
+      "sha256": "d71c062d066feeb1858a01064a1391e10b73ad3b78dfc276cef55d0d39161aef"
+    },
+    {
+      "path": "Scripts/source_tree_provenance.py",
+      "size": 2014,
+      "sha256": "14e11d6a558a26a0c1a58d555e316a0a2ddb636181ee750791e4f61d7595da04"
+    },
+    {
+      "path": "Scripts/validate_voxtral_product_run.py",
+      "size": 22445,
+      "sha256": "ee12be652c27f71421aa975b8d2ba5eb99be1022389b6738087bd4bf1b2a368e"
+    },
+    {
+      "path": "Scripts/verify_japanese_corpora.sh",
+      "size": 962,
+      "sha256": "c28e4acdcdebf4279089bec565472f604a0de34edd056cfbe27b3c7be9e0e209"
+    },
+    {
+      "path": "Sources/APIServer.swift",
+      "size": 26143,
+      "sha256": "16b6ea257d16e955553d6c80bdcfaf1d2fa82982d99cd054590ce25e4ac50741"
+    },
+    {
+      "path": "Sources/AppIconGenerator.swift",
+      "size": 2961,
+      "sha256": "cd4ac171244df31fccd8c9b093398077579fa9c1c0ba2934dfaa2fd9fbf0373e"
+    },
+    {
+      "path": "Sources/AppPickerView.swift",
+      "size": 26282,
+      "sha256": "5021ea52cf24e702773217fbd83629e85b753584a7c6c1c6c792f6c2fc5a969b"
+    },
+    {
+      "path": "Sources/AppState.swift",
+      "size": 229097,
+      "sha256": "999533f83e3a6667f990698ffd7eb888eb65269e366bc2813152ccc35376e311"
+    },
+    {
+      "path": "Sources/AppStoragePaths.swift",
+      "size": 921,
+      "sha256": "70a7b66e4c457a3e8d7e047212bdbe416b26de122b35b77070919c8953fdfc05"
+    },
+    {
+      "path": "Sources/AppleLiveServices.swift",
+      "size": 21661,
+      "sha256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6"
+    },
+    {
+      "path": "Sources/AsyncDeadline.swift",
+      "size": 3303,
+      "sha256": "761c4001a002300dd4456c42568034cf58a1d558a949f60ee52f5338f3890d27"
+    },
+    {
+      "path": "Sources/AudioLoader.swift",
+      "size": 6267,
+      "sha256": "7aeb534deedd80e84bb9b1f5863a35006124f32f287ef09fde9a5e420a5cf44f"
+    },
+    {
+      "path": "Sources/AudioPlayerManager.swift",
+      "size": 3789,
+      "sha256": "e53f52b30d27fa060439278f68e8960c30b8b9a5405e837328c8075844cc7a85"
+    },
+    {
+      "path": "Sources/AudioRecorder.swift",
+      "size": 63004,
+      "sha256": "5f6ec5ebe6c9b0eae7c5f7890849bb019679be03e71cae5bc2160e1d3f0e18d5"
+    },
+    {
+      "path": "Sources/BackupService.swift",
+      "size": 9572,
+      "sha256": "57b107a61b37fde7dc8494d5eeaa9da93bf8db4bf722c0c6948f2fad09724966"
+    },
+    {
+      "path": "Sources/ContentView.swift",
+      "size": 968,
+      "sha256": "24717e66e299d8d1cfe0a90590e57ca61ff03da138d63cf91f2cd013ee03de46"
+    },
+    {
+      "path": "Sources/DetailView.swift",
+      "size": 26315,
+      "sha256": "89d2d9d619d80b37dc42488a02f674eaa057d2df56038f96efd98511e7d3cd5b"
+    },
+    {
+      "path": "Sources/ExecutableLocator.swift",
+      "size": 624,
+      "sha256": "70b580d0e96a5fe091acf57f6ee939f8b59ff510ad7dbfb7eecb607c0bb9eff1"
+    },
+    {
+      "path": "Sources/HeavyweightModelGate.swift",
+      "size": 17874,
+      "sha256": "3b9771da40e93bdd72bafb2f2c197f00bb20faf92be08dbbaee13b7cc3ad744a"
+    },
+    {
+      "path": "Sources/HighQualityASRWorker.swift",
+      "size": 18950,
+      "sha256": "ab5981d939485f52fbeea8bf45732ea5cd6b41760482d066cd7de3be198d3c22"
+    },
+    {
+      "path": "Sources/HighQualityAlignmentSpeakerWorker.swift",
+      "size": 18569,
+      "sha256": "56c98872d0cdd6dc74f9bd8ffc40c2dfad89fd1d59100b2f38e23b302ea66fcb"
+    },
+    {
+      "path": "Sources/HighQualityConversationContext.swift",
+      "size": 3251,
+      "sha256": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a"
+    },
+    {
+      "path": "Sources/HighQualityFluidAudioRuntime.swift",
+      "size": 4186,
+      "sha256": "d5e013d180aee09a0ec9fff585bdf15c3248e4c3c50b2eddf29cd58f3a6b0b13"
+    },
+    {
+      "path": "Sources/HighQualityForcedAlignerRuntime.swift",
+      "size": 13187,
+      "sha256": "0fe36c3e36fac9962fdb472a6d5faeb450f8f8a9ddf5013773214f9e327c0b2c"
+    },
+    {
+      "path": "Sources/HighQualityGlossary.swift",
+      "size": 35516,
+      "sha256": "01435dba07364c8ceebd0f449071019ed6f6f48cea75fb0cd097047abbf157b2"
+    },
+    {
+      "path": "Sources/HighQualityJob.swift",
+      "size": 165441,
+      "sha256": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c"
+    },
+    {
+      "path": "Sources/HighQualityJobView.swift",
+      "size": 15860,
+      "sha256": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a"
+    },
+    {
+      "path": "Sources/HighQualityRuntimeMemorySampler.swift",
+      "size": 819,
+      "sha256": "a696adbb49f34a36a588dc65defaa7fa1f0576b633488303e7fe339c5827a410"
+    },
+    {
+      "path": "Sources/HighQualitySpeakerKitRuntime.swift",
+      "size": 4727,
+      "sha256": "9ac5b0ed7a1147def3cd71045f16b862d4ffa14a81f53e67b106fe1028c6f84b"
+    },
+    {
+      "path": "Sources/HighQualityTranslationIntegrity.swift",
+      "size": 16367,
+      "sha256": "397431297c9c5ecc067b00d5ac7b75d6af3addfa05d70030103846464ac54819"
+    },
+    {
+      "path": "Sources/HighQualityTranslationWorker.swift",
+      "size": 10734,
+      "sha256": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f"
+    },
+    {
+      "path": "Sources/HighQualityWorkerProcess.swift",
+      "size": 12712,
+      "sha256": "497c0841283260517f1a85d4507df5d793b3d7b61f0700a8adc805f6f8fde5dd"
+    },
+    {
+      "path": "Sources/JapaneseGlossary.swift",
+      "size": 14698,
+      "sha256": "fac26d9fe8c9960179f8bf3e9cdf88b178c507072387d6b7490ebace64ed87eb"
+    },
+    {
+      "path": "Sources/LiveRecoveryStore.swift",
+      "size": 2289,
+      "sha256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94"
+    },
+    {
+      "path": "Sources/LocalCaptionPipeline.swift",
+      "size": 39631,
+      "sha256": "77029cf5d723e1c6d2ea87fa8b7dc3654c5646f9447aef89e0664377e8942634"
+    },
+    {
+      "path": "Sources/LocalDiarizationShadow.swift",
+      "size": 32494,
+      "sha256": "757cd7f4064779b60546c11801f8571f689240d30299277ef2d6a9efb59f6631"
+    },
+    {
+      "path": "Sources/LocalEnglishModels.swift",
+      "size": 24262,
+      "sha256": "06c8eb7819ec542f94c72e729243e7ba03c8f2fcdcee4b9ee8e9f9186c2c8567"
+    },
+    {
+      "path": "Sources/LocalMLXTranslator.swift",
+      "size": 18311,
+      "sha256": "88057870984c07b81b5374d6b3a0cf1654ed3c4c52b43e9da9578742bf771a51"
+    },
+    {
+      "path": "Sources/MacMemoryPressureMonitor.swift",
+      "size": 1889,
+      "sha256": "0513add52a57ab366bd05eed86eb3fc732880cd7a19eaaa70394ddba5e9e55b6"
+    },
+    {
+      "path": "Sources/ModelCatalog.swift",
+      "size": 12039,
+      "sha256": "193b265db9d6c3d7df6ba6bb1288a9ceda28e2637e39991481468fc9f730c0ae"
+    },
+    {
+      "path": "Sources/ModelDownloadView.swift",
+      "size": 4455,
+      "sha256": "d4770b7fc9dadb5e4c99730ca37e9fcac01139b09255c59835daf4dd563b0cea"
+    },
+    {
+      "path": "Sources/ModelDownloader.swift",
+      "size": 8347,
+      "sha256": "db35c84750764a463fd4d09ebda24082792fcd7977caaa84a7986f7c0b67a883"
+    },
+    {
+      "path": "Sources/Models.swift",
+      "size": 14020,
+      "sha256": "c473d0db5353b1d0210d7f26ca2b4599852116337e03c752c3975d22b5b6d446"
+    },
+    {
+      "path": "Sources/ParakeetRuntime.swift",
+      "size": 1525,
+      "sha256": "8fbb3e856d285016eb0bbd31da2a614a29fee50bb80cf7b00e0ce4decd2fc684"
+    },
+    {
+      "path": "Sources/PlayerView.swift",
+      "size": 6748,
+      "sha256": "74012b40a62824e5ab87db97727744ebe555598a1afa2afa0e3e3b431b382ef6"
+    },
+    {
+      "path": "Sources/QwenPseudoLiveCoordinator.swift",
+      "size": 6432,
+      "sha256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202"
+    },
+    {
+      "path": "Sources/RecordingView.swift",
+      "size": 20838,
+      "sha256": "b530ff863f010bd38b2ea0863dc34d79263c495ddb9249d926147b73104a0c1f"
+    },
+    {
+      "path": "Sources/RecoverablePCMSpool.swift",
+      "size": 28373,
+      "sha256": "5e791e11d880cfb487352076f59582141036a3fdbc8449f2f915f51bc06ab550"
+    },
+    {
+      "path": "Sources/Runtime/VoxtralHelper/patch_runtime.py",
+      "size": 28813,
+      "sha256": "67768e28e14087b79b7eae9960bf3e8719a64864b689949a312cb76177656efe"
+    },
+    {
+      "path": "Sources/Runtime/VoxtralHelper/pyproject.toml",
+      "size": 226,
+      "sha256": "55f9c06c601f8f2613cb1b4a0bdae4ae89ef8d76338ef4c7d3b17d6661e7c01c"
+    },
+    {
+      "path": "Sources/Runtime/VoxtralHelper/uv.lock",
+      "size": 102610,
+      "sha256": "d8047fd0a07300a8bfac4472c4d3ec5f0af46fa74f87217ed8eaf2292203d0db"
+    },
+    {
+      "path": "Sources/SettingsView.swift",
+      "size": 23959,
+      "sha256": "1a6d0a8827f66a3425aeb4ebbb764e8ed4aa7496c11abe4e06e97cb09bb79a33"
+    },
+    {
+      "path": "Sources/SidebarView.swift",
+      "size": 16801,
+      "sha256": "a3881de166f2809dbe0db1125d98c9951bc71f33bb90ff21fa9eaee5f1aef47a"
+    },
+    {
+      "path": "Sources/SingleInstanceGuard.swift",
+      "size": 1399,
+      "sha256": "78b5352a64e3ad645514f5fc49ed7cbfad4df8588cc55bdd507e46b2b41dfa43"
+    },
+    {
+      "path": "Sources/SubtitleTimecode.swift",
+      "size": 630,
+      "sha256": "dbc2a2e4e77081b9a16e4d18774c410bce36fc45c25bb20bbfe8763c9f800e29"
+    },
+    {
+      "path": "Sources/ToastView.swift",
+      "size": 1928,
+      "sha256": "c8b7ef280337bde6882b8860809c19c51f7c1e11d0d9bf53c7df368b2d3e9a2e"
+    },
+    {
+      "path": "Sources/TranscriptionService.swift",
+      "size": 18477,
+      "sha256": "b859801de748c5ad794324efb7fadfd0197939cfd2d7b3d1778aea089c84a6f7"
+    },
+    {
+      "path": "Sources/TranscriptionStore.swift",
+      "size": 8259,
+      "sha256": "66a9f44ee9ceb9a6d67b9ffb819dfe9255696544ade38b4755c7863e1c1706a4"
+    },
+    {
+      "path": "Sources/TranslationService.swift",
+      "size": 14272,
+      "sha256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26"
+    },
+    {
+      "path": "Sources/VoxtralClausePlanner.swift",
+      "size": 24540,
+      "sha256": "13d07fa18e6344d2368ed7786879e8b60ffef2a20242f7d57b5eea2d7013a2a1"
+    },
+    {
+      "path": "Sources/VoxtralHelperRuntime.swift",
+      "size": 59282,
+      "sha256": "f9ad8bb385e405c90855581ffa6abcc8c18dd5ed8cab898cf7e69f82a1533fba"
+    },
+    {
+      "path": "Sources/VoxtralMarkerCalibrationProof.swift",
+      "size": 10481,
+      "sha256": "c3d0ff9d25a48f1e779c1ff1e413761a42a030660dc29d823be929a7dc674080"
+    },
+    {
+      "path": "Sources/WhisperASRApp.swift",
+      "size": 10820,
+      "sha256": "43d52ffd2eb7924968cf837e70984a52c47cea65e3b081f7b3e70c73d82a8a5e"
+    },
+    {
+      "path": "Sources/WhisperKitRuntime.swift",
+      "size": 3233,
+      "sha256": "aa9a62b07934c1080edfdaee58dda23109339ad240e3f472763e90e3931374e6"
+    },
+    {
+      "path": "Sources/YouTubeAcquirer.swift",
+      "size": 8878,
+      "sha256": "5f455efb9e6c8f8a3a80e8889ae3111405c47748c5ec5bcc78c371e3a4d8d26b"
+    },
+    {
+      "path": "Tests/AppleTranslationSessionRecoveryTests.swift",
+      "size": 995,
+      "sha256": "69a2be302182b9e82dd29f2ac8000b01452867422ae42173df4d38045d9de983"
+    },
+    {
+      "path": "Tests/AudioRecorderReliabilityTests.swift",
+      "size": 6633,
+      "sha256": "3b28c96b861041e5f2975c480eaa8055aa72165a0fdd6e9e36db4addf209fb44"
+    },
+    {
+      "path": "Tests/DiarizationBakeoffTests.swift",
+      "size": 42111,
+      "sha256": "593d6e39e723dad0dd8aa500e9192a92218c27e601cff041548293b15f991e77"
+    },
+    {
+      "path": "Tests/HeavyweightModelGateTests.swift",
+      "size": 11266,
+      "sha256": "fe3f6390f8df9f22e8ddfca704fee6b0c92cdbb7788bddbddbc1a5b189f1b41b"
+    },
+    {
+      "path": "Tests/HighQualityASRWorkerTests.swift",
+      "size": 20994,
+      "sha256": "62545899bcdf2e900a7bb88216077560fc9cf250efaeb6f3dca752deb49213ab"
+    },
+    {
+      "path": "Tests/HighQualityAcceptanceTests.swift",
+      "size": 52340,
+      "sha256": "c9d40652629414113f0209b74edb8f1cb14bf07ee065c45c1eef7faad7465fbe"
+    },
+    {
+      "path": "Tests/HighQualityAlignmentSpeakerWorkerTests.swift",
+      "size": 26115,
+      "sha256": "3128317237c65183fce6fe6319290cbb5a6baa588f7abdaa8e743ff8ba7dd2a3"
+    },
+    {
+      "path": "Tests/HighQualityConversationContextTests.swift",
+      "size": 22089,
+      "sha256": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f"
+    },
+    {
+      "path": "Tests/HighQualityGlossaryTests.swift",
+      "size": 30925,
+      "sha256": "02dcbb77c0347d765a9378f872a949f8b8cf055db4dc0aafb9f8486a90bb71a6"
+    },
+    {
+      "path": "Tests/HighQualityJobTests.swift",
+      "size": 115286,
+      "sha256": "95f135062d39a8e6a05d3669aca5e5597e562623e993663ead11f9f984bfc1b6"
+    },
+    {
+      "path": "Tests/HighQualityLocalTranslationTests.swift",
+      "size": 46287,
+      "sha256": "073a28fdf90d1f6c92d9da852c4989e1fdd091ecbba34b80a2c8d13f07779223"
+    },
+    {
+      "path": "Tests/HighQualityTranslationIntegrityTests.swift",
+      "size": 40297,
+      "sha256": "0aa392ce8fc1cafcfc5686870227812fef5039935622bca87775206634993ba0"
+    },
+    {
+      "path": "Tests/HighQualityTranslationWorkerTests.swift",
+      "size": 20809,
+      "sha256": "a1b8816383df1ff87327aeb297e94e69b99491b02f31a747225dcffaf1f496c5"
+    },
+    {
+      "path": "Tests/JapaneseBenchmarkSupport.swift",
+      "size": 40919,
+      "sha256": "28ccbd61d507f8b7eb2b9fa9d9566bfcb3d04f572dfdfa6a13d0543b9ba3400e"
+    },
+    {
+      "path": "Tests/JapaneseDirectModelSmokeTests.swift",
+      "size": 8889,
+      "sha256": "1dbabe2a5790d1ab1742cb59a88e95978c1251e12f5eec6f36581694ee11c0d4"
+    },
+    {
+      "path": "Tests/JapaneseEnglishFullBakeoffTests.swift",
+      "size": 34936,
+      "sha256": "366c00cd96fd62e3bf85cfa61fa85af6d3d3f54f3f1b5be0111198064bab7ae7"
+    },
+    {
+      "path": "Tests/JapaneseGlossaryTests.swift",
+      "size": 7046,
+      "sha256": "f5957c6b5a253df0f28a892d7c056844cb5ddd0d1624519ac0fe3cd6a78509da"
+    },
+    {
+      "path": "Tests/JapaneseLiveBenchmarkSupport.swift",
+      "size": 14943,
+      "sha256": "75f3f9327a182fd2dcfdc795570a464a8d1e549828bbb020d717535bc3c84cd1"
+    },
+    {
+      "path": "Tests/JapaneseLiveBenchmarkSupportTests.swift",
+      "size": 3034,
+      "sha256": "cd61ad5b22eeb7de6752442637a0c6c5256c1f5bffa7f1d1a0b19388ec35a3bf"
+    },
+    {
+      "path": "Tests/JapaneseLiveReplayTests.swift",
+      "size": 75955,
+      "sha256": "f7866e22498063cd1d9c8323d3088d2ea9a323a81ca67012834a59edef4c9de8"
+    },
+    {
+      "path": "Tests/JapaneseModelBakeoffTests.swift",
+      "size": 239928,
+      "sha256": "619ef4d33ed5e1a9cc5d3047013b906eebf2f5519c516cae044c0651432f9a4a"
+    },
+    {
+      "path": "Tests/JapaneseModelRecipeTests.swift",
+      "size": 13463,
+      "sha256": "cf30db108d3493bb9f34edad6df4bf888a2d5de0ef41599d8edd88f95255bd32"
+    },
+    {
+      "path": "Tests/JapaneseOfflineEvaluationTests.swift",
+      "size": 78909,
+      "sha256": "07db834699cf4ae2bc73aa4d75d2d3b8d9fdef8adfcae3b783de4e9cf5feeb67"
+    },
+    {
+      "path": "Tests/JapaneseTranslationControlTests.swift",
+      "size": 17250,
+      "sha256": "56dfda06a9f6e18dcf81c1de6da477ca12edae08dd2ad86150f7c75990b0ab99"
+    },
+    {
+      "path": "Tests/LiveCaptionTests.swift",
+      "size": 38338,
+      "sha256": "4d9c1d75ab9cde0a139079d76eaf5e8cee83e36d5e1b53c9e8092f2da401e283"
+    },
+    {
+      "path": "Tests/LocalBenchmarkTelemetryTests.swift",
+      "size": 12104,
+      "sha256": "6e8802a4d18c60211f624efb47234ca0ae92645255e2fef726b464c20c4d3879"
+    },
+    {
+      "path": "Tests/LocalDiarizationShadowTests.swift",
+      "size": 14348,
+      "sha256": "d48176243fd7b9f367f1f8468c8628886938a5109fc9cecd7d8c1f6096930911"
+    },
+    {
+      "path": "Tests/LocalFinalTranslationRetryTests.swift",
+      "size": 14398,
+      "sha256": "baaed2fa09c1b83c41ea1c7e25f15341ec87b87479556324fdabded08cc84ab0"
+    },
+    {
+      "path": "Tests/LocalPrototypeBenchmarkTests.swift",
+      "size": 68156,
+      "sha256": "395cf8dd7d1c1c851ad4285dd417b318f0359c02edd033dc0e030097fc1f4d00"
+    },
+    {
+      "path": "Tests/LocalTranslatorBakeoffTests.swift",
+      "size": 16709,
+      "sha256": "a6bd1c1a7abfc3bd8892e1424f9b5ba1bb25e452eb1b7932302788a4648118fc"
+    },
+    {
+      "path": "Tests/MOSSQ8SmokeTests.swift",
+      "size": 9670,
+      "sha256": "c3c66e852056c0c81c8b64727e1143eee7ee80be1dfe20223d970f9d046d4a9e"
+    },
+    {
+      "path": "Tests/QwenDecoderLoopGuardTests.swift",
+      "size": 343,
+      "sha256": "1382661cdb3c444020a49986bcf0ba1218a7fb88931faed4e4530c906fd4cfa4"
+    },
+    {
+      "path": "Tests/QwenPseudoLiveCoordinatorTests.swift",
+      "size": 15364,
+      "sha256": "2105d8bb573215d7a119f16e4d5177d13eec32174668674462899a48f7683d3c"
+    },
+    {
+      "path": "Tests/RecoverablePCMSpoolTests.swift",
+      "size": 14465,
+      "sha256": "94c93c19862c75c2ef53c11a4e397611db475499c0ed3b5cd43285ded703f990"
+    },
+    {
+      "path": "Tests/SingleInstanceGuardTests.swift",
+      "size": 885,
+      "sha256": "33b2625b07bc3cbbe9b97de7210c11cdead4a81d55a89905ca09fd896a8a8ecc"
+    },
+    {
+      "path": "Tests/StereoChannelBakeoffTests.swift",
+      "size": 15075,
+      "sha256": "ac3f32e8abbe75bc5b7ebaa051f4c0a5081b0d27bf10fb115c6663925e578af8"
+    },
+    {
+      "path": "Tests/TranscriptionPersistenceStoreTests.swift",
+      "size": 5443,
+      "sha256": "493d57ae2068854080f804c99b0e0539adeb955a56f0dd2ef84a7050c172fbf2"
+    },
+    {
+      "path": "Tests/VoxtralClausePlannerTests.swift",
+      "size": 40801,
+      "sha256": "20caf7760778413c3efda091d5e1ed522de8d1fd793fa0fa619e5d1b5fc3479f"
+    },
+    {
+      "path": "Tests/VoxtralConfigurationComparisonTests.swift",
+      "size": 4423,
+      "sha256": "4a657902e298005cae5b3b6df530f281e33ec39e1d1d02e3b3ce0c58336720ee"
+    },
+    {
+      "path": "Tests/VoxtralHelperRuntimeTests.swift",
+      "size": 25177,
+      "sha256": "4267f3c23f20349c38836031b55136abafd373805673eceb083392b24cac5612"
+    },
+    {
+      "path": "Tests/VoxtralMarkerCalibrationProofTests.swift",
+      "size": 7705,
+      "sha256": "ac7a990be6f081a04c4a307a2362da5ffac5331ad43642498b4c5daac33cecb0"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/LICENSE",
+      "size": 10763,
+      "sha256": "8b86cbde30daef6bfac0780dee1649be3b2de2abf4ecdefd5b7099df212c5a1d"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/PROVENANCE.md",
+      "size": 746,
+      "sha256": "b9a6c6506a0a05a0e5bef300d754c7b3915b7516854558fee2c7ebc003a653f5"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Package.swift",
+      "size": 1559,
+      "sha256": "ac1780c7eb26bf715684e948d148ac71202bca8c1063f346e5b3caea0140c7f0"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/AudioFileLoader.swift",
+      "size": 16465,
+      "sha256": "81e287b0069408d27554e8ccb6c9a446e4aeb10c1b3d7bb32b16fb8d3297358d"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/AudioModelError.swift",
+      "size": 1633,
+      "sha256": "93f638080442b373cc2966ad1152772f1ad672ebfb1734978049589fb7b41306"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/CoreMLComputeUnits.swift",
+      "size": 2195,
+      "sha256": "8d6996e7b567d4bf42f808e12ee41869b1aebb667b05f37669463b598af3968b"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/HuggingFaceDownloader.swift",
+      "size": 45018,
+      "sha256": "f3f0aa63e26c50139d33e1aabb4abb833d62bb15ac6d60e17908950f9c1073c1"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/Logging.swift",
+      "size": 667,
+      "sha256": "05d5b1521782fa5651b3f5449721fd796f3163154fb7c8fdef78a2fb4ab225ec"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/Protocols.swift",
+      "size": 10160,
+      "sha256": "72c4b6d46dcafcb5986c1998671b21ec7dd27caec03ddc510fbb646eb380c926"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/SentencePieceModel.swift",
+      "size": 6107,
+      "sha256": "24f9bd8b3d64c5013e88680987b989b5df0930857f2a51ac02f42db77d62b916"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/AudioCommon/Tokenizer.swift",
+      "size": 11321,
+      "sha256": "827ae7f5fcb21745dfcf2d06a11f03f3ac5887d32a29348e885358ec16f23edc"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/EncodecLSTM.swift",
+      "size": 3045,
+      "sha256": "05a86a443debf92bbacbf195e6dfe6a7591fd762ae95a2396c626381a6e575f9"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/MetalBudget.swift",
+      "size": 1968,
+      "sha256": "aef5bd7f00a056ae0a0f739e366d3ef42cde918e667e28df3f89b8f3df172e8e"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/ModuleMemory.swift",
+      "size": 759,
+      "sha256": "a16c009c49b8b3dc31ac1224deaf2a7cf2cbc7178f62acb2dd2b0842a5918de1"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/PreQuantizedEmbedding.swift",
+      "size": 1926,
+      "sha256": "26158eea44117d02f11039354bef2863424a7efbf0dc4bd8ebce0959b53ac00a"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/QuantizedMLP.swift",
+      "size": 2157,
+      "sha256": "8603ea6b241b924d2712ec21b223a7c999930d77d80c7338466bfced8602b1e9"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/SDPA.swift",
+      "size": 4362,
+      "sha256": "3a2804a1f4a16f33a5c5bc32e4337c29101f9b09510ca4f8f1a577e8863e36b5"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/SlaneyMel.swift",
+      "size": 7129,
+      "sha256": "ce7e441a47658b2aecfeeb7678a0e8a40dec4dcf2957288616c8fb63f1d9ff54"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/MLXCommon/WeightLoading.swift",
+      "size": 10137,
+      "sha256": "c7a70333e9c0229c3fc60c4f0dfd1358b638bd1e7e0be9377d8d8b55a2ce9587"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/AudioEncoder.swift",
+      "size": 19716,
+      "sha256": "106866ea7d350760f147828769ddcf5a49694ea4815cb91e464d5bc5576dc482"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/AudioPreprocessing.swift",
+      "size": 20378,
+      "sha256": "602cc9051b88d031b40de57ba935c325fc547ef8d2cb27d54645f47a184e853c"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/Configuration.swift",
+      "size": 5512,
+      "sha256": "9e5dd32eed4dcdb4967cc44d51f4bcdb0d95ad86261045bb7937db6f237ab022"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/CoreMLASRModel.swift",
+      "size": 16324,
+      "sha256": "97fcff942537e92bd5b7882fa9a58a6f71c576f7d370785bbea119f00695d79f"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/CoreMLEncoder.swift",
+      "size": 10649,
+      "sha256": "d7d1f9e01ce9884905d3a4adac539e9afff1bb9ddd1e15aca04f590be6a6cde4"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/CoreMLForcedAligner.swift",
+      "size": 29544,
+      "sha256": "1b19061463b7819a83fc39979bd8989061fd1b4099277e6dc3b694c50477acb3"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/CoreMLTextDecoder.swift",
+      "size": 25576,
+      "sha256": "21d180412ad7d8ee4b2d93f334a86c8be850f73a0bbd53a85fcd6b4ed4edae0e"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/FloatTextDecoder.swift",
+      "size": 8470,
+      "sha256": "078ef3225baa0740c0e964383e63ff56a9d425b360fd0236ef7bb2bba28fbdd0"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/ForcedAligner+Protocols.swift",
+      "size": 318,
+      "sha256": "c767a551de699aee13563548561f512d0d070f7862936515f9a8196a2b8edcb4"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/ForcedAligner.swift",
+      "size": 19234,
+      "sha256": "0cde700e1045ed345ea531df5af8c9d90e9e7a9e8d85e85abb4f559ca0724f6d"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/QuantizedTextDecoder.swift",
+      "size": 9277,
+      "sha256": "71f05b9bd86c8aeaf30b5676bacc189fca739839da35ee04daec77820e3f455f"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/Qwen3ASR+Memory.swift",
+      "size": 893,
+      "sha256": "e976f0c138aff8c819badabdde20f98ed6d967a0118e7bc70729849f72900ff2"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/Qwen3ASR+Protocols.swift",
+      "size": 344,
+      "sha256": "36f87171469447659cf97224cf8e43a1e079e8a92d712700decae6a42a329811"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/Qwen3ASR.swift",
+      "size": 59621,
+      "sha256": "45855a1a1a5d7bd1cb35272192bccd9826d70547399c1dd217ffb1b6deb57dbd"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/TextPreprocessing.swift",
+      "size": 13036,
+      "sha256": "1b87c00de8040d447dc7bd5f67b24bc74d189411a5bc0151f4ff64edeb247051"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/TimestampCorrection.swift",
+      "size": 5054,
+      "sha256": "55ece6daf24a3ad4e98ee11ac69dc61f4a7664276dc9c78dff44f9e83423d35f"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/Qwen3ASR/WeightLoading.swift",
+      "size": 15811,
+      "sha256": "e96a1efd5762939b7d6927f7483519bba2cdf26fad431430645eae259e75be3e"
+    },
+    {
+      "path": "Vendor/SpeechSwiftPrototype/Sources/SpeechVAD/FireRedVAD.swift",
+      "size": 18611,
+      "sha256": "ccb7ca9ae2bf401003695f47104c330db807466e41ad392d3efd0e1dc6596276"
+    },
+    {
+      "path": "docs/japanese-live/corpora/easy-japanese-1/manifest.json",
+      "size": 46026,
+      "sha256": "362c207395071b463fecd0f6fdba6ad13c9c27a857cb2df869261897dc18e21c"
+    },
+    {
+      "path": "docs/japanese-live/corpora/interview-speakers-0245-0325/manifest.json",
+      "size": 7420,
+      "sha256": "4d1b1a089b8660bec251a9e9979697b30608fda56080ec92116a9eb2466636e8"
+    },
+    {
+      "path": "docs/japanese-live/corpora/kikusasaizu-l1-1/manifest.json",
+      "size": 13701,
+      "sha256": "5c3fa0c062498465b421c02d993de7ff378fa38a4dbdce371dcc36f37e87d5d0"
+    },
+    {
+      "path": "docs/japanese-live/corpora/md62mmdz0m/manifest.json",
+      "size": 110465,
+      "sha256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc"
+    },
+    {
+      "path": "docs/japanese-live/corpora/okkei-shun-1541-1711/manifest.json",
+      "size": 2762,
+      "sha256": "133c01b7e07d0ffd3ae7114d51ce9028e9012aed4c58d8988fe60bd085aa5c23"
+    },
+    {
+      "path": "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json",
+      "size": 80473,
+      "sha256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b"
+    },
+    {
+      "path": "docs/japanese-live/model-recipes.json",
+      "size": 14190,
+      "sha256": "1bd685bc6c7749f307cf7a26355fde1689252095d3a88d94093fce2fb8229473"
+    }
+  ]
+}

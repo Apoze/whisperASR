@@ -1,0 +1,201 @@
+{
+  "deliverables" : [
+    "english-subtitles",
+    "english-translation-transcript",
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "forced-alignment",
+    "speaker-diarization",
+    "llm-translation",
+    "export"
+  ],
+  "failures" : [
+
+  ],
+  "finishedAt" : "2026-08-10T19:09:39Z",
+  "generatedFiles" : [
+    {
+      "kind" : "deliverable",
+      "path" : "japanese-transcript.txt"
+    },
+    {
+      "kind" : "deliverable",
+      "path" : "english-translation-transcript.txt"
+    },
+    {
+      "kind" : "deliverable",
+      "path" : "english-subtitles.vtt"
+    },
+    {
+      "kind" : "deliverable",
+      "path" : "english-subtitles.srt"
+    },
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "64000001-0000-4000-8000-000000000001",
+  "model" : {
+    "backend" : "qwen-ja",
+    "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-10T19:03:26Z",
+      "backend" : "qwen-ja",
+      "kind" : "reserve-checked",
+      "message" : "peak=7516192768 reserve=0 total=25769803776 available=11524947968 baseline=172852160",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:26Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-started",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:26Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:26Z",
+      "backend" : "qwen-ja",
+      "kind" : "unload-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:26Z",
+      "backend" : "qwen-ja",
+      "kind" : "memory-release-checked",
+      "message" : "memory=172868544 runtimePeak=172868544 minimumAvailable=11524947968 maximum=25769803776 reserve=0",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:26Z",
+      "kind" : "reserve-checked",
+      "message" : "peak=4294967296 reserve=0 total=25769803776 available=11525013504 baseline=172966848",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:26Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:27Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:39Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:39Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=432785496 runtimePeak=4580182440 minimumAvailable=7742291968 maximum=25769803776 reserve=0",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:39Z",
+      "kind" : "reserve-checked",
+      "message" : "peak=4294967296 reserve=0 total=25769803776 available=11892588544 baseline=432785496",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-10T19:03:39Z",
+      "kind" : "load-started",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-10T19:03:39Z",
+      "kind" : "load-completed",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-10T19:03:51Z",
+      "kind" : "unload-completed",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-10T19:03:51Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=263620576 runtimePeak=774834432 minimumAvailable=11570200576 maximum=25769803776 reserve=0",
+      "modelID" : "argmaxinc\/speakerkit-coreml"
+    },
+    {
+      "at" : "2026-08-10T19:03:51Z",
+      "kind" : "reserve-checked",
+      "message" : "peak=8589934592 reserve=0 total=25769803776 available=12073369600 baseline=263702496",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:51Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:03:55Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:09:39Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-10T19:09:39Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=225298616 runtimePeak=18417834032 minimumAvailable=2584657920 maximum=25769803776 reserve=0",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    }
+  ],
+  "peakMemoryBytes" : 18417834032,
+  "schemaVersion" : 1,
+  "selectedBackend" : "qwen-ja",
+  "source" : {
+    "byteCount" : 386867452,
+    "fileName" : "Video1.webm",
+    "modifiedAt" : "2026-07-18T19:42:51Z",
+    "path" : "\/Users\/maz\/Documents\/videos\/jap\/1\/Video1.webm"
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : true,
+  "stageDurations" : [
+    "translating",
+    348.43501496315,
+    "exporting",
+    0.08568000793457031,
+    "normalizing-source",
+    1.9226000308990479,
+    "aligning",
+    11.489266991615295,
+    "transcribing",
+    0.0008410215377807617,
+    "preparing-alignment",
+    1.1901519298553467,
+    "diarizing",
+    12.067551016807556,
+    "preparing-diarization",
+    0.16947901248931885,
+    "preparing-asr",
+    0.0004780292510986328
+  ],
+  "startedAt" : "2026-08-10T19:03:24Z",
+  "status" : "completed"
+}

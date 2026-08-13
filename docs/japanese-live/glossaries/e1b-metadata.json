@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "selectorVersion": "e1b-v2",
+  "selectorFields": ["videoID", "channelID", "title", "domainLabels"],
+  "items": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "videoID": "QUdu2fx3NCc",
+      "channelID": null,
+      "title": "【スト6】VSPO!SHOWDOWN本番で甘結もかvs立川の試合を見て感動して泣くねこたつたち【猫汰つな⧸一ノ瀬うるは⧸夢野あかり⧸白波らむね⧸千燈ゆうひ⧸ぶいすぽ⧸切り抜き】",
+      "domainLabels": ["vtuber", "gaming"],
+      "videoRelativePath": "1/【スト6】VSPO!SHOWDOWN本番で甘結もかvs立川の試合を見て感動して泣くねこたつたち【猫汰つな⧸一ノ瀬うるは⧸夢野あかり⧸白波らむね⧸千燈ゆうひ⧸ぶいすぽ⧸切り抜き】 [QUdu2fx3NCc].webm",
+      "sourceVideoSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1"
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "videoID": "_mD62MMDz0M",
+      "channelID": null,
+      "title": "【ぶいすぽ⧸藍沢エマ】清楚との二択を迫られる、自分の●●姿を写真で送ろうとするエマたそ、ラブタイプ診断を言い合う【緋月ゆい⧸白雪レイド⧸切り抜き】",
+      "domainLabels": ["vtuber", "conversation"],
+      "videoRelativePath": "2/【ぶいすぽ⧸藍沢エマ】清楚との二択を迫られる、自分の●●姿を写真で送ろうとするエマたそ、ラブタイプ診断を言い合う【緋月ゆい⧸白雪レイド⧸切り抜き】 [_mD62MMDz0M].webm",
+      "sourceVideoSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d"
+    }
+  ],
+  "provenance": {
+    "domainLabels": "E00 fixed labels",
+    "videoIDAndTitle": "supplied source filenames",
+    "channelID": "absent from supplied filenames, container tags and reference packs; limits promotion holdout only",
+    "composition": "General plus every recognized domain profile in fixed order",
+    "transcriptUsedForSelection": false
+  }
+}

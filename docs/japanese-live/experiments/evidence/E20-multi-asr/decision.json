@@ -1,0 +1,853 @@
+{
+  "schemaVersion": 1,
+  "ticket": 64,
+  "decision": "reject-multi-asr-keep-qwen",
+  "holdoutOpened": false,
+  "productOrLiveChanged": false,
+  "development": {
+    "qwenHighNonOverlapCER": {
+      "editDistance": 1608,
+      "referenceCharacterCount": 1852,
+      "turnCount": 111,
+      "ratePercent": 86.82505399568035
+    },
+    "roverHighNonOverlapCER": {
+      "editDistance": 1475,
+      "referenceCharacterCount": 1852,
+      "turnCount": 111,
+      "ratePercent": 79.64362850971922
+    },
+    "pairedRelativeGain": {
+      "baselineEdits": 1608,
+      "candidateEdits": 1475,
+      "relativeGainPercent": 8.271144278606965,
+      "low95Percent": -2.038369304556355,
+      "high95Percent": 16.475644699140403,
+      "seed": 46,
+      "samples": 10000
+    },
+    "qwenAllTimedCER": {
+      "editDistance": 3966,
+      "referenceCharacterCount": 2989,
+      "turnCount": 199,
+      "ratePercent": 132.68651722984276
+    },
+    "roverAllTimedCER": {
+      "editDistance": 2855,
+      "referenceCharacterCount": 2989,
+      "turnCount": 199,
+      "ratePercent": 95.51689528270325
+    },
+    "aggregateCERDeltaPoints": -37.16962194713952,
+    "addedEmptySpeechTurnIDs": [
+      34,
+      36,
+      37,
+      38,
+      40,
+      143,
+      147,
+      150
+    ],
+    "gates": {
+      "primaryJapanese": false,
+      "aggregateRegression": true,
+      "noAddedEmptySpeech": false,
+      "runtime": true,
+      "memorySafety": true,
+      "sequentialModels": true,
+      "singleTranslation": true,
+      "english": false
+    },
+    "examples": {
+      "gained": [
+        {
+          "turnID": 32,
+          "startSeconds": 179.0,
+          "endSeconds": 185.0,
+          "reference": "リーサルだー！ ドーーーン!!!",
+          "qwen": "あああああああリーサルの時最後の一撃これで決まるみたいなモカちゃんがリーザルの形はこのぐらいの長さみたいなこれで死ぬなキルラインみたいなこれはやったまみたいな手に入りますから前側の立ち回りが強くなるやっぱりおお止まってるエラーとこれエラーエラーログに完全に反映してるけど入って見てました",
+          "candidate": "最後のなんていうんだろう一撃これで決まるみたいな萌歌ちゃんがリーサルのケージはこのぐらいの長さみたいなのやっててこれで死ぬなみたいな着るラインみたいな感じこれはやったなみたいな舞川の立ち回りが完璧でしたおっすごい攻め",
+          "editGain": 33
+        },
+        {
+          "turnID": 163,
+          "startSeconds": 742.0,
+          "endSeconds": 748.0,
+          "reference": "さあ、ということで、これでVSPO!チーム全勝！ おめでとうございます！",
+          "qwen": "さあということでこれでv勝利ですえ全勝ですおめでとうございますすごいおめだとうみんな勝ったよやばいこれが本当のプロになれやんマジでプロになれモカお前はプロになれえこの後はモカお前は世界に羽ばたけえすごい本当に泣ける感動したいいのチームだ大丈夫かっておかしくないマジで泣けるよあとはその選手っていうすごいすごいすぎるまあ持つな本当に感動をもらった対応力としてまあコーチとの",
+          "candidate": "さあということでこれでvsカーブリースの全勝ですおめでとうございますすごいおめでとうみんな勝ったよねこれが本当のプロになれやんマジでプロになれモカお前はプロになれモカお前は世界見羽ばたけすごい本当に泊ける感動した次のチーム大丈夫かな本当に泣けるまた三試合選手っていう人もヤバすぎる本当に感動をもらったコーチとの",
+          "editGain": 33
+        },
+        {
+          "turnID": 38,
+          "startSeconds": 217.5,
+          "endSeconds": 220.0,
+          "reference": "すごいよね。",
+          "qwen": "そうなんだよすごい試合ですよすごいよねすごいねすごいすごいすごいスカッカーの時",
+          "candidate": "",
+          "editGain": 29
+        },
+        {
+          "turnID": 52,
+          "startSeconds": 292.0,
+          "endSeconds": 297.0,
+          "reference": "ちなみに豪鬼は、他のキャラよりもHPが少ない。",
+          "qwen": "対抗されているのではいそうだねこれすごい激戦に突っ込んで甘えもかの技を突き出していく次にゴキは他のキャラよりもhpが少ないさすがですね",
+          "candidate": "ユムカの技を突き出していますちなみにゴウキは他のキャラよりもhpが少ないさすがです",
+          "editGain": 29
+        },
+        {
+          "turnID": 11,
+          "startSeconds": 57.0,
+          "endSeconds": 60.0,
+          "reference": "（笑）怖っ。",
+          "qwen": "ておろにそう柄の悪い人の絡みみたいなそこからなんかポータ",
+          "candidate": "ん",
+          "editGain": 26
+        },
+        {
+          "turnID": 181,
+          "startSeconds": 801.86,
+          "endSeconds": 806.26,
+          "reference": "それでは一度、こちら実況席からお送りしました。ステージの平岩さん、お願いします。",
+          "qwen": "します",
+          "candidate": "らお送りしましたステージの平岩さんお願いします",
+          "editGain": 20
+        },
+        {
+          "turnID": 180,
+          "startSeconds": 796.74,
+          "endSeconds": 801.86,
+          "reference": "このすごい相手に勝つまでやってきた努力を考えたら、マジで泣ける。",
+          "qwen": "やってたんですけどいやこのすごい相手に勝つまでやってきた努力を考えたらマじで泣けそれでは1位とですねこちら実況生から送りしましたステージの平山さんお願い",
+          "candidate": "た努力を考えたらマジで負けるそれでは一度ですねこちら実況席から",
+          "editGain": 17
+        },
+        {
+          "turnID": 29,
+          "startSeconds": 165.0,
+          "endSeconds": 169.0,
+          "reference": "そっか、時間もあるのか。",
+          "qwen": "欲しい時間もかなり少ない状況ですそこそこ時間もあるのかあとこれ時間20",
+          "candidate": "です地名そっか時間もあるのかこれ時間20秒",
+          "editGain": 16
+        }
+      ],
+      "lost": [
+        {
+          "turnID": 4,
+          "startSeconds": 13.0,
+          "endSeconds": 18.0,
+          "reference": "VCR GTAで人のパンツ覗いてきた人のことなんか、ボコボコにしてくれ。",
+          "qwen": "たgtaで人のパンツ覗いてきた人のことなんか報告にしてくれ",
+          "candidate": "か",
+          "editGain": -25
+        },
+        {
+          "turnID": 1,
+          "startSeconds": 0.0,
+          "endSeconds": 4.0,
+          "reference": "続いての大将戦ですが、甘結もか、そして立川。",
+          "qwen": "続いての対象戦ですが甘いモカそして立川",
+          "candidate": "か",
+          "editGain": -13
+        },
+        {
+          "turnID": 8,
+          "startSeconds": 46.0,
+          "endSeconds": 51.0,
+          "reference": "肩に鳥乗っけてるVTuberいるから、こいつにしようぜ、みたいな感じで（笑）。",
+          "qwen": "のメンターに取り残してくるクイチュバいるぞこいつにしようぜみたいな",
+          "candidate": "な",
+          "editGain": -11
+        },
+        {
+          "turnID": 30,
+          "startSeconds": 169.0,
+          "endSeconds": 175.0,
+          "reference": "この間合いで、僕たちには考えられない、とんでもない量のいろんなこと考えてんの？",
+          "qwen": "秒この前で僕たちには考えられないとんでもない量のいろんなこと考えちゃったよ",
+          "candidate": "このままいけじゃん僕たちには考えられないとでもないよ",
+          "editGain": -11
+        },
+        {
+          "turnID": 3,
+          "startSeconds": 9.0,
+          "endSeconds": 13.0,
+          "reference": "立川も、プロとしての意地を見せます。",
+          "qwen": "ほどはね立川もプロとしての意地を見せました",
+          "candidate": "か",
+          "editGain": -10
+        },
+        {
+          "turnID": 179,
+          "startSeconds": 792.58,
+          "endSeconds": 796.74,
+          "reference": "すごすぎて、すごい。ほれぼれするようなプレー。",
+          "qwen": "のすごい見てて俺俺するようなプレー",
+          "candidate": "相手に勝つまでやってき",
+          "editGain": -10
+        },
+        {
+          "turnID": 7,
+          "startSeconds": 32.4,
+          "endSeconds": 41.3,
+          "reference": "なんか立川さんの切り抜きで上がってたの見たんだけどさ。なんか立川さんがめっちゃ前、5年前とかだっけ？",
+          "qwen": "川さんがめっちゃ前5年前とかってそういう部",
+          "candidate": "かポータル2人でしま",
+          "editGain": -8
+        },
+        {
+          "turnID": 6,
+          "startSeconds": 20.0,
+          "endSeconds": 25.0,
+          "reference": "私とくろむさんのパンツ覗いてきたから、立川さん（笑）。",
+          "qwen": "最低だな私とクロスさんのパンツを覗いたから",
+          "candidate": "か",
+          "editGain": -7
+        }
+      ]
+    }
+  },
+  "englishDiagnostic": {
+    "qwen": {
+      "chrFPlusPlus": 45.4357314364877,
+      "glossary": {
+        "hits": 0,
+        "opportunities": 4,
+        "accuracyPercent": 0.0
+      },
+      "cueIntegrity": {
+        "missingCueIDs": [],
+        "duplicateCueIDs": [],
+        "reordered": false,
+        "unknownCueIDs": [],
+        "nativeMarkerFailures": [
+          "cue-0001-SPEAKER_01-3",
+          "cue-0001-SPEAKER_03-2",
+          "cue-0011-SPEAKER_04-20",
+          "cue-0018-SPEAKER_03-29",
+          "cue-0021-SPEAKER_02-40",
+          "cue-0022-SPEAKER_02-41",
+          "cue-0023-SPEAKER_00-45",
+          "cue-0023-SPEAKER_00-46",
+          "cue-0026-SPEAKER_01-49",
+          "cue-0036-SPEAKER_02-61",
+          "cue-0042-SPEAKER_02-65",
+          "cue-0042-SPEAKER_02-66",
+          "cue-0049-SPEAKER_02-84",
+          "cue-0070-SPEAKER_00-119",
+          "cue-0071-SPEAKER_00-119",
+          "cue-0072-SPEAKER_00-119",
+          "cue-0081-SPEAKER_01-133",
+          "cue-0081-SPEAKER_02-132",
+          "cue-0082-SPEAKER_02-134",
+          "cue-0084-SPEAKER_02-148",
+          "cue-0084-SPEAKER_02-149",
+          "cue-0084-SPEAKER_02-150",
+          "cue-0084-SPEAKER_02-171",
+          "cue-0084-SPEAKER_03-166",
+          "cue-0084-SPEAKER_03-169",
+          "cue-0084-SPEAKER_04-167",
+          "cue-0084-SPEAKER_04-168",
+          "cue-0085-SPEAKER_03-175",
+          "cue-0085-SPEAKER_03-176",
+          "cue-0093-SPEAKER_03-195",
+          "cue-0094-SPEAKER_00-186",
+          "cue-0096-SPEAKER_04-197",
+          "cue-0100-SPEAKER_01-208",
+          "cue-0190-SPEAKER_01-386",
+          "cue-0193-SPEAKER_02-389",
+          "cue-0194-SPEAKER_02-389",
+          "cue-0198-SPEAKER_04-394",
+          "cue-0200-SPEAKER_00-393",
+          "cue-0202-SPEAKER_00-402",
+          "cue-0231-SPEAKER_00-444",
+          "cue-0231-SPEAKER_02-445",
+          "cue-0241-SPEAKER_04-461",
+          "cue-0244-SPEAKER_03-465",
+          "cue-0244-SPEAKER_03-466",
+          "cue-0244-SPEAKER_03-467",
+          "cue-0245-SPEAKER_02-468",
+          "cue-0246-SPEAKER_02-469",
+          "cue-0246-SPEAKER_02-470",
+          "cue-0247-SPEAKER_04-472",
+          "cue-0249-SPEAKER_02-475",
+          "cue-0249-SPEAKER_04-474",
+          "cue-0249-SPEAKER_04-476",
+          "cue-0251-SPEAKER_04-480",
+          "cue-0252-SPEAKER_04-480",
+          "cue-0253-SPEAKER_04-480",
+          "cue-0253-SPEAKER_04-481",
+          "cue-0255-SPEAKER_00-486",
+          "cue-0255-SPEAKER_04-483",
+          "cue-0255-SPEAKER_04-485",
+          "cue-0261-SPEAKER_04-496",
+          "cue-0262-SPEAKER_04-496"
+        ]
+      },
+      "structuredCueGatePassed": true,
+      "untranslatedCueIDs": [
+        "28"
+      ],
+      "suspectedHallucinatedCueIDs": [
+        "2",
+        "15",
+        "27",
+        "51",
+        "53",
+        "56",
+        "63",
+        "144",
+        "177",
+        "187",
+        "194"
+      ]
+    },
+    "candidate": {
+      "chrFPlusPlus": 42.07777889200076,
+      "glossary": {
+        "hits": 0,
+        "opportunities": 1,
+        "accuracyPercent": 0.0
+      },
+      "cueIntegrity": {
+        "missingCueIDs": [],
+        "duplicateCueIDs": [],
+        "reordered": false,
+        "unknownCueIDs": [],
+        "nativeMarkerFailures": [
+          "unit-0001",
+          "unit-0002",
+          "unit-0003",
+          "unit-0004",
+          "unit-0005",
+          "unit-0006",
+          "unit-0007",
+          "unit-0008",
+          "unit-0009",
+          "unit-0010",
+          "unit-0011",
+          "unit-0012",
+          "unit-0013",
+          "unit-0014",
+          "unit-0015",
+          "unit-0016",
+          "unit-0017",
+          "unit-0018",
+          "unit-0019",
+          "unit-0020",
+          "unit-0021",
+          "unit-0022",
+          "unit-0023",
+          "unit-0024",
+          "unit-0025",
+          "unit-0026",
+          "unit-0027",
+          "unit-0028",
+          "unit-0029",
+          "unit-0030",
+          "unit-0031",
+          "unit-0032",
+          "unit-0033",
+          "unit-0034",
+          "unit-0035",
+          "unit-0036",
+          "unit-0037",
+          "unit-0038",
+          "unit-0039",
+          "unit-0040",
+          "unit-0041",
+          "unit-0042",
+          "unit-0043",
+          "unit-0044",
+          "unit-0045",
+          "unit-0046",
+          "unit-0047",
+          "unit-0048",
+          "unit-0049",
+          "unit-0050",
+          "unit-0051",
+          "unit-0052",
+          "unit-0053",
+          "unit-0054",
+          "unit-0055",
+          "unit-0056",
+          "unit-0057",
+          "unit-0058",
+          "unit-0059",
+          "unit-0060",
+          "unit-0061",
+          "unit-0062",
+          "unit-0063",
+          "unit-0064",
+          "unit-0065",
+          "unit-0066",
+          "unit-0067",
+          "unit-0068",
+          "unit-0069",
+          "unit-0070",
+          "unit-0071",
+          "unit-0072",
+          "unit-0073",
+          "unit-0074",
+          "unit-0075",
+          "unit-0076",
+          "unit-0077",
+          "unit-0078",
+          "unit-0079",
+          "unit-0080",
+          "unit-0081",
+          "unit-0082",
+          "unit-0083",
+          "unit-0084",
+          "unit-0085",
+          "unit-0086",
+          "unit-0087",
+          "unit-0088",
+          "unit-0089",
+          "unit-0090",
+          "unit-0091",
+          "unit-0092",
+          "unit-0093"
+        ]
+      },
+      "structuredCueGatePassed": true,
+      "untranslatedCueIDs": [],
+      "suspectedHallucinatedCueIDs": [
+        "14",
+        "15",
+        "28",
+        "32",
+        "46",
+        "53",
+        "56",
+        "59",
+        "61",
+        "63",
+        "85",
+        "86",
+        "122",
+        "163",
+        "177",
+        "184"
+      ]
+    },
+    "checks": {
+      "chrFPlusPlusNonInferior": false,
+      "untranslatedCuesNonIncreasing": true,
+      "hallucinationFlagsNonIncreasing": false,
+      "structuredCueGatePassed": true,
+      "COMETEvaluated": false
+    },
+    "cueExamples": {
+      "gained": [
+        {
+          "cueID": "27",
+          "japanese": "かなり慎重な両者。",
+          "reference": "Both players are being extremely cautious.",
+          "qwen": "Speaker 02:\nYes.\n\n[Transition to:]\nThe American mocha, which offers a satisfying driving experience, feels a bit slow. Speaker 02:\nCareful.\n\n[Transition to:]\nThe American mocha, which is great for driving, feels a little slow. Careful consideration.",
+          "candidate": "This is difficult to counter. Both sides are being very cautious.",
+          "chrFPlusPlusDelta": 31.74567960038592
+        },
+        {
+          "cueID": "181",
+          "japanese": "それでは一度、こちら実況席からお送りしました。ステージの平岩さん、お願いします。",
+          "reference": "That concludes our coverage from the commentary desk. Hira-iwa-san on stage, over to you.",
+          "qwen": "Yes.",
+          "candidate": "\"I can't afford to lose. It's been quite the effort, and we're bringing you this live from the commentary booth. Mr. Hiraiwa, please, let's start with an introduction.\"",
+          "chrFPlusPlusDelta": 28.325240852568065
+        },
+        {
+          "cueID": "56",
+          "japanese": "豪鬼が9000で、デフォルトが10000だったはず。",
+          "reference": "Akuma has 9,000 health; I think the default is 10,000.",
+          "qwen": "That's a unique advantage that's come out. SPEAKER_ID:\nSPEAKER_03\nCONTEXT_BEFORE:\nAnd from that great victory, we gained a significant lead, but there's a tendency to get complacent. Oh, wow, you're right, even now, Moka's drive gauge was a little lower. That's amazing! Daggy is so smooth in the Daggy corner, it looks so easy, doesn't it? You're right. Games often look easy, don't they? Seriously, they look easy. It makes you feel like you can't even do it. Yeah, that's true. And, of course, it won't tolerate any mistakes. There's Susanor here. This Dissolva is incredible! Wow! It was a solid counter. It's okay! Oh! Audica is challenging. It's being quite effectively countered. Yes, that's right. It's an incredibly intense battle, and Moka is unleashing her techniques. Next, Gokki has less HP than other characters, as expected. Oh, yes, she's so cute! Yes, yes, yes. But that means there's a drawback – she needs to deal a lot of damage. Yes SPEAKER_ID:\nSPEAKER_03\nCONTEXT_BEFORE:\nAnd after that great victory, we gained a significant lead, but she's being a bit spoiled, isn't she? Ah, yes, right now, her drive gauge was a little lower. That's amazing! Daggy was so smooth around the Daggy corner, it looks so easy, doesn't it? Urotte, games often look easy, right? Seriously, they look easy. It makes you feel like, \"You can't possibly do that!\" Yes, that's true. And she won't tolerate any air breaks. Susanor is here. This disolver is incredible! That was a solid counter. It's okay, it's okay. She's challenging with Audica. She's being quite well countered, so yes. That's amazing. She's diving into a fierce battle, bringing out Moka's techniques. Next, Gokki has less HP than other characters, as expected. Ah, yes, she's so cute. Yes, yes, yes. But that gives her a disadvantage; she needs to deal more damage. Yes, she has...\n<<<CURRENT:cue-",
+          "candidate": "\"Her Aiki is 9000, and the default setting is...\" \"I'm pretty sure it was 10,000. And with that many options, it's huge, right? Even though it's ranked, it still feels powerful. It has a lot of combo potential with its Aiki.\"",
+          "chrFPlusPlusDelta": 25.269496980291063
+        },
+        {
+          "cueID": "17",
+          "japanese": "注目のマッチアップ、見ていきましょう。お願いします。",
+          "reference": "Let's watch this highly anticipated matchup. Here we go.",
+          "qwen": "Let's talk about \"amai imo\" and introduce what's currently trending in Tachikawa. Please. Let's proactively challenge the department head.",
+          "candidate": "Alright, let's get ready. We have Aime, and then Tachikawa. Let's take a look at this highly anticipated match. Let's see, Tachikawa is... Let's focus on the department head's match.",
+          "chrFPlusPlusDelta": 23.66232394612598
+        },
+        {
+          "cueID": "52",
+          "japanese": "ちなみに豪鬼は、他のキャラよりもHPが少ない。",
+          "reference": "By the way, Akuma has less health than the other characters.",
+          "qwen": "I returned it, my lord! Oh, a powerful challenge! A counterattack, a skillful move! Let's see what happens next! It's even better than G's! Their HP is lower than mine, even with Go's. Well, that's quite impressive, I suppose. Um, careful.",
+          "candidate": "\"It's also effective in close-quarters combat, and it's revealing Amayumika's techniques. By the way, Gouki has more HP than other characters.\" \"That's not much, is it? Harangyo, right? I think she... well, she definitely has that.\"",
+          "chrFPlusPlusDelta": 20.410656684949654
+        }
+      ],
+      "lost": [
+        {
+          "cueID": "198",
+          "japanese": "はい、ありがとうございます。",
+          "reference": "Yes—thank you very much.",
+          "qwen": "Keep going and do your best. Thank you very much.\n\n(Still, we have the next match ahead of us.)",
+          "candidate": "“Please do your best. Thank you. We still have the next match, so…”",
+          "chrFPlusPlusDelta": -22.160095309502715
+        },
+        {
+          "cueID": "31",
+          "japanese": "さあ、成功。3ゲージ残っています。",
+          "reference": "And it works. Three bars remain.",
+          "qwen": "Hmm. Hmm. Three people stopped. Person",
+          "candidate": "",
+          "chrFPlusPlusDelta": -21.133613054827496
+        },
+        {
+          "cueID": "186",
+          "japanese": "ちょっとリーグとか出てるんじゃないかと思っちゃいましたね、もしかしたら。",
+          "reference": "I honestly started wondering whether she might already be playing in a league or something.",
+          "qwen": "Um... I thought they might be participating in a league or something like that.",
+          "candidate": "\"I thought you might be participating in some smaller leagues, perhaps. Maybe you're really that good. And, well, you're doing quite well so far.\"",
+          "chrFPlusPlusDelta": -15.958982008433733
+        },
+        {
+          "cueID": "3",
+          "japanese": "立川も、プロとしての意地を見せます。",
+          "reference": "Tachikawa says he will show his pride as a pro.",
+          "qwen": "Soon. \"Well, Tachikawa... as a professional...\" Yes. \"Show them your resolve. Do it again.\" Show them your resolve; do it again.",
+          "candidate": "Apparently, they started playing with that kind of vibe – like, \"let's do this.\" Then, they started suggesting something like, \"Want to play Portal together?\"",
+          "chrFPlusPlusDelta": -15.82995493690404
+        },
+        {
+          "cueID": "1",
+          "japanese": "続いての大将戦ですが、甘結もか、そして立川。",
+          "reference": "Next up is the anchor match: Amayui Moka versus Tachikawa.",
+          "qwen": "In all the battles, it's all about sweet mocha and Tachikawa. Moka, please do your best.",
+          "candidate": "Apparently, they started playing with that kind of vibe – like, \"let's do this.\" Then, they started suggesting something like, \"Want to play Portal together?\"",
+          "chrFPlusPlusDelta": -14.50773225537201
+        }
+      ]
+    },
+    "selectedTermExamples": [
+      {
+        "termID": "burnout",
+        "expected": "Burnout",
+        "cueID": "unit-0047",
+        "source": "しっかりと対応してきた投げさせましたバーンアウトしてるとよくなさそうなんですけど",
+        "translation": "\"I'm concerned that they're showing signs of burnout, despite our efforts to support them.\""
+      },
+      {
+        "termID": "yoroshiku-onegaishimasu",
+        "expected": "Thank you in advance",
+        "cueID": "unit-0085",
+        "source": "張らせていただきたいと思います皆さん今後も応援よろしくお願いしますはい田地加さんありがとうござい",
+        "translation": "“I would like to continue to work hard and I appreciate everyone's continued support. Thank you, Tajika-san.”"
+      }
+    ],
+    "COMET": null,
+    "COMETNotRunReason": "primary Japanese DEV gate failed; no extra heavy model can change the decision"
+  },
+  "runtime": {
+    "qwenReferenceWallSeconds": 5168.0,
+    "candidateReplayWallSeconds": 375.0,
+    "candidateReconstructedFullWallSeconds": 1034.322648882866,
+    "extraASRInferenceSeconds": 527.3585520982742,
+    "extraASRBudgetSeconds": 527.4,
+    "allReusedASRStageSeconds": {
+      "qwen-ja": {
+        "preparing-asr": 1.1053119897842407,
+        "normalizing-source": 1.916754961013794,
+        "translating": 4991.419125080109,
+        "exporting": 0.05362701416015625,
+        "transcribing": 125.9823739528656,
+        "preparing-alignment": 1.2932870388031006,
+        "preparing-diarization": 20.636031985282898,
+        "diarizing": 12.874222993850708,
+        "aligning": 12.80715799331665
+      },
+      "parakeet-ja": {
+        "exporting": 0.0376659631729126,
+        "normalizing-source": 2.0672680139541626,
+        "diarizing": 12.17383599281311,
+        "preparing-diarization": 0.13167095184326172,
+        "translating": 1165.3125801086426,
+        "aligning": 9.27034306526184,
+        "preparing-asr": 0.4839339256286621,
+        "transcribing": 4.901591062545776,
+        "preparing-alignment": 1.2525779008865356
+      },
+      "whisperkit": {
+        "normalizing-source": 1.8934969902038574,
+        "aligning": 11.359441995620728,
+        "preparing-diarization": 0.12524104118347168,
+        "preparing-alignment": 1.2376309633255005,
+        "exporting": 0.055445075035095215,
+        "diarizing": 12.171743035316467,
+        "translating": 2097.9115298986435,
+        "transcribing": 522.4569610357285,
+        "preparing-asr": 4.393317937850952
+      }
+    },
+    "candidateStageSeconds": {
+      "translating": 348.43501496315,
+      "exporting": 0.08568000793457031,
+      "normalizing-source": 1.9226000308990479,
+      "aligning": 11.489266991615295,
+      "transcribing": 0.0008410215377807617,
+      "preparing-alignment": 1.1901519298553467,
+      "diarizing": 12.067551016807556,
+      "preparing-diarization": 0.16947901248931885,
+      "preparing-asr": 0.0004780292510986328
+    }
+  },
+  "memory": {
+    "policy": "admit only when vm.memory_pressure=0; stop on native warning/critical events",
+    "sampleCount": 1449,
+    "peakProcessMemoryBytes": 18417834008,
+    "minimumAvailableMemoryBytes": 2696298496,
+    "minimumMemorystatusLevel": 19,
+    "pressureEvents": [],
+    "swapUsedStartBytes": 2930245632,
+    "swapUsedPeakBytes": 10870390784,
+    "swapUsedEndBytes": 6263275520,
+    "swapUsedDeltaBytes": 3333029888
+  },
+  "sequentialModels": {
+    "passed": true,
+    "overlaps": [],
+    "unloadedModels": [
+      "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "mlx-community/Qwen3-ForcedAligner-0.6B-4bit",
+      "argmaxinc/speakerkit-coreml",
+      "mlx-community/translategemma-12b-it-4bit"
+    ],
+    "fixedReserveBytes": 0,
+    "allReserveEventsUseZero": true
+  },
+  "verification": {
+    "reporterSelfTest": "passed",
+    "sequentialPressureGuardTest": "passed",
+    "realDevelopmentJob": "passed",
+    "applicationLaunch": "passed-and-running",
+    "fullSwiftSuite": {
+      "status": "failed-existing-controls",
+      "executed": 377,
+      "skipped": 49,
+      "failedTestCases": [
+        "HighQualityGlossaryTests.testCheckedInE13EvidenceAndCoverageMatchExpandedCatalog",
+        "HighQualityLocalTranslationTests.testFailedTranslationLoadUnloadsAndReleasesOfflineWorkflow",
+        "HighQualityLocalTranslationTests.testLocalTranslationRunsOnlyAfterASRUnloadWithoutHostedCredentials",
+        "HighQualityLocalTranslationTests.testTranslationCancellationUnloadsAndReleasesOfflineWorkflow",
+        "HighQualityTranslationIntegrityTests.testCancellationDuringRetryUnloadsTranslatorAndReleasesModelGate"
+      ],
+      "classification": {
+        "reference": "checked-in E13 evidence mismatch reproduces alone",
+        "runnerEnvironment": "translation controls hit the existing fixed 8 GiB product reserve after the heavy run",
+        "candidate": "targeted and real DEV tests passed",
+        "application": "launch passed"
+      },
+      "alreadyOwnedByIssue": 47
+    }
+  },
+  "artifacts": {
+    "candidate": [
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-candidate-job/english-subtitles.srt",
+        "sha256": "deb29d8d2414bdc4cef839e9fa2e12407c8f1e860e9dc4a0a24d16ed8e58a3c6",
+        "bytes": 14556
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-candidate-job/english-subtitles.vtt",
+        "sha256": "ec160c9543bbb177c3f1d29728904951e3ce0e11bd634460ca8daa1970d7f8fd",
+        "bytes": 15293
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-candidate-job/english-translation-transcript.txt",
+        "sha256": "9b71cef1c21e88321c2d5b308074b8d2237de8ce1228f70af5786a2d9c4a59aa",
+        "bytes": 11334
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-candidate-job/japanese-transcript.txt",
+        "sha256": "c7fcb89fcaafffe07c96363906b6efd87ac34a169e8206866023bfcfc7394a26",
+        "bytes": 10193
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-candidate-job/manifest.json",
+        "sha256": "5ec0284b0e00161365d8ab13980a2974993771eff265cabd8f44700f136f67b3",
+        "bytes": 5858
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-candidate-job/raw-asr.json",
+        "sha256": "854973f33e72cabd67eeb185136e7bf819d9942d8a96d085adaf5e87ba0ccfaa",
+        "bytes": 2203130
+      }
+    ],
+    "sixRetainedASR": [
+      {
+        "corpusID": "qudu2fx3ncc",
+        "role": "development",
+        "backend": "qwen-ja",
+        "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+        "model": {
+          "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+          "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+        },
+        "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+        "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+        "manifest": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/manifest.json",
+          "sha256": "3f31b861f8a59ab5fbed35561d58c8921ce2d4c7a46f5a222a6ad4548109275a"
+        },
+        "rawASR": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/raw-asr.json",
+          "sha256": "b7281fdd3226930a4dc59758eb5e192642747ad6f9d18d942b850288ad42a394"
+        }
+      },
+      {
+        "corpusID": "qudu2fx3ncc",
+        "role": "development",
+        "backend": "parakeet-ja",
+        "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+        "model": {
+          "modelID": "FluidInference/parakeet-0.6b-ja-coreml",
+          "revision": "2952296ff1da4a6d6a7aec545e226367db80c612"
+        },
+        "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+        "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+        "manifest": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000002/manifest.json",
+          "sha256": "13d517d82f1fe704196bce102817282e0a929ec5b7c0eb93e635774c8232d7fa"
+        },
+        "rawASR": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000002/raw-asr.json",
+          "sha256": "2ab8678481b4ad22a08c015a2332c25e85309e0e327158e127a3bd3351611c6d"
+        }
+      },
+      {
+        "corpusID": "qudu2fx3ncc",
+        "role": "development",
+        "backend": "whisperkit",
+        "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+        "model": {
+          "modelID": "argmaxinc/whisperkit-coreml/openai_whisper-large-v3",
+          "revision": "97a5bf9bbc74c7d9c12c755d04dea59e672e3808"
+        },
+        "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+        "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+        "manifest": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000003/manifest.json",
+          "sha256": "3cb34f2a7eb39b741024b4bf1039665d2eedbaf8d1eeafa903e9a7e6a30e2471"
+        },
+        "rawASR": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000003/raw-asr.json",
+          "sha256": "30fdb2f4e5f2e5ef92b02c3bfa1121edd205f739a06fa7253e499999dce8f0fb"
+        }
+      },
+      {
+        "corpusID": "md62mmdz0m",
+        "role": "untouched-final-holdout",
+        "backend": "qwen-ja",
+        "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+        "model": {
+          "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+          "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+        },
+        "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+        "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+        "manifest": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000001/manifest.json",
+          "sha256": "ab4b1c21e1fd02488502e31458271aa6bc85e92b665ff3bd52ea2000dc770411"
+        },
+        "rawASR": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000001/raw-asr.json",
+          "sha256": "00b986ccb47e1da4e6532682ef8006086ad0dca8865459ba972fee297f3af5c1"
+        }
+      },
+      {
+        "corpusID": "md62mmdz0m",
+        "role": "untouched-final-holdout",
+        "backend": "parakeet-ja",
+        "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+        "model": {
+          "modelID": "FluidInference/parakeet-0.6b-ja-coreml",
+          "revision": "2952296ff1da4a6d6a7aec545e226367db80c612"
+        },
+        "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+        "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+        "manifest": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000002/manifest.json",
+          "sha256": "bdff00cb4c3dacb3e10360a1f62dfd0c689056545229cceb2f52eedcf57940a7"
+        },
+        "rawASR": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000002/raw-asr.json",
+          "sha256": "0cdb4764bc139c24220c797a08858632e30b5dee00f9d73bb1e6ce29e2f8a7ec"
+        }
+      },
+      {
+        "corpusID": "md62mmdz0m",
+        "role": "untouched-final-holdout",
+        "backend": "whisperkit",
+        "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+        "model": {
+          "modelID": "argmaxinc/whisperkit-coreml/openai_whisper-large-v3",
+          "revision": "97a5bf9bbc74c7d9c12c755d04dea59e672e3808"
+        },
+        "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+        "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+        "manifest": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000003/manifest.json",
+          "sha256": "0dec0d24daecfa409ef2cc7d2128b95ced13acd9ddca8ebf638d80ea0ba3bd15"
+        },
+        "rawASR": {
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000003/raw-asr.json",
+          "sha256": "c4d804e3e4db34b944a12eb0db90ab60e0dc27f97ab65e14565b9f199c8767eb"
+        }
+      }
+    ],
+    "candidateInput": {
+      "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-rover-input.json",
+      "sha256": "a5ea512d4d586362ef96f105a9159935b628b1a2b829184b8216862cdb67ebcb"
+    },
+    "memoryLog": {
+      "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-memory.json",
+      "sha256": "99f1acb32a122999706629431b8d8c2a3a3bcf53700fe746c6b47fa745494939"
+    },
+    "baseProof": {
+      "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/base-proof.json",
+      "sha256": "440422ba2ad9b80e1803ef4b5a2d074c9dcaee761f10ed561bb1310bfc68fb9d"
+    },
+    "modelWeightVerification": {
+      "path": "docs/japanese-live/experiments/evidence/E19-safety-stop/model-weight-verification.json",
+      "sha256": "3b5961068c8e5d7250faee24bb485ce626e7f7bf6d6f0df5716377395f891dee"
+    },
+    "validationLogs": [
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/app-launch.log",
+        "sha256": "1fa152c7dd345791f3e552fd720c3b53baf106de3ef862f235028f106e343d2c"
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/development-run.log",
+        "sha256": "945423af5ff95b7f8861fa3bb2a5160ec03ed11890a1efe38a00019f6c057481"
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/sequential-pressure-guard-test.log",
+        "sha256": "79dae4f7e289371fca87d534305eb4ab7488fa22f27f52ee38fca46dcd3130a9"
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/full-swift-test.log",
+        "sha256": "bdf1c897d625ce271e1cd6cc2a2463584f2c3c0e19ab6e4ab917cb58bc0851d3"
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/diagnostic-glossary-test.log",
+        "sha256": "9d856ee5a3f8c42472414ba36d9d9a69b8604d6565ce971411ad43fc58b41c45"
+      },
+      {
+        "path": "docs/japanese-live/experiments/evidence/E20-multi-asr/diagnostic-local-translation-tests.log",
+        "sha256": "375290f8072b03d4236c4b9fdbc46604b23d01c236dd72fd2f8dd3c7ab0e27a4"
+      }
+    ]
+  },
+  "failedRunnerAttempts": [
+    "development-run-attempt-1-runner-failure.log",
+    "development-run-attempt-2-pressure-decoding-failure.log"
+  ]
+}

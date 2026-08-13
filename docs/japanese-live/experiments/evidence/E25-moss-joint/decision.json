@@ -1,0 +1,57 @@
+{
+  "assessment": {
+    "attribution": "not-assessable",
+    "duplication": "not-assessable",
+    "mappingErrors": "not-assessable",
+    "metrics": null,
+    "spanErrors": "not-assessable",
+    "speechRecoveredOrLost": "not-assessable",
+    "termsNumbersMeaningAndEnglish": "not-assessable",
+    "transcriptionErrors": "not-assessable"
+  },
+  "candidateSelection": {
+    "bestMOSS": null,
+    "decision": "no-admissible-candidate",
+    "frozenOnDevelopment": true
+  },
+  "condition": {
+    "authorized": false,
+    "checked": true,
+    "observed": "candidateOutputProduced=false; issue99Authorized=false",
+    "required": "complete DEV spans-only candidate mapping from issue #98",
+    "upstreamResult": "no-go-material"
+  },
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "disposition": "not-run",
+  "experiment": "E25-moss-joint-development-decision",
+  "issue": 99,
+  "jointRun": {
+    "attempted": false,
+    "durationSeconds": null,
+    "modelLoaded": false,
+    "outputProduced": false,
+    "peakMemoryBytes": null,
+    "reason": "The issue #98 admission gate is closed."
+  },
+  "provenance": {
+    "baseCommit": "ea0c312c4f1d2843120be02a251946fe112370db",
+    "fullSwiftTestLogSHA256": "0e03414a2fa80cf6b04f7f9e848a278dc3b8f4cddfa9df96305c2e08dea3c338",
+    "preflightSHA256": "4a06289472911d8412dc9475d2c3baaabb92caac130f9c90d0cb0472312ab5ca",
+    "rawOutputSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runMetaSHA256": "1a2b1fd3aa905513873444df978d95ba27e75183f605cef90f81c1afc300759f",
+    "testLogSHA256": "f90137d62d2298ed2d68ec93d518ee0b42d75bffeaef9b5bf430f696a8a5a98b",
+    "upstreamIssue": 98,
+    "verifierSHA256": "83355239003f209546a7a90224004653870b9b175997a64d32c3c7ea07e9844a",
+    "workerEvidenceSHA256": "061424b81ce2c5cedf2a4d5eba9c127a2f2b2e08a95eff5bc8b0f9d4c6f317fb",
+    "workerStderrSHA256": "4a1ea0b51c88735f68fe4adb736f50f28f4d2df3533bf8ac5ab1572e9bd0d826"
+  },
+  "safety": {
+    "holdoutOpened": false,
+    "liveChanged": false,
+    "standardChanged": false,
+    "uiAdded": false
+  },
+  "schemaVersion": 1,
+  "verdict": "NO-GO conditionnel: MOSS conjoint non admissible et non exécuté"
+}

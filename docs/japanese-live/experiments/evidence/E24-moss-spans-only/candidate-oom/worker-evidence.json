@@ -1,0 +1,585 @@
+{
+  "availableMemorySamples" : [
+    {
+      "at" : 808183665.493082,
+      "availableMemoryBytes" : 9343107072
+    },
+    {
+      "at" : 808183665.493181,
+      "availableMemoryBytes" : 9343270912
+    },
+    {
+      "at" : 808183665.599262,
+      "availableMemoryBytes" : 9346514944
+    },
+    {
+      "at" : 808183665.709318,
+      "availableMemoryBytes" : 9342713856
+    },
+    {
+      "at" : 808183665.814865,
+      "availableMemoryBytes" : 9346859008
+    },
+    {
+      "at" : 808183665.916623,
+      "availableMemoryBytes" : 9346859008
+    },
+    {
+      "at" : 808183666.017966,
+      "availableMemoryBytes" : 9346859008
+    },
+    {
+      "at" : 808183666.125893,
+      "availableMemoryBytes" : 9346859008
+    },
+    {
+      "at" : 808183666.228154,
+      "availableMemoryBytes" : 9346859008
+    },
+    {
+      "at" : 808183666.329525,
+      "availableMemoryBytes" : 9346859008
+    },
+    {
+      "at" : 808183666.430918,
+      "availableMemoryBytes" : 9346859008
+    },
+    {
+      "at" : 808183666.538144,
+      "availableMemoryBytes" : 8738144256
+    },
+    {
+      "at" : 808183666.639029,
+      "availableMemoryBytes" : 8736997376
+    },
+    {
+      "at" : 808183666.739987,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183666.840872,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183666.948678,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183667.05408,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183667.15758,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183667.259622,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183667.364279,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183667.46438,
+      "availableMemoryBytes" : 8738242560
+    },
+    {
+      "at" : 808183667.565171,
+      "availableMemoryBytes" : 8740978688
+    },
+    {
+      "at" : 808183667.665903,
+      "availableMemoryBytes" : 8740061184
+    },
+    {
+      "at" : 808183667.772117,
+      "availableMemoryBytes" : 8737095680
+    },
+    {
+      "at" : 808183667.873766,
+      "availableMemoryBytes" : 8736833536
+    },
+    {
+      "at" : 808183667.976454,
+      "availableMemoryBytes" : 8738045952
+    },
+    {
+      "at" : 808183668.082539,
+      "availableMemoryBytes" : 8737357824
+    },
+    {
+      "at" : 808183668.182667,
+      "availableMemoryBytes" : 8738570240
+    },
+    {
+      "at" : 808183668.283866,
+      "availableMemoryBytes" : 8737701888
+    },
+    {
+      "at" : 808183668.389386,
+      "availableMemoryBytes" : 8737701888
+    },
+    {
+      "at" : 808183668.498682,
+      "availableMemoryBytes" : 8737701888
+    },
+    {
+      "at" : 808183668.598971,
+      "availableMemoryBytes" : 8735457280
+    },
+    {
+      "at" : 808183668.700932,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183668.80549,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183668.907397,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183669.015858,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183669.124191,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183669.232472,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183669.334051,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183669.439419,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183669.543082,
+      "availableMemoryBytes" : 8736636928
+    },
+    {
+      "at" : 808183669.646958,
+      "availableMemoryBytes" : 8734703616
+    },
+    {
+      "at" : 808183669.754461,
+      "availableMemoryBytes" : 8736227328
+    },
+    {
+      "at" : 808183669.857495,
+      "availableMemoryBytes" : 8738291712
+    },
+    {
+      "at" : 808183669.958881,
+      "availableMemoryBytes" : 8735522816
+    },
+    {
+      "at" : 808183670.063467,
+      "availableMemoryBytes" : 8735031296
+    },
+    {
+      "at" : 808183670.165882,
+      "availableMemoryBytes" : 8736522240
+    },
+    {
+      "at" : 808183670.267227,
+      "availableMemoryBytes" : 8735997952
+    },
+    {
+      "at" : 808183670.374126,
+      "availableMemoryBytes" : 8735358976
+    },
+    {
+      "at" : 808183670.475513,
+      "availableMemoryBytes" : 8735358976
+    },
+    {
+      "at" : 808183670.582535,
+      "availableMemoryBytes" : 8735358976
+    },
+    {
+      "at" : 808183670.688178,
+      "availableMemoryBytes" : 8735653888
+    },
+    {
+      "at" : 808183670.790913,
+      "availableMemoryBytes" : 8735047680
+    },
+    {
+      "at" : 808183670.895103,
+      "availableMemoryBytes" : 8732803072
+    },
+    {
+      "at" : 808183670.996162,
+      "availableMemoryBytes" : 8734179328
+    },
+    {
+      "at" : 808183671.101709,
+      "availableMemoryBytes" : 8733081600
+    },
+    {
+      "at" : 808183671.207485,
+      "availableMemoryBytes" : 8734785536
+    },
+    {
+      "at" : 808183671.313995,
+      "availableMemoryBytes" : 8732917760
+    },
+    {
+      "at" : 808183671.415802,
+      "availableMemoryBytes" : 8733016064
+    },
+    {
+      "at" : 808183671.52196,
+      "availableMemoryBytes" : 8733016064
+    },
+    {
+      "at" : 808183671.62634,
+      "availableMemoryBytes" : 8733016064
+    },
+    {
+      "at" : 808183671.728954,
+      "availableMemoryBytes" : 8735162368
+    },
+    {
+      "at" : 808183671.832449,
+      "availableMemoryBytes" : 8734834688
+    },
+    {
+      "at" : 808183671.939062,
+      "availableMemoryBytes" : 8736882688
+    },
+    {
+      "at" : 808183672.04087,
+      "availableMemoryBytes" : 8734097408
+    },
+    {
+      "at" : 808183672.149131,
+      "availableMemoryBytes" : 8734097408
+    },
+    {
+      "at" : 808183672.256682,
+      "availableMemoryBytes" : 8734097408
+    },
+    {
+      "at" : 808183672.363808,
+      "availableMemoryBytes" : 8734097408
+    },
+    {
+      "at" : 808183672.46454,
+      "availableMemoryBytes" : 8734097408
+    },
+    {
+      "at" : 808183672.565347,
+      "availableMemoryBytes" : 8734097408
+    },
+    {
+      "at" : 808183672.671775,
+      "availableMemoryBytes" : 8734097408
+    },
+    {
+      "at" : 808183672.773867,
+      "availableMemoryBytes" : 8734195712
+    },
+    {
+      "at" : 808183672.880391,
+      "availableMemoryBytes" : 8734048256
+    },
+    {
+      "at" : 808183672.986568,
+      "availableMemoryBytes" : 8731688960
+    },
+    {
+      "at" : 808183673.08671,
+      "availableMemoryBytes" : 8732934144
+    },
+    {
+      "at" : 808183673.188292,
+      "availableMemoryBytes" : 8734113792
+    },
+    {
+      "at" : 808183673.291127,
+      "availableMemoryBytes" : 8728510464
+    },
+    {
+      "at" : 808183673.397433,
+      "availableMemoryBytes" : 8730918912
+    },
+    {
+      "at" : 808183673.50439,
+      "availableMemoryBytes" : 8730918912
+    },
+    {
+      "at" : 808183673.610529,
+      "availableMemoryBytes" : 8730918912
+    },
+    {
+      "at" : 808183673.715272,
+      "availableMemoryBytes" : 8730918912
+    },
+    {
+      "at" : 808183673.816023,
+      "availableMemoryBytes" : 8735637504
+    },
+    {
+      "at" : 808183673.916401,
+      "availableMemoryBytes" : 8735260672
+    },
+    {
+      "at" : 808183674.016658,
+      "availableMemoryBytes" : 8730214400
+    },
+    {
+      "at" : 808183674.116972,
+      "availableMemoryBytes" : 8731394048
+    },
+    {
+      "at" : 808183674.220516,
+      "availableMemoryBytes" : 8732606464
+    },
+    {
+      "at" : 808183674.324225,
+      "availableMemoryBytes" : 8730804224
+    },
+    {
+      "at" : 808183674.42803,
+      "availableMemoryBytes" : 8728920064
+    },
+    {
+      "at" : 808183674.530684,
+      "availableMemoryBytes" : 8731115520
+    },
+    {
+      "at" : 808183674.636506,
+      "availableMemoryBytes" : 8732327936
+    },
+    {
+      "at" : 808183674.73791,
+      "availableMemoryBytes" : 8732327936
+    },
+    {
+      "at" : 808183674.84083,
+      "availableMemoryBytes" : 8731213824
+    },
+    {
+      "at" : 808183674.946979,
+      "availableMemoryBytes" : 8732999680
+    },
+    {
+      "at" : 808183675.049104,
+      "availableMemoryBytes" : 8732213248
+    },
+    {
+      "at" : 808183675.151859,
+      "availableMemoryBytes" : 8733196288
+    },
+    {
+      "at" : 808183675.256902,
+      "availableMemoryBytes" : 8732524544
+    },
+    {
+      "at" : 808183675.357642,
+      "availableMemoryBytes" : 8732016640
+    },
+    {
+      "at" : 808183675.464094,
+      "availableMemoryBytes" : 8732016640
+    },
+    {
+      "at" : 808183675.564904,
+      "availableMemoryBytes" : 8732016640
+    },
+    {
+      "at" : 808183675.674085,
+      "availableMemoryBytes" : 8732016640
+    },
+    {
+      "at" : 808183675.777757,
+      "availableMemoryBytes" : 8732016640
+    },
+    {
+      "at" : 808183675.879445,
+      "availableMemoryBytes" : 8726970368
+    },
+    {
+      "at" : 808183675.981563,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.088094,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.190741,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.295011,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.3969,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.502613,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.603176,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.703926,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.807004,
+      "availableMemoryBytes" : 8728788992
+    },
+    {
+      "at" : 808183676.913882,
+      "availableMemoryBytes" : 8732196864
+    },
+    {
+      "at" : 808183677.021949,
+      "availableMemoryBytes" : 8727592960
+    },
+    {
+      "at" : 808183677.124064,
+      "availableMemoryBytes" : 8726937600
+    },
+    {
+      "at" : 808183677.229061,
+      "availableMemoryBytes" : 8728117248
+    },
+    {
+      "at" : 808183677.338151,
+      "availableMemoryBytes" : 8729853952
+    },
+    {
+      "at" : 808183677.440701,
+      "availableMemoryBytes" : 8729444352
+    },
+    {
+      "at" : 808183677.549028,
+      "availableMemoryBytes" : 8727543808
+    },
+    {
+      "at" : 808183677.649211,
+      "availableMemoryBytes" : 8728821760
+    },
+    {
+      "at" : 808183677.753956,
+      "availableMemoryBytes" : 8728821760
+    },
+    {
+      "at" : 808183677.85704,
+      "availableMemoryBytes" : 8728821760
+    },
+    {
+      "at" : 808183677.964209,
+      "availableMemoryBytes" : 8808251392
+    },
+    {
+      "at" : 808183678.065825,
+      "availableMemoryBytes" : 7564247040
+    },
+    {
+      "at" : 808183678.169013,
+      "availableMemoryBytes" : 7047069696
+    },
+    {
+      "at" : 808183678.270617,
+      "availableMemoryBytes" : 6602326016
+    },
+    {
+      "at" : 808183678.370823,
+      "availableMemoryBytes" : 6042648576
+    },
+    {
+      "at" : 808183678.483788,
+      "availableMemoryBytes" : 5499158528
+    },
+    {
+      "at" : 808183678.58965,
+      "availableMemoryBytes" : 4906795008
+    },
+    {
+      "at" : 808183678.696299,
+      "availableMemoryBytes" : 4520542208
+    },
+    {
+      "at" : 808183678.797329,
+      "availableMemoryBytes" : 4286562304
+    },
+    {
+      "at" : 808183678.90537,
+      "availableMemoryBytes" : 3883417600
+    },
+    {
+      "at" : 808183679.013654,
+      "availableMemoryBytes" : 3628269568
+    },
+    {
+      "at" : 808183679.122382,
+      "availableMemoryBytes" : 3356835840
+    },
+    {
+      "at" : 808183679.222508,
+      "availableMemoryBytes" : 3030843392
+    },
+    {
+      "at" : 808183679.32936,
+      "availableMemoryBytes" : 2656157696
+    },
+    {
+      "at" : 808183679.433195,
+      "availableMemoryBytes" : 2656157696
+    },
+    {
+      "at" : 808183679.534945,
+      "availableMemoryBytes" : 2656157696
+    },
+    {
+      "at" : 808183679.638655,
+      "availableMemoryBytes" : 2656157696
+    },
+    {
+      "at" : 808183679.746112,
+      "availableMemoryBytes" : 2656157696
+    }
+  ],
+  "command" : [
+    "/bin/bash",
+    "/Users/maz/.codex/worktrees/c7bf/whisperASR/Scripts/run_moss_q8_worker.sh",
+    "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/tools/moss-transcribe.cpp/build/moss-transcribe",
+    "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/models/moss-transcribe-q8_0.gguf",
+    "/Users/maz/.codex/worktrees/c7bf/whisperASR/.build/benchmarks/moss-spans-98/run/full-development.wav",
+    "/Users/maz/.codex/worktrees/c7bf/whisperASR/.build/benchmarks/moss-spans-98/run/moss/raw-output.txt",
+    "/Users/maz/.codex/worktrees/c7bf/whisperASR/.build/benchmarks/moss-spans-98/run/moss/worker-stderr.log",
+    "32768"
+  ],
+  "elapsedSeconds" : 14.354645013809204,
+  "exitStatus" : 1,
+  "exitedAt" : 808183679.847288,
+  "forcedTermination" : false,
+  "peakPhysicalFootprintBytes" : 3010628296,
+  "pressureTransitions" : [
+
+  ],
+  "processIdentifier" : 44447,
+  "rawLog" : "",
+  "rawLogPath" : "/Users/maz/.codex/worktrees/c7bf/whisperASR/.build/benchmarks/moss-spans-98/run/moss/worker.log",
+  "startedAt" : 808183665.492643,
+  "swapUsedAfterBytes" : 2721382400,
+  "swapUsedBeforeBytes" : 1909653504,
+  "terminationReason" : "exit"
+}

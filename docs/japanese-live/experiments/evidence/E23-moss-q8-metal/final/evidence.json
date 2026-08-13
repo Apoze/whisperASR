@@ -1,0 +1,613 @@
+{
+  "corpusID" : "qudu2fx3ncc",
+  "corpusRole" : "development",
+  "excerpts" : [
+    {
+      "input" : {
+        "audioPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/opening-multispeaker.wav",
+        "audioSHA256" : "d1c3ec3a01b00953f61f9956d1ec035cded04c831aebe7e29055ceb7ac5cb272",
+        "durationSeconds" : 30,
+        "id" : "opening-multispeaker",
+        "offsetSeconds" : 0
+      },
+      "rawOutputPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/raw-output.txt",
+      "rawOutputSHA256" : "8a566c9bec14a3e8bca33216f7baf46dbde09d99be7b3ecb087e1b257124f16c",
+      "spans" : [
+        {
+          "end" : 5.25,
+          "speaker" : "S01",
+          "start" : 0.29,
+          "text" : "続いての対象戦ですが、甘いモカそして立川来ました。"
+        },
+        {
+          "end" : 6.79,
+          "speaker" : "S02",
+          "start" : 5.27,
+          "text" : "モカさん頑張れ。"
+        },
+        {
+          "end" : 7.82,
+          "speaker" : "S03",
+          "start" : 6.82,
+          "text" : "頑張れ。"
+        },
+        {
+          "end" : 8.86,
+          "speaker" : "S04",
+          "start" : 8.03,
+          "text" : "頑張れ。"
+        },
+        {
+          "end" : 13.11,
+          "speaker" : "S01",
+          "start" : 8.88,
+          "text" : "先ほどはね、立川もプロとしての意地を見せました。"
+        },
+        {
+          "end" : 17.32,
+          "speaker" : "S02",
+          "start" : 12.61,
+          "text" : "CRGTAで人のパンツ覗いてきた人のことなの、ボボボにしてくれ。"
+        },
+        {
+          "end" : 19.64,
+          "speaker" : "S04",
+          "start" : 17.74,
+          "text" : "えー、そうなの？最低だな。"
+        },
+        {
+          "end" : 24.12,
+          "speaker" : "S03",
+          "start" : 21.62,
+          "text" : "私とクロスさんのパンツ覗いてきたから。"
+        },
+        {
+          "end" : 25.82,
+          "speaker" : "S04",
+          "start" : 24.61,
+          "text" : "いや、許せない。"
+        },
+        {
+          "end" : 29.99,
+          "speaker" : "S05",
+          "start" : 27.24,
+          "text" : "立川さんとさ、トトの出会い知って。"
+        }
+      ],
+      "stderrPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/worker-stderr.log",
+      "stderrSHA256" : "9f59db815156de92431935ae46d1bcb260d26b345922f69307f8c1f8a7bbd4c5",
+      "worker" : {
+        "availableMemorySamples" : [
+          {
+            "at" : 808181339.455118,
+            "availableMemoryBytes" : 9968500736
+          },
+          {
+            "at" : 808181339.455199,
+            "availableMemoryBytes" : 9968500736
+          },
+          {
+            "at" : 808181339.557318,
+            "availableMemoryBytes" : 9961308160
+          },
+          {
+            "at" : 808181339.664251,
+            "availableMemoryBytes" : 9966714880
+          },
+          {
+            "at" : 808181339.7666,
+            "availableMemoryBytes" : 9647882240
+          },
+          {
+            "at" : 808181339.871174,
+            "availableMemoryBytes" : 9647882240
+          },
+          {
+            "at" : 808181339.971782,
+            "availableMemoryBytes" : 9647882240
+          },
+          {
+            "at" : 808181340.077022,
+            "availableMemoryBytes" : 9647882240
+          },
+          {
+            "at" : 808181340.180058,
+            "availableMemoryBytes" : 9647882240
+          },
+          {
+            "at" : 808181340.280832,
+            "availableMemoryBytes" : 9647882240
+          },
+          {
+            "at" : 808181340.381118,
+            "availableMemoryBytes" : 9647882240
+          },
+          {
+            "at" : 808181340.484285,
+            "availableMemoryBytes" : 9043099648
+          },
+          {
+            "at" : 808181340.585493,
+            "availableMemoryBytes" : 8722513920
+          },
+          {
+            "at" : 808181340.685691,
+            "availableMemoryBytes" : 8727756800
+          },
+          {
+            "at" : 808181340.787572,
+            "availableMemoryBytes" : 8722759680
+          },
+          {
+            "at" : 808181340.888751,
+            "availableMemoryBytes" : 8726003712
+          },
+          {
+            "at" : 808181340.990006,
+            "availableMemoryBytes" : 8438792192
+          },
+          {
+            "at" : 808181341.093494,
+            "availableMemoryBytes" : 8438792192
+          },
+          {
+            "at" : 808181341.196811,
+            "availableMemoryBytes" : 8438792192
+          },
+          {
+            "at" : 808181341.29739,
+            "availableMemoryBytes" : 8438792192
+          },
+          {
+            "at" : 808181341.397918,
+            "availableMemoryBytes" : 8438792192
+          },
+          {
+            "at" : 808181341.499529,
+            "availableMemoryBytes" : 8439365632
+          },
+          {
+            "at" : 808181341.600493,
+            "availableMemoryBytes" : 8447164416
+          },
+          {
+            "at" : 808181341.701252,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181341.8021,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181341.904739,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181342.013175,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181342.114747,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181342.218411,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181342.321962,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181342.422469,
+            "availableMemoryBytes" : 8455946240
+          },
+          {
+            "at" : 808181342.526798,
+            "availableMemoryBytes" : 8459272192
+          },
+          {
+            "at" : 808181342.630994,
+            "availableMemoryBytes" : 8460959744
+          },
+          {
+            "at" : 808181342.73343,
+            "availableMemoryBytes" : 8465907712
+          },
+          {
+            "at" : 808181342.839608,
+            "availableMemoryBytes" : 8463630336
+          },
+          {
+            "at" : 808181342.947992,
+            "availableMemoryBytes" : 8465039360
+          },
+          {
+            "at" : 808181343.048268,
+            "availableMemoryBytes" : 8465039360
+          },
+          {
+            "at" : 808181343.156141,
+            "availableMemoryBytes" : 8465039360
+          },
+          {
+            "at" : 808181343.264615,
+            "availableMemoryBytes" : 8465039360
+          },
+          {
+            "at" : 808181343.369522,
+            "availableMemoryBytes" : 8465039360
+          },
+          {
+            "at" : 808181343.473051,
+            "availableMemoryBytes" : 8465039360
+          },
+          {
+            "at" : 808181343.573225,
+            "availableMemoryBytes" : 8458928128
+          },
+          {
+            "at" : 808181343.674691,
+            "availableMemoryBytes" : 8489467904
+          },
+          {
+            "at" : 808181343.778105,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181343.879176,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181343.981255,
+            "availableMemoryBytes" : 8488370176
+          }
+        ],
+        "command" : [
+          "/bin/bash",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/Scripts/run_moss_q8_worker.sh",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/tools/moss-transcribe.cpp/build/moss-transcribe",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/models/moss-transcribe-q8_0.gguf",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/opening-multispeaker.wav",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/raw-output.txt",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/worker-stderr.log",
+          "4096"
+        ],
+        "elapsedSeconds" : 4.633839011192322,
+        "exitStatus" : 0,
+        "exitedAt" : 808181344.088558,
+        "forcedTermination" : false,
+        "peakPhysicalFootprintBytes" : 1302414872,
+        "pressureTransitions" : [
+
+        ],
+        "processIdentifier" : 20979,
+        "rawLog" : "",
+        "rawLogPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/worker.log",
+        "startedAt" : 808181339.454719,
+        "swapUsedAfterBytes" : 1909653504,
+        "swapUsedBeforeBytes" : 1909653504,
+        "terminationReason" : "exit"
+      }
+    },
+    {
+      "input" : {
+        "audioPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/overlap-match.wav",
+        "audioSHA256" : "a7cb3b5154b4a714184ad7b53289a208fb9df8df8b7dc179cefffe80cf1e213d",
+        "durationSeconds" : 22,
+        "id" : "overlap-match",
+        "offsetSeconds" : 218
+      },
+      "rawOutputPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/raw-output.txt",
+      "rawOutputSHA256" : "b7a6f215e5ea99ed3f6a60a1eea5dd4eb0cfd7cd2feecd36261042f5ac756f8b",
+      "spans" : [
+        {
+          "end" : 1.88,
+          "speaker" : "S01",
+          "start" : 0,
+          "text" : "すごいよね。"
+        },
+        {
+          "end" : 3.42,
+          "speaker" : "S02",
+          "start" : 1.88,
+          "text" : "えー！"
+        },
+        {
+          "end" : 7.12,
+          "speaker" : "S03",
+          "start" : 5.18,
+          "text" : "えー、出たよ。"
+        },
+        {
+          "end" : 8.48,
+          "speaker" : "S01",
+          "start" : 7.28,
+          "text" : "すごい。"
+        },
+        {
+          "end" : 9.14,
+          "speaker" : "S02",
+          "start" : 8.52,
+          "text" : "は？"
+        },
+        {
+          "end" : 11.48,
+          "speaker" : "S04",
+          "start" : 9.14,
+          "text" : "今のはオーディンシャッカーの時点で、"
+        },
+        {
+          "end" : 12.88,
+          "speaker" : "S04",
+          "start" : 11.48,
+          "text" : "セッティングたまらなかった。"
+        },
+        {
+          "end" : 13.64,
+          "speaker" : "S03",
+          "start" : 12.88,
+          "text" : "だけど。"
+        },
+        {
+          "end" : 14.82,
+          "speaker" : "S04",
+          "start" : 13.76,
+          "text" : "完璧でした。"
+        },
+        {
+          "end" : 17.88,
+          "speaker" : "S05",
+          "start" : 15.16,
+          "text" : "さあ、これで甘いボカスで一セット勝利。"
+        },
+        {
+          "end" : 19.78,
+          "speaker" : "S02",
+          "start" : 18.18,
+          "text" : "やったー！"
+        },
+        {
+          "end" : 20.88,
+          "speaker" : "S05",
+          "start" : 20.28,
+          "text" : "金子。"
+        },
+        {
+          "end" : 21.98,
+          "speaker" : "S02",
+          "start" : 21.22,
+          "text" : "ガード。"
+        }
+      ],
+      "stderrPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/worker-stderr.log",
+      "stderrSHA256" : "56a96fc8a05cb103ef44bcb56e985bb37fa40d4eb621f7bf50c524b93a82d94f",
+      "worker" : {
+        "availableMemorySamples" : [
+          {
+            "at" : 808181344.094045,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181344.094098,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181344.19459,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181344.296654,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181344.402545,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181344.512593,
+            "availableMemoryBytes" : 8488370176
+          },
+          {
+            "at" : 808181344.613459,
+            "availableMemoryBytes" : 9090187264
+          },
+          {
+            "at" : 808181344.7181,
+            "availableMemoryBytes" : 9054896128
+          },
+          {
+            "at" : 808181344.827124,
+            "availableMemoryBytes" : 8172404736
+          },
+          {
+            "at" : 808181344.93149,
+            "availableMemoryBytes" : 8158068736
+          },
+          {
+            "at" : 808181345.03257,
+            "availableMemoryBytes" : 8153497600
+          },
+          {
+            "at" : 808181345.132752,
+            "availableMemoryBytes" : 8134295552
+          },
+          {
+            "at" : 808181345.237751,
+            "availableMemoryBytes" : 8152121344
+          },
+          {
+            "at" : 808181345.356041,
+            "availableMemoryBytes" : 8151875584
+          },
+          {
+            "at" : 808181345.457059,
+            "availableMemoryBytes" : 8181448704
+          },
+          {
+            "at" : 808181345.559455,
+            "availableMemoryBytes" : 8181448704
+          },
+          {
+            "at" : 808181345.659897,
+            "availableMemoryBytes" : 8359641088
+          },
+          {
+            "at" : 808181345.765085,
+            "availableMemoryBytes" : 8354021376
+          },
+          {
+            "at" : 808181345.869424,
+            "availableMemoryBytes" : 8345534464
+          },
+          {
+            "at" : 808181345.969636,
+            "availableMemoryBytes" : 8332509184
+          },
+          {
+            "at" : 808181346.069775,
+            "availableMemoryBytes" : 8328478720
+          },
+          {
+            "at" : 808181346.170843,
+            "availableMemoryBytes" : 8330510336
+          },
+          {
+            "at" : 808181346.27261,
+            "availableMemoryBytes" : 8328216576
+          },
+          {
+            "at" : 808181346.373083,
+            "availableMemoryBytes" : 8325120000
+          },
+          {
+            "at" : 808181346.475308,
+            "availableMemoryBytes" : 8326348800
+          },
+          {
+            "at" : 808181346.579345,
+            "availableMemoryBytes" : 8326348800
+          },
+          {
+            "at" : 808181346.681214,
+            "availableMemoryBytes" : 8346157056
+          },
+          {
+            "at" : 808181346.787491,
+            "availableMemoryBytes" : 8347058176
+          },
+          {
+            "at" : 808181346.88885,
+            "availableMemoryBytes" : 8342552576
+          },
+          {
+            "at" : 808181346.994686,
+            "availableMemoryBytes" : 8339668992
+          },
+          {
+            "at" : 808181347.097589,
+            "availableMemoryBytes" : 8339292160
+          },
+          {
+            "at" : 808181347.202783,
+            "availableMemoryBytes" : 8340832256
+          },
+          {
+            "at" : 808181347.30351,
+            "availableMemoryBytes" : 8340832256
+          },
+          {
+            "at" : 808181347.404599,
+            "availableMemoryBytes" : 8340832256
+          },
+          {
+            "at" : 808181347.507321,
+            "availableMemoryBytes" : 8340832256
+          },
+          {
+            "at" : 808181347.608191,
+            "availableMemoryBytes" : 8340832256
+          },
+          {
+            "at" : 808181347.710761,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181347.813215,
+            "availableMemoryBytes" : 8353333248
+          },
+          {
+            "at" : 808181347.914865,
+            "availableMemoryBytes" : 8354414592
+          },
+          {
+            "at" : 808181348.015737,
+            "availableMemoryBytes" : 8356675584
+          },
+          {
+            "at" : 808181348.122361,
+            "availableMemoryBytes" : 8354676736
+          },
+          {
+            "at" : 808181348.224558,
+            "availableMemoryBytes" : 8354283520
+          },
+          {
+            "at" : 808181348.327056,
+            "availableMemoryBytes" : 8354283520
+          },
+          {
+            "at" : 808181348.428392,
+            "availableMemoryBytes" : 8354283520
+          }
+        ],
+        "command" : [
+          "/bin/bash",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/Scripts/run_moss_q8_worker.sh",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/tools/moss-transcribe.cpp/build/moss-transcribe",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/models/moss-transcribe-q8_0.gguf",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/overlap-match.wav",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/raw-output.txt",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/worker-stderr.log",
+          "4096"
+        ],
+        "elapsedSeconds" : 4.436138987541199,
+        "exitStatus" : 0,
+        "exitedAt" : 808181348.52959,
+        "forcedTermination" : false,
+        "peakPhysicalFootprintBytes" : 1301775872,
+        "pressureTransitions" : [
+
+        ],
+        "processIdentifier" : 21026,
+        "rawLog" : "",
+        "rawLogPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/worker.log",
+        "startedAt" : 808181344.093451,
+        "swapUsedAfterBytes" : 1909653504,
+        "swapUsedBeforeBytes" : 1909653504,
+        "terminationReason" : "exit"
+      }
+    }
+  ],
+  "experiment" : "issue-97-moss-q8-metal-two-dev-excerpts",
+  "modelFile" : "moss-transcribe-q8_0.gguf",
+  "modelLicense" : "Apache-2.0",
+  "modelRepository" : "mudler/moss-transcribe.cpp-gguf",
+  "modelRevision" : "54e4bbd17da3f84adf1c1bcf7791b9b9266f741e",
+  "modelSHA256" : "ed6c35d0d527c5d03171c3eb448e2150a42c76a51e3e73aa821e351c3da8307c",
+  "portLicense" : "MIT",
+  "portRepository" : "localai-org/moss-transcribe.cpp",
+  "portRevision" : "190a569c13b4b247450f2fb3b2a431244e84833e",
+  "runnerSHA256" : "ccc542e611d9d7a65b1f05502d0628194f4d7053dbba25abb7a45f6f4941a807",
+  "schemaVersion" : 1,
+  "settings" : {
+    "device" : "metal",
+    "maxNewTokens" : "4096",
+    "metalResidencySets" : "disabled",
+    "output" : "raw transcript parsed without subtitle postprocessing",
+    "quantization" : "q8_0",
+    "threads" : "8"
+  },
+  "sourcePath" : "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256" : "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1"
+}

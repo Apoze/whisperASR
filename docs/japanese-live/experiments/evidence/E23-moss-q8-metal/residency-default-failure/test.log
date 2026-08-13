@@ -1,0 +1,32 @@
+warning: '--skip-update' option is deprecated and will be removed in a future release
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/Documents/projets/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/Documents/projets/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (10.90s)
+Test Suite 'Selected tests' started at 2026-08-12 00:46:58.065.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-12 00:46:58.066.
+Test Suite 'MOSSQ8SmokeTests' started at 2026-08-12 00:46:58.066.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/1d49/whisperASR/Tests/MOSSQ8SmokeTests.swift:166: error: -[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn] : XCTAssertEqual failed: ("6") is not equal to ("0")
+/Users/maz/.codex/worktrees/1d49/whisperASR/Tests/MOSSQ8SmokeTests.swift:169: error: -[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn] : XCTAssertTrue failed
+/Users/maz/.codex/worktrees/1d49/whisperASR/Tests/MOSSQ8SmokeTests.swift:166: error: -[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn] : XCTAssertEqual failed: ("6") is not equal to ("0")
+/Users/maz/.codex/worktrees/1d49/whisperASR/Tests/MOSSQ8SmokeTests.swift:169: error: -[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn] : XCTAssertTrue failed
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn]' failed (21.109 seconds).
+Test Suite 'MOSSQ8SmokeTests' failed at 2026-08-12 00:47:19.175.
+	 Executed 1 test, with 4 failures (0 unexpected) in 21.109 (21.109) seconds
+Test Suite 'WhisperASRPackageTests.xctest' failed at 2026-08-12 00:47:19.175.
+	 Executed 1 test, with 4 failures (0 unexpected) in 21.109 (21.109) seconds
+Test Suite 'Selected tests' failed at 2026-08-12 00:47:19.175.
+	 Executed 1 test, with 4 failures (0 unexpected) in 21.109 (21.110) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

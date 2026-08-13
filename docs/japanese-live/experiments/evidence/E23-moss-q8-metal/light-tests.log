@@ -1,0 +1,68 @@
+warning: '--skip-update' option is deprecated and will be removed in a future release
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/Documents/projets/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/Documents/projets/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/9] Write sources
+[4/9] Write swift-version--58304C5D6DBC2206.txt
+[6/8] Emitting module WhisperASRTests
+[7/8] Compiling WhisperASRTests MOSSQ8SmokeTests.swift
+[7/9] Write Objects.LinkFileList
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[2](whisper.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[3](ggml-backend-dl.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[4](ggml-backend-reg.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[5](ggml.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[7](ggml-alloc.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[8](ggml-backend.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[10](ggml-threading.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[11](ggml-quants.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[13](ggml-cpu.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[14](ggml-cpu.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[15](repack.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[17](quants.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[18](traits.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[21](binary-ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[22](unary-ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[23](vec.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[24](ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[25](quants.c.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[26](repack.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[27](ggml-metal.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[28](ggml-metal-device.m.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[29](ggml-metal-device.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[30](ggml-metal-common.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[31](ggml-metal-context.m.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[32](ggml-metal-ops.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[33](ggml-metal-embed.s.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+ld: warning: object file (/Users/maz/Documents/projets/whisperASR/.build/arm64-apple-macosx/debug/libwhisper_all.a[34](ggml-blas.cpp.o)) was built for newer 'macOS' version (26.0) than being linked (15.0)
+[8/9] Linking WhisperASRPackageTests
+Build complete! (12.22s)
+Test Suite 'Selected tests' started at 2026-08-12 00:48:40.927.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-12 00:48:40.929.
+Test Suite 'HighQualityTranslationWorkerTests' started at 2026-08-12 00:48:40.929.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testFiniteWorkerExitCanBeAwaitedAndRecorded]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testFiniteWorkerExitCanBeAwaitedAndRecorded]' passed (0.246 seconds).
+Test Suite 'HighQualityTranslationWorkerTests' passed at 2026-08-12 00:48:41.175.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.246 (0.247) seconds
+Test Suite 'MOSSQ8SmokeTests' started at 2026-08-12 00:48:41.175.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/1d49/whisperASR/Tests/MOSSQ8SmokeTests.swift:121: -[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn] : Test skipped - Set WHISPERASR_RUN_MOSS_Q8_SMOKE=1 for issue #97.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalTwoDevelopmentExcerptsWhenOptedIn]' skipped (0.001 seconds).
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testRawSpansAreCompleteOrderedAndBounded]' started.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testRawSpansAreCompleteOrderedAndBounded]' passed (0.001 seconds).
+Test Suite 'MOSSQ8SmokeTests' passed at 2026-08-12 00:48:41.178.
+	 Executed 2 tests, with 1 test skipped and 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-12 00:48:41.178.
+	 Executed 3 tests, with 1 test skipped and 0 failures (0 unexpected) in 0.249 (0.249) seconds
+Test Suite 'Selected tests' passed at 2026-08-12 00:48:41.178.
+	 Executed 3 tests, with 1 test skipped and 0 failures (0 unexpected) in 0.249 (0.250) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
