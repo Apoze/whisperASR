@@ -23,6 +23,7 @@ EXPECTED = {
     "plan": "3bfa62a1e0ded143555c61f8a02e65501b8b72adf2dfa277527c2d8de4c4b1a8",
     "run": "c4ff5fa759801301806aaccf1fc3081b9522d5902518422c64ca875475eabc52",
     "selection": "4279b6e2a187f5c8c0695b79c085af8c42b0e8fc294fdc0c0e07fffec4521a2f",
+    "referenceManifest": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
 }
 
 
@@ -145,6 +146,8 @@ def analyze(args: argparse.Namespace) -> None:
         ],
     }
 
+    if adaptive.sha256(args.reference_manifest) != EXPECTED["referenceManifest"]:
+        raise RuntimeError("frozen DEV reference manifest changed")
     mapped, mapping_audit = adaptive.reference_text_by_window(
         args.character_alignment, plan["windows"]
     )
@@ -164,7 +167,14 @@ def analyze(args: argparse.Namespace) -> None:
     calibration = calibrate_trigger(raw_rows)
     threshold = calibration["threshold"]
     triggered = trigger_rows(raw_rows, threshold) if threshold is not None else []
-    coverage = reference_coverage(args.character_alignment, plan["windows"])
+    alignment_rows = [json.loads(line) for line in args.character_alignment.read_text(
+        encoding="utf-8"
+    ).splitlines()]
+    evaluability = reference_evaluability(
+        adaptive.read_json(args.reference_manifest), alignment_rows, plan["windows"], mapped,
+        adaptive.sha256(args.character_alignment),
+    )
+    coverage = evaluability["windows"]
     triggered_coverage = {row["id"]: coverage[row["id"]] for row in triggered}
     reference_evaluable = bool(triggered) and all(
         row["complete"] for row in triggered_coverage.values()
@@ -189,7 +199,7 @@ def analyze(args: argparse.Namespace) -> None:
             "qwenWeaknessGreaterThan": threshold,
             "requiresBothSignals": True,
         },
-        "calibrationStatus": "signal-only-four-fold-threshold-support",
+        "calibrationStatus": calibration["status"],
         "windows": [{
             "id": row["id"],
             "startSample": row["startSample"],
@@ -221,6 +231,8 @@ def analyze(args: argparse.Namespace) -> None:
             for row in triggered
         ),
         "referenceEvaluability": {
+            "source": evaluability["source"],
+            "completeForEveryWindow": evaluability["completeForEveryWindow"],
             "completeForEveryTriggeredWindow": reference_evaluable,
             "completeWindowCount": sum(
                 row["complete"] for row in triggered_coverage.values()
@@ -406,15 +418,60 @@ def interval_coverage(cues: list[dict], start: float, end: float) -> dict:
     }
 
 
-def reference_coverage(path: Path, windows: list[dict]) -> dict[str, dict]:
-    with path.open(encoding="utf-8") as handle:
-        cues = [json.loads(line) for line in handle if line.strip()]
+def reference_evaluability(
+    manifest: dict,
+    alignment_rows: list[dict],
+    windows: list[dict],
+    references: list[str],
+    alignment_sha256: str,
+) -> dict:
+    alignment_reference = next(
+        (row for row in manifest.get("source", {}).get("references", [])
+         if row.get("label") == "character-alignment"), None
+    )
+    fixture = manifest.get("fixture", {})
+    turns = manifest.get("annotations", {}).get("turns", [])
+    observed = [{
+        "id": int(row["cue_id"]),
+        "speaker": row["speaker_id"],
+        "startSample": round(row["start"] * adaptive.SAMPLE_RATE),
+        "endSample": round(row["end"] * adaptive.SAMPLE_RATE),
+        "japanese": row["japanese"],
+    } for row in alignment_rows if row["speaker_id"] != "SPEAKER_NONE"]
+    expected = [{key: row[key] for key in observed[0]} for row in turns] if observed else []
+    if (alignment_reference is None or alignment_reference.get("sha256") != alignment_sha256
+            or fixture.get("sampleRate") != adaptive.SAMPLE_RATE
+            or len(references) != len(windows) or observed != expected):
+        raise RuntimeError("root DEV reference and character alignment do not match")
+    complete = bool(
+        manifest.get("annotations", {}).get("status") == "complete"
+        and windows and windows[0]["startSample"] == 0
+        and windows[-1]["endSample"] == fixture.get("sampleCount")
+    )
+    cues = [row for row in alignment_rows if row["speaker_id"] != "SPEAKER_NONE"]
     return {
-        window["id"]: interval_coverage(
-            cues,
-            window["startSample"] / adaptive.SAMPLE_RATE,
-            window["endSample"] / adaptive.SAMPLE_RATE,
-        ) for window in windows
+        "source": {
+            "manifestStatus": manifest["annotations"]["status"],
+            "manifestTurnCount": len(turns),
+            "alignmentTurnCount": len(observed),
+            "alignmentSHA256": alignment_sha256,
+            "timelineSampleCount": fixture["sampleCount"],
+        },
+        "completeForEveryWindow": complete,
+        "windows": {
+            window["id"]: {
+                "complete": complete,
+                "referenceKind": ("speech" if adaptive.normalize(reference)
+                                  else "accepted-empty"),
+                "referenceCharacterCount": len(adaptive.normalize(reference)),
+                "cueIntervalDiagnostic": interval_coverage(
+                    cues,
+                    window["startSample"] / adaptive.SAMPLE_RATE,
+                    window["endSample"] / adaptive.SAMPLE_RATE,
+                ),
+            }
+            for window, reference in zip(windows, references)
+        },
     }
 
 
@@ -435,10 +492,18 @@ def select(args: argparse.Namespace) -> None:
         raise RuntimeError("WhisperKit targeted worker evidence is incomplete")
 
     plan, run = adaptive.read_json(args.plan), adaptive.read_json(args.run)
-    coverage = reference_coverage(args.character_alignment, plan["windows"])
+    if adaptive.sha256(args.reference_manifest) != EXPECTED["referenceManifest"]:
+        raise RuntimeError("frozen DEV reference manifest changed")
     mapped, mapping_audit = adaptive.reference_text_by_window(
         args.character_alignment, plan["windows"]
     )
+    alignment_rows = [json.loads(line) for line in args.character_alignment.read_text(
+        encoding="utf-8"
+    ).splitlines()]
+    coverage = reference_evaluability(
+        adaptive.read_json(args.reference_manifest), alignment_rows, plan["windows"], mapped,
+        adaptive.sha256(args.character_alignment),
+    )["windows"]
     e23_segments = adaptive.read_json(args.e23_segments)
     scored = adaptive.selection_rows(plan, run, mapped, e23_segments)
     terms, numbers = adaptive.dimension_vocabulary(e23_segments)
@@ -629,7 +694,7 @@ def final_report(args: argparse.Namespace) -> None:
     issue94_english = issue94["english"]["candidateChrFPlusPlus"]
     english = {
         "run": False,
-        "reason": "Japanese impact is not evaluable with the partial DEV reference",
+        "reason": "Awaiting one serialized alignment and translation after the Japanese gate",
         "qwenChrFPlusPlus": qwen_english,
         "issue94ChrFPlusPlus": issue94_english,
         "candidateChrFPlusPlus": None,
@@ -643,11 +708,79 @@ def final_report(args: argparse.Namespace) -> None:
     reference_complete = japanese["gates"].get(
         "completeReferenceCoverageForOverrides", False
     )
+    downstream = (args.candidate_raw, args.candidate_manifest,
+                  args.translation_runtime, args.baseline_raw, args.reference_manifest)
+    if any(downstream) and not all(downstream):
+        raise RuntimeError("partial #95 English evidence is not reportable")
+    if all(downstream):
+        if adaptive.sha256(args.reference_manifest) != EXPECTED["referenceManifest"]:
+            raise RuntimeError("frozen DEV reference manifest changed")
+        candidate = adaptive.read_json(args.candidate_raw)
+        candidate_manifest = adaptive.read_json(args.candidate_manifest)
+        translation_runtime = adaptive.read_json(args.translation_runtime)
+        manifest = adaptive.read_json(args.reference_manifest)
+        baseline = adaptive.read_json(args.baseline_raw)
+        if (not selection["developmentEligibleJapanese"] or not reference_complete
+                or candidate_manifest.get("status") != "completed"
+                or candidate.get("rawASR") != selection["rawTranscript"]
+                or candidate.get("asrWorker") is not None
+                or candidate.get("translation") is None
+                or translation_runtime.get("exitCode") != 0):
+            raise RuntimeError("single #95 downstream translation evidence is incomplete")
+        baseline_rows = adaptive.translation_rows(manifest, baseline)
+        candidate_rows = adaptive.translation_rows(manifest, candidate)
+        reference = " ".join(row["reference"] for row in candidate_rows)
+        baseline_score = adaptive.chrf_pp(
+            " ".join(row["hypothesis"] for row in baseline_rows), reference
+        )
+        candidate_score = adaptive.chrf_pp(
+            " ".join(row["hypothesis"] for row in candidate_rows), reference
+        )
+        if abs(baseline_score - qwen_english) > 1e-9:
+            raise RuntimeError("Qwen English baseline changed")
+        integrity = adaptive.cue_integrity(candidate)
+        baseline_empty = sum(not row["hypothesis"] for row in baseline_rows)
+        candidate_empty = sum(not row["hypothesis"] for row in candidate_rows)
+        aligner = candidate.get("alignment", {}).get("worker")
+        translator = candidate.get("translation", {}).get("worker")
+        sequential = bool(
+            aligner and translator
+            and adaptive.parse_date(wk_worker["exitedAt"]) <= adaptive.parse_date(aligner["startedAt"])
+            <= adaptive.parse_date(aligner["exitedAt"]) <= adaptive.parse_date(translator["startedAt"])
+            <= adaptive.parse_date(translator["exitedAt"])
+        )
+        gates = {
+            "oneTranslation": True,
+            "structuredCues": adaptive.structured_cues_are_valid(integrity),
+            "noAddedEmptyTurns": candidate_empty <= baseline_empty,
+            "noValidationFailure": not candidate["translation"].get("validationFailures"),
+            "chrFPlusPlusNotWorseThanQwen": candidate_score >= baseline_score,
+            "workersCleanAndSequential": sequential and worker_clean(aligner)
+                and worker_clean(translator),
+        }
+        english = {
+            "run": True,
+            "qwenChrFPlusPlus": baseline_score,
+            "issue94ChrFPlusPlus": issue94_english,
+            "candidateChrFPlusPlus": candidate_score,
+            "deltaVsQwen": candidate_score - baseline_score,
+            "deltaVsIssue94": candidate_score - issue94_english,
+            "qwenEmptyTurns": baseline_empty,
+            "candidateEmptyTurns": candidate_empty,
+            "integrity": integrity,
+            "gates": gates,
+        }
     report = {
         "schemaVersion": 1,
         "ticket": 95,
         "decision": ("INCONCLUSIVE_REFERENCE_HARNESS_NO_DOWNSTREAM"
-                     if not reference_complete else "NO-GO_TARGETED_WHISPERKIT_JAPANESE"),
+                     if not reference_complete else
+                     ("NO-GO_TARGETED_WHISPERKIT_JAPANESE"
+                      if not selection["developmentEligibleJapanese"] else
+                      ("DEV_PASS_HOLDOUT_CLOSED" if english["run"]
+                       and all(english["gates"].values()) else
+                       ("NO-GO_TARGETED_WHISPERKIT_ENGLISH" if english["run"]
+                        else "READY_FOR_ENGLISH_DOWNSTREAM")))),
         "classification": ("harness-reference-coverage-gap"
                            if not reference_complete else "model-result"),
         "holdoutOpened": False,
@@ -665,25 +798,27 @@ def final_report(args: argparse.Namespace) -> None:
         "diagnostic": {
             "initialPreflightMissedReferenceCoverage": True,
             "heavyRunOccurredBeforeCoverageGate": True,
-            "correctedPreflightWouldRunWhisperKit": False,
-            "modelConclusion": None,
+            "rootCause": "cue interval fill was mistaken for reference completeness",
+            "correctedReferenceManifestComplete": reference_complete,
+            "reusedArchivedWhisperKitRaw": True,
+            "modelConclusion": ("English evaluated" if english["run"]
+                                else "Japanese pass; English pending"),
         },
         "japanese": {
             "developmentEligible": selection["developmentEligibleJapanese"],
             "qwenEdits": japanese["qwenEdits"],
             "issue94Edits": japanese["qwenParakeetEdits"],
-            "candidateEdits": None,
-            "provisionalCandidateEdits": japanese["candidateEdits"],
+            "candidateEdits": japanese["candidateEdits"],
             "qwenDimensions": japanese["qwenDimensions"],
             "issue94Dimensions": japanese["qwenParakeetDimensions"],
-            "candidateDimensions": None,
-            "provisionalCandidateDimensions": japanese["candidateDimensions"],
+            "candidateDimensions": japanese["candidateDimensions"],
             "whisperKitOverrides": japanese["overrideCount"],
-            "badWhisperKitOverrides": None,
-            "provisionalBadWhisperKitOverrides": japanese["badOverrideCount"],
+            "badWhisperKitOverrides": japanese["badOverrideCount"],
             "gates": japanese["gates"],
             "examples": japanese["overrides"],
-            "productWinnerRemains": "qwen",
+            "developmentWinner": ("qwen-parakeet-whisperkit" if english["run"]
+                                  and all(english["gates"].values()) else "qwen"),
+            "productDefaultRemains": "qwen",
         },
         "english": english,
         "runtime": {
@@ -709,8 +844,41 @@ def final_report(args: argparse.Namespace) -> None:
             "selection": adaptive.sha256(args.selection),
             "selectionReport": adaptive.sha256(args.selection_report),
             "whisperKitRun": adaptive.sha256(args.whisperkit_run),
+            **({
+                "candidateRaw": adaptive.sha256(args.candidate_raw),
+                "candidateManifest": adaptive.sha256(args.candidate_manifest),
+                "translationRuntime": adaptive.sha256(args.translation_runtime),
+                "baselineRaw": adaptive.sha256(args.baseline_raw),
+                "referenceManifest": adaptive.sha256(args.reference_manifest),
+            } if all(downstream) else {}),
         },
     }
+    if english["run"]:
+        downstream_seconds = translation_runtime["elapsedSeconds"]
+        downstream_peak = max(
+            candidate_manifest["peakMemoryBytes"],
+            aligner["peakPhysicalFootprintBytes"],
+            translator["peakPhysicalFootprintBytes"],
+        )
+        report["runtime"].update({
+            "downstreamCommandSeconds": downstream_seconds,
+            "downstreamStageSeconds": adaptive.named_durations(
+                candidate_manifest["stageDurations"]
+            ),
+            "alignmentWorkerSeconds": aligner["elapsedSeconds"],
+            "translationWorkerSeconds": translator["elapsedSeconds"],
+            "incrementalCommandSeconds": incremental_seconds + downstream_seconds,
+            "combinedDevelopmentCommandSeconds": (
+                prior["runtime"]["totalCommandSeconds"]
+                + incremental_seconds + downstream_seconds
+            ),
+            "incrementalPeakPhysicalFootprintBytes": max(
+                wk_worker["peakPhysicalFootprintBytes"], downstream_peak
+            ),
+            "allHeavyWorkersClean": all(worker_clean(worker) for worker in (
+                wk_worker, aligner, translator
+            )),
+        })
     adaptive.write_json(args.output, report)
     write_markdown(args.markdown, report)
 
@@ -725,14 +893,15 @@ def write_markdown(path: Path, report: dict) -> None:
         f"- Raw-only : {trigger['count']}/169 fenêtres ({trigger['rate']:.2%}), "
         f"{trigger['seconds']:.2f}s ; seuil faiblesse Qwen {trigger['threshold']}, "
         f"folds {trigger['perFoldThreshold']}.",
-        "- Diagnostic : le preflight initial a manqué la couverture référence ; le "
-        "preflight corrigé conclut désormais no-run avant WhisperKit. Aucun résultat modèle.",
+        "- Diagnostic : la gate confondait le remplissage temporel des cues avec la "
+        "complétude de la référence ; le manifest racine complet et l’alignement 199/199 "
+        "rendent désormais les 6 fenêtres évaluables.",
         f"- Japonais : edits Qwen {japanese['qwenEdits']}, #94 {japanese['issue94Edits']}, "
-        f"#95 provisoire {japanese['provisionalCandidateEdits']} ; overrides WhisperKit "
-        f"{japanese['whisperKitOverrides']}, mauvais indéterminés.",
+        f"#95 {japanese['candidateEdits']} ; overrides WhisperKit "
+        f"{japanese['whisperKitOverrides']}, mauvais {japanese['badWhisperKitOverrides']}.",
         f"- Termes/nombres/sens récupérés : Qwen {japanese['qwenDimensions']}, "
-        f"#94 {japanese['issue94Dimensions']}, #95 provisoire "
-        f"{japanese['provisionalCandidateDimensions']} ; Qwen reste la Lane A produit.",
+        f"#94 {japanese['issue94Dimensions']}, #95 "
+        f"{japanese['candidateDimensions']} ; aucun changement produit.",
         f"- Coût #95 : WhisperKit commande {runtime['whisperKitCommandSeconds']:.2f}s, "
         f"worker {runtime['whisperKitWorkerSeconds']:.2f}s ; incrément total "
         f"{runtime['incrementalCommandSeconds']:.2f}s ; pic "
@@ -761,9 +930,9 @@ def write_markdown(path: Path, report: dict) -> None:
             lines.append(
                 f"- {row['id']} — référence « {row['referenceJapanese']} » ; "
                 f"base « {row['baseBackend']}: {row['qwen'] if row['baseBackend'] == 'qwen-ja' else row['parakeet']} » ; "
-                f"WhisperKit « {row['whisperkit']} » ; edits provisoires "
-                f"{row['baseEdits']}→{row['whisperkitEdits']} ; couverture référence "
-                f"{row['referenceCoverage']['ratio']:.1%}."
+                f"WhisperKit « {row['whisperkit']} » ; edits "
+                f"{row['baseEdits']}→{row['whisperkitEdits']} ; référence "
+                f"{row['referenceCoverage']['referenceKind']} complète."
             )
     else:
         lines.append("- Aucun : le sélecteur s’est abstenu.")
@@ -773,6 +942,25 @@ def write_markdown(path: Path, report: dict) -> None:
 
 
 def self_test() -> None:
+    evaluability = reference_evaluability({
+        "corpusID": "fixture",
+        "fixture": {"sampleRate": 16_000, "sampleCount": 32_000},
+        "source": {"references": [{
+            "label": "character-alignment", "sha256": "fixture-alignment",
+        }]},
+        "annotations": {"status": "complete", "turns": [{
+            "id": 1, "speaker": "A", "startSample": 0, "endSample": 4_000,
+            "japanese": "A",
+        }]},
+    }, [{
+        "cue_id": "001", "speaker_id": "A", "start": 0.0, "end": 0.25,
+        "japanese": "A", "characters": [{"char": "A", "start": 0.0, "end": 0.25}],
+    }], [
+        {"id": "speech", "startSample": 0, "endSample": 16_000},
+        {"id": "silence", "startSample": 16_000, "endSample": 32_000},
+    ], ["A", ""], "fixture-alignment")
+    assert evaluability["completeForEveryWindow"]
+    assert evaluability["windows"]["silence"]["referenceKind"] == "accepted-empty"
     coverage = interval_coverage([
         {"start": 1.0, "end": 2.0}, {"start": 1.5, "end": 2.5}
     ], 0.0, 4.0)
@@ -808,19 +996,22 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("self-test")
     analyze_parser = sub.add_parser("analyze")
-    for name in ("plan", "run", "selection", "character-alignment", "e23-segments",
-                 "trigger-plan", "report"):
+    for name in ("plan", "run", "selection", "reference-manifest",
+                 "character-alignment", "e23-segments", "trigger-plan", "report"):
         analyze_parser.add_argument(f"--{name}", type=Path, required=True)
     select_parser = sub.add_parser("select")
     for name in ("plan", "run", "selection", "trigger-plan", "trigger-report",
-                 "whisperkit-run", "character-alignment", "e23-segments",
-                 "output-selection", "output-report"):
+                 "whisperkit-run", "reference-manifest", "character-alignment",
+                 "e23-segments", "output-selection", "output-report"):
         select_parser.add_argument(f"--{name}", type=Path, required=True)
     report_parser = sub.add_parser("report")
     for name in ("trigger-report", "selection", "selection-report", "whisperkit-run",
                  "whisperkit-runtime", "issue94-completion", "issue94-report",
                  "output", "markdown"):
         report_parser.add_argument(f"--{name}", type=Path, required=True)
+    for name in ("candidate-raw", "candidate-manifest", "translation-runtime",
+                 "baseline-raw", "reference-manifest"):
+        report_parser.add_argument(f"--{name}", type=Path)
     args = parser.parse_args()
     if args.command == "self-test":
         self_test()

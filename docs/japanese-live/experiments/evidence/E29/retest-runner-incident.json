@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "ticket": 95,
+  "classification": "runner-preflight-slot-barrier-bypass",
+  "firstObservedAt": "2026-08-13T04:51:55Z",
+  "lastObservedAt": "2026-08-13T04:51:55Z",
+  "attemptCount": 1,
+  "cause": "One long-lived preflight shell read a concurrently edited runner tail before an in-function slot check existed, so it crossed the benchmark barrier without BENCHMARK_SLOT_GRANTED=95.",
+  "effect": {
+    "qwenPasses": 0,
+    "parakeetPasses": 0,
+    "whisperKitPasses": 0,
+    "alignmentStarts": 1,
+    "translationStarts": 1,
+    "completedOutput": false,
+    "terminationSignal": 15,
+    "holdoutOpened": false
+  },
+  "partialLogSHA256": "1fb28a4386f423e9867aa2065ff7483e1b0471037774d0e6284aee92c657353d",
+  "partialLogRetained": false,
+  "recovery": "Record the unauthorized start, add an in-function fail-closed slot check, and never infer authorization from preflight state.",
+  "correctiveCheck": "The runner now requires BENCHMARK_SLOT_GRANTED=95 at both the development entry and model-launch seam; self-test proves a missing slot fails closed."
+}

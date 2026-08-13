@@ -245,7 +245,9 @@ final class AdaptiveASRExperimentTests: XCTestCase {
     func testSingleDownstreamTranslationWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_ADAPTIVE_TRANSLATION_DEV"] == "1",
-              environment["BENCHMARK_SLOT_GRANTED"] == "94",
+              let benchmarkTicket = Int(environment["BENCHMARK_SLOT_GRANTED"] ?? ""),
+              [94, 95].contains(benchmarkTicket),
+              benchmarkTicket == 94 || environment["BENCHMARK_SLOT_CONFIRMED_BY_USER"] == "95",
               let audioPath = environment["WHISPERASR_ADAPTIVE_AUDIO"],
               let selectionPath = environment["WHISPERASR_ADAPTIVE_SELECTION"],
               let outputRoot = environment["WHISPERASR_ADAPTIVE_TRANSLATION_OUTPUT"],
@@ -258,7 +260,7 @@ final class AdaptiveASRExperimentTests: XCTestCase {
             Selection.self,
             from: Data(contentsOf: URL(fileURLWithPath: selectionPath))
         )
-        XCTAssertEqual(selection.ticket, 94)
+        XCTAssertEqual(selection.ticket, benchmarkTicket)
         XCTAssertTrue(selection.developmentEligibleJapanese)
         let audioURL = URL(fileURLWithPath: audioPath)
         XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: audioURL), selection.sourceSHA256)
