@@ -220,6 +220,8 @@ def score_row(root: Path, candidate: str, corpus: str) -> tuple[dict, list[dict]
     implementation = (recovery.get("validatorImplementationSHA256", {})
                       if recovery.get("runtimeImplementationUnchanged") is True
                       else run_meta.get("implementationSHA256", {}))
+    implementation = {**implementation,
+                      **(run_meta.get("reportRecovery") or {}).get("implementationSHA256", {})}
     implementation_match = bool(implementation) and all(
         Path(path).is_file() and sha256(Path(path)) == digest
         for path, digest in implementation.items()
@@ -351,8 +353,15 @@ def build_report(root: Path, candidates: list[str]) -> tuple[dict, str]:
             else ("4B_ONLY" if four_b_only else "full"),
         "ticket106Concluded": not (four_b_only or translation_only),
         "campaignClassification": (
+            "VALIDATED_PARTIAL_TRANSLATION_REPLAY"
+            if translation_only and candidates == [CANDIDATES[0]] else
             "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE"
             if four_b_only or translation_only else "COMPLETE"
+        ),
+        "finalIntegrated12BReadiness": (
+            {"decision": "NO_READY", "ready": False,
+             "blocker": "The existing full command also reruns 4B, outside the granted 12B-only scope."}
+            if translation_only and candidates == [CANDIDATES[0]] else None
         ),
         "prior12BAttempt": None if not pressure_attempt else {
             "path": str(PRESSURE_ATTEMPT),
@@ -450,7 +459,11 @@ def build_report(root: Path, candidates: list[str]) -> tuple[dict, str]:
             ]
     lines += ["", "## Décision", "",
               "Les pannes de validation produit restent classées comme qualité modèle ; toute panne build, runner, référence ou sécurité interdit un verdict modèle.",
-              report["scopeLimit"], ""]
+              report["scopeLimit"]]
+    if report["finalIntegrated12BReadiness"]:
+        lines += ["", "**NO_READY** pour le dernier run intégré 12B : la commande `full` existante "
+                  "relance aussi le 4B, hors du scope accordé. Aucune nouvelle variante n’est préparée."]
+    lines.append("")
     return report, "\n".join(lines)
 
 

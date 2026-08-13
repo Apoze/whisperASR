@@ -59,6 +59,7 @@ export WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE="${WHISPERASR_HIGH_QUALITY_WORK
 PHASE=startup
 CURRENT_TRANSLATOR=""
 CURRENT_CORPUS=""
+RUNNER_SUBSHELL="$BASH_SUBSHELL"
 
 die() {
   mkdir -p "$ARTIFACTS"
@@ -73,6 +74,7 @@ die() {
 on_error() {
   local status="$?"
   trap - ERR
+  ((BASH_SUBSHELL == RUNNER_SUBSHELL)) || return "$status"
   die "Command failed at $PHASE (exit $status)"
 }
 
@@ -268,6 +270,48 @@ prepare_translation_replay() {
       replayInvariant:"The current HighQualityJob recomputes and exactly matches frozen source turns and glossary inputs; accepted English context remains candidate-dependent output.",
       fullIntegratedRun:false,ticket106Concluded:false}' \
     >"$ARTIFACTS/translation-replay-source.json"
+}
+
+record_translation_replay_preflight() {
+  local binary="$ROOT/.build/arm64-apple-macosx/debug/WhisperASRPackageTests.xctest/Contents/MacOS/WhisperASRPackageTests"
+  local mismatch="$ROOT/docs/japanese-live/experiments/evidence/E31-translation-only-12b-context-harness-attempt"
+  local checks='[]' corpus frozen log request_hash
+  [[ -x "$binary" ]] || die "Missing rebuilt XCTest binary for replay preflight"
+  [[ ! -d "$ARTIFACTS/$REPLAY_TRANSLATOR/qudu2fx3ncc/jobs" \
+    && ! -d "$ARTIFACTS/$REPLAY_TRANSLATOR/md62mmdz0m/jobs" ]] \
+    || die "Current replay root contains prior model jobs; refusing reuse"
+  (cd "$mismatch" && shasum -a 256 -c sha256.tsv >/dev/null) \
+    || die "Prior mismatch evidence hash verification failed"
+  jq -e '.campaignClassification == "INCONCLUSIVE_HARNESS_INPUT_MISMATCH"
+    and .modelVerdictAssigned == false' "$mismatch/report.json" >/dev/null
+  for corpus in qudu2fx3ncc md62mmdz0m; do
+    frozen="$ARTIFACTS/frozen/$corpus-raw-asr.json"
+    log="$ARTIFACTS/controls/replay-validation-$corpus.log"
+    jq -e '(.translation.request.turns | length) > 0
+      and (.translation.request.conversationContextByCueID | length)
+        == (.translation.request.turns | length)
+      and all(.translation.request.conversationContextByCueID[];
+        .policyVersion == "previous-accepted-v1")' "$frozen" >/dev/null
+    grep -q 'Executed 1 test, with 0 failures' "$log"
+    request_hash="$(jq -cS '.translation.request | del(.source.modifiedAt)' "$frozen" \
+      | shasum -a 256 | awk '{print $1}')"
+    checks="$(jq -c --arg corpus "$corpus" --arg frozen "$(sha256 "$frozen")" \
+      --arg request "$request_hash" --arg log "$(sha256 "$log")" \
+      --argjson cues "$(jq '.translation.request.turns | length' "$frozen")" \
+      '. + [{corpusID:$corpus,cueCount:$cues,jobPolicy:"productDefault",
+        resolvedPolicy:"previous-accepted-v1",semanticTurnsMatched:true,
+        frozenUpstreamSHA256:$frozen,frozenSemanticRequestSHA256:$request,
+        validationLogSHA256:$log,workerCreated:false}]' <<<"$checks")"
+  done
+  jq -n --arg test "$(sha256 Tests/HighQualityAcceptanceTests.swift)" \
+    --arg binary "$(sha256 "$binary")" --argjson checks "$checks" \
+    --arg mismatchManifest "$(sha256 "$mismatch/sha256.tsv")" \
+    '{schemaVersion:1,ticket:106,classification:"validation-only/no-worker",
+      implementationSHA256:{"Tests/HighQualityAcceptanceTests.swift":$test},
+      runtimeSHA256:{"WhisperASRPackageTests.xctest":$binary},checks:$checks,
+      priorMismatch:{classification:"INCONCLUSIVE_HARNESS_INPUT_MISMATCH",
+        retainedManifestSHA256:$mismatchManifest,reusedAsModelVerdict:false}}' \
+    >"$ARTIFACTS/controls/replay-harness-validation.json"
 }
 
 implementation_hashes() {
@@ -706,6 +750,7 @@ run_translation_replay() {
   local job="$(job_directory "$translator" "$corpus")" log="$directory/run.log"
   local frozen="$ARTIFACTS/frozen/$corpus-raw-asr.json"
   local ready="$directory/translation-loaded" marker="$directory/job-started" watcher status=0 route
+  local harness=""
   CURRENT_TRANSLATOR="$translator"; CURRENT_CORPUS="$corpus"; PHASE=translation-replay
   if job_is_reusable "$translator" "$corpus"; then
     check_translation_replay "$translator" "$corpus"
@@ -747,12 +792,17 @@ run_translation_replay() {
   fi
   [[ ! -e "$job" ]] || die "Incomplete replay retained at $job; preserve it and choose a new artifact root"
   write_metadata "$translator" "$corpus"
+  [[ ! -f "$ARTIFACTS/controls/replay-harness-validation.json" ]] \
+    || harness="$(sha256 "$ARTIFACTS/controls/replay-harness-validation.json")"
   jq --arg source "$frozen" --arg sourceHash "$(sha256 "$frozen")" \
     --arg replay "$(sha256 "$ARTIFACTS/translation-replay-source.json")" \
+    --arg harness "$harness" \
     --arg mode "$MODE" \
     '. + {runMode:$mode,fullIntegratedRun:false,ticket106Concluded:false,
       frozenUpstreamPath:$source,frozenUpstreamSHA256:$sourceHash,
-      translationReplaySourceSHA256:$replay}' "$directory/run-meta.json" \
+      translationReplaySourceSHA256:$replay,
+      replayHarnessValidationSHA256:(if $harness == "" then null else $harness end)}' \
+    "$directory/run-meta.json" \
     >"$directory/run-meta.updated.json"
   mv "$directory/run-meta.updated.json" "$directory/run-meta.json"
   touch "$marker"
@@ -897,6 +947,8 @@ retain_evidence() {
   elif [[ "$MODE" == TRANSLATION_ONLY_4B || "$MODE" == TRANSLATION_ONLY_12B ]]; then
     translators=("$REPLAY_TRANSLATOR")
     controls+=("$ARTIFACTS/translation-replay-source.json")
+    [[ ! -f "$ARTIFACTS/controls/replay-harness-validation.json" ]] \
+      || controls+=("$ARTIFACTS/controls/replay-harness-validation.json")
   else
     controls+=("$ARTIFACTS/12b-to-4b-handoff.json")
   fi
@@ -914,6 +966,9 @@ retain_evidence() {
         "$ARTIFACTS/$translator/$corpus/safety.samples.jsonl" "$destination/"
       [[ ! -f "$ARTIFACTS/$translator/$corpus/cleanup.json" ]] \
         || cp "$ARTIFACTS/$translator/$corpus/cleanup.json" "$destination/"
+      capture_translation_worker_raw \
+        "$(dirname "$(jq -er .translation.worker.rawLogPath "$job/raw-asr.json")")" \
+        "$destination/worker-raw"
       gzip -n -c "$ARTIFACTS/$translator/$corpus/run.log" >"$destination/run.log.gz"
       for path in japanese-transcript.txt english-translation-transcript.txt \
         english-subtitles.srt english-subtitles.vtt; do
@@ -1005,6 +1060,7 @@ preflight() {
   xcrun swift test --filter \
     'HighQualityLocalTranslationTests/testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract|HighQualityLocalTranslationTests/testEveryTranslationRequestClearsCacheBeforeTheNextRequest|HighQualityLocalTranslationTests/testCueBoundaryClearsCacheAfterSuccessRetryFailureCancellationAndUnload|HighQualityTranslationWorkerTests|HeavyweightModelGateTests|HighQualityJobTests/testSpeakerBetaControlsVisibilityAndSafeDefaults|HighQualityJobTests/testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend|HighQualityJobTests/testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface|HighQualityJobTests/testCancellationIsSafeForEveryOfflineBackend' \
     2>&1 | tee "$ARTIFACTS/controls/light-tests.log"
+  [[ "$MODE" != TRANSLATION_ONLY_12B ]] || record_translation_replay_preflight
   if [[ "$MODE" == TRANSLATION_SMOKE_12B_100 ]]; then
     command='BENCHMARK_SLOT_GRANTED=106 bash Scripts/run_integrated_offline_validation.sh TRANSLATION_SMOKE_12B_100'
     duration='5-8 minutes'; memory='8-12 GiB process tree'
@@ -1032,6 +1088,8 @@ preflight() {
     --arg models "$(sha256 "$ARTIFACTS/model-provenance.json")" \
     --arg inputs "$(sha256 "$ARTIFACTS/corpus-preflight.tsv")" \
     --arg smokeRequest "$smoke_request_hash" \
+    --arg harness "$([[ "$MODE" == TRANSLATION_ONLY_12B ]] \
+      && sha256 "$ARTIFACTS/controls/replay-harness-validation.json" || true)" \
     --arg worker "$(sha256 "$WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE")" \
     --arg metallib "$(sha256 "$ROOT/.build/debug/mlx.metallib")" \
     --argjson implementation "$(implementation_hashes)" \
@@ -1041,6 +1099,7 @@ preflight() {
       memoryPolicy:"warning requests cache cleanup then one native re-sample; recovered warning continues; critical, persistent warning, post-cleanup growth, swap or runaway stops; offline reserve=0",
       heavyModelsLoaded:false,modelProvenanceSHA256:$models,inputPreflightSHA256:$inputs,
       smokeRequestSHA256:(if $smokeRequest == "" then null else $smokeRequest end),
+      replayHarnessValidationSHA256:(if $harness == "" then null else $harness end),
       implementationSHA256:$implementation,
       runtimeSHA256:{workerExecutable:$worker,mlxMetallib:$metallib}}' \
       >"$ARTIFACTS/benchmark-ready.json"
@@ -1131,7 +1190,12 @@ translation_only_run() {
     --candidate "$REPLAY_TRANSLATOR" --json "$REPORT_JSON" --markdown "$REPORT_MD"
   jq -e --arg mode "$MODE" '.workflowAuditable == true and .ticket106Concluded == false
     and .runMode == $mode
-    and .campaignClassification == "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE"' \
+    and (if $mode == "TRANSLATION_ONLY_12B"
+      then .campaignClassification == "VALIDATED_PARTIAL_TRANSLATION_REPLAY"
+        and .finalIntegrated12BReadiness == {
+          decision:"NO_READY",ready:false,
+          blocker:"The existing full command also reruns 4B, outside the granted 12B-only scope."}
+      else .campaignClassification == "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE" end)' \
     "$REPORT_JSON" >/dev/null
   echo "Report: $REPORT_MD"
 }

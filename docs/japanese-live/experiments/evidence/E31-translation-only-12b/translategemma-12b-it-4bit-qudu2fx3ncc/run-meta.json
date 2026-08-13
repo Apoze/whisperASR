@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "corpusID": "qudu2fx3ncc",
+  "translator": "translategemma-12b-it-4bit",
+  "translationModelID": "mlx-community/translategemma-12b-it-4bit",
+  "translationRevision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "commit": "17cab77e9ed72fc89baffe58f78cbcfed54bec49",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/1/Video1_reference_transcript_and_translation.zip",
+  "referenceArchiveSHA256": "8f1c4ed3836d5e0f627448f9ecc44ab064d8750cb4464c8849eafabbba401474",
+  "corpusManifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "corpusPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "localReferences": [
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/reference.csv",
+      "sha256": "df0bce85845cca243e0ed4ae3c5b885e519cc4f0aada9c6ddb1b169cb22f93ba"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/character-alignment.jsonl",
+      "sha256": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/qudu2fx3ncc/speaker-map.json",
+      "sha256": "4e1326ac13fab5c76b07451600e6553c65e824b278a1b4c4ce7192e77a73497b"
+    }
+  ],
+  "decisionsSHA256": "711f2f72266abcca7916e72c81af6cef7b4360c03f62d34381538184809d46ab",
+  "modelProvenanceSHA256": "fbf578bf8ae61cd19380bf377f104af4c9a3ac60262d509129e3138161cadf44",
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "bf58409dc3aeab5abaf67c3302a947e00348b8dcf5ac72f04beab34c6fe058ae",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef",
+    "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+    "Scripts/run_integrated_offline_validation.sh": "c796ec933763ac0dd3c972f71f18e417f4d53c9232da491f25c7d7398888425b",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "6316686c049f6b90a27b3eab2b63acc46d3d72710828b1e6eda16f04498489b5",
+    "Scripts/test_mossformer2_guard.sh": "865316ad8868ed9ddb259b65a2debafcb94c8976de497c63177e1d5b70ee3569",
+    "Scripts/report_integrated_offline_validation.py": "f99097dbfefee2b9b54ef0954ab8ad671c3bf3b033618c5d3f54fcd3a7db7b27",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "runtimeSHA256": {
+    "workerExecutable": "f7ce56c58b08ce1906f69ea627050f014e2a4d6f18fad9ec00ed8af5d819b3a6",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  },
+  "configuration": {
+    "ASR": "Qwen Standard",
+    "alignment": "Qwen3 Forced Aligner",
+    "diarization": "SpeakerKit Standard",
+    "cues": "Standard",
+    "overlapRecovery": null,
+    "translation": "translategemma-12b-it-4bit"
+  },
+  "runMode": "TRANSLATION_ONLY_12B",
+  "fullIntegratedRun": false,
+  "ticket106Concluded": false,
+  "frozenUpstreamPath": "/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/high-quality/integrated-validation-106-translation-only-12b/frozen/qudu2fx3ncc-raw-asr.json",
+  "frozenUpstreamSHA256": "6060f830c8c3b8febb186c540e992f3d70375a674adb4d48087f77e1ce97c2b2",
+  "translationReplaySourceSHA256": "1cd847609a37feae118d63343cc827467ffe422a919ff640fab76110f819f1f5",
+  "replayHarnessValidationSHA256": "703f06f70b8e98e6faa24722e86f2dd4b7ac89ea08c641a408127bcc0c78eaf1",
+  "resultRoute": "completed",
+  "rawArtifactSHA256": {
+    "manifest.json": "22d9cd4e42f3fec8296b28470f897d1a67e2a5cbe016c1202b81cc99b5a51c3d",
+    "raw-asr.json": "b28f788cde88691a53b3e9b6fe9f20f2b15b4940cf0d2df6c07f2a29f1a0720c"
+  },
+  "safetySHA256": {
+    "safety.json": "e4ab7735164262cdfc3d952afd24f95f5793d18b7af338836d9d745d0658d5a5",
+    "safety.samples.jsonl": "61653d75cecc86f3b65aeaa9bcd9dcf16a8a03c526f2efce371f0435c8de0d40"
+  },
+  "reportRecovery": {
+    "classificationOnly": true,
+    "modelExecutionAndOutputsUnchanged": true,
+    "implementationSHA256": {
+      "Scripts/run_integrated_offline_validation.sh": "d418407bfb661a7413888a774550c1dffaeacefbddb78e520b9376e916bd2732",
+      "Scripts/report_integrated_offline_validation.py": "8418859ab79a8a34ff10657e625c2446607cb9af5e90cd4d0354822d287cd3ab"
+    }
+  }
+}
