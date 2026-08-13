@@ -1,0 +1,139 @@
+{
+  "deliverables" : [
+    "english-translation-transcript",
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "forced-alignment",
+    "llm-translation",
+    "export"
+  ],
+  "failures" : [
+
+  ],
+  "finishedAt" : "2026-08-13T06:21:17Z",
+  "generatedFiles" : [
+    {
+      "kind" : "deliverable",
+      "path" : "japanese-transcript.txt"
+    },
+    {
+      "kind" : "deliverable",
+      "path" : "english-translation-transcript.txt"
+    },
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "95000001-0000-4000-8000-000000000001",
+  "model" : {
+    "backend" : "qwen-ja",
+    "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-13T06:14:03Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-started",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T06:14:03Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T06:14:03Z",
+      "backend" : "qwen-ja",
+      "kind" : "unload-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-13T06:14:03Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T06:14:05Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T06:14:29Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-13T06:14:29Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-13T06:14:34Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    },
+    {
+      "at" : "2026-08-13T06:21:17Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/translategemma-12b-it-4bit"
+    }
+  ],
+  "peakMemoryBytes" : 2788641024,
+  "schemaVersion" : 2,
+  "selectedBackend" : "qwen-ja",
+  "source" : {
+    "byteCount" : 30630694,
+    "fileName" : "audio-16k-mono.wav",
+    "modifiedAt" : "2026-07-19T11:32:54Z",
+    "path" : "\/Users\/maz\/Documents\/projets\/whisperASR\/.build\/benchmarks\/japanese-live\/corpora\/qudu2fx3ncc\/audio-16k-mono.wav"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : false,
+  "stageDurations" : [
+    "exporting",
+    0.04000389575958252,
+    "normalizing-source",
+    0.0001729726791381836,
+    "translating",
+    407.9660850763321,
+    "transcribing",
+    0.07946503162384033,
+    "aligning",
+    24.640501976013184,
+    "preparing-alignment",
+    1.4772249460220337,
+    "preparing-asr",
+    0.0005630254745483398
+  ],
+  "startedAt" : "2026-08-13T06:14:03Z",
+  "status" : "completed",
+  "translationModel" : {
+    "modelID" : "mlx-community\/translategemma-12b-it-4bit",
+    "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+    "runtimeVersion" : "3.31.4",
+    "translator" : "translategemma-12b-it-4bit",
+    "weightSHA256" : [
+      "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+      "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+    ]
+  }
+}

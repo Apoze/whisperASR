@@ -1,0 +1,1910 @@
+{
+  "asrWorker" : {
+    "backend" : "reazonspeech-k2-v2-int8",
+    "characters" : [
+      {
+        "chunkIndex" : 0,
+        "sourceEnd" : 0.5199999809265137,
+        "sourceStart" : 0.07999999821186066,
+        "text" : "ご"
+      },
+      {
+        "chunkIndex" : 0,
+        "sourceEnd" : 0.6800000071525574,
+        "sourceStart" : 0.5199999809265137,
+        "text" : "め"
+      },
+      {
+        "chunkIndex" : 0,
+        "sourceEnd" : 15.88,
+        "sourceStart" : 0.6800000071525574,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 1,
+        "sourceEnd" : 35.52,
+        "sourceStart" : 15.959999998211861,
+        "text" : "今"
+      },
+      {
+        "chunkIndex" : 2,
+        "sourceEnd" : 55.52,
+        "sourceStart" : 35.52,
+        "text" : "何"
+      },
+      {
+        "chunkIndex" : 3,
+        "sourceEnd" : 69,
+        "sourceStart" : 53.599999998211864,
+        "text" : "三"
+      },
+      {
+        "chunkIndex" : 4,
+        "sourceEnd" : 88.6,
+        "sourceStart" : 69.07999999821186,
+        "text" : "何"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 89.11999998092651,
+        "sourceStart" : 88.6,
+        "text" : "皆"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 89.16000000238418,
+        "sourceStart" : 89.11999998092651,
+        "text" : "さ"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 89.35999999046325,
+        "sourceStart" : 89.16000000238418,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 89.55999997854232,
+        "sourceStart" : 89.35999999046325,
+        "text" : "の"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 89.7599999666214,
+        "sourceStart" : 89.55999997854232,
+        "text" : "近"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 89.87999997138976,
+        "sourceStart" : 89.7599999666214,
+        "text" : "く"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 90.03999993801116,
+        "sourceStart" : 89.87999997138976,
+        "text" : "に"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 90.15999994277954,
+        "sourceStart" : 90.03999993801116,
+        "text" : "あ"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 90.23999998569488,
+        "sourceStart" : 90.15999994277954,
+        "text" : "り"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 90.31999990940093,
+        "sourceStart" : 90.23999998569488,
+        "text" : "ま"
+      },
+      {
+        "chunkIndex" : 5,
+        "sourceEnd" : 105.41999999999999,
+        "sourceStart" : 90.31999990940093,
+        "text" : "す"
+      },
+      {
+        "chunkIndex" : 6,
+        "sourceEnd" : 121.42,
+        "sourceStart" : 105.42,
+        "text" : "あ"
+      },
+      {
+        "chunkIndex" : 6,
+        "sourceEnd" : 121.52000000000001,
+        "sourceStart" : 121.42,
+        "text" : "っ"
+      },
+      {
+        "chunkIndex" : 7,
+        "sourceEnd" : 124.8399999332428,
+        "sourceStart" : 121.59999999821186,
+        "text" : "最"
+      },
+      {
+        "chunkIndex" : 7,
+        "sourceEnd" : 127.15999986648559,
+        "sourceStart" : 124.8399999332428,
+        "text" : "後"
+      },
+      {
+        "chunkIndex" : 7,
+        "sourceEnd" : 127.19999982833862,
+        "sourceStart" : 127.15999986648559,
+        "text" : "ま"
+      },
+      {
+        "chunkIndex" : 7,
+        "sourceEnd" : 137.1199994277954,
+        "sourceStart" : 127.19999982833862,
+        "text" : "で"
+      },
+      {
+        "chunkIndex" : 7,
+        "sourceEnd" : 137.15999938964842,
+        "sourceStart" : 137.1199994277954,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 7,
+        "sourceEnd" : 140.78,
+        "sourceStart" : 137.15999938964842,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 8,
+        "sourceEnd" : 156.66000011444092,
+        "sourceStart" : 140.81999999910593,
+        "text" : "よ"
+      },
+      {
+        "chunkIndex" : 8,
+        "sourceEnd" : 157.02,
+        "sourceStart" : 156.66000011444092,
+        "text" : "し"
+      },
+      {
+        "chunkIndex" : 9,
+        "sourceEnd" : 176.8999991607666,
+        "sourceStart" : 157.02,
+        "text" : "は"
+      },
+      {
+        "chunkIndex" : 9,
+        "sourceEnd" : 177.02,
+        "sourceStart" : 176.8999991607666,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 10,
+        "sourceEnd" : 182.6599998664856,
+        "sourceStart" : 175.09999999821187,
+        "text" : "よ"
+      },
+      {
+        "chunkIndex" : 10,
+        "sourceEnd" : 182.69999982833863,
+        "sourceStart" : 182.6599998664856,
+        "text" : "ろ"
+      },
+      {
+        "chunkIndex" : 10,
+        "sourceEnd" : 194.8999991607666,
+        "sourceStart" : 182.69999982833863,
+        "text" : "し"
+      },
+      {
+        "chunkIndex" : 10,
+        "sourceEnd" : 195.02,
+        "sourceStart" : 194.8999991607666,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 11,
+        "sourceEnd" : 208.37999965667726,
+        "sourceStart" : 193.02,
+        "text" : "ど"
+      },
+      {
+        "chunkIndex" : 11,
+        "sourceEnd" : 208.5,
+        "sourceStart" : 208.37999965667726,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 12,
+        "sourceEnd" : 226.18000030517578,
+        "sourceStart" : 208.5,
+        "text" : "何"
+      },
+      {
+        "chunkIndex" : 12,
+        "sourceEnd" : 226.73999977111816,
+        "sourceStart" : 226.18000030517578,
+        "text" : "回"
+      },
+      {
+        "chunkIndex" : 12,
+        "sourceEnd" : 228.5,
+        "sourceStart" : 226.73999977111816,
+        "text" : "か"
+      },
+      {
+        "chunkIndex" : 13,
+        "sourceEnd" : 245.45999908447266,
+        "sourceStart" : 226.5,
+        "text" : "あ"
+      },
+      {
+        "chunkIndex" : 13,
+        "sourceEnd" : 245.56,
+        "sourceStart" : 245.45999908447266,
+        "text" : "っ"
+      },
+      {
+        "chunkIndex" : 14,
+        "sourceEnd" : 265.56,
+        "sourceStart" : 245.63999999821186,
+        "text" : "二"
+      },
+      {
+        "chunkIndex" : 15,
+        "sourceEnd" : 283.4399991607666,
+        "sourceStart" : 263.63999999821186,
+        "text" : "お"
+      },
+      {
+        "chunkIndex" : 15,
+        "sourceEnd" : 283.56,
+        "sourceStart" : 283.4399991607666,
+        "text" : "っ"
+      },
+      {
+        "chunkIndex" : 16,
+        "sourceEnd" : 297.2799993133545,
+        "sourceStart" : 281.56,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 16,
+        "sourceEnd" : 300.2,
+        "sourceStart" : 297.2799993133545,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 17,
+        "sourceEnd" : 314.9599992752075,
+        "sourceStart" : 300.2399999991059,
+        "text" : "や"
+      },
+      {
+        "chunkIndex" : 17,
+        "sourceEnd" : 317.27999992370604,
+        "sourceStart" : 314.9599992752075,
+        "text" : "め"
+      },
+      {
+        "chunkIndex" : 17,
+        "sourceEnd" : 317.76,
+        "sourceStart" : 317.27999992370604,
+        "text" : "ろ"
+      },
+      {
+        "chunkIndex" : 18,
+        "sourceEnd" : 331.8799998855591,
+        "sourceStart" : 317.83999999821185,
+        "text" : "大"
+      },
+      {
+        "chunkIndex" : 18,
+        "sourceEnd" : 331.9199998474121,
+        "sourceStart" : 331.8799998855591,
+        "text" : "丈"
+      },
+      {
+        "chunkIndex" : 18,
+        "sourceEnd" : 334.9,
+        "sourceStart" : 331.9199998474121,
+        "text" : "夫"
+      },
+      {
+        "chunkIndex" : 19,
+        "sourceEnd" : 338.4599999427795,
+        "sourceStart" : 334.9399999991059,
+        "text" : "よ"
+      },
+      {
+        "chunkIndex" : 19,
+        "sourceEnd" : 338.5399998664856,
+        "sourceStart" : 338.4599999427795,
+        "text" : "ろ"
+      },
+      {
+        "chunkIndex" : 19,
+        "sourceEnd" : 340.6999997138977,
+        "sourceStart" : 338.5399998664856,
+        "text" : "し"
+      },
+      {
+        "chunkIndex" : 19,
+        "sourceEnd" : 350.38,
+        "sourceStart" : 340.6999997138977,
+        "text" : "く"
+      },
+      {
+        "chunkIndex" : 20,
+        "sourceEnd" : 368.49999893188476,
+        "sourceStart" : 350.38,
+        "text" : "は"
+      },
+      {
+        "chunkIndex" : 20,
+        "sourceEnd" : 368.74,
+        "sourceStart" : 368.49999893188476,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 21,
+        "sourceEnd" : 407.0600003051758,
+        "sourceStart" : 387.4199999991059,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 21,
+        "sourceEnd" : 407.18,
+        "sourceStart" : 407.0600003051758,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 22,
+        "sourceEnd" : 425.4999996948242,
+        "sourceStart" : 407.18,
+        "text" : "は"
+      },
+      {
+        "chunkIndex" : 22,
+        "sourceEnd" : 425.6,
+        "sourceStart" : 425.4999996948242,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 23,
+        "sourceEnd" : 444.8399997711182,
+        "sourceStart" : 425.63999999910595,
+        "text" : "お"
+      },
+      {
+        "chunkIndex" : 23,
+        "sourceEnd" : 445.6,
+        "sourceStart" : 444.8399997711182,
+        "text" : "っ"
+      },
+      {
+        "chunkIndex" : 24,
+        "sourceEnd" : 458.72,
+        "sourceStart" : 443.63999999910595,
+        "text" : "何"
+      },
+      {
+        "chunkIndex" : 25,
+        "sourceEnd" : 476.5199992370606,
+        "sourceStart" : 458.7999999982119,
+        "text" : "現"
+      },
+      {
+        "chunkIndex" : 25,
+        "sourceEnd" : 476.82000000000005,
+        "sourceStart" : 476.5199992370606,
+        "text" : "在"
+      },
+      {
+        "chunkIndex" : 26,
+        "sourceEnd" : 492.05999977111816,
+        "sourceStart" : 476.8599999991059,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 26,
+        "sourceEnd" : 492.52,
+        "sourceStart" : 492.05999977111816,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 27,
+        "sourceEnd" : 511.59999992370604,
+        "sourceStart" : 492.59999999821184,
+        "text" : "ど"
+      },
+      {
+        "chunkIndex" : 27,
+        "sourceEnd" : 511.7,
+        "sourceStart" : 511.59999992370604,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 28,
+        "sourceEnd" : 531.3399993896485,
+        "sourceStart" : 511.7399999991059,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 28,
+        "sourceEnd" : 531.62,
+        "sourceStart" : 531.3399993896485,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 547.0199996185303,
+        "sourceStart" : 531.62,
+        "text" : "そ"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 547.3399993133545,
+        "sourceStart" : 547.0199996185303,
+        "text" : "の"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 547.4199992370606,
+        "sourceStart" : 547.3399993133545,
+        "text" : "こ"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 547.6999999237061,
+        "sourceStart" : 547.4199992370606,
+        "text" : "の"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 547.8999987792969,
+        "sourceStart" : 547.6999999237061,
+        "text" : "十"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 548.0600005340576,
+        "sourceStart" : 547.8999987792969,
+        "text" : "四"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 548.1799994659424,
+        "sourceStart" : 548.0600005340576,
+        "text" : "時"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 548.3800002288818,
+        "sourceStart" : 548.1799994659424,
+        "text" : "間"
+      },
+      {
+        "chunkIndex" : 29,
+        "sourceEnd" : 551.62,
+        "sourceStart" : 548.3800002288818,
+        "text" : "は"
+      },
+      {
+        "chunkIndex" : 30,
+        "sourceEnd" : 565.3399993133545,
+        "sourceStart" : 549.62,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 30,
+        "sourceEnd" : 566.26,
+        "sourceStart" : 565.3399993133545,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 31,
+        "sourceEnd" : 584.26,
+        "sourceStart" : 566.26,
+        "text" : "は"
+      },
+      {
+        "chunkIndex" : 31,
+        "sourceEnd" : 584.36,
+        "sourceStart" : 584.26,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 32,
+        "sourceEnd" : 600.12,
+        "sourceStart" : 584.4399999982119,
+        "text" : "私"
+      },
+      {
+        "chunkIndex" : 33,
+        "sourceEnd" : 613.2799998474121,
+        "sourceStart" : 600.1999999982119,
+        "text" : "大"
+      },
+      {
+        "chunkIndex" : 33,
+        "sourceEnd" : 613.3199998092651,
+        "sourceStart" : 613.2799998474121,
+        "text" : "丈"
+      },
+      {
+        "chunkIndex" : 33,
+        "sourceEnd" : 616.26,
+        "sourceStart" : 613.3199998092651,
+        "text" : "夫"
+      },
+      {
+        "chunkIndex" : 34,
+        "sourceEnd" : 632.9400003051758,
+        "sourceStart" : 616.26,
+        "text" : "ど"
+      },
+      {
+        "chunkIndex" : 34,
+        "sourceEnd" : 633.14,
+        "sourceStart" : 632.9400003051758,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 35,
+        "sourceEnd" : 652.2599989318848,
+        "sourceStart" : 633.1799999991059,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 35,
+        "sourceEnd" : 653.14,
+        "sourceStart" : 652.2599989318848,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 36,
+        "sourceEnd" : 670.9399992370605,
+        "sourceStart" : 651.2199999982118,
+        "text" : "大"
+      },
+      {
+        "chunkIndex" : 36,
+        "sourceEnd" : 670.9800001525879,
+        "sourceStart" : 670.9399992370605,
+        "text" : "丈"
+      },
+      {
+        "chunkIndex" : 36,
+        "sourceEnd" : 671.14,
+        "sourceStart" : 670.9800001525879,
+        "text" : "夫"
+      },
+      {
+        "chunkIndex" : 37,
+        "sourceEnd" : 688.8599993133545,
+        "sourceStart" : 669.2199999982118,
+        "text" : "お"
+      },
+      {
+        "chunkIndex" : 37,
+        "sourceEnd" : 688.98,
+        "sourceStart" : 688.8599993133545,
+        "text" : "っ"
+      },
+      {
+        "chunkIndex" : 38,
+        "sourceEnd" : 689.4999999809265,
+        "sourceStart" : 688.98,
+        "text" : "よ"
+      },
+      {
+        "chunkIndex" : 38,
+        "sourceEnd" : 689.5400000023842,
+        "sourceStart" : 689.4999999809265,
+        "text" : "ろ"
+      },
+      {
+        "chunkIndex" : 38,
+        "sourceEnd" : 689.6600000071526,
+        "sourceStart" : 689.5400000023842,
+        "text" : "し"
+      },
+      {
+        "chunkIndex" : 38,
+        "sourceEnd" : 708.98,
+        "sourceStart" : 689.6600000071526,
+        "text" : "く"
+      },
+      {
+        "chunkIndex" : 39,
+        "sourceEnd" : 726.98,
+        "sourceStart" : 706.98,
+        "text" : "何"
+      },
+      {
+        "chunkIndex" : 40,
+        "sourceEnd" : 741.8200001525879,
+        "sourceStart" : 725.019999999106,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 40,
+        "sourceEnd" : 742.08,
+        "sourceStart" : 741.8200001525879,
+        "text" : "わ"
+      },
+      {
+        "chunkIndex" : 41,
+        "sourceEnd" : 757.5199995803833,
+        "sourceStart" : 742.08,
+        "text" : "は"
+      },
+      {
+        "chunkIndex" : 41,
+        "sourceEnd" : 757.64,
+        "sourceStart" : 757.5199995803833,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 42,
+        "sourceEnd" : 774.08,
+        "sourceStart" : 757.64,
+        "text" : "何"
+      },
+      {
+        "chunkIndex" : 43,
+        "sourceEnd" : 775.3999999332428,
+        "sourceStart" : 774.1599999982119,
+        "text" : "皆"
+      },
+      {
+        "chunkIndex" : 43,
+        "sourceEnd" : 775.4799999761582,
+        "sourceStart" : 775.3999999332428,
+        "text" : "さ"
+      },
+      {
+        "chunkIndex" : 43,
+        "sourceEnd" : 793.4000000000001,
+        "sourceStart" : 775.4799999761582,
+        "text" : "ん"
+      },
+      {
+        "chunkIndex" : 44,
+        "sourceEnd" : 796.8800000190735,
+        "sourceStart" : 793.4799999982118,
+        "text" : "可"
+      },
+      {
+        "chunkIndex" : 44,
+        "sourceEnd" : 796.9599999427795,
+        "sourceStart" : 796.8800000190735,
+        "text" : "能"
+      },
+      {
+        "chunkIndex" : 44,
+        "sourceEnd" : 798.1599997520447,
+        "sourceStart" : 796.9599999427795,
+        "text" : "性"
+      },
+      {
+        "chunkIndex" : 44,
+        "sourceEnd" : 798.8400000572204,
+        "sourceStart" : 798.1599997520447,
+        "text" : "が"
+      },
+      {
+        "chunkIndex" : 44,
+        "sourceEnd" : 798.9599999427795,
+        "sourceStart" : 798.8400000572204,
+        "text" : "あ"
+      },
+      {
+        "chunkIndex" : 44,
+        "sourceEnd" : 812.22,
+        "sourceStart" : 798.9599999427795,
+        "text" : "る"
+      },
+      {
+        "chunkIndex" : 45,
+        "sourceEnd" : 830.0999991607666,
+        "sourceStart" : 812.22,
+        "text" : "お"
+      },
+      {
+        "chunkIndex" : 45,
+        "sourceEnd" : 830.2,
+        "sourceStart" : 830.0999991607666,
+        "text" : "っ"
+      },
+      {
+        "chunkIndex" : 46,
+        "sourceEnd" : 848.120000076294,
+        "sourceStart" : 830.2,
+        "text" : "そ"
+      },
+      {
+        "chunkIndex" : 46,
+        "sourceEnd" : 848.24,
+        "sourceStart" : 848.120000076294,
+        "text" : "れ"
+      },
+      {
+        "chunkIndex" : 47,
+        "sourceEnd" : 864.5199987792969,
+        "sourceStart" : 848.24,
+        "text" : "そ"
+      },
+      {
+        "chunkIndex" : 47,
+        "sourceEnd" : 864.64,
+        "sourceStart" : 864.5199987792969,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 48,
+        "sourceEnd" : 881.7599989318848,
+        "sourceStart" : 864.64,
+        "text" : "は"
+      },
+      {
+        "chunkIndex" : 48,
+        "sourceEnd" : 881.86,
+        "sourceStart" : 881.7599989318848,
+        "text" : "い"
+      },
+      {
+        "chunkIndex" : 49,
+        "sourceEnd" : 900.4199994659424,
+        "sourceStart" : 881.86,
+        "text" : "あ"
+      },
+      {
+        "chunkIndex" : 49,
+        "sourceEnd" : 900.54,
+        "sourceStart" : 900.4199994659424,
+        "text" : "っ"
+      },
+      {
+        "chunkIndex" : 50,
+        "sourceEnd" : 917.3800001525879,
+        "sourceStart" : 900.54,
+        "text" : "そ"
+      },
+      {
+        "chunkIndex" : 50,
+        "sourceEnd" : 917.5,
+        "sourceStart" : 917.3800001525879,
+        "text" : "れ"
+      },
+      {
+        "chunkIndex" : 51,
+        "sourceEnd" : 934.26,
+        "sourceStart" : 917.5799999982119,
+        "text" : "一"
+      },
+      {
+        "chunkIndex" : 52,
+        "sourceEnd" : 949.4999997711182,
+        "sourceStart" : 934.3399999982119,
+        "text" : "現"
+      },
+      {
+        "chunkIndex" : 52,
+        "sourceEnd" : 950.54,
+        "sourceStart" : 949.4999997711182,
+        "text" : "在"
+      },
+      {
+        "chunkIndex" : 53,
+        "sourceEnd" : 953.8599999332428,
+        "sourceStart" : 950.54,
+        "text" : "う"
+      },
+      {
+        "chunkIndex" : 53,
+        "sourceEnd" : 957.2078124999999,
+        "sourceStart" : 953.8599999332428,
+        "text" : "ん"
+      }
+    ],
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-11T23:22:40Z",
+          "availableMemoryBytes" : 10367172608
+        },
+        {
+          "at" : "2026-08-11T23:22:40Z",
+          "availableMemoryBytes" : 10367172608
+        },
+        {
+          "at" : "2026-08-11T23:22:40Z",
+          "availableMemoryBytes" : 10341269504
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 10199891968
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:41Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9928949760
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9798533120
+        },
+        {
+          "at" : "2026-08-11T23:22:42Z",
+          "availableMemoryBytes" : 9800155136
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9802907648
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9790291968
+        },
+        {
+          "at" : "2026-08-11T23:22:43Z",
+          "availableMemoryBytes" : 9788948480
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9789669376
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9849307136
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9842130944
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9842130944
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9842130944
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9842130944
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9842130944
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9842130944
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9825632256
+        },
+        {
+          "at" : "2026-08-11T23:22:44Z",
+          "availableMemoryBytes" : 9824993280
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9818292224
+        },
+        {
+          "at" : "2026-08-11T23:22:45Z",
+          "availableMemoryBytes" : 9765011456
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9769533440
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9809526784
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9808642048
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9808642048
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9808642048
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9808642048
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9808642048
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9808642048
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9808642048
+        },
+        {
+          "at" : "2026-08-11T23:22:46Z",
+          "availableMemoryBytes" : 9819291648
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9819914240
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9811869696
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9808936960
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9808936960
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9808936960
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9808936960
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9808936960
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9808936960
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9808936960
+        },
+        {
+          "at" : "2026-08-11T23:22:47Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9818046464
+        },
+        {
+          "at" : "2026-08-11T23:22:48Z",
+          "availableMemoryBytes" : 9825927168
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9824862208
+        },
+        {
+          "at" : "2026-08-11T23:22:49Z",
+          "availableMemoryBytes" : 9816178688
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9807233024
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9805742080
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9804365824
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9804365824
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9804365824
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9804365824
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9804365824
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9804365824
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9804365824
+        },
+        {
+          "at" : "2026-08-11T23:22:50Z",
+          "availableMemoryBytes" : 9786703872
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:51Z",
+          "availableMemoryBytes" : 9791766528
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9830694912
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9857859584
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9852092416
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9852092416
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9851682816
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9851682816
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9851682816
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9851682816
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9851682816
+        },
+        {
+          "at" : "2026-08-11T23:22:52Z",
+          "availableMemoryBytes" : 9851682816
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9853927424
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9854582784
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9854926848
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9856073728
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9856073728
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9856073728
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9856073728
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9856073728
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9856073728
+        },
+        {
+          "at" : "2026-08-11T23:22:53Z",
+          "availableMemoryBytes" : 9856073728
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9848897536
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9849536512
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9849159680
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9850896384
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9850896384
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9850896384
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9850896384
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9850896384
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9850896384
+        },
+        {
+          "at" : "2026-08-11T23:22:54Z",
+          "availableMemoryBytes" : 9850896384
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854140416
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:55Z",
+          "availableMemoryBytes" : 9854746624
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9831645184
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9830154240
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9825042432
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9826336768
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9826336768
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9826336768
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9826336768
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9826336768
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9826336768
+        },
+        {
+          "at" : "2026-08-11T23:22:56Z",
+          "availableMemoryBytes" : 9826336768
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9827729408
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9817751552
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:57Z",
+          "availableMemoryBytes" : 9818947584
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9806004224
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9804496896
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9805332480
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9803399168
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9803399168
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9801940992
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9801940992
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9801940992
+        },
+        {
+          "at" : "2026-08-11T23:22:58Z",
+          "availableMemoryBytes" : 9801940992
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9801940992
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9802465280
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9803055104
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9803726848
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9799860224
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9799860224
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9799860224
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9799860224
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9799860224
+        },
+        {
+          "at" : "2026-08-11T23:22:59Z",
+          "availableMemoryBytes" : 9799860224
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9799860224
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9680977920
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:00Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9681420288
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9567010816
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:01Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9565732864
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9615785984
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:02Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:03Z",
+          "availableMemoryBytes" : 9617752064
+        },
+        {
+          "at" : "2026-08-11T23:23:03Z",
+          "availableMemoryBytes" : 9650257920
+        },
+        {
+          "at" : "2026-08-11T23:23:03Z",
+          "availableMemoryBytes" : 9648750592
+        },
+        {
+          "at" : "2026-08-11T23:23:03Z",
+          "availableMemoryBytes" : 9648750592
+        },
+        {
+          "at" : "2026-08-11T23:23:03Z",
+          "availableMemoryBytes" : 9648750592
+        },
+        {
+          "at" : "2026-08-11T23:23:03Z",
+          "availableMemoryBytes" : 9648750592
+        },
+        {
+          "at" : "2026-08-11T23:23:03Z",
+          "availableMemoryBytes" : 9648750592
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/06b7\/whisperASR\/.build\/benchmarks\/reazonspeech-k2-v2-89\/sherpa-onnx-1.13.4\/bin\/python",
+        "\/Users\/maz\/.codex\/worktrees\/06b7\/whisperASR\/Scripts\/reazon_asr_worker.py",
+        "reazonspeech-k2-v2-int8",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-reazonspeech-k2-v2-int8-27730319-69D0-40B1-974D-1F4238626BB0"
+      ],
+      "elapsedSeconds" : 22.89067804813385,
+      "exitStatus" : 0,
+      "exitedAt" : "2026-08-11T23:23:03Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 1426851592,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 43038,
+      "rawLog" : "",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-reazonspeech-k2-v2-int8-27730319-69D0-40B1-974D-1F4238626BB0\/worker.log",
+      "startedAt" : "2026-08-11T23:22:40Z",
+      "swapUsedAfterBytes" : 1909653504,
+      "swapUsedBeforeBytes" : 1909653504,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "reazonspeech-k2-v2-int8",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2",
+      "revision" : "291488c8151be24d7da4bf7af26e533fad96e407",
+      "runtimeVersion" : "sherpa-onnx 1.13.4",
+      "weightSHA256" : {
+        "decoder-epoch-99-avg-1.onnx" : "58b18211ae06265466bfa17172dab574df94f76c8bcb61a3640c28ba860e4124",
+        "encoder-epoch-99-avg-1.int8.onnx" : "2c7bd08a8a99f9ddd0d9e458456577b1f6279214e51426f114f9eced44c54e1d",
+        "joiner-epoch-99-avg-1.int8.onnx" : "49cc7ea1d3d35a40a27442db5e89996da64bf0e683a903dce76e99e57a12e4de",
+        "tokens.txt" : "2c3ac659818a48a0c04010e0593bbc4d7c8a24a054340b01131499c05fd52def"
+      }
+    }
+  },
+  "deliverables" : [
+    "english-subtitles",
+    "english-translation-transcript",
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "forced-alignment",
+    "speaker-diarization",
+    "llm-translation",
+    "export"
+  ],
+  "failures" : [
+    {
+      "message" : "Forced alignment worker failed: ASR timing anchor exceeds the forced aligner's 20-second limit.",
+      "stage" : "alignment"
+    }
+  ],
+  "finishedAt" : "2026-08-11T23:23:11Z",
+  "generatedFiles" : [
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "89000001-0000-4000-8000-000000000001",
+  "model" : {
+    "backend" : "reazonspeech-k2-v2-int8",
+    "modelID" : "reazon-research\/reazonspeech-k2-v2",
+    "revision" : "291488c8151be24d7da4bf7af26e533fad96e407",
+    "runtimeVersion" : "sherpa-onnx 1.13.4",
+    "weightSHA256" : {
+      "decoder-epoch-99-avg-1.onnx" : "58b18211ae06265466bfa17172dab574df94f76c8bcb61a3640c28ba860e4124",
+      "encoder-epoch-99-avg-1.int8.onnx" : "2c7bd08a8a99f9ddd0d9e458456577b1f6279214e51426f114f9eced44c54e1d",
+      "joiner-epoch-99-avg-1.int8.onnx" : "49cc7ea1d3d35a40a27442db5e89996da64bf0e683a903dce76e99e57a12e4de",
+      "tokens.txt" : "2c3ac659818a48a0c04010e0593bbc4d7c8a24a054340b01131499c05fd52def"
+    }
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-11T23:22:40Z",
+      "backend" : "reazonspeech-k2-v2-int8",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=1073741824 reserve=0 total=25769803776 available=10367156224 baseline=528483480",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:22:40Z",
+      "backend" : "reazonspeech-k2-v2-int8",
+      "kind" : "load-started",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:22:41Z",
+      "backend" : "reazonspeech-k2-v2-int8",
+      "kind" : "load-completed",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:23:03Z",
+      "backend" : "reazonspeech-k2-v2-int8",
+      "kind" : "unload-completed",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:23:03Z",
+      "backend" : "reazonspeech-k2-v2-int8",
+      "kind" : "memory-release-checked",
+      "message" : "memory=333694152 runtimePeak=528991432 minimumAvailable=9565732864 maximum=25769803776 reserve=0",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:23:03Z",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=4294967296 reserve=0 total=25769803776 available=9648750592 baseline=333759688",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-11T23:23:03Z",
+      "kind" : "load-started",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-11T23:23:06Z",
+      "kind" : "load-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-11T23:23:11Z",
+      "kind" : "unload-completed",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    },
+    {
+      "at" : "2026-08-11T23:23:11Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=333857992 runtimePeak=333825224 minimumAvailable=7955480576 maximum=25769803776 reserve=0",
+      "modelID" : "mlx-community\/Qwen3-ForcedAligner-0.6B-4bit"
+    }
+  ],
+  "peakMemoryBytes" : 2998405448,
+  "schemaVersion" : 2,
+  "selectedBackend" : "reazonspeech-k2-v2-int8",
+  "source" : {
+    "byteCount" : 386867452,
+    "fileName" : "Video1.webm",
+    "modifiedAt" : "2026-07-18T19:42:51Z",
+    "path" : "\/Users\/maz\/Documents\/videos\/jap\/1\/Video1.webm"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : true,
+  "stageDurations" : [
+    "normalizing-source",
+    1.8580949306488037,
+    "preparing-alignment",
+    3.124177932739258,
+    "transcribing",
+    21.96023404598236,
+    "aligning",
+    4.780297040939331,
+    "preparing-asr",
+    0.9586930274963379
+  ],
+  "startedAt" : "2026-08-11T23:22:38Z",
+  "status" : "failed",
+  "translationModel" : {
+    "modelID" : "mlx-community\/translategemma-12b-it-4bit",
+    "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+    "runtimeVersion" : "3.31.4",
+    "translator" : "translategemma-12b-it-4bit",
+    "weightSHA256" : [
+      "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+      "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+    ]
+  }
+}

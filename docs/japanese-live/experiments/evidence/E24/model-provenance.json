@@ -1,0 +1,12 @@
+{
+  "archiveURL": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2",
+  "archiveSHA256": "eb43d7ccc2e86b243f6a03b7df361033dda66db9523d1a92bf6aca2b50c9476b",
+  "archiveBytes": 841730611,
+  "upstreamCheckpointRevision": "unproven-by-exporter",
+  "runtimeVersion": "1.13.5",
+  "runtimeCommit": "3dc7c569f31ca2cd4a20ed6f7db780327e6714c5",
+  "runtimeWheelSHA256": {
+    "sherpaOnnx": "97471fe025fc1d655a1df2f4ffb5d3fe843c269f2016d5e1cca4b0d168a49169",
+    "sherpaOnnxCore": "899e88916efd96ee1eabc512e9ceaf2fdb711b20b2512cf40358b623e90b5ded"
+  }
+}

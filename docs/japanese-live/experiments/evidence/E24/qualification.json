@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "ticket": 90,
+  "capturedAt": "2026-08-11T22:54:08Z",
+  "decision": "no-go-license-non-eligible",
+  "holdoutOpened": false,
+  "productChanges": "none",
+  "liveChanges": "none",
+  "candidate": {
+    "modelID": "jaykwok/Qwen3-ASR-1.7B-JA-Anime-Galgame",
+    "revision": "6db0efecd56d4a7e0003190a6bd4cac056d0f390",
+    "declaredLicense": "other",
+    "baseModel": "Qwen/Qwen3-ASR-1.7B",
+    "trainingDataset": "litagin/Galgame_Speech_ASR_16kHz",
+    "weight": {
+      "path": "model.safetensors",
+      "format": "safetensors",
+      "tensorType": "BF16",
+      "sizeBytes": 4076191640,
+      "sha256": "11e6833181be3107ad4384464ba656d3f2c8b773806fe6b7fc615e3eb01bd661"
+    },
+    "metadataURL": "https://huggingface.co/api/models/jaykwok/Qwen3-ASR-1.7B-JA-Anime-Galgame/revision/6db0efecd56d4a7e0003190a6bd4cac056d0f390?blobs=true",
+    "modelCardURL": "https://huggingface.co/jaykwok/Qwen3-ASR-1.7B-JA-Anime-Galgame/blob/6db0efecd56d4a7e0003190a6bd4cac056d0f390/README.md"
+  },
+  "licenseGate": {
+    "baseModelLicense": "Apache-2.0",
+    "datasetMetadataLicense": "gpl-3.0",
+    "datasetAdditionalTerms": {
+      "commercialUseProhibited": true,
+      "prohibitionExtendsToTrainedModels": true,
+      "commercialUseRequiresAllProvidersAuthorization": true,
+      "trainedModelsMustBeOpenSource": true
+    },
+    "datasetLicenseURL": "https://huggingface.co/datasets/litagin/Galgame_Speech_ASR_16kHz/blob/3fb86654222b3f0af0f7c332ae6a0ef9752a9451/README.md#L120-L131",
+    "checkpointGrantsAdditionalRights": false,
+    "eligibleForLocalProductIntegrationAndDistribution": false
+  },
+  "primarySources": [
+    {
+      "path": "docs/japanese-live/experiments/evidence/E24/primary-sources/checkpoint-api.json",
+      "revision": "6db0efecd56d4a7e0003190a6bd4cac056d0f390",
+      "sha256": "57d71cd16fe602ccbf8fbbce67eff52027158e04c97f10ce7eeae004b800f405"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E24/primary-sources/checkpoint-README.md",
+      "revision": "6db0efecd56d4a7e0003190a6bd4cac056d0f390",
+      "sha256": "aa1410c2ea39f7bcd599482e92779fb9f5406a3eaa3ecb6727db35c3388b8ee0"
+    },
+    {
+      "path": "docs/japanese-live/experiments/evidence/E24/primary-sources/dataset-README.md",
+      "revision": "3fb86654222b3f0af0f7c332ae6a0ef9752a9451",
+      "sha256": "c5c29a4802b85fdd3a9a4fe29d8eff1ba0225a0e9516b186e16991ab61698021"
+    }
+  ],
+  "execution": {
+    "weightDownloaded": false,
+    "eightBitPrepared": false,
+    "runtimeBuilt": false,
+    "smokeRun": false,
+    "developmentRun": false,
+    "holdoutRun": false,
+    "heavyBenchmarkRequested": false,
+    "candidateRuntimeSeconds": 0.0
+  },
+  "cache": {
+    "checkedPath": "/Users/maz/Library/Caches/huggingface/hub/models--jaykwok--Qwen3-ASR-1.7B-JA-Anime-Galgame",
+    "candidatePresent": false
+  },
+  "currentLightweightControls": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-clang-cache xcrun swift build && xcrun swift test --filter HighQualityASRWorkerTests",
+    "buildPassed": true,
+    "buildSeconds": 5.23,
+    "workerTests": {
+      "executed": 10,
+      "passed": 8,
+      "skippedHeavy": 2,
+      "failed": 0,
+      "seconds": 2.574
+    },
+    "runnerFailureExcluded": true,
+    "rawLog": {
+      "path": "docs/japanese-live/experiments/evidence/E24/lightweight-controls.log",
+      "sha256": "9b87533f8d7dd98ec7ee54bc8bc40f701ee28206f247cfb49239cb4e5b69ac77"
+    }
+  },
+  "frozenControls": {
+    "source": "E22/E23 retained development evidence",
+    "buildAndRunner": "validated by E22; current lightweight rerun recorded separately",
+    "inputAndReference": {
+      "manifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+      "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+      "audioSHA256": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+      "characterAlignmentSHA256": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7",
+      "rawE22SHA256": "1f5edc2fcb929c9abc2cb85256f326bbf2891a200ef66d1c1cb9a66a9c711ce8",
+      "e23SegmentsSHA256": "e6f8024c83d8c30199065703a4abf1f0ca1dfcead13381d3168c659f88082f81"
+    }
+  },
+  "frozenExamples": [
+    {
+      "id": "199",
+      "japanese": "まだね、次の試合ありますから。",
+      "referenceEnglish": "There is still another match coming up.",
+      "qwenStandardEnglish": "Yes, thank you very much. There's still another match coming up, so...",
+      "animeGalgameEnglish": null
+    },
+    {
+      "id": "32",
+      "japanese": "リーサルだー！ ドーーーン!!!",
+      "referenceEnglish": "It's lethal! BAAAM!!!",
+      "qwenStandardEnglish": "",
+      "animeGalgameEnglish": null
+    }
+  ],
+  "frozenTimings": {
+    "e23DiagnosticSeconds": 2.92,
+    "e22DevelopmentASRSeconds": 68.1,
+    "e22DevelopmentTotalSeconds": 1124.0,
+    "candidateSeconds": 0.0
+  }
+}

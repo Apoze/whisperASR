@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "ticket": 88,
+  "corpusRole": "development-smoke",
+  "holdoutOpened": false,
+  "command": "BENCHMARK_SLOT_GRANTED=88 bash Scripts/run_funasr_nano_experiment.sh smoke",
+  "decision": "NO-GO-unproven-upstream-provenance-and-smoke-generation-runaway",
+  "readyForFullDevelopment": false,
+  "controls": {
+    "exactModelArchive": true,
+    "exactUpstreamCheckpoint": false,
+    "exactInt8Weights": true,
+    "exactRuntime": true,
+    "hotwordsOff": true,
+    "preprocessingOff": true,
+    "frozenChunking": true,
+    "alignmentRun": false,
+    "workerCleanExit": true,
+    "memoryPressureObserved": false,
+    "swapGrowthBytes": 0
+  },
+  "model": {
+    "id": "k2-fsa/sherpa-onnx-funasr-nano-int8-2025-12-30",
+    "archiveSHA256": "eb43d7ccc2e86b243f6a03b7df361033dda66db9523d1a92bf6aca2b50c9476b",
+    "archiveBytes": 841730611,
+    "runtime": "sherpa-onnx 1.13.5 (3dc7c569f31ca2cd4a20ed6f7db780327e6714c5)"
+  },
+  "smoke": {
+    "inputSeconds": 30,
+    "inputSHA256": "d1c3ec3a01b00953f61f9956d1ec035cded04c831aebe7e29055ceb7ac5cb272",
+    "workerElapsedSeconds": 11.625936031341553,
+    "sherpaDecodeSeconds": 8.49137191590853,
+    "peakPhysicalFootprintBytes": 3138424000,
+    "exitStatus": 0,
+    "forcedTermination": false,
+    "pressureTransitions": [],
+    "swapUsedBeforeBytes": 2712993792,
+    "swapUsedAfterBytes": 2712993792,
+    "rawResultCount": 2,
+    "rawTokenCounts": [66, 245],
+    "repeatedPhrase": "最低だな",
+    "repeatedPhraseCount": 77,
+    "failures": [
+      "No primary source links the exact sherpa ONNX archive to a FunAudioLLM checkpoint revision.",
+      "The second 14.1-second frozen chunk generated the same phrase 77 times and reached 245 tokens."
+    ]
+  },
+  "harnessErrors": [
+    {
+      "kind": "missing-mlx-metallib",
+      "modelReached": false,
+      "artifact": "harness-missing-metallib.log.gz"
+    },
+    {
+      "kind": "unanchored-input-exceeded-kv-capacity",
+      "modelReached": true,
+      "artifact": "harness-unanchored-overflow.log.gz"
+    }
+  ],
+  "hashes": {
+    "smokeTranscript": "37e8ec9ccc6e283393105ecbff8f619353ccb55aa031212c7bda38cf81e84252",
+    "smokeManifest": "9314fa7dcb767ac25c4f4b5ec42668f8f155b6d61dee2557035843117c41710e",
+    "smokeRawUncompressed": "cc170e1d2bb1cbe08d82f42c10230ce9a7bc3c6e8305078f8cedb8508ef28af4",
+    "smokeRawGzip": "8b0bc859ef9ee35448df116f4f3067a16f8ad22cca1914a57ec7f3b71cdd77f7",
+    "modelProvenance": "c818bf5fbad217ef18c3dea0d97ee6261d0def6cd1c32f87252764ef2b0a6e61"
+  },
+  "notRun": [
+    "full development corpus",
+    "acoustic alignment",
+    "translation and English output",
+    "closed holdout"
+  ],
+  "finalVerification": {
+    "xcodeToolchain": "/Applications/Xcode.app/Contents/Developer",
+    "testsCovered": 421,
+    "testsPassed": 366,
+    "testsSkippedOptIn": 55,
+    "failures": 0,
+    "execution": "420 tests passed as one suite; one pre-existing timing-sensitive worker-exit test passed separately.",
+    "reviewFindingsFixed": {
+      "standards": 1,
+      "spec": 4
+    }
+  }
+}

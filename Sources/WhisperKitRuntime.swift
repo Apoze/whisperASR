@@ -11,6 +11,11 @@ extension LocalPrototypeModelID {
 }
 
 actor WhisperKitRuntime {
+    struct Transcription: Sendable {
+        let text: String
+        let averageLogProbability: Double?
+    }
+
     nonisolated static let decodingOptions = DecodingOptions(
         task: .transcribe,
         language: "ja"
@@ -54,6 +59,10 @@ actor WhisperKitRuntime {
     }
 
     func transcribe(audio: [Float]) async throws -> String {
+        try await transcribeWithEvidence(audio: audio).text
+    }
+
+    func transcribeWithEvidence(audio: [Float]) async throws -> Transcription {
         guard let pipeline else {
             throw LocalPrototypeError.modelNotLoaded("WhisperKit large-v3")
         }
@@ -64,7 +73,16 @@ actor WhisperKitRuntime {
             callback: { _ in !Task.isCancelled }
         )
         try Task.checkCancellation()
-        return results.map(\.text).joined(separator: " ")
+        let segments = results.flatMap(\.segments)
+        let tokenCount = segments.reduce(0) { $0 + $1.tokens.count }
+        return .init(
+            text: results.map(\.text).joined(separator: " "),
+            averageLogProbability: tokenCount == 0 ? nil : Double(
+                segments.reduce(Float.zero) {
+                    $0 + $1.avgLogprob * Float($1.tokens.count)
+                } / Float(tokenCount)
+            )
+        )
     }
 
     func unload() async {

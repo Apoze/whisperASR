@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "ticket": 92,
+  "baseCommit": "d444bc6f6effa1f08f99d2f14bd6e4a4d4e32578",
+  "xcode": {
+    "version": "26.6 (17F113)",
+    "developerDir": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "swift": {
+    "version": "6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)",
+    "target": "arm64-apple-macosx26.0"
+  },
+  "build": {
+    "command": "/usr/bin/time -p env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift build -c debug",
+    "passed": true,
+    "durationSeconds": 117.91
+  },
+  "metallib": {
+    "command": "/usr/bin/time -p env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash Scripts/build_mlx_metallib.sh debug",
+    "passed": true,
+    "durationSeconds": 139.17,
+    "path": ".build/debug/mlx.metallib",
+    "sha256": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+    "sizeBytes": 107367162,
+    "copiedIntoTestBundle": true
+  },
+  "tests": {
+    "command": "/usr/bin/time -p env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --skip-build",
+    "passed": true,
+    "executed": 425,
+    "skipped": 56,
+    "failed": 0,
+    "suiteDurationSeconds": 8.213,
+    "wallDurationSeconds": 11.70,
+    "stabilityEvidence": "test-stability.json",
+    "consecutivePassingReruns": 4
+  },
+  "failures": {
+    "runner": [
+      {
+        "phase": "metallib-precondition",
+        "durationSeconds": 0.0,
+        "error": "run swift build -c debug first",
+        "classification": "runner-order",
+        "modelReached": false
+      },
+      {
+        "phase": "sandbox-build-attempt",
+        "durationSeconds": 0.61,
+        "error": "Clang module cache was not writable inside the filesystem sandbox",
+        "classification": "runner-environment",
+        "modelReached": false
+      },
+      {
+        "phase": "sandbox-metallib-attempt",
+        "durationSeconds": 0.89,
+        "error": "Clang module cache was not writable inside the filesystem sandbox",
+        "classification": "runner-environment",
+        "modelReached": false
+      },
+      {
+        "phase": "initial-full-test",
+        "durationSeconds": 35.33,
+        "error": "swift test recreated the xctest bundle after metallib preparation, so MLX could not find its bundled metallib",
+        "classification": "runner-order",
+        "modelReached": false
+      }
+    ],
+    "build": [],
+    "model": []
+  },
+  "unresolvedObservations": [
+    {
+      "phase": "first-skip-build-test",
+      "durationSeconds": 12.95,
+      "result": "425 tests completed with one failure whose identity was truncated by the runner capture",
+      "classification": "unreproduced-test-observation",
+      "stabilityEvidence": "test-stability.json",
+      "modelReached": false
+    }
+  ],
+  "heavyBenchmarkAuthorized": false,
+  "modelRunsLaunched": 0,
+  "candidateRuntimeSeconds": 0.0,
+  "candidatePeakMemoryBytes": null,
+  "holdoutOpened": false
+}

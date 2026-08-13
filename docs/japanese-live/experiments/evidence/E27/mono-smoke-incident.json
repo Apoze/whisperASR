@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "ticket": 93,
+  "classification": "invalid-preflight-smoke-mono-input-cli-contract",
+  "authorizedBenchmarkSlot": false,
+  "reasonLaunched": "Mistakenly treated as a lightweight local Apple-runtime compatibility preflight before READY; this was not authorized and will not be repeated.",
+  "input": {
+    "source": "Video1.webm",
+    "offsetSeconds": 125.2,
+    "durationSeconds": 2.0,
+    "format": "PCM s16le 16 kHz mono"
+  },
+  "loaded": {
+    "runtime": "sherpa-onnx v1.13.5 osx arm64 shared no-tts",
+    "provider": "cpu",
+    "threads": 1,
+    "modelsConfigured": ["vocals.fp16.onnx", "accompaniment.fp16.onnx"],
+    "sessionsMayHaveBeenConstructed": true
+  },
+  "executed": {
+    "configurationParsed": true,
+    "resamplerStarted": "16000 to 44100 Hz",
+    "stftReached": true,
+    "modelInferenceProven": false,
+    "outputsWritten": false,
+    "error": "Invalid channel 1. Max 1"
+  },
+  "resources": {
+    "wallSeconds": 0.07,
+    "userSeconds": 0.05,
+    "systemSeconds": 0.01,
+    "peakRAMBytes": null,
+    "ramReasonUnknown": "time -l could not read kern.clockrate in the sandbox and emitted no RSS"
+  },
+  "attribution": "Stereo input required by the Spleeter CLI/model contract; not evidence of a bad model.",
+  "rawLog": "mono-smoke-incident.log",
+  "rerunForbidden": true
+}

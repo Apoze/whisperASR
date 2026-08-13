@@ -1,0 +1,15 @@
+{
+  "command": [
+    "xcrun",
+    "swift",
+    "test",
+    "--skip-build",
+    "--filter",
+    "HighQualityTranslationIntegrityTests/testRetriesFrozenRejectedUnitsWhenOptedIn"
+  ],
+  "elapsedSeconds": 21.372141083003953,
+  "exitCode": 0,
+  "rawLog": "/Users/maz/.codex/worktrees/4656/whisperASR/.build/benchmarks/issue-94/development/targeted-translation-retry/run.log",
+  "timedOut": false,
+  "timeoutSeconds": 300
+}

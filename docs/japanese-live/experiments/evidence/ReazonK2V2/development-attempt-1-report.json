@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "ticket": 89,
+  "recordedAt": "2026-08-11T23:26:58Z",
+  "attribution": "HARNESS_FAILURE_RETRY_REQUIRED",
+  "candidateVerdict": "WITHHELD",
+  "holdoutOpened": false,
+  "job": {
+    "jobID": "89000001-0000-4000-8000-000000000001",
+    "status": "failed",
+    "startedAt": "2026-08-11T23:22:38Z",
+    "finishedAt": "2026-08-11T23:23:11Z",
+    "failureStage": "alignment",
+    "failure": "Forced alignment worker failed: ASR timing anchor exceeds the forced aligner's 20-second limit."
+  },
+  "rootCause": {
+    "kind": "shared-chunk-reconciliation",
+    "candidateProperty": false,
+    "explanation": "The shared chunker advanced an alignment anchor only when a non-empty transcript was emitted. A Reazon-empty physical window was skipped, so the next emitted transcript inherited the previous emitted chunk end instead of the previous physical window end.",
+    "offendingAnchor": {
+      "emittedChunkIndex": 21,
+      "sourceStartSeconds": 368.74,
+      "sourceEndSeconds": 407.18,
+      "durationSeconds": 38.44
+    },
+    "modelWindowLimitSeconds": 20,
+    "evidence": "The next retained character starts at 387.4199999991059 s, proving the 368.74 s anchor came from an earlier emitted chunk rather than the current <=20-second model window.",
+    "fix": "Advance alignmentAnchorStart to every processed windowEnd, including empty ASR windows."
+  },
+  "regression": {
+    "test": "HighQualityJobTests/testChunkedASRAdvancesAlignmentAnchorAcrossEmptyWindows",
+    "syntheticWindowsSeconds": [[0, 20], [20, 38], [38, 56], [56, 74], [74, 91]],
+    "emptyWindows": [1, 3],
+    "expectedEmittedAnchorsSeconds": [[0, 20], [38, 56], [74, 91]],
+    "maximumSeconds": 20,
+    "focusedTestsPassed": 5,
+    "focusedTestsFailed": 0,
+    "testSeconds": 0.117
+  },
+  "partialCandidateEvidence": {
+    "sourceDurationSeconds": 957.2078125,
+    "sampleRate": 16000,
+    "sampleCount": 15315325,
+    "rawJapaneseCharacters": 135,
+    "qwenRawJapaneseCharacters": 4396,
+    "nonEmptyTranscriptChunks": 54,
+    "CERPercent": {"reazon": 97.18969555035129, "qwen": 81.26463700234191},
+    "warning": "The partial raw output is severely sparse, but the candidate verdict remains withheld because the frozen High-quality contract did not complete and English effects were not produced."
+  },
+  "timingsSeconds": {
+    "normalizing-source": 1.8580949306488037,
+    "preparing-asr": 0.9586930274963379,
+    "transcribing": 21.96023404598236,
+    "preparing-alignment": 3.124177932739258,
+    "aligning": 4.780297040939331,
+    "stageSum": 32.68149697780609,
+    "testWall": 32.952
+  },
+  "resources": {
+    "jobPeakMemoryBytes": 2998405448,
+    "asrWorker": {
+      "elapsedSeconds": 22.89067804813385,
+      "peakPhysicalFootprintBytes": 1426851592,
+      "minimumAvailableMemoryBytes": 9565732864,
+      "pressureTransitions": [],
+      "swapDeltaBytes": 0,
+      "exitStatus": 0,
+      "forcedTermination": false
+    },
+    "alignmentWorker": {
+      "elapsedSeconds": 7.898292064666748,
+      "peakPhysicalFootprintBytes": 2998405448,
+      "minimumAvailableMemoryBytes": 7955480576,
+      "pressureTransitions": [],
+      "swapDeltaBytes": 0,
+      "exitStatus": 1,
+      "forcedTermination": false
+    }
+  },
+  "artifactSHA256": {
+    "sourceManifest": "2fd40ddf73e16a2b480b89c52c5baaab7ff690da3fcb339e310f4e913863ea76",
+    "sourceRawASR": "47e2ace278c789a683d09974800917caf7524584c22915a02f0ae9d9b922867c",
+    "retainedRawASRGzip": "a1e376b579e069010ab2fc571e8ccc2fd5e0c2ea3b2e0451b314e57fa61885cd",
+    "retainedRunLogGzip": "b451f7a91943b984a5ebe3b92f61edaf063ae9f4f7db69538d33c4e71df79c80"
+  },
+  "fixedImplementationSHA256": {
+    "Sources/HighQualityJob.swift": "b685d4b2cbb55efe88e4fddc17c54ad4d43e013acc6f6df81b8bbad561b9dc2f",
+    "Tests/HighQualityJobTests.swift": "9f3590406eab5176e76ed1a8f032545beba081fa8c99a0866434aca436150107",
+    "Scripts/run_reazon_dev_experiment.sh": "b66ebda1c0328faae0904e55b52a062d179fea478a09ac5776960558d12cf10b"
+  },
+  "nextJobID": "89000001-0000-4000-8000-000000000002"
+}

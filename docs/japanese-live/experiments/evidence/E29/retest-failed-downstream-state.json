@@ -1,0 +1,22 @@
+{
+  "ticket": 95,
+  "status": "FAILED_DOWNSTREAM_NO_RERUN",
+  "heavyRunsLaunched": 1,
+  "modelPassesCompleted": {
+    "qwen": 0,
+    "parakeet": 0,
+    "whisperKit": 0,
+    "alignment": 0,
+    "translation": 0
+  },
+  "plannedModelPasses": {
+    "qwen": 0,
+    "parakeet": 0,
+    "whisperKit": 0,
+    "alignment": 1,
+    "translation": 1
+  },
+  "reusedWhisperKitRaw": true,
+  "holdoutOpened": false,
+  "benchmarkSlotReleased": true
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "ticket": 93,
+  "purpose": "Permit one corrected ASR resume without a second Spleeter pass",
+  "reusableArtifacts": {
+    ".build/benchmarks/issue-93/window-plan.json": "92e51dd1cd8e6181afa082e699f850abbbfbaadf6312860c96aab9289f1ba567",
+    ".build/benchmarks/issue-93/audio/separator-input-16k-stereo.wav": "e182be7a9851f51c0e645b47d5406ceb13758f109d9221052b694463713138d0",
+    ".build/benchmarks/issue-93/audio/vocals.wav": "51650573f045d6c0d7233b0f17563fbd4030a1f378223bac2895e09265c20691",
+    ".build/benchmarks/issue-93/audio/accompaniment.wav": "0d2c4ba9ae122aeb6b024781589e1d5f9309b696a71a48b8e158390e65d039bb",
+    ".build/benchmarks/issue-93/audio/vocals-16k-mono.wav": "63082acb8829136b54d4e003ad0c834c8d7a5bdedb205c38088771d9aa541442",
+    ".build/benchmarks/issue-93/audio/candidate.wav": "8df0e11d06510983dd66b3e0386c5562cf27a8c71bf3acfcf46eb6697b576411",
+    ".build/benchmarks/issue-93/audio/audio-audit.json": "39aaeaecff81284f13b96cf4d5b6d17b98d82447c76f19f12ce8e3a74a6b089e",
+    ".build/benchmarks/issue-93/audio/separator.log": "0b25aacc24add09f9d9e90b26787beedfbd00cac2687b2e878f18547bcf6f3db",
+    ".build/benchmarks/issue-93/audio/separator-runtime.json": "7eda713c000b923a34836e98242ba551fa404da81182b7e5ea3350e2e9e933c4"
+  },
+  "spleeterPassesCompleted": 1,
+  "additionalSpleeterPassesAllowed": 0,
+  "correctedResumeQwenPasses": 1,
+  "holdoutOpened": false
+}

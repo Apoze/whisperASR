@@ -1,0 +1,15 @@
+{
+  "command": [
+    "xcrun",
+    "swift",
+    "test",
+    "--skip-build",
+    "--filter",
+    "HighQualityAcceptanceTests/testRealFrozenWorkflowWhenOptedIn"
+  ],
+  "elapsedSeconds": 144.68082691705786,
+  "exitCode": 1,
+  "rawLog": "/Users/maz/.codex/worktrees/a9ad/whisperASR/.build/benchmarks/issue-93/corrected-resume/run.log",
+  "timedOut": false,
+  "timeoutSeconds": 1200
+}

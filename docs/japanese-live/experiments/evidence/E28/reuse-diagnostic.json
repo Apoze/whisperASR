@@ -1,0 +1,80 @@
+{
+  "artifacts": {
+    "parakeetManifest": {
+      "bytes": 5397,
+      "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000002/manifest.json",
+      "sha256": "13d517d82f1fe704196bce102817282e0a929ec5b7c0eb93e635774c8232d7fa"
+    },
+    "parakeetRaw": {
+      "bytes": 1286829,
+      "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000002/raw-asr.json",
+      "sha256": "2ab8678481b4ad22a08c015a2332c25e85309e0e327158e127a3bd3351611c6d"
+    },
+    "qwenManifest": {
+      "bytes": 5340,
+      "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/manifest.json",
+      "sha256": "3f31b861f8a59ab5fbed35561d58c8921ce2d4c7a46f5a222a6ad4548109275a"
+    },
+    "qwenRaw": {
+      "bytes": 2623816,
+      "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/raw-asr.json",
+      "sha256": "b7281fdd3226930a4dc59758eb5e192642747ad6f9d18d942b850288ad42a394"
+    }
+  },
+  "decisionReusable": false,
+  "holdoutOpened": false,
+  "mustRecalculate": [
+    "Qwen hypotheses on common acoustic windows <=8s",
+    "Parakeet hypotheses on the same common acoustic windows <=8s"
+  ],
+  "parakeet": {
+    "model": {
+      "backend": "parakeet-ja",
+      "modelID": "FluidInference/parakeet-0.6b-ja-coreml",
+      "revision": "2952296ff1da4a6d6a7aec545e226367db80c612"
+    },
+    "timing": {
+      "chunkCount": 16,
+      "maximumChunkSeconds": 65.60000000000002,
+      "minimumChunkSeconds": 30.427812500000073,
+      "rawItemCount": 1959,
+      "regressingRawItemCount": 0,
+      "shortDecisionWindows": false,
+      "stableCharacterMapping": false,
+      "zeroDurationRawItemCount": 1155,
+      "zeroDurationRawItemPercent": 58.95865237366003
+    },
+    "transcribingSeconds": 4.901591062545776
+  },
+  "qwen": {
+    "model": {
+      "backend": "qwen-ja",
+      "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+    },
+    "timing": {
+      "chunkCount": 16,
+      "maximumChunkSeconds": 65.60000000000002,
+      "minimumChunkSeconds": 30.427812500000073,
+      "rawItemCount": 4466,
+      "regressingRawItemCount": 0,
+      "shortDecisionWindows": false,
+      "stableCharacterMapping": false,
+      "zeroDurationRawItemCount": 2740,
+      "zeroDurationRawItemPercent": 61.35244066278549
+    },
+    "transcribingSeconds": 125.9823739528656
+  },
+  "reasons": [
+    "archived ASR chunks are 58-65s, not short decision windows",
+    "archived Parakeet character timing is not stable enough to remap text"
+  ],
+  "reusedFor": [
+    "pinned input/model provenance",
+    "baseline quality",
+    "cost budget"
+  ],
+  "schemaVersion": 1,
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "ticket": 94
+}

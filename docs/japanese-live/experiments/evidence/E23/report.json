@@ -1,0 +1,1118 @@
+{
+  "schemaVersion": 1,
+  "ticket": 87,
+  "decision": "qwen-diagnostic-frozen-development-only",
+  "candidateAttribution": "allowed-after-runner-input-reference-controls",
+  "holdoutOpened": false,
+  "productChanges": "none",
+  "liveChanges": "none",
+  "standardDefaultsChanged": false,
+  "controls": {
+    "runner": {
+      "pythonSupported": true,
+      "stdlibPCMReader": true
+    },
+    "input": {
+      "frozenHashes": true,
+      "developmentOnly": true,
+      "sourceHashDeclared": true,
+      "audioHashDeclared": true,
+      "sampleCount": true,
+      "qwenPinned": true
+    },
+    "reference": {
+      "complete": true,
+      "turnsPresent": true,
+      "characterAlignmentPresent": true,
+      "characterAlignmentHashDeclared": true,
+      "e22ArtifactGates": true,
+      "e22BuildAndReferenceControls": true
+    }
+  },
+  "counts": {
+    "units": 295,
+    "referenceAssignedUnits": 223,
+    "unassignedReferenceCharacters": 378,
+    "unassignedReferenceLossFragments": 97,
+    "maximumDurationSeconds": 8.0,
+    "speechRecoveredCharacters": 1697,
+    "speechLostCharacters": 1371,
+    "termRecovered": 8,
+    "termLost": 18,
+    "numberRecovered": 6,
+    "numberLost": 11,
+    "meaningRecovered": 7,
+    "meaningLost": 5,
+    "emptyTurns": 12,
+    "duplicatedTurns": 1,
+    "voiceMusicTriggeredMaterialWindows": 41
+  },
+  "classification": {
+    "speech": "reference-relative recovered/lost Japanese characters",
+    "terms": "pinned glossary Japanese forms present in the authoritative DEV reference",
+    "numbers": "Arabic and full-width number tokens",
+    "meaning": "predeclared DEV propositions for terms, numbers, negation and game state",
+    "emptyAndDuplicateTurns": "empty against non-empty reference; exact consecutive duplicate",
+    "boundary": "material unit or unassigned reference cue fragment within 1.0 second of an E22 ASR-window edge"
+  },
+  "representativeMaterialErrors": [
+    {
+      "id": "cue-0118",
+      "start": 415.98,
+      "end": 422.38,
+      "referenceJapanese": "そうそうそう。いろいろあるんですよね、4回投げるまでに。早めに吐いて、このあとのゲージを溜めながら。そう思わせて、実",
+      "qwenJapanese": "この後の成長とかそう思って実はただ投げるバケって。",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 6,
+          "lostCharacters": 46,
+          "insertedOrSubstitutedCharacters": 18,
+          "referenceCharacters": 52
+        },
+        "terms": {
+          "recovered": [],
+          "lost": []
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": [
+            "4"
+          ]
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 15.789473684210526
+      },
+      "nearASRBoundary": false
+    },
+    {
+      "id": "cue-0060-part-1",
+      "start": 228.66,
+      "end": 235.46,
+      "referenceJapanese": "ど！さあ、ここで甘結もか、すでに1セット勝かっこいいんだけど。完璧でした。",
+      "qwenJapanese": "このままはオーディシャッカーの時点で3番手",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 2,
+          "lostCharacters": 30,
+          "insertedOrSubstitutedCharacters": 19,
+          "referenceCharacters": 32
+        },
+        "terms": {
+          "recovered": [],
+          "lost": [
+            "甘結もか"
+          ]
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": [
+            "1"
+          ]
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 7.547169811320755
+      },
+      "nearASRBoundary": true
+    },
+    {
+      "id": "cue-0082-part-2",
+      "start": 309.4,
+      "end": 317.4,
+      "referenceJapanese": "000だったはず。その1000、でかいの？いや、でもランクしてるとね、でかいなって",
+      "qwenJapanese": "1万だったその線でかいのランクしてるとねでかいなって思",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 23,
+          "lostCharacters": 13,
+          "insertedOrSubstitutedCharacters": 4,
+          "referenceCharacters": 36
+        },
+        "terms": {
+          "recovered": [],
+          "lost": []
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": [
+            "000",
+            "1000"
+          ]
+        },
+        "meaning": {
+          "recovered": [
+            "でかい"
+          ],
+          "lost": [
+            "1000"
+          ]
+        },
+        "emptyTurn": false,
+        "similarityPercent": 73.01587301587301
+      },
+      "nearASRBoundary": true
+    },
+    {
+      "id": "cue-0158",
+      "start": 531.62,
+      "end": 534.58,
+      "referenceJapanese": "ゲージ使った技が使えないってこと？よくなさそうなんですけど、ガードしててもダメージ",
+      "qwenJapanese": "ガードしててもダメージ入っちゃう。",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 11,
+          "lostCharacters": 28,
+          "insertedOrSubstitutedCharacters": 5,
+          "referenceCharacters": 39
+        },
+        "terms": {
+          "recovered": [],
+          "lost": []
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 40.0
+      },
+      "nearASRBoundary": true
+    },
+    {
+      "id": "cue-0226-part-1",
+      "start": 742.4000000000001,
+      "end": 750.1600000000001,
+      "referenceJapanese": "ということで、これでVSPO!チーム全勝！ おめでとうございます！いや、すごい。すごい、",
+      "qwenJapanese": "さあということでこれでV選手え全勝すご",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 14,
+          "lostCharacters": 22,
+          "insertedOrSubstitutedCharacters": 5,
+          "referenceCharacters": 36
+        },
+        "terms": {
+          "recovered": [],
+          "lost": [
+            "VSPO"
+          ]
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 50.90909090909091
+      },
+      "nearASRBoundary": true
+    },
+    {
+      "id": "cue-0083-part-1",
+      "start": 317.76,
+      "end": 325.76,
+      "referenceJapanese": "う。豪鬼にコンボ刺さると、めっちゃ気持ちいいよ。めっちゃ入るから。ゴリゴリ削れる？このレベルになってうん、めっちゃゴリゴリ削れる。",
+      "qwenJapanese": "後期にコンボ刺さると超気持ちいいよめっちゃ入るからゴリゴリ削れるめっちゃゴリゴリ削れるこのレベルに",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 40,
+          "lostCharacters": 18,
+          "insertedOrSubstitutedCharacters": 9,
+          "referenceCharacters": 58
+        },
+        "terms": {
+          "recovered": [],
+          "lost": [
+            "豪鬼"
+          ]
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 74.76635514018692
+      },
+      "nearASRBoundary": true
+    },
+    {
+      "id": "cue-0194-part-2",
+      "start": 641.14,
+      "end": 649.06,
+      "referenceJapanese": "取る。一気に立川、チャンスです！ガード！やばいやばいやばい！心臓痛くなってきた（笑）。［実況不",
+      "qwenJapanese": "ン一気に立ち上がるチャンスですやばいやばいやばいやばい心臓に余裕で余裕でエージリッ",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 21,
+          "lostCharacters": 17,
+          "insertedOrSubstitutedCharacters": 20,
+          "referenceCharacters": 38
+        },
+        "terms": {
+          "recovered": [],
+          "lost": [
+            "立川"
+          ]
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [
+            "チャンス"
+          ],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 53.16455696202531
+      },
+      "nearASRBoundary": false
+    },
+    {
+      "id": "cue-0030",
+      "start": 125.2,
+      "end": 129.12,
+      "referenceJapanese": "うまい。OD百鬼襲から前に詰めてくるところに、ジャンプから……。モダ",
+      "qwenJapanese": "オーディカ長戦から前に詰めてくるところに残空解け。",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 13,
+          "lostCharacters": 16,
+          "insertedOrSubstitutedCharacters": 11,
+          "referenceCharacters": 29
+        },
+        "terms": {
+          "recovered": [],
+          "lost": [
+            "百鬼襲"
+          ]
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 49.056603773584904
+      },
+      "nearASRBoundary": false
+    },
+    {
+      "id": "cue-0194-part-1",
+      "start": 633.14,
+      "end": 641.14,
+      "referenceJapanese": "すごい、すごい！前に行かないという判断。バックステップで距離を",
+      "qwenJapanese": "すごい次うわこの対策だ前に行かないという爆星そして爆星でしたねさこのガミアジ",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 13,
+          "lostCharacters": 15,
+          "insertedOrSubstitutedCharacters": 25,
+          "referenceCharacters": 28
+        },
+        "terms": {
+          "recovered": [],
+          "lost": []
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [
+            "前に行かない"
+          ],
+          "lost": [
+            "バックステップ"
+          ]
+        },
+        "emptyTurn": false,
+        "similarityPercent": 39.39393939393939
+      },
+      "nearASRBoundary": true
+    },
+    {
+      "id": "cue-0225",
+      "start": 738.1800000000001,
+      "end": 739.3000000000001,
+      "referenceJapanese": "動しました！動した！普通に涙出マジで感動し",
+      "qwenJapanese": "え、わかる。",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 0,
+          "lostCharacters": 19,
+          "insertedOrSubstitutedCharacters": 4,
+          "referenceCharacters": 19
+        },
+        "terms": {
+          "recovered": [],
+          "lost": []
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 0.0
+      },
+      "nearASRBoundary": false
+    },
+    {
+      "id": "cue-0005-part-1",
+      "start": 15.88,
+      "end": 23.8,
+      "referenceJapanese": "ことなんか、ボコボコにしてくれ。え？ そうなの？ 最低だな。私とくろむさんのパンツ覗いてきたか",
+      "qwenJapanese": "ことなんか保護にしてくれええそうなの最低だな私と黒木さんのパンツの外見だと",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 27,
+          "lostCharacters": 13,
+          "insertedOrSubstitutedCharacters": 10,
+          "referenceCharacters": 40
+        },
+        "terms": {
+          "recovered": [],
+          "lost": [
+            "くろむ"
+          ]
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 70.12987012987013
+      },
+      "nearASRBoundary": true
+    },
+    {
+      "id": "cue-0217",
+      "start": 693.62,
+      "end": 697.62,
+      "referenceJapanese": "保険にしておくって感じですね、立川としては。",
+      "qwenJapanese": "お守りとして、立ち回としては、気だったり、これやるだけだ。",
+      "classification": {
+        "speech": {
+          "recoveredCharacters": 7,
+          "lostCharacters": 13,
+          "insertedOrSubstitutedCharacters": 18,
+          "referenceCharacters": 20
+        },
+        "terms": {
+          "recovered": [],
+          "lost": [
+            "立川"
+          ]
+        },
+        "numbers": {
+          "recovered": [],
+          "lost": []
+        },
+        "meaning": {
+          "recovered": [],
+          "lost": []
+        },
+        "emptyTurn": false,
+        "similarityPercent": 31.11111111111111
+      },
+      "nearASRBoundary": false
+    }
+  ],
+  "turnIntegrity": {
+    "empty": [
+      {
+        "cueID": 32,
+        "start": 179.0,
+        "end": 185.0,
+        "referenceJapanese": "リーサルだー！ ドーーーン!!!",
+        "boundaryDistanceSeconds": 1.9799999999999898,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 11,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 11
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": [
+              "リーサル",
+              "ドーーーン"
+            ]
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 39,
+        "start": 220.0,
+        "end": 224.5,
+        "referenceJapanese": "えっ……えーっ！ 一本取ったよ！",
+        "boundaryDistanceSeconds": 4.0,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 11,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 11
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 40,
+        "start": 224.5,
+        "end": 227.5,
+        "referenceJapanese": "すごい！ はぁーっ！",
+        "boundaryDistanceSeconds": 1.0,
+        "nearASRBoundary": true,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 7,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 53,
+        "start": 297.0,
+        "end": 301.0,
+        "referenceJapanese": "え、そうなんだ。そうそうそう。",
+        "boundaryDistanceSeconds": 0.8000000000000114,
+        "nearASRBoundary": true,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 12,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 12
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 80,
+        "start": 444.0,
+        "end": 447.0,
+        "referenceJapanese": "リーサルだ！",
+        "boundaryDistanceSeconds": 1.3999999999999773,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 5,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 5
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 81,
+        "start": 447.0,
+        "end": 450.0,
+        "referenceJapanese": "うわ、こんな感じなんだ。",
+        "boundaryDistanceSeconds": 1.3999999999999773,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 10,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 10
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 147,
+        "start": 715.0,
+        "end": 717.0,
+        "referenceJapanese": "やったー！",
+        "boundaryDistanceSeconds": 6.019999999999982,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 4,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 148,
+        "start": 717.0,
+        "end": 719.0,
+        "referenceJapanese": "やるー！",
+        "boundaryDistanceSeconds": 7.980000000000018,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 3,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 149,
+        "start": 719.0,
+        "end": 721.0,
+        "referenceJapanese": "えーーー！",
+        "boundaryDistanceSeconds": 5.980000000000018,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 4,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 161,
+        "start": 740.0,
+        "end": 742.0,
+        "referenceJapanese": "普通に涙出た。",
+        "boundaryDistanceSeconds": 0.08000000000004093,
+        "nearASRBoundary": true,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 6,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 162,
+        "start": 740.0,
+        "end": 742.0,
+        "referenceJapanese": "ね、わかる！",
+        "boundaryDistanceSeconds": 0.08000000000004093,
+        "nearASRBoundary": true,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 4,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      },
+      {
+        "cueID": 183,
+        "start": 819.5,
+        "end": 822.5,
+        "referenceJapanese": "2先にしてほしかったですね。（笑）",
+        "boundaryDistanceSeconds": 7.279999999999973,
+        "nearASRBoundary": false,
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 14,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 14
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "2"
+            ]
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        }
+      }
+    ],
+    "duplicates": [
+      {
+        "id": "cue-0153",
+        "start": 518.98,
+        "end": 519.3,
+        "qwenJapanese": "バーンアウトだ。"
+      }
+    ]
+  },
+  "voiceMusic": {
+    "runtimeRule": "one reference-free Qwen/alignment weakness AND active audio AND one broadband/dense mix proxy",
+    "thresholds": {
+      "alignmentZeroDurationRate": 0.08,
+      "characterRatePerSecond": [
+        1,
+        12
+      ],
+      "activeRMSDBFS": -32,
+      "broadbandHighFrequencyRatio": 0.1,
+      "denseMaximumCrestFactor": 6,
+      "activeSegmentEdgeDBFS": -32
+    },
+    "hardDevelopmentWindows": [
+      {
+        "id": "cue-0194-part-2",
+        "start": 641.14,
+        "end": 649.06,
+        "referenceJapanese": "取る。一気に立川、チャンスです！ガード！やばいやばいやばい！心臓痛くなってきた（笑）。［実況不",
+        "qwenJapanese": "ン一気に立ち上がるチャンスですやばいやばいやばいやばい心臓に余裕で余裕でエージリッ",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08"
+          ],
+          "voiceMusicAcoustic": [
+            "active-rms>=-32-dBFS",
+            "broadband-ratio>=0.10"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -29.312332476532013,
+          "leading250msDBFS": -41.101969138781314,
+          "trailing250msDBFS": -33.853610295188744,
+          "zeroCrossingRate": 0.17718731997569426,
+          "highFrequencyRatio": 0.104425518316955,
+          "crestFactor": 8.022554529658983
+        },
+        "materialErrorScore": 22
+      },
+      {
+        "id": "cue-0030",
+        "start": 125.2,
+        "end": 129.12,
+        "referenceJapanese": "うまい。OD百鬼襲から前に詰めてくるところに、ジャンプから……。モダ",
+        "qwenJapanese": "オーディカ長戦から前に詰めてくるところに残空解け。",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08"
+          ],
+          "voiceMusicAcoustic": [
+            "active-rms>=-32-dBFS",
+            "broadband-ratio>=0.10",
+            "active-segment-edge>=-32-dBFS"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -20.8057864231627,
+          "leading250msDBFS": -15.395762816514244,
+          "trailing250msDBFS": -41.12787873256,
+          "zeroCrossingRate": 0.17851049921076548,
+          "highFrequencyRatio": 0.11507926776697468,
+          "crestFactor": 6.561555656878326
+        },
+        "materialErrorScore": 21
+      },
+      {
+        "id": "cue-0225",
+        "start": 738.1800000000001,
+        "end": 739.3000000000001,
+        "referenceJapanese": "動しました！動した！普通に涙出マジで感動し",
+        "qwenJapanese": "え、わかる。",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08"
+          ],
+          "voiceMusicAcoustic": [
+            "active-rms>=-32-dBFS",
+            "broadband-ratio>=0.10",
+            "dense-crest-factor<=6",
+            "active-segment-edge>=-32-dBFS"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -22.046800513960186,
+          "leading250msDBFS": -17.004074994459828,
+          "trailing250msDBFS": -27.46286798537401,
+          "zeroCrossingRate": 0.21920866119761148,
+          "highFrequencyRatio": 0.13209172632485428,
+          "crestFactor": 5.813351602041241
+        },
+        "materialErrorScore": 19
+      },
+      {
+        "id": "cue-0129",
+        "start": 462.40000000000003,
+        "end": 462.72,
+        "referenceJapanese": "だよどんだけ夢の世界にいるのっ",
+        "qwenJapanese": "分かってる。",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08",
+            "qwen-character-rate-outside-1-to-12-per-second"
+          ],
+          "voiceMusicAcoustic": [
+            "broadband-ratio>=0.10",
+            "dense-crest-factor<=6",
+            "active-segment-edge>=-32-dBFS"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -34.49148443528344,
+          "leading250msDBFS": -44.163449471749274,
+          "trailing250msDBFS": -31.72191932262503,
+          "zeroCrossingRate": 0.12775932799374878,
+          "highFrequencyRatio": 0.10060386320143061,
+          "crestFactor": 4.949505006461838
+        },
+        "materialErrorScore": 14
+      },
+      {
+        "id": "cue-0223",
+        "start": 735.0600000000001,
+        "end": 736.82,
+        "referenceJapanese": "マジで感動しましたえ、泣けるんだけど、普通に！",
+        "qwenJapanese": "え、マジで感動しました。",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08"
+          ],
+          "voiceMusicAcoustic": [
+            "active-rms>=-32-dBFS",
+            "broadband-ratio>=0.10",
+            "active-segment-edge>=-32-dBFS"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -26.98183574592061,
+          "leading250msDBFS": -22.064608694445532,
+          "trailing250msDBFS": -31.44751383333999,
+          "zeroCrossingRate": 0.21201036968642353,
+          "highFrequencyRatio": 0.1440299501343536,
+          "crestFactor": 7.4320426280391825
+        },
+        "materialErrorScore": 11
+      },
+      {
+        "id": "cue-0153",
+        "start": 518.98,
+        "end": 519.3,
+        "referenceJapanese": "アウ",
+        "qwenJapanese": "バーンアウトだ。",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08",
+            "qwen-character-rate-outside-1-to-12-per-second",
+            "exact-consecutive-duplicate"
+          ],
+          "voiceMusicAcoustic": [
+            "active-rms>=-32-dBFS",
+            "broadband-ratio>=0.10",
+            "active-segment-edge>=-32-dBFS"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -20.6811814516784,
+          "leading250msDBFS": -21.078623758846255,
+          "trailing250msDBFS": -20.317080921885772,
+          "zeroCrossingRate": 0.1961320570423911,
+          "highFrequencyRatio": 0.11812641964347519,
+          "crestFactor": 6.864514542940545
+        },
+        "materialErrorScore": 10
+      },
+      {
+        "id": "cue-0186",
+        "start": 611,
+        "end": 612.6,
+        "referenceJapanese": "が出た。つながっていない。ピン",
+        "qwenJapanese": "捕まえてない。",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08"
+          ],
+          "voiceMusicAcoustic": [
+            "broadband-ratio>=0.10",
+            "active-segment-edge>=-32-dBFS"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -34.1495043363174,
+          "leading250msDBFS": -31.15768477211401,
+          "trailing250msDBFS": -32.49732634998406,
+          "zeroCrossingRate": 0.18602289151919996,
+          "highFrequencyRatio": 0.1101500484883736,
+          "crestFactor": 6.711270445122871
+        },
+        "materialErrorScore": 10
+      },
+      {
+        "id": "cue-0222",
+        "start": 727.62,
+        "end": 735.0600000000001,
+        "referenceJapanese": "え、すごすぎる！えーーー！え、泣けるんだけど、普通に！",
+        "qwenJapanese": "え、泣けるんだけど普通に。",
+        "signals": {
+          "referenceFreeWeakness": [
+            "alignment-zero-duration-rate>=0.08"
+          ],
+          "voiceMusicAcoustic": [
+            "active-rms>=-32-dBFS",
+            "broadband-ratio>=0.10",
+            "active-segment-edge>=-32-dBFS"
+          ],
+          "voiceMusicTrigger": true
+        },
+        "audio": {
+          "rmsDBFS": -20.700081885553093,
+          "leading250msDBFS": -23.41889478793295,
+          "trailing250msDBFS": -24.784739488570477,
+          "zeroCrossingRate": 0.21566881442216415,
+          "highFrequencyRatio": 0.1198071099593284,
+          "crestFactor": 9.853282279031458
+        },
+        "materialErrorScore": 10
+      }
+    ],
+    "productEligible": false,
+    "reason": "diagnostic trigger frozen on DEV; no enhancement candidate has been run"
+  },
+  "fireRed": {
+    "rule": "eligible only with >=3 boundary-loss units/fragments, >=60% near an edge, and >=1.5x enrichment over boundary exposure",
+    "lossUnitsOrUnassignedCueFragments": 206,
+    "boundaryLossUnitsOrFragments": 78,
+    "boundaryLossShare": 0.3786407766990291,
+    "boundaryExposureShare": 0.34375,
+    "concentrationRatio": 1.1015004413062666,
+    "eligible": false,
+    "decision": "ineligible-no-concentrated-boundary-loss"
+  },
+  "developmentToHoldout": {
+    "state": "holdout-closed",
+    "authorization": "none",
+    "requiredBeforeOpening": [
+      "freeze one candidate and all thresholds from DEV",
+      "recover more material speech than lost",
+      "no worse terms or numbers",
+      "no net empty or duplicated turns",
+      "no semantic inversion",
+      "retain raw outputs, timings, memory and hashes"
+    ]
+  },
+  "timings": {
+    "diagnosticSeconds": 2.9179754168726504,
+    "modelRunsLaunched": 0,
+    "reusedE22TotalSeconds": 1064.0,
+    "reusedE22TranscriptionSeconds": 68.12763202190399,
+    "reusedE22PeakMemoryBytes": 18339289016
+  },
+  "provenance": {
+    "hashes": {
+      "manifest": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+      "rawE22": "1f5edc2fcb929c9abc2cb85256f326bbf2891a200ef66d1c1cb9a66a9c711ce8",
+      "e22Report": "7cb21ebab639fcbc290dc30d951e9a15864701a64fee5907f0b09da522ab6a13",
+      "source": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+      "audio": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+      "characterAlignment": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7"
+    },
+    "reporterSHA256": "5534440846d9d5cc6c2a76dbf29569ab88341c9d64f28a7644b123364faf90c8",
+    "decodedSampleCount": 15315325,
+    "e22Model": {
+      "backend": "qwen-ja",
+      "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+      "weightSHA256": {
+        "model.safetensors": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+      }
+    },
+    "segments": {
+      "path": "docs/japanese-live/experiments/evidence/E23/segments.json",
+      "sha256": "e6f8024c83d8c30199065703a4abf1f0ca1dfcead13381d3168c659f88082f81"
+    }
+  },
+  "limits": "One supplied DEV video; this diagnostic does not prove universal anime, VTuber, gaming, conversation, voice or music quality."
+}

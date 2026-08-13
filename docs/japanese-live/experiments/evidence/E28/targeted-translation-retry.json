@@ -1,0 +1,483 @@
+{
+  "baselineArtifact" : "\/Users\/maz\/.codex\/worktrees\/4656\/whisperASR\/.build\/benchmarks\/issue-94\/development\/targeted-translation-retry\/baseline.json",
+  "corpus" : "development",
+  "rejectedCueIDs" : [
+    "unit-0054"
+  ],
+  "retry" : {
+    "attempts" : [
+      {
+        "duration" : 2.279868006706238,
+        "number" : 1,
+        "outcome" : "success"
+      }
+    ],
+    "batches" : [
+      {
+        "cueIDs" : [
+          "unit-0054"
+        ],
+        "duration" : 2.2793760299682617,
+        "finishReason" : "stop",
+        "inputTokens" : 91,
+        "model" : "mlx-community\/translategemma-12b-it-4bit",
+        "nativeOutput" : "That's right, right, right, right, right. It's like a cutting line.",
+        "nativePrompt" : "{\"generation\":{\"max_tokens\":128,\"temperature\":0},\"messages\":[{\"content\":[{\"source_lang_code\":\"ja-JP\",\"target_lang_code\":\"en\",\"text\":\"な切るラインみたいなあそうそうそうそうそう切るラ\",\"type\":\"text\"}],\"role\":\"user\"}]}",
+        "outputTokens" : 21,
+        "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+        "sanitizedOutput" : "That's right, right, right, right, right. It's like a cutting line.",
+        "sanitizedPrompt" : "な切るラインみたいなあそうそうそうそうそう切るラ"
+      }
+    ],
+    "integrityVerdicts" : [
+      {
+        "cueID" : "unit-0054",
+        "generatedOutput" : "That's right, right, right, right, right. It's like a cutting line.",
+        "glossaryOpportunities" : [
+
+        ],
+        "reasons" : [
+
+        ],
+        "testedSource" : "な切るラインみたいなあそうそうそうそうそう切るラ",
+        "thresholdVersion" : "translation-integrity-dev-v1",
+        "verdict" : "pass"
+      }
+    ],
+    "model" : "mlx-community\/translategemma-12b-it-4bit",
+    "peakMemoryBytes" : 6911789160,
+    "request" : {
+      "conversationContextByCueID" : {
+
+      },
+      "glossary" : [
+
+      ],
+      "glossaryByCueID" : {
+        "unit-0054" : [
+
+        ]
+      },
+      "retryReasonCodes" : {
+        "unit-0054" : [
+          "degenerate-repetition"
+        ]
+      },
+      "source" : {
+        "byteCount" : 30630694,
+        "fileName" : "audio-16k-mono.wav",
+        "modifiedAt" : 806153574,
+        "path" : "\/Users\/maz\/Documents\/projets\/whisperASR\/.build\/benchmarks\/japanese-live\/corpora\/qudu2fx3ncc\/audio-16k-mono.wav"
+      },
+      "turns" : [
+        {
+          "followingJapanese" : [
+            "頭って入りますか。"
+          ],
+          "id" : "unit-0054",
+          "japanese" : "な切るラインみたいなあそうそうそうそうそう切るラ",
+          "precedingJapanese" : [
+            "あ、もかちゃんに、このリハーサルの、なんか、のゲージは、"
+          ],
+          "sourceEnd" : 201.5,
+          "sourceStart" : 198.06
+        }
+      ]
+    },
+    "response" : "{\"translations\":[{\"text\":\"That's right, right, right, right, right. It's like a cutting line.\",\"id\":\"unit-0054\"}]}",
+    "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+    "runtimeVersion" : "3.31.4",
+    "validationFailures" : [
+
+    ],
+    "weightSHA256" : [
+
+    ],
+    "worker" : {
+      "availableMemorySamples" : [
+        {
+          "at" : 808202576.732677,
+          "availableMemoryBytes" : 9475702784
+        },
+        {
+          "at" : 808202576.732761,
+          "availableMemoryBytes" : 9475702784
+        },
+        {
+          "at" : 808202576.837495,
+          "availableMemoryBytes" : 9475031040
+        },
+        {
+          "at" : 808202576.938682,
+          "availableMemoryBytes" : 9486794752
+        },
+        {
+          "at" : 808202577.039051,
+          "availableMemoryBytes" : 9514926080
+        },
+        {
+          "at" : 808202577.145846,
+          "availableMemoryBytes" : 9510289408
+        },
+        {
+          "at" : 808202577.250106,
+          "availableMemoryBytes" : 9510289408
+        },
+        {
+          "at" : 808202577.352677,
+          "availableMemoryBytes" : 9510289408
+        },
+        {
+          "at" : 808202577.459612,
+          "availableMemoryBytes" : 9510289408
+        },
+        {
+          "at" : 808202577.564296,
+          "availableMemoryBytes" : 9510289408
+        },
+        {
+          "at" : 808202577.670565,
+          "availableMemoryBytes" : 9510289408
+        },
+        {
+          "at" : 808202577.775342,
+          "availableMemoryBytes" : 9510682624
+        },
+        {
+          "at" : 808202577.877789,
+          "availableMemoryBytes" : 9512206336
+        },
+        {
+          "at" : 808202577.983025,
+          "availableMemoryBytes" : 9529049088
+        },
+        {
+          "at" : 808202578.087314,
+          "availableMemoryBytes" : 9533571072
+        },
+        {
+          "at" : 808202578.194056,
+          "availableMemoryBytes" : 9533571072
+        },
+        {
+          "at" : 808202578.300792,
+          "availableMemoryBytes" : 9533571072
+        },
+        {
+          "at" : 808202578.402587,
+          "availableMemoryBytes" : 9533571072
+        },
+        {
+          "at" : 808202578.503326,
+          "availableMemoryBytes" : 9533571072
+        },
+        {
+          "at" : 808202578.610172,
+          "availableMemoryBytes" : 9533571072
+        },
+        {
+          "at" : 808202578.710792,
+          "availableMemoryBytes" : 9533571072
+        },
+        {
+          "at" : 808202578.817644,
+          "availableMemoryBytes" : 8860057600
+        },
+        {
+          "at" : 808202578.920711,
+          "availableMemoryBytes" : 8766013440
+        },
+        {
+          "at" : 808202579.021666,
+          "availableMemoryBytes" : 8588394496
+        },
+        {
+          "at" : 808202579.123558,
+          "availableMemoryBytes" : 8298479616
+        },
+        {
+          "at" : 808202579.229713,
+          "availableMemoryBytes" : 7983333376
+        },
+        {
+          "at" : 808202579.336396,
+          "availableMemoryBytes" : 7658930176
+        },
+        {
+          "at" : 808202579.438894,
+          "availableMemoryBytes" : 7470514176
+        },
+        {
+          "at" : 808202579.542707,
+          "availableMemoryBytes" : 7172423680
+        },
+        {
+          "at" : 808202579.648075,
+          "availableMemoryBytes" : 6895583232
+        },
+        {
+          "at" : 808202579.748954,
+          "availableMemoryBytes" : 6788710400
+        },
+        {
+          "at" : 808202579.84918,
+          "availableMemoryBytes" : 6787284992
+        },
+        {
+          "at" : 808202579.949597,
+          "availableMemoryBytes" : 6791053312
+        },
+        {
+          "at" : 808202580.049948,
+          "availableMemoryBytes" : 6794919936
+        },
+        {
+          "at" : 808202580.150682,
+          "availableMemoryBytes" : 6792183808
+        },
+        {
+          "at" : 808202580.257471,
+          "availableMemoryBytes" : 6789988352
+        },
+        {
+          "at" : 808202580.36135,
+          "availableMemoryBytes" : 6793625600
+        },
+        {
+          "at" : 808202580.462471,
+          "availableMemoryBytes" : 6791200768
+        },
+        {
+          "at" : 808202580.562695,
+          "availableMemoryBytes" : 6788677632
+        },
+        {
+          "at" : 808202580.668019,
+          "availableMemoryBytes" : 6788677632
+        },
+        {
+          "at" : 808202580.770151,
+          "availableMemoryBytes" : 6788677632
+        },
+        {
+          "at" : 808202580.87033,
+          "availableMemoryBytes" : 6776619008
+        },
+        {
+          "at" : 808202580.975802,
+          "availableMemoryBytes" : 6787809280
+        },
+        {
+          "at" : 808202581.077686,
+          "availableMemoryBytes" : 6777995264
+        },
+        {
+          "at" : 808202581.182375,
+          "availableMemoryBytes" : 6774685696
+        },
+        {
+          "at" : 808202581.282874,
+          "availableMemoryBytes" : 6768721920
+        },
+        {
+          "at" : 808202581.387332,
+          "availableMemoryBytes" : 6768721920
+        },
+        {
+          "at" : 808202581.488455,
+          "availableMemoryBytes" : 6768721920
+        },
+        {
+          "at" : 808202581.592995,
+          "availableMemoryBytes" : 6768721920
+        },
+        {
+          "at" : 808202581.695897,
+          "availableMemoryBytes" : 6768721920
+        },
+        {
+          "at" : 808202581.797932,
+          "availableMemoryBytes" : 6768721920
+        },
+        {
+          "at" : 808202581.904668,
+          "availableMemoryBytes" : 6780960768
+        },
+        {
+          "at" : 808202582.006845,
+          "availableMemoryBytes" : 6661849088
+        },
+        {
+          "at" : 808202582.11359,
+          "availableMemoryBytes" : 6662324224
+        },
+        {
+          "at" : 808202582.219879,
+          "availableMemoryBytes" : 6660243456
+        },
+        {
+          "at" : 808202582.321212,
+          "availableMemoryBytes" : 6659375104
+        },
+        {
+          "at" : 808202582.427413,
+          "availableMemoryBytes" : 6657687552
+        },
+        {
+          "at" : 808202582.528198,
+          "availableMemoryBytes" : 6656573440
+        },
+        {
+          "at" : 808202582.631791,
+          "availableMemoryBytes" : 6715670528
+        },
+        {
+          "at" : 808202582.734937,
+          "availableMemoryBytes" : 6711590912
+        },
+        {
+          "at" : 808202582.838815,
+          "availableMemoryBytes" : 6711590912
+        },
+        {
+          "at" : 808202582.94562,
+          "availableMemoryBytes" : 6702055424
+        },
+        {
+          "at" : 808202583.052368,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.158671,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.260489,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.361224,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.461933,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.566767,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.67109,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.776416,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.880912,
+          "availableMemoryBytes" : 6697648128
+        },
+        {
+          "at" : 808202583.983953,
+          "availableMemoryBytes" : 5560745984
+        },
+        {
+          "at" : 808202584.089376,
+          "availableMemoryBytes" : 5502763008
+        },
+        {
+          "at" : 808202584.192415,
+          "availableMemoryBytes" : 5477138432
+        },
+        {
+          "at" : 808202584.293883,
+          "availableMemoryBytes" : 5380014080
+        },
+        {
+          "at" : 808202584.400674,
+          "availableMemoryBytes" : 5375295488
+        },
+        {
+          "at" : 808202584.505201,
+          "availableMemoryBytes" : 5375623168
+        },
+        {
+          "at" : 808202584.610673,
+          "availableMemoryBytes" : 5376212992
+        },
+        {
+          "at" : 808202584.717102,
+          "availableMemoryBytes" : 5308399616
+        },
+        {
+          "at" : 808202584.822122,
+          "availableMemoryBytes" : 5308399616
+        },
+        {
+          "at" : 808202584.927683,
+          "availableMemoryBytes" : 5308399616
+        },
+        {
+          "at" : 808202585.028866,
+          "availableMemoryBytes" : 5305532416
+        },
+        {
+          "at" : 808202585.129339,
+          "availableMemoryBytes" : 5308039168
+        },
+        {
+          "at" : 808202585.130925,
+          "availableMemoryBytes" : 5308055552
+        },
+        {
+          "at" : 808202585.233649,
+          "availableMemoryBytes" : 5306187776
+        },
+        {
+          "at" : 808202585.337713,
+          "availableMemoryBytes" : 7903985664
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/4656\/whisperASR\/.build\/arm64-apple-macosx\/debug\/WhisperASR",
+        "--high-quality-translation-worker",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE",
+        "translategemma-12b-it-4bit"
+      ],
+      "elapsedSeconds" : 8.713005065917969,
+      "exitStatus" : 0,
+      "exitedAt" : 808202585.442149,
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 7325652824,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 14159,
+      "rawLog" : "",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE\/worker.log",
+      "startedAt" : 808202576.729144,
+      "swapUsedAfterBytes" : 2586902528,
+      "swapUsedBeforeBytes" : 2586902528,
+      "terminationReason" : "exit"
+    }
+  },
+  "retryVerdicts" : [
+    {
+      "cueID" : "unit-0054",
+      "generatedOutput" : "That's right, right, right, right, right. It's like a cutting line.",
+      "glossaryOpportunities" : [
+
+      ],
+      "reasons" : [
+
+      ],
+      "testedSource" : "な切るラインみたいなあそうそうそうそうそう切るラ",
+      "thresholdVersion" : "translation-integrity-dev-v1",
+      "verdict" : "pass"
+    }
+  ],
+  "schemaVersion" : 1,
+  "verdictArtifact" : "\/Users\/maz\/.codex\/worktrees\/4656\/whisperASR\/.build\/benchmarks\/issue-94\/development\/targeted-translation-retry\/verdicts.json"
+}

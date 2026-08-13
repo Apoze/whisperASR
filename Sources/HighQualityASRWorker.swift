@@ -9,6 +9,19 @@ struct HighQualityASRWorkerEvidence: Codable, Equatable, Sendable {
     let backend: HighQualityASRBackend
     let model: HighQualityModelEvidence
     let lifecycle: HighQualityWorkerEvidence
+    let characters: [HighQualityASRCharacter]?
+
+    init(
+        backend: HighQualityASRBackend,
+        model: HighQualityModelEvidence,
+        lifecycle: HighQualityWorkerEvidence,
+        characters: [HighQualityASRCharacter]? = nil
+    ) {
+        self.backend = backend
+        self.model = model
+        self.lifecycle = lifecycle
+        self.characters = characters
+    }
 }
 
 enum HighQualityASRWorkerError: LocalizedError, Equatable, Sendable {
@@ -34,7 +47,7 @@ private struct HighQualityASRWorkerRequest: Codable {
     let anchored: Bool
 }
 
-private struct HighQualityASRWorkerResponse: Codable {
+private struct HighQualityASRWorkerResponse: Codable, Sendable {
     let ready: Bool?
     let model: HighQualityModelEvidence?
     let exchange: HighQualityASRExchange?
@@ -47,6 +60,7 @@ actor HighQualityASRWorkerClient {
     private let worker: HighQualityWorkerProcess
     private var sequence = 0
     private var preparedModel: HighQualityModelEvidence?
+    private var lastCharacters: [HighQualityASRCharacter]?
 
     init(
         backend: HighQualityASRBackend,
@@ -55,7 +69,8 @@ actor HighQualityASRWorkerClient {
         workingDirectory: URL? = nil,
         pressure: MacMemoryPressureMonitor = .shared,
         pollInterval: Duration = .milliseconds(100),
-        shutdownTimeout: Duration = .seconds(3)
+        shutdownTimeout: Duration = .seconds(3),
+        launchOverride: (executable: URL, argumentsPrefix: [String])? = nil
     ) {
         self.backend = backend
         let directory = workingDirectory
@@ -63,13 +78,26 @@ actor HighQualityASRWorkerClient {
                 "WhisperASR-ASR-\(backend.rawValue)-\(UUID().uuidString)",
                 isDirectory: true
             )
+        let launch: (executable: URL, arguments: [String])
+        if let launchOverride {
+            launch = (
+                launchOverride.executable,
+                launchOverride.argumentsPrefix + [
+                    HighQualityASRWorkerCommand.argument,
+                    backend.rawValue,
+                    directory.path,
+                ]
+            )
+        } else {
+            launch = Self.launch(
+                for: backend,
+                executableURL: executableURL,
+                workingDirectory: directory
+            )
+        }
         worker = HighQualityWorkerProcess(
-            executableURL: executableURL,
-            arguments: [
-                HighQualityASRWorkerCommand.argument,
-                backend.rawValue,
-                directory.path,
-            ],
+            executableURL: launch.executable,
+            arguments: launch.arguments,
             workingDirectory: directory,
             pressure: pressure,
             pollInterval: pollInterval,
@@ -85,7 +113,8 @@ actor HighQualityASRWorkerClient {
             return .init(
                 backend: backend,
                 model: preparedModel ?? backend.model,
-                lifecycle: lifecycle
+                lifecycle: lifecycle,
+                characters: lastCharacters
             )
         }
     }
@@ -100,8 +129,9 @@ actor HighQualityASRWorkerClient {
         }
         progress(0, "\(backend.displayName) worker \(pid) starting…")
         do {
-            let response: HighQualityASRWorkerResponse = try await worker.waitForJSON(
-                at: worker.workingDirectory.appendingPathComponent("ready.json")
+            let response = try await waitForWorkerJSON(
+                at: worker.workingDirectory.appendingPathComponent("ready.json"),
+                timeoutVariable: "WHISPERASR_FUNASR_PREPARE_TIMEOUT_SECONDS"
             )
             if response.criticalMemoryPressure == true {
                 await worker.stop(critical: true)
@@ -132,6 +162,31 @@ actor HighQualityASRWorkerClient {
         _ samples: [Float],
         anchored: Bool
     ) async throws -> HighQualityASRExchange {
+        if backend == .funASRNanoInt8, anchored {
+            return try await HighQualityJob.Services.chunkedASR(samples) {
+                try await self.transcribe($0, anchored: false).rawTranscript
+            }
+        }
+        if anchored && backend == .reazonSpeechK2V2 {
+            let operation: @Sendable () async throws -> HighQualityASRExchange = {
+                try await HighQualityJob.Services.chunkedASR(samples) { chunk in
+                    try await self.transcribe(chunk, anchored: false)
+                }
+            }
+            let exchange = try await withAsyncDeadline(
+                .seconds(341),
+                operationName: "ReazonSpeech ASR 5x Qwen stop",
+                onTimeout: { await self.worker.stop() },
+                operation: operation
+            )
+            guard Self.isValid(exchange, sampleCount: samples.count, anchored: true) else {
+                throw HighQualityASRWorkerError.protocolFailure(
+                    "invalid anchored transcription response"
+                )
+            }
+            lastCharacters = exchange.characters
+            return exchange
+        }
         guard !(await worker.isCritical) else {
             throw HighQualityASRWorkerError.criticalMemoryPressure
         }
@@ -153,11 +208,15 @@ actor HighQualityASRWorkerClient {
 
         let response: HighQualityASRWorkerResponse
         do {
-            response = try await worker.waitForJSON(at: responseURL)
+            response = try await waitForWorkerJSON(
+                at: responseURL,
+                timeoutVariable: "WHISPERASR_FUNASR_REQUEST_TIMEOUT_SECONDS"
+            )
         } catch {
             if await worker.isCritical {
                 throw HighQualityASRWorkerError.criticalMemoryPressure
             }
+            if error is HighQualityASRWorkerError { await worker.stop() }
             throw Self.mapped(error)
         }
         let critical = await worker.isCritical
@@ -172,6 +231,7 @@ actor HighQualityASRWorkerClient {
               Self.isValid(exchange, sampleCount: samples.count, anchored: anchored) else {
             throw HighQualityASRWorkerError.protocolFailure("invalid transcription response")
         }
+        lastCharacters = exchange.characters
         return exchange
     }
 
@@ -180,22 +240,45 @@ actor HighQualityASRWorkerClient {
         await worker.stop(critical: critical)
     }
 
-    private static func isValid(
+    static func isValid(
         _ exchange: HighQualityASRExchange,
         sampleCount: Int,
         anchored: Bool
     ) -> Bool {
-        guard anchored else { return exchange.chunks.isEmpty }
         let duration = Double(sampleCount) / 16_000
+        let expectedCharacterText = anchored
+            ? exchange.chunks.map(\.transcript).joined()
+            : exchange.rawTranscript
+        let charactersValid = exchange.characters.map { characters in
+            characters.map(\.text).joined() == expectedCharacterText
+                && characters.allSatisfy {
+                    $0.text.count == 1
+                        && $0.chunkIndex >= 0
+                        && $0.sourceStart >= 0
+                        && $0.sourceEnd >= $0.sourceStart
+                        && $0.sourceEnd <= duration
+                }
+                && zip(characters, characters.dropFirst()).allSatisfy {
+                    $0.sourceStart <= $1.sourceStart && $0.chunkIndex <= $1.chunkIndex
+                }
+        } ?? true
+        guard charactersValid else { return false }
+        guard anchored else { return exchange.chunks.isEmpty }
         guard exchange.rawTranscript == exchange.chunks.map(\.transcript).joined(separator: "\n")
         else { return false }
-        return exchange.chunks.enumerated().allSatisfy { offset, chunk in
+        let chunksValid = exchange.chunks.enumerated().allSatisfy { offset, chunk in
             chunk.index == offset
                 && chunk.sourceStart >= 0
                 && chunk.sourceEnd >= chunk.sourceStart
                 && chunk.sourceEnd <= duration
                 && !chunk.transcript.isEmpty
         }
+        guard chunksValid else { return false }
+        return exchange.characters?.allSatisfy { character in
+            exchange.chunks.indices.contains(character.chunkIndex)
+                && character.sourceStart >= exchange.chunks[character.chunkIndex].sourceStart
+                && character.sourceEnd <= exchange.chunks[character.chunkIndex].sourceEnd
+        } ?? true
     }
 
     private static func mapped(_ error: Error) -> Error {
@@ -210,6 +293,64 @@ actor HighQualityASRWorkerClient {
             }
         }
         return HighQualityASRWorkerError.protocolFailure(error.localizedDescription)
+    }
+
+    private func waitForWorkerJSON(
+        at url: URL,
+        timeoutVariable: String
+    ) async throws -> HighQualityASRWorkerResponse {
+        guard backend == .funASRNanoInt8,
+              let value = ProcessInfo.processInfo.environment[timeoutVariable],
+              let seconds = Double(value), seconds > 0 else {
+            return try await worker.waitForJSON(at: url)
+        }
+        return try await withThrowingTaskGroup(of: HighQualityASRWorkerResponse.self) { group in
+            group.addTask { try await self.worker.waitForJSON(at: url) }
+            group.addTask {
+                try await Task.sleep(for: .seconds(seconds))
+                throw HighQualityASRWorkerError.protocolFailure(
+                    "Fun-ASR worker exceeded \(seconds)s while waiting for \(url.lastPathComponent)"
+                )
+            }
+            let response = try await group.next()!
+            group.cancelAll()
+            return response
+        }
+    }
+
+    private static func launch(
+        for backend: HighQualityASRBackend,
+        executableURL: URL,
+        workingDirectory: URL
+    ) -> (executable: URL, arguments: [String]) {
+        let environment = ProcessInfo.processInfo.environment
+        let appArguments = [
+            HighQualityASRWorkerCommand.argument,
+            backend.rawValue,
+            workingDirectory.path,
+        ]
+        switch backend {
+        case .funASRNanoInt8:
+            let python = environment["WHISPERASR_FUNASR_PYTHON"]
+                ?? FileManager.default.currentDirectoryPath
+                    + "/.build/runtimes/funasr-nano-int8/bin/python3"
+            let helper = environment["WHISPERASR_FUNASR_WORKER"]
+                ?? URL(fileURLWithPath: #filePath)
+                    .deletingLastPathComponent()
+                    .appendingPathComponent("Runtime/FunASRNanoWorker.py").path
+            return (URL(fileURLWithPath: python), [helper] + appArguments)
+        case .reazonSpeechK2V2:
+            guard let python = environment["WHISPERASR_REAZON_WORKER_PYTHON"],
+                  let script = environment["WHISPERASR_REAZON_WORKER_SCRIPT"] else {
+                return (executableURL, appArguments)
+            }
+            return (
+                URL(fileURLWithPath: python),
+                [script, backend.rawValue, workingDirectory.path]
+            )
+        case .qwenJA, .parakeetJA, .whisperKit:
+            return (executableURL, appArguments)
+        }
     }
 }
 
@@ -230,6 +371,20 @@ enum HighQualityASRWeightEvidence {
                     LocalPrototypeModelID.whisperKitVariant,
                     isDirectory: true
                 )
+        case .funASRNanoInt8:
+            directory = URL(fileURLWithPath: ProcessInfo.processInfo.environment[
+                "WHISPERASR_FUNASR_MODEL_DIR"
+            ] ?? FileManager.default.currentDirectoryPath
+                + "/.build/models/sherpa-onnx-funasr-nano-int8-2025-12-30")
+        case .reazonSpeechK2V2:
+            guard let path = ProcessInfo.processInfo.environment[
+                "WHISPERASR_REAZON_MODEL_ROOT"
+            ] else {
+                throw HighQualityASRWorkerError.protocolFailure(
+                    "WHISPERASR_REAZON_MODEL_ROOT is required"
+                )
+            }
+            directory = URL(fileURLWithPath: path, isDirectory: true)
         }
         return try hashes(in: directory)
     }
@@ -246,6 +401,9 @@ enum HighQualityASRWeightEvidence {
                 return false
             }
             return url.pathExtension == "safetensors"
+                || url.pathExtension == "onnx"
+                || ["merges.txt", "tokenizer.json", "vocab.json"].contains(url.lastPathComponent)
+                || url.lastPathComponent == "tokens.txt"
                 || (url.pathExtension == "bin"
                     && url.deletingLastPathComponent().lastPathComponent == "weights")
         }.sorted { $0.path < $1.path }
@@ -287,10 +445,26 @@ private actor HighQualityASRWorkerRuntime {
             try await parakeet.prepare(progress: progress)
         case .whisperKit:
             try await whisperKit.prepare(progress: progress)
+        case .funASRNanoInt8:
+            throw HighQualityASRWorkerError.protocolFailure(
+                "Fun-ASR Nano requires its pinned sherpa-onnx worker."
+            )
+        case .reazonSpeechK2V2:
+            throw HighQualityASRWorkerError.protocolFailure(
+                "ReazonSpeech requires the pinned external sherpa-onnx worker"
+            )
         }
     }
 
     func transcribe(_ samples: [Float], anchored: Bool) async throws -> HighQualityASRExchange {
+        if backend == .whisperKit, !anchored {
+            let result = try await whisperKit.transcribeWithEvidence(audio: samples)
+            return .init(
+                rawTranscript: result.text,
+                chunks: [],
+                averageLogProbability: result.averageLogProbability
+            )
+        }
         let transcribe: @Sendable ([Float]) async throws -> String
         switch backend {
         case .qwenJA:
@@ -312,6 +486,14 @@ private actor HighQualityASRWorkerRuntime {
             }
         case .whisperKit:
             transcribe = { try await self.whisperKit.transcribe(audio: $0) }
+        case .funASRNanoInt8:
+            throw HighQualityASRWorkerError.protocolFailure(
+                "Fun-ASR Nano requires its pinned sherpa-onnx worker."
+            )
+        case .reazonSpeechK2V2:
+            throw HighQualityASRWorkerError.protocolFailure(
+                "ReazonSpeech requires the pinned external sherpa-onnx worker"
+            )
         }
         if anchored {
             return try await HighQualityJob.Services.chunkedASR(samples, transcribe: transcribe)
@@ -327,6 +509,8 @@ private actor HighQualityASRWorkerRuntime {
             await parakeet.unload()
         case .whisperKit:
             await whisperKit.unload()
+        case .funASRNanoInt8, .reazonSpeechK2V2:
+            break
         }
     }
 

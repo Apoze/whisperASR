@@ -10,6 +10,7 @@ actor HighQualityForcedAlignerRuntime {
     static let maximumWindowSeconds = 20
     static let maximumFallbackCharacters = 84
     static let maximumFallbackCharactersPerSecond = 20.0
+    static let maximumCoarseAnchorCharacters = 48
     private static let sampleRate = 16_000
 
     private var model: Qwen3ForcedAlignerModel?
@@ -131,7 +132,8 @@ actor HighQualityForcedAlignerRuntime {
                     retryAcceptedGroupCount += 1
                 } else if let fallback = Self.contentPreservingFallback(
                     cues: result.cues,
-                    after: previousCueEnd,
+                    rawItems: result.items,
+                    after: max(previousCueEnd, sourceStart),
                     before: min(
                         sourceEnd,
                         groups.indices.contains(index + 1)
@@ -168,6 +170,10 @@ actor HighQualityForcedAlignerRuntime {
                 "coarseFallbackCount": String(fallbackMerges.count {
                     $0.timingPolicy == "coarse-fallback-free-window-gap"
                 }),
+                "coarseTimingPolicy": "single-zero-cue-asr-anchor-20cps",
+                "coarseTimingCueIDs": chunks.flatMap(\.cues).compactMap {
+                    $0.timingQuality == "coarse" ? $0.id : nil
+                }.joined(separator: ","),
             ],
             fallbackMerges: fallbackMerges
         )
@@ -175,6 +181,7 @@ actor HighQualityForcedAlignerRuntime {
 
     static func contentPreservingFallback(
         cues: [HighQualityAlignedCue],
+        rawItems: [HighQualityAlignmentItem] = [],
         after lowerBound: TimeInterval,
         before upperBound: TimeInterval,
         chunkIndex: Int = 0
@@ -184,6 +191,32 @@ actor HighQualityForcedAlignerRuntime {
     )? {
         let zeroCueIDs = cues.filter { $0.end <= $0.start }.map(\.id)
         guard !zeroCueIDs.isEmpty else { return nil }
+        if let cue = cues.first,
+           cues.count == 1,
+           cue.end == cue.start,
+           !rawItems.isEmpty,
+           rawItems.allSatisfy({
+               $0.cueID == cue.id && $0.start == cue.start && $0.end == $0.start
+           }),
+           cue.text.count <= maximumCoarseAnchorCharacters,
+           lowerBound < upperBound,
+           cue.start >= lowerBound,
+           cue.start <= upperBound {
+            let duration = Double(cue.text.count) / maximumFallbackCharactersPerSecond
+            guard duration > 0, duration <= upperBound - lowerBound else { return nil }
+            let start = min(max(cue.start - duration, lowerBound), upperBound - duration)
+            let end = start + duration
+            guard cue.start >= start, cue.start <= end else { return nil }
+            return ([HighQualityAlignedCue(
+                id: cue.id,
+                text: cue.text,
+                start: start,
+                end: end,
+                timingOrigin: "asr-window-anchor",
+                timingPolicy: "single-zero-cue-asr-anchor-20cps",
+                timingQuality: "coarse"
+            )], [])
+        }
         var result = cues
         var merges: [HighQualityAlignmentFallbackMerge] = []
         let lastCueID = cues.last?.id

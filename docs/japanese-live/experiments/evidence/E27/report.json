@@ -1,0 +1,4064 @@
+{
+  "alignedWindowDiagnostic": {
+    "cleanControls": [
+      {
+        "baselineJapanese": "続いての対象戦ですが甘いモカそして立川来ました",
+        "candidateJapanese": "続いての対象戦ですが甘いモカそして立川来ました",
+        "id": "cue-0001",
+        "kind": "clean-speech",
+        "textIdentical": true
+      },
+      {
+        "baselineJapanese": "ね甘い向かの技を突き出します",
+        "candidateJapanese": "はなくてはいあまり他の技を突き出し",
+        "id": "cue-0078",
+        "kind": "clean-laughter",
+        "textIdentical": false
+      },
+      {
+        "baselineJapanese": "うち人のゲームプレイ見て泣くの初めてだったけどマジですごいただただ上手いっていう",
+        "candidateJapanese": "うち人のゲームプレイ見て泣くの初めてだったけどマジですごいただただ上手いっていう",
+        "id": "cue-0238",
+        "kind": "clean-laughter-and-speech",
+        "textIdentical": true
+      }
+    ],
+    "counts": {
+      "baselineDuplicates": 0,
+      "baselineEmptyTurns": 0,
+      "candidateDuplicates": 1,
+      "candidateEmptyTurns": 4,
+      "dimensionDeltas": {
+        "meaning": 0,
+        "numbers": 0,
+        "terms": 0
+      },
+      "recoveredCharactersErased": 18,
+      "recoveredCharactersGained": 13,
+      "targets": 68
+    },
+    "promotional": false,
+    "reason": "forced-alignment pipeline failed; timestamps are diagnostic only",
+    "targetWindows": [
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "いよくはない",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "い",
+        "end": 80.253,
+        "id": "cue-0015",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "複",
+        "speechErased": false,
+        "start": 79.56
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "セ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 100.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "",
+        "end": 119.98,
+        "id": "cue-0027",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": true,
+        "start": 119.66
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "オーマ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "オーマ",
+        "end": 125.2,
+        "id": "cue-0029",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 124.64
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 48.148148148148145,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 12,
+            "lostCharacters": 16,
+            "recoveredCharacters": 13,
+            "referenceCharacters": 29
+          },
+          "terms": {
+            "lost": [
+              "百鬼襲"
+            ],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ーオーディカ長戦から前に詰めてくるところに残空解け",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 48.148148148148145,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 12,
+            "lostCharacters": 16,
+            "recoveredCharacters": 13,
+            "referenceCharacters": 29
+          },
+          "terms": {
+            "lost": [
+              "百鬼襲"
+            ],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ーオーディカ長戦から前に詰めてくるところに残空解け",
+        "end": 129.12,
+        "id": "cue-0030",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "うまい。OD百鬼襲から前に詰めてくるところに、ジャンプから……。モダ",
+        "speechErased": false,
+        "start": 125.2
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "読み上",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 5,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "上げそれ3",
+        "end": 176.06,
+        "id": "cue-0045",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 175.82000000000002
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 26.666666666666668,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 3,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 5
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "これ3人止まってます",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 5,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 5
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ますリサルがこれはお",
+        "end": 177.77200000000002,
+        "id": "cue-0046",
+        "kind": null,
+        "recoveredCharacterDelta": -2,
+        "referenceJapanese": "ージ残って",
+        "speechErased": false,
+        "start": 177.02
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "すご",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "すご",
+        "end": 219.3,
+        "id": "cue-0055",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "い",
+        "speechErased": false,
+        "start": 218.74
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 25.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 12,
+            "lostCharacters": 0,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "いよねすごいすごいよすごすぎ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 80.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 0,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "いよね",
+        "end": 219.8,
+        "id": "cue-0057",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "よね",
+        "speechErased": false,
+        "start": 219.3
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "は",
+        "candidateClassification": {
+          "emptyTurn": true,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "",
+        "end": 228.66,
+        "id": "cue-0059",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "け",
+        "speechErased": true,
+        "start": 228.5
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 3,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "そこ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 7,
+            "lostCharacters": 3,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ばいハイパンお",
+        "end": 241.62,
+        "id": "cue-0061",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "ガード。",
+        "speechErased": false,
+        "start": 239.54
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 50.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 3,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "おすごい攻め",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 46.15384615384615,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 3,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "おーすごい攻め",
+        "end": 244.98,
+        "id": "cue-0064",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "い攻めですね",
+        "speechErased": false,
+        "start": 243.86
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 12.5,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 23,
+            "lostCharacters": 5,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "確かに今アウェイムカのドライブゲージより少なかった",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 21.428571428571427,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 18,
+            "lostCharacters": 4,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "かに今アウェーのドライブゲージが少なかった",
+        "end": 259.16,
+        "id": "cue-0068",
+        "kind": null,
+        "recoveredCharacterDelta": 1,
+        "referenceJapanese": "かが追いついた。",
+        "speechErased": false,
+        "start": 254.36
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 11,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "いうシンプルに簡単そう",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "そ",
+        "end": 264.68,
+        "id": "cue-0071",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 264.28
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 40.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 1,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "頑張れ",
+        "candidateClassification": {
+          "emptyTurn": true,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 2,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "",
+        "end": 286.44,
+        "id": "cue-0075",
+        "kind": null,
+        "recoveredCharacterDelta": -1,
+        "referenceJapanese": "れー",
+        "speechErased": true,
+        "start": 285.72
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 70.58823529411765,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 9,
+            "lostCharacters": 1,
+            "recoveredCharacters": 12,
+            "referenceCharacters": 13
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ちなみにゴキは他のキャラよりもHPが少ない",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 72.72727272727273,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 1,
+            "recoveredCharacters": 12,
+            "referenceCharacters": 13
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "普通に攻撃は他のキャラよりもHPが少ない",
+        "end": 296.36,
+        "id": "cue-0079",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "鬼は、他のキャラよりもHPが",
+        "speechErased": false,
+        "start": 293.16
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 7,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "えこれ辛いんだ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 7,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ああいいですね",
+        "end": 298.92,
+        "id": "cue-0081",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 297.16
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 18.181818181818183,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 9,
+            "lostCharacters": 0,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "い自分で考えるのかな",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 28.57142857142857,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 5,
+            "lostCharacters": 0,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "自分で考える",
+        "end": 339.38,
+        "id": "cue-0085",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "自",
+        "speechErased": false,
+        "start": 338.02
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "おおさジャスパー",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "おおさジャスパー",
+        "end": 355.34,
+        "id": "cue-0090",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 354.06
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 12,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "タチカに対して大量リード",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 14,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "カチカーンに対して大量リード",
+        "end": 368.14,
+        "id": "cue-0096",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 366.14
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 9,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "んかやっぱ飛んでる",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "んかやっぱ飛ぶお",
+        "end": 379.78000000000003,
+        "id": "cue-0105",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 377.7
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 16,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "でも体力有利だけまだ攻めまだある",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 13,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "でも体力有利だけまだ攻めま",
+        "end": 391.604,
+        "id": "cue-0110",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 387.38
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 44.44444444444444,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 1,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "あああやばい",
+        "candidateClassification": {
+          "emptyTurn": true,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 3,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "",
+        "end": 396.9,
+        "id": "cue-0111",
+        "kind": null,
+        "recoveredCharacterDelta": -2,
+        "referenceJapanese": "ああっ！",
+        "speechErased": true,
+        "start": 391.78
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 11,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "4回投げるまでに来るだ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "よね",
+        "end": 415.98,
+        "id": "cue-0117",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 415.18
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "し込むこれはリサルタ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "仕事これはリーサルだ",
+        "end": 441.92,
+        "id": "cue-0124",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 440.48
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 10.526315789473683,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 14,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 15
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "分かって",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 21.052631578947366,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 13,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 15
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "何だっけ",
+        "end": 462.72,
+        "id": "cue-0129",
+        "kind": null,
+        "recoveredCharacterDelta": 1,
+        "referenceJapanese": "だよどんだけ夢の世界にいるのっ",
+        "speechErased": false,
+        "start": 462.40000000000003
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 81.25,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 6,
+            "recoveredCharacters": 13,
+            "referenceCharacters": 19
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "なんか後ろで腕組んで見てる",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 77.41935483870968,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 7,
+            "recoveredCharacters": 12,
+            "referenceCharacters": 19
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "なんか後ろで腕組んで見て",
+        "end": 470.24,
+        "id": "cue-0132",
+        "kind": null,
+        "recoveredCharacterDelta": -1,
+        "referenceJapanese": "うん。なんか後ろで腕組んで見てるの、なんか",
+        "speechErased": false,
+        "start": 465.92
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 90.9090909090909,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 0,
+            "recoveredCharacters": 20,
+            "referenceCharacters": 20
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "なんかゲーセンでさゲーム機の後ろで見てるみたいな",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 88.88888888888889,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 5,
+            "lostCharacters": 0,
+            "recoveredCharacters": 20,
+            "referenceCharacters": 20
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "るなんかゲーセンでさゲーム機の後ろで見てるみたいな",
+        "end": 474.08000000000004,
+        "id": "cue-0133",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "ゲーセンでさ、ゲーム機の後ろで見てるみたい",
+        "speechErased": false,
+        "start": 470.24
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 85.71428571428571,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 1,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "いいな",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 50.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 2,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "すごいな",
+        "end": 478.09999999999997,
+        "id": "cue-0135",
+        "kind": null,
+        "recoveredCharacterDelta": -1,
+        "referenceJapanese": " いいな、私",
+        "speechErased": false,
+        "start": 476.82
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 85.71428571428571,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 1,
+            "recoveredCharacters": 6,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "私後ろで見たい",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 82.35294117647058,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 0,
+            "recoveredCharacters": 7,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "私も後ろで見たいドラ",
+        "end": 479.46,
+        "id": "cue-0136",
+        "kind": null,
+        "recoveredCharacterDelta": 1,
+        "referenceJapanese": "も後ろで見たい",
+        "speechErased": false,
+        "start": 478.09999999999997
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ュおいら",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "おいら",
+        "end": 488.02,
+        "id": "cue-0139",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "ラ",
+        "speechErased": false,
+        "start": 487.38
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 66.66666666666666,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 3,
+            "recoveredCharacters": 5,
+            "referenceCharacters": 8
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "投げ取れました",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 66.66666666666666,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 3,
+            "recoveredCharacters": 5,
+            "referenceCharacters": 8
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "投げ取れました",
+        "end": 518.18,
+        "id": "cue-0151",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "！ 投げが通りました",
+        "speechErased": false,
+        "start": 516.5
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 50.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 2,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "バ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 60.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 0,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "バーンアウトだ",
+        "end": 518.98,
+        "id": "cue-0152",
+        "kind": null,
+        "recoveredCharacterDelta": 2,
+        "referenceJapanese": "！バーン",
+        "speechErased": false,
+        "start": 518.26
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 26.666666666666668,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 11,
+            "lostCharacters": 0,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ーンアウトだバーンアウトだ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 44.44444444444444,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 5,
+            "lostCharacters": 0,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "バーンアウトだ",
+        "end": 519.3,
+        "id": "cue-0153",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "アウ",
+        "speechErased": false,
+        "start": 518.98
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 15.384615384615385,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 3,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "うバーンアウトした",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 28.57142857142857,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 3,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "してた",
+        "end": 522.74,
+        "id": "cue-0155",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "ちゃった",
+        "speechErased": false,
+        "start": 522.1
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 86.95652173913044,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 5,
+            "lostCharacters": 1,
+            "recoveredCharacters": 20,
+            "referenceCharacters": 21
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ダメージ入っちゃうしパリできないしインパクト打てな",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 85.1063829787234,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 1,
+            "recoveredCharacters": 20,
+            "referenceCharacters": 21
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ダメージ入っちゃうしパリーできないしインパクト打てな",
+        "end": 539.62,
+        "id": "cue-0159",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "入っちゃうし、パリィできないし、インパクト打て",
+        "speechErased": false,
+        "start": 534.58
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 20,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ガードでインパクト打てるとバガートでピヨ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 33,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "も使わせてないダゲキでバイバイカドでインパクトを打てるとその後でピ",
+        "end": 550.18,
+        "id": "cue-0163-part-1",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 542.58
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ピヨ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ピヨ",
+        "end": 551.22,
+        "id": "cue-0163-part-2",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 551.0600000000001
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 22.22222222222222,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 5,
+            "lostCharacters": 2,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "わあお疲れ様",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 20.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 15,
+            "lostCharacters": 1,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 3
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "よめもわーびっくりしたわあよしお前",
+        "end": 564.1,
+        "id": "cue-0167",
+        "kind": null,
+        "recoveredCharacterDelta": 1,
+        "referenceJapanese": "わー！え、",
+        "speechErased": false,
+        "start": 562.26
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [
+              "2"
+            ],
+            "recovered": []
+          },
+          "similarityPercent": 33.33333333333333,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 3,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "みん",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [
+              "2"
+            ],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 4,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "素晴らしいニンニ",
+        "end": 566.18,
+        "id": "cue-0168",
+        "kind": null,
+        "recoveredCharacterDelta": -1,
+        "referenceJapanese": "対2やん！",
+        "speechErased": false,
+        "start": 564.58
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 100.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 0,
+            "recoveredCharacters": 6,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "相手いないわ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 100.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 0,
+            "recoveredCharacters": 6,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "相手いないわ",
+        "end": 576.02,
+        "id": "cue-0171",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "。相手いないわ！",
+        "speechErased": false,
+        "start": 573.86
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 22.22222222222222,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 3,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "一回返した",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 9.523809523809524,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 16,
+            "lostCharacters": 3,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "今回した画面端までついてくるいる先",
+        "end": 593.16,
+        "id": "cue-0177",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "いった！返",
+        "speechErased": false,
+        "start": 592.12
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 72.72727272727273,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 3,
+            "recoveredCharacters": 4,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "画面端も",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 7,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "頭",
+        "end": 596.84,
+        "id": "cue-0178",
+        "kind": null,
+        "recoveredCharacterDelta": -4,
+        "referenceJapanese": "したー!!!画面端も",
+        "speechErased": false,
+        "start": 593.16
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 77.77777777777779,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 1,
+            "recoveredCharacters": 7,
+            "referenceCharacters": 8
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "そして打っていきます",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 77.77777777777779,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 1,
+            "recoveredCharacters": 7,
+            "referenceCharacters": 8
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "そして打っていきます",
+        "end": 602.008,
+        "id": "cue-0180",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "そして打っていく",
+        "speechErased": false,
+        "start": 600.12
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 2,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "影の前打ってきました",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 15.384615384615385,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 1,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "の前を打ってきましたさ",
+        "end": 603,
+        "id": "cue-0181",
+        "kind": null,
+        "recoveredCharacterDelta": 1,
+        "referenceJapanese": "。さあ、",
+        "speechErased": false,
+        "start": 602.104
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 22.22222222222222,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 1,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ああミスされた",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 22.22222222222222,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 1,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 2
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "打撃ミスされた",
+        "end": 610.2,
+        "id": "cue-0185",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "した。",
+        "speechErased": false,
+        "start": 608.92
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 31.57894736842105,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 10,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 13
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "捕まえてない",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 33.33333333333333,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 10,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 13
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "まんないピ",
+        "end": 612.6,
+        "id": "cue-0186",
+        "kind": "soft-voice",
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "が出た。つながっていない。ピン",
+        "speechErased": false,
+        "start": 611
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 18.181818181818183,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 13,
+            "lostCharacters": 5,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ピンチの前で裏返れれば後ろの前",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 16.666666666666664,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 15,
+            "lostCharacters": 5,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ンチの間が取り替えられれば後ろ前に",
+        "end": 615.8,
+        "id": "cue-0187",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "、もか。後ろ投げが",
+        "speechErased": false,
+        "start": 612.92
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "あつまんない",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ああタマネギ",
+        "end": 617.22,
+        "id": "cue-0188",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "れ。",
+        "speechErased": false,
+        "start": 616.26
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "くくっついて",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "おめっち",
+        "end": 617.86,
+        "id": "cue-0189",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 617.22
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "どうしようこれ取った",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 21,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "エヴァスどうしようこれ取ったらやばいやばい",
+        "end": 631.9399999999999,
+        "id": "cue-0193",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "頑",
+        "speechErased": false,
+        "start": 631.46
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": [
+              "チャンス"
+            ]
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 54.54545454545454,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 18,
+            "lostCharacters": 17,
+            "recoveredCharacters": 21,
+            "referenceCharacters": 38
+          },
+          "terms": {
+            "lost": [
+              "立川"
+            ],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ン一気に立ち上がるチャンスですやばいやばいやばいやばい心臓に余裕で余裕でエージ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": [
+              "チャンス"
+            ]
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 51.85185185185185,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 22,
+            "lostCharacters": 17,
+            "recoveredCharacters": 21,
+            "referenceCharacters": 38
+          },
+          "terms": {
+            "lost": [
+              "立川"
+            ],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ン一気に立ち上がるチャンスですやばいやばいややばいややっやぶややぶい心臓で余裕でエージ",
+        "end": 649.06,
+        "id": "cue-0194-part-2",
+        "kind": "laughter",
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "取る。一気に立川、チャンスです！ガード！やばいやばいやばい！心臓痛くなってきた（笑）。［実況不",
+        "speechErased": false,
+        "start": 641.14
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 9.523809523809524,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 9,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 10
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "サーうわあああああテク",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 40.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 7,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 10
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ターでフル",
+        "end": 652.98,
+        "id": "cue-0194-part-3",
+        "kind": "scream",
+        "recoveredCharacterDelta": 2,
+        "referenceJapanese": "明瞭］うおー！フルラウン",
+        "speechErased": false,
+        "start": 649.14
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 54.54545454545454,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 0,
+            "recoveredCharacters": 6,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "でドライブを奪っていくという判断",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 100.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 0,
+            "recoveredCharacters": 6,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "くという判断",
+        "end": 673.86,
+        "id": "cue-0204",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "くという判断",
+        "speechErased": false,
+        "start": 672.99
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 11,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "めっちゃハンドルいいな",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 7,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "止めやしなんで",
+        "end": 677.924,
+        "id": "cue-0206",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 674.8199999999999
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "ボタン押",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ボタン押す勝",
+        "end": 678.42,
+        "id": "cue-0207",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "も",
+        "speechErased": false,
+        "start": 678.02
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 25.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 6,
+            "lostCharacters": 0,
+            "recoveredCharacters": 1,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "う勝間後ろ向け",
+        "candidateClassification": {
+          "emptyTurn": true,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "",
+        "end": 680.66,
+        "id": "cue-0209",
+        "kind": null,
+        "recoveredCharacterDelta": -1,
+        "referenceJapanese": "後",
+        "speechErased": true,
+        "start": 680.42
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 8,
+            "lostCharacters": 4,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "うマジかそうです",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 14,
+            "lostCharacters": 4,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 4
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "うですねマジか最後はこうです",
+        "end": 725.3000000000001,
+        "id": "cue-0220",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "ーーー！ え",
+        "speechErased": false,
+        "start": 723.38
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 7,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "えすごいすぎる",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "えすご",
+        "end": 727.62,
+        "id": "cue-0221",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 726.98
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 64.51612903225806,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 11,
+            "recoveredCharacters": 10,
+            "referenceCharacters": 21
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "え泣けるんだけど普通",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 77.77777777777779,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 7,
+            "recoveredCharacters": 14,
+            "referenceCharacters": 21
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "いすぎるえ泣けるんだけど普通に",
+        "end": 735.0600000000001,
+        "id": "cue-0222",
+        "kind": null,
+        "recoveredCharacterDelta": 4,
+        "referenceJapanese": "え、すごすぎる！えーーー！え、泣けるんだけど、普通に！",
+        "speechErased": false,
+        "start": 727.62
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 58.06451612903226,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 11,
+            "recoveredCharacters": 9,
+            "referenceCharacters": 20
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "にえマジで感動しました",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 32.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 1,
+            "lostCharacters": 16,
+            "recoveredCharacters": 4,
+            "referenceCharacters": 20
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "えマジで感",
+        "end": 736.82,
+        "id": "cue-0223",
+        "kind": null,
+        "recoveredCharacterDelta": -5,
+        "referenceJapanese": "マジで感動しましたえ、泣けるんだけど、普通に！",
+        "speechErased": false,
+        "start": 735.0600000000001
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 50.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 4,
+            "recoveredCharacters": 4,
+            "referenceCharacters": 8
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "えマジで感動した",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 36.36363636363637,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 10,
+            "lostCharacters": 4,
+            "recoveredCharacters": 4,
+            "referenceCharacters": 8
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "動しましたえマジで感動したえ",
+        "end": 738.1800000000001,
+        "id": "cue-0224",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "！マジで感マジで感",
+        "speechErased": false,
+        "start": 736.82
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 19,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 19
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "えわか",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 19,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 19
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "わか",
+        "end": 739.3000000000001,
+        "id": "cue-0225",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "動しました！動した！普通に涙出マジで感動し",
+        "speechErased": false,
+        "start": 738.1800000000001
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 35.294117647058826,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 7,
+            "lostCharacters": 4,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "モカお前はプロになれ",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 35.294117647058826,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 7,
+            "lostCharacters": 4,
+            "recoveredCharacters": 3,
+            "referenceCharacters": 7
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "モカお前はプロになれ",
+        "end": 760.76,
+        "id": "cue-0228",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "になれ。もか、お前",
+        "speechErased": false,
+        "start": 759.08
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "えすご",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 4,
+            "lostCharacters": 1,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 1
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "えすごい",
+        "end": 764.68,
+        "id": "cue-0230",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "け！",
+        "speechErased": false,
+        "start": 764.36
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 52.63157894736842,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 9,
+            "recoveredCharacters": 5,
+            "referenceCharacters": 14
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "る感動した",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 52.63157894736842,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 0,
+            "lostCharacters": 9,
+            "recoveredCharacters": 5,
+            "referenceCharacters": 14
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "る感動した",
+        "end": 769.8,
+        "id": "cue-0232",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "。本当に泣ける。感動した。次のチー",
+        "speechErased": false,
+        "start": 766.12
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 40.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 4,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "マジで泣",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 40.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 2,
+            "lostCharacters": 4,
+            "recoveredCharacters": 2,
+            "referenceCharacters": 6
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "マジで泣",
+        "end": 773.3199999999999,
+        "id": "cue-0234",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "で泣ける。また、",
+        "speechErased": false,
+        "start": 772.04
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 47,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "あのそれで向けてあの甘井さんからまた一からいろいろ教えていただきながら頑張らせていただきたいと",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": []
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 0.0,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 46,
+            "lostCharacters": 0,
+            "recoveredCharacters": 0,
+            "referenceCharacters": 0
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "ねあのそれで向けてあの天井さんからまた1からいろいろ教えていただきながら頑張らせていただきた",
+        "end": 891.86,
+        "id": "cue-0262-part-1",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "",
+        "speechErased": false,
+        "start": 884.1
+      },
+      {
+        "baselineClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": [
+              "次の試合",
+              "あります"
+            ]
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 86.95652173913044,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 0,
+            "recoveredCharacters": 10,
+            "referenceCharacters": 10
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "baselineJapanese": "まだね次の試合ありますから",
+        "candidateClassification": {
+          "emptyTurn": false,
+          "meaning": {
+            "lost": [],
+            "recovered": [
+              "次の試合",
+              "あります"
+            ]
+          },
+          "numbers": {
+            "lost": [],
+            "recovered": []
+          },
+          "similarityPercent": 86.95652173913044,
+          "speech": {
+            "insertedOrSubstitutedCharacters": 3,
+            "lostCharacters": 0,
+            "recoveredCharacters": 10,
+            "referenceCharacters": 10
+          },
+          "terms": {
+            "lost": [],
+            "recovered": []
+          }
+        },
+        "candidateJapanese": "まだね次の試合ありますから",
+        "end": 941.38,
+        "id": "cue-0278",
+        "kind": null,
+        "recoveredCharacterDelta": 0,
+        "referenceJapanese": "、次の試合ありますから。",
+        "speechErased": false,
+        "start": 940.18
+      }
+    ]
+  },
+  "audioAudit": {
+    "baseline": {
+      "locator": "urn:sha256:494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+      "sha256": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2"
+    },
+    "candidate": {
+      "locator": "urn:sha256:8df0e11d06510983dd66b3e0386c5562cf27a8c71bf3acfcf46eb6697b576411",
+      "sha256": "8df0e11d06510983dd66b3e0386c5562cf27a8c71bf3acfcf46eb6697b576411"
+    },
+    "changedOutsideTargetSamples": 0,
+    "changedTargetSamples": 2142866,
+    "cleanControls": [
+      {
+        "byteIdentical": true,
+        "id": "cue-0001"
+      },
+      {
+        "byteIdentical": true,
+        "id": "cue-0078"
+      },
+      {
+        "byteIdentical": true,
+        "id": "cue-0238"
+      }
+    ],
+    "montages": {
+      "afterCleanControls": {
+        "retention": "local-benchmark-artifact",
+        "sha256": "39401df8a602bb05808788f2257a07a7bc6f3aa679db2619416cdffa063eabfd"
+      },
+      "afterTargets": {
+        "retention": "local-benchmark-artifact",
+        "sha256": "891cea9fd2421d42e557579e289df08025168c419745ab1a24159d5c308cd689"
+      },
+      "beforeCleanControls": {
+        "retention": "local-benchmark-artifact",
+        "sha256": "39401df8a602bb05808788f2257a07a7bc6f3aa679db2619416cdffa063eabfd"
+      },
+      "beforeTargets": {
+        "retention": "local-benchmark-artifact",
+        "sha256": "5fc472e5cf77c30df71dca34be9c66fa5cb12b6bf459c6fd11c2c67a433a1197"
+      }
+    },
+    "sampleCount": 15315325,
+    "sampleRate": 16000
+  },
+  "decision": "NO-GO-stop-before-holdout",
+  "englishFinal": {
+    "baselineCharacters": 17811,
+    "candidateCharacters": 0,
+    "candidateFinalPresent": false,
+    "comparable": false
+  },
+  "gates": {
+    "cleanAudioByteIdentical": true,
+    "cleanControlTextIdentical": false,
+    "costNotRunaway": true,
+    "developmentOnly": true,
+    "finalEnglishPresent": false,
+    "moreTargetSpeechRecoveredThanErased": false,
+    "noNetNewTargetEmptiesOrDuplicates": false,
+    "noTargetSpeechErased": false,
+    "pipelineCompleted": false,
+    "protectedScreamLaughterSoftVoiceNotWorse": false,
+    "rawGlobalSpeechNotWorse": false,
+    "rawGlobalTermsNumbersMeaningNotWorse": false,
+    "rawOutputNotEmptyOrMoreDuplicated": true,
+    "targetTermsNumbersMeaningNotWorse": false,
+    "targetWindowScoreValid": false
+  },
+  "holdoutOpened": false,
+  "memoryPressure": {
+    "alignmentTransitions": [],
+    "asrTransitions": [],
+    "minimumAvailableMemoryBytes": 5115510784
+  },
+  "pipelineFailures": [
+    {
+      "message": "Alignment cue cue-0159 has invalid or non-monotonic timing.",
+      "stage": "alignment"
+    }
+  ],
+  "rawComparison": {
+    "baseline": {
+      "artifact": "qudu2fx3ncc-raw-asr.json.gz",
+      "sha256": "1f5edc2fcb929c9abc2cb85256f326bbf2891a200ef66d1c1cb9a66a9c711ce8"
+    },
+    "candidate": {
+      "artifact": "corrected-resume-failure-raw-asr.json.gz",
+      "sha256": "dcf8b3d4cab5976010fbfcc44aa51b4c8ef06840674f8e89d9bf94d02d8e6eb8"
+    }
+  },
+  "rawQwenComparison": {
+    "baselineAdjacentDuplicates": 0,
+    "baselineClassification": {
+      "emptyTurn": false,
+      "meaning": {
+        "lost": [],
+        "recovered": [
+          "チャンス",
+          "次の試合",
+          "あります"
+        ]
+      },
+      "numbers": {
+        "lost": [
+          "10000",
+          "1000"
+        ],
+        "recovered": [
+          "5",
+          "2",
+          "3",
+          "1",
+          "9000",
+          "4",
+          "2800"
+        ]
+      },
+      "similarityPercent": 58.78885316184351,
+      "speech": {
+        "insertedOrSubstitutedCharacters": 2202,
+        "lostCharacters": 874,
+        "recoveredCharacters": 2194,
+        "referenceCharacters": 3068
+      },
+      "terms": {
+        "lost": [
+          "百鬼襲"
+        ],
+        "recovered": [
+          "立川"
+        ]
+      }
+    },
+    "candidateAdjacentDuplicates": 0,
+    "candidateClassification": {
+      "emptyTurn": false,
+      "meaning": {
+        "lost": [],
+        "recovered": [
+          "チャンス",
+          "次の試合",
+          "あります"
+        ]
+      },
+      "numbers": {
+        "lost": [
+          "10000",
+          "2800"
+        ],
+        "recovered": [
+          "5",
+          "2",
+          "3",
+          "1",
+          "9000",
+          "1000",
+          "4"
+        ]
+      },
+      "similarityPercent": 58.90522875816993,
+      "speech": {
+        "insertedOrSubstitutedCharacters": 2113,
+        "lostCharacters": 905,
+        "recoveredCharacters": 2163,
+        "referenceCharacters": 3068
+      },
+      "terms": {
+        "lost": [
+          "百鬼襲"
+        ],
+        "recovered": [
+          "立川"
+        ]
+      }
+    },
+    "dimensionChanges": {
+      "meaning": {
+        "newlyLost": [],
+        "newlyRecovered": []
+      },
+      "numbers": {
+        "newlyLost": [
+          "2800"
+        ],
+        "newlyRecovered": [
+          "1000"
+        ]
+      },
+      "terms": {
+        "newlyLost": [],
+        "newlyRecovered": []
+      }
+    },
+    "dimensionDeltas": {
+      "meaning": 0,
+      "numbers": 0,
+      "terms": 0
+    },
+    "recoveredCharacterDelta": -31,
+    "scope": "complete rawASR strings; independent of forced-alignment timestamps",
+    "speechExamples": {
+      "lostByCandidate": [
+        "ちゃんいかが",
+        "してるけど",
+        "いい試合",
+        "ちなみに",
+        "んじゃ"
+      ],
+      "recoveredByCandidate": [
+        "フルセット",
+        "ではなく",
+        "仲良くな",
+        "おおや",
+        "すごい"
+      ]
+    }
+  },
+  "runtime": {
+    "equivalentTotalWallSeconds": 154.25978070893325,
+    "jobStageSeconds": 133.77705097198486,
+    "peakJobMemoryBytes": 10324710800,
+    "qwenTranscribingSeconds": 98.83906400203705,
+    "resume": {
+      "command": [
+        "xcrun",
+        "swift",
+        "test",
+        "--skip-build",
+        "--filter",
+        "HighQualityAcceptanceTests/testRealFrozenWorkflowWhenOptedIn"
+      ],
+      "elapsedSeconds": 144.68082691705786,
+      "exitCode": 1,
+      "rawLog": "$REPO/.build/benchmarks/issue-93/corrected-resume/run.log",
+      "timedOut": false,
+      "timeoutSeconds": 1200
+    },
+    "separator": {
+      "command": [
+        "$REPO/.build/benchmarks/issue-93/assets/sherpa-onnx-v1.13.5-osx-arm64-shared-no-tts/bin/sherpa-onnx-offline-source-separation",
+        "--spleeter-vocals=$REPO/.build/benchmarks/issue-93/assets/sherpa-onnx-spleeter-2stems-fp16/vocals.fp16.onnx",
+        "--spleeter-accompaniment=$REPO/.build/benchmarks/issue-93/assets/sherpa-onnx-spleeter-2stems-fp16/accompaniment.fp16.onnx",
+        "--num-threads=1",
+        "--input-wav=$REPO/.build/benchmarks/issue-93/audio/separator-input-16k-stereo.wav",
+        "--output-vocals-wav=$REPO/.build/benchmarks/issue-93/audio/vocals.wav",
+        "--output-accompaniment-wav=$REPO/.build/benchmarks/issue-93/audio/accompaniment.wav"
+      ],
+      "elapsedSeconds": 9.578953791875392,
+      "exitCode": 0,
+      "peakChildRSSBytes": 3365715968,
+      "rawLog": "$REPO/.build/benchmarks/issue-93/audio/separator.log"
+    }
+  },
+  "schemaVersion": 1,
+  "ticket": 93
+}

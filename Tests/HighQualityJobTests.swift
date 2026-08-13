@@ -266,6 +266,140 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(semantic.units.map { ($0.start, $0.end) }.last?.1, 1.5)
     }
 
+    func testForcedAlignmentCoarseAnchorRejectsMultipleZeroCues() {
+        XCTAssertNil(HighQualityForcedAlignerRuntime.contentPreservingFallback(
+            cues: [
+                .init(id: "cue-0159", text: "気を取っちゃう。", start: 551.62, end: 551.62),
+                .init(id: "cue-0160", text: "ピヨピヨ。", start: 551.62, end: 551.62),
+            ],
+            rawItems: [
+                .init(cueID: "cue-0159", text: "気", start: 551.62, end: 551.62),
+                .init(cueID: "cue-0160", text: "ピ", start: 551.62, end: 551.62),
+            ],
+            after: 551.62,
+            before: 566.26
+        ))
+    }
+
+    func testForcedAlignmentCoarseFallbackUsesASRAnchorForOnlyZeroCue() throws {
+        let rawItems = [
+            HighQualityAlignmentItem(
+                cueID: "cue-0295", text: "う", start: 957.18, end: 957.18
+            ),
+            HighQualityAlignmentItem(
+                cueID: "cue-0295", text: "ん", start: 957.18, end: 957.18
+            ),
+        ]
+        let result = try XCTUnwrap(
+            HighQualityForcedAlignerRuntime.contentPreservingFallback(
+                cues: [
+                    .init(id: "cue-0295", text: "うん。", start: 957.18, end: 957.18),
+                ],
+                rawItems: rawItems,
+                after: 950.62,
+                before: 957.2078125
+            )
+        )
+
+        XCTAssertEqual(result.cues[0].id, "cue-0295")
+        XCTAssertEqual(result.cues[0].text, "うん。")
+        XCTAssertEqual(result.cues[0].start, 957.03, accuracy: 0.000_000_1)
+        XCTAssertEqual(result.cues[0].end, 957.18, accuracy: 0.000_000_1)
+        XCTAssertEqual(result.cues[0].timingOrigin, "asr-window-anchor")
+        XCTAssertEqual(result.cues[0].timingPolicy, "single-zero-cue-asr-anchor-20cps")
+        XCTAssertEqual(result.cues[0].timingQuality, "coarse")
+        XCTAssertTrue(result.merges.isEmpty)
+
+        let turn = HighQualityTranslationTurn(
+            id: "cue-0295", japanese: "うん。", precedingJapanese: [], followingJapanese: [],
+            speakerLabel: nil, sourceStart: 950.62, sourceEnd: 957.2078125
+        )
+        let chunk = HighQualityAlignmentChunk(
+            index: 168,
+            sourceStart: 950.62,
+            sourceEnd: 957.2078125,
+            cues: result.cues,
+            rawItems: rawItems
+        )
+        let validated = try HighQualityJob.validatedAlignment(
+            [chunk], turns: [turn], duration: 957.2078125
+        )
+        let semantic = try HighQualityJob.semanticTranslationUnits(
+            alignment: .init(
+                modelID: "fixture", revision: "fixture", chunks: [chunk],
+                mergedCues: validated, sourceDuration: 957.2078125,
+                peakMemoryBytes: 0, validationDiagnostics: []
+            ),
+            sourceTurns: [turn]
+        )
+        XCTAssertEqual(semantic.units.map(\.japanese), ["うん。"])
+        XCTAssertTrue(semantic.units[0].decisions.contains("fallback:positive-cue-timing"))
+    }
+
+    func testForcedAlignmentCoarseAnchorRejectsLongTextAndInsufficientSpace() {
+        let raw = [HighQualityAlignmentItem(
+            cueID: "cue", text: "あ", start: 1, end: 1
+        )]
+        XCTAssertNil(HighQualityForcedAlignerRuntime.contentPreservingFallback(
+            cues: [.init(id: "cue", text: String(repeating: "あ", count: 49), start: 1, end: 1)],
+            rawItems: raw,
+            after: 0,
+            before: 10
+        ))
+        XCTAssertNil(HighQualityForcedAlignerRuntime.contentPreservingFallback(
+            cues: [.init(id: "cue", text: "うん。", start: 1, end: 1)],
+            rawItems: raw,
+            after: 0.95,
+            before: 1.05
+        ))
+    }
+
+    func testAlignmentValidatorRejectsUnauditedCoarseTiming() {
+        let turn = HighQualityTranslationTurn(
+            id: "cue", japanese: "うん。", precedingJapanese: [], followingJapanese: [],
+            speakerLabel: nil, sourceStart: 0, sourceEnd: 1
+        )
+        let chunk = HighQualityAlignmentChunk(
+            index: 0,
+            sourceStart: 0,
+            sourceEnd: 1,
+            cues: [.init(
+                id: "cue", text: "うん。", start: 0, end: 0.15,
+                timingOrigin: "asr-window-anchor",
+                timingPolicy: "unapproved",
+                timingQuality: "coarse"
+            )],
+            rawItems: [.init(cueID: "cue", text: "う", start: 0.15, end: 0.15)]
+        )
+
+        XCTAssertThrowsError(try HighQualityJob.validatedAlignment(
+            [chunk], turns: [turn], duration: 1
+        ))
+    }
+
+    func testAlignmentValidatorRejectsShiftedCoarseTiming() {
+        let turn = HighQualityTranslationTurn(
+            id: "cue", japanese: "うん。", precedingJapanese: [], followingJapanese: [],
+            speakerLabel: nil, sourceStart: 0, sourceEnd: 1
+        )
+        let chunk = HighQualityAlignmentChunk(
+            index: 0,
+            sourceStart: 0,
+            sourceEnd: 1,
+            cues: [.init(
+                id: "cue", text: "うん。", start: 0.4, end: 0.55,
+                timingOrigin: "asr-window-anchor",
+                timingPolicy: "single-zero-cue-asr-anchor-20cps",
+                timingQuality: "coarse"
+            )],
+            rawItems: [.init(cueID: "cue", text: "う", start: 0.5, end: 0.5)]
+        )
+
+        XCTAssertThrowsError(try HighQualityJob.validatedAlignment(
+            [chunk], turns: [turn], duration: 1
+        ))
+    }
+
     func testSemanticTranslationUnitsMergeZeroItemDraftsIntoSameCueNeighbor() throws {
         let turns = [
             HighQualityTranslationTurn(
@@ -379,6 +513,87 @@ final class HighQualityJobTests: XCTestCase {
             $0.sourceCueIDs.contains("cue-0178")
                 && $0.decisions.contains("fallback:positive-cue-timing")
         })
+    }
+
+    func testForcedAlignmentFallbackReplayEvidenceWhenOptedIn() throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard let path = environment["WHISPERASR_FORCED_ALIGNMENT_EVIDENCE"],
+              let expectation = environment["WHISPERASR_FORCED_ALIGNMENT_EXPECTATION"] else {
+            throw XCTSkip("Set the raw alignment evidence and expected fallback result.")
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: URL(fileURLWithPath: path))
+        )
+        let recorded = try XCTUnwrap(evidence.alignment)
+        let chunks = recorded.chunks.sorted { $0.index < $1.index }
+        let invalidIndex = try XCTUnwrap(chunks.firstIndex {
+            !HighQualityForcedAlignerRuntime.hasValidCueTimeline(
+                $0.cues, after: $0.sourceStart, before: $0.sourceEnd
+            )
+        })
+        let chunk = chunks[invalidIndex]
+        let previousEnd = invalidIndex == 0
+            ? chunk.sourceStart : chunks[invalidIndex - 1].cues.last?.end ?? chunk.sourceStart
+        let upperBound = min(
+            chunk.sourceEnd,
+            chunks.indices.contains(invalidIndex + 1)
+                ? chunks[invalidIndex + 1].sourceStart : chunk.sourceEnd
+        )
+        let fallback = HighQualityForcedAlignerRuntime.contentPreservingFallback(
+            cues: chunk.cues,
+            rawItems: chunk.rawItems,
+            after: max(previousEnd, chunk.sourceStart),
+            before: upperBound,
+            chunkIndex: chunk.index
+        )
+        if expectation == "fail-closed" {
+            XCTAssertNil(fallback)
+            return
+        }
+        XCTAssertEqual(expectation, "single-coarse-anchor")
+        let fixed = try XCTUnwrap(fallback)
+        XCTAssertTrue(fixed.merges.isEmpty)
+        XCTAssertEqual(fixed.cues.map(\.id), ["cue-0295"])
+        XCTAssertEqual(fixed.cues.first?.timingQuality, "coarse")
+        let fixedChunk = HighQualityAlignmentChunk(
+            index: chunk.index,
+            sourceStart: chunk.sourceStart,
+            sourceEnd: chunk.sourceEnd,
+            cues: fixed.cues,
+            rawItems: chunk.rawItems
+        )
+        XCTAssertEqual(fixedChunk.rawItems, chunk.rawItems)
+        let turns = chunk.cues.enumerated().map { index, cue in
+            HighQualityTranslationTurn(
+                id: cue.id,
+                japanese: cue.text,
+                precedingJapanese: index == 0 ? [] : [chunk.cues[index - 1].text],
+                followingJapanese: index + 1 == chunk.cues.count
+                    ? [] : [chunk.cues[index + 1].text],
+                speakerLabel: nil,
+                sourceStart: chunk.sourceStart,
+                sourceEnd: chunk.sourceEnd
+            )
+        }
+        let validated = try HighQualityJob.validatedAlignment(
+            [fixedChunk], turns: turns, duration: recorded.sourceDuration
+        )
+        let semantic = try HighQualityJob.semanticTranslationUnits(
+            alignment: .init(
+                modelID: recorded.modelID,
+                revision: recorded.revision,
+                chunks: [fixedChunk],
+                mergedCues: validated,
+                sourceDuration: recorded.sourceDuration,
+                peakMemoryBytes: recorded.peakMemoryBytes,
+                validationDiagnostics: []
+            ),
+            sourceTurns: turns
+        )
+        XCTAssertEqual(semantic.units.map(\.japanese), turns.map(\.japanese))
     }
 
     func testSemanticTranslationUnitsIgnoreDiarizationAndPreserveAlignedJapanese() async throws {
@@ -926,6 +1141,38 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(processedSampleCount, samples.count + 12 * sampleRate)
     }
 
+    func testChunkedASRRetainsCharacterTimestampsAfterOverlapRemoval() async throws {
+        let sampleRate = 16_000
+        let samples = [Float](repeating: 0.5, count: 21 * sampleRate)
+        let counts = SampleCounts()
+
+        let result = try await HighQualityJob.Services.chunkedASR(samples) { chunk in
+            let text = await counts.append(chunk.count) == 1 ? "一共通" : "共通二"
+            return .init(
+                rawTranscript: text,
+                chunks: [],
+                characters: Array(text).enumerated().map { offset, character in
+                    .init(
+                        chunkIndex: 0,
+                        text: String(character),
+                        sourceStart: Double(offset == 2 && text == "共通二" ? 1 : offset),
+                        sourceEnd: offset == 2 && text == "共通二"
+                            ? Double(offset + 1).nextUp : Double(offset + 1)
+                    )
+                }
+            )
+        }
+
+        XCTAssertEqual(result.rawTranscript, "一共通\n二")
+        XCTAssertEqual(result.characters?.map(\.text).joined(), "一共通二")
+        XCTAssertEqual(result.characters?.map(\.chunkIndex), [0, 0, 0, 1])
+        XCTAssertEqual(result.characters?.last?.sourceStart, 20)
+        XCTAssertEqual(result.characters?.last?.sourceEnd, 21)
+        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+            result, sampleCount: samples.count, anchored: true
+        ))
+    }
+
     func testChunkedASRKeepsForcedAlignmentWindowsWithinTwentySeconds() async throws {
         let sampleRate = 16_000
         let samples = [Float](repeating: 0.5, count: 91 * sampleRate)
@@ -939,6 +1186,22 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.rawTranscript, "一。共通。\n二。\n三。\n四。\n五。")
         XCTAssertEqual(result.chunks.map(\.sourceStart), [0, 20, 38, 56, 74])
         XCTAssertEqual(result.chunks.map(\.sourceEnd), [20, 38, 56, 74, 91])
+        XCTAssertTrue(result.chunks.allSatisfy { $0.sourceEnd - $0.sourceStart <= 20 })
+    }
+
+    func testChunkedASRAdvancesAlignmentAnchorAcrossEmptyWindows() async throws {
+        let sampleRate = 16_000
+        let samples = [Float](repeating: 0.5, count: 91 * sampleRate)
+        let transcripts = ["一。", "", "二。", "", "三。"]
+        let counts = SampleCounts()
+
+        let result = try await HighQualityJob.Services.chunkedASR(samples) { chunk in
+            transcripts[await counts.append(chunk.count) - 1]
+        }
+
+        XCTAssertEqual(result.rawTranscript, "一。\n二。\n三。")
+        XCTAssertEqual(result.chunks.map(\.sourceStart), [0, 38, 74])
+        XCTAssertEqual(result.chunks.map(\.sourceEnd), [20, 56, 91])
         XCTAssertTrue(result.chunks.allSatisfy { $0.sourceEnd - $0.sourceStart <= 20 })
     }
 
@@ -1918,6 +2181,10 @@ final class HighQualityJobTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: root) }
         XCTAssertEqual(HighQualityASRBackend.allCases, [.qwenJA, .parakeetJA, .whisperKit])
         XCTAssertEqual(HighQualityASRBackend.productDefault, .qwenJA)
+        XCTAssertEqual(
+            HighQualityASRBackend(rawValue: "funasr-nano-int8"),
+            .funASRNanoInt8
+        )
 
         for backend in HighQualityASRBackend.allCases {
             let progress = ProgressLog()
@@ -1925,6 +2192,8 @@ final class HighQualityJobTests: XCTestCase {
             case .qwenJA: " こんにちは \n"
             case .parakeetJA: " 日本語 \n"
             case .whisperKit: " 音声認識 \n"
+            case .funASRNanoInt8: " 実験 \n"
+            case .reazonSpeechK2V2: ""
             }
             let job = HighQualityJob(servicesForBackend: { _ in
                 .init(

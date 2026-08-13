@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "ticket": 93,
+  "command": "BENCHMARK_SLOT_GRANTED=93 BENCHMARK_RESUME_GRANTED=93 bash Scripts/run_qwen_voice_music_experiment.sh resume",
+  "scope": {
+    "corpus": "qudu2fx3ncc",
+    "role": "development",
+    "holdoutOpened": false,
+    "spleeterPassesInResume": 0,
+    "qwenPassesInResume": 1,
+    "benchmarkSlotReleased": true
+  },
+  "decision": "NO-GO-stop-before-holdout",
+  "classification": "candidate-pipeline-failure-after-complete-qwen-asr",
+  "metrics": {
+    "rawQwenGlobal": {
+      "baselineRecoveredCharacters": 2194,
+      "candidateRecoveredCharacters": 2163,
+      "recoveredCharacterDelta": -31,
+      "baselineLostCharacters": 874,
+      "candidateLostCharacters": 905,
+      "termsDelta": 0,
+      "numbersDelta": 0,
+      "meaningDelta": 0,
+      "newlyRecoveredNumbers": ["1000"],
+      "newlyLostNumbers": ["2800"]
+    },
+    "alignedWindowDiagnostic": {
+      "promotional": false,
+      "targets": 68,
+      "recoveredCharactersGained": 13,
+      "recoveredCharactersErased": 18,
+      "baselineEmptyTurns": 0,
+      "candidateEmptyTurns": 4,
+      "baselineDuplicates": 0,
+      "candidateDuplicates": 1
+    },
+    "finalEnglishBaselineCharacters": 17811,
+    "finalEnglishCandidateCharacters": 0
+  },
+  "runtime": {
+    "historicalSpleeterSeconds": 9.578953791875392,
+    "qwenTranscribingSeconds": 98.83906400203705,
+    "correctedResumeWallSeconds": 144.68082691705786,
+    "equivalentTotalWallSeconds": 154.25978070893325,
+    "timedOut": false
+  },
+  "memory": {
+    "historicalSpleeterPeakRSSBytes": 3365715968,
+    "jobPeakPhysicalFootprintBytes": 10324710800,
+    "minimumAvailableMemoryBytes": 5115510784,
+    "asrPressureTransitions": [],
+    "alignmentPressureTransitions": [],
+    "criticalPressureObserved": false
+  },
+  "alignmentDiagnostic": {
+    "failure": "Alignment cue cue-0159 has invalid or non-monotonic timing.",
+    "rawQwenContainsTimestamps": false,
+    "candidateCue": {
+      "id": "cue-0159",
+      "text": "気を取っちゃう。",
+      "start": 551.62,
+      "end": 551.62
+    },
+    "forcedAlignmentWindow": {
+      "chunkIndex": 31,
+      "sourceStart": 551.62,
+      "sourceEnd": 566.26,
+      "zeroDurationCueCountBeforeFirstPositiveCue": 10
+    },
+    "route": "After the forced aligner's boundedInterval mapping, the result contains items at the full-audio window boundary; the generic zero-duration fallback could not merge the run, and HighQualityJob validation correctly rejected it.",
+    "montageTimelineMappingInASRPath": false,
+    "fixtureOrAssertionSource": "production HighQualityJob alignment validation, not a test fixture",
+    "spleeterCausalityEstablished": false,
+    "offlinePipelineReplayAvailable": false
+  },
+  "artifacts": {
+    "baselineRawASRGzipSHA256": "1f5edc2fcb929c9abc2cb85256f326bbf2891a200ef66d1c1cb9a66a9c711ce8",
+    "candidateRawASRSHA256": "e4a8d5d3e886aec516c9533a7ab66d1442f8f3de8eaf2f365a696b7342f1d226",
+    "candidateWAVSHA256": "8df0e11d06510983dd66b3e0386c5562cf27a8c71bf3acfcf46eb6697b576411",
+    "separatorLogSHA256": "0b25aacc24add09f9d9e90b26787beedfbd00cac2687b2e878f18547bcf6f3db",
+    "separatorRuntimeSHA256": "7eda713c000b923a34836e98242ba551fa404da81182b7e5ea3350e2e9e933c4",
+    "retainedManifestSHA256": "4fde91dcd092064bf4048ec93622b00990cd959f1cc772abdc364148a8548f6c",
+    "retainedRawASRGzipSHA256": "dcf8b3d4cab5976010fbfcc44aa51b4c8ef06840674f8e89d9bf94d02d8e6eb8",
+    "retainedRunLogGzipSHA256": "b0b84ab7ac018480617d4c7ab4c93e7bf307c39b088bda978adc98d5b3afcbb8",
+    "retainedRuntimeSHA256": "322cc91d337396ed5aec21abf364234580d8fda5c33ee9fc75d44c74d982c5b8"
+  },
+  "attempt1EvidenceRemainsSeparate": true
+}

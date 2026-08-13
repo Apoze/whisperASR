@@ -1,0 +1,15 @@
+{
+  "command": [
+    "xcrun",
+    "swift",
+    "test",
+    "--skip-build",
+    "--filter",
+    "AdaptiveASRExperimentTests/testDevelopmentASRWhenOptedIn"
+  ],
+  "elapsedSeconds": 140.09573270892724,
+  "exitCode": 0,
+  "rawLog": "/Users/maz/.codex/worktrees/4656/whisperASR/.build/benchmarks/issue-94/development/asr.log",
+  "timedOut": false,
+  "timeoutSeconds": 1200
+}

@@ -1,0 +1,2079 @@
+{
+  "completeness": {
+    "acceptedAfterTarget": 228,
+    "acceptedBeforeTarget": 53,
+    "neverGeneratedUnits": 0,
+    "retriedUnitIDs": [
+      "unit-0054"
+    ],
+    "reusedAcceptedUnits": 281,
+    "totalUnits": 282
+  },
+  "english": {
+    "COMET": null,
+    "baselineChrFPlusPlus": 46.4359351521226,
+    "candidateChrFPlusPlus": 45.874880077811724,
+    "delta": -0.5610550743108789,
+    "overrides": [
+      {
+        "baseline": {
+          "english": "It's difficult to handle. I used my gauge. It's quite direct. If you can hit with guard, it's a big advantage.",
+          "japanese": "対応難しい。 ゲージ使ったわ。 ズバつく。 ガードでインパクト打てると、バガー",
+          "turnIDs": [
+            "unit-0177",
+            "unit-0178",
+            "unit-0179",
+            "unit-0180"
+          ]
+        },
+        "baselineChrFPlusPlus": 38.6673357227064,
+        "candidate": {
+          "english": "It's not possible to use techniques that rely on a cage.",
+          "japanese": "ケージ使った技が使えない。",
+          "turnIDs": [
+            "unit-0157"
+          ]
+        },
+        "candidateChrFPlusPlus": 29.113219653281092,
+        "distanceFromFailureSeconds": 338.38,
+        "distanceFromFailureWindows": 59,
+        "end": 543.16,
+        "id": "segment-0095",
+        "index": 94,
+        "parakeet": "ケージ使った技が使えない。",
+        "qwen": "はいはい、はい。はいあ、は、は。は、あ、あ。ははは、いや、はは。あ、いや。はあ、う、はあ。ああ、まあ、はや、はゆ、は難しい。ゲージ使ったわ。ズ、だ、しか使わ、ない、",
+        "referenceEnglish": "It's a really bad state: you still take chip damage while guarding, you can't parry, and you can't use Drive Impact.",
+        "selectedJapanese": "ケージ使った技が使えない。",
+        "start": 539.88
+      },
+      {
+        "baseline": {
+          "english": "Well, really? It ends like this.",
+          "japanese": "さあ、マジか、最後はこう。",
+          "turnIDs": [
+            "unit-0236"
+          ]
+        },
+        "baselineChrFPlusPlus": null,
+        "candidate": {
+          "english": "Got it!",
+          "japanese": "濱家ボケ、やった!",
+          "turnIDs": [
+            "unit-0212"
+          ]
+        },
+        "candidateChrFPlusPlus": null,
+        "distanceFromFailureSeconds": 504.78,
+        "distanceFromFailureWindows": 90,
+        "end": 711.3,
+        "id": "segment-0126",
+        "index": 125,
+        "parakeet": "濱家ボケ、やった!",
+        "qwen": "あああ！ああ、ああ。",
+        "referenceEnglish": null,
+        "selectedJapanese": "濱家ボケ、やった!",
+        "start": 706.28
+      }
+    ]
+  },
+  "holdoutOpened": false,
+  "inputSHA256": {
+    "candidateRaw": "7c5cce5f95d3d68e3bebd53da92a0a38df770bed1f59bda11e7c39edc450b2b6",
+    "diagnostic": "8f8b09f4a63576809e6a7a494d88ab02611a04f8eb2c3a88548fe6598b6e5fe5",
+    "ready": "2c841e0af22d455669f5941fc0dda6d0bda2b4aeff5f93482228e2153fa07dad",
+    "retry": "71b27de29969befad6f4076fadc00df3fef9ee941bc313ebbf76222cd82014c4"
+  },
+  "invalidDeliverablePublished": false,
+  "preflightVerifiedTranslationWeightSHA256": [
+    "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+    "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+  ],
+  "reporterImplementationSHA256": {
+    "Scripts/adaptive_asr_harness.py": "dc4d762a855e300ef27587436e1dfe197f4d7ed800ab94b9314bd5758a772aeb",
+    "Scripts/run_adaptive_asr_experiment.sh": "d6117aef572b1ddd1876e5c8e22bfd4a060cf03443e537eb6a8884942554bfe0"
+  },
+  "runtime": {
+    "command": {
+      "command": [
+        "xcrun",
+        "swift",
+        "test",
+        "--skip-build",
+        "--filter",
+        "HighQualityTranslationIntegrityTests/testRetriesFrozenRejectedUnitsWhenOptedIn"
+      ],
+      "elapsedSeconds": 21.372141083003953,
+      "exitCode": 0,
+      "rawLog": "/Users/maz/.codex/worktrees/4656/whisperASR/.build/benchmarks/issue-94/development/targeted-translation-retry/run.log",
+      "timedOut": false,
+      "timeoutSeconds": 300
+    },
+    "exchangePeakMemoryBytes": 6911789160,
+    "generationSeconds": 2.2793760299682617,
+    "minimumAvailableMemoryBytes": 5305532416,
+    "swapDeltaBytes": 0,
+    "worker": {
+      "availableMemorySamples": [
+        {
+          "at": 808202576.732677,
+          "availableMemoryBytes": 9475702784
+        },
+        {
+          "at": 808202576.732761,
+          "availableMemoryBytes": 9475702784
+        },
+        {
+          "at": 808202576.837495,
+          "availableMemoryBytes": 9475031040
+        },
+        {
+          "at": 808202576.938682,
+          "availableMemoryBytes": 9486794752
+        },
+        {
+          "at": 808202577.039051,
+          "availableMemoryBytes": 9514926080
+        },
+        {
+          "at": 808202577.145846,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.250106,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.352677,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.459612,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.564296,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.670565,
+          "availableMemoryBytes": 9510289408
+        },
+        {
+          "at": 808202577.775342,
+          "availableMemoryBytes": 9510682624
+        },
+        {
+          "at": 808202577.877789,
+          "availableMemoryBytes": 9512206336
+        },
+        {
+          "at": 808202577.983025,
+          "availableMemoryBytes": 9529049088
+        },
+        {
+          "at": 808202578.087314,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.194056,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.300792,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.402587,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.503326,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.610172,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.710792,
+          "availableMemoryBytes": 9533571072
+        },
+        {
+          "at": 808202578.817644,
+          "availableMemoryBytes": 8860057600
+        },
+        {
+          "at": 808202578.920711,
+          "availableMemoryBytes": 8766013440
+        },
+        {
+          "at": 808202579.021666,
+          "availableMemoryBytes": 8588394496
+        },
+        {
+          "at": 808202579.123558,
+          "availableMemoryBytes": 8298479616
+        },
+        {
+          "at": 808202579.229713,
+          "availableMemoryBytes": 7983333376
+        },
+        {
+          "at": 808202579.336396,
+          "availableMemoryBytes": 7658930176
+        },
+        {
+          "at": 808202579.438894,
+          "availableMemoryBytes": 7470514176
+        },
+        {
+          "at": 808202579.542707,
+          "availableMemoryBytes": 7172423680
+        },
+        {
+          "at": 808202579.648075,
+          "availableMemoryBytes": 6895583232
+        },
+        {
+          "at": 808202579.748954,
+          "availableMemoryBytes": 6788710400
+        },
+        {
+          "at": 808202579.84918,
+          "availableMemoryBytes": 6787284992
+        },
+        {
+          "at": 808202579.949597,
+          "availableMemoryBytes": 6791053312
+        },
+        {
+          "at": 808202580.049948,
+          "availableMemoryBytes": 6794919936
+        },
+        {
+          "at": 808202580.150682,
+          "availableMemoryBytes": 6792183808
+        },
+        {
+          "at": 808202580.257471,
+          "availableMemoryBytes": 6789988352
+        },
+        {
+          "at": 808202580.36135,
+          "availableMemoryBytes": 6793625600
+        },
+        {
+          "at": 808202580.462471,
+          "availableMemoryBytes": 6791200768
+        },
+        {
+          "at": 808202580.562695,
+          "availableMemoryBytes": 6788677632
+        },
+        {
+          "at": 808202580.668019,
+          "availableMemoryBytes": 6788677632
+        },
+        {
+          "at": 808202580.770151,
+          "availableMemoryBytes": 6788677632
+        },
+        {
+          "at": 808202580.87033,
+          "availableMemoryBytes": 6776619008
+        },
+        {
+          "at": 808202580.975802,
+          "availableMemoryBytes": 6787809280
+        },
+        {
+          "at": 808202581.077686,
+          "availableMemoryBytes": 6777995264
+        },
+        {
+          "at": 808202581.182375,
+          "availableMemoryBytes": 6774685696
+        },
+        {
+          "at": 808202581.282874,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.387332,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.488455,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.592995,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.695897,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.797932,
+          "availableMemoryBytes": 6768721920
+        },
+        {
+          "at": 808202581.904668,
+          "availableMemoryBytes": 6780960768
+        },
+        {
+          "at": 808202582.006845,
+          "availableMemoryBytes": 6661849088
+        },
+        {
+          "at": 808202582.11359,
+          "availableMemoryBytes": 6662324224
+        },
+        {
+          "at": 808202582.219879,
+          "availableMemoryBytes": 6660243456
+        },
+        {
+          "at": 808202582.321212,
+          "availableMemoryBytes": 6659375104
+        },
+        {
+          "at": 808202582.427413,
+          "availableMemoryBytes": 6657687552
+        },
+        {
+          "at": 808202582.528198,
+          "availableMemoryBytes": 6656573440
+        },
+        {
+          "at": 808202582.631791,
+          "availableMemoryBytes": 6715670528
+        },
+        {
+          "at": 808202582.734937,
+          "availableMemoryBytes": 6711590912
+        },
+        {
+          "at": 808202582.838815,
+          "availableMemoryBytes": 6711590912
+        },
+        {
+          "at": 808202582.94562,
+          "availableMemoryBytes": 6702055424
+        },
+        {
+          "at": 808202583.052368,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.158671,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.260489,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.361224,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.461933,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.566767,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.67109,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.776416,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.880912,
+          "availableMemoryBytes": 6697648128
+        },
+        {
+          "at": 808202583.983953,
+          "availableMemoryBytes": 5560745984
+        },
+        {
+          "at": 808202584.089376,
+          "availableMemoryBytes": 5502763008
+        },
+        {
+          "at": 808202584.192415,
+          "availableMemoryBytes": 5477138432
+        },
+        {
+          "at": 808202584.293883,
+          "availableMemoryBytes": 5380014080
+        },
+        {
+          "at": 808202584.400674,
+          "availableMemoryBytes": 5375295488
+        },
+        {
+          "at": 808202584.505201,
+          "availableMemoryBytes": 5375623168
+        },
+        {
+          "at": 808202584.610673,
+          "availableMemoryBytes": 5376212992
+        },
+        {
+          "at": 808202584.717102,
+          "availableMemoryBytes": 5308399616
+        },
+        {
+          "at": 808202584.822122,
+          "availableMemoryBytes": 5308399616
+        },
+        {
+          "at": 808202584.927683,
+          "availableMemoryBytes": 5308399616
+        },
+        {
+          "at": 808202585.028866,
+          "availableMemoryBytes": 5305532416
+        },
+        {
+          "at": 808202585.129339,
+          "availableMemoryBytes": 5308039168
+        },
+        {
+          "at": 808202585.130925,
+          "availableMemoryBytes": 5308055552
+        },
+        {
+          "at": 808202585.233649,
+          "availableMemoryBytes": 5306187776
+        },
+        {
+          "at": 808202585.337713,
+          "availableMemoryBytes": 7903985664
+        }
+      ],
+      "command": [
+        "/Users/maz/.codex/worktrees/4656/whisperASR/.build/arm64-apple-macosx/debug/WhisperASR",
+        "--high-quality-translation-worker",
+        "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE",
+        "translategemma-12b-it-4bit"
+      ],
+      "elapsedSeconds": 8.713005065917969,
+      "exitStatus": 0,
+      "exitedAt": 808202585.442149,
+      "forcedTermination": false,
+      "peakPhysicalFootprintBytes": 7325652824,
+      "pressureTransitions": [],
+      "processIdentifier": 14159,
+      "rawLog": "",
+      "rawLogPath": "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE/worker.log",
+      "startedAt": 808202576.729144,
+      "swapUsedAfterBytes": 2586902528,
+      "swapUsedBeforeBytes": 2586902528,
+      "terminationReason": "exit"
+    }
+  },
+  "schemaVersion": 1,
+  "status": "completed",
+  "targetedRetry": {
+    "baselineArtifact": "/Users/maz/.codex/worktrees/4656/whisperASR/.build/benchmarks/issue-94/development/targeted-translation-retry/baseline.json",
+    "corpus": "development",
+    "rejectedCueIDs": [
+      "unit-0054"
+    ],
+    "retry": {
+      "attempts": [
+        {
+          "duration": 2.279868006706238,
+          "number": 1,
+          "outcome": "success"
+        }
+      ],
+      "batches": [
+        {
+          "cueIDs": [
+            "unit-0054"
+          ],
+          "duration": 2.2793760299682617,
+          "finishReason": "stop",
+          "inputTokens": 91,
+          "model": "mlx-community/translategemma-12b-it-4bit",
+          "nativeOutput": "That's right, right, right, right, right. It's like a cutting line.",
+          "nativePrompt": "{\"generation\":{\"max_tokens\":128,\"temperature\":0},\"messages\":[{\"content\":[{\"source_lang_code\":\"ja-JP\",\"target_lang_code\":\"en\",\"text\":\"な切るラインみたいなあそうそうそうそうそう切るラ\",\"type\":\"text\"}],\"role\":\"user\"}]}",
+          "outputTokens": 21,
+          "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+          "sanitizedOutput": "That's right, right, right, right, right. It's like a cutting line.",
+          "sanitizedPrompt": "な切るラインみたいなあそうそうそうそうそう切るラ"
+        }
+      ],
+      "integrityVerdicts": [
+        {
+          "cueID": "unit-0054",
+          "generatedOutput": "That's right, right, right, right, right. It's like a cutting line.",
+          "glossaryOpportunities": [],
+          "reasons": [],
+          "testedSource": "な切るラインみたいなあそうそうそうそうそう切るラ",
+          "thresholdVersion": "translation-integrity-dev-v1",
+          "verdict": "pass"
+        }
+      ],
+      "model": "mlx-community/translategemma-12b-it-4bit",
+      "peakMemoryBytes": 6911789160,
+      "request": {
+        "conversationContextByCueID": {},
+        "glossary": [],
+        "glossaryByCueID": {
+          "unit-0054": []
+        },
+        "retryReasonCodes": {
+          "unit-0054": [
+            "degenerate-repetition"
+          ]
+        },
+        "source": {
+          "byteCount": 30630694,
+          "fileName": "audio-16k-mono.wav",
+          "modifiedAt": 806153574,
+          "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/japanese-live/corpora/qudu2fx3ncc/audio-16k-mono.wav"
+        },
+        "turns": [
+          {
+            "followingJapanese": [
+              "頭って入りますか。"
+            ],
+            "id": "unit-0054",
+            "japanese": "な切るラインみたいなあそうそうそうそうそう切るラ",
+            "precedingJapanese": [
+              "あ、もかちゃんに、このリハーサルの、なんか、のゲージは、"
+            ],
+            "sourceEnd": 201.5,
+            "sourceStart": 198.06
+          }
+        ]
+      },
+      "response": "{\"translations\":[{\"text\":\"That's right, right, right, right, right. It's like a cutting line.\",\"id\":\"unit-0054\"}]}",
+      "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "runtimeVersion": "3.31.4",
+      "validationFailures": [],
+      "weightSHA256": [],
+      "worker": {
+        "availableMemorySamples": [
+          {
+            "at": 808202576.732677,
+            "availableMemoryBytes": 9475702784
+          },
+          {
+            "at": 808202576.732761,
+            "availableMemoryBytes": 9475702784
+          },
+          {
+            "at": 808202576.837495,
+            "availableMemoryBytes": 9475031040
+          },
+          {
+            "at": 808202576.938682,
+            "availableMemoryBytes": 9486794752
+          },
+          {
+            "at": 808202577.039051,
+            "availableMemoryBytes": 9514926080
+          },
+          {
+            "at": 808202577.145846,
+            "availableMemoryBytes": 9510289408
+          },
+          {
+            "at": 808202577.250106,
+            "availableMemoryBytes": 9510289408
+          },
+          {
+            "at": 808202577.352677,
+            "availableMemoryBytes": 9510289408
+          },
+          {
+            "at": 808202577.459612,
+            "availableMemoryBytes": 9510289408
+          },
+          {
+            "at": 808202577.564296,
+            "availableMemoryBytes": 9510289408
+          },
+          {
+            "at": 808202577.670565,
+            "availableMemoryBytes": 9510289408
+          },
+          {
+            "at": 808202577.775342,
+            "availableMemoryBytes": 9510682624
+          },
+          {
+            "at": 808202577.877789,
+            "availableMemoryBytes": 9512206336
+          },
+          {
+            "at": 808202577.983025,
+            "availableMemoryBytes": 9529049088
+          },
+          {
+            "at": 808202578.087314,
+            "availableMemoryBytes": 9533571072
+          },
+          {
+            "at": 808202578.194056,
+            "availableMemoryBytes": 9533571072
+          },
+          {
+            "at": 808202578.300792,
+            "availableMemoryBytes": 9533571072
+          },
+          {
+            "at": 808202578.402587,
+            "availableMemoryBytes": 9533571072
+          },
+          {
+            "at": 808202578.503326,
+            "availableMemoryBytes": 9533571072
+          },
+          {
+            "at": 808202578.610172,
+            "availableMemoryBytes": 9533571072
+          },
+          {
+            "at": 808202578.710792,
+            "availableMemoryBytes": 9533571072
+          },
+          {
+            "at": 808202578.817644,
+            "availableMemoryBytes": 8860057600
+          },
+          {
+            "at": 808202578.920711,
+            "availableMemoryBytes": 8766013440
+          },
+          {
+            "at": 808202579.021666,
+            "availableMemoryBytes": 8588394496
+          },
+          {
+            "at": 808202579.123558,
+            "availableMemoryBytes": 8298479616
+          },
+          {
+            "at": 808202579.229713,
+            "availableMemoryBytes": 7983333376
+          },
+          {
+            "at": 808202579.336396,
+            "availableMemoryBytes": 7658930176
+          },
+          {
+            "at": 808202579.438894,
+            "availableMemoryBytes": 7470514176
+          },
+          {
+            "at": 808202579.542707,
+            "availableMemoryBytes": 7172423680
+          },
+          {
+            "at": 808202579.648075,
+            "availableMemoryBytes": 6895583232
+          },
+          {
+            "at": 808202579.748954,
+            "availableMemoryBytes": 6788710400
+          },
+          {
+            "at": 808202579.84918,
+            "availableMemoryBytes": 6787284992
+          },
+          {
+            "at": 808202579.949597,
+            "availableMemoryBytes": 6791053312
+          },
+          {
+            "at": 808202580.049948,
+            "availableMemoryBytes": 6794919936
+          },
+          {
+            "at": 808202580.150682,
+            "availableMemoryBytes": 6792183808
+          },
+          {
+            "at": 808202580.257471,
+            "availableMemoryBytes": 6789988352
+          },
+          {
+            "at": 808202580.36135,
+            "availableMemoryBytes": 6793625600
+          },
+          {
+            "at": 808202580.462471,
+            "availableMemoryBytes": 6791200768
+          },
+          {
+            "at": 808202580.562695,
+            "availableMemoryBytes": 6788677632
+          },
+          {
+            "at": 808202580.668019,
+            "availableMemoryBytes": 6788677632
+          },
+          {
+            "at": 808202580.770151,
+            "availableMemoryBytes": 6788677632
+          },
+          {
+            "at": 808202580.87033,
+            "availableMemoryBytes": 6776619008
+          },
+          {
+            "at": 808202580.975802,
+            "availableMemoryBytes": 6787809280
+          },
+          {
+            "at": 808202581.077686,
+            "availableMemoryBytes": 6777995264
+          },
+          {
+            "at": 808202581.182375,
+            "availableMemoryBytes": 6774685696
+          },
+          {
+            "at": 808202581.282874,
+            "availableMemoryBytes": 6768721920
+          },
+          {
+            "at": 808202581.387332,
+            "availableMemoryBytes": 6768721920
+          },
+          {
+            "at": 808202581.488455,
+            "availableMemoryBytes": 6768721920
+          },
+          {
+            "at": 808202581.592995,
+            "availableMemoryBytes": 6768721920
+          },
+          {
+            "at": 808202581.695897,
+            "availableMemoryBytes": 6768721920
+          },
+          {
+            "at": 808202581.797932,
+            "availableMemoryBytes": 6768721920
+          },
+          {
+            "at": 808202581.904668,
+            "availableMemoryBytes": 6780960768
+          },
+          {
+            "at": 808202582.006845,
+            "availableMemoryBytes": 6661849088
+          },
+          {
+            "at": 808202582.11359,
+            "availableMemoryBytes": 6662324224
+          },
+          {
+            "at": 808202582.219879,
+            "availableMemoryBytes": 6660243456
+          },
+          {
+            "at": 808202582.321212,
+            "availableMemoryBytes": 6659375104
+          },
+          {
+            "at": 808202582.427413,
+            "availableMemoryBytes": 6657687552
+          },
+          {
+            "at": 808202582.528198,
+            "availableMemoryBytes": 6656573440
+          },
+          {
+            "at": 808202582.631791,
+            "availableMemoryBytes": 6715670528
+          },
+          {
+            "at": 808202582.734937,
+            "availableMemoryBytes": 6711590912
+          },
+          {
+            "at": 808202582.838815,
+            "availableMemoryBytes": 6711590912
+          },
+          {
+            "at": 808202582.94562,
+            "availableMemoryBytes": 6702055424
+          },
+          {
+            "at": 808202583.052368,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.158671,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.260489,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.361224,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.461933,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.566767,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.67109,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.776416,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.880912,
+            "availableMemoryBytes": 6697648128
+          },
+          {
+            "at": 808202583.983953,
+            "availableMemoryBytes": 5560745984
+          },
+          {
+            "at": 808202584.089376,
+            "availableMemoryBytes": 5502763008
+          },
+          {
+            "at": 808202584.192415,
+            "availableMemoryBytes": 5477138432
+          },
+          {
+            "at": 808202584.293883,
+            "availableMemoryBytes": 5380014080
+          },
+          {
+            "at": 808202584.400674,
+            "availableMemoryBytes": 5375295488
+          },
+          {
+            "at": 808202584.505201,
+            "availableMemoryBytes": 5375623168
+          },
+          {
+            "at": 808202584.610673,
+            "availableMemoryBytes": 5376212992
+          },
+          {
+            "at": 808202584.717102,
+            "availableMemoryBytes": 5308399616
+          },
+          {
+            "at": 808202584.822122,
+            "availableMemoryBytes": 5308399616
+          },
+          {
+            "at": 808202584.927683,
+            "availableMemoryBytes": 5308399616
+          },
+          {
+            "at": 808202585.028866,
+            "availableMemoryBytes": 5305532416
+          },
+          {
+            "at": 808202585.129339,
+            "availableMemoryBytes": 5308039168
+          },
+          {
+            "at": 808202585.130925,
+            "availableMemoryBytes": 5308055552
+          },
+          {
+            "at": 808202585.233649,
+            "availableMemoryBytes": 5306187776
+          },
+          {
+            "at": 808202585.337713,
+            "availableMemoryBytes": 7903985664
+          }
+        ],
+        "command": [
+          "/Users/maz/.codex/worktrees/4656/whisperASR/.build/arm64-apple-macosx/debug/WhisperASR",
+          "--high-quality-translation-worker",
+          "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE",
+          "translategemma-12b-it-4bit"
+        ],
+        "elapsedSeconds": 8.713005065917969,
+        "exitStatus": 0,
+        "exitedAt": 808202585.442149,
+        "forcedTermination": false,
+        "peakPhysicalFootprintBytes": 7325652824,
+        "pressureTransitions": [],
+        "processIdentifier": 14159,
+        "rawLog": "",
+        "rawLogPath": "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-TranslateGemma-78A285BD-7714-4FFA-AD0D-DF06CE1B28FE/worker.log",
+        "startedAt": 808202576.729144,
+        "swapUsedAfterBytes": 2586902528,
+        "swapUsedBeforeBytes": 2586902528,
+        "terminationReason": "exit"
+      }
+    },
+    "retryVerdicts": [
+      {
+        "cueID": "unit-0054",
+        "generatedOutput": "That's right, right, right, right, right. It's like a cutting line.",
+        "glossaryOpportunities": [],
+        "reasons": [],
+        "testedSource": "な切るラインみたいなあそうそうそうそうそう切るラ",
+        "thresholdVersion": "translation-integrity-dev-v1",
+        "verdict": "pass"
+      }
+    ],
+    "schemaVersion": 1,
+    "verdictArtifact": "/Users/maz/.codex/worktrees/4656/whisperASR/.build/benchmarks/issue-94/development/targeted-translation-retry/verdicts.json"
+  },
+  "ticket": 94,
+  "translations": [
+    {
+      "id": "unit-0001",
+      "text": "The next target, we have Takashi Amai and Tatsuyoshi Ikeda."
+    },
+    {
+      "id": "unit-0002",
+      "text": "Mr. Oka, you can do it! Keep going! Keep going! Earlier, Mr. Tachikawa also showed his professionalism."
+    },
+    {
+      "id": "unit-0003",
+      "text": "Please stop looking at people's bodies."
+    },
+    {
+      "id": "unit-0004",
+      "text": "Really?"
+    },
+    {
+      "id": "unit-0005",
+      "text": "That's amazing."
+    },
+    {
+      "id": "unit-0006",
+      "text": "Absolute Cross."
+    },
+    {
+      "id": "unit-0007",
+      "text": "Did you take Mr. San's pants off? I don't understand. I just thought it might be the case. Do you know how Mr. Tachikawa and Toto met?"
+    },
+    {
+      "id": "unit-0008",
+      "text": "I don't know."
+    },
+    {
+      "id": "unit-0009",
+      "text": "Apparently, something involving cutouts of Mr. Tsuchikawa came up."
+    },
+    {
+      "id": "unit-0010",
+      "text": "I saw something, but…"
+    },
+    {
+      "id": "unit-0011",
+      "text": "\"Takahashi-san was talking about something – I think it was maybe five years ago – and he mentioned something would come up. He was saying something like, 'Let's get someone involved in the stream raid.'\""
+    },
+    {
+      "id": "unit-0012",
+      "text": "\"So, let's just randomly pick someone and try to make them a VTuber, you know?\""
+    },
+    {
+      "id": "unit-0013",
+      "text": "That's why."
+    },
+    {
+      "id": "unit-0014",
+      "text": "Oh, Lami, well, it's like… dealing with troublesome people, or something like that."
+    },
+    {
+      "id": "unit-0015",
+      "text": "\"They were sending messages like, 'Hey, want to play Portal together?' or something like that.\""
+    },
+    {
+      "id": "unit-0016",
+      "text": "\"Hey Ren, you know, it's probably okay to say things like 'Hey, are you sure?' or 'Maybe...'\""
+    },
+    {
+      "id": "unit-0017",
+      "text": "They're getting along really well."
+    },
+    {
+      "id": "unit-0018",
+      "text": "Souta thinks the combination of Goki and Sinalimai is genuinely funny, and Tachikawa is also quite interesting."
+    },
+    {
+      "id": "unit-0019",
+      "text": "It's lovely, that kind of encounter. It's interesting to see the fish getting along so well. It's not something you see every day. There's definitely a powerful, ultimate move here."
+    },
+    {
+      "id": "unit-0020",
+      "text": "Dealing with things through force is difficult."
+    },
+    {
+      "id": "unit-0021",
+      "text": "I'd like to be prepared."
+    },
+    {
+      "id": "unit-0022",
+      "text": "Let's watch the highly anticipated match-up in Tachikawa, even with the rain."
+    },
+    {
+      "id": "unit-0023",
+      "text": "Tachikawa is actively pursuing a riverfront strategy."
+    },
+    {
+      "id": "unit-0024",
+      "text": "However, it's dangerous."
+    },
+    {
+      "id": "unit-0025",
+      "text": "I'm not worried anymore."
+    },
+    {
+      "id": "unit-0026",
+      "text": "Crush the waves."
+    },
+    {
+      "id": "unit-0027",
+      "text": "Good momentum."
+    },
+    {
+      "id": "unit-0028",
+      "text": "Go for it."
+    },
+    {
+      "id": "unit-0029",
+      "text": "Likely, they'll focus on aggressive plays and push forward."
+    },
+    {
+      "id": "unit-0030",
+      "text": "That's fine."
+    },
+    {
+      "id": "unit-0031",
+      "text": "\"Well, okay, so you came here ahead of time to prepare for the live performance, didn't you?\""
+    },
+    {
+      "id": "unit-0032",
+      "text": "Both drivers fled the scene."
+    },
+    {
+      "id": "unit-0033",
+      "text": "Calm down."
+    },
+    {
+      "id": "unit-0034",
+      "text": "Both parties are creating distance between themselves."
+    },
+    {
+      "id": "unit-0035",
+      "text": "Oh, how cute."
+    },
+    {
+      "id": "unit-0036",
+      "text": "From the Koshou ship, focusing on the area directly ahead, this appears to be a measure that can be implemented with significant force, Mr. Audica. Vertical adjustment."
+    },
+    {
+      "id": "unit-0037",
+      "text": "\"It's a technique to return to a stance, specifically during a forward jump, using a three-point stance.\""
+    },
+    {
+      "id": "unit-0038",
+      "text": "is difficult to handle."
+    },
+    {
+      "id": "unit-0039",
+      "text": "A remarkably cautious and lenient approach."
+    },
+    {
+      "id": "unit-0040",
+      "text": "The lingering feeling of rain clouds feels somehow slow."
+    },
+    {
+      "id": "unit-0041",
+      "text": "Bodywork, and I bet she has an incredible amount of free time."
+    },
+    {
+      "id": "unit-0042",
+      "text": "That's why driving is good for the front."
+    },
+    {
+      "id": "unit-0043",
+      "text": "This challenge is dangerous."
+    },
+    {
+      "id": "unit-0044",
+      "text": "You seem to be taking good care of yourself."
+    },
+    {
+      "id": "unit-0045",
+      "text": "Sweet potatoes will always move away as soon as they get close."
+    },
+    {
+      "id": "unit-0046",
+      "text": "That was tough, a little frustrating."
+    },
+    {
+      "id": "unit-0047",
+      "text": "We have very limited time."
+    },
+    {
+      "id": "unit-0048",
+      "text": "Okay, it seems we have time. Twenty seconds. An absolutely staggering amount of various things – far more than we can possibly comprehend."
+    },
+    {
+      "id": "unit-0049",
+      "text": "That's something I really get into."
+    },
+    {
+      "id": "unit-0050",
+      "text": "\"We're all lethal, the three of us.\""
+    },
+    {
+      "id": "unit-0051",
+      "text": "This is your final kick, your last chance to finish strong."
+    },
+    {
+      "id": "unit-0052",
+      "text": "Let's try not to do that again for the fourth time."
+    },
+    {
+      "id": "unit-0053",
+      "text": "Oh, for Moka-chan, regarding this rehearsal, something like this length—it's about this long—I'm going to need it."
+    },
+    {
+      "id": "unit-0054",
+      "text": "That's right, right, right, right, right. It's like a cutting line."
+    },
+    {
+      "id": "unit-0055",
+      "text": "Can this fit in your head?"
+    },
+    {
+      "id": "unit-0056",
+      "text": "The ability to control the front becomes stronger."
+    },
+    {
+      "id": "unit-0057",
+      "text": "\"It's true, wow, it's flying.\""
+    },
+    {
+      "id": "unit-0058",
+      "text": "That's perfectly done, and you clearly paid close attention."
+    },
+    {
+      "id": "unit-0059",
+      "text": "\"It's over there, and yes, it was an incredible match, wasn't it?\""
+    },
+    {
+      "id": "unit-0060",
+      "text": "Amazing."
+    },
+    {
+      "id": "unit-0061",
+      "text": "Sigh."
+    },
+    {
+      "id": "unit-0062",
+      "text": "Ah, at the point where I was doing Ollie Shutter, everything felt absolutely perfect, like \"Ama-chan\" and everything."
+    },
+    {
+      "id": "unit-0063",
+      "text": "Did."
+    },
+    {
+      "id": "unit-0064",
+      "text": "There, we secured a set victory with a sweet drop shot."
+    },
+    {
+      "id": "unit-0065",
+      "text": "Alright!"
+    },
+    {
+      "id": "unit-0066",
+      "text": "That defense is incredible."
+    },
+    {
+      "id": "unit-0067",
+      "text": "Oh, the Dikado is decreasing."
+    },
+    {
+      "id": "unit-0068",
+      "text": "That's an incredible attack."
+    },
+    {
+      "id": "unit-0069",
+      "text": "Oh."
+    },
+    {
+      "id": "unit-0070",
+      "text": "Significantly increased lead generation."
+    },
+    {
+      "id": "unit-0071",
+      "text": "But it's raining."
+    },
+    {
+      "id": "unit-0072",
+      "text": "Certainly, the drive gauge was quite low when we were away, so it was running smoothly."
+    },
+    {
+      "id": "unit-0073",
+      "text": "It appears simple."
+    },
+    {
+      "id": "unit-0074",
+      "text": "\"It looks easy, doesn't it? It really makes you think, 'Maybe I could do something.'\""
+    },
+    {
+      "id": "unit-0075",
+      "text": "Certainly, firmly, indeed, it won't accept anything less than vibrant."
+    },
+    {
+      "id": "unit-0076",
+      "text": "Is this a repurchase?"
+    },
+    {
+      "id": "unit-0077",
+      "text": "Amazing."
+    },
+    {
+      "id": "unit-0078",
+      "text": "Wow."
+    },
+    {
+      "id": "unit-0079",
+      "text": "I returned it thoroughly."
+    },
+    {
+      "id": "unit-0080",
+      "text": "It's alright."
+    },
+    {
+      "id": "unit-0081",
+      "text": "Go for it."
+    },
+    {
+      "id": "unit-0082",
+      "text": "It's amazing how effectively they're handling the challenges related to the influenza situation."
+    },
+    {
+      "id": "unit-0083",
+      "text": "Is it sweet?"
+    },
+    {
+      "id": "unit-0084",
+      "text": "To enhance its techniques, Go-ki has less HP compared to other characters."
+    },
+    {
+      "id": "unit-0085",
+      "text": "That's quite impressive."
+    },
+    {
+      "id": "unit-0086",
+      "text": "Ah, that's nice."
+    },
+    {
+      "id": "unit-0087",
+      "text": "Really?"
+    },
+    {
+      "id": "unit-0088",
+      "text": "\"There's no benefit to it, but the potential damage is significant. It's quite powerful, isn't it? Yes, and the total cost for these rights is 9000. It's quite a substantial amount.\""
+    },
+    {
+      "id": "unit-0089",
+      "text": "It was definitely around 10,000."
+    },
+    {
+      "id": "unit-0090",
+      "text": "That line is huge."
+    },
+    {
+      "id": "unit-0091",
+      "text": "\"It's just... when you're ranked, you feel like a big deal.\""
+    },
+    {
+      "id": "unit-0092",
+      "text": "That feels incredibly good when you get a combo."
+    },
+    {
+      "id": "unit-0093",
+      "text": "It really fits."
+    },
+    {
+      "id": "unit-0094",
+      "text": "It grinds away sharply."
+    },
+    {
+      "id": "unit-0095",
+      "text": "It cuts incredibly sharply."
+    },
+    {
+      "id": "unit-0096",
+      "text": "At this stage, it's probably not something that can be done easily."
+    },
+    {
+      "id": "unit-0097",
+      "text": "Tachikawa."
+    },
+    {
+      "id": "unit-0098",
+      "text": "When it's time for a break, who will speak? I wonder who Mr. Ichikawa will tell. But maybe I don't even need to speak myself."
+    },
+    {
+      "id": "unit-0099",
+      "text": "How are you going to coach, considering you're the one doing the thinking?"
+    },
+    {
+      "id": "unit-0100",
+      "text": "Cute."
+    },
+    {
+      "id": "unit-0101",
+      "text": "That's what you decided."
+    },
+    {
+      "id": "unit-0102",
+      "text": "Jasper's face is really serious."
+    },
+    {
+      "id": "unit-0103",
+      "text": "The way she handles that headband is truly remarkable; many professionals struggle to achieve that level of skill."
+    },
+    {
+      "id": "unit-0104",
+      "text": "That's about how good they are."
+    },
+    {
+      "id": "unit-0105",
+      "text": "Is this sweet potato?"
+    },
+    {
+      "id": "unit-0106",
+      "text": "Achieved a significant lead against Tachikawa."
+    },
+    {
+      "id": "unit-0107",
+      "text": "Delicious."
+    },
+    {
+      "id": "unit-0108",
+      "text": "And fight back."
+    },
+    {
+      "id": "unit-0109",
+      "text": "Wow."
+    },
+    {
+      "id": "unit-0110",
+      "text": "That's not going to work. We need to keep it going, and we need to speed things up. There's just... something that's not quite right."
+    },
+    {
+      "id": "unit-0111",
+      "text": "Lost, adrift, and uncertain."
+    },
+    {
+      "id": "unit-0112",
+      "text": "In the shadow."
+    },
+    {
+      "id": "unit-0113",
+      "text": "And regarding the camera situation."
+    },
+    {
+      "id": "unit-0114",
+      "text": "Throw?"
+    },
+    {
+      "id": "unit-0115",
+      "text": "Even though they have a physical advantage, they still have life left."
+    },
+    {
+      "id": "unit-0116",
+      "text": "Wow, this is tough. Tatsukawa's style is so modern, but it's completely different from my own. And it's all based on the same starting point, too."
+    },
+    {
+      "id": "unit-0117",
+      "text": "It doesn't feel modern."
+    },
+    {
+      "id": "unit-0118",
+      "text": "That was another one down, even that seemingly simple four-pitch sequence."
+    },
+    {
+      "id": "unit-0119",
+      "text": "There are various things there, you know."
+    },
+    {
+      "id": "unit-0120",
+      "text": "It took four pitches, but he wasn't winning. It seemed like he was being made to feel that way, but in reality, he was just throwing the ball."
+    },
+    {
+      "id": "unit-0121",
+      "text": "\"Is that what you mean? Yes, the background music is really great.\""
+    },
+    {
+      "id": "unit-0122",
+      "text": "\"I guess I don't really listen to background music much, do I?\""
+    },
+    {
+      "id": "unit-0123",
+      "text": "This… a feeling of excitement, a feeling of excitement."
+    },
+    {
+      "id": "unit-0124",
+      "text": "The responsibility for the edges of the screen fell to Tanaka."
+    },
+    {
+      "id": "unit-0125",
+      "text": "Close."
+    },
+    {
+      "id": "unit-0126",
+      "text": "There, it's lethal."
+    },
+    {
+      "id": "unit-0127",
+      "text": "It's something like that."
+    },
+    {
+      "id": "unit-0128",
+      "text": "That's impressive."
+    },
+    {
+      "id": "unit-0129",
+      "text": "Even among accomplished performers, he's truly a professional – an exceptional professional. He's so skilled, and he consistently delivers modern, compelling characters."
+    },
+    {
+      "id": "unit-0130",
+      "text": "It's incredible that they're competing against professionals."
+    },
+    {
+      "id": "unit-0131",
+      "text": "Feel the sensation of being on top of the world."
+    },
+    {
+      "id": "unit-0132",
+      "text": "It feels like someone's crossed their arms and is watching from behind. It's kind of like the way you'd see someone looking at a game console."
+    },
+    {
+      "id": "unit-0133",
+      "text": "Huh?"
+    },
+    {
+      "id": "unit-0134",
+      "text": "That's nice."
+    },
+    {
+      "id": "unit-0135",
+      "text": "I want to watch from behind."
+    },
+    {
+      "id": "unit-0136",
+      "text": "Drive is in the lead."
+    },
+    {
+      "id": "unit-0137",
+      "text": "Rush."
+    },
+    {
+      "id": "unit-0138",
+      "text": "Camera flavor."
+    },
+    {
+      "id": "unit-0139",
+      "text": "There's a terminal block attached to the back of the car."
+    },
+    {
+      "id": "unit-0140",
+      "text": "He managed to get a good read of the situation from a high vantage point."
+    },
+    {
+      "id": "unit-0141",
+      "text": "That's a Gyakuten Cyber song."
+    },
+    {
+      "id": "unit-0142",
+      "text": "That's fun."
+    },
+    {
+      "id": "unit-0143",
+      "text": "Are my comments being posted?"
+    },
+    {
+      "id": "unit-0144",
+      "text": "That's right."
+    },
+    {
+      "id": "unit-0145",
+      "text": "I was watching."
+    },
+    {
+      "id": "unit-0146",
+      "text": "We have handled it this way."
+    },
+    {
+      "id": "unit-0147",
+      "text": "Does it have any significance?"
+    },
+    {
+      "id": "unit-0148",
+      "text": "Indeed."
+    },
+    {
+      "id": "unit-0149",
+      "text": "Is it Ameyume you're bringing?"
+    },
+    {
+      "id": "unit-0150",
+      "text": "The current is strong and consistent."
+    },
+    {
+      "id": "unit-0151",
+      "text": "The accuracy of the pedestrian detection system is also exceptionally high."
+    },
+    {
+      "id": "unit-0152",
+      "text": "The outside world is certainly harsh."
+    },
+    {
+      "id": "unit-0153",
+      "text": "Oh, if it comes to that, I suppose I could tolerate something like being compared to a banana."
+    },
+    {
+      "id": "unit-0154",
+      "text": "\"No, not a banana, this is a bar.\""
+    },
+    {
+      "id": "unit-0155",
+      "text": "It doesn't feel right when I'm offline, but what's wrong? Even when I'm protected, I still take damage."
+    },
+    {
+      "id": "unit-0156",
+      "text": "It's difficult to get traction, and I can't make a significant impact."
+    },
+    {
+      "id": "unit-0157",
+      "text": "It's not possible to use techniques that rely on a cage."
+    },
+    {
+      "id": "unit-0158",
+      "text": "That attack left him unable to move, cornered."
+    },
+    {
+      "id": "unit-0159",
+      "text": "Once you're caught up in something, it's easy to get distracted afterward."
+    },
+    {
+      "id": "unit-0160",
+      "text": "\"You can reduce it as much as possible.\""
+    },
+    {
+      "id": "unit-0161",
+      "text": "You guys are really smart."
+    },
+    {
+      "id": "unit-0162",
+      "text": "But, five."
+    },
+    {
+      "id": "unit-0163",
+      "text": "Japparash E-nini and Nini are gathering."
+    },
+    {
+      "id": "unit-0164",
+      "text": "Wow."
+    },
+    {
+      "id": "unit-0165",
+      "text": "No, this doesn't have V-Tech."
+    },
+    {
+      "id": "unit-0166",
+      "text": "I don't have a partner."
+    },
+    {
+      "id": "unit-0167",
+      "text": "I can't let that out."
+    },
+    {
+      "id": "unit-0168",
+      "text": "I can't. There's nobody available."
+    },
+    {
+      "id": "unit-0169",
+      "text": "That's done."
+    },
+    {
+      "id": "unit-0170",
+      "text": "Round one: a match against a winning opponent."
+    },
+    {
+      "id": "unit-0171",
+      "text": "Wow, this group of 100 people... it's just incredible luck."
+    },
+    {
+      "id": "unit-0172",
+      "text": "I relied on it."
+    },
+    {
+      "id": "unit-0173",
+      "text": "Made a small step forward."
+    },
+    {
+      "id": "unit-0174",
+      "text": "The effect extends to the edges of the screen."
+    },
+    {
+      "id": "unit-0175",
+      "text": "Yes, alright, above."
+    },
+    {
+      "id": "unit-0176",
+      "text": "Moving forward, approaching the shadow, striking. Okay, the drive is receiving a red signal, skillfully utilizing Paris to maneuver."
+    },
+    {
+      "id": "unit-0177",
+      "text": "You're back, aren't you?"
+    },
+    {
+      "id": "unit-0178",
+      "text": "It turned around."
+    },
+    {
+      "id": "unit-0179",
+      "text": "Let's go."
+    },
+    {
+      "id": "unit-0180",
+      "text": "Oh, I missed it."
+    },
+    {
+      "id": "unit-0181",
+      "text": "It's gone."
+    },
+    {
+      "id": "unit-0182",
+      "text": "Go for it."
+    },
+    {
+      "id": "unit-0183",
+      "text": "If you can shift out of a difficult situation, highlight it."
+    },
+    {
+      "id": "unit-0184",
+      "text": "Oh, a towel, a towel... excuse me, I'm so sorry."
+    },
+    {
+      "id": "unit-0185",
+      "text": "It's complicated, there are many things to consider. Today, 2800."
+    },
+    {
+      "id": "unit-0186",
+      "text": "Oh wow, this is bad, what should I do? If I take this, it's going to be tough. Match point. You're doing great, keep it up."
+    },
+    {
+      "id": "unit-0187",
+      "text": "Wow, next! Oh, that's so fast."
+    },
+    {
+      "id": "unit-0188",
+      "text": "Don't go ahead."
+    },
+    {
+      "id": "unit-0189",
+      "text": "Runaway."
+    },
+    {
+      "id": "unit-0190",
+      "text": "And then there was Bakusō C2, Saki's game addiction."
+    },
+    {
+      "id": "unit-0191",
+      "text": "This is your chance to rise quickly."
+    },
+    {
+      "id": "unit-0192",
+      "text": "Oh no, oh no, oh no."
+    },
+    {
+      "id": "unit-0193",
+      "text": "Absolutely, the gauge will reset easily."
+    },
+    {
+      "id": "unit-0194",
+      "text": "Full-service, complete package."
+    },
+    {
+      "id": "unit-0195",
+      "text": "It's the final round."
+    },
+    {
+      "id": "unit-0196",
+      "text": "\"Oh dear, wait, I'll get it all ready.\""
+    },
+    {
+      "id": "unit-0197",
+      "text": "Wow, is this another 100-yen store where they're showcasing costumes, presumably as a professional presentation?"
+    },
+    {
+      "id": "unit-0198",
+      "text": "Ah, and I'll bring drinks to go with it again this time, but I want to respond to that."
+    },
+    {
+      "id": "unit-0199",
+      "text": "Alright, here, right in the center – it's S2."
+    },
+    {
+      "id": "unit-0200",
+      "text": "Certainly a decision to take away driving privileges."
+    },
+    {
+      "id": "unit-0201",
+      "text": "The drive didn't work out as planned."
+    },
+    {
+      "id": "unit-0202",
+      "text": "Really helpful."
+    },
+    {
+      "id": "unit-0203",
+      "text": "Press the button."
+    },
+    {
+      "id": "unit-0204",
+      "text": "And then, Tanaka turned around."
+    },
+    {
+      "id": "unit-0205",
+      "text": "Possibly a faulty driver."
+    },
+    {
+      "id": "unit-0206",
+      "text": "That's impressive."
+    },
+    {
+      "id": "unit-0207",
+      "text": "The driver has recovered."
+    },
+    {
+      "id": "unit-0208",
+      "text": "\"It's a girl, but… well, it's a game, isn't it? It feels like she's telling me to protect something, like a gauge. Touch.\""
+    },
+    {
+      "id": "unit-0209",
+      "text": "As a card, it's a miss, but a hit."
+    },
+    {
+      "id": "unit-0210",
+      "text": "That's all I can do."
+    },
+    {
+      "id": "unit-0211",
+      "text": "Oh!"
+    },
+    {
+      "id": "unit-0212",
+      "text": "Got it!"
+    },
+    {
+      "id": "unit-0213",
+      "text": "Oh my. Oh dear."
+    },
+    {
+      "id": "unit-0214",
+      "text": "Wow."
+    },
+    {
+      "id": "unit-0215",
+      "text": "Oh, this, this."
+    },
+    {
+      "id": "unit-0216",
+      "text": "Seriously, that's the end?"
+    },
+    {
+      "id": "unit-0217",
+      "text": "Yes."
+    },
+    {
+      "id": "unit-0218",
+      "text": "Wow, that's incredible!"
+    },
+    {
+      "id": "unit-0219",
+      "text": "\"Oh, I'm on it, just like everyone else.\""
+    },
+    {
+      "id": "unit-0220",
+      "text": "I was deeply moved."
+    },
+    {
+      "id": "unit-0221",
+      "text": "Wow, I was really moved."
+    },
+    {
+      "id": "unit-0222",
+      "text": "I was genuinely moved to tears."
+    },
+    {
+      "id": "unit-0223",
+      "text": "Oh, I understand."
+    },
+    {
+      "id": "unit-0224",
+      "text": "Okay, so with that, we're concluding."
+    },
+    {
+      "id": "unit-0225",
+      "text": "The player is undefeated."
+    },
+    {
+      "id": "unit-0226",
+      "text": "Wow, congratulations!"
+    },
+    {
+      "id": "unit-0227",
+      "text": "Wow, congratulations!"
+    },
+    {
+      "id": "unit-0228",
+      "text": "Everyone is buying it."
+    },
+    {
+      "id": "unit-0229",
+      "text": "You can't become a real professional that way."
+    },
+    {
+      "id": "unit-0230",
+      "text": "Seriously, become a professional."
+    },
+    {
+      "id": "unit-0231",
+      "text": "Moka, you need to become a professional."
+    },
+    {
+      "id": "unit-0232",
+      "text": "Now, go out into the world and soar."
+    },
+    {
+      "id": "unit-0233",
+      "text": "Wow, that's amazing, I'm really crying, I'm so moved."
+    },
+    {
+      "id": "unit-0234",
+      "text": "Is the next team alright?"
+    },
+    {
+      "id": "unit-0235",
+      "text": "It's genuinely so moving."
+    },
+    {
+      "id": "unit-0236",
+      "text": "I really like that player."
+    },
+    {
+      "id": "unit-0237",
+      "text": "\"I was truly moved by the responsiveness and the strong, trusting relationship with the coach.\""
+    },
+    {
+      "id": "unit-0238",
+      "text": "That moment really got to me, didn't it? It was the first time I cried watching someone play that game, but it was truly amazing."
+    },
+    {
+      "id": "unit-0239",
+      "text": "That's incredible, it's just so good, you have to see it."
+    },
+    {
+      "id": "unit-0240",
+      "text": "It's truly moving to see a player who has clearly put in so much effort, especially when they've overcome such a formidable opponent."
+    },
+    {
+      "id": "unit-0241",
+      "text": "Yes, that's correct. Excuse me, speaking from the commentary booth."
+    },
+    {
+      "id": "unit-0242",
+      "text": "\"Mr. Hirayama, please proceed.\""
+    },
+    {
+      "id": "unit-0243",
+      "text": "Well, there's certainly some initial difficulty in approaching people, but as I recall..."
+    },
+    {
+      "id": "unit-0244",
+      "text": "To, a defeat in the third round."
+    },
+    {
+      "id": "unit-0245",
+      "text": "How was it?"
+    },
+    {
+      "id": "unit-0246",
+      "text": "I wish we had done that earlier."
+    },
+    {
+      "id": "unit-0247",
+      "text": "How was Hamai's skill?"
+    },
+    {
+      "id": "unit-0248",
+      "text": "Yes, indeed."
+    },
+    {
+      "id": "unit-0249",
+      "text": "In this game, the stronger player wins."
+    },
+    {
+      "id": "unit-0250",
+      "text": "We can definitely handle it and win."
+    },
+    {
+      "id": "unit-0251",
+      "text": "Please handle this from my end."
+    },
+    {
+      "id": "unit-0252",
+      "text": "I was starting to wonder if you might be involved in some kind of organization or league."
+    },
+    {
+      "id": "unit-0253",
+      "text": "Possibly, or rather, they're really that good."
+    },
+    {
+      "id": "unit-0254",
+      "text": "It was really frustrating seeing Bon appear and disappear along the way."
+    },
+    {
+      "id": "unit-0255",
+      "text": "There were so many—seriously, I was incredibly happy. There were 34 of them, and it felt like someone was really explaining everything clearly."
+    },
+    {
+      "id": "unit-0256",
+      "text": "That was quite impressive with the way it appeared and disappeared. I think it really highlighted the coach's skill, too. Just a little bit."
+    },
+    {
+      "id": "unit-0257",
+      "text": "\"Mr. Tachikawa, you're saying that, but Ms. Moka, was that really the case?\""
+    },
+    {
+      "id": "unit-0258",
+      "text": "The way the coach is moving…"
+    },
+    {
+      "id": "unit-0259",
+      "text": "Yes, indeed."
+    },
+    {
+      "id": "unit-0260",
+      "text": "People often tell me I look like someone, so I'm working hard to develop my own unique qualities."
+    },
+    {
+      "id": "unit-0261",
+      "text": "Yes."
+    },
+    {
+      "id": "unit-0262",
+      "text": "Well, you know, it's like this..."
+    },
+    {
+      "id": "unit-0263",
+      "text": "Next year, the event will be held here. See you then – it's going to be really nice."
+    },
+    {
+      "id": "unit-0264",
+      "text": "\"Um, regarding that,...\""
+    },
+    {
+      "id": "unit-0265",
+      "text": "I would like to continue learning and working hard, receiving guidance and support from everyone, starting from the very beginning. I look forward to working with you all going forward."
+    },
+    {
+      "id": "unit-0266",
+      "text": "Thank you for your support. And thank you, Mr. Tachibana."
+    },
+    {
+      "id": "unit-0267",
+      "text": "\"It was a remarkable victory for Nemoca. Coach, thank you for your efforts. And how was it for you, Bon?\""
+    },
+    {
+      "id": "unit-0268",
+      "text": "Wow, things really got heated, didn't they?"
+    },
+    {
+      "id": "unit-0269",
+      "text": "The support was incredible."
+    },
+    {
+      "id": "unit-0270",
+      "text": "Wow, that's amazing."
+    },
+    {
+      "id": "unit-0271",
+      "text": "\"Even so, things are going according to plan, just like in practice.\""
+    },
+    {
+      "id": "unit-0272",
+      "text": "\"Are we seeing a change? When those changes start to translate into wins, you really feel like both teams put in some good practice.\""
+    },
+    {
+      "id": "unit-0273",
+      "text": "It's truly the happiest when you see the results finally come out like this."
+    },
+    {
+      "id": "unit-0274",
+      "text": "\"She could really tell he was determined to win, so Moka, even though it wasn't ideal, decided to let him win this time.\""
+    },
+    {
+      "id": "unit-0275",
+      "text": "With that said, I think there will be other opportunities to do various things, and hopefully we'll have the chance to see some good matches then."
+    },
+    {
+      "id": "unit-0276",
+      "text": "Is."
+    },
+    {
+      "id": "unit-0277",
+      "text": "There's still a lot to do, so please do your best."
+    },
+    {
+      "id": "unit-0278",
+      "text": "Yes, thank you."
+    },
+    {
+      "id": "unit-0279",
+      "text": "We still have another match to play."
+    },
+    {
+      "id": "unit-0280",
+      "text": "Yes."
+    },
+    {
+      "id": "unit-0281",
+      "text": "Okay."
+    },
+    {
+      "id": "unit-0282",
+      "text": "Yes."
+    }
+  ]
+}

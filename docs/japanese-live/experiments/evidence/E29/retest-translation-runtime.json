@@ -1,0 +1,16 @@
+{
+  "command": [
+    "xcrun",
+    "swift",
+    "test",
+    "--disable-sandbox",
+    "--skip-build",
+    "--filter",
+    "AdaptiveASRExperimentTests/testSingleDownstreamTranslationWhenOptedIn"
+  ],
+  "elapsedSeconds": 445.5353967498522,
+  "exitCode": 0,
+  "rawLog": "/private/tmp/whisperASR-issue95-retest/.build/benchmarks/issue-95/development/translation.log",
+  "timedOut": false,
+  "timeoutSeconds": 2400
+}

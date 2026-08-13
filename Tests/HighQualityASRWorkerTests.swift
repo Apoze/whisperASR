@@ -51,6 +51,10 @@ final class HighQualityASRWorkerTests: XCTestCase {
             transcript = try await runtime.transcribe(audio: samples)
             await runtime.unload()
             whisperKitWeightSHA256 = try HighQualityASRWeightEvidence.collect(for: backend)
+        case .funASRNanoInt8:
+            throw XCTSkip("Fun-ASR direct parity uses only the pinned sherpa worker.")
+        case .reazonSpeechK2V2:
+            throw XCTSkip("ReazonSpeech parity uses its pinned external worker smoke.")
         }
         let exported = transcript.trimmingCharacters(in: .whitespacesAndNewlines) + "\n"
         let output = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -86,7 +90,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
 
     func testRealBackendCompletesFrozenJapaneseJobWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
-        guard environment["BENCHMARK_SLOT_GRANTED"] == "72",
+        let slot = environment["WHISPERASR_ASR_WORKER_SLOT"] ?? "72"
+        guard environment["BENCHMARK_SLOT_GRANTED"] == slot,
               environment["WHISPERASR_RUN_ASR_WORKER_SMOKE"] == "1",
               let rawBackend = environment["WHISPERASR_ASR_WORKER_BACKEND"],
               let backend = HighQualityASRBackend(rawValue: rawBackend),
@@ -94,13 +99,13 @@ final class HighQualityASRWorkerTests: XCTestCase {
               let expectedSHA256 = environment[
                 "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE_SHA256"
               ] else {
-            throw XCTSkip("Grant benchmark slot #72 and set its worker smoke environment.")
+            throw XCTSkip("Grant the requested benchmark slot and set its worker smoke environment.")
         }
         let fixture = URL(fileURLWithPath: fixturePath)
         XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: fixture), expectedSHA256)
         let outputRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent(
-                ".build/benchmarks/issue-72/\(backend.rawValue)",
+                ".build/benchmarks/issue-\(slot)/\(backend.rawValue)",
                 isDirectory: true
             )
         let executable = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -110,7 +115,10 @@ final class HighQualityASRWorkerTests: XCTestCase {
             loadSource: { try await AudioLoader.loadSamples(url: $0) },
             prepareASR: { try await asr.prepare(progress: $0) },
             transcribeJapanese: {
-                try await asr.transcribe($0, anchored: false).rawTranscript
+                try await asr.transcribe(
+                    $0,
+                    anchored: backend == .funASRNanoInt8
+                ).rawTranscript
             },
             transcribeJapaneseAnchored: { try await asr.transcribe($0, anchored: true) },
             unloadASR: { await asr.unload() },
@@ -142,12 +150,62 @@ final class HighQualityASRWorkerTests: XCTestCase {
         XCTAssertFalse(worker.lifecycle.forcedTermination)
         XCTAssertGreaterThan(worker.lifecycle.peakPhysicalFootprintBytes, 0)
         XCTAssertNotEqual(kill(worker.lifecycle.processIdentifier, 0), 0)
-        XCTAssertEqual(
-            try JapaneseBenchmarkSupport.sha256(
-                at: result.directory.appendingPathComponent("japanese-transcript.txt")
-            ),
-            frozenTranscriptSHA256(for: backend)
+        let transcriptSHA256 = try JapaneseBenchmarkSupport.sha256(
+            at: result.directory.appendingPathComponent("japanese-transcript.txt")
         )
+        if backend == .funASRNanoInt8 {
+            print("[issue-88][smoke] transcriptSHA256=\(transcriptSHA256)")
+        } else {
+            XCTAssertEqual(transcriptSHA256, frozenTranscriptSHA256(for: backend))
+        }
+    }
+
+    func testRealReazonWorkerCompletesTimestampedSmokeWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["BENCHMARK_SLOT_GRANTED"] == "89",
+              environment["WHISPERASR_RUN_REAZON_SMOKE"] == "1",
+              let fixturePath = environment["WHISPERASR_HIGH_QUALITY_ASR_FIXTURE"],
+              let expectedSHA256 = environment[
+                "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE_SHA256"
+              ],
+              let outputPath = environment["WHISPERASR_ACCEPTANCE_OUTPUT_ROOT"] else {
+            throw XCTSkip("Grant benchmark slot #89 and set the Reazon smoke environment.")
+        }
+        let fixture = URL(fileURLWithPath: fixturePath)
+        XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: fixture), expectedSHA256)
+        let backend = HighQualityASRBackend.reazonSpeechK2V2
+        let result = try await HighQualityJob().run(.init(
+            sourceURL: fixture,
+            deliverables: [.japaneseTranscript],
+            backend: backend,
+            outputRoot: URL(fileURLWithPath: outputPath)
+        ))
+
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.manifest.selectedBackend, backend)
+        XCTAssertEqual(result.manifest.dependencies, [
+            .sourceNormalization, .japaneseASR, .export,
+        ])
+        let worker = try XCTUnwrap(result.evidence.asrWorker)
+        let characters = try XCTUnwrap(worker.characters)
+        XCTAssertFalse(characters.isEmpty)
+        XCTAssertEqual(characters.map(\.text).joined(), result.evidence.rawASR)
+        XCTAssertTrue(characters.allSatisfy {
+            $0.sourceStart >= 0 && $0.sourceEnd >= $0.sourceStart
+        })
+        XCTAssertEqual(worker.model, backend.model.withWeightSHA256([
+            "decoder-epoch-99-avg-1.onnx":
+                "58b18211ae06265466bfa17172dab574df94f76c8bcb61a3640c28ba860e4124",
+            "encoder-epoch-99-avg-1.int8.onnx":
+                "2c7bd08a8a99f9ddd0d9e458456577b1f6279214e51426f114f9eced44c54e1d",
+            "joiner-epoch-99-avg-1.int8.onnx":
+                "49cc7ea1d3d35a40a27442db5e89996da64bf0e683a903dce76e99e57a12e4de",
+            "tokens.txt":
+                "2c3ac659818a48a0c04010e0593bbc4d7c8a24a054340b01131499c05fd52def",
+        ]))
+        XCTAssertEqual(worker.lifecycle.exitStatus, 0)
+        XCTAssertFalse(worker.lifecycle.forcedTermination)
+        XCTAssertNotEqual(kill(worker.lifecycle.processIdentifier, 0), 0)
     }
 
     func testEveryBackendRoundTripsOneTranscriptAndExits() async throws {
@@ -204,6 +262,35 @@ final class HighQualityASRWorkerTests: XCTestCase {
         await worker.unload()
 
         XCTAssertEqual(moved, frozen)
+    }
+
+    func testAnchoredCharacterTimingFailsClosedWhenNotMonotonic() {
+        let chunks = [HighQualityASRChunk(
+            index: 0, sourceStart: 0, sourceEnd: 2, transcript: "日本"
+        )]
+        let valid = HighQualityASRExchange(
+            rawTranscript: "日本",
+            chunks: chunks,
+            characters: [
+                .init(chunkIndex: 0, text: "日", sourceStart: 0.2, sourceEnd: 0.8),
+                .init(chunkIndex: 0, text: "本", sourceStart: 0.8, sourceEnd: 1.2),
+            ]
+        )
+        let regressing = HighQualityASRExchange(
+            rawTranscript: "日本",
+            chunks: chunks,
+            characters: [
+                .init(chunkIndex: 0, text: "日", sourceStart: 0.8, sourceEnd: 1),
+                .init(chunkIndex: 0, text: "本", sourceStart: 0.5, sourceEnd: 1.2),
+            ]
+        )
+
+        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+            valid, sampleCount: 32_000, anchored: true
+        ))
+        XCTAssertFalse(HighQualityASRWorkerClient.isValid(
+            regressing, sampleCount: 32_000, anchored: true
+        ))
     }
 
     func testMalformedOutputFailsAndWorkerTerminates() async throws {
@@ -368,6 +455,10 @@ final class HighQualityASRWorkerTests: XCTestCase {
             "3cad6a614de6a0526a8b96ee07fc142ca1b431fe8c4997319092c7fccbd48bfb"
         case .whisperKit:
             "ce3de9ff8e084329bea612985ce6a60b4d998410071de595e749033c4d2486ad"
+        case .funASRNanoInt8:
+            preconditionFailure("Fun-ASR has no frozen #72 transcript")
+        case .reazonSpeechK2V2:
+            preconditionFailure("ReazonSpeech has no frozen heavy output before ticket #89.")
         }
     }
 
@@ -483,7 +574,8 @@ private struct ASRWorkerFixture {
             workingDirectory: directory,
             pressure: pressure,
             pollInterval: .milliseconds(2),
-            shutdownTimeout: .milliseconds(50)
+            shutdownTimeout: .milliseconds(50),
+            launchOverride: (executable, [])
         )
     }
 }

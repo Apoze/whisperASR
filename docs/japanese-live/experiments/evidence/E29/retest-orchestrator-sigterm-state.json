@@ -1,0 +1,14 @@
+{
+  "ticket": 95,
+  "status": "downstream-running",
+  "heavyRunsLaunched": 1,
+  "modelPasses": {
+    "qwen": 0,
+    "parakeet": 0,
+    "whisperKit": 0,
+    "alignment": 1,
+    "translation": 1
+  },
+  "reusedWhisperKitRaw": true,
+  "holdoutOpened": false
+}

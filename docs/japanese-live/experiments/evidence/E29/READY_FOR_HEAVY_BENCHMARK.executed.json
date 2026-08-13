@@ -1,0 +1,71 @@
+{
+  "status": "READY_FOR_HEAVY_BENCHMARK",
+  "ticket": 95,
+  "heavyRunsLaunched": 0,
+  "command": "BENCHMARK_SLOT_GRANTED=95 bash Scripts/run_targeted_whisperkit_experiment.sh development",
+  "corpus": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "holdoutOpened": false,
+  "runtimeReference": false,
+  "reuse": {
+    "qwenPasses": 0,
+    "parakeetPasses": 0,
+    "alignmentPassesBeforeJapaneseGate": 0,
+    "translationPassesBeforeJapaneseGate": 0,
+    "source": "frozen E28 checkpoints"
+  },
+  "whisperKit": {
+    "windowCount": 6,
+    "audioSeconds": 27.96,
+    "modelAlreadyLocalGiB": 2.9,
+    "typicalMinutes": 2,
+    "hardTimeoutMinutes": 10,
+    "peakRAMGiB": 3,
+    "incrementalDiskMiB": 20
+  },
+  "conditionalDownstream": {
+    "condition": "Japanese gates pass",
+    "separateAuthorizationRequired": true,
+    "launchedByDevelopmentCommand": false,
+    "alignmentPasses": 1,
+    "translationPasses": 1,
+    "typicalMinutes": 17,
+    "hardTimeoutMinutes": 40,
+    "peakRAMGiB": 11.1,
+    "incrementalDiskMiB": 250
+  },
+  "estimate": {
+    "freeDiskBytes": 169559203840,
+    "totalRAMBytes": 25769803776
+  },
+  "gates": [
+    "frozen input/reference/model hashes",
+    "build, tests, runner probe",
+    "raw trigger = disagreement AND independent Qwen weakness",
+    "six targeted windows only",
+    "one complete hypothesis, no fusion",
+    "block-calibrated selector, no bad override or critical loss",
+    "Japanese comparison vs Qwen and #94",
+    "English comparison only after Japanese pass",
+    "clean pressure, runaway, cancellation and worker lifecycle"
+  ],
+  "memory": {
+    "nativePressure": true,
+    "runawayGuard": true,
+    "cancellation": true,
+    "fixedReserveBytes": 0
+  },
+  "implementationSHA256": {
+    "harness": "fa5222b5062357c3e44890746dbfb076b385123c338acc7add2d308f3e2aa72e",
+    "adaptiveHarness": "dc4d762a855e300ef27587436e1dfe197f4d7ed800ab94b9314bd5758a772aeb",
+    "metallibBuilder": "5ce9f61172f5a8cf14d63bfc6427c0f79bc09c818f0b94ca0697cc5e980494b4",
+    "runner": "f17f92dc62b74769aaa97af32606537e8efd40dd3e184cf4eaecd5ed91fc8f57",
+    "tests": "7322d32610f96252a4abfed83444f6fcc3065cc734f12c98e63622a3616eb5a2",
+    "job": "2b80493d9f41b11eaaa421bf172d4470690945c251cefa0864378be1c28a4a1c",
+    "whisperKitRuntime": "c2628f60c7ee35c06aede909e6262b0f5f55dda6265017fc2db20a35ea6539a5",
+    "workerSource": "fddd146685f81817e63d0ab4eb2e1d34e5a19fc223e463cd05869e580d781638",
+    "workerBinary": "d8d03905658ecfce2091eac4c056c18c7a29a5d1a6eb4f2c8f0c8c0d39df0348",
+    "triggerPlan": "fcefb0d8a543e572a5356b76ed98833cdf247049e547079bdf8e788502c70b16",
+    "triggerReport": "a1b65379c9f2b1c1a25767599a2fbb7bebaae3b42727bf2b60f2a05fd7a57814"
+  }
+}

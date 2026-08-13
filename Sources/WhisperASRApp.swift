@@ -67,6 +67,10 @@ struct WhisperASRApp: App {
 enum WhisperASREntryPoint {
     static func main() async {
         let arguments = ProcessInfo.processInfo.arguments
+        if arguments == [arguments[0], HighQualityASRWorkerCommand.argument, "--probe"] {
+            print("WHISPERASR_HIGH_QUALITY_ASR_WORKER_PROBE_OK")
+            exit(0)
+        }
         if arguments.count == 4,
            arguments[1] == HighQualityASRWorkerCommand.argument,
            let backend = HighQualityASRBackend(rawValue: arguments[2]) {

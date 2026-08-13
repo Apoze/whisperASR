@@ -1,0 +1,11 @@
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/parse-options.cc:Read:374 /tmp/whisperasr-issue93-preflight.vC6wPN/runtime/sherpa-onnx-v1.13.5-osx-arm64-shared-no-tts/bin/sherpa-onnx-offline-source-separation --spleeter-vocals=/tmp/whisperasr-issue93-preflight.vC6wPN/model/sherpa-onnx-spleeter-2stems-fp16/vocals.fp16.onnx --spleeter-accompaniment=/tmp/whisperasr-issue93-preflight.vC6wPN/model/sherpa-onnx-spleeter-2stems-fp16/accompaniment.fp16.onnx --num-threads=1 --input-wav=/tmp/whisperasr-issue93-preflight.vC6wPN/input-16k-mono.wav --output-vocals-wav=/tmp/whisperasr-issue93-preflight.vC6wPN/vocals.wav --output-accompaniment-wav=/tmp/whisperasr-issue93-preflight.vC6wPN/accompaniment.wav 
+
+OfflineSourceSeparationConfig(model=OfflineSourceSeparationModelConfig(spleeter=OfflineSourceSeparationSpleeterModelConfig(vocals="/tmp/whisperasr-issue93-preflight.vC6wPN/model/sherpa-onnx-spleeter-2stems-fp16/vocals.fp16.onnx", accompaniment="/tmp/whisperasr-issue93-preflight.vC6wPN/model/sherpa-onnx-spleeter-2stems-fp16/accompaniment.fp16.onnx"), uvr=OfflineSourceSeparationUvrModelConfig(model=""), num_threads=1, debug=False, provider="cpu"))
+Started
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-source-separation-impl.cc:Resample:73 Creating a resampler:
+   in_sample_rate: 16000
+   output_sample_rate: 44100
+
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-source-separation-spleeter-impl.h:ComputeStft:196 Invalid channel 1. Max 1
+        0.07 real         0.05 user         0.01 sys
+time: sysctl kern.clockrate: Operation not permitted
