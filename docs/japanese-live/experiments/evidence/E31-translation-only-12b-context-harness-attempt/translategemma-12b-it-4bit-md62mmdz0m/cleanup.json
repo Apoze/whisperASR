@@ -1,0 +1,13 @@
+{
+  "ticket": 106,
+  "runMode": "TRANSLATION_ONLY_12B",
+  "at": "2026-08-13T00:39:05Z",
+  "translationWorkerPID": 21717,
+  "resident": false,
+  "unloadVerified": true,
+  "nativePressureLevel": "normal",
+  "nativePressureRaw": 1,
+  "freeMemoryPercent": 76,
+  "swapUsedBytes": 4922865091,
+  "pageouts": 1786133
+}

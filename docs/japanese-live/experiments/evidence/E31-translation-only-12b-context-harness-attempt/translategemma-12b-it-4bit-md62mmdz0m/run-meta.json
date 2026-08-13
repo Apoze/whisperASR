@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "corpusID": "md62mmdz0m",
+  "translator": "translategemma-12b-it-4bit",
+  "translationModelID": "mlx-community/translategemma-12b-it-4bit",
+  "translationRevision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "commit": "8959d658b13917d2642c9c5524710542e1b49380",
+  "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+  "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/2/Video2_final_readable_transcript_pack.zip",
+  "referenceArchiveSHA256": "a95e73422dd0b8628f6d8a5cb064e41deb4a64b5a0024e1e1a5a62450e5aff86",
+  "corpusManifestSHA256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc",
+  "corpusPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "localReferences": [
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/reference.jsonl",
+      "sha256": "c1f08461fb393d40cc3e82dc22c3f3befd066b3dd091b6522547228db86996df"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/character-alignment.tsv",
+      "sha256": "446e7a00ad003b904e3de90786ef65f1829cc063217638535b134c084f2db925"
+    }
+  ],
+  "decisionsSHA256": "711f2f72266abcca7916e72c81af6cef7b4360c03f62d34381538184809d46ab",
+  "modelProvenanceSHA256": "fbf578bf8ae61cd19380bf377f104af4c9a3ac60262d509129e3138161cadf44",
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "bf58409dc3aeab5abaf67c3302a947e00348b8dcf5ac72f04beab34c6fe058ae",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Tests/HighQualityAcceptanceTests.swift": "b4a24911d5546755cec0bd40f971e79a3c4e42108910f9dd79916f9bf898a153",
+    "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+    "Scripts/run_integrated_offline_validation.sh": "6ac2d8ccff38b1ae645bb0acd9e147be1f1b4bf7fc1bfa766adc0d661d7b2558",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "6316686c049f6b90a27b3eab2b63acc46d3d72710828b1e6eda16f04498489b5",
+    "Scripts/test_mossformer2_guard.sh": "865316ad8868ed9ddb259b65a2debafcb94c8976de497c63177e1d5b70ee3569",
+    "Scripts/report_integrated_offline_validation.py": "f99097dbfefee2b9b54ef0954ab8ad671c3bf3b033618c5d3f54fcd3a7db7b27",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "runtimeSHA256": {
+    "workerExecutable": "991ce6ef4fd86b642ddd04c79579aae1c8eaa74b215e44651b09f81323af1adc",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  },
+  "configuration": {
+    "ASR": "Qwen Standard",
+    "alignment": "Qwen3 Forced Aligner",
+    "diarization": "SpeakerKit Standard",
+    "cues": "Standard",
+    "overlapRecovery": null,
+    "translation": "translategemma-12b-it-4bit"
+  },
+  "runMode": "TRANSLATION_ONLY_12B",
+  "fullIntegratedRun": false,
+  "ticket106Concluded": false,
+  "frozenUpstreamPath": "/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/high-quality/integrated-validation-106-translation-only-12b/frozen/md62mmdz0m-raw-asr.json",
+  "frozenUpstreamSHA256": "85819a6e40930529c8e4206850d8fc107491e78c7600e5cabd259145d7991891",
+  "translationReplaySourceSHA256": "1cd847609a37feae118d63343cc827467ffe422a919ff640fab76110f819f1f5"
+}

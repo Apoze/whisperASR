@@ -1,0 +1,27 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/da40/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/da40/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (5.07s)
+Test Suite 'Selected tests' started at 2026-08-13 02:54:16.576.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-13 02:54:16.577.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-13 02:54:16.577.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenSemanticTranslationExperimentWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenSemanticTranslationExperimentWhenOptedIn]' passed (0.098 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-13 02:54:16.676.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.098 (0.099) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-13 02:54:16.676.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.098 (0.099) seconds
+Test Suite 'Selected tests' passed at 2026-08-13 02:54:16.676.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.098 (0.100) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

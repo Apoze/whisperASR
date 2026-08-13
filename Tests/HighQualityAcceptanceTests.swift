@@ -520,6 +520,21 @@ final class HighQualityAcceptanceTests: XCTestCase {
             sourceTurns: baseTurns
         )
         XCTAssertEqual(semantic.turns, frozenTranslation.request.turns)
+        let jobRequest = HighQualityJobRequest(
+            id: jobID,
+            sourceURL: URL(fileURLWithPath: evidencePath),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: baseline.model.backend,
+            translator: translator,
+            speakerLabels: true,
+            translationContextPolicy: .productDefault,
+            outputRoot: URL(fileURLWithPath: outputPath)
+        )
+        XCTAssertEqual(jobRequest.translationContextPolicy, .previousAcceptedV1)
+        XCTAssertEqual(
+            Set(frozenTranslation.request.conversationContextByCueID.values.map(\.policyVersion)),
+            [jobRequest.translationContextPolicy.version]
+        )
         if environment["WHISPERASR_VALIDATE_SEMANTIC_REPLAY_ONLY"] == "1" { return }
 
         let translationWorker = HighQualityTranslationWorkerClient(
@@ -563,15 +578,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
             translationWorkerEvidence: { await translationWorker.evidence }
         ))
 
-        let result = try await job.run(.init(
-            id: jobID,
-            sourceURL: URL(fileURLWithPath: evidencePath),
-            deliverables: Set(HighQualityDeliverable.allCases),
-            backend: baseline.model.backend,
-            translator: translator,
-            speakerLabels: true,
-            outputRoot: URL(fileURLWithPath: outputPath)
-        ))
+        let result = try await job.run(jobRequest)
 
         let units = try XCTUnwrap(result.evidence.alignment?.semanticUnits)
         XCTAssertFalse(units.isEmpty)
