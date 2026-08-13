@@ -1,0 +1,16 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-10 08:59:08.542.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 08:59:08.543.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-10 08:59:08.543.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenExclusiveSpeakerReconciliationWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testFrozenExclusiveSpeakerReconciliationWhenOptedIn]' passed (14.923 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-10 08:59:23.466.
+	 Executed 1 test, with 0 failures (0 unexpected) in 14.923 (14.923) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-10 08:59:23.466.
+	 Executed 1 test, with 0 failures (0 unexpected) in 14.923 (14.924) seconds
+Test Suite 'Selected tests' passed at 2026-08-10 08:59:23.466.
+	 Executed 1 test, with 0 failures (0 unexpected) in 14.923 (14.925) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

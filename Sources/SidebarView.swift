@@ -104,6 +104,13 @@ struct SidebarView: View {
                     }
                 }
             }
+            ToolbarItem {
+                Button {
+                    openWindow(id: "high-quality-job")
+                } label: {
+                    Label("High-quality Japanese Transcript", systemImage: "text.document")
+                }
+            }
         }
         .onChange(of: searchText) { _, newValue in
             searchDebounceTask?.cancel()

@@ -1,0 +1,21 @@
+{
+  "availableBeforeLoadBytes" : 17276190720,
+  "baselineMemoryBytes" : 22004528,
+  "batches" : [
+
+  ],
+  "cueCount" : 8,
+  "durationSeconds" : 9.744782125,
+  "failure" : "Stopped after unloading mlx-community/translategemma-12b-it-4bit: memory remained at 7212767088 bytes, above the safe handoff limit of 558875440 bytes.; cleanup: Stopped after unloading mlx-community/translategemma-12b-it-4bit: memory remained at 7212767088 bytes, above the safe handoff limit of 558875440 bytes.",
+  "finishedAt" : "2026-08-10T12:18:54Z",
+  "inputSHA256" : "b7281fdd3226930a4dc59758eb5e192642747ad6f9d18d942b850288ad42a394",
+  "maximumMemoryBytes" : 17179869184,
+  "minimumAvailableMemoryBytes" : 7995981824,
+  "modelID" : "mlx-community/translategemma-12b-it-4bit",
+  "reserveBytes" : 8589934592,
+  "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "runtimePeakMemoryBytes" : 7098193728,
+  "schemaVersion" : 1,
+  "startedAt" : "2026-08-10T12:18:44Z",
+  "ticket" : 62
+}

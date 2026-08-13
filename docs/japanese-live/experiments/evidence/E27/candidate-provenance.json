@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "ticket": 93,
+  "observedAt": "2026-08-12",
+  "candidate": "sherpa-onnx-v1.13.5 + Spleeter 2-stems fp16 vocals",
+  "eligible": true,
+  "runtime": {
+    "license": "Apache-2.0",
+    "release": "v1.13.5",
+    "signedReleaseCommit": "3dc7c569f31ca2cd4a20ed6f7db780327e6714c5",
+    "commitSignatureVerifiedByGitHub": true,
+    "workflowRun": "https://github.com/k2-fsa/sherpa-onnx/actions/runs/31467002221",
+    "workflowJob": 93701873500,
+    "workflowConclusion": "success",
+    "workflowUploadedExactAssetAt": "2026-08-11T07:30:09Z",
+    "asset": "sherpa-onnx-v1.13.5-osx-arm64-shared-no-tts.tar.bz2",
+    "assetBytes": 17880704,
+    "officialAssetDigest": "77c46d0e7d383735b7dd9713313ddf764815e829503b0b917ff51ac31be2e897",
+    "observedDownloadSHA256": "77c46d0e7d383735b7dd9713313ddf764815e829503b0b917ff51ac31be2e897",
+    "binary": "bin/sherpa-onnx-offline-source-separation",
+    "binarySHA256": "165cdcd3e4c10d633487fe4682d7dc3ad29fc6dbf11f8f93791cd35ab0d45910",
+    "binaryArchiveMemberSHA256": "165cdcd3e4c10d633487fe4682d7dc3ad29fc6dbf11f8f93791cd35ab0d45910",
+    "binaryArchitecture": "Mach-O 64-bit executable arm64",
+    "dylibArchitectures": "arm64",
+    "codeSignature": "valid ad-hoc SHA-256; no TeamIdentifier",
+    "slsaAttestation": "absent (GitHub attestations API returned 404)",
+    "source": "https://github.com/k2-fsa/sherpa-onnx/releases/tag/v1.13.5"
+  },
+  "models": {
+    "license": "MIT (Spleeter source and pretrained models, JOSS 10.21105/joss.02154)",
+    "conversionSourceCommit": "55a44793e66ffd76757ee7f286c3b2dd16b0be4f",
+    "conversionCommitSignatureVerifiedByGitHub": true,
+    "immutableRepository": "csukuangfj/sherpa-onnx-spleeter-2stems-fp16",
+    "immutableRevision": "93ba771920ade509f8cbd6825b1a90856c797e08",
+    "files": {
+      "vocals.fp16.onnx": {
+        "bytes": 19681017,
+        "sha256": "24cef84aedcd1fe87c0b743ef3370ad34dc1fabf6c9014d6128a75a538c7b668"
+      },
+      "accompaniment.fp16.onnx": {
+        "bytes": 19681024,
+        "sha256": "d14cea55793cc531a5875f5f4da08207d1c5ab9292e8e0099a104eecb014fcc0"
+      }
+    },
+    "upstreamSpleeterRelease": "v1.4.0",
+    "upstreamArchive": "2stems.tar.gz",
+    "upstreamArchiveSHA256": "f3a90b39dd2874269e8b05a48a86745df897b848c61f3958efc80a39152bd692",
+    "source": "https://huggingface.co/csukuangfj/sherpa-onnx-spleeter-2stems-fp16/tree/93ba771920ade509f8cbd6825b1a90856c797e08"
+  },
+  "rejectedReleaseArchive": {
+    "eligible": false,
+    "asset": "sherpa-onnx-spleeter-2stems-fp16.tar.bz2",
+    "checksumAssetCreatedAt": "2025-05-23T01:29:00Z",
+    "checksumExpectedSHA256": "c6c5c4307673bc6813ddf58d4efdff57c26d2dfc3f25b05c7a32db453d70aca6",
+    "modelAssetCreatedAt": "2025-05-23T07:28:22Z",
+    "observedCurrentBytes": 35271738,
+    "observedCurrentSHA256": "d54561979bd2e08a51e7dbd99ac36bb47564e089eefd403636dbca93e811bba2",
+    "officialDigest": null,
+    "eliminatedExplanations": {
+      "wrongAsset": "No: checksum.txt names this exact archive filename.",
+      "wrongFormat": "No: the current download is a valid bzip2 tar with the expected model directory.",
+      "archiveVersusInternalFile": "No: checksum.txt records the archive checksum; neither internal ONNX SHA-256 equals it.",
+      "mirror": "No: both observations came from the canonical k2-fsa/sherpa-onnx GitHub release URL.",
+      "releaseAssetReplaced": "Yes: checksum.txt predates the model asset by 5h59m22s and the signed upload workflow uses overwrite:true."
+    },
+    "reason": "The model asset was overwritten six hours after checksum.txt by the signed conversion workflow using overwrite:true. checksum.txt authenticates an older archive, not the current asset. The current archive is never downloaded by the runner; immutable individual Hugging Face files are pinned instead."
+  }
+}

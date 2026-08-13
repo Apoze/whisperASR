@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "ticket": 95,
+  "classification": "second-concurrent-pre-slot-downstream-attempt",
+  "observedAt": "2026-08-13T04:55:22Z",
+  "authorizedByUser": false,
+  "cause": "A separate concurrent task invoked development with the legacy slot flag despite no user-provided slot; the root agent terminated the process group.",
+  "effect": {
+    "qwenPasses": 0,
+    "parakeetPasses": 0,
+    "whisperKitPasses": 0,
+    "alignmentStarts": 1,
+    "translationStarts": 1,
+    "completedOutput": false,
+    "exitCode": 143,
+    "holdoutOpened": false
+  },
+  "partialLogSHA256": "1fb28a4386f423e9867aa2065ff7483e1b0471037774d0e6284aee92c657353d",
+  "lastStateSHA256": "e93fdf8e9c483b782e3620300d55171449a0aff476cef706a098db0a7c67bcbc",
+  "recovery": "Use one persistent PTY, poll it below 60 seconds, and do not rerun automatically after that recovery attempt."
+}

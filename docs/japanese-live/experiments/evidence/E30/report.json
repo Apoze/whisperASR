@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "ticket": 96,
+  "decision": "NO-GO-BASELINE-WINNER-HOLDOUT-NO-RUN",
+  "corpusRole": "development",
+  "automaticSelection": {
+    "rule": "a distinct candidate must be admissible, fully referenced, improve Japanese, preserve final English and add no critical loss",
+    "candidates": [
+      {
+        "id": "qwen-standard",
+        "name": "Qwen JA standard",
+        "kind": "single-ASR",
+        "distinct": false,
+        "admissible": true,
+        "completeReference": true,
+        "japanesePass": true,
+        "englishPass": true,
+        "noCriticalLoss": true,
+        "stable": true,
+        "costPass": true
+      },
+      {
+        "id": "qwen-parakeet",
+        "name": "Qwen + Parakeet",
+        "kind": "adaptive-ASR",
+        "distinct": true,
+        "admissible": true,
+        "completeReference": true,
+        "japanesePass": true,
+        "englishPass": false,
+        "noCriticalLoss": true,
+        "stable": true,
+        "costPass": true
+      },
+      {
+        "id": "qwen-parakeet-whisperkit",
+        "name": "WhisperKit ciblé",
+        "kind": "adaptive-ASR",
+        "distinct": true,
+        "admissible": true,
+        "completeReference": false,
+        "japanesePass": false,
+        "englishPass": false,
+        "noCriticalLoss": false,
+        "stable": false,
+        "costPass": true
+      }
+    ],
+    "winner": {
+      "id": "qwen-standard",
+      "name": "Qwen JA standard",
+      "kind": "single-ASR",
+      "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+      "weightSHA256": {
+        "model.safetensors": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+      }
+    },
+    "winnerFrozenBeforeHoldout": true,
+    "winnerIsBaseline": true,
+    "winnerIsDistinct": false
+  },
+  "holdout": {
+    "status": "NO_RUN",
+    "opened": false,
+    "modelRunsLaunched": 0,
+    "candidate": null,
+    "reason": "rerunning the baseline cannot identify or confirm a gain",
+    "reopenCondition": "a genuinely distinct candidate passes every DEV gate"
+  },
+  "tracks": [
+    {
+      "id": "qwen-standard",
+      "decision": "WINNER_BASELINE",
+      "admissible": true,
+      "speech": {
+        "recoveredCharacters": 1697,
+        "lostOrSubstitutedCharacters": 1371,
+        "emptyTurns": 12,
+        "duplicatedTurns": 1
+      },
+      "terms": {
+        "recovered": 8,
+        "lost": 18
+      },
+      "numbers": {
+        "recovered": 6,
+        "lost": 11
+      },
+      "meaning": {
+        "recovered": 7,
+        "lost": 5
+      },
+      "english": {
+        "chrFPlusPlus": 46.4359351521226
+      },
+      "cost": {
+        "developmentASRSeconds": 68.12763202190399,
+        "fullEvidenceSeconds": {
+          "e23Report": 1064.0,
+          "e24FrozenTiming": 1124.0,
+          "status": "source-disagreement-retained"
+        },
+        "peakMemoryBytes": 18339289016
+      },
+      "consequence": "baseline Lane A retained; no identifiable holdout gain"
+    },
+    {
+      "id": "funasr",
+      "decision": "NO-GO-unproven-upstream-provenance-and-smoke-generation-runaway",
+      "admissible": false,
+      "speech": {
+        "status": "smoke-generation-runaway",
+        "repeatedPhrase": "最低だな",
+        "repeatedPhraseCount": 77
+      },
+      "terms": null,
+      "numbers": null,
+      "meaning": null,
+      "english": null,
+      "cost": {
+        "workerSeconds": 11.625936031341553,
+        "peakMemoryBytes": 3138424000
+      },
+      "consequence": "stopped after smoke; no full DEV or English"
+    },
+    {
+      "id": "reazon",
+      "decision": "NO-GO",
+      "admissible": false,
+      "speech": {
+        "recoveredVsQwen": 0,
+        "lostVsQwen": 3391,
+        "characters": 135,
+        "CERPercent": 97.18969555035129
+      },
+      "terms": {
+        "lost": 26
+      },
+      "numbers": {
+        "lost": 16
+      },
+      "meaning": {
+        "lost": 10
+      },
+      "english": null,
+      "cost": {
+        "workerSeconds": 23.24585795402527,
+        "peakMemoryBytes": 1387398896
+      },
+      "consequence": "quality collapse; downstream stopped despite corrected ULP harness bug"
+    },
+    {
+      "id": "qwen-anime",
+      "decision": "no-go-license-non-eligible",
+      "admissible": false,
+      "speech": null,
+      "terms": null,
+      "numbers": null,
+      "meaning": null,
+      "english": null,
+      "cost": {
+        "runtimeSeconds": 0.0,
+        "peakMemoryBytes": null
+      },
+      "consequence": "license blocks weights, smoke, DEV and product distribution"
+    },
+    {
+      "id": "firered",
+      "decision": "NO-RUN-fireRed-ineligible",
+      "admissible": false,
+      "speech": null,
+      "terms": null,
+      "numbers": null,
+      "meaning": null,
+      "english": null,
+      "cost": {
+        "runtimeSeconds": 0.0,
+        "peakMemoryBytes": null
+      },
+      "consequence": "boundary-loss concentration gate failed; no candidate run"
+    },
+    {
+      "id": "hotwords",
+      "decision": "INAPPLICABLE-NO-RUN-no-native-hotword-mechanism",
+      "admissible": false,
+      "speech": null,
+      "terms": null,
+      "numbers": null,
+      "meaning": null,
+      "english": null,
+      "cost": {
+        "runtimeSeconds": 0.0,
+        "peakMemoryBytes": null
+      },
+      "consequence": "no mechanism distinct from the rejected system prompt"
+    },
+    {
+      "id": "qwen-spleeter",
+      "decision": "NO-GO-stop-before-holdout",
+      "admissible": false,
+      "speech": {
+        "recoveredCharacterDelta": -31,
+        "candidateEmptyTurns": 4,
+        "candidateDuplicates": 1
+      },
+      "terms": {
+        "delta": 0
+      },
+      "numbers": {
+        "delta": 0
+      },
+      "meaning": {
+        "delta": 0
+      },
+      "english": null,
+      "cost": {
+        "preprocessingSeconds": 9.578953791875392,
+        "jobSeconds": 133.77705097198486,
+        "peakMemoryBytes": 10324710800
+      },
+      "consequence": "lost 31 speech characters, added target empties/duplicate, alignment failed"
+    },
+    {
+      "id": "qwen-parakeet",
+      "decision": "NO-GO-english-regression-stop-before-holdout",
+      "admissible": false,
+      "speech": {
+        "qwenEdits": 3273,
+        "candidateEdits": 3229,
+        "editGain": 44,
+        "emptyTurns": 0,
+        "duplicates": 0
+      },
+      "terms": {
+        "qwen": 7,
+        "candidate": 7
+      },
+      "numbers": {
+        "qwen": 11,
+        "candidate": 11
+      },
+      "meaning": {
+        "qwen": 6,
+        "candidate": 6
+      },
+      "english": {
+        "baselineChrFPlusPlus": 46.4359351521226,
+        "candidateChrFPlusPlus": 45.874880077811724,
+        "delta": -0.5610550743108789
+      },
+      "cost": {
+        "commandSeconds": 650.1646856251173,
+        "modelWorkerSeconds": 599.99869120121,
+        "peakMemoryBytes": 11851782216
+      },
+      "consequence": "44 Japanese edits recovered but final English regressed; holdout veto"
+    },
+    {
+      "id": "targeted-whisperkit",
+      "decision": "INCONCLUSIVE_REFERENCE_HARNESS_NO_DOWNSTREAM",
+      "admissible": false,
+      "speech": {
+        "qwenEdits": 3273,
+        "adaptiveEdits": 3229,
+        "provisionalCandidateEdits": 3219,
+        "validCandidateEdits": null
+      },
+      "terms": {
+        "provisional": 7
+      },
+      "numbers": {
+        "provisional": 11
+      },
+      "meaning": {
+        "provisional": 6
+      },
+      "english": null,
+      "cost": {
+        "targetSeconds": 27.96,
+        "commandSeconds": 98.07183720893227,
+        "workerSeconds": 88.45128202438354,
+        "peakMemoryBytes": 3537161768
+      },
+      "consequence": "model not judged: only 1/6 triggered references complete; retest after reference repair"
+    }
+  ],
+  "preflight": {
+    "order": [
+      "harness",
+      "build",
+      "input",
+      "reference",
+      "candidate"
+    ],
+    "currentBuildPassed": true,
+    "inputReportsHashVerified": true,
+    "referenceDiagnosis": "#95 initial preflight missed coverage; corrected preflight stops before WhisperKit",
+    "referenceCoverageCompleteWindows": 1,
+    "referenceCoverageWindows": 6,
+    "whisperKitModelConclusion": null,
+    "candidateRunAuthorized": false,
+    "sourceTimingDisagreementSeconds": 60.0
+  },
+  "product": {
+    "betaOptionAdded": false,
+    "uiChanged": false,
+    "sourcesByteIdentical": true,
+    "sourcesTreeSHA256": "a11fc98669da14c30db3e3cea5c1e2a16342b84c970fbd2eae5277e0d6bb30e7",
+    "packageSHA256": {
+      "Package.swift": "ab6236f33ff99c10d6caaa51da856735cd3a6f93d7b3e9fa28d939edf0719c36",
+      "Package.resolved": "71d9161262d1962dd6775c3f9aacf0a9a677d8dfc042e2dfa8c49669e885e41f"
+    },
+    "defaultASR": "qwen-ja",
+    "liveChanged": false,
+    "requestJobManifestDeliverablesChanged": false,
+    "appLaunch": "passed-existing-single-instance-lock"
+  },
+  "retest": {
+    "ticket": 95,
+    "allowed": true,
+    "condition": "complete temporal references for every suspect triggered window, then rerun corrected preflight before any model",
+    "currentClassification": "harness-reference-coverage-gap"
+  },
+  "controls": {
+    "schemaVersion": 1,
+    "ticket": 96,
+    "baseCommit": "ad3d56feffec443e36af7adb68ce7fa9b3e4f32c",
+    "benchmarkSlotGranted": false,
+    "modelRunsLaunched": 0,
+    "holdoutOpened": false,
+    "reporterSelfTestPassed": true,
+    "sourcesTreeSHA256": "a11fc98669da14c30db3e3cea5c1e2a16342b84c970fbd2eae5277e0d6bb30e7",
+    "build": {
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift build",
+      "exitCode": 0,
+      "rawLog": "docs/japanese-live/experiments/evidence/E30/build.log",
+      "rawLogSHA256": "8ac9fcd38489f02330c86d05a001b23a80eb4f1e77568a7714680a03404efd93"
+    },
+    "initialTestFailure": {
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test",
+      "exitCode": 1,
+      "classification": "infrastructure-missing-metallib",
+      "modelReached": false,
+      "rawLog": "docs/japanese-live/experiments/evidence/E30/swift-test-missing-metallib.log",
+      "rawLogSHA256": "1cb75fe36522f939bb381693f4be35a69521a502f3eff50295bf229fa121dc79"
+    },
+    "metallib": {
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash Scripts/build_mlx_metallib.sh debug",
+      "passed": true,
+      "path": ".build/debug/mlx.metallib",
+      "sha256": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+    },
+    "tests": {
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --skip-build",
+      "exitCode": 0,
+      "executed": 436,
+      "skippedOptIn": 60,
+      "failed": 0,
+      "rawLog": "docs/japanese-live/experiments/evidence/E30/swift-test.log",
+      "rawLogSHA256": "8bfdc2253a8957efa82f011533246db9a7b9966cb8ade6e282852681fd221dae"
+    },
+    "appLaunch": {
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift run &",
+      "processID": 39445,
+      "exitCode": 0,
+      "classification": "expected-single-instance-lock",
+      "existingProcessID": 87706,
+      "existingInstanceRemainedActive": true,
+      "rawLog": "docs/japanese-live/experiments/evidence/E30/app-launch.log",
+      "rawLogSHA256": "c111505f06813e7ffe98a31c5d4d369872c60185d984edfe6ae44ca11dfec88a"
+    }
+  },
+  "provenance": {
+    "baseCommit": "ad3d56feffec443e36af7adb68ce7fa9b3e4f32c",
+    "sourceReportsSHA256": {
+      "qwenDiagnostic": "0e43cbd5c7f4d6dd0b4706710fb9e473306a40dd7530f72ee2c4dc36a16e8c6a",
+      "funASR": "56deb9adbef7da757154e7c86bb598cfc90bf7dd232eb92ec298060888c446bc",
+      "reazon": "fdb32727c899c1ee0516ab9ab43bd11531ab789b5f4ab7914c8bd284e73b2ea4",
+      "qwenAnime": "e90c4bf6af835ff3eb181a91670b34aa54a8b714820873b4e45b657e6685513f",
+      "fireRed": "8fa4460e1d9b599e6d1dffa40af024e80223380e118f6164359cbbfd2f0f1330",
+      "hotwords": "a065bfcfcc9260660cb4fe00f4c788de37c428febd8f9067e77b69571aebd518",
+      "voiceMusic": "fe0e73831af465a3c526639973b78e8cd65cc61f8a86771fb610289c3323816b",
+      "adaptive": "25d38a79db2673a9baac37be0d376a70cfe0abbb74d8c35f4729696f248a4fee",
+      "whisperKit": "5871c72dc44a7ac1bac93e7815cf612adc0a896344950aff0bf7abd85164c863"
+    },
+    "rawArtifactsSHA256": {
+      "voiceMusicCandidateRaw": "dcf8b3d4cab5976010fbfcc44aa51b4c8ef06840674f8e89d9bf94d02d8e6eb8",
+      "adaptiveCandidateRaw": "51e9e3fc7a9833711b659526d221dbe97a5edb89d74fa6bff345d2f5bd2e68a9",
+      "adaptiveTranslationLog": "2f2a933138c8000d3166affd43d0411bd17659e7c88f2e0a2880fedfd6cf85b6",
+      "whisperKitRun": "e5903c6cde8d79b95f8cb375ceb3d867cd2ab3b07964e29bd4f39bfe450477d3",
+      "whisperKitLog": "1c815658f60feacae28fb20d7ec31fc2c22a4aa1fb4a442e4043d381b24912ea",
+      "whisperKitSelection": "680c739c9f1eebb63fd106b5fc6ef2dc39ffb5e477a4c99f8f96880c36b31b15",
+      "whisperKitTriggerPlan": "fcefb0d8a543e572a5356b76ed98833cdf247049e547079bdf8e788502c70b16"
+    },
+    "reporterSHA256": "05f2759e828589f539a22c4d3bb6796048c6ed1ca7dad20294140a60fd743618"
+  }
+}

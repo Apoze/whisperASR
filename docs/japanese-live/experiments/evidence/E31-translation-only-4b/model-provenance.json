@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "weights": [
+    {
+      "modelID": "mlx-community/translategemma-4b-it-4bit",
+      "revision": "5788ec08c047f3f2e17808101b8d9566ac930d58",
+      "file": "model.safetensors",
+      "sourcePath": "/Users/maz/.cache/huggingface/hub/models--mlx-community--translategemma-4b-it-4bit/snapshots/5788ec08c047f3f2e17808101b8d9566ac930d58/model.safetensors",
+      "sizeBytes": 76,
+      "sha256": "113acb0c29997a3015af84bec2c8f967cb7b15f8959d1c26b9628b921e324c40"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "build": true,
+  "sourceDecode": true,
+  "referenceIntegrity": true,
+  "modelPreparation": true,
+  "realCancellation": true,
+  "failureClassification": true,
+  "artifactParsing": true,
+  "selectableBackends": true,
+  "paidAPIAbsent": true,
+  "isolatedWorkers": true,
+  "dynamicMemoryPressure": true,
+  "liveMutualExclusion": true,
+  "standardSpeakerDefaults": true,
+  "speakerBetaOptionsIndependent": true,
+  "translatorSelections": true,
+  "deliverableCombinations": true,
+  "youtubeAcquisition": true,
+  "englishOnly": true,
+  "liveRegression": true,
+  "fullSwiftSuite": true
+}

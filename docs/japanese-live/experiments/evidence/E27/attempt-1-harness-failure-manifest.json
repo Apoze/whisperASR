@@ -1,0 +1,143 @@
+{
+  "asrWorker" : {
+    "backend" : "qwen-ja",
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-12T01:38:57Z",
+          "availableMemoryBytes" : 11411570688
+        },
+        {
+          "at" : "2026-08-12T01:38:57Z",
+          "availableMemoryBytes" : 11411570688
+        }
+      ],
+      "command" : [
+        "\/Applications\/Xcode.app\/Contents\/Developer\/usr\/bin\/xctest",
+        "--high-quality-asr-worker",
+        "qwen-ja",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-qwen-ja-37A0B5B1-C6E1-495C-8C4B-753401C82205"
+      ],
+      "elapsedSeconds" : 0.1036520004272461,
+      "exitStatus" : 1,
+      "exitedAt" : "2026-08-12T01:38:57Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 180296,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 81073,
+      "rawLog" : "Usage: xctest [-XCTest <TestClassOne\/testMethodA>(,...)] <path to test bundle>\n\nFailure: Unrecognized argument: --high-quality-asr-worker\n\nDisplaying process arguments and environment for debugging purposes:\nArguments: (\n    \"\/Applications\/Xcode.app\/Contents\/Developer\/usr\/bin\/xctest\",\n    \"--high-quality-asr-worker\",\n    \"qwen-ja\",\n    \"\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-qwen-ja-37A0B5B1-C6E1-495C-8C4B-753401C82205\"\n)\nEnvironment: {\n    \"BENCHMARK_SLOT_GRANTED\" = 93;\n    \"BROWSER_USE_AVAILABLE_BACKENDS\" = \"chrome,iab\";\n    \"CLANG_MODULE_CACHE_PATH\" = \"\/tmp\/whisperasr-93-clang-cache\";\n    \"CODEX_CI\" = 1;\n    \"CODEX_INTERNAL_ORIGINATOR_OVERRIDE\" = \"Codex Desktop\";\n    \"CODEX_SANDBOX_NETWORK_DISABLED\" = 1;\n    \"CODEX_SHELL\" = 1;\n    \"CODEX_THREAD_ID\" = \"019ff382-9c7f-7bb0-b066-66f8426dafa6\";\n    COLORTERM = \"\";\n    \"COMMAND_MODE\" = unix2003;\n    CPATH = \"\/usr\/local\/include\";\n    \"DEVELOPER_DIR\" = \"\/Applications\/Xcode.app\/Contents\/Developer\";\n    \"DISABLE_AUTO_UPDATE\" = true;\n    \"DYLD_FRAMEWORK_PATH\" = \"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/Frameworks:\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/Library\/PrivateFrameworks\";\n    \"DYLD_LIBRARY_PATH\" = \"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/usr\/lib\";\n    FPATH = \"\/opt\/homebrew\/share\/zsh\/site-functions:\/opt\/homebrew\/share\/zsh\/site-functions:\/usr\/local\/share\/zsh\/site-functions:\/usr\/share\/zsh\/site-functions:\/usr\/share\/zsh\/5.9\/functions:\/Users\/maz\/.orbstack\/shell\/completions\/zsh:\/Users\/maz\/.orbstack\/shell\/completions\/zsh\";\n    \"GH_PAGER\" = cat;\n    \"GIT_PAGER\" = cat;\n    HOME = \"\/Users\/maz\";\n    \"HOMEBREW_CELLAR\" = \"\/opt\/homebrew\/Cellar\";\n    \"HOMEBREW_PREFIX\" = \"\/opt\/homebrew\";\n    \"HOMEBREW_REPOSITORY\" = \"\/opt\/homebrew\";\n    INFOPATH = \"\/opt\/homebrew\/share\/info:\/opt\/homebrew\/share\/info:\";\n    LANG = \"C.UTF-8\";\n    \"LC_ALL\" = \"C.UTF-8\";\n    \"LC_CTYPE\" = \"C.UTF-8\";\n    \"LIBRARY_PATH\" = \"\/usr\/local\/lib\";\n    LOGNAME = maz;\n    \"LOG_FORMAT\" = json;\n    MANPATH = \"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX26.5.sdk\/usr\/share\/man:\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/usr\/share\/man:\/Applications\/Xcode.app\/Contents\/Developer\/usr\/share\/man:\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/share\/man:\";\n    MallocNanoZone = 0;\n    \"NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S\" = 8e86beb821b9afc846211798e0113bd4b9e79312dfcd135eb447bdb154f64071;\n    \"NODE_REPL_TRUSTED_CODE_PATHS\" = \"\/Users\/maz\/.codex:\/Applications\/ChatGPT.app\/Contents\/Resources\/cua_node\/lib\/node_modules\";\n    \"NO_COLOR\" = 1;\n    OLDPWD = \"\/Users\/maz\/.codex\/worktrees\/a9ad\/whisperASR\";\n    OSLogRateLimit = 64;\n    PAGER = cat;\n    PATH = \"\/Users\/maz\/.local\/bin:\/Users\/maz\/.local\/bin:\/opt\/homebrew\/bin:\/opt\/homebrew\/sbin:\/usr\/local\/bin:\/System\/Cryptexes\/App\/usr\/bin:\/usr\/bin:\/bin:\/usr\/sbin:\/sbin:\/var\/run\/com.apple.security.cryptexd\/codex.system\/bootstrap\/usr\/local\/bin:\/var\/run\/com.apple.security.cryptexd\/codex.system\/bootstrap\/usr\/bin:\/var\/run\/com.apple.security.cryptexd\/codex.system\/bootstrap\/usr\/appleinternal\/bin:\/pkg\/env\/global\/bin:\/Library\/Apple\/usr\/bin:\/Users\/maz\/.codex\/tmp\/arg0\/codex-arg0VFGpEf:\/Users\/maz\/.cache\/codex-runtimes\/codex-primary-runtime\/dependencies\/bin\/override:\/Users\/maz\/.local\/bin:\/Users\/maz\/.orbstack\/bin:\/Users\/maz\/.lmstudio\/bin:\/Users\/maz\/.cache\/codex-runtimes\/codex-primary-runtime\/dependencies\/bin\/fallback:\/Applications\/ChatGPT.app\/Contents\/Resources:\/Users\/maz\/.orbstack\/bin:\/Users\/maz\/.lmstudio\/bin\";\n    PWD = \"\/Users\/maz\/.codex\/worktrees\/a9ad\/whisperASR\";\n    \"RUST_LOG\" = warn;\n    SDKROOT = \"\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX26.5.sdk\";\n    SHELL = \"\/bin\/zsh\";\n    SHLVL = 2;\n    \"SSH_AUTH_SOCK\" = \"\/var\/run\/com.apple.launchd.OP8ZqZNelr\/Listeners\";\n    \"SWIFT_TESTING_ENABLED\" = 0;\n    TERM = dumb;\n    TMPDIR = \"\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/\";\n    USER = maz;\n    \"WHISPERASR_ACCEPTANCE_BACKEND\" = \"qwen-ja\";\n    \"WHISPERASR_ACCEPTANCE_CORPUS\" = qudu2fx3ncc;\n    \"WHISPERASR_ACCEPTANCE_JOB_ID\" = \"93000001-0000-4000-8000-000000000001\";\n    \"WHISPERASR_ACCEPTANCE_OUTPUT_ROOT\" = \"\/Users\/maz\/.codex\/worktrees\/a9ad\/whisperASR\/.build\/benchmarks\/issue-93\/development\/jobs\";\n    \"WHISPERASR_ACCEPTANCE_REFERENCE_ARCHIVE\" = \"\/Users\/maz\/Documents\/videos\/jap\/1\/Video1_reference_transcript_and_translation.zip\";\n    \"WHISPERASR_ACCEPTANCE_SOURCE\" = \"\/Users\/maz\/.codex\/worktrees\/a9ad\/whisperASR\/.build\/benchmarks\/issue-93\/audio\/candidate.wav\";\n    \"WHISPERASR_ACCEPTANCE_SOURCE_SHA256\" = 8df0e11d06510983dd66b3e0386c5562cf27a8c71bf3acfcf46eb6697b576411;\n    \"WHISPERASR_ACCEPTANCE_TRANSLATION_CONTEXT\" = \"product-default\";\n    \"WHISPERASR_RUN_HIGH_QUALITY_ACCEPTANCE\" = 1;\n    \"XPC_FLAGS\" = 0x0;\n    \"XPC_SERVICE_NAME\" = 0;\n    \"ZSH_TMUX_AUTOSTART\" = false;\n    \"ZSH_TMUX_AUTOSTARTED\" = true;\n    \"_\" = \"\/opt\/homebrew\/bin\/python3\";\n    \"__CF_USER_TEXT_ENCODING\" = \"0x1F5:0x0:0x1\";\n}\n",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-qwen-ja-37A0B5B1-C6E1-495C-8C4B-753401C82205\/worker.log",
+      "startedAt" : "2026-08-12T01:38:57Z",
+      "swapUsedAfterBytes" : 2653618176,
+      "swapUsedBeforeBytes" : 2653618176,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "qwen-ja",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+    }
+  },
+  "deliverables" : [
+    "english-subtitles",
+    "english-translation-transcript",
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "forced-alignment",
+    "speaker-diarization",
+    "llm-translation",
+    "export"
+  ],
+  "failures" : [
+    {
+      "message" : "Japanese ASR worker failed: process exited before replying",
+      "stage" : "model-preparation"
+    }
+  ],
+  "finishedAt" : "2026-08-12T01:38:57Z",
+  "generatedFiles" : [
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "93000001-0000-4000-8000-000000000001",
+  "model" : {
+    "backend" : "qwen-ja",
+    "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-12T01:38:57Z",
+      "backend" : "qwen-ja",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=7516192768 reserve=0 total=25769803776 available=11410964480 baseline=220562440",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-12T01:38:57Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-started",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-12T01:38:57Z",
+      "kind" : "unload-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-12T01:38:57Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=220627976 runtimePeak=220611592 minimumAvailable=11410964480 maximum=25769803776 reserve=0",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    }
+  ],
+  "peakMemoryBytes" : 220627976,
+  "schemaVersion" : 2,
+  "selectedBackend" : "qwen-ja",
+  "source" : {
+    "byteCount" : 30630694,
+    "fileName" : "candidate.wav",
+    "modifiedAt" : "2026-08-12T01:36:25Z",
+    "path" : "\/Users\/maz\/.codex\/worktrees\/a9ad\/whisperASR\/.build\/benchmarks\/issue-93\/audio\/candidate.wav"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : true,
+  "stageDurations" : [
+    "normalizing-source",
+    0.13527202606201172,
+    "preparing-asr",
+    0.15216302871704102
+  ],
+  "startedAt" : "2026-08-12T01:38:57Z",
+  "status" : "failed",
+  "translationModel" : {
+    "modelID" : "mlx-community\/translategemma-12b-it-4bit",
+    "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+    "runtimeVersion" : "3.31.4",
+    "translator" : "translategemma-12b-it-4bit",
+    "weightSHA256" : [
+      "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+      "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89"
+    ]
+  }
+}

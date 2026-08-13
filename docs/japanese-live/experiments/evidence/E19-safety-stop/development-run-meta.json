@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "backend": "qwen-ja",
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/1/Video1_reference_transcript_and_translation.zip",
+  "referenceArchiveSHA256": "8f1c4ed3836d5e0f627448f9ecc44ab064d8750cb4464c8849eafabbba401474",
+  "manifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "commit": "8f06b05ba749ee26d78afcd254c4f3b7bb2983ed",
+  "baselineRoot": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance",
+  "candidateSelection": [
+    {
+      "ticket": 54,
+      "report": "docs/high-quality-glossary-e13.json",
+      "sha256": "2e3f0bfe03f98f6813aabbe713a34d6401c5f70b0f6f2dd83cfb473da8c1c4d0",
+      "promoted": false,
+      "selectedBehavior": "baseline",
+      "recordedDecision": "not-promoted"
+    },
+    {
+      "ticket": 55,
+      "report": "docs/high-quality-context-e14.json",
+      "sha256": "a870116cb40bc182a334f93041703f4fb93fac3afa0975434989d4135c580567",
+      "promoted": true,
+      "selectedBehavior": "previous-accepted-v1",
+      "recordedDecision": "promoted"
+    },
+    {
+      "ticket": 56,
+      "report": "docs/high-quality-metricx-e15.json",
+      "sha256": "efe5190593323d67dc73757771a08cdfeaa4eff2cac0c34faded38cade4d2bdd",
+      "promoted": false,
+      "selectedBehavior": "baseline",
+      "recordedDecision": "no-go-development"
+    },
+    {
+      "ticket": 57,
+      "report": "docs/japanese-live/experiments/evidence/E15/report.json",
+      "sha256": "093005ee94b9b57c05d4f33646051178f0643e0e4ec67b8dd9287548f2fc3255",
+      "promoted": false,
+      "selectedBehavior": "non-exclusive",
+      "recordedDecision": "do not promote; development gates or principal-Speaker gain failed"
+    },
+    {
+      "ticket": 58,
+      "report": "docs/japanese-live/experiments/evidence/E16/report.json",
+      "sha256": "d51f5be47aa4553f1899287bb5a0d6b1f819fa52910fbe4acac561ada36f093d",
+      "promoted": false,
+      "selectedBehavior": "W8A16/W8A16",
+      "recordedDecision": "do not promote; untouched holdout did not confirm every gate"
+    },
+    {
+      "ticket": 59,
+      "report": "docs/japanese-live/experiments/evidence/E17-speaker-count/report.json",
+      "sha256": "738651a136caf4b954e254776c70e167d27f8dc0429ece667c08ba855d9a8739",
+      "promoted": false,
+      "selectedBehavior": "automatic",
+      "recordedDecision": "do not ship explicit count; holdout did not confirm the gain"
+    },
+    {
+      "ticket": 60,
+      "report": "docs/japanese-live/experiments/evidence/E17/report.json",
+      "sha256": "79ff5320e34cf30df09452b017a4f6ca11b7724f99d0779f3c5e25865e5fe9a3",
+      "promoted": false,
+      "selectedBehavior": "library-default",
+      "recordedDecision": "do not promote; untouched holdout did not confirm every gate"
+    },
+    {
+      "ticket": 61,
+      "report": "docs/japanese-live/experiments/evidence/E18/development-report.json",
+      "sha256": "d9f312f3594bd4026028f23f82fcc9ebaa55e233ba60f046f69887fae88d1b82",
+      "promoted": false,
+      "selectedBehavior": "speakerkit",
+      "recordedDecision": "keep SpeakerKit; FluidAudio did not pass development"
+    }
+  ],
+  "configuration": {
+    "ASR": "qwen-ja-product-default",
+    "alignment": "Qwen3-ForcedAligner",
+    "diarization": "SpeakerKit-W8A16-auto-library-default-non-exclusive",
+    "translation": "TranslateGemma-12b-4bit-previous-accepted-v1"
+  },
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "4cb9e0cf9e8ff870adf46d6e5f52f2a8971c97c2246162fd4b739c1ff6384f26",
+    "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+    "Sources/HighQualityForcedAlignerRuntime.swift": "62fc210589ae02f3b691e815b47bbe07527d03c03e1c5c026d35f463f577d47c",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "5071cb179ec310f66a089dab27bfda426f6a13712e6993b3a693b44c461f4f0f",
+    "Sources/LocalMLXTranslator.swift": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9",
+    "Tests/HighQualityAcceptanceTests.swift": "ff67dbc3ee1054373a9d9c218eeb6619c907412c7af116d533851f482081e635",
+    "Scripts/run_combined_offline_validation.sh": "5ce6750ed2cb2e0077161e3826fc7b44273bfb4685cffadb47278591550fddb5",
+    "Scripts/report_combined_offline_validation.py": "26328a52208dc00aa59cc641df809c5b2ef109e3d17a730eacf4b0ad834b0481"
+  }
+}

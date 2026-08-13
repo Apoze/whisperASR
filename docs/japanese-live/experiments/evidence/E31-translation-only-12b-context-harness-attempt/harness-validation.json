@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "classification": "validation-only/no-worker",
+  "implementationSHA256": {
+    "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef"
+  },
+  "runtimeSHA256": {
+    "WhisperASRPackageTests.xctest": "92732701f4b48fb00da09b5cda0bceefcf20e41a46097a593d18264b57e13a04"
+  },
+  "checks": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "expectedPolicy": "previous-accepted-v1",
+      "expectedContextCount": 307,
+      "workerCreated": false,
+      "passed": true,
+      "logSHA256": "160006eeb53c616a213e6a8621647b83e7ffe14ab10c7b53d3bd986e38e8598e"
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "expectedPolicy": "previous-accepted-v1",
+      "expectedContextCount": 260,
+      "workerCreated": false,
+      "passed": true,
+      "logSHA256": "c2f69a73add58b640503d70add781ef80e354f5f3cbdf1cc207db153aa1c20c6"
+    }
+  ]
+}

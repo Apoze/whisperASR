@@ -1,0 +1,1341 @@
+{
+  "availableBeforeLoadBytes" : 10823483392,
+  "baselineMemoryBytes" : 22004504,
+  "batches" : [
+    {
+      "context" : {
+        "acceptedHistory" : [
+
+        ],
+        "currentTarget" : "続ての対象戦でが甘いモカそして立川",
+        "encodedHistoryBytes" : 0,
+        "policyVersion" : "previous-accepted-v1",
+        "resetReason" : "job-start"
+      },
+      "cueIDs" : [
+        "cue-0001-SPEAKER_01-1"
+      ],
+      "duration" : 3.699625015258789,
+      "finishReason" : "stop",
+      "inputTokens" : 88,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "In all battles, enjoy sweet mocha and Tachikawa.",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"続ての対象戦でが甘いモカそして立川\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 11,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "In all battles, enjoy sweet mocha and Tachikawa.",
+      "sanitizedPrompt" : "続ての対象戦でが甘いモカそして立川"
+    },
+    {
+      "context" : {
+        "acceptedHistory" : [
+          {
+            "cueID" : "cue-0001-SPEAKER_01-1",
+            "english" : "In all battles, enjoy sweet mocha and Tachikawa.",
+            "japanese" : "続ての対象戦でが甘いモカそして立川"
+          }
+        ],
+        "currentTarget" : "の対象戦でが",
+        "encodedHistoryBytes" : 99,
+        "policyVersion" : "previous-accepted-v1"
+      },
+      "cueIDs" : [
+        "cue-0001-SPEAKER_03-2"
+      ],
+      "duration" : 1.53085196018219,
+      "finishReason" : "stop",
+      "inputTokens" : 181,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "Regarding all engagements.",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"続ての対象戦でが甘いモカそして立川\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"In all battles, enjoy sweet mocha and Tachikawa.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"の対象戦でが\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 4,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "Regarding all engagements.",
+      "sanitizedPrompt" : "の対象戦でが"
+    },
+    {
+      "context" : {
+        "acceptedHistory" : [
+          {
+            "cueID" : "cue-0001-SPEAKER_01-1",
+            "english" : "In all battles, enjoy sweet mocha and Tachikawa.",
+            "japanese" : "続ての対象戦でが甘いモカそして立川"
+          },
+          {
+            "cueID" : "cue-0001-SPEAKER_03-2",
+            "english" : "Regarding all engagements.",
+            "japanese" : "の対象戦でが"
+          }
+        ],
+        "currentTarget" : "来ました",
+        "encodedHistoryBytes" : 143,
+        "policyVersion" : "previous-accepted-v1"
+      },
+      "cueIDs" : [
+        "cue-0001-SPEAKER_01-3"
+      ],
+      "duration" : 2.2269879579544067,
+      "finishReason" : "stop",
+      "inputTokens" : 264,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "        Arrived.",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"続ての対象戦でが甘いモカそして立川\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"In all battles, enjoy sweet mocha and Tachikawa.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"の対象戦でが\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Regarding all engagements.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"来ました\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 4,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "Arrived.",
+      "sanitizedPrompt" : "来ました"
+    },
+    {
+      "context" : {
+        "acceptedHistory" : [
+          {
+            "cueID" : "cue-0001-SPEAKER_03-2",
+            "english" : "Regarding all engagements.",
+            "japanese" : "の対象戦でが"
+          },
+          {
+            "cueID" : "cue-0001-SPEAKER_01-3",
+            "english" : "Arrived.",
+            "japanese" : "来ました"
+          }
+        ],
+        "currentTarget" : "モカ",
+        "encodedHistoryBytes" : 64,
+        "policyVersion" : "previous-accepted-v1"
+      },
+      "cueIDs" : [
+        "cue-0002-SPEAKER_01-3"
+      ],
+      "duration" : 2.1495879888534546,
+      "finishReason" : "stop",
+      "inputTokens" : 245,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "        Moca.",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"の対象戦でが\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Regarding all engagements.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"来ました\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Arrived.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"モカ\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 4,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "Moca.",
+      "sanitizedPrompt" : "モカ"
+    },
+    {
+      "context" : {
+        "acceptedHistory" : [
+          {
+            "cueID" : "cue-0001-SPEAKER_01-3",
+            "english" : "Arrived.",
+            "japanese" : "来ました"
+          },
+          {
+            "cueID" : "cue-0002-SPEAKER_01-3",
+            "english" : "Moca.",
+            "japanese" : "モカ"
+          }
+        ],
+        "currentTarget" : "カさん頑張れ頑れ頼",
+        "encodedHistoryBytes" : 31,
+        "policyVersion" : "previous-accepted-v1"
+      },
+      "cueIDs" : [
+        "cue-0002-SPEAKER_03-4"
+      ],
+      "duration" : 2.736087918281555,
+      "finishReason" : "stop",
+      "inputTokens" : 246,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "        \"Do your best, [name]! Keep it up! I'm counting on you!\"",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"来ました\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Arrived.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"モカ\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Moca.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"カさん頑張れ頑れ頼\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 21,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "\"Do your best, [name]! Keep it up! I'm counting on you!\"",
+      "sanitizedPrompt" : "カさん頑張れ頑れ頼"
+    },
+    {
+      "context" : {
+        "acceptedHistory" : [
+          {
+            "cueID" : "cue-0002-SPEAKER_01-3",
+            "english" : "Moca.",
+            "japanese" : "モカ"
+          },
+          {
+            "cueID" : "cue-0002-SPEAKER_03-4",
+            "english" : "\"Do your best, [name]! Keep it up! I'm counting on you!\"",
+            "japanese" : "カさん頑張れ頑れ頼"
+          }
+        ],
+        "currentTarget" : "頼む",
+        "encodedHistoryBytes" : 94,
+        "policyVersion" : "previous-accepted-v1"
+      },
+      "cueIDs" : [
+        "cue-0002-SPEAKER_03-5"
+      ],
+      "duration" : 3.0459240674972534,
+      "finishReason" : "stop",
+      "inputTokens" : 263,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "        \"Please.\" / \"I'm counting on you.\" / \"Please do.\"",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"モカ\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Moca.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"カさん頑張れ頑れ頼\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"\\\"Do your best, [name]! Keep it up! I'm counting on you!\\\"\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"頼む\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 18,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "\"Please.\" / \"I'm counting on you.\" / \"Please do.\"",
+      "sanitizedPrompt" : "頼む"
+    },
+    {
+      "context" : {
+        "acceptedHistory" : [
+          {
+            "cueID" : "cue-0002-SPEAKER_01-3",
+            "english" : "Moca.",
+            "japanese" : "モカ"
+          },
+          {
+            "cueID" : "cue-0002-SPEAKER_03-4",
+            "english" : "\"Do your best, [name]! Keep it up! I'm counting on you!\"",
+            "japanese" : "カさん頑張れ頑れ頼"
+          }
+        ],
+        "currentTarget" : "先ほ",
+        "encodedHistoryBytes" : 94,
+        "policyVersion" : "previous-accepted-v1"
+      },
+      "cueIDs" : [
+        "cue-0003-SPEAKER_03-5"
+      ],
+      "duration" : 2.366577982902527,
+      "finishReason" : "stop",
+      "inputTokens" : 263,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "        Soon.",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"モカ\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Moca.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"カさん頑張れ頑れ頼\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"\\\"Do your best, [name]! Keep it up! I'm counting on you!\\\"\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"先ほ\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 3,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "Soon.",
+      "sanitizedPrompt" : "先ほ"
+    },
+    {
+      "context" : {
+        "acceptedHistory" : [
+          {
+            "cueID" : "cue-0002-SPEAKER_03-4",
+            "english" : "\"Do your best, [name]! Keep it up! I'm counting on you!\"",
+            "japanese" : "カさん頑張れ頑れ頼"
+          },
+          {
+            "cueID" : "cue-0003-SPEAKER_03-5",
+            "english" : "Soon.",
+            "japanese" : "先ほ"
+          }
+        ],
+        "currentTarget" : "先ほはね立川もプロとしての",
+        "encodedHistoryBytes" : 94,
+        "policyVersion" : "previous-accepted-v1"
+      },
+      "cueIDs" : [
+        "cue-0003-SPEAKER_01-6"
+      ],
+      "duration" : 2.6689969301223755,
+      "finishReason" : "stop",
+      "inputTokens" : 269,
+      "model" : "mlx-community/translategemma-12b-it-4bit",
+      "nativeOutput" : "        \"Regarding Tachikawa, he's also a professional...\"",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"カさん頑張れ頑れ頼\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"\\\"Do your best, [name]! Keep it up! I'm counting on you!\\\"\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"先ほ\",\"type\":\"text\"}],\"role\":\"user\"},{\"content\":\"Soon.\",\"role\":\"assistant\"},{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"先ほはね立川もプロとしての\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 13,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "\"Regarding Tachikawa, he's also a professional...\"",
+      "sanitizedPrompt" : "先ほはね立川もプロとしての"
+    }
+  ],
+  "cueCount" : 8,
+  "durationSeconds" : 27.458747167,
+  "finishedAt" : "2026-08-10T21:39:39Z",
+  "inputSHA256" : "b7281fdd3226930a4dc59758eb5e192642747ad6f9d18d942b850288ad42a394",
+  "maximumMemoryBytes" : 25769803776,
+  "minimumAvailableMemoryBytes" : 5657083904,
+  "modelID" : "mlx-community/translategemma-12b-it-4bit",
+  "modelReportedPeakMemoryBytes" : 7348101954,
+  "releasedMemoryBytes" : 22987592,
+  "reserveBytes" : 0,
+  "response" : "{\"translations\":[{\"id\":\"cue-0001-SPEAKER_01-1\",\"text\":\"In all battles, enjoy sweet mocha and Tachikawa.\"},{\"text\":\"Regarding all engagements.\",\"id\":\"cue-0001-SPEAKER_03-2\"},{\"id\":\"cue-0001-SPEAKER_01-3\",\"text\":\"Arrived.\"},{\"id\":\"cue-0002-SPEAKER_01-3\",\"text\":\"Moca.\"},{\"text\":\"\\\"Do your best, [name]! Keep it up! I'm counting on you!\\\"\",\"id\":\"cue-0002-SPEAKER_03-4\"},{\"id\":\"cue-0002-SPEAKER_03-5\",\"text\":\"\\\"Please.\\\" \\/ \\\"I'm counting on you.\\\" \\/ \\\"Please do.\\\"\"},{\"text\":\"Soon.\",\"id\":\"cue-0003-SPEAKER_03-5\"},{\"text\":\"\\\"Regarding Tachikawa, he's also a professional...\\\"\",\"id\":\"cue-0003-SPEAKER_01-6\"}]}",
+  "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "runtimePeakMemoryBytes" : 10663466936,
+  "schemaVersion" : 3,
+  "startedAt" : "2026-08-10T21:39:11Z",
+  "ticket" : 71,
+  "worker" : {
+    "availableMemorySamples" : [
+      {
+        "at" : "2026-08-10T21:39:11Z",
+        "availableMemoryBytes" : 10822533120
+      },
+      {
+        "at" : "2026-08-10T21:39:11Z",
+        "availableMemoryBytes" : 10822533120
+      },
+      {
+        "at" : "2026-08-10T21:39:11Z",
+        "availableMemoryBytes" : 10820239360
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10823237632
+      },
+      {
+        "at" : "2026-08-10T21:39:12Z",
+        "availableMemoryBytes" : 10832691200
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10828283904
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10830004224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10830004224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10834100224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10834100224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10834100224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10834100224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10834100224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10834100224
+      },
+      {
+        "at" : "2026-08-10T21:39:13Z",
+        "availableMemoryBytes" : 10435756032
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 10186489856
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9928409088
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9720086528
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9720086528
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9720086528
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9720086528
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9720086528
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9720086528
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 9720086528
+      },
+      {
+        "at" : "2026-08-10T21:39:14Z",
+        "availableMemoryBytes" : 8369520640
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8216215552
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8085929984
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8075853824
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8075853824
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8075853824
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8075853824
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8075853824
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8075853824
+      },
+      {
+        "at" : "2026-08-10T21:39:15Z",
+        "availableMemoryBytes" : 8075853824
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 8087404544
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 8001536000
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7982759936
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7917191168
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7917191168
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7917191168
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7917191168
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7917191168
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7917191168
+      },
+      {
+        "at" : "2026-08-10T21:39:16Z",
+        "availableMemoryBytes" : 7917191168
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850541056
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850803200
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:17Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7850639360
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7946010624
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7939883008
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:18Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7934984192
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7572406272
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:19Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7570948096
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7675445248
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7688257536
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7738343424
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7739392000
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7739293696
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7739293696
+      },
+      {
+        "at" : "2026-08-10T21:39:20Z",
+        "availableMemoryBytes" : 7739293696
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 7739293696
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 7739293696
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 7739293696
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 6123831296
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 6132318208
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 6133841920
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 6135676928
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 6135676928
+      },
+      {
+        "at" : "2026-08-10T21:39:21Z",
+        "availableMemoryBytes" : 6135676928
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6135676928
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6135676928
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6135676928
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6135676928
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6207946752
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6310477824
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6304120832
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6304120832
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6303612928
+      },
+      {
+        "at" : "2026-08-10T21:39:22Z",
+        "availableMemoryBytes" : 6303612928
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 6303612928
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 6303612928
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 6303612928
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 6303612928
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 5884690432
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 5883002880
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:23Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 5881413632
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 6044581888
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 6240927744
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 6256869376
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 6285574144
+      },
+      {
+        "at" : "2026-08-10T21:39:24Z",
+        "availableMemoryBytes" : 6285574144
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 6285574144
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 6285574144
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 6285574144
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 6285574144
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 6285574144
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:25Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5778702336
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5781995520
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5782028288
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:26Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5795168256
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5861752832
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5792776192
+      },
+      {
+        "at" : "2026-08-10T21:39:27Z",
+        "availableMemoryBytes" : 5799575552
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5799673856
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5795086336
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5795086336
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5795086336
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5795086336
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5795086336
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5795086336
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5903335424
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:28Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5907693568
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 6405308416
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5863211008
+      },
+      {
+        "at" : "2026-08-10T21:39:29Z",
+        "availableMemoryBytes" : 5796233216
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5796429824
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5796855808
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5796855808
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5796855808
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5796855808
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5796855808
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5796855808
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5849612288
+      },
+      {
+        "at" : "2026-08-10T21:39:30Z",
+        "availableMemoryBytes" : 5856837632
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 5855985664
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 6181552128
+      },
+      {
+        "at" : "2026-08-10T21:39:31Z",
+        "availableMemoryBytes" : 6191906816
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6378438656
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6479921152
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6488571904
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6488571904
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6488571904
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6488571904
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6488571904
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 6488571904
+      },
+      {
+        "at" : "2026-08-10T21:39:32Z",
+        "availableMemoryBytes" : 5803933696
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5739118592
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5753634816
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5749981184
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5746393088
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5746393088
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5746393088
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5746393088
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5746393088
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5746393088
+      },
+      {
+        "at" : "2026-08-10T21:39:33Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 5762875392
+      },
+      {
+        "at" : "2026-08-10T21:39:34Z",
+        "availableMemoryBytes" : 6035095552
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:35Z",
+        "availableMemoryBytes" : 6042304512
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5984157696
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5776982016
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5780586496
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5775294464
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5775294464
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5775294464
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5775294464
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5775294464
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5775294464
+      },
+      {
+        "at" : "2026-08-10T21:39:36Z",
+        "availableMemoryBytes" : 5775294464
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5783224320
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:37Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5724602368
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 8370683904
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 7296925696
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 6423281664
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5761695744
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5657083904
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5657083904
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5657083904
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5657083904
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5657083904
+      },
+      {
+        "at" : "2026-08-10T21:39:38Z",
+        "availableMemoryBytes" : 5657083904
+      },
+      {
+        "at" : "2026-08-10T21:39:39Z",
+        "availableMemoryBytes" : 5657083904
+      },
+      {
+        "at" : "2026-08-10T21:39:39Z",
+        "availableMemoryBytes" : 8047132672
+      }
+    ],
+    "command" : [
+      "/Users/maz/.codex/worktrees/79b9/whisperASR/.build/arm64-apple-macosx/debug/WhisperASR",
+      "--high-quality-translation-worker",
+      "/Users/maz/.codex/worktrees/79b9/whisperASR/docs/japanese-live/experiments/evidence/E20-worker/worker-runtime"
+    ],
+    "elapsedSeconds" : 27.433130979537964,
+    "exitStatus" : 0,
+    "exitedAt" : "2026-08-10T21:39:39Z",
+    "forcedTermination" : false,
+    "peakPhysicalFootprintBytes" : 10663466936,
+    "pressureTransitions" : [
+
+    ],
+    "processIdentifier" : 31191,
+    "rawLog" : "",
+    "rawLogPath" : "/Users/maz/.codex/worktrees/79b9/whisperASR/docs/japanese-live/experiments/evidence/E20-worker/worker-runtime/worker.log",
+    "startedAt" : "2026-08-10T21:39:11Z",
+    "swapUsedAfterBytes" : 2975334400,
+    "swapUsedBeforeBytes" : 2975334400,
+    "terminationReason" : "exit"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "ticket": 93,
+  "classification": "invalid-harness-worker-executable-resolution",
+  "countsAsModelResult": false,
+  "concludesTicket": false,
+  "holdoutOpened": false,
+  "spleeter": {
+    "passes": 1,
+    "input": "canonical 16 kHz stereo montage of 68 reference-free E23 windows",
+    "inputSeconds": 192.487,
+    "elapsedSeconds": 9.578953791875392,
+    "peakRSSBytes": 3365715968,
+    "exitCode": 0,
+    "candidateSHA256": "8df0e11d06510983dd66b3e0386c5562cf27a8c71bf3acfcf46eb6697b576411",
+    "changedTargetSamples": 2142866,
+    "changedOutsideTargetSamples": 0,
+    "cleanControlsByteIdentical": true
+  },
+  "qwen": {
+    "passes": 0,
+    "modelInferenceStarted": false,
+    "workerCommandExecutable": "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+    "workerExitStatus": 1,
+    "workerError": "Unrecognized argument: --high-quality-asr-worker"
+  },
+  "job": {
+    "wrapperElapsedSeconds": 13.294126915978268,
+    "normalizingSourceSeconds": 0.13527202606201172,
+    "preparingASRSeconds": 0.15216302871704102,
+    "peakMemoryBytes": 220627976,
+    "criticalPressureTransitions": 0,
+    "availableMemoryBytes": 11411570688
+  },
+  "cause": "The runner omitted WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE, so XCTest's Bundle.main executable was resolved as the shared worker executable.",
+  "rawArtifacts": {
+    "manifest": "attempt-1-harness-failure-manifest.json",
+    "rawASR": "attempt-1-harness-failure-raw-asr.json.gz",
+    "runLog": "attempt-1-harness-failure-run.log.gz",
+    "runtime": "attempt-1-harness-failure-runtime.json"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "ticket": 54,
+  "catalog": {
+    "schemaVersion": 2,
+    "version": "2026-08-10",
+    "entries": 35,
+    "coverageLimit": "Coverage prioritizes the two Offline acceptance videos and reusable high-frequency terms; it is not universal."
+  },
+  "budget": {
+    "maxEntries": 12,
+    "maxEncodedBytes": 2048,
+    "maxInputTokenShare": 0.25,
+    "maxScoringOperations": 512,
+    "maxFalseCorrectionRisk": 0
+  },
+  "coverage": [
+    {
+      "domain": "anime",
+      "catalogEntries": 8,
+      "authoritativeLocalReferenceOpportunities": 0,
+      "productSelectionOpportunities": 0,
+      "hasAuthoritativeLocalReference": false,
+      "limitation": "Neither Offline acceptance video contains an authoritative anime term opportunity."
+    },
+    {
+      "domain": "vtuber",
+      "catalogEntries": 6,
+      "authoritativeLocalReferenceOpportunities": 4,
+      "productSelectionOpportunities": 1,
+      "hasAuthoritativeLocalReference": true,
+      "limitation": "Only Amayui Moka reaches the product translation units; short forms for other people remain excluded."
+    },
+    {
+      "domain": "gaming",
+      "catalogEntries": 13,
+      "authoritativeLocalReferenceOpportunities": 7,
+      "productSelectionOpportunities": 0,
+      "hasAuthoritativeLocalReference": true,
+      "limitation": "Seven reference annotations contain SF6/input-method terms, but none survive into the product ASR translation units; this slice remains diagnostic."
+    },
+    {
+      "domain": "conversation",
+      "catalogEntries": 8,
+      "authoritativeLocalReferenceOpportunities": 2,
+      "productSelectionOpportunities": 2,
+      "hasAuthoritativeLocalReference": true,
+      "limitation": "Two context-dependent expressions are selected as soft guidance; valid contextual translations need not use exact canonical wording."
+    }
+  ],
+  "development": {
+    "corpusID": "qudu2fx3ncc",
+    "applicableOpportunities": 3,
+    "newEntryOpportunities": 0,
+    "canonicalOrAliasAccuracy": 0.3333333333333333,
+    "hardCanonicalOrAliasAccuracy": 1,
+    "falseInsertions": 0,
+    "maximumPromptEntries": 1,
+    "maximumPromptTokenShare": 0.02294921875,
+    "COMET": 0.4828819389918342,
+    "chrFPlusPlus": 45.684299211832645,
+    "applicableDirectOutputsMatchFrozenRun": true,
+    "rawArtifacts": [
+      {"path": "docs/japanese-live/experiments/evidence/E13/development-glossary-selection.json", "sha256": "4c7c1e732f19c0c8ae4aa6a8f2602b251f0669d38a87db8140bff500cc09aedf"},
+      {"path": "docs/japanese-live/experiments/evidence/E13/development-expanded-catalog-translation.json", "sha256": "b2147db7ec3301a446e1d84cfad0e50fffc1b4d18d72f8913400d04daeb32c54"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/development-retry.json.gz", "sha256": "3031ef21d0acd7be54a0b1a5c27b94b9280b95f20ee0d12c17b756f29d856bd1"}
+    ]
+  },
+  "holdout": {
+    "corpusID": "md62mmdz0m",
+    "applicableOpportunities": 0,
+    "newEntryOpportunities": 0,
+    "canonicalOrAliasAccuracy": null,
+    "hardCanonicalOrAliasAccuracy": null,
+    "falseInsertions": 0,
+    "maximumPromptEntries": 0,
+    "maximumPromptTokenShare": 0,
+    "COMET": 0.5856149821263837,
+    "chrFPlusPlus": 50.19480432152061,
+    "rawArtifacts": [
+      {"path": "docs/japanese-live/experiments/evidence/E13/holdout-glossary-selection.json", "sha256": "95f665f899d8133ec6a82ac3e7f75c87d25680a5a39449374055089ec364977c"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/holdout-direct-protocol.json.gz", "sha256": "6fafa90685389da3f0749055498767916a2bbb045249208a9d3b23e46e55243c"},
+      {"path": "docs/japanese-live/experiments/evidence/E12/holdout-retry.json.gz", "sha256": "1313a8c1b1811ff626932a5d54a2225e9fdf2dad9780f3ccc61d1765af90ef4e"}
+    ]
+  },
+  "promoted": false,
+  "evidenceLimitation": "The expanded entries have zero opportunities in product ASR translation units. An E13 run regenerated all three applicable development units and matched the frozen direct outputs; holdout selection is empty, so its request is unchanged. Corpus COMET and chrF++ therefore remain the frozen E12 values. The gaming reference-only and anime slices are diagnostic and cannot support Promotion."
+}

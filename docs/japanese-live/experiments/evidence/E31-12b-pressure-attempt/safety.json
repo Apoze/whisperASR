@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "startedAt": "2026-08-12T21:13:19Z",
+  "exitedAt": "2026-08-12T21:16:24Z",
+  "elapsedSeconds": 185,
+  "timeoutSeconds": 2400,
+  "stopReason": "native-pressure-warning",
+  "exitStatus": 143,
+  "forcedTermination": false,
+  "peakResidentBytes": 5268062208,
+  "peakPhysicalFootprintBytes": 11889334152,
+  "reportedPeakPhysicalFootprintBytes": 11889334152,
+  "minimumFreeMemoryPercent": 27,
+  "nativePressureLevels": [
+    "normal",
+    "warning"
+  ],
+  "catastrophicGuard": {
+    "physicalMemoryBytes": 25769803776,
+    "limitPercent": 90,
+    "limitBytes": 23192823398
+  },
+  "swapGrowthGuard": {
+    "limitPercentOfPhysicalMemory": 25,
+    "limitBytes": 6442450944
+  },
+  "postLoadRunawayGuard": {
+    "modelLoadedObserved": false,
+    "growthPercent": 25,
+    "windowSamples": 30
+  },
+  "systemBefore": {
+    "freeMemoryPercent": 76,
+    "swapUsedBytes": 5166134723,
+    "pageouts": 1777345
+  },
+  "systemAfter": {
+    "freeMemoryPercent": 70,
+    "swapUsedBytes": 5149357507,
+    "swapDeltaBytes": -16777216,
+    "pageouts": 1777767,
+    "pageoutDelta": 422,
+    "recoveredFreeMemoryPercentagePoints": 43
+  },
+  "peakSwapDeltaBytes": 0,
+  "rawSamples": {
+    "path": "/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/high-quality/integrated-validation-106/translategemma-12b-it-4bit/qudu2fx3ncc/safety.samples.jsonl",
+    "sha256": "78d3a98a97b56089bc731616e7773f717e4b134c8f630bbaa9639bbbf0b58495"
+  }
+}

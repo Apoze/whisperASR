@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "backend": "qwen-ja",
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/1/Video1_reference_transcript_and_translation.zip",
+  "referenceArchiveSHA256": "8f1c4ed3836d5e0f627448f9ecc44ab064d8750cb4464c8849eafabbba401474",
+  "manifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "commit": "7c9978fdc4f0cc8e743678a000de905fe9de6054",
+  "baselineRoot": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance",
+  "candidateSelection": [
+    {
+      "ticket": 54,
+      "report": "docs/high-quality-glossary-e13.json",
+      "sha256": "2e3f0bfe03f98f6813aabbe713a34d6401c5f70b0f6f2dd83cfb473da8c1c4d0",
+      "promoted": false,
+      "selectedBehavior": "baseline",
+      "recordedDecision": "not-promoted"
+    },
+    {
+      "ticket": 55,
+      "report": "docs/high-quality-context-e14.json",
+      "sha256": "a870116cb40bc182a334f93041703f4fb93fac3afa0975434989d4135c580567",
+      "promoted": true,
+      "selectedBehavior": "previous-accepted-v1",
+      "recordedDecision": "promoted"
+    },
+    {
+      "ticket": 56,
+      "report": "docs/high-quality-metricx-e15.json",
+      "sha256": "efe5190593323d67dc73757771a08cdfeaa4eff2cac0c34faded38cade4d2bdd",
+      "promoted": false,
+      "selectedBehavior": "baseline",
+      "recordedDecision": "no-go-development"
+    },
+    {
+      "ticket": 57,
+      "report": "docs/japanese-live/experiments/evidence/E15/report.json",
+      "sha256": "093005ee94b9b57c05d4f33646051178f0643e0e4ec67b8dd9287548f2fc3255",
+      "promoted": false,
+      "selectedBehavior": "non-exclusive",
+      "recordedDecision": "do not promote; development gates or principal-Speaker gain failed"
+    },
+    {
+      "ticket": 58,
+      "report": "docs/japanese-live/experiments/evidence/E16/report.json",
+      "sha256": "d51f5be47aa4553f1899287bb5a0d6b1f819fa52910fbe4acac561ada36f093d",
+      "promoted": false,
+      "selectedBehavior": "W8A16/W8A16",
+      "recordedDecision": "do not promote; untouched holdout did not confirm every gate"
+    },
+    {
+      "ticket": 59,
+      "report": "docs/japanese-live/experiments/evidence/E17-speaker-count/report.json",
+      "sha256": "738651a136caf4b954e254776c70e167d27f8dc0429ece667c08ba855d9a8739",
+      "promoted": false,
+      "selectedBehavior": "automatic",
+      "recordedDecision": "do not ship explicit count; holdout did not confirm the gain"
+    },
+    {
+      "ticket": 60,
+      "report": "docs/japanese-live/experiments/evidence/E17/report.json",
+      "sha256": "79ff5320e34cf30df09452b017a4f6ca11b7724f99d0779f3c5e25865e5fe9a3",
+      "promoted": false,
+      "selectedBehavior": "library-default",
+      "recordedDecision": "do not promote; untouched holdout did not confirm every gate"
+    },
+    {
+      "ticket": 61,
+      "report": "docs/japanese-live/experiments/evidence/E18/development-report.json",
+      "sha256": "d9f312f3594bd4026028f23f82fcc9ebaa55e233ba60f046f69887fae88d1b82",
+      "promoted": false,
+      "selectedBehavior": "speakerkit",
+      "recordedDecision": "keep SpeakerKit; FluidAudio did not pass development"
+    }
+  ],
+  "configuration": {
+    "ASR": "qwen-ja-product-default",
+    "alignment": "Qwen3-ForcedAligner",
+    "diarization": "SpeakerKit-W8A16-auto-library-default-non-exclusive",
+    "translation": "TranslateGemma-12b-4bit-previous-accepted-v1"
+  },
+  "implementationSHA256": {
+    "Sources/HighQualityJob.swift": "ac0cf1e4b2ad8d5ce0cbae06cb7e7954866d5da64e9a9d5516d2ae3a4dbcbd82",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityASRWorker.swift": "ab5981d939485f52fbeea8bf45732ea5cd6b41760482d066cd7de3be198d3c22",
+    "Sources/HighQualityAlignmentSpeakerWorker.swift": "56c98872d0cdd6dc74f9bd8ffc40c2dfad89fd1d59100b2f38e23b302ea66fcb",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "3b9771da40e93bdd72bafb2f2c197f00bb20faf92be08dbbaee13b7cc3ad744a",
+    "Sources/HighQualityForcedAlignerRuntime.swift": "0fe36c3e36fac9962fdb472a6d5faeb450f8f8a9ddf5013773214f9e327c0b2c",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "9ac5b0ed7a1147def3cd71045f16b862d4ffa14a81f53e67b106fe1028c6f84b",
+    "Sources/LocalMLXTranslator.swift": "88057870984c07b81b5374d6b3a0cf1654ed3c4c52b43e9da9578742bf771a51",
+    "Tests/HeavyweightModelGateTests.swift": "fe3f6390f8df9f22e8ddfca704fee6b0c92cdbb7788bddbddbc1a5b189f1b41b",
+    "Tests/HighQualityJobTests.swift": "27773f10a3e00a8e77bfbbd47f420f0a3b7bdd02f7d8a721a4df1fcce2645902",
+    "Tests/HighQualityLocalTranslationTests.swift": "073a28fdf90d1f6c92d9da852c4989e1fdd091ecbba34b80a2c8d13f07779223",
+    "Tests/HighQualityAcceptanceTests.swift": "c9d40652629414113f0209b74edb8f1cb14bf07ee065c45c1eef7faad7465fbe",
+    "Tests/HighQualityASRWorkerTests.swift": "62545899bcdf2e900a7bb88216077560fc9cf250efaeb6f3dca752deb49213ab",
+    "Tests/HighQualityAlignmentSpeakerWorkerTests.swift": "3128317237c65183fce6fe6319290cbb5a6baa588f7abdaa8e743ff8ba7dd2a3",
+    "Tests/HighQualityTranslationWorkerTests.swift": "0061051ac841b3364696c0386ec40d58cf3fbf2f2213e592b831209aecc58f1f",
+    "Scripts/run_combined_offline_validation.sh": "36a6adba8620e67eaa4e92be0865785b8c470197bdfd49ca891360be4b208bb0",
+    "Scripts/report_combined_offline_validation.py": "98ad63cfde7b5854b9a8954ef4b253c57b22fe55d5d33f55fd668c04cf580e3a"
+  },
+  "rawArtifactSHA256": {
+    "manifest.json": "a18fb08a8a2ef3ad60152d4d8fb12de6a7b6c384bb4905f1a64bc7bd6c144020",
+    "raw-asr.json": "6060f830c8c3b8febb186c540e992f3d70375a674adb4d48087f77e1ce97c2b2"
+  },
+  "modelProvenance": {
+    "path": "model-provenance.json",
+    "sha256": "d199240ef0dbfcacc23c198de334f8eba58ae5d4db13f49aacdc0f9899bd5020"
+  },
+  "scoringImplementationSHA256": {
+    "Scripts/report_combined_offline_validation.py": "1b9a5e338dfdd23934aa4d02eb840080b0997eef9b9c85b1d81133202f15dd77",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "revalidation": {
+    "kind": "current-code-raw-replay",
+    "rawArtifactSHA256": "6060f830c8c3b8febb186c540e992f3d70375a674adb4d48087f77e1ce97c2b2",
+    "implementationSHA256": {
+      "Sources/HighQualityTranslationIntegrity.swift": "397431297c9c5ecc067b00d5ac7b75d6af3addfa05d70030103846464ac54819",
+      "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+      "Tests/HighQualityTranslationIntegrityTests.swift": "0aa392ce8fc1cafcfc5686870227812fef5039935622bca87775206634993ba0"
+    },
+    "testBinarySHA256": "d5c9e7e6779d72eb3df6573f2843dc7599a8896edb29736a9b5f3a72cbe1a743",
+    "testLogSHA256": "b397f83cc0de0ededf935b47b2a42af9920835c75cd37da47ee51d5ae566fe0d"
+  }
+}

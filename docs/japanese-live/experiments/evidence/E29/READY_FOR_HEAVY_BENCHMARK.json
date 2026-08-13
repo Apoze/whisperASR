@@ -1,0 +1,97 @@
+{
+  "status": "READY_FOR_HEAVY_BENCHMARK",
+  "ticket": 95,
+  "heavyCommandsLaunchedBeforeCheckpoint": 2,
+  "completedHeavyRunsBeforeCheckpoint": 0,
+  "userSlotGranted": false,
+  "incidentAcknowledgementRequired": true,
+  "command": "BENCHMARK_SLOT_GRANTED=95 BENCHMARK_SLOT_CONFIRMED_BY_USER=95 bash Scripts/run_targeted_whisperkit_experiment.sh development",
+  "corpus": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "holdoutOpened": false,
+  "runtimeReference": false,
+  "observedModelStarts": {
+    "qwen": 0,
+    "parakeet": 0,
+    "whisperKit": 0,
+    "alignment": 2,
+    "translation": 2
+  },
+  "retainedCompletedModelPasses": {
+    "qwen": 0,
+    "parakeet": 0,
+    "whisperKit": 0,
+    "alignment": 0,
+    "translation": 0
+  },
+  "plannedModelPasses": {
+    "qwen": 0,
+    "parakeet": 0,
+    "whisperKit": 0,
+    "alignment": 1,
+    "translation": 1
+  },
+  "reuse": {
+    "source": "frozen E28 + hash-verified E29 WhisperKit raw",
+    "whisperKitRunSHA256": "e5903c6cde8d79b95f8cb375ceb3d867cd2ab3b07964e29bd4f39bfe450477d3"
+  },
+  "whisperKit": {
+    "windowCount": 6,
+    "audioSeconds": 27.96,
+    "rawReused": true
+  },
+  "downstream": {
+    "condition": "Japanese gates passed",
+    "alignmentPasses": 1,
+    "translationPasses": 1,
+    "typicalMinutes": 17,
+    "hardTimeoutMinutes": 40,
+    "peakRAMGiB": 11.1,
+    "incrementalDiskMiB": 250
+  },
+  "estimate": {
+    "freeDiskBytes": 149109084160,
+    "totalRAMBytes": 25769803776
+  },
+  "gates": [
+    "frozen input/reference/model hashes",
+    "build, tests, runner probe",
+    "raw trigger = disagreement AND independent Qwen weakness",
+    "six targeted windows only",
+    "one complete hypothesis, no fusion",
+    "block-calibrated selector, no bad override or critical loss",
+    "Japanese comparison vs Qwen and #94",
+    "English comparison only after Japanese pass",
+    "clean pressure, runaway, cancellation and worker lifecycle"
+  ],
+  "memory": {
+    "nativePressure": true,
+    "runawayGuard": true,
+    "cancellation": true,
+    "fixedReserveBytes": 0
+  },
+  "inputSHA256": {
+    "referenceManifest": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+    "whisperKitRun": "e5903c6cde8d79b95f8cb375ceb3d867cd2ab3b07964e29bd4f39bfe450477d3",
+    "runnerIncident": "51220e4e5d53c2dffcd72881278f97af560c33f717464895d8d0d40c69f8d2bd",
+    "orchestratorIncident": "9810ad8fec4e43b0eefe1be56f53a92092339d842c2574d19eb3a2a6f59ed1b0",
+    "incidentState": "e93fdf8e9c483b782e3620300d55171449a0aff476cef706a098db0a7c67bcbc",
+    "incidentLog": "1fb28a4386f423e9867aa2065ff7483e1b0471037774d0e6284aee92c657353d",
+    "triggerPlan": "fcefb0d8a543e572a5356b76ed98833cdf247049e547079bdf8e788502c70b16",
+    "triggerReport": "07d2ef4e35af25bb5eeb3ba18c2af0991b340af142484c2241553899f10099f1",
+    "selection": "016582179911bf0115ebd20fd5e78f53c08bd300eee2bd8619d73598bf87b720",
+    "selectionReport": "d49e4ce792229ed32dcedbc1b151145d71db153a56f06dfa445a74f474c7214c"
+  },
+  "implementationSHA256": {
+    "harness": "3762e11f9119da0788b598e83ad762c344caaecb0e811fbe1f0719a8339e8506",
+    "adaptiveHarness": "dc4d762a855e300ef27587436e1dfe197f4d7ed800ab94b9314bd5758a772aeb",
+    "runner": "1a619ae971f0ff1211965794fc6aa38e0bcbe29a1a59ab78ef5d7a07cb32bbc0",
+    "tests": "13e7a7ee9039936f3b1c1fce2e014500ee40d9195d68f5ee2c6e656af2085eca",
+    "job": "2b80493d9f41b11eaaa421bf172d4470690945c251cefa0864378be1c28a4a1c",
+    "whisperKitRuntime": "c2628f60c7ee35c06aede909e6262b0f5f55dda6265017fc2db20a35ea6539a5",
+    "workerSource": "fddd146685f81817e63d0ab4eb2e1d34e5a19fc223e463cd05869e580d781638",
+    "workerBinary": "8d506cbe024ce1918a307b6cbdc1ab2e1436f42560c11eaa34284952438b7268",
+    "triggerPlan": "fcefb0d8a543e572a5356b76ed98833cdf247049e547079bdf8e788502c70b16",
+    "triggerReport": "07d2ef4e35af25bb5eeb3ba18c2af0991b340af142484c2241553899f10099f1"
+  }
+}

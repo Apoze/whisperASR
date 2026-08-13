@@ -1,0 +1,16 @@
+{
+  "command": [
+    "xcrun",
+    "swift",
+    "test",
+    "--disable-sandbox",
+    "--skip-build",
+    "--filter",
+    "AdaptiveASRExperimentTests/testTargetedWhisperKitASRWhenOptedIn"
+  ],
+  "elapsedSeconds": 98.07183720893227,
+  "exitCode": 0,
+  "rawLog": "/Users/maz/.codex/worktrees/6182/whisperASR/.build/benchmarks/issue-95/development/whisperkit.log",
+  "timedOut": false,
+  "timeoutSeconds": 600
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "ticket": 89,
+  "recordedAt": "2026-08-11T23:11:17Z",
+  "commitBeforeExperiment": "837c0179d3d99fad46263ed89dd776fada7f4c59",
+  "host": "Darwin/arm64",
+  "holdoutOpened": false,
+  "weightsDownloaded": false,
+  "runtimeInstalled": false,
+  "smokeLaunched": false,
+  "developmentLaunched": false,
+  "checkpoint": {
+    "modelID": "reazon-research/reazonspeech-k2-v2",
+    "revision": "291488c8151be24d7da4bf7af26e533fad96e407",
+    "artifactLicense": "Apache-2.0",
+    "trainingDataLicense": "CDLA-Sharing-1.0",
+    "runtime": "sherpa-onnx 1.13.4",
+    "recipe": "encoder-int8_decoder-fp32_joiner-int8"
+  },
+  "controls": {
+    "architecture": true,
+    "sourceHash": true,
+    "referenceArchiveHash": true,
+    "frozenLocalReferences": true,
+    "E22Hash": true,
+    "E23Hash": true,
+    "workerSelfTest": true,
+    "reporterSelfTest": true,
+    "swiftFocusedTests": {"passed": 7, "failed": 0, "seconds": 0.992},
+    "incrementalBuildSeconds": 4.95,
+    "sandboxRunnerFailureExcluded": true
+  },
+  "implementationSHA256": {
+    "Sources/HighQualityASRWorker.swift": "455c87399df2309e73030c47a3e51150be2e786b2faad999843ce12d63bae379",
+    "Sources/HighQualityJob.swift": "ac937ccb9dfd1bb50b3af131d0581f3cd4cd7e6c26f5157aff8de2c62599f0ce",
+    "Scripts/reazon_asr_worker.py": "493982ef89ca519c8246251f11ac12ed57b09cb5210fbc121058a1b33ed219ff",
+    "Scripts/report_reazon_dev.py": "cd1e7ff2ce1c8912ef51c43fdc4d0101e957dde16b6e4a4269abddc528cbc05d",
+    "Scripts/run_reazon_dev_experiment.sh": "55060ce091d63ee816d80bb7bd41399a185bdb20314a630bcef0e5f04fbcead2",
+    "Tests/HighQualityASRWorkerTests.swift": "5b00a1c8df75e611b223ebbccc0c5a5e4e09839efae47a108572287315ceedc7",
+    "Tests/HighQualityJobTests.swift": "d790086aaa9e67a0f27c08197dd3bafc1c66a1bcc01bc60ceed11d4fe737af1d"
+  },
+  "lightTestLogSHA256": "63b0e15f67d9c0a4b0ec7b8388afa4094d1d164e9ab93d46470373b8ef82852a",
+  "compressedLightTestLogSHA256": "85671ed0110693fd7a650cc05736e2c9bfae81913ed107a58d20e81837328cea"
+}

@@ -1,0 +1,74 @@
+{
+  "status": "READY_FOR_FIXED_DOWNSTREAM_REPLAY",
+  "ticket": 94,
+  "command": "BENCHMARK_SLOT_GRANTED=94 bash Scripts/run_adaptive_asr_experiment.sh fixed-downstream-replay",
+  "holdoutOpened": false,
+  "runtimeReference": false,
+  "rerunASR": false,
+  "selection": {
+    "fixedThreshold": 0.5,
+    "qwen": 167,
+    "parakeet": 2
+  },
+  "modelPasses": {
+    "asr": 0,
+    "alignment": 1,
+    "translation": 1
+  },
+  "strictlySequential": true,
+  "fix": {
+    "cueID": "cue-0295",
+    "text": "うん。",
+    "sourceAnchor": [
+      950.62,
+      957.2078125
+    ],
+    "rawPoint": 957.18,
+    "policy": "single-zero-cue-asr-anchor-20cps",
+    "timingQuality": "coarse",
+    "preservesRawItems": true,
+    "validatorRelaxed": false
+  },
+  "estimate": {
+    "alignmentSeconds": 25,
+    "translationSeconds": 950,
+    "totalMinutes": 17,
+    "hardTimeoutMinutes": 40,
+    "peakRAMGiB": 10,
+    "incrementalDiskMiB": 250,
+    "basis": "E28 alignment and E22 frozen TranslateGemma product run"
+  },
+  "memory": {
+    "nativePressure": true,
+    "runawayGuard": true,
+    "cancellation": true,
+    "fixedReserveBytes": 0
+  },
+  "pureReplay": {
+    "modelsLoaded": 0,
+    "e27": "fail-closed",
+    "e28": "cue-0295-valid"
+  },
+  "pureReplaySHA256": {
+    "docs/japanese-live/experiments/evidence/E28/fixed-replay-e27.log.gz": "efeb0d6b69a1dd3ef65dbb5768d98e2a7fa600fdb948503d06561e0c517bf066",
+    "docs/japanese-live/experiments/evidence/E28/fixed-replay-e28.log.gz": "9cdaf2de7a6674e38438a9e00c729fb5c470c2e2e5ec3ed4951fd8be85e0bfcc"
+  },
+  "checkpointSHA256": "4fb086239984f65fb56fd41ad12bbc3c850c1727a11d0fa852450768131c7f03",
+  "reuseSHA256": {
+    "asr-run.json": "c4ff5fa759801301806aaccf1fc3081b9522d5902518422c64ca875475eabc52",
+    "qwen-short-windows.json": "e5bede73c1cc39152e8f6852560ca51215ddd2b05b94c659487c843ae1b386cf",
+    "parakeet-short-windows.json": "bd191674834f36bd10ae64cb940bb185730ac2024d5f9a69eca10d85de8ab5b2",
+    "selection.json": "4279b6e2a187f5c8c0695b79c085af8c42b0e8fc294fdc0c0e07fffec4521a2f"
+  },
+  "diagnosticReplaySHA256": {
+    "docs/japanese-live/experiments/evidence/E27/corrected-resume-failure-raw-asr.json.gz": "dcf8b3d4cab5976010fbfcc44aa51b4c8ef06840674f8e89d9bf94d02d8e6eb8",
+    "docs/japanese-live/experiments/evidence/E28/candidate-raw-asr.json.gz": "51e9e3fc7a9833711b659526d221dbe97a5edb89d74fa6bff345d2f5bd2e68a9"
+  },
+  "implementationSHA256": {
+    "Sources/HighQualityForcedAlignerRuntime.swift": "51b9debe733d3c8615c0fdf9effddc1f2e86ac646246576eacf9978ac36e02fa",
+    "Sources/HighQualityJob.swift": "fd243d6784d50131bb4dd535158241ce91883d897f74d12765ddfd14e1119d35",
+    "Tests/HighQualityJobTests.swift": "8e44396d42c74c3ee14dd666e5b6c8d8b22a05ee0c763d37a5b5a38c3ce00e11",
+    "Scripts/run_adaptive_asr_experiment.sh": "d9498dc582549f3d098907ab93cf5aa445e0d6a93e27d38f2c0bd22172490f77",
+    ".build/debug/WhisperASR": "5a0ab62e8d39c82071261a78fd8fceb7bd14e32a7f7f555a19cc7f7ceaae4ceb"
+  }
+}

@@ -1,0 +1,397 @@
+{
+  "calibration": {
+    "admissible": true,
+    "allTriggeredBlocksDiscriminateQwenWeakness": true,
+    "blocks": 5,
+    "fixedThresholdBlocks": [
+      {
+        "block": 0,
+        "discrimination": null,
+        "otherQwenErrorRateMean": 0.7571994064396094,
+        "threshold": 0.25,
+        "triggerCount": 0,
+        "triggerRate": 0.0,
+        "triggeredQwenErrorRateMean": null
+      },
+      {
+        "block": 1,
+        "discrimination": null,
+        "otherQwenErrorRateMean": 0.8716779285330332,
+        "threshold": 0.25,
+        "triggerCount": 0,
+        "triggerRate": 0.0,
+        "triggeredQwenErrorRateMean": null
+      },
+      {
+        "block": 2,
+        "discrimination": 0.175190184293328,
+        "otherQwenErrorRateMean": 0.7890955299923863,
+        "threshold": 0.25,
+        "triggerCount": 1,
+        "triggerRate": 0.029411764705882353,
+        "triggeredQwenErrorRateMean": 0.9642857142857143
+      },
+      {
+        "block": 3,
+        "discrimination": 0.2830616634126092,
+        "otherQwenErrorRateMean": 0.8684534881025424,
+        "threshold": 0.25,
+        "triggerCount": 3,
+        "triggerRate": 0.08823529411764706,
+        "triggeredQwenErrorRateMean": 1.1515151515151516
+      },
+      {
+        "block": 4,
+        "discrimination": 0.49821984831131494,
+        "otherQwenErrorRateMean": 0.5017801516886851,
+        "threshold": 0.25,
+        "triggerCount": 2,
+        "triggerRate": 0.06060606060606061,
+        "triggeredQwenErrorRateMean": 1.0
+      }
+    ],
+    "folds": [
+      {
+        "heldout": {
+          "discrimination": null,
+          "otherQwenErrorRateMean": 0.7571994064396094,
+          "threshold": 0.25,
+          "triggerCount": 0,
+          "triggerRate": 0.0,
+          "triggeredQwenErrorRateMean": null
+        },
+        "heldoutBlock": 0,
+        "threshold": 0.25,
+        "trainingCandidates": [
+          {
+            "discrimination": 0.30081392338905144,
+            "otherQwenErrorRateMean": 0.7590191007296869,
+            "threshold": 0.0,
+            "triggerCount": 7,
+            "triggerRate": 0.05185185185185185,
+            "triggeredQwenErrorRateMean": 1.0598330241187384
+          },
+          {
+            "discrimination": 0.3089180250889163,
+            "otherQwenErrorRateMean": 0.7608871697162785,
+            "threshold": 0.25,
+            "triggerCount": 6,
+            "triggerRate": 0.044444444444444446,
+            "triggeredQwenErrorRateMean": 1.0698051948051948
+          },
+          {
+            "discrimination": 0.22306386866344863,
+            "otherQwenErrorRateMean": 0.76800755990798,
+            "threshold": 0.5,
+            "triggerCount": 4,
+            "triggerRate": 0.02962962962962963,
+            "triggeredQwenErrorRateMean": 0.9910714285714286
+          },
+          {
+            "discrimination": 0.2270651040132008,
+            "otherQwenErrorRateMean": 0.7729348959867992,
+            "threshold": 1.0,
+            "triggerCount": 1,
+            "triggerRate": 0.007407407407407408,
+            "triggeredQwenErrorRateMean": 1.0
+          }
+        ]
+      },
+      {
+        "heldout": {
+          "discrimination": null,
+          "otherQwenErrorRateMean": 0.8716779285330332,
+          "threshold": 0.25,
+          "triggerCount": 0,
+          "triggerRate": 0.0,
+          "triggeredQwenErrorRateMean": null
+        },
+        "heldoutBlock": 1,
+        "threshold": 0.25,
+        "trainingCandidates": [
+          {
+            "discrimination": 0.33909065881896594,
+            "otherQwenErrorRateMean": 0.7307145359862288,
+            "threshold": 0.0,
+            "triggerCount": 6,
+            "triggerRate": 0.044444444444444446,
+            "triggeredQwenErrorRateMean": 1.0698051948051948
+          },
+          {
+            "discrimination": 0.33909065881896594,
+            "otherQwenErrorRateMean": 0.7307145359862288,
+            "threshold": 0.25,
+            "triggerCount": 6,
+            "triggerRate": 0.044444444444444446,
+            "triggeredQwenErrorRateMean": 1.0698051948051948
+          },
+          {
+            "discrimination": 0.25277585149685633,
+            "otherQwenErrorRateMean": 0.7382955770745723,
+            "threshold": 0.5,
+            "triggerCount": 4,
+            "triggerRate": 0.02962962962962963,
+            "triggeredQwenErrorRateMean": 0.9910714285714286
+          },
+          {
+            "discrimination": 0.2561118932010844,
+            "otherQwenErrorRateMean": 0.7438881067989156,
+            "threshold": 1.0,
+            "triggerCount": 1,
+            "triggerRate": 0.007407407407407408,
+            "triggeredQwenErrorRateMean": 1.0
+          }
+        ]
+      },
+      {
+        "heldout": {
+          "discrimination": 0.175190184293328,
+          "otherQwenErrorRateMean": 0.7890955299923863,
+          "threshold": 0.25,
+          "triggerCount": 1,
+          "triggerRate": 0.029411764705882353,
+          "triggeredQwenErrorRateMean": 0.9642857142857143
+        },
+        "heldoutBlock": 2,
+        "threshold": 0.25,
+        "trainingCandidates": [
+          {
+            "discrimination": 0.32491205465216566,
+            "otherQwenErrorRateMean": 0.75084552110541,
+            "threshold": 0.0,
+            "triggerCount": 6,
+            "triggerRate": 0.044444444444444446,
+            "triggeredQwenErrorRateMean": 1.0757575757575757
+          },
+          {
+            "discrimination": 0.338146996889107,
+            "otherQwenErrorRateMean": 0.7527620940199838,
+            "threshold": 0.25,
+            "triggerCount": 5,
+            "triggerRate": 0.037037037037037035,
+            "triggeredQwenErrorRateMean": 1.0909090909090908
+          },
+          {
+            "discrimination": 0.24004835093073218,
+            "otherQwenErrorRateMean": 0.7599516490692678,
+            "threshold": 0.5,
+            "triggerCount": 3,
+            "triggerRate": 0.022222222222222223,
+            "triggeredQwenErrorRateMean": 1.0
+          },
+          {
+            "discrimination": 0.2364655397228108,
+            "otherQwenErrorRateMean": 0.7635344602771892,
+            "threshold": 1.0,
+            "triggerCount": 1,
+            "triggerRate": 0.007407407407407408,
+            "triggeredQwenErrorRateMean": 1.0
+          }
+        ]
+      },
+      {
+        "heldout": {
+          "discrimination": 0.2830616634126092,
+          "otherQwenErrorRateMean": 0.8684534881025424,
+          "threshold": 0.0,
+          "triggerCount": 3,
+          "triggerRate": 0.08823529411764706,
+          "triggeredQwenErrorRateMean": 1.1515151515151516
+        },
+        "heldoutBlock": 3,
+        "threshold": 0.0,
+        "trainingCandidates": [
+          {
+            "discrimination": 0.25842130199762836,
+            "otherQwenErrorRateMean": 0.7326501265738002,
+            "threshold": 0.0,
+            "triggerCount": 4,
+            "triggerRate": 0.02962962962962963,
+            "triggeredQwenErrorRateMean": 0.9910714285714286
+          },
+          {
+            "discrimination": 0.2534197336924515,
+            "otherQwenErrorRateMean": 0.7346755044027866,
+            "threshold": 0.25,
+            "triggerCount": 3,
+            "triggerRate": 0.022222222222222223,
+            "triggeredQwenErrorRateMean": 0.9880952380952381
+          },
+          {
+            "discrimination": 0.2534197336924515,
+            "otherQwenErrorRateMean": 0.7346755044027866,
+            "threshold": 0.5,
+            "triggerCount": 3,
+            "triggerRate": 0.022222222222222223,
+            "triggeredQwenErrorRateMean": 0.9880952380952381
+          },
+          {
+            "discrimination": null,
+            "otherQwenErrorRateMean": 0.7403070540403967,
+            "threshold": 1.0,
+            "triggerCount": 0,
+            "triggerRate": 0.0,
+            "triggeredQwenErrorRateMean": null
+          }
+        ]
+      },
+      {
+        "heldout": {
+          "discrimination": 0.49821984831131494,
+          "otherQwenErrorRateMean": 0.5017801516886851,
+          "threshold": 0.25,
+          "triggerCount": 2,
+          "triggerRate": 0.06060606060606061,
+          "triggeredQwenErrorRateMean": 1.0
+        },
+        "heldoutBlock": 4,
+        "threshold": 0.25,
+        "trainingCandidates": [
+          {
+            "discrimination": 0.2643460810181619,
+            "otherQwenErrorRateMean": 0.8194201527480718,
+            "threshold": 0.0,
+            "triggerCount": 5,
+            "triggerRate": 0.03676470588235294,
+            "triggeredQwenErrorRateMean": 1.0837662337662337
+          },
+          {
+            "discrimination": 0.28391961031387236,
+            "otherQwenErrorRateMean": 0.8207881818939198,
+            "threshold": 0.25,
+            "triggerCount": 4,
+            "triggerRate": 0.029411764705882353,
+            "triggeredQwenErrorRateMean": 1.1047077922077921
+          },
+          {
+            "discrimination": 0.15528774173582094,
+            "otherQwenErrorRateMean": 0.8268551154070363,
+            "threshold": 0.5,
+            "triggerCount": 2,
+            "triggerRate": 0.014705882352941176,
+            "triggeredQwenErrorRateMean": 0.9821428571428572
+          },
+          {
+            "discrimination": 0.1721268801568253,
+            "otherQwenErrorRateMean": 0.8278731198431747,
+            "threshold": 1.0,
+            "triggerCount": 1,
+            "triggerRate": 0.007352941176470588,
+            "triggeredQwenErrorRateMean": 1.0
+          }
+        ]
+      }
+    ],
+    "perFoldThreshold": [
+      0.25,
+      0.25,
+      0.25,
+      0.0,
+      0.25
+    ],
+    "status": "four-fold-agreement-one-broader-fold",
+    "threshold": 0.25
+  },
+  "heavyRunJustified": true,
+  "holdoutOpened": false,
+  "mappingAudit": {
+    "assignedCharacterCount": 3573,
+    "characterAlignmentSHA256": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7",
+    "characterCount": 3573,
+    "cueCount": 199,
+    "everyCueTextConserved": true,
+    "method": "character-midpoint-to-acoustic-window; stable-cue-order-within-window",
+    "overlappingCuesInterleaved": false,
+    "unassignedCharacterCount": 0
+  },
+  "rawOnlyMeasurement": {
+    "candidateThresholds": [
+      {
+        "threshold": 0.0,
+        "triggerCount": 7
+      },
+      {
+        "threshold": 0.25,
+        "triggerCount": 6
+      },
+      {
+        "threshold": 0.5,
+        "triggerCount": 4
+      },
+      {
+        "threshold": 1.0,
+        "triggerCount": 1
+      }
+    ],
+    "measuredBeforeCalibrationLabels": true,
+    "windowCount": 169
+  },
+  "schemaVersion": 1,
+  "ticket": 95,
+  "triggerCount": 6,
+  "triggerPlanSHA256": "fcefb0d8a543e572a5356b76ed98833cdf247049e547079bdf8e788502c70b16",
+  "triggerRate": 0.03550295857988166,
+  "triggeredSeconds": 27.96,
+  "triggeredWindows": [
+    {
+      "block": 2,
+      "disagreement": 0.7647058823529411,
+      "id": "segment-0095",
+      "parakeetEdits": 10,
+      "qwenEdits": 54,
+      "qwenErrorRate": 0.9642857142857143,
+      "qwenWeakness": 0.845528455284553,
+      "referenceJapanese": "ない。"
+    },
+    {
+      "block": 3,
+      "disagreement": 1.0,
+      "id": "segment-0125",
+      "parakeetEdits": 3,
+      "qwenEdits": 3,
+      "qwenErrorRate": 1.0,
+      "qwenWeakness": 0.4117647058823529,
+      "referenceJapanese": ""
+    },
+    {
+      "block": 3,
+      "disagreement": 1.0,
+      "id": "segment-0126",
+      "parakeetEdits": 7,
+      "qwenEdits": 7,
+      "qwenErrorRate": 1.0,
+      "qwenWeakness": 2.2,
+      "referenceJapanese": ""
+    },
+    {
+      "block": 3,
+      "disagreement": 0.92,
+      "id": "segment-0127",
+      "parakeetEdits": 17,
+      "qwenEdits": 16,
+      "qwenErrorRate": 1.4545454545454546,
+      "qwenWeakness": 0.3333333333333335,
+      "referenceJapanese": "やったー！や"
+    },
+    {
+      "block": 4,
+      "disagreement": 1.0,
+      "id": "segment-0167",
+      "parakeetEdits": 2,
+      "qwenEdits": 2,
+      "qwenErrorRate": 1.0,
+      "qwenWeakness": 0.6240601503759399,
+      "referenceJapanese": ""
+    },
+    {
+      "block": 4,
+      "disagreement": 1.0,
+      "id": "segment-0168",
+      "parakeetEdits": 2,
+      "qwenEdits": 1,
+      "qwenErrorRate": 1.0,
+      "qwenWeakness": 0.6688741721854304,
+      "referenceJapanese": ""
+    }
+  ]
+}

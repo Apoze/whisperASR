@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E18-fluid-audio-offline",
+  "primaryMetric": "speaker-attributed Japanese error rate",
+  "development": {
+    "corpusID": "qudu2fx3ncc",
+    "role": "development",
+    "referenceAnnotations": {
+      "pseudoSpeakers": {
+        "SPEAKER_13": "group-reaction/overlap annotation; not one acoustic identity"
+      },
+      "uncertainty": "SPEAKER_13 is a group-reaction/overlap pseudo-speaker excluded from acoustic identity scoring; timing remains reference-limited."
+    },
+    "metrics": {
+      "speakerkit": {
+        "DERPercent": 108.46221378765807,
+        "JERPercent": 84.74678985341754,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 6,
+        "speakerCountAbsoluteError": 6,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 4444,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 150.6951508986097,
+          "unattributedCharacterCount": 0
+        },
+        "overlap": {
+          "precisionPercent": 12.572840537928329,
+          "recallPercent": 21.743761997917225,
+          "f1Percent": 15.932862351913657,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 161.52812600135803,
+          "matchedSeconds": 20.30867370605469,
+          "missedSeconds": 73.09132629394531,
+          "falseAlarmSeconds": 141.21945229530334
+        },
+        "activityFalseAlarmSeconds": 166.46592742919927,
+        "crossSpeakerOverlapSeconds": 161.52812600135803,
+        "runtimeSeconds": 12.903679013252258,
+        "preparationSeconds": 0.14595401287078857,
+        "peakMemoryBytes": 744048104
+      },
+      "fluid-audio-offline": {
+        "DERPercent": 105.02141414663431,
+        "JERPercent": 98.60037986291262,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 1,
+        "speakerCountAbsoluteError": 11,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 6523,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 221.19362495761274,
+          "unattributedCharacterCount": 0
+        },
+        "overlap": {
+          "precisionPercent": 0.0,
+          "recallPercent": 0.0,
+          "f1Percent": 0.0,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 0,
+          "matchedSeconds": 0,
+          "missedSeconds": 93.4,
+          "falseAlarmSeconds": 0.0
+        },
+        "activityFalseAlarmSeconds": 169.23053222656245,
+        "crossSpeakerOverlapSeconds": 0.0,
+        "runtimeSeconds": 6.688898921012878,
+        "preparationSeconds": 0.3427680730819702,
+        "peakMemoryBytes": 790660296
+      }
+    },
+    "gates": {
+      "speakerkit": {
+        "provenance": true,
+        "oneVariable": true,
+        "frozenASRAlignmentTranslation": true,
+        "modelIdentityRevisionConfiguration": true,
+        "completeDiarizationEvidence": true,
+        "stablePrincipalAttribution": true,
+        "fluidAudioCancellationFailClosed": true,
+        "validDeliverables": true,
+        "renameConsistency": true,
+        "lifecycleAndMemoryRelease": true,
+        "runtimeAndMemoryMeasured": true,
+        "zeroDuplication": true,
+        "translationAndLiveUnchanged": true
+      },
+      "fluid-audio-offline": {
+        "provenance": true,
+        "oneVariable": true,
+        "frozenASRAlignmentTranslation": true,
+        "modelIdentityRevisionConfiguration": true,
+        "completeDiarizationEvidence": true,
+        "stablePrincipalAttribution": true,
+        "fluidAudioCancellationFailClosed": true,
+        "validDeliverables": true,
+        "renameConsistency": true,
+        "lifecycleAndMemoryRelease": true,
+        "runtimeAndMemoryMeasured": true,
+        "zeroDuplication": true,
+        "translationAndLiveUnchanged": true
+      }
+    },
+    "candidateQualityGates": {
+      "strictSpeakerAttributedJapaneseGain": false,
+      "noUnattributedContentRegression": true,
+      "DERDoesNotRegress": true,
+      "JERDoesNotRegress": false,
+      "speakerCountErrorDoesNotRegress": false
+    },
+    "candidateEligible": false,
+    "rawArtifacts": {
+      "speakerkit": {
+        "rawASR": "docs/japanese-live/experiments/evidence/E18/development-speakerkit-raw-asr.json.gz",
+        "manifest": "docs/japanese-live/experiments/evidence/E18/development-speakerkit-manifest.json",
+        "log": "docs/japanese-live/experiments/evidence/E18/development-speakerkit.log",
+        "scorerInput": "docs/japanese-live/experiments/evidence/E18/development-speakerkit-scorer-input.json.gz"
+      },
+      "fluid-audio-offline": {
+        "rawASR": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-offline-raw-asr.json.gz",
+        "manifest": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-offline-manifest.json",
+        "log": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-offline.log",
+        "scorerInput": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-offline-scorer-input.json.gz"
+      }
+    }
+  },
+  "holdout": null,
+  "holdoutRun": false,
+  "promote": false,
+  "decision": "keep SpeakerKit; FluidAudio did not pass development",
+  "limitedEvidence": "two supplied videos; no universal domain-quality claim"
+}

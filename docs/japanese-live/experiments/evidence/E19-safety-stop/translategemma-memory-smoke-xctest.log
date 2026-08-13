@@ -1,0 +1,13 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-10 14:18:44.335.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 14:18:44.336.
+Test Suite 'HighQualityLocalTranslationTests' started at 2026-08-10 14:18:44.336.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn]' started.
+/private/tmp/whisperASR-ticket62.T0MjTn/Tests/HighQualityLocalTranslationTests.swift:694: error: -[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn] : failed: caught error: "runtimeReserveViolated(modelID: \"mlx-community/translategemma-12b-it-4bit\", currentBytes: 7098193728, maximumBytes: 17179869184, availableBytes: 7995981824, reserveBytes: 8589934592)"
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn]' failed (10.914 seconds).
+Test Suite 'HighQualityLocalTranslationTests' failed at 2026-08-10 14:18:55.251.
+	 Executed 1 test, with 1 failure (1 unexpected) in 10.914 (10.914) seconds
+Test Suite 'WhisperASRPackageTests.xctest' failed at 2026-08-10 14:18:55.251.
+	 Executed 1 test, with 1 failure (1 unexpected) in 10.914 (10.915) seconds
+Test Suite 'Selected tests' failed at 2026-08-10 14:18:55.251.
+	 Executed 1 test, with 1 failure (1 unexpected) in 10.914 (10.915) seconds

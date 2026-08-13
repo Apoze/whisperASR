@@ -1,0 +1,1713 @@
+{
+  "corpusID" : "md62mmdz0m",
+  "schemaVersion" : 1,
+  "selection" : {
+    "budget" : {
+      "maxEncodedBytes" : 2048,
+      "maxEntries" : 12,
+      "maxFalseCorrectionRisk" : 0,
+      "maxInputTokenShare" : 0.25,
+      "maxScoringOperations" : 512
+    },
+    "contextBytes" : 38223,
+    "coverageLimit" : "Built-in seed terms only; source names, slang, new releases, and context-dependent translations may be absent.",
+    "decisions" : [
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 120,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Amayui Moka",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Moka Amayui"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "amayui-moka",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "甘結もか",
+            "甘いモカ"
+          ],
+          "provenance" : [
+            "https:\/\/vspo.jp\/en\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 139,
+        "falseCorrectionRisk" : 1,
+        "guidance" : "hard",
+        "reason" : "false-correction-risk budget",
+        "score" : 32,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+          {
+            "cueID" : "cue-0038",
+            "matchedForm" : "エペ",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          },
+          {
+            "cueID" : "cue-0191",
+            "matchedForm" : "エペ",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          }
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+            "エペ"
+          ],
+          "canonicalEnglish" : "Apex Legends",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "apex-legends",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "エーペックスレジェンズ",
+            "Apex Legends",
+            "エペ"
+          ],
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja-jp\/games\/apex-legends\/about\/frequently-asked-questions"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+            "進撃"
+          ],
+          "canonicalEnglish" : "Attack on Titan",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "attack-on-titan",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "進撃の巨人",
+            "進撃"
+          ],
+          "provenance" : [
+            "https:\/\/shingeki.tv\/final\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 135,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+            "鬼滅"
+          ],
+          "canonicalEnglish" : "Demon Slayer: Kimetsu no Yaiba",
+          "domain" : "anime",
+          "englishAliases" : [
+            "Demon Slayer"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "demon-slayer",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "鬼滅の刃",
+            "鬼滅"
+          ],
+          "provenance" : [
+            "https:\/\/demonslayer-anime.com\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 119,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+            "ホロ"
+          ],
+          "canonicalEnglish" : "hololive",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "hololive production"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "hololive",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ホロライブ",
+            "ホロ"
+          ],
+          "provenance" : [
+            "https:\/\/hololive.hololivepro.com\/en\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 120,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Let's eat",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Thank you for the food"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "itadakimasu",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "いただきます"
+          ],
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+            "呪術"
+          ],
+          "canonicalEnglish" : "JUJUTSU KAISEN",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "jujutsu-kaisen",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "呪術廻戦",
+            "呪術"
+          ],
+          "provenance" : [
+            "https:\/\/jujutsukaisen.jp\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+            "マイクラ"
+          ],
+          "canonicalEnglish" : "Minecraft",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "minecraft",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "マインクラフト",
+            "マイクラ"
+          ],
+          "provenance" : [
+            "https:\/\/www.minecraft.net\/ja-jp"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 138,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "My Hero Academia",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "my-hero-academia",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "僕のヒーローアカデミア",
+            "ヒロアカ"
+          ],
+          "provenance" : [
+            "https:\/\/heroaca.com\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 106,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "NIJISANJI",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "nijisanji",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "にじさんじ",
+            "虹さんじ"
+          ],
+          "provenance" : [
+            "https:\/\/www.nijisanji.jp\/en"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 136,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thanks for your hard work",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Good work"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "otsukaresama",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "お疲れさま",
+            "お疲れ様"
+          ],
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 84,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "senior",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "senpai"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "senpai",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "先輩"
+          ],
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 141,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+            "ストロク"
+          ],
+          "canonicalEnglish" : "Street Fighter 6",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "SF6"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "street-fighter-6",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ストリートファイター6",
+            "ストロク"
+          ],
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 103,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VALORANT",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "valorant",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ヴァロラント",
+            "VALORANT"
+          ],
+          "provenance" : [
+            "https:\/\/playvalorant.com\/ja-jp\/"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VSPO!",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "vspo",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ぶいすぽっ！",
+            "ぶいすぽ",
+            "VSPO"
+          ],
+          "provenance" : [
+            "https:\/\/store.vspo.jp\/en"
+          ]
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 149,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thank you in advance",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Nice to meet you"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "yoroshiku-onegaishimasu",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "よろしくお願いします"
+          ],
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ]
+        }
+      }
+    ],
+    "encodedSize" : 2,
+    "scoringOperations" : 78,
+    "terminologyRegister" : {
+
+    },
+    "tokenShareByCueID" : {
+      "cue-0001" : 0.00048828125,
+      "cue-0002" : 0.00048828125,
+      "cue-0003" : 0.00048828125,
+      "cue-0004" : 0.00048828125,
+      "cue-0006" : 0.00048828125,
+      "cue-0007" : 0.00048828125,
+      "cue-0008" : 0.00048828125,
+      "cue-0009" : 0.00048828125,
+      "cue-0010" : 0.00048828125,
+      "cue-0011" : 0.00048828125,
+      "cue-0012" : 0.00048828125,
+      "cue-0013" : 0.00048828125,
+      "cue-0014" : 0.00048828125,
+      "cue-0015" : 0.00048828125,
+      "cue-0016" : 0.00048828125,
+      "cue-0017" : 0.00048828125,
+      "cue-0018" : 0.00048828125,
+      "cue-0019" : 0.00048828125,
+      "cue-0020" : 0.00048828125,
+      "cue-0021" : 0.00048828125,
+      "cue-0022" : 0.00048828125,
+      "cue-0023" : 0.00048828125,
+      "cue-0024" : 0.00048828125,
+      "cue-0025" : 0.00048828125,
+      "cue-0026" : 0.00048828125,
+      "cue-0027" : 0.00048828125,
+      "cue-0028" : 0.00048828125,
+      "cue-0029" : 0.00048828125,
+      "cue-0030" : 0.00048828125,
+      "cue-0031" : 0.00048828125,
+      "cue-0032" : 0.00048828125,
+      "cue-0033" : 0.00048828125,
+      "cue-0034" : 0.00048828125,
+      "cue-0035" : 0.00048828125,
+      "cue-0036" : 0.00048828125,
+      "cue-0038" : 0.00048828125,
+      "cue-0039" : 0.00048828125,
+      "cue-0040" : 0.00048828125,
+      "cue-0041" : 0.00048828125,
+      "cue-0042" : 0.00048828125,
+      "cue-0043" : 0.00048828125,
+      "cue-0044" : 0.00048828125,
+      "cue-0045" : 0.00048828125,
+      "cue-0046" : 0.00048828125,
+      "cue-0047" : 0.00048828125,
+      "cue-0048" : 0.00048828125,
+      "cue-0049" : 0.00048828125,
+      "cue-0050" : 0.00048828125,
+      "cue-0051" : 0.00048828125,
+      "cue-0052" : 0.00048828125,
+      "cue-0053" : 0.00048828125,
+      "cue-0054" : 0.00048828125,
+      "cue-0055" : 0.00048828125,
+      "cue-0056" : 0.00048828125,
+      "cue-0057" : 0.00048828125,
+      "cue-0058" : 0.00048828125,
+      "cue-0059" : 0.00048828125,
+      "cue-0060" : 0.00048828125,
+      "cue-0061" : 0.00048828125,
+      "cue-0062" : 0.00048828125,
+      "cue-0063" : 0.00048828125,
+      "cue-0064" : 0.00048828125,
+      "cue-0065" : 0.00048828125,
+      "cue-0066" : 0.00048828125,
+      "cue-0067" : 0.00048828125,
+      "cue-0068" : 0.00048828125,
+      "cue-0069" : 0.00048828125,
+      "cue-0070" : 0.00048828125,
+      "cue-0071" : 0.00048828125,
+      "cue-0072" : 0.00048828125,
+      "cue-0073" : 0.00048828125,
+      "cue-0074" : 0.00048828125,
+      "cue-0075" : 0.00048828125,
+      "cue-0076" : 0.00048828125,
+      "cue-0077" : 0.00048828125,
+      "cue-0078" : 0.00048828125,
+      "cue-0079" : 0.00048828125,
+      "cue-0080" : 0.00048828125,
+      "cue-0081" : 0.00048828125,
+      "cue-0082" : 0.00048828125,
+      "cue-0083" : 0.00048828125,
+      "cue-0084" : 0.00048828125,
+      "cue-0085" : 0.00048828125,
+      "cue-0086" : 0.00048828125,
+      "cue-0087" : 0.00048828125,
+      "cue-0088" : 0.00048828125,
+      "cue-0089" : 0.00048828125,
+      "cue-0090" : 0.00048828125,
+      "cue-0091" : 0.00048828125,
+      "cue-0092" : 0.00048828125,
+      "cue-0093" : 0.00048828125,
+      "cue-0094" : 0.00048828125,
+      "cue-0095" : 0.00048828125,
+      "cue-0096" : 0.00048828125,
+      "cue-0097" : 0.00048828125,
+      "cue-0098" : 0.00048828125,
+      "cue-0099" : 0.00048828125,
+      "cue-0100" : 0.00048828125,
+      "cue-0101" : 0.00048828125,
+      "cue-0102" : 0.00048828125,
+      "cue-0103" : 0.00048828125,
+      "cue-0104" : 0.00048828125,
+      "cue-0105" : 0.00048828125,
+      "cue-0106" : 0.00048828125,
+      "cue-0107" : 0.00048828125,
+      "cue-0108" : 0.00048828125,
+      "cue-0109" : 0.00048828125,
+      "cue-0110" : 0.00048828125,
+      "cue-0111" : 0.00048828125,
+      "cue-0112" : 0.00048828125,
+      "cue-0113" : 0.00048828125,
+      "cue-0114" : 0.00048828125,
+      "cue-0115" : 0.00048828125,
+      "cue-0116" : 0.00048828125,
+      "cue-0117" : 0.00048828125,
+      "cue-0118" : 0.00048828125,
+      "cue-0119" : 0.00048828125,
+      "cue-0120" : 0.00048828125,
+      "cue-0121" : 0.00048828125,
+      "cue-0122" : 0.00048828125,
+      "cue-0123" : 0.00048828125,
+      "cue-0124" : 0.00048828125,
+      "cue-0125" : 0.00048828125,
+      "cue-0126" : 0.00048828125,
+      "cue-0127" : 0.00048828125,
+      "cue-0128" : 0.00048828125,
+      "cue-0129" : 0.00048828125,
+      "cue-0130" : 0.00048828125,
+      "cue-0131" : 0.00048828125,
+      "cue-0132" : 0.00048828125,
+      "cue-0133" : 0.00048828125,
+      "cue-0134" : 0.00048828125,
+      "cue-0135" : 0.00048828125,
+      "cue-0136" : 0.00048828125,
+      "cue-0137" : 0.00048828125,
+      "cue-0138" : 0.00048828125,
+      "cue-0139" : 0.00048828125,
+      "cue-0140" : 0.00048828125,
+      "cue-0141" : 0.00048828125,
+      "cue-0142" : 0.00048828125,
+      "cue-0143" : 0.00048828125,
+      "cue-0144" : 0.00048828125,
+      "cue-0145" : 0.00048828125,
+      "cue-0146" : 0.00048828125,
+      "cue-0147" : 0.00048828125,
+      "cue-0148" : 0.00048828125,
+      "cue-0149" : 0.00048828125,
+      "cue-0150" : 0.00048828125,
+      "cue-0151" : 0.00048828125,
+      "cue-0152" : 0.00048828125,
+      "cue-0153" : 0.00048828125,
+      "cue-0154" : 0.00048828125,
+      "cue-0155" : 0.00048828125,
+      "cue-0156" : 0.00048828125,
+      "cue-0157" : 0.00048828125,
+      "cue-0158" : 0.00048828125,
+      "cue-0159" : 0.00048828125,
+      "cue-0160" : 0.00048828125,
+      "cue-0161" : 0.00048828125,
+      "cue-0162" : 0.00048828125,
+      "cue-0163" : 0.00048828125,
+      "cue-0164" : 0.00048828125,
+      "cue-0165" : 0.00048828125,
+      "cue-0166" : 0.00048828125,
+      "cue-0167" : 0.00048828125,
+      "cue-0168" : 0.00048828125,
+      "cue-0169" : 0.00048828125,
+      "cue-0170" : 0.00048828125,
+      "cue-0171" : 0.00048828125,
+      "cue-0172" : 0.00048828125,
+      "cue-0173" : 0.00048828125,
+      "cue-0174" : 0.00048828125,
+      "cue-0175" : 0.00048828125,
+      "cue-0176" : 0.00048828125,
+      "cue-0177" : 0.00048828125,
+      "cue-0178" : 0.00048828125,
+      "cue-0179" : 0.00048828125,
+      "cue-0180" : 0.00048828125,
+      "cue-0181" : 0.00048828125,
+      "cue-0182" : 0.00048828125,
+      "cue-0183" : 0.00048828125,
+      "cue-0184" : 0.00048828125,
+      "cue-0185" : 0.00048828125,
+      "cue-0186" : 0.00048828125,
+      "cue-0187" : 0.00048828125,
+      "cue-0188" : 0.00048828125,
+      "cue-0189" : 0.00048828125,
+      "cue-0190" : 0.00048828125,
+      "cue-0191" : 0.00048828125,
+      "cue-0192" : 0.00048828125,
+      "cue-0193" : 0.00048828125,
+      "cue-0194" : 0.00048828125,
+      "cue-0195" : 0.00048828125,
+      "cue-0196" : 0.00048828125,
+      "cue-0197" : 0.00048828125,
+      "cue-0198" : 0.00048828125,
+      "cue-0199" : 0.00048828125,
+      "cue-0200" : 0.00048828125,
+      "cue-0201" : 0.00048828125,
+      "cue-0202" : 0.00048828125,
+      "cue-0203" : 0.00048828125,
+      "cue-0204" : 0.00048828125,
+      "cue-0205" : 0.00048828125,
+      "cue-0206" : 0.00048828125,
+      "cue-0207" : 0.00048828125,
+      "cue-0208" : 0.00048828125,
+      "cue-0209" : 0.00048828125,
+      "cue-0210" : 0.00048828125,
+      "cue-0211" : 0.00048828125,
+      "cue-0212" : 0.00048828125,
+      "cue-0213" : 0.00048828125,
+      "cue-0214" : 0.00048828125,
+      "cue-0215" : 0.00048828125,
+      "cue-0216" : 0.00048828125,
+      "cue-0217" : 0.00048828125,
+      "cue-0218" : 0.00048828125,
+      "cue-0219" : 0.00048828125,
+      "cue-0220" : 0.00048828125,
+      "cue-0221" : 0.00048828125,
+      "cue-0222" : 0.00048828125,
+      "cue-0223" : 0.00048828125,
+      "cue-0224" : 0.00048828125,
+      "cue-0225" : 0.00048828125,
+      "cue-0226" : 0.00048828125,
+      "cue-0227" : 0.00048828125,
+      "cue-0228" : 0.00048828125,
+      "cue-0229" : 0.00048828125,
+      "cue-0230" : 0.00048828125,
+      "cue-0231" : 0.00048828125,
+      "cue-0232" : 0.00048828125,
+      "cue-0233" : 0.00048828125,
+      "cue-0234" : 0.00048828125,
+      "cue-0235" : 0.00048828125,
+      "cue-0236" : 0.00048828125,
+      "cue-0237" : 0.00048828125,
+      "cue-0238" : 0.00048828125,
+      "cue-0239" : 0.00048828125,
+      "cue-0240" : 0.00048828125,
+      "cue-0241" : 0.00048828125,
+      "cue-0242" : 0.00048828125,
+      "cue-0243" : 0.00048828125,
+      "cue-0244" : 0.00048828125,
+      "cue-0245" : 0.00048828125,
+      "cue-0246" : 0.00048828125,
+      "cue-0247" : 0.00048828125,
+      "cue-0248" : 0.00048828125,
+      "cue-0249" : 0.00048828125,
+      "cue-0250" : 0.00048828125,
+      "cue-0251" : 0.00048828125,
+      "cue-0252" : 0.00048828125,
+      "cue-0253" : 0.00048828125,
+      "cue-0254" : 0.00048828125,
+      "cue-0255" : 0.00048828125,
+      "cue-0256" : 0.00048828125,
+      "cue-0257" : 0.00048828125,
+      "cue-0258" : 0.00048828125,
+      "cue-0259" : 0.00048828125,
+      "cue-0260" : 0.00048828125,
+      "cue-0261" : 0.00048828125,
+      "cue-0262" : 0.00048828125,
+      "cue-0263" : 0.00048828125,
+      "cue-0264" : 0.00048828125,
+      "cue-0265" : 0.00048828125,
+      "cue-0266" : 0.00048828125,
+      "cue-0267" : 0.00048828125,
+      "cue-0268" : 0.00048828125,
+      "cue-0269" : 0.00048828125,
+      "cue-0270" : 0.00048828125,
+      "cue-0271" : 0.00048828125,
+      "cue-0272" : 0.00048828125,
+      "cue-0273" : 0.00048828125
+    }
+  },
+  "ticket" : 53,
+  "validationOpportunityTermIDsByCueID" : {
+    "cue-0001" : [
+
+    ],
+    "cue-0002" : [
+
+    ],
+    "cue-0003" : [
+
+    ],
+    "cue-0004" : [
+
+    ],
+    "cue-0006" : [
+
+    ],
+    "cue-0007" : [
+
+    ],
+    "cue-0008" : [
+
+    ],
+    "cue-0009" : [
+
+    ],
+    "cue-0010" : [
+
+    ],
+    "cue-0011" : [
+
+    ],
+    "cue-0012" : [
+
+    ],
+    "cue-0013" : [
+
+    ],
+    "cue-0014" : [
+
+    ],
+    "cue-0015" : [
+
+    ],
+    "cue-0016" : [
+
+    ],
+    "cue-0017" : [
+
+    ],
+    "cue-0018" : [
+
+    ],
+    "cue-0019" : [
+
+    ],
+    "cue-0020" : [
+
+    ],
+    "cue-0021" : [
+
+    ],
+    "cue-0022" : [
+
+    ],
+    "cue-0023" : [
+
+    ],
+    "cue-0024" : [
+
+    ],
+    "cue-0025" : [
+
+    ],
+    "cue-0026" : [
+
+    ],
+    "cue-0027" : [
+
+    ],
+    "cue-0028" : [
+
+    ],
+    "cue-0029" : [
+
+    ],
+    "cue-0030" : [
+
+    ],
+    "cue-0031" : [
+
+    ],
+    "cue-0032" : [
+
+    ],
+    "cue-0033" : [
+
+    ],
+    "cue-0034" : [
+
+    ],
+    "cue-0035" : [
+
+    ],
+    "cue-0036" : [
+
+    ],
+    "cue-0038" : [
+
+    ],
+    "cue-0039" : [
+
+    ],
+    "cue-0040" : [
+
+    ],
+    "cue-0041" : [
+
+    ],
+    "cue-0042" : [
+
+    ],
+    "cue-0043" : [
+
+    ],
+    "cue-0044" : [
+
+    ],
+    "cue-0045" : [
+
+    ],
+    "cue-0046" : [
+
+    ],
+    "cue-0047" : [
+
+    ],
+    "cue-0048" : [
+
+    ],
+    "cue-0049" : [
+
+    ],
+    "cue-0050" : [
+
+    ],
+    "cue-0051" : [
+
+    ],
+    "cue-0052" : [
+
+    ],
+    "cue-0053" : [
+
+    ],
+    "cue-0054" : [
+
+    ],
+    "cue-0055" : [
+
+    ],
+    "cue-0056" : [
+
+    ],
+    "cue-0057" : [
+
+    ],
+    "cue-0058" : [
+
+    ],
+    "cue-0059" : [
+
+    ],
+    "cue-0060" : [
+
+    ],
+    "cue-0061" : [
+
+    ],
+    "cue-0062" : [
+
+    ],
+    "cue-0063" : [
+
+    ],
+    "cue-0064" : [
+
+    ],
+    "cue-0065" : [
+
+    ],
+    "cue-0066" : [
+
+    ],
+    "cue-0067" : [
+
+    ],
+    "cue-0068" : [
+
+    ],
+    "cue-0069" : [
+
+    ],
+    "cue-0070" : [
+
+    ],
+    "cue-0071" : [
+
+    ],
+    "cue-0072" : [
+
+    ],
+    "cue-0073" : [
+
+    ],
+    "cue-0074" : [
+
+    ],
+    "cue-0075" : [
+
+    ],
+    "cue-0076" : [
+
+    ],
+    "cue-0077" : [
+
+    ],
+    "cue-0078" : [
+
+    ],
+    "cue-0079" : [
+
+    ],
+    "cue-0080" : [
+
+    ],
+    "cue-0081" : [
+
+    ],
+    "cue-0082" : [
+
+    ],
+    "cue-0083" : [
+
+    ],
+    "cue-0084" : [
+
+    ],
+    "cue-0085" : [
+
+    ],
+    "cue-0086" : [
+
+    ],
+    "cue-0087" : [
+
+    ],
+    "cue-0088" : [
+
+    ],
+    "cue-0089" : [
+
+    ],
+    "cue-0090" : [
+
+    ],
+    "cue-0091" : [
+
+    ],
+    "cue-0092" : [
+
+    ],
+    "cue-0093" : [
+
+    ],
+    "cue-0094" : [
+
+    ],
+    "cue-0095" : [
+
+    ],
+    "cue-0096" : [
+
+    ],
+    "cue-0097" : [
+
+    ],
+    "cue-0098" : [
+
+    ],
+    "cue-0099" : [
+
+    ],
+    "cue-0100" : [
+
+    ],
+    "cue-0101" : [
+
+    ],
+    "cue-0102" : [
+
+    ],
+    "cue-0103" : [
+
+    ],
+    "cue-0104" : [
+
+    ],
+    "cue-0105" : [
+
+    ],
+    "cue-0106" : [
+
+    ],
+    "cue-0107" : [
+
+    ],
+    "cue-0108" : [
+
+    ],
+    "cue-0109" : [
+
+    ],
+    "cue-0110" : [
+
+    ],
+    "cue-0111" : [
+
+    ],
+    "cue-0112" : [
+
+    ],
+    "cue-0113" : [
+
+    ],
+    "cue-0114" : [
+
+    ],
+    "cue-0115" : [
+
+    ],
+    "cue-0116" : [
+
+    ],
+    "cue-0117" : [
+
+    ],
+    "cue-0118" : [
+
+    ],
+    "cue-0119" : [
+
+    ],
+    "cue-0120" : [
+
+    ],
+    "cue-0121" : [
+
+    ],
+    "cue-0122" : [
+
+    ],
+    "cue-0123" : [
+
+    ],
+    "cue-0124" : [
+
+    ],
+    "cue-0125" : [
+
+    ],
+    "cue-0126" : [
+
+    ],
+    "cue-0127" : [
+
+    ],
+    "cue-0128" : [
+
+    ],
+    "cue-0129" : [
+
+    ],
+    "cue-0130" : [
+
+    ],
+    "cue-0131" : [
+
+    ],
+    "cue-0132" : [
+
+    ],
+    "cue-0133" : [
+
+    ],
+    "cue-0134" : [
+
+    ],
+    "cue-0135" : [
+
+    ],
+    "cue-0136" : [
+
+    ],
+    "cue-0137" : [
+
+    ],
+    "cue-0138" : [
+
+    ],
+    "cue-0139" : [
+
+    ],
+    "cue-0140" : [
+
+    ],
+    "cue-0141" : [
+
+    ],
+    "cue-0142" : [
+
+    ],
+    "cue-0143" : [
+
+    ],
+    "cue-0144" : [
+
+    ],
+    "cue-0145" : [
+
+    ],
+    "cue-0146" : [
+
+    ],
+    "cue-0147" : [
+
+    ],
+    "cue-0148" : [
+
+    ],
+    "cue-0149" : [
+
+    ],
+    "cue-0150" : [
+
+    ],
+    "cue-0151" : [
+
+    ],
+    "cue-0152" : [
+
+    ],
+    "cue-0153" : [
+
+    ],
+    "cue-0154" : [
+
+    ],
+    "cue-0155" : [
+
+    ],
+    "cue-0156" : [
+
+    ],
+    "cue-0157" : [
+
+    ],
+    "cue-0158" : [
+
+    ],
+    "cue-0159" : [
+
+    ],
+    "cue-0160" : [
+
+    ],
+    "cue-0161" : [
+
+    ],
+    "cue-0162" : [
+
+    ],
+    "cue-0163" : [
+
+    ],
+    "cue-0164" : [
+
+    ],
+    "cue-0165" : [
+
+    ],
+    "cue-0166" : [
+
+    ],
+    "cue-0167" : [
+
+    ],
+    "cue-0168" : [
+
+    ],
+    "cue-0169" : [
+
+    ],
+    "cue-0170" : [
+
+    ],
+    "cue-0171" : [
+
+    ],
+    "cue-0172" : [
+
+    ],
+    "cue-0173" : [
+
+    ],
+    "cue-0174" : [
+
+    ],
+    "cue-0175" : [
+
+    ],
+    "cue-0176" : [
+
+    ],
+    "cue-0177" : [
+
+    ],
+    "cue-0178" : [
+
+    ],
+    "cue-0179" : [
+
+    ],
+    "cue-0180" : [
+
+    ],
+    "cue-0181" : [
+
+    ],
+    "cue-0182" : [
+
+    ],
+    "cue-0183" : [
+
+    ],
+    "cue-0184" : [
+
+    ],
+    "cue-0185" : [
+
+    ],
+    "cue-0186" : [
+
+    ],
+    "cue-0187" : [
+
+    ],
+    "cue-0188" : [
+
+    ],
+    "cue-0189" : [
+
+    ],
+    "cue-0190" : [
+
+    ],
+    "cue-0191" : [
+
+    ],
+    "cue-0192" : [
+
+    ],
+    "cue-0193" : [
+
+    ],
+    "cue-0194" : [
+
+    ],
+    "cue-0195" : [
+
+    ],
+    "cue-0196" : [
+
+    ],
+    "cue-0197" : [
+
+    ],
+    "cue-0198" : [
+
+    ],
+    "cue-0199" : [
+
+    ],
+    "cue-0200" : [
+
+    ],
+    "cue-0201" : [
+
+    ],
+    "cue-0202" : [
+
+    ],
+    "cue-0203" : [
+
+    ],
+    "cue-0204" : [
+
+    ],
+    "cue-0205" : [
+
+    ],
+    "cue-0206" : [
+
+    ],
+    "cue-0207" : [
+
+    ],
+    "cue-0208" : [
+
+    ],
+    "cue-0209" : [
+
+    ],
+    "cue-0210" : [
+
+    ],
+    "cue-0211" : [
+
+    ],
+    "cue-0212" : [
+
+    ],
+    "cue-0213" : [
+
+    ],
+    "cue-0214" : [
+
+    ],
+    "cue-0215" : [
+
+    ],
+    "cue-0216" : [
+
+    ],
+    "cue-0217" : [
+
+    ],
+    "cue-0218" : [
+
+    ],
+    "cue-0219" : [
+
+    ],
+    "cue-0220" : [
+
+    ],
+    "cue-0221" : [
+
+    ],
+    "cue-0222" : [
+
+    ],
+    "cue-0223" : [
+
+    ],
+    "cue-0224" : [
+
+    ],
+    "cue-0225" : [
+
+    ],
+    "cue-0226" : [
+
+    ],
+    "cue-0227" : [
+
+    ],
+    "cue-0228" : [
+
+    ],
+    "cue-0229" : [
+
+    ],
+    "cue-0230" : [
+
+    ],
+    "cue-0231" : [
+
+    ],
+    "cue-0232" : [
+
+    ],
+    "cue-0233" : [
+
+    ],
+    "cue-0234" : [
+
+    ],
+    "cue-0235" : [
+
+    ],
+    "cue-0236" : [
+
+    ],
+    "cue-0237" : [
+
+    ],
+    "cue-0238" : [
+
+    ],
+    "cue-0239" : [
+
+    ],
+    "cue-0240" : [
+
+    ],
+    "cue-0241" : [
+
+    ],
+    "cue-0242" : [
+
+    ],
+    "cue-0243" : [
+
+    ],
+    "cue-0244" : [
+
+    ],
+    "cue-0245" : [
+
+    ],
+    "cue-0246" : [
+
+    ],
+    "cue-0247" : [
+
+    ],
+    "cue-0248" : [
+
+    ],
+    "cue-0249" : [
+
+    ],
+    "cue-0250" : [
+
+    ],
+    "cue-0251" : [
+
+    ],
+    "cue-0252" : [
+
+    ],
+    "cue-0253" : [
+
+    ],
+    "cue-0254" : [
+
+    ],
+    "cue-0255" : [
+
+    ],
+    "cue-0256" : [
+
+    ],
+    "cue-0257" : [
+
+    ],
+    "cue-0258" : [
+
+    ],
+    "cue-0259" : [
+
+    ],
+    "cue-0260" : [
+
+    ],
+    "cue-0261" : [
+
+    ],
+    "cue-0262" : [
+
+    ],
+    "cue-0263" : [
+
+    ],
+    "cue-0264" : [
+
+    ],
+    "cue-0265" : [
+
+    ],
+    "cue-0266" : [
+
+    ],
+    "cue-0267" : [
+
+    ],
+    "cue-0268" : [
+
+    ],
+    "cue-0269" : [
+
+    ],
+    "cue-0270" : [
+
+    ],
+    "cue-0271" : [
+
+    ],
+    "cue-0272" : [
+
+    ],
+    "cue-0273" : [
+
+    ]
+  }
+}

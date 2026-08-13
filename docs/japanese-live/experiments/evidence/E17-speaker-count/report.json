@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E17-speaker-count",
+  "developmentPromotionEligible": true,
+  "holdoutRun": true,
+  "promote": false,
+  "decision": "do not ship explicit count; holdout did not confirm the gain",
+  "rows": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "role": "development",
+      "expectedSpeakerCount": 12,
+      "automatic": {
+        "DERPercent": 108.46221378765807,
+        "JERPercent": 84.74678985341754,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 6,
+        "speakerCountAbsoluteError": 6,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2706,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 91.75991861648016,
+          "unattributedCharacterCount": 2803
+        },
+        "overlap": {
+          "precisionPercent": 12.572840537928329,
+          "recallPercent": 21.743761997917225,
+          "f1Percent": 15.932862351913657,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 161.52812600135803,
+          "matchedSeconds": 20.30867370605469,
+          "missedSeconds": 73.09132629394531,
+          "falseAlarmSeconds": 141.21945229530334
+        },
+        "activityFalseAlarmSeconds": 166.46592742919927,
+        "crossSpeakerOverlapSeconds": 161.52812600135803,
+        "runtimeSeconds": 13.17418098449707,
+        "preparationSeconds": 17.995016932487488,
+        "peakMemoryBytes": 667518440
+      },
+      "expected": {
+        "DERPercent": 106.29608267871696,
+        "JERPercent": 75.94078622709547,
+        "referenceSpeakerCount": 12,
+        "candidateSpeakerCount": 12,
+        "speakerCountAbsoluteError": 0,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2655,
+          "referenceCharacterCount": 2949,
+          "ratePercent": 90.03051881993896,
+          "unattributedCharacterCount": 2825
+        },
+        "overlap": {
+          "precisionPercent": 12.91129420546909,
+          "recallPercent": 19.975041260811196,
+          "f1Percent": 15.68454683855894,
+          "referenceSeconds": 93.4,
+          "candidateSeconds": 144.49898082017899,
+          "matchedSeconds": 18.65668853759766,
+          "missedSeconds": 74.74331146240235,
+          "falseAlarmSeconds": 125.84229228258133
+        },
+        "activityFalseAlarmSeconds": 163.50473327636723,
+        "crossSpeakerOverlapSeconds": 144.49898082017899,
+        "runtimeSeconds": 13.196393013000488,
+        "preparationSeconds": 0.14645898342132568,
+        "peakMemoryBytes": 745735656
+      },
+      "diagnostics": {
+        "unattributedJapaneseCharactersDelta": 22
+      },
+      "gates": {
+        "provenance": true,
+        "oneVariable": true,
+        "frozenASRAlignment": true,
+        "policiesRetained": true,
+        "autoUnchanged": true,
+        "sameSpeakerKit": true,
+        "completeEvidence": true,
+        "validDeliverables": true,
+        "versionedArtifacts": true,
+        "unchangedProductAndLive": true,
+        "translationUnchanged": true,
+        "lifecycleAndMemoryRelease": true,
+        "runtimeAndMemoryMeasured": true,
+        "zeroDuplication": true,
+        "noSpokenContentLoss": true,
+        "speakerCountGain": true,
+        "speakerQualityGain": true,
+        "deterministicControls": true
+      },
+      "eligible": true
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "role": "untouched-holdout",
+      "expectedSpeakerCount": 3,
+      "automatic": {
+        "DERPercent": 58.91197519861313,
+        "JERPercent": 52.275026922457776,
+        "referenceSpeakerCount": 3,
+        "candidateSpeakerCount": 3,
+        "speakerCountAbsoluteError": 0,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2247,
+          "referenceCharacterCount": 3756,
+          "ratePercent": 59.82428115015974,
+          "unattributedCharacterCount": 1005
+        },
+        "overlap": {
+          "precisionPercent": 0.7137316471213452,
+          "recallPercent": 11.698045494699713,
+          "f1Percent": 1.3453778912771313,
+          "referenceSeconds": 5.659999999999968,
+          "candidateSeconds": 92.76727151870728,
+          "matchedSeconds": 0.662109375,
+          "missedSeconds": 4.997890624999968,
+          "falseAlarmSeconds": 92.10516214370728
+        },
+        "activityFalseAlarmSeconds": 88.58141273498529,
+        "crossSpeakerOverlapSeconds": 92.76727151870728,
+        "runtimeSeconds": 8.172327995300293,
+        "preparationSeconds": 0.15993201732635498,
+        "peakMemoryBytes": 711280080
+      },
+      "expected": {
+        "DERPercent": 58.91197519861313,
+        "JERPercent": 52.275026922457776,
+        "referenceSpeakerCount": 3,
+        "candidateSpeakerCount": 3,
+        "speakerCountAbsoluteError": 0,
+        "duplicationCount": 0,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 2247,
+          "referenceCharacterCount": 3756,
+          "ratePercent": 59.82428115015974,
+          "unattributedCharacterCount": 1005
+        },
+        "overlap": {
+          "precisionPercent": 0.7137316471213452,
+          "recallPercent": 11.698045494699713,
+          "f1Percent": 1.3453778912771313,
+          "referenceSeconds": 5.659999999999968,
+          "candidateSeconds": 92.76727151870728,
+          "matchedSeconds": 0.662109375,
+          "missedSeconds": 4.997890624999968,
+          "falseAlarmSeconds": 92.10516214370728
+        },
+        "activityFalseAlarmSeconds": 88.58141273498529,
+        "crossSpeakerOverlapSeconds": 92.76727151870728,
+        "runtimeSeconds": 8.11903202533722,
+        "preparationSeconds": 0.1423250436782837,
+        "peakMemoryBytes": 712230352
+      },
+      "diagnostics": {
+        "unattributedJapaneseCharactersDelta": 0
+      },
+      "gates": {
+        "provenance": true,
+        "oneVariable": true,
+        "frozenASRAlignment": true,
+        "policiesRetained": true,
+        "autoUnchanged": true,
+        "sameSpeakerKit": true,
+        "completeEvidence": true,
+        "validDeliverables": true,
+        "versionedArtifacts": true,
+        "unchangedProductAndLive": true,
+        "translationUnchanged": true,
+        "lifecycleAndMemoryRelease": true,
+        "runtimeAndMemoryMeasured": true,
+        "zeroDuplication": true,
+        "noSpokenContentLoss": true,
+        "speakerCountGain": false,
+        "speakerQualityGain": false,
+        "deterministicControls": true
+      },
+      "eligible": false
+    }
+  ]
+}

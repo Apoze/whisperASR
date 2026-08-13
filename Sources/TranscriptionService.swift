@@ -13,6 +13,7 @@ final class TranscriptionService: @unchecked Sendable {
     private let whisperQueue = DispatchQueue(label: "com.whisperasr.whisper", qos: .userInitiated)
     private let realtimeLock = NSLock()
     private var realtimeSessionActive = false
+    private let liveModelOwner = HeavyweightLiveModelOwner()
 
     var isRealtimeSessionActive: Bool {
         realtimeLock.withLock { realtimeSessionActive }
@@ -23,21 +24,23 @@ final class TranscriptionService: @unchecked Sendable {
     }
 
     func shutdown() {
-        // Serialize with any in-flight whisper_full; if the process exits before
-        // this runs the OS reclaims the context anyway.
-        whisperQueue.async {
-            if let ctx = self.ctx {
-                whisper_free(ctx)
-                self.ctx = nil
-                self.loadedModelPath = nil
-            }
-        }
+        Task { await unloadModel() }
     }
 
     /// Release the resident Whisper context when another exclusive local
     /// English prototype is selected. Serialized with inference so a model is
     /// never freed while whisper_full is using it.
     func unloadModel() async {
+        do {
+            try await liveModelOwner.unload { [weak self] in
+                await self?.unloadWhisperModel()
+            }
+        } catch {
+            print("[TranscriptionService] model release blocked: \(error.localizedDescription)")
+        }
+    }
+
+    private func unloadWhisperModel() async {
         await withCheckedContinuation { continuation in
             whisperQueue.async {
                 if let ctx = self.ctx {
@@ -239,7 +242,8 @@ final class TranscriptionService: @unchecked Sendable {
     /// Reserve the single Whisper context for live work after all earlier work has drained.
     func beginRealtimeSession(
         modelPath: String? = nil,
-        requireEnglishTranslation: Bool
+        requireEnglishTranslation: Bool,
+        gateHeavyweightModel: Bool = true
     ) async throws {
         let acquired = realtimeLock.withLock { () -> Bool in
             guard !realtimeSessionActive else { return false }
@@ -248,10 +252,27 @@ final class TranscriptionService: @unchecked Sendable {
         }
         guard acquired else { throw TranscriptionError.modelBusy }
         do {
-            try await preloadModel(
-                modelPath: modelPath,
-                requireEnglishTranslation: requireEnglishTranslation
-            )
+            if gateHeavyweightModel {
+                try await liveModelOwner.prepare(
+                    modelID: "live:whisper.cpp",
+                    declaredPeakBytes: 4 * 1_024 * 1_024 * 1_024,
+                    load: { [weak self] in
+                        guard let self else { throw CancellationError() }
+                        try await self.preloadModel(
+                            modelPath: modelPath,
+                            requireEnglishTranslation: requireEnglishTranslation
+                        )
+                    },
+                    unload: { [weak self] in
+                        await self?.unloadWhisperModel()
+                    }
+                )
+            } else {
+                try await preloadModel(
+                    modelPath: modelPath,
+                    requireEnglishTranslation: requireEnglishTranslation
+                )
+            }
         } catch {
             endRealtimeSession()
             throw error

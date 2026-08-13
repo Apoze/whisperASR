@@ -1,0 +1,68 @@
+Usage: xctest [-XCTest <TestClassOne/testMethodA>(,...)] <path to test bundle>
+
+Failure: Unrecognized argument: --high-quality-asr-worker
+
+Displaying process arguments and environment for debugging purposes:
+Arguments: (
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+    "--high-quality-asr-worker",
+    "qwen-ja",
+    "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-ASR-qwen-ja-EB8EC872-CBA9-4B19-B3CB-27EB7AA6C1D6"
+)
+Environment: {
+    "BENCHMARK_SLOT_GRANTED" = 77;
+    "BROWSER_USE_AVAILABLE_BACKENDS" = "chrome,iab";
+    "CODEX_CI" = 1;
+    "CODEX_INTERNAL_ORIGINATOR_OVERRIDE" = "Codex Desktop";
+    "CODEX_PERMISSION_PROFILE" = ":danger-full-access";
+    "CODEX_SHELL" = 1;
+    "CODEX_THREAD_ID" = "019fee36-500e-76c1-b39a-ef9d3d9bbe73";
+    COLORTERM = "";
+    "COMMAND_MODE" = unix2003;
+    CPATH = "/usr/local/include";
+    "DEVELOPER_DIR" = "/Applications/Xcode.app/Contents/Developer";
+    "DISABLE_AUTO_UPDATE" = true;
+    "DYLD_FRAMEWORK_PATH" = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks";
+    "DYLD_LIBRARY_PATH" = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib";
+    FPATH = "/opt/homebrew/share/zsh/site-functions:/opt/homebrew/share/zsh/site-functions:/usr/local/share/zsh/site-functions:/usr/share/zsh/site-functions:/usr/share/zsh/5.9/functions:/Users/maz/.orbstack/shell/completions/zsh:/Users/maz/.orbstack/shell/completions/zsh";
+    "GH_PAGER" = cat;
+    "GIT_PAGER" = cat;
+    HOME = "/Users/maz";
+    "HOMEBREW_CELLAR" = "/opt/homebrew/Cellar";
+    "HOMEBREW_PREFIX" = "/opt/homebrew";
+    "HOMEBREW_REPOSITORY" = "/opt/homebrew";
+    INFOPATH = "/opt/homebrew/share/info:/opt/homebrew/share/info:";
+    LANG = "C.UTF-8";
+    "LC_ALL" = "C.UTF-8";
+    "LC_CTYPE" = "C.UTF-8";
+    "LIBRARY_PATH" = "/usr/local/lib";
+    LOGNAME = maz;
+    "LOG_FORMAT" = json;
+    MANPATH = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk/usr/share/man:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/usr/share/man:/Applications/Xcode.app/Contents/Developer/usr/share/man:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/man:";
+    MallocNanoZone = 0;
+    "NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S" = 323bc3e687e17d7e377238d9f4c69111c4d0e6219103b6316d8c52082489533b;
+    "NODE_REPL_TRUSTED_CODE_PATHS" = "/Users/maz/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules";
+    "NO_COLOR" = 1;
+    OLDPWD = "/Users/maz/.codex/worktrees/4edc/whisperASR";
+    OSLogRateLimit = 64;
+    PAGER = cat;
+    PATH = "/Users/maz/.local/bin:/Users/maz/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Users/maz/.codex/tmp/arg0/codex-arg0TSdjXj:/Users/maz/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/maz/.local/bin:/Users/maz/.orbstack/bin:/Users/maz/.lmstudio/bin:/Users/maz/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Users/maz/.orbstack/bin:/Users/maz/.lmstudio/bin";
+    PWD = "/Users/maz/.codex/worktrees/4edc/whisperASR";
+    "RUST_LOG" = warn;
+    SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk";
+    SHELL = "/bin/zsh";
+    SHLVL = 2;
+    "SSH_AUTH_SOCK" = "/var/run/com.apple.launchd.OP8ZqZNelr/Listeners";
+    "SWIFT_TESTING_ENABLED" = 0;
+    TERM = dumb;
+    TMPDIR = "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/";
+    USER = maz;
+    "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE" = "/Users/maz/.codex/worktrees/4edc/whisperASR/.build/benchmarks/standard-offline-validation-77/controls/dev-30s.wav";
+    "WHISPERASR_HIGH_QUALITY_ASR_FIXTURE_SHA256" = d1c3ec3a01b00953f61f9956d1ec035cded04c831aebe7e29055ceb7ac5cb272;
+    "XPC_FLAGS" = 0x0;
+    "XPC_SERVICE_NAME" = 0;
+    "ZSH_TMUX_AUTOSTART" = false;
+    "ZSH_TMUX_AUTOSTARTED" = true;
+    "_" = "/usr/bin/xcrun";
+    "__CF_USER_TEXT_ENCODING" = "0x1F5:0x0:0x1";
+}

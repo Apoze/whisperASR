@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "runMode": "TRANSLATION_ONLY_12B",
+  "commit": "3c7eff33ec3d733a503c191bef0e0dda177b3dd0",
+  "classification": "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE",
+  "route": "runtime-safety",
+  "modelQualityVerdictAssigned": false,
+  "ticket106Concluded": false,
+  "fullIntegratedReadiness": "NO_READY",
+  "reason": "Video 1 reached a persistent native macOS warning after cache cleanup and re-sampling; the guard stopped cleanly before a complete product artifact. Video 2 was not started.",
+  "scope": {
+    "translationModel": "mlx-community/translategemma-12b-it-4bit",
+    "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+    "modelProvenanceContainsOnly12B": true,
+    "translateGemma4BWeightsAccessedHashedOrLoaded": false,
+    "fullIntegratedRun": false,
+    "video1Started": true,
+    "video1Completed": false,
+    "video2Started": false
+  },
+  "inputIdentity": {
+    "corpusID": "qudu2fx3ncc",
+    "turnCount": 307,
+    "replay4BAnd12BInvariantSHA256": "552334768a9e4e712c2786071b5db94e9cf4b95032dd2b80bf0db8bb798056c7",
+    "invariant": "turns, glossary, glossaryByCueID",
+    "matchesFrozenE22AndE31Replay4B": true
+  },
+  "partialTranslation": {
+    "requestCount": 1,
+    "completedCues": 76,
+    "attemptedCues": 77,
+    "totalCues": 307,
+    "publishableEnglishArtifact": false,
+    "integrityScoringAvailable": false,
+    "chrFPlusPlusAvailable": false,
+    "cometAvailable": false
+  },
+  "timing": {
+    "startedAt": "2026-08-12T23:17:44Z",
+    "stoppedAt": "2026-08-12T23:20:00Z",
+    "elapsedSeconds": 136,
+    "translationCompletedSeconds": null,
+    "realTimeFactor": null
+  },
+  "memory": {
+    "nativePressureLevels": ["normal", "warning"],
+    "warningAtElapsedSeconds": 128,
+    "warningCleanupRequests": 1,
+    "warningPersistedAfterResample": true,
+    "peakPhysicalFootprintBytes": 11119990688,
+    "workerReportedPeakBytes": 6966725972,
+    "peakResidentBytes": 2332098560,
+    "minimumFreeMemoryPercent": 30,
+    "peakSwapGrowthBytes": 0,
+    "pageoutDelta": 785,
+    "stopReason": "native-pressure-warning-persisted",
+    "forcedTermination": false,
+    "postStopPressure": "normal",
+    "postStopFreeMemoryPercent": 71,
+    "postStopSwapDeltaBytes": -8388608
+  },
+  "lifecycle": {
+    "translationWorkerPID": 77652,
+    "xctestPID": 77609,
+    "guardedProcessPID": 76942,
+    "allExited": true,
+    "residentAfterStop": false,
+    "workerUnloadExitPathReached": true,
+    "explicitUnloadMarkerAvailable": false,
+    "memoryRecovered": true
+  },
+  "result": "NO_READY: a final full integrated 12B run is not safe to schedule from this evidence. The shared translator still holds cache for the whole 307-cue batch; request-boundary cleanup occurs too late to prevent the native warning."
+}

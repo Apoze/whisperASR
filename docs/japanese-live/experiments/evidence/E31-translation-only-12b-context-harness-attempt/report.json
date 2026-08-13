@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "runMode": "TRANSLATION_ONLY_12B",
+  "executionCommit": "8959d658b13917d2642c9c5524710542e1b49380",
+  "campaignClassification": "INCONCLUSIVE_HARNESS_INPUT_MISMATCH",
+  "failureRoute": "harness-input",
+  "modelVerdictAssigned": false,
+  "ticket106Concluded": false,
+  "finalIntegrated12BReady": false,
+  "cause": "The replay request used translationContextPolicy=none while the frozen and product request requires previous-accepted-v1.",
+  "qualityScoring": {
+    "chrfPlusPlus": null,
+    "comet": null,
+    "reason": "The replay inputs were not exact; scoring would not be scientifically comparable. COMET was locally available but was not run."
+  },
+  "corpora": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "sourceDurationSeconds": 957.2078125,
+      "turnCount": 307,
+      "actualContextCount": 0,
+      "expectedContextCount": 307,
+      "workerElapsedSeconds": 448.95883297920227,
+      "guardElapsedSeconds": 460,
+      "translationReplayRTF": 0.4690296371554137,
+      "completedDeliverable": false,
+      "observedFailure": "unit-0061 failed integrity validation twice",
+      "observedIntegrity": {"pass": 305, "suspect": 1, "hardFailure": 1},
+      "modelVerdictAssigned": false,
+      "safety": {
+        "stopReason": "completed",
+        "workerExitStatus": 0,
+        "guardExitStatus": 1,
+        "forcedTermination": false,
+        "peakResidentBytes": 3075489792,
+        "peakPhysicalFootprintBytes": 7462000520,
+        "minimumFreeMemoryPercent": 45,
+        "nativePressureLevels": ["normal"],
+        "swapDeltaBytes": 0,
+        "pageoutDelta": 861,
+        "cleanupResident": false,
+        "unloadVerified": true,
+        "recoveredFreeMemoryPercent": 75
+      }
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "sourceDurationSeconds": 886.1199375,
+      "turnCount": 260,
+      "actualContextCount": 0,
+      "expectedContextCount": 260,
+      "workerElapsedSeconds": 398.81632697582245,
+      "guardElapsedSeconds": 416,
+      "translationReplayRTF": 0.4500703686918482,
+      "completedDeliverable": true,
+      "observedFailure": "post-run context equality assertion",
+      "observedIntegrity": {"pass": 259, "suspect": 1, "hardFailure": 0},
+      "modelVerdictAssigned": false,
+      "safety": {
+        "stopReason": "completed",
+        "workerExitStatus": 0,
+        "guardExitStatus": 1,
+        "forcedTermination": false,
+        "peakResidentBytes": 3242967040,
+        "peakPhysicalFootprintBytes": 7462737824,
+        "minimumFreeMemoryPercent": 44,
+        "nativePressureLevels": ["normal"],
+        "swapDeltaBytes": -8388608,
+        "pageoutDelta": 714,
+        "cleanupResident": false,
+        "unloadVerified": true,
+        "recoveredFreeMemoryPercent": 76
+      }
+    }
+  ],
+  "nextRequiredExperiment": "Rerun TRANSLATION_ONLY_12B with the product-default context policy before any final integrated 12B run."
+}

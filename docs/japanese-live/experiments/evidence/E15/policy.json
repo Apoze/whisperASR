@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "ticket": 56,
+  "modelID": "google/metricx-24-hybrid-large-v2p6-bfloat16",
+  "modelRevision": "febb720e29a059df2e8af3ffd71dcdc9e0a24910",
+  "provenanceSHA256": "b0069de164770dba3d5fe8dc954c231b6677f14fb275f6ad5b87f89c7d0d434e",
+  "mode": "reference-free-qe",
+  "scoreDirection": "lower-is-better",
+  "candidatePolicy": "hard-veto-then-margin-over-baseline",
+  "hardFailureReasons": [
+    "control-scaffolding",
+    "critical-glossary-violation",
+    "degenerate-repetition",
+    "empty-output",
+    "residual-japanese",
+    "truncated-output"
+  ],
+  "margin": 1.0,
+  "calibration": {
+    "selectedMargin": 1.0,
+    "accuracy": 0.875,
+    "realDevelopmentOverrides": 0,
+    "grid": [
+      {
+        "margin": 0.0,
+        "correctInjectedChoices": 14,
+        "injectedChoices": 16,
+        "injectedAccuracy": 0.875,
+        "realDevelopmentOverrides": 0,
+        "realDevelopmentPairs": 2
+      },
+      {
+        "margin": 0.1,
+        "correctInjectedChoices": 14,
+        "injectedChoices": 16,
+        "injectedAccuracy": 0.875,
+        "realDevelopmentOverrides": 0,
+        "realDevelopmentPairs": 2
+      },
+      {
+        "margin": 0.25,
+        "correctInjectedChoices": 14,
+        "injectedChoices": 16,
+        "injectedAccuracy": 0.875,
+        "realDevelopmentOverrides": 0,
+        "realDevelopmentPairs": 2
+      },
+      {
+        "margin": 0.5,
+        "correctInjectedChoices": 14,
+        "injectedChoices": 16,
+        "injectedAccuracy": 0.875,
+        "realDevelopmentOverrides": 0,
+        "realDevelopmentPairs": 2
+      },
+      {
+        "margin": 1.0,
+        "correctInjectedChoices": 14,
+        "injectedChoices": 16,
+        "injectedAccuracy": 0.875,
+        "realDevelopmentOverrides": 0,
+        "realDevelopmentPairs": 2
+      },
+      {
+        "margin": 2.0,
+        "correctInjectedChoices": 13,
+        "injectedChoices": 16,
+        "injectedAccuracy": 0.8125,
+        "realDevelopmentOverrides": 0,
+        "realDevelopmentPairs": 2
+      }
+    ],
+    "counterbalancedControlAccuracy": 0.5,
+    "counterbalancedControlDesign": "Equal original/corrupt assignments provide a frozen selection control; this is not the product baseline policy.",
+    "humanEnglishReferencesUsed": false
+  },
+  "promotionGates": {
+    "minimumInjectedChoiceAccuracy": 0.9,
+    "minimumHoldoutCOMETGain": 0.005,
+    "minimumHoldoutChrFPlusPlusGain": 0.0,
+    "maximumAddedRuntimeFraction": 0.1,
+    "systemReserveBytes": 8589934592
+  },
+  "developmentSourceArtifactSHA256": "b8b0ed61c761e4e78b656b1fb7834e329293f7c14b5a11833ed332ff67fcd2ef",
+  "frozenBeforeHoldout": true
+}

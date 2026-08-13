@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "command": "env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --skip-build",
+  "unreproducedObservation": {
+    "executed": 425,
+    "skipped": 56,
+    "failed": 1,
+    "wallDurationSeconds": 12.95,
+    "failureIdentity": null,
+    "captureLimitation": "the original Codex runner output was truncated before the failing assertion"
+  },
+  "reproductionAttempts": [
+    {
+      "run": 1,
+      "executed": 425,
+      "skipped": 56,
+      "failed": 0,
+      "suiteDurationSeconds": 10.988,
+      "rawLogSHA256": "96341fe3e93d181055cb63a6a6670a31d9d2701f1da33d2f98d01e46812f8e54"
+    },
+    {
+      "run": 2,
+      "executed": 425,
+      "skipped": 56,
+      "failed": 0,
+      "suiteDurationSeconds": 8.397,
+      "rawLogSHA256": "7e8c69645c8050dbb7f065c06758bc4e38d82d5a072e8fc14a0dfb5c16735a57"
+    },
+    {
+      "run": 3,
+      "executed": 425,
+      "skipped": 56,
+      "failed": 0,
+      "suiteDurationSeconds": 7.852,
+      "rawLogSHA256": "213a4988ec09c6792e49b5ac97d545cada643bd80d37fd490e51198f63cfa8c0"
+    },
+    {
+      "run": 4,
+      "executed": 425,
+      "skipped": 56,
+      "failed": 0,
+      "suiteDurationSeconds": 8.227,
+      "rawLogSHA256": "07433f3497b002252aa516d5f2169c31e35fd1aaf7bcf9f54367eb1e2978cb79"
+    }
+  ],
+  "result": "not reproduced in four recorded consecutive immediate reruns; no model was loaded"
+}

@@ -1,0 +1,17 @@
+{
+  "ticket": 106,
+  "capturedAfterSafetyStop": true,
+  "nativePressureLevel": "normal",
+  "freeMemoryPercentImmediate": 71,
+  "freeMemoryPercentFollowUp": 73,
+  "swapDeltaBytes": -8388608,
+  "pageoutDelta": 785,
+  "translationWorkerPID": 77652,
+  "xctestPID": 77609,
+  "guardedProcessPID": 76942,
+  "resident": false,
+  "processExitVerified": true,
+  "forcedTermination": false,
+  "explicitUnloadMarkerAvailable": false,
+  "unloadExitPath": "HighQualityTranslationWorkerCommand.run defer-equivalent terminal path calls translator.unload() before process exit"
+}

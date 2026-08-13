@@ -21,6 +21,7 @@ HASH_FILE="$OUT_DIR/.mlx.metallib.sha"
 
 [[ -d "$OUT_DIR" ]] || { echo "error: run swift build -c $CONFIG first" >&2; exit 1; }
 [[ -d "$KERNELS_DIR" ]] || { echo "error: MLX Metal kernels are missing" >&2; exit 1; }
+[[ "$CONFIG" != debug ]] || xcrun swift build --build-tests -c debug
 
 CURRENT_HASH="$(find "$KERNELS_DIR" -type f \( -name '*.metal' -o -name '*.h' \) ! -name '*_nax.metal' | LC_ALL=C sort | xargs cat | shasum -a 256 | awk '{print $1}')"
 if [[ ! -f "$OUT_METALLIB" || ! -f "$HASH_FILE" || "$(cat "$HASH_FILE")" != "$CURRENT_HASH" ]]; then

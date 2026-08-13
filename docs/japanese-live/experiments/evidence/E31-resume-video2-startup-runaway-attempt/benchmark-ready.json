@@ -1,0 +1,48 @@
+{
+  "ticket": 106,
+  "status": "READY_FOR_HEAVY_BENCHMARK",
+  "commit": "a5c240bebf026e57f77394c53ae257f0d2b981a1",
+  "runMode": "RESUME_FULL_12B_VIDEO2",
+  "smokeCueLimit": null,
+  "command": "BENCHMARK_SLOT_GRANTED=106 bash Scripts/run_integrated_offline_validation.sh RESUME_FULL_12B_VIDEO2",
+  "estimatedDuration": "20-30 minutes",
+  "estimatedPeakMemory": "10-14 GiB process tree",
+  "executionOrder": [
+    "verify+reuse hashed completed 12B/video1",
+    "Qwen+aligner+SpeakerKit+12B/video2",
+    "full cleanup+native recovery",
+    "COMET-if-local",
+    "compose audited 4B replay"
+  ],
+  "memoryPolicy": "product clears cache once on warning; external guard traces and continues while stable; critical, free<=10%, post-cleanup growth>1%, swap/pageout runaway, catastrophic footprint or timeout stops; offline reserve=0",
+  "heavyModelsLoaded": false,
+  "modelProvenanceSHA256": "d199240ef0dbfcacc23c198de334f8eba58ae5d4db13f49aacdc0f9899bd5020",
+  "inputPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "smokeRequestSHA256": null,
+  "replayHarnessValidationSHA256": null,
+  "implementationSHA256": {
+    "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "0214c8835edf2cc5a4134525e48684a8e57b83705df7467fec791cb2a884b61a",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef",
+    "Tests/HighQualityConversationContextTests.swift": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f",
+    "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+    "Tests/HeavyweightModelGateTests.swift": "6344c2debac7879b93aaebaca1d29df31b6c917b3bc1cc6c8f506315a58afe60",
+    "Scripts/run_integrated_offline_validation.sh": "40eccd327f8a999b2bd0b4cc62acc52711db421129488a15b8c95059f0d2dff3",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "f55edf7fb5ddfce8ed976872bd9e41e88523c46fc83fc96cbdc7eca3aca2f7f2",
+    "Scripts/test_mossformer2_guard.sh": "74612df41e86166c6eac15834d0c9b5e6df7117528834ddc5a09398152943b0f",
+    "Scripts/report_integrated_offline_validation.py": "f58fadf88791ec489bf2556dbba93a54da3a09863a0e40580a1c1fa967822f55",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "runtimeSHA256": {
+    "workerExecutable": "0c6a3e6dce86bd32f1fb1996fedb6df2ac025227fa5e837e5ab353599c97a463",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  }
+}

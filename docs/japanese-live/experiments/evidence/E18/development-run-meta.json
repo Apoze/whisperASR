@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "experiment": "E18-fluid-audio-offline",
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "corpusManifestPath": "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json",
+  "corpusManifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "frozenUpstreamEvidencePath": "docs/japanese-live/experiments/evidence/E16/development-quantized-raw-asr.json.gz",
+  "frozenUpstreamEvidenceContentSHA256": "8154e211b851eae901e20ee2713dbfc5a2581c64db75418a826a7b8abc26c800",
+  "controlEvidencePath": "docs/japanese-live/experiments/evidence/E18/controls.json",
+  "controlEvidenceSHA256": "e4a1401623463298845a943ddff63d0a3e7b5fd6e8583861bfaedd67bf301de9",
+  "jobs": {
+    "speakerkit": "61000001-0000-4000-8000-000000000001",
+    "fluid-audio-offline": "61000001-0000-4000-8000-000000000002"
+  },
+  "baseCommit": "f6dbfa652a054bd2620edc04a1d52eb077dfbe9b",
+  "settings": {
+    "speakerkit": {
+      "engine": "speakerkit",
+      "speakerCount": "automatic",
+      "useExclusiveReconciliation": false,
+      "completeDiarizationAttribution": true,
+      "principalAttribution": "longest-overlap-then-nearest-span-stable-label",
+      "frozenUpstream": true,
+      "engineConfiguration": {
+        "precision": "quantized",
+        "segmenterVariant": "W8A16",
+        "embedderVariant": "W8A16",
+        "clusterDistanceThreshold": 0.60
+      }
+    },
+    "fluid-audio-offline": {
+      "engine": "fluid-audio-offline",
+      "speakerCount": "automatic",
+      "useExclusiveReconciliation": false,
+      "completeDiarizationAttribution": true,
+      "principalAttribution": "longest-overlap-then-nearest-span-stable-label",
+      "frozenUpstream": true,
+      "engineConfiguration": {
+        "pipeline": "offline-vbx-community",
+        "clusteringThreshold": 0.60,
+        "exclusiveSegments": false,
+        "computeUnits": "all",
+        "fbankComputeUnits": "cpuOnly"
+      }
+    }
+  },
+  "referenceAnnotations": {
+    "pseudoSpeakers": {
+      "SPEAKER_13": "group-reaction/overlap annotation; not one acoustic identity"
+    },
+    "uncertainty": "SPEAKER_13 is a group-reaction/overlap pseudo-speaker excluded from acoustic identity scoring; timing remains reference-limited."
+  },
+  "failurePolicy": {
+    "candidateAttribution": "withheld until build, model preparation, input, reference and evidence controls pass"
+  },
+  "executionImplementationSHA256": {
+    "Sources/HighQualityJob.swift": "8a19f94a8b45515a88542d3062cdc9781ad711c231a77e007c710a73db060f2f",
+    "Sources/HighQualityRuntimeMemorySampler.swift": "a696adbb49f34a36a588dc65defaa7fa1f0576b633488303e7fe339c5827a410",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "5071cb179ec310f66a089dab27bfda426f6a13712e6993b3a693b44c461f4f0f",
+    "Sources/HighQualityFluidAudioRuntime.swift": "d5e013d180aee09a0ec9fff585bdf15c3248e4c3c50b2eddf29cd58f3a6b0b13",
+    "Tests/HighQualityAcceptanceTests.swift": "4070d5e0fbd16b0087324ff8cd5b42cba71d13a075022b0dd57f26287989afe9",
+    "Scripts/run_fluid_audio_offline_experiment.sh": "958ee79e0b1ac1a6f8aebc095c46c685f3ececfa900ce7a758d1581883a8d315",
+    "Scripts/report_fluid_audio_offline.py": "0a95bcf9d0155ec68496237216abf6c3ee194135d6c856cb7930abcea4c54f46",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_speakerkit_precision.py": "0d5cc562dd9a3711a8755413adcf2283cc67241659df14d606e0bf6bd7110f5b"
+  },
+  "executionSourceSnapshots": {
+    "Sources/HighQualityJob.swift": "docs/japanese-live/experiments/evidence/E18/execution-sources/Sources_HighQualityJob.swift",
+    "Sources/HighQualityRuntimeMemorySampler.swift": "docs/japanese-live/experiments/evidence/E18/execution-sources/Sources_HighQualityRuntimeMemorySampler.swift",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "docs/japanese-live/experiments/evidence/E18/execution-sources/Sources_HighQualitySpeakerKitRuntime.swift",
+    "Sources/HighQualityFluidAudioRuntime.swift": "docs/japanese-live/experiments/evidence/E18/execution-sources/Sources_HighQualityFluidAudioRuntime.swift",
+    "Tests/HighQualityAcceptanceTests.swift": "docs/japanese-live/experiments/evidence/E18/execution-sources/Tests_HighQualityAcceptanceTests.swift",
+    "Scripts/run_fluid_audio_offline_experiment.sh": "docs/japanese-live/experiments/evidence/E18/execution-sources/Scripts_run_fluid_audio_offline_experiment.sh",
+    "Scripts/report_fluid_audio_offline.py": "docs/japanese-live/experiments/evidence/E18/execution-sources/Scripts_report_fluid_audio_offline.py",
+    "Scripts/report_exclusive_reconciliation.py": "docs/japanese-live/experiments/evidence/E18/execution-sources/Scripts_report_exclusive_reconciliation.py",
+    "Scripts/report_high_quality_acceptance.py": "docs/japanese-live/experiments/evidence/E18/execution-sources/Scripts_report_high_quality_acceptance.py",
+    "Scripts/report_speakerkit_precision.py": "docs/japanese-live/experiments/evidence/E18/execution-sources/Scripts_report_speakerkit_precision.py"
+  },
+  "reviewedImplementationSHA256": {
+    "Sources/HighQualityJob.swift": "8a19f94a8b45515a88542d3062cdc9781ad711c231a77e007c710a73db060f2f",
+    "Sources/HighQualityRuntimeMemorySampler.swift": "a696adbb49f34a36a588dc65defaa7fa1f0576b633488303e7fe339c5827a410",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "5071cb179ec310f66a089dab27bfda426f6a13712e6993b3a693b44c461f4f0f",
+    "Sources/HighQualityFluidAudioRuntime.swift": "d5e013d180aee09a0ec9fff585bdf15c3248e4c3c50b2eddf29cd58f3a6b0b13",
+    "Tests/HighQualityAcceptanceTests.swift": "4070d5e0fbd16b0087324ff8cd5b42cba71d13a075022b0dd57f26287989afe9",
+    "Scripts/run_fluid_audio_offline_experiment.sh": "958ee79e0b1ac1a6f8aebc095c46c685f3ececfa900ce7a758d1581883a8d315",
+    "Scripts/report_fluid_audio_offline.py": "0a95bcf9d0155ec68496237216abf6c3ee194135d6c856cb7930abcea4c54f46",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_speakerkit_precision.py": "0d5cc562dd9a3711a8755413adcf2283cc67241659df14d606e0bf6bd7110f5b"
+  },
+  "unchangedImplementations": {
+    "Sources/AppleLiveServices.swift": {
+      "baseSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6",
+      "candidateSHA256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6"
+    },
+    "Sources/HighQualityTranslationIntegrity.swift": {
+      "baseSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278",
+      "candidateSHA256": "3501dd33906ae82b8394159af68ba41fc494f28328a09d298bed5d6ca03bc278"
+    },
+    "Sources/LiveRecoveryStore.swift": {
+      "baseSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94",
+      "candidateSHA256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94"
+    },
+    "Sources/LocalMLXTranslator.swift": {
+      "baseSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9",
+      "candidateSHA256": "673f04315b5e472ad6dc911060ab2c6fcd51e040f1135efe3947f02428c37ad9"
+    },
+    "Sources/QwenPseudoLiveCoordinator.swift": {
+      "baseSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202",
+      "candidateSHA256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202"
+    },
+    "Sources/TranslationService.swift": {
+      "baseSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26",
+      "candidateSHA256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26"
+    }
+  },
+  "artifactSHA256": {
+    "speakerkit": {
+      "japanese-transcript.txt": "eba1bbddbd7fd8e5746d77324d76493a7f3e4f1ffc6fa2cd21705335bd0df946",
+      "english-translation-transcript.txt": "28dac9aea751c9442802bf1857f5ed89928937d1fa36767dae600d9518eab6b2",
+      "english-subtitles.vtt": "0f8df8d78d6b878c1163f423964fa4638ece1c686a76543ee49aa8275570fed0",
+      "english-subtitles.srt": "d57127dee6d4ebb2fa7bad2ccf09eff2a94da117505efc8ab25846f9576b6e9b",
+      "raw-asr.json": "d88f3165154bfb3c075c15595552f396073be94f49cf24187d9832e1bd4e8721",
+      "manifest.json": "a7f2394b4b5f35bd8580d0e82cced033fff07a99538fea33ff3b31529087ea85"
+    },
+    "fluid-audio-offline": {
+      "japanese-transcript.txt": "126626af392f0bdee0d3e9c0b82707fcc237d9d1bff5bf32d1db2a4bc67b07d0",
+      "english-translation-transcript.txt": "8e5edae11908bb50ec7e8333c8bcaf7606d0913309251d2e4c48c06aa32430e2",
+      "english-subtitles.vtt": "6a73e52e977dbc4dfa4e0bc41f407f6307ef12e02fb7302dcd6176966991222f",
+      "english-subtitles.srt": "560e97bfe9293e37c7f4573a90ec43e508305a0fe2f3a004a1eeedaf2036e9c2",
+      "raw-asr.json": "15833884720d5766b99f8cec17324b863396295e362e4dbc77f58ae20320bdfe",
+      "manifest.json": "3c5a16366f54a9fa3a4b68e2c12b296029e75746409ce7c3aff05ba0a39a28fc"
+    }
+  },
+  "runLogSHA256": {
+    "speakerkit": "a799d2dc29c96ea0013d2f4280d4a286bc55bda52022ee9b6b9cc06943cc2d50",
+    "fluid-audio-offline": "64795a342d96ba8cc1a084d3e913d94cd914fe91e2a9be6dc1e83b0b35208add"
+  },
+  "scorerInputContentSHA256": {
+    "speakerkit": "6e848a03c1a97c49f224cadc266ff70aa043204524faa2a9ee157d6b3fa920f1",
+    "fluid-audio-offline": "666edfe5ed2abd816bcde267e14a5bb762d78f67fa6390f5de81d11728997a6a"
+  },
+  "modelInventories": {
+    "speakerkit": {
+      "path": "docs/japanese-live/experiments/evidence/E18/development-speakerkit-model-cache-manifest.json",
+      "sha256": "385752c660b37021ecaddcd3c19939244883b4c0923ea7fff4299de7a80086f4"
+    },
+    "fluid-audio-offline": {
+      "path": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-offline-model-cache-manifest.json",
+      "sha256": "820054f5d85c1691c3603f1624bb6626b460738b7c2d9f3508953aaf81837100"
+    }
+  },
+  "fluidAudioRemoteRevision": {
+    "before": "1ed7a662fdc7109e36d822db793ee6eebdaf8594",
+    "after": "1ed7a662fdc7109e36d822db793ee6eebdaf8594"
+  },
+  "renameConsistency": {
+    "speakerkit": true,
+    "fluid-audio-offline": true
+  },
+  "fluidAudioCancellationEvidence": {
+    "jobID": "61000001-0000-4000-8000-000000000003",
+    "manifestPath": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-cancellation-manifest.json",
+    "manifestSHA256": "8e17ceec6ef9fa8ea21f1b4e5b81973c5abe2d44ec42f712d479e55e394dbf32",
+    "rawASRPath": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-cancellation-raw-asr.json.gz",
+    "rawASRContentSHA256": "b37a478327a61006e733aeeeaba17226364743f4a81323e062e02f1b58719420",
+    "logPath": "docs/japanese-live/experiments/evidence/E18/development-fluid-audio-cancellation.log",
+    "logSHA256": "e12c06e945693c05a54fc833604bc8463585ace092b8a93695bdab4b9415f898"
+  }
+}

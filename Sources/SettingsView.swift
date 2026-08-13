@@ -6,7 +6,7 @@ struct SettingsView: View {
     @AppStorage("modelPath") private var modelPath = ""
     @AppStorage("targetLanguage") private var targetLanguage = ""
     @AppStorage("translationEndpoint") private var translationEndpoint = ""
-    @AppStorage("translationAPIKey") private var translationAPIKey = ""
+    @State private var translationAPIKey = ""
     @AppStorage("translationModel") private var translationModel = ""
     @State private var japaneseContextLibrary = JapaneseContextLibrary.stored()
     @State private var editedJapaneseContextProfileID = JapaneseContextLibrary.generalID
@@ -69,12 +69,19 @@ struct SettingsView: View {
                 SecureField("API Key", text: $translationAPIKey,
                             prompt: Text("sk-..."))
                     .textFieldStyle(.roundedBorder)
-                    .onChange(of: translationAPIKey) { _, _ in verifyResult = nil }
+                    .onChange(of: translationAPIKey) { _, value in
+                        verifyResult = nil
+                        do {
+                            try TranslationCredentialStore.setAPIKey(value)
+                        } catch {
+                            verifyResult = .failure(error.localizedDescription)
+                        }
+                    }
                 TextField("Model", text: $translationModel,
                           prompt: Text("gpt-4o-mini"))
                     .textFieldStyle(.roundedBorder)
                     .onChange(of: translationModel) { _, _ in verifyResult = nil }
-                Text("Only API Key is required. Endpoint defaults to OpenAI, model defaults to gpt-4o-mini.")
+                Text("Only API Key is required and is stored in Keychain. Endpoint defaults to OpenAI, model defaults to gpt-4o-mini.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -252,7 +259,7 @@ struct SettingsView: View {
                     EmptyView()
                 }
 
-                Text("Saves your settings (model choice, translation API config, font size, recent apps) to one file. On a new Mac, copy your Recordings and Transcriptions folders into ~/Library/Application Support/WhisperASR/ — transcripts load from there and audio links repair automatically — then restore your settings here. The file includes your translation API key, so keep it private.")
+                Text("Saves your settings (model choice, translation API config, font size, recent apps) to one file. On a new Mac, copy your Recordings and Transcriptions folders into ~/Library/Application Support/WhisperASR/ — transcripts load from there and audio links repair automatically — then restore your settings here. Keychain credentials are not included.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -261,6 +268,9 @@ struct SettingsView: View {
         .frame(width: 480)
         .padding()
         .onAppear {
+            if let apiKey = try? TranslationCredentialStore.apiKey() {
+                translationAPIKey = apiKey
+            }
             ModelManager.shared.refresh()
             japaneseContextLibrary = JapaneseContextLibrary.stored()
             if !japaneseContextLibrary.profiles.contains(where: {

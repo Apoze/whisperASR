@@ -1,0 +1,6 @@
+Loaded 62 added tokens from tokenizer_config.json
+Loaded tokenizer with 151705 tokens, 151291 merges
+Found 1 safetensor files
+Loading: model.safetensors
+Applied weights to audio encoder (24 layers, 397 tensors)
+Applied weights to text decoder (28 layers, 704 tensors)

@@ -1,0 +1,151 @@
+{
+  "attempts" : [
+    {
+      "duration" : 3.966410994529724,
+      "number" : 1,
+      "outcome" : "success"
+    }
+  ],
+  "batches" : [
+    {
+      "cueIDs" : [
+        "unit-0001"
+      ],
+      "duration" : 1.7679380178451538,
+      "finishReason" : "stop",
+      "inputTokens" : 88,
+      "model" : "mlx-community\/translategemma-12b-it-4bit",
+      "nativeOutput" : "The next target areas are Amaoi Moka and Tachikawa.",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"続いての対象戦ですが、甘いモカそして立川\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 13,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "The next target areas are Amaoi Moka and Tachikawa.",
+      "sanitizedPrompt" : "続いての対象戦ですが、甘いモカそして立川"
+    },
+    {
+      "cueIDs" : [
+        "unit-0188"
+      ],
+      "duration" : 1.0230809450149536,
+      "finishReason" : "stop",
+      "inputTokens" : 80,
+      "model" : "mlx-community\/translategemma-12b-it-4bit",
+      "nativeOutput" : "Thank you for your hard work.\n",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"お疲れ様でした。\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 8,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "Thank you for your hard work.",
+      "sanitizedPrompt" : "お疲れ様でした。"
+    },
+    {
+      "cueIDs" : [
+        "unit-0297"
+      ],
+      "duration" : 1.1749800443649292,
+      "finishReason" : "stop",
+      "inputTokens" : 82,
+      "model" : "mlx-community\/translategemma-12b-it-4bit",
+      "nativeOutput" : "Thank you everyone, and we look forward to your continued support.",
+      "nativePrompt" : "[{\"content\":[{\"source_lang_code\":\"ja\",\"target_lang_code\":\"en\",\"text\":\"皆さん、今後も応援よろしくお願いします。\",\"type\":\"text\"}],\"role\":\"user\"}]",
+      "outputTokens" : 13,
+      "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "sanitizedOutput" : "Thank you everyone, and we look forward to your continued support.",
+      "sanitizedPrompt" : "皆さん、今後も応援よろしくお願いします。"
+    }
+  ],
+  "integrityVerdicts" : [
+
+  ],
+  "model" : "mlx-community\/translategemma-12b-it-4bit",
+  "peakMemoryBytes" : 6903819816,
+  "request" : {
+    "glossary" : [
+      {
+        "english" : "Amayui Moka",
+        "englishAliases" : [
+          "Moka Amayui"
+        ],
+        "id" : "amayui-moka",
+        "japanese" : [
+          "甘結もか",
+          "あまゆいもか",
+          "Amayui Moka",
+          "甘いモカ"
+        ]
+      },
+      {
+        "english" : "Thanks for your hard work",
+        "englishAliases" : [
+          "Good work"
+        ],
+        "id" : "otsukaresama",
+        "japanese" : [
+          "お疲れさま",
+          "お疲れ様",
+          "otsukaresama"
+        ]
+      },
+      {
+        "english" : "Thank you in advance",
+        "englishAliases" : [
+          "Nice to meet you"
+        ],
+        "id" : "yoroshiku-onegaishimasu",
+        "japanese" : [
+          "よろしくお願いします",
+          "yoroshiku onegaishimasu"
+        ]
+      }
+    ],
+    "source" : {
+      "byteCount" : 1919081,
+      "fileName" : "raw-asr.json",
+      "modifiedAt" : "2026-08-09T12:01:31Z",
+      "path" : "docs\/japanese-live\/corpora\/qudu2fx3ncc\/manifest.json"
+    },
+    "turns" : [
+      {
+        "followingJapanese" : [
+          "モカさん頑張れ頑张れ頼む。"
+        ],
+        "id" : "unit-0001",
+        "japanese" : "続いての対象戦ですが、甘いモカそして立川",
+        "precedingJapanese" : [
+
+        ],
+        "sourceEnd" : 3.84,
+        "sourceStart" : 0.56
+      },
+      {
+        "followingJapanese" : [
+          "わあ、お疲れさん。"
+        ],
+        "id" : "unit-0188",
+        "japanese" : "お疲れ様でした。",
+        "precedingJapanese" : [
+          "わー、わー。"
+        ],
+        "sourceEnd" : 553.62,
+        "sourceStart" : 553.62
+      },
+      {
+        "followingJapanese" : [
+          "はーい。"
+        ],
+        "id" : "unit-0297",
+        "japanese" : "皆さん、今後も応援よろしくお願いします。",
+        "precedingJapanese" : [
+          "あの、それで向けて、あのアマユイさんからまた一からいろいろ教えていただきながら、頑张いしていただきたいと思います。"
+        ],
+        "sourceEnd" : 894.64,
+        "sourceStart" : 892.8
+      }
+    ]
+  },
+  "response" : "{\"translations\":[{\"text\":\"The next target areas are Amaoi Moka and Tachikawa.\",\"id\":\"unit-0001\"},{\"text\":\"Thank you for your hard work.\",\"id\":\"unit-0188\"},{\"text\":\"Thank you everyone, and we look forward to your continued support.\",\"id\":\"unit-0297\"}]}",
+  "revision" : "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "runtimeVersion" : "3.31.4",
+  "validationFailures" : [
+
+  ]
+}

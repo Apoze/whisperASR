@@ -1,0 +1,1932 @@
+{
+  "schemaVersion": 1,
+  "ticket": 89,
+  "corpusRole": "development",
+  "holdoutOpened": false,
+  "decision": "RETRY-REQUIRED",
+  "model": {
+    "backend": "reazonspeech-k2-v2-int8",
+    "modelID": "reazon-research/reazonspeech-k2-v2",
+    "revision": "291488c8151be24d7da4bf7af26e533fad96e407",
+    "runtimeVersion": "sherpa-onnx 1.13.4",
+    "weightSHA256": {
+      "decoder-epoch-99-avg-1.onnx": "58b18211ae06265466bfa17172dab574df94f76c8bcb61a3640c28ba860e4124",
+      "encoder-epoch-99-avg-1.int8.onnx": "2c7bd08a8a99f9ddd0d9e458456577b1f6279214e51426f114f9eced44c54e1d",
+      "joiner-epoch-99-avg-1.int8.onnx": "49cc7ea1d3d35a40a27442db5e89996da64bf0e683a903dce76e99e57a12e4de",
+      "tokens.txt": "2c3ac659818a48a0c04010e0593bbc4d7c8a24a054340b01131499c05fd52def"
+    }
+  },
+  "timestamps": {
+    "characterCount": 135,
+    "oneUnicodeCharacterPerEntry": true,
+    "completeText": true,
+    "monotonic": false,
+    "bounded": true,
+    "chunkIndexesComplete": true
+  },
+  "material": {
+    "recovered": 0,
+    "lost": 3391,
+    "qwen": {
+      "materialErrorScore": 1158,
+      "lostCharacters": 993,
+      "lostTerms": 18,
+      "lostNumbers": 10,
+      "lostMeaningAnchors": 3,
+      "emptyTurns": 0,
+      "duplicatedTurns": 1
+    },
+    "reazon": {
+      "materialErrorScore": 4549,
+      "lostCharacters": 2679,
+      "lostTerms": 26,
+      "lostNumbers": 16,
+      "lostMeaningAnchors": 10,
+      "emptyTurns": 161,
+      "duplicatedTurns": 0
+    }
+  },
+  "CER": {
+    "qwen": {
+      "editDistance": 2429,
+      "referenceCharacterCount": 2989,
+      "hypothesisCharacterCount": 4396,
+      "ratePercent": 81.26463700234191
+    },
+    "reazon": {
+      "editDistance": 2905,
+      "referenceCharacterCount": 2989,
+      "hypothesisCharacterCount": 135,
+      "ratePercent": 97.18969555035129
+    }
+  },
+  "resources": {
+    "stageDurationsSeconds": {
+      "normalizing-source": 1.8909670114517212,
+      "transcribing": 22.139809012413025,
+      "preparing-alignment": 2.9703019857406616,
+      "preparing-asr": 1.0971269607543945,
+      "aligning": 12.182245016098022
+    },
+    "totalStageSeconds": 40.280449986457825,
+    "peakJobMemoryBytes": 3042232600,
+    "worker": {
+      "availableMemorySamples": [
+        {
+          "at": "2026-08-11T23:30:41Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:41Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:41Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13846446080
+        },
+        {
+          "at": "2026-08-11T23:30:42Z",
+          "availableMemoryBytes": 13541588992
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13428981760
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13418790912
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13423968256
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13423968256
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13423968256
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13423968256
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13423968256
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13423968256
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13423968256
+        },
+        {
+          "at": "2026-08-11T23:30:43Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13352009728
+        },
+        {
+          "at": "2026-08-11T23:30:44Z",
+          "availableMemoryBytes": 13370654720
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13372686336
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13375012864
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13376241664
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13376241664
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13376241664
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13376241664
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13376241664
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13376241664
+        },
+        {
+          "at": "2026-08-11T23:30:45Z",
+          "availableMemoryBytes": 13376241664
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13394558976
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13391364096
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13391872000
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13385023488
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13385023488
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13385023488
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13385023488
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13385023488
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13385023488
+        },
+        {
+          "at": "2026-08-11T23:30:46Z",
+          "availableMemoryBytes": 13385023488
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13340590080
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13343522816
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:47Z",
+          "availableMemoryBytes": 13342932992
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13342162944
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13342064640
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13329072128
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13331824640
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13333282816
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13333282816
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13333282816
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13333282816
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13333282816
+        },
+        {
+          "at": "2026-08-11T23:30:48Z",
+          "availableMemoryBytes": 13333282816
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13327826944
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:49Z",
+          "availableMemoryBytes": 13326925824
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13311639552
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13312819200
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13312819200
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13310672896
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13310672896
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13310672896
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13310672896
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13310672896
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13310672896
+        },
+        {
+          "at": "2026-08-11T23:30:50Z",
+          "availableMemoryBytes": 13310672896
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13304332288
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13286998016
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:51Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13288947712
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13274644480
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13275889664
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13270220800
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13269270528
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13269270528
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13269270528
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13269270528
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13269270528
+        },
+        {
+          "at": "2026-08-11T23:30:52Z",
+          "availableMemoryBytes": 13269270528
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13269270528
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13262028800
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13255491584
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13256966144
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13256720384
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13252624384
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13252624384
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13252624384
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13252624384
+        },
+        {
+          "at": "2026-08-11T23:30:53Z",
+          "availableMemoryBytes": 13252624384
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13252624384
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13250461696
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:54Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13249904640
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13237616640
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228982272
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:55Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13228998656
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13228867584
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13230391296
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:56Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13226885120
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13207650304
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13204848640
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:57Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13205307392
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13191888896
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:58Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13186088960
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13177683968
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13178896384
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:30:59Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 13177978880
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 13067255808
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 13065453568
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 13065453568
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 12974129152
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 12973637632
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 12973637632
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 12973637632
+        },
+        {
+          "at": "2026-08-11T23:31:00Z",
+          "availableMemoryBytes": 12973637632
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12973637632
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12973637632
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12954173440
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12955598848
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12952813568
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12999032832
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12999032832
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12999032832
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12999032832
+        },
+        {
+          "at": "2026-08-11T23:31:01Z",
+          "availableMemoryBytes": 12999032832
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999032832
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999032832
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12993839104
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:02Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 12999016448
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13028098048
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:03Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13032407040
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13039697920
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:04Z",
+          "availableMemoryBytes": 13040926720
+        }
+      ],
+      "command": [
+        "/Users/maz/.codex/worktrees/06b7/whisperASR/.build/benchmarks/reazonspeech-k2-v2-89/sherpa-onnx-1.13.4/bin/python",
+        "/Users/maz/.codex/worktrees/06b7/whisperASR/Scripts/reazon_asr_worker.py",
+        "reazonspeech-k2-v2-int8",
+        "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-ASR-reazonspeech-k2-v2-int8-CFD7A546-16B9-492F-9BC5-3C3F61CB81D5"
+      ],
+      "elapsedSeconds": 23.178074955940247,
+      "exitStatus": 0,
+      "exitedAt": "2026-08-11T23:31:05Z",
+      "forcedTermination": false,
+      "peakPhysicalFootprintBytes": 1385678528,
+      "pressureTransitions": [],
+      "processIdentifier": 45323,
+      "rawLog": "",
+      "rawLogPath": "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-ASR-reazonspeech-k2-v2-int8-CFD7A546-16B9-492F-9BC5-3C3F61CB81D5/worker.log",
+      "startedAt": "2026-08-11T23:30:41Z",
+      "swapUsedAfterBytes": 2721382400,
+      "swapUsedBeforeBytes": 2721382400,
+      "terminationReason": "exit"
+    },
+    "alignmentWorker": {
+      "availableMemorySamples": [
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13040926720
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13737852928
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13737066496
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13738164224
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13752549376
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13745799168
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13745799168
+        },
+        {
+          "at": "2026-08-11T23:31:05Z",
+          "availableMemoryBytes": 13745799168
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13745799168
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13745799168
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13745799168
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13692174336
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13687128064
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13675560960
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13690142720
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13689143296
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13689176064
+        },
+        {
+          "at": "2026-08-11T23:31:06Z",
+          "availableMemoryBytes": 13689176064
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13689176064
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13689176064
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13689176064
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13641596928
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13640761344
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:07Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 13637697536
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 11490852864
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:08Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 10808901632
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 12308086784
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 10853892096
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:09Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 12490260480
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 12499910656
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 11041374208
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 12357419008
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 11128733696
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 11128733696
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 11128733696
+        },
+        {
+          "at": "2026-08-11T23:31:10Z",
+          "availableMemoryBytes": 11128733696
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11128733696
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11128733696
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11128733696
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:11Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 11365007360
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 12255870976
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 10809131008
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 12255952896
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 12255952896
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 10837360640
+        },
+        {
+          "at": "2026-08-11T23:31:12Z",
+          "availableMemoryBytes": 10837360640
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10837360640
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10837360640
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10837360640
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10837360640
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 12263178240
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10825908224
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 12288049152
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10932797440
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10932797440
+        },
+        {
+          "at": "2026-08-11T23:31:13Z",
+          "availableMemoryBytes": 10932797440
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10932797440
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10932797440
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10932797440
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10932797440
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 11586912256
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:14Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 10746855424
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 11089084416
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 12024856576
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 11065344000
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 12463423488
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 12463423488
+        },
+        {
+          "at": "2026-08-11T23:31:15Z",
+          "availableMemoryBytes": 12463423488
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 12463423488
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 12463423488
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 12463423488
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 12463423488
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 11068571648
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:16Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10830905344
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:17Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 10874585088
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 11013423104
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 11679137792
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 11054071808
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 12447088640
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 12447088640
+        },
+        {
+          "at": "2026-08-11T23:31:18Z",
+          "availableMemoryBytes": 12447088640
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 12447088640
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 12447088640
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 12447088640
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 12447088640
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 11052466176
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 12446515200
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 10876715008
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 12249268224
+        },
+        {
+          "at": "2026-08-11T23:31:19Z",
+          "availableMemoryBytes": 10866343936
+        },
+        {
+          "at": "2026-08-11T23:31:20Z",
+          "availableMemoryBytes": 10866343936
+        },
+        {
+          "at": "2026-08-11T23:31:20Z",
+          "availableMemoryBytes": 10866343936
+        },
+        {
+          "at": "2026-08-11T23:31:20Z",
+          "availableMemoryBytes": 10866343936
+        }
+      ],
+      "command": [
+        "/Users/maz/.codex/worktrees/06b7/whisperASR/.build/debug/WhisperASR",
+        "--high-quality-alignment-worker",
+        "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-alignment-C96CEE13-B9E4-4D84-B97A-5FDA1F72F12E"
+      ],
+      "elapsedSeconds": 15.14401400089264,
+      "exitStatus": 0,
+      "exitedAt": "2026-08-11T23:31:20Z",
+      "forcedTermination": false,
+      "peakPhysicalFootprintBytes": 3042232600,
+      "pressureTransitions": [],
+      "processIdentifier": 45337,
+      "rawLog": "",
+      "rawLogPath": "/var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/WhisperASR-alignment-C96CEE13-B9E4-4D84-B97A-5FDA1F72F12E/worker.log",
+      "startedAt": "2026-08-11T23:31:05Z",
+      "swapUsedAfterBytes": 2721382400,
+      "swapUsedBeforeBytes": 2721382400,
+      "terminationReason": "exit"
+    }
+  },
+  "artifacts": {
+    "manifestSHA256": "502afe6e722f2096a95d8cd99db103ae6b7f5819f13591049c2dd415928125c5",
+    "rawASRSHA256": "8a14395da852bf0ac9c840fa0574f83040239767792dbcaad644b0fd20b73fa2",
+    "retainedRawASRGzipSHA256": "62067494780c0cd80efca43cce50bfcd9fab826aef7f38069353af9f110a4402",
+    "retainedRunLogGzipSHA256": "cf562d74433e742d26a7d8733802e306551c3024594b4297c8c3393100fff360",
+    "baselineSHA256": "1f5edc2fcb929c9abc2cb85256f326bbf2891a200ef66d1c1cb9a66a9c711ce8",
+    "segmentsSHA256": "e6f8024c83d8c30199065703a4abf1f0ca1dfcead13381d3168c659f88082f81",
+    "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1"
+  },
+  "manifestStatus": "failed",
+  "executionImplementationSHA256": {
+    "Sources/HighQualityASRWorker.swift": "455c87399df2309e73030c47a3e51150be2e786b2faad999843ce12d63bae379",
+    "Sources/HighQualityJob.swift": "b685d4b2cbb55efe88e4fddc17c54ad4d43e013acc6f6df81b8bbad561b9dc2f",
+    "Scripts/reazon_asr_worker.py": "493982ef89ca519c8246251f11ac12ed57b09cb5210fbc121058a1b33ed219ff",
+    "Scripts/run_reazon_dev_experiment.sh": "b66ebda1c0328faae0904e55b52a062d179fea478a09ac5776960558d12cf10b"
+  },
+  "generatedAt": "2026-08-12T01:47:09.030925+02:00",
+  "candidateVerdict": "WITHHELD",
+  "gates": {
+    "modelPinned": true,
+    "timestampsComplete": true,
+    "timestampsGloballyMonotonic": false,
+    "connectorValid": true,
+    "pipelineComplete": false,
+    "englishComparisonComplete": false,
+    "workerCleanExit": true,
+    "noCriticalPressure": true,
+    "holdoutClosed": true
+  },
+  "rootCause": {
+    "attribution": "harness-timestamp-reconciliation-failure",
+    "failure": {
+      "message": "Alignment cue cue-0002 has invalid or non-monotonic timing.",
+      "stage": "alignment"
+    },
+    "candidateCharacters": [
+      {
+        "chunkIndex": 1,
+        "sourceEnd": 35.52,
+        "sourceStart": 15.959999998211861,
+        "text": "今"
+      }
+    ],
+    "alignmentAnchor": {
+      "sourceStart": 15.88,
+      "sourceEnd": 35.52
+    },
+    "alignerRawItems": [
+      {
+        "cueID": "cue-0002",
+        "end": 15.88,
+        "start": 15.88,
+        "text": "今"
+      }
+    ],
+    "invalidCue": {
+      "end": 15.88,
+      "id": "cue-0002",
+      "start": 15.88,
+      "text": "今"
+    },
+    "connectorValid": true,
+    "explanation": "cue-0002 has valid local Reazon timing inside a <=20-second anchor and the aligner returns zero duration, but the assembled character timeline regresses at later overlap boundaries; candidate attribution is withheld until the corrected shared reconciliation is rerun."
+  },
+  "japaneseExamples": {
+    "worsened": [
+      {
+        "id": "cue-0274",
+        "start": 925.98,
+        "end": 933.98,
+        "referenceJapanese": "かさんがね。まあ立川には悪いけど、ちょっと今回はもかさんの勝ちということで。またいろいろやる機会はあると",
+        "qwenJapanese": "モコさんがね、まあ勝ちには悪いけど、ちょっと今回はモコさんの勝ちということで、またねいろいろやる機会があると思うんで。",
+        "reazonJapanese": "",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 49,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 49
+          },
+          "terms": {
+            "recovered": [],
+            "lost": [
+              "立川"
+            ]
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        },
+        "duplicatedTurn": false,
+        "materialErrorScore": 64,
+        "materialDeltaVsQwen": -53
+      },
+      {
+        "id": "cue-0251-part-1",
+        "start": 848.24,
+        "end": 856.16,
+        "referenceJapanese": "ちゃん教えてる」みたいなのが3、4個あって。ちょっとやっぱ、コーチ",
+        "qwenJapanese": "絶対分ちゃん教えてるみたいなのが34個あってその見え隠れに結構やられたなって思ってちょっとやっぱコーチの優",
+        "reazonJapanese": "",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 29,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 29
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "3",
+              "4"
+            ]
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        },
+        "duplicatedTurn": false,
+        "materialErrorScore": 49,
+        "materialDeltaVsQwen": -49
+      },
+      {
+        "id": "cue-0238",
+        "start": 785.2,
+        "end": 792.48,
+        "referenceJapanese": "うち、人のゲームプレイ見て泣くの初めてなんだけど（笑）。え、マジですごい。ただただ、うまいっ",
+        "qwenJapanese": "うち、人のゲームプレイ見て泣くの初めてだったけど、マジで、すごいただただ上手いっていう、",
+        "reazonJapanese": "",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 39,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 39
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        },
+        "duplicatedTurn": false,
+        "materialErrorScore": 49,
+        "materialDeltaVsQwen": -43
+      },
+      {
+        "id": "cue-0250-part-1",
+        "start": 830.2,
+        "end": 838.12,
+        "referenceJapanese": "ちょっとリーグとか出てるんじゃないかと思っちゃいましたね、もしかしたら。い",
+        "qwenJapanese": "俺が対応される側になってちょっとリーグとか出てるんじゃないかと思っちゃいましたねもしかし",
+        "reazonJapanese": "",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 35,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 35
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        },
+        "duplicatedTurn": false,
+        "materialErrorScore": 45,
+        "materialDeltaVsQwen": -42
+      },
+      {
+        "id": "cue-0006-part-1",
+        "start": 35.52,
+        "end": 43.52,
+        "referenceJapanese": "の見たんだけどさ。なんか立川さんがめっちゃ前、5年前とかだっけ？",
+        "qwenJapanese": "見たんだけどさなんか勝間さんのめっちゃ前5年前とかだっけなんか出るんですよ配信のレ",
+        "reazonJapanese": "",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 29,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 29
+          },
+          "terms": {
+            "recovered": [],
+            "lost": [
+              "立川"
+            ]
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": [
+              "5"
+            ]
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        },
+        "duplicatedTurn": false,
+        "materialErrorScore": 49,
+        "materialDeltaVsQwen": -40
+      },
+      {
+        "id": "cue-0044",
+        "start": 169.42000000000002,
+        "end": 175.82000000000002,
+        "referenceJapanese": "の間合いで、僕たちには考えられない、とんでもない量のいろんなこと考えてんの？さあ、成功",
+        "qwenJapanese": "この間で僕たちには考えられないとんでもない量のいろんなこと考えちゃう。",
+        "reazonJapanese": "",
+        "classification": {
+          "speech": {
+            "recoveredCharacters": 0,
+            "lostCharacters": 39,
+            "insertedOrSubstitutedCharacters": 0,
+            "referenceCharacters": 39
+          },
+          "terms": {
+            "recovered": [],
+            "lost": []
+          },
+          "numbers": {
+            "recovered": [],
+            "lost": []
+          },
+          "meaning": {
+            "recovered": [],
+            "lost": []
+          },
+          "emptyTurn": true,
+          "similarityPercent": 0.0
+        },
+        "duplicatedTurn": false,
+        "materialErrorScore": 49,
+        "materialDeltaVsQwen": -40
+      }
+    ]
+  },
+  "english": {
+    "status": "not-produced",
+    "reason": "Fail-closed alignment stopped the frozen pipeline before translation.",
+    "qwenBaselineExamples": [
+      {
+        "id": "1",
+        "source": "続いての大将戦ですが、甘結もか、そして立川。",
+        "reference": "Next up is the anchor match: Amayui Moka versus Tachikawa.",
+        "hypothesis": "Sweet Moka = Amayui Moka\nThe next target is Sweet Moka and Tachikawa."
+      },
+      {
+        "id": "2",
+        "source": "もかさん、頑張れ！ 頑張れ！",
+        "reference": "Moka, you've got this! Go! Go!",
+        "hypothesis": "I'm here. \"Moka, you can do it! Keep going! Keep going!\""
+      }
+    ]
+  }
+}

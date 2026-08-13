@@ -1,0 +1,45 @@
+{
+  "ticket": 106,
+  "runMode": "RESUME_FULL_12B_VIDEO2",
+  "corpusID": "qudu2fx3ncc",
+  "reusedCompletedVideo1": true,
+  "modelExecutionAndOutputsUnchanged": true,
+  "retainedEvidence": {
+    "path": "/Users/maz/.codex/worktrees/da40/whisperASR/docs/japanese-live/experiments/evidence/E31-full-12b-only-warning-attempt",
+    "manifestSHA256": "5f4e5804deedb83222f32a43f85a910b93d18c414d048f25ebacab200d5afc40"
+  },
+  "sourceSHA256": {
+    "runMetadata": "b9760268ece2f0daac2d2b340b4116431148536d7fafe2426261ca859a978f29",
+    "safety": "0effbd09dd069d3499b6e23140c74eab07ee46185a62583cb5f1a9d1e80a87c1",
+    "cleanup": "6dadfeae59bb73d8503dd6e991c3514eab288fb1d7c9cab982d039468c621638",
+    "manifest": "b2fc82f741f572bf3210f8d04a5054d96ee7764213459081c08b7a83c059d0ac",
+    "rawEvidence": "95b5089cf630f717cabf4c4c545673c46fa6bd62d74d2722e7930f084b6d48c5",
+    "exports": {
+      "japanese-transcript.txt": "31b1782879958d1a4da736b03ce3be1361130aeae096be9f80e86f48b2d65694",
+      "english-translation-transcript.txt": "f7d85a26bb7fd427860fe7f69e50e64b82082fa27cb6ad45614ca3812a9c88aa",
+      "english-subtitles.srt": "7579150bea92eaae5a61e91d9a28e16c59797c7c69c86c3daf6ffeb1c8c5f9da",
+      "english-subtitles.vtt": "9342816e56f086ce7c131e2132428eba14bfefd35acdba3b59d1a9f6e9fc1c4a"
+    }
+  },
+  "resumeImplementationSHA256": {
+    "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "0214c8835edf2cc5a4134525e48684a8e57b83705df7467fec791cb2a884b61a",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef",
+    "Tests/HighQualityConversationContextTests.swift": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f",
+    "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+    "Tests/HeavyweightModelGateTests.swift": "6344c2debac7879b93aaebaca1d29df31b6c917b3bc1cc6c8f506315a58afe60",
+    "Scripts/run_integrated_offline_validation.sh": "40eccd327f8a999b2bd0b4cc62acc52711db421129488a15b8c95059f0d2dff3",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "f55edf7fb5ddfce8ed976872bd9e41e88523c46fc83fc96cbdc7eca3aca2f7f2",
+    "Scripts/test_mossformer2_guard.sh": "74612df41e86166c6eac15834d0c9b5e6df7117528834ddc5a09398152943b0f",
+    "Scripts/report_integrated_offline_validation.py": "f58fadf88791ec489bf2556dbba93a54da3a09863a0e40580a1c1fa967822f55",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  }
+}

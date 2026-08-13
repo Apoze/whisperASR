@@ -1,0 +1,16 @@
+xctestStillRunning=false
+translatorProcessStillRunning=false
+
+command=memory_pressure
+System-wide memory free percentage: 84%
+
+command=vm_stat
+pageSize=16384
+pagesFree=474466
+pagesActive=402218
+pagesInactive=402314
+pagesSpeculative=2088
+pagesThrottled=0
+pagesWired=184102
+pagesPurgeable=272
+pagesOccupiedByCompressor=41043

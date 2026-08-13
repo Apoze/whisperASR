@@ -1,0 +1,9 @@
+{
+  "ticket": 106,
+  "status": "failed",
+  "route": "run",
+  "detail": "Safety stop: native-pressure-warning",
+  "translator": "translategemma-12b-it-4bit",
+  "corpusID": "qudu2fx3ncc",
+  "modelVerdictAssigned": false
+}

@@ -1,0 +1,65 @@
+{
+  "ticket": 106,
+  "runMode": "TRANSLATION_SMOKE_12B_100",
+  "status": "completed",
+  "cueCount": 100,
+  "freshProcessPerRun": true,
+  "modelQualityVerdictAssigned": false,
+  "ticket106Concluded": false,
+  "harnessRecovery": {
+    "reason": "raw worker capture find returned nonzero after the completed model run",
+    "modelWasNotRerun": true,
+    "postProcessorImplementationSHA256": {
+      "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+      "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+      "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+      "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+      "Sources/HeavyweightModelGate.swift": "bf58409dc3aeab5abaf67c3302a947e00348b8dcf5ac72f04beab34c6fe058ae",
+      "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+      "Tests/HighQualityAcceptanceTests.swift": "b4a24911d5546755cec0bd40f971e79a3c4e42108910f9dd79916f9bf898a153",
+      "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+      "Scripts/run_integrated_offline_validation.sh": "6ac2d8ccff38b1ae645bb0acd9e147be1f1b4bf7fc1bfa766adc0d661d7b2558",
+      "Scripts/run_mossformer2_oracle_experiment.sh": "6316686c049f6b90a27b3eab2b63acc46d3d72710828b1e6eda16f04498489b5",
+      "Scripts/test_mossformer2_guard.sh": "865316ad8868ed9ddb259b65a2debafcb94c8976de497c63177e1d5b70ee3569",
+      "Scripts/report_integrated_offline_validation.py": "f99097dbfefee2b9b54ef0954ab8ad671c3bf3b033618c5d3f54fcd3a7db7b27",
+      "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+      "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+      "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+      "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+    }
+  },
+  "memory": {
+    "elapsedSeconds": 173,
+    "peakResidentBytes": 2341666816,
+    "peakPhysicalFootprintBytes": 7462786928,
+    "minimumFreeMemoryPercent": 44,
+    "nativePressureLevels": [
+      "normal"
+    ],
+    "peakSwapDeltaBytes": 0,
+    "stopReason": "completed",
+    "warningRecoveryGuard": {
+      "cleanupRequests": 0,
+      "growthLimitBytes": 257698037
+    },
+    "systemBefore": {
+      "freeMemoryPercent": 77,
+      "swapUsedBytes": 4939642307,
+      "pageouts": 1783537
+    },
+    "systemAfter": {
+      "freeMemoryPercent": 76,
+      "swapUsedBytes": 4939642307,
+      "swapDeltaBytes": 0,
+      "pageouts": 1783904,
+      "pageoutDelta": 367,
+      "recoveredFreeMemoryPercentagePoints": 32
+    }
+  },
+  "sha256": {
+    "smoke.json": "78076a9ffb5aa18a2bdd3014b2025cb6605db98c0915e0d491b600ace36d259b",
+    "safety.json": "cd0dfa3379c079dce457ff6a3d237c6ee8124d7bacd14e6bcda414f959ff8bc4",
+    "safety.samples.jsonl": "711916f48cc23978df25e6fb95eea25aa41f530eebdb7750bca02f6da72626b5",
+    "cleanup.json": "0a7a7cb4b511514531c27f286f3cd93106109b0e77b0fb5f5ae8a2e01bd00da7"
+  }
+}

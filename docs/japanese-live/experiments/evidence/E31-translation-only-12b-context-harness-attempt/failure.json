@@ -1,0 +1,9 @@
+{
+  "ticket": 106,
+  "status": "failed",
+  "route": "translation-replay",
+  "detail": "Translation replay non-quality failure; no model verdict assigned",
+  "translator": "translategemma-12b-it-4bit",
+  "corpusID": "md62mmdz0m",
+  "modelVerdictAssigned": false
+}

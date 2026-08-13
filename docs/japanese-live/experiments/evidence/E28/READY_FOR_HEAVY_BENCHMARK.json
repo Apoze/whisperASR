@@ -1,0 +1,56 @@
+{
+  "status": "READY_FOR_HEAVY_BENCHMARK",
+  "ticket": 94,
+  "heavyRunsLaunched": 0,
+  "command": "BENCHMARK_SLOT_GRANTED=94 bash Scripts/run_adaptive_asr_experiment.sh development",
+  "resumeCommand": "BENCHMARK_SLOT_GRANTED=94 bash Scripts/run_adaptive_asr_experiment.sh resume",
+  "corpus": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "holdoutOpened": false,
+  "recipe": {
+    "qwen": "standard-ja",
+    "spleeter": false,
+    "fireRed": false,
+    "hotwords": false,
+    "runtimeReference": false
+  },
+  "windows": {
+    "count": 169,
+    "minimumSeconds": 3.02,
+    "maximumSeconds": 8.0,
+    "commonAcousticTimeline": true
+  },
+  "passes": [
+    "Qwen: 169 windows, one persistent worker",
+    "Parakeet: same 169 windows, one persistent worker",
+    "If Japanese gates pass: forced alignment",
+    "If Japanese gates pass: one TranslateGemma translation"
+  ],
+  "estimate": {
+    "typicalMinutes": 25,
+    "hardTimeoutMinutes": 60,
+    "peakRAMGiB": 14,
+    "incrementalDiskMiB": 250,
+    "freeDiskBytes": 174968250368,
+    "totalRAMBytes": 25769803776
+  },
+  "gates": [
+    "build and worker probe",
+    "frozen input/reference/model hashes",
+    "short complete timeline",
+    "strict sequential lifecycle",
+    "stable LOBO calibration",
+    "no added empty/duplicate/term-number-meaning loss",
+    "Japanese gain >=2%",
+    "ASR cost <=5x Qwen",
+    "English not worse"
+  ],
+  "recovery": "Resume retained completed phases only; never rerun a failed heavy phase.",
+  "implementationSHA256": {
+    "Scripts/adaptive_asr_harness.py": "df378ada9248ea5eae86539b8fdb55be6469582bfc5396ba6d49d7fd2c5d604e",
+    "Scripts/run_adaptive_asr_experiment.sh": "90eee70395e096c9abe3c76a542be60c1a7059817afaeeaab4e02f6b781b3d07",
+    "Tests/AdaptiveASRExperimentTests.swift": "c2b1258a2db5485f1f4b62ad4c7d5e051b706ae7b7edcd687de5559089bbc124",
+    ".build/debug/WhisperASR": "b3d9176d76726f4bfda88835a090e314c9dc7645b194dc0a1d2a1d79500243e3",
+    ".build/benchmarks/issue-94/window-plan.json": "3bfa62a1e0ded143555c61f8a02e65501b8b72adf2dfa277527c2d8de4c4b1a8"
+  }
+}

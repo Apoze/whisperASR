@@ -1,0 +1,65 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-10 13:49:06.809.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 13:49:06.810.
+Test Suite 'HighQualityJobTests' started at 2026-08-10 13:49:06.810.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRealOfflineBackendFunctionalGateWhenOptedIn]' started.
+Loaded 62 added tokens from tokenizer_config.json
+Loaded tokenizer with 151705 tokens, 151291 merges
+Loaded 62 added tokens from tokenizer_config.json
+Loaded tokenizer with 151705 tokens, 151291 merges
+[13:49:13.872] [INFO] [FluidAudio.AsrModels] Downloading ASR models to: /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja
+[13:49:13.881] [INFO] [FluidAudio.AsrModels] ASR models already present at: /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja
+[13:49:13.881] [INFO] [FluidAudio.AsrModels] Loading ASR models from: /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja
+[13:49:13.881] [INFO] [FluidAudio.DownloadUtils] Host environment: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:13.881] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:13.893] [INFO] [FluidAudio.DownloadUtils] Compiled model Preprocessor.mlmodelc in 14.29 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:13.893] [INFO] [FluidAudio.AsrModels] Loaded Preprocessor.mlmodelc with compute units: cpuOnly
+[13:49:13.893] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:14.046] [INFO] [FluidAudio.DownloadUtils] Compiled model Encoder.mlmodelc in 152.33 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:14.046] [INFO] [FluidAudio.AsrModels] Loaded Encoder.mlmodelc with compute units: cpuAndNeuralEngine
+[13:49:14.046] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:14.056] [INFO] [FluidAudio.DownloadUtils] Compiled model Decoderv2.mlmodelc in 10.37 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:14.056] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:14.068] [INFO] [FluidAudio.DownloadUtils] Compiled model Jointerv2.mlmodelc in 11.42 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:14.068] [INFO] [FluidAudio.AsrModels] Loaded Jointerv2.mlmodelc
+[13:49:14.070] [INFO] [FluidAudio.AsrModels] Loaded vocabulary with 3072 tokens from /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja/vocab.json
+[13:49:14.070] [INFO] [FluidAudio.AsrModels] Successfully loaded all ASR models with optimized compute units
+[13:49:14.071] [DEBUG] [FluidAudio.ChunkProcessor] ChunkProcessor using worker pool of size 4
+[13:49:14.310] [INFO] [FluidAudio.ASR] AsrManager resources cleaned up
+[13:49:14.430] [INFO] [FluidAudio.AsrModels] Downloading ASR models to: /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja
+[13:49:14.430] [INFO] [FluidAudio.AsrModels] ASR models already present at: /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja
+[13:49:14.430] [INFO] [FluidAudio.AsrModels] Loading ASR models from: /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja
+[13:49:14.430] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:14.440] [INFO] [FluidAudio.DownloadUtils] Compiled model Preprocessor.mlmodelc in 9.75 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:14.440] [INFO] [FluidAudio.AsrModels] Loaded Preprocessor.mlmodelc with compute units: cpuOnly
+[13:49:14.440] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:14.533] [INFO] [FluidAudio.DownloadUtils] Compiled model Encoder.mlmodelc in 93.40 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:14.533] [INFO] [FluidAudio.AsrModels] Loaded Encoder.mlmodelc with compute units: cpuAndNeuralEngine
+[13:49:14.533] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:14.542] [INFO] [FluidAudio.DownloadUtils] Compiled model Decoderv2.mlmodelc in 9.01 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:14.542] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed
+[13:49:14.553] [INFO] [FluidAudio.DownloadUtils] Compiled model Jointerv2.mlmodelc in 10.27 ms :: macOS Version 26.5.2 (assemblage 25F84), arch=arm64, chip=Apple M5 Pro, cores=15/15, mem=24 Go, rosetta=false
+[13:49:14.553] [INFO] [FluidAudio.AsrModels] Loaded Jointerv2.mlmodelc
+[13:49:14.554] [INFO] [FluidAudio.AsrModels] Loaded vocabulary with 3072 tokens from /Users/maz/Library/Application Support/FluidAudio/Models/parakeet-ja/vocab.json
+[13:49:14.554] [INFO] [FluidAudio.AsrModels] Successfully loaded all ASR models with optimized compute units
+[13:49:14.555] [DEBUG] [FluidAudio.ChunkProcessor] ChunkProcessor using worker pool of size 4
+[13:49:14.559] [INFO] [FluidAudio.ASR] AsrManager resources cleaned up
+Test Case '-[WhisperASRTests.HighQualityJobTests testRealOfflineBackendFunctionalGateWhenOptedIn]' passed (31.917 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-10 13:49:38.727.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.917 (31.917) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-10 13:49:38.727.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.917 (31.917) seconds
+Test Suite 'Selected tests' passed at 2026-08-10 13:49:38.727.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.917 (31.918) seconds
+Found 1 safetensor files
+Loading: model.safetensors
+Applied weights to audio encoder (24 layers, 397 tensors)
+Applied weights to text decoder (28 layers, 704 tensors)
+Found 1 safetensor files
+Loading: model.safetensors
+Applied weights to audio encoder (24 layers, 397 tensors)
+Applied weights to text decoder (28 layers, 704 tensors)
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "decision": "holdout-authorized",
+  "chronology": "This development report and these exact scorer/runner hashes authorized the holdout before its automatic job ran.",
+  "developmentReportPath": "docs/japanese-live/experiments/evidence/E17/pre-holdout-report.json",
+  "developmentReportSHA256": "325cc263c984e25ecf83b502f2111a67d03f8a9242ea25c62dd9d6fa48320561",
+  "scoringImplementationSHA256": {
+    "Scripts/report_speaker_count.py": "fa28bf85cc0ee703b48fe0bc53b7c80fbb754128e39be478daa6004fdf23ffd8",
+    "Scripts/report_exclusive_reconciliation.py": "27f48e58b46a888469fac712369a1580f64c522474e62778adf5e3a25c8fde66"
+  },
+  "runnerSHA256": "014abf4afc249585c3cdb4fea707959ae210bff7cba591e14ed8259119542073",
+  "currentReportPath": "docs/japanese-live/experiments/evidence/E17/report.json"
+}

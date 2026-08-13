@@ -1,0 +1,130 @@
+{
+  "asrWorker" : {
+    "backend" : "reazonspeech-k2-v2-int8",
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-11T23:16:31Z",
+          "availableMemoryBytes" : 10936762368
+        },
+        {
+          "at" : "2026-08-11T23:16:31Z",
+          "availableMemoryBytes" : 10937040896
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/06b7\/whisperASR\/.build\/benchmarks\/reazonspeech-k2-v2-89\/sherpa-onnx-1.13.4\/bin\/python",
+        "\/Users\/maz\/.codex\/worktrees\/06b7\/whisperASR\/Scripts\/reazon_asr_worker.py",
+        "reazonspeech-k2-v2-int8",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-reazonspeech-k2-v2-int8-33080860-E4AA-40AA-8D39-89E9D4350228"
+      ],
+      "elapsedSeconds" : 0.10191500186920166,
+      "exitStatus" : 1,
+      "exitedAt" : "2026-08-11T23:16:31Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 229448,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 42209,
+      "rawLog" : "",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-reazonspeech-k2-v2-int8-33080860-E4AA-40AA-8D39-89E9D4350228\/worker.log",
+      "startedAt" : "2026-08-11T23:16:31Z",
+      "swapUsedAfterBytes" : 1909653504,
+      "swapUsedBeforeBytes" : 1909653504,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "reazonspeech-k2-v2-int8",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2",
+      "revision" : "291488c8151be24d7da4bf7af26e533fad96e407",
+      "runtimeVersion" : "sherpa-onnx 1.13.4"
+    }
+  },
+  "deliverables" : [
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "export"
+  ],
+  "failures" : [
+    {
+      "message" : "Japanese ASR failed: ModuleNotFoundError: No module named 'numpy'",
+      "stage" : "model-preparation"
+    }
+  ],
+  "finishedAt" : "2026-08-11T23:16:31Z",
+  "generatedFiles" : [
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "0EC354F8-8952-4DD4-B11A-5867CD51DF7B",
+  "model" : {
+    "backend" : "reazonspeech-k2-v2-int8",
+    "modelID" : "reazon-research\/reazonspeech-k2-v2",
+    "revision" : "291488c8151be24d7da4bf7af26e533fad96e407",
+    "runtimeVersion" : "sherpa-onnx 1.13.4"
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-11T23:16:31Z",
+      "backend" : "reazonspeech-k2-v2-int8",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=1073741824 reserve=0 total=25769803776 available=10936172544 baseline=23970656",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:16:31Z",
+      "backend" : "reazonspeech-k2-v2-int8",
+      "kind" : "load-started",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:16:31Z",
+      "kind" : "unload-completed",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    },
+    {
+      "at" : "2026-08-11T23:16:31Z",
+      "kind" : "memory-release-checked",
+      "message" : "memory=24167288 runtimePeak=24085368 minimumAvailable=10936172544 maximum=25769803776 reserve=0",
+      "modelID" : "reazon-research\/reazonspeech-k2-v2"
+    }
+  ],
+  "peakMemoryBytes" : 24167288,
+  "schemaVersion" : 2,
+  "selectedBackend" : "reazonspeech-k2-v2-int8",
+  "source" : {
+    "byteCount" : 640078,
+    "fileName" : "smoke-20s.wav",
+    "modifiedAt" : "2026-08-11T23:16:30Z",
+    "path" : "\/Users\/maz\/.codex\/worktrees\/06b7\/whisperASR\/.build\/benchmarks\/reazonspeech-k2-v2-89\/smoke-20s.wav"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : false,
+  "stageDurations" : [
+    "preparing-asr",
+    0.13620805740356445,
+    "normalizing-source",
+    0.08008897304534912
+  ],
+  "startedAt" : "2026-08-11T23:16:31Z",
+  "status" : "failed"
+}

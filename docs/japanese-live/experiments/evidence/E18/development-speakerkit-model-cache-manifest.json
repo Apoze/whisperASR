@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "root": ".build/benchmarks/fluid-audio-offline/speakerkit-model-cache",
+  "files": [
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/analytics/coremldata.bin.metadata",
+      "size": 124,
+      "sha256": "8cb7fb6b2e8ba1a465cc0e121e922a9ab16f1b3c08177208c4489cb1bf56d84d"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/coremldata.bin.metadata",
+      "size": 124,
+      "sha256": "a53bd3182af1e41b2e5c52a6b0235e7e391e7047818c17f20561f379a657c783"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/metadata.json.metadata",
+      "size": 100,
+      "sha256": "f20d1d40298416d4087b0abb3ebd5a7664a427f3dc4965a2ec40997d20e93ba0"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/model.mil.metadata",
+      "size": 100,
+      "sha256": "7b25e5d498f90b7ea0479829649338c176df1d93a79f5f52032efa6e215445a3"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/weights/weight.bin.metadata",
+      "size": 124,
+      "sha256": "d97dca17ee79e151242f302c199b31d0288365d25401e9da044034fd453303b7"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_clusterer/pyannote-v4/W32A32/README.txt.metadata",
+      "size": 100,
+      "sha256": "b81643a073bf849d9a4f9b40c099651939117251b913beed882e0d418b07a799"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/README.txt.metadata",
+      "size": 101,
+      "sha256": "365076e7fc35bcef3be43519ac5f43427fa3c94ee889cdaa1c24434ba7dbda3e"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/analytics/coremldata.bin.metadata",
+      "size": 125,
+      "sha256": "c1d5748371e1f1818c4c1d70623f70a77787ccd8abb0721f6a5d3f05892c4251"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/coremldata.bin.metadata",
+      "size": 124,
+      "sha256": "c5c6c5d235cb3a57330796c62a7c379d833afc85401ed71657b0a8902390c221"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/metadata.json.metadata",
+      "size": 100,
+      "sha256": "27ec13a69fa3ce6256f4b917aef9f0b37eff418ba3a9f767b7eeddd003179e25"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/model.mil.metadata",
+      "size": 99,
+      "sha256": "59dd222b75cb85d7c364e212d5e0a6549d72a74e6e436471c3506bf762f4c166"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/weights/weight.bin.metadata",
+      "size": 124,
+      "sha256": "42e8fff973a095c222779ee9633100536c7717a6946dc3f507ddcaf92e48b690"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/analytics/coremldata.bin.metadata",
+      "size": 125,
+      "sha256": "8cd3459aa7b749950a1b3b508288a390e87f251d6abd872ae788717bdf594e48"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/coremldata.bin.metadata",
+      "size": 124,
+      "sha256": "918ef9ecd3b3687d714e151ed9860a29fe9ec06a6346a9ae5d3a619085d283e2"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/metadata.json.metadata",
+      "size": 100,
+      "sha256": "674dc690731feaf202e780d201862b5687f6ac99a683b950b7f72fb11ec00ec4"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/model.mil.metadata",
+      "size": 100,
+      "sha256": "6a69cf66c8529169d219c7c889e8b3fb25b858dc5b84bb9ba3f7870f7023b99c"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/weights/weight.bin.metadata",
+      "size": 124,
+      "sha256": "9cb80cdf5dcea263967f0041b18737566e17aa4cda66fbf8eedf68f314d1980b"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_segmenter/pyannote-v3/W8A16/README.txt.metadata",
+      "size": 100,
+      "sha256": "dba07f7f77fb82c2a2c607743a8f11b4203a8f1782f4abb014bebc5d460618b5"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/analytics/coremldata.bin.metadata",
+      "size": 124,
+      "sha256": "1b4a560255ab6ccb231a6cfd957c282add7730490b49b319e9177847c40c53a3"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/coremldata.bin.metadata",
+      "size": 124,
+      "sha256": "e1c0feaa5f3ad4cacd9741f04c5515d97a004ddb24031ca3032f10dd87454c58"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/metadata.json.metadata",
+      "size": 100,
+      "sha256": "1bb2a6f863044cff1214f906bd4a215d2b7ea26a298249b8b96f5e415f977d9b"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/model.mil.metadata",
+      "size": 101,
+      "sha256": "f25ed5150ae405bffa6c87004f9159d3658b4ed7997b0ff7894b115719bccf78"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/.cache/huggingface/download/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/weights/weight.bin.metadata",
+      "size": 125,
+      "sha256": "10d7889f61559565b9b4e89a338fadc893624c1a7d6332eaa5160c50213a627d"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/analytics/coremldata.bin",
+      "size": 243,
+      "sha256": "3e13c8f4df77ea27cbbcdd6d083c63f5e7b3f32566cc5bf223fab92d40b81b8b"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/coremldata.bin",
+      "size": 327,
+      "sha256": "6f6820ccf221d4cc7c107101d0ae4d716eb224e4fdffaf8f7ca36af70ae64c40"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/metadata.json",
+      "size": 1766,
+      "sha256": "acc86b4a4f542d8e7eaf84fc290fe72bd8629b0ffcc16e5b1a9e13d777abd9d8"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/model.mil",
+      "size": 8128,
+      "sha256": "209e641bf4d9c3868c9dc43ab8705094997917eb2df5f5d8c8fda09fed54b1d4"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_clusterer/pyannote-v4/W32A32/PldaProjector.mlmodelc/weights/weight.bin",
+      "size": 199040,
+      "sha256": "a1dbbb651a0a67fcfe5334672f459df090fa960917a6ee3a5423245a7ab92ced"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_clusterer/pyannote-v4/W32A32/README.txt",
+      "size": 98,
+      "sha256": "1714fe351f449b3e0d54f9b5be5219d4168fa2a56e1ab2cae509d5c38a7af915"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/README.txt",
+      "size": 122,
+      "sha256": "c6ac9e9755ca881df5d0493e425a1841b398f7efdfa8c5a5175914587ee45310"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/analytics/coremldata.bin",
+      "size": 243,
+      "sha256": "ba8405dfc9b9348ade705e052888b4bdc7fb8d079ef3ff71108a5f692d0209f2"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/coremldata.bin",
+      "size": 370,
+      "sha256": "1597d6c037ac52436b5c2e1abc47e6c68483c19eeac75267dfb8795a78ec07c5"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/metadata.json",
+      "size": 2367,
+      "sha256": "29ea3421161c8344f6ea95db9b472217638a869f686f2494d10e5d11f11f4cda"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/model.mil",
+      "size": 451487,
+      "sha256": "5eee9f6aa380aef88fee604d75c5deaa23adc83c9480cb8f6dedc72803973e77"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedder.mlmodelc/weights/weight.bin",
+      "size": 6661888,
+      "sha256": "a02861969f47cf3a67e3b0d276e54b3c8bc3a6e43d40d77d1cccbd57da0e5795"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/analytics/coremldata.bin",
+      "size": 243,
+      "sha256": "ce9bef9fb3125a5401300b5c5998c5d8f211094692cae780645d3e2757410f2c"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/coremldata.bin",
+      "size": 330,
+      "sha256": "b4ebd0b9ce5a84768672663aff426eb19f9648d4b9f74286f0e19fc753ad76ba"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/metadata.json",
+      "size": 1979,
+      "sha256": "789f81c17dc04d469611d253684e534565fb4a008e54c722b925f1608bf87fce"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/model.mil",
+      "size": 14224,
+      "sha256": "42e552ebd7efb12ea813eceb474018dd0f46168e84ad3a1c54945bfc47be7a82"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_embedder/pyannote-v3/W8A16/SpeakerEmbedderPreprocessor.mlmodelc/weights/weight.bin",
+      "size": 2181696,
+      "sha256": "5f2c284bd22f1f7ab76901c1c6e57f82d4ebbf057fa0b924aad057f124f77a89"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_segmenter/pyannote-v3/W8A16/README.txt",
+      "size": 105,
+      "sha256": "b84da4b3cdd7619435f45833d88cad15530a93fb99ef56ee6c4786d7f4664016"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/analytics/coremldata.bin",
+      "size": 243,
+      "sha256": "40637aa0cb2a073bc303c7ca9ee79da35fa81d2cad1ead180e93b134005b95de"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/coremldata.bin",
+      "size": 497,
+      "sha256": "6c356ed983b2a3332ce51299ca0f9747a35cb6c2a67b0ac24c69dbef3f989634"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/metadata.json",
+      "size": 3757,
+      "sha256": "2fd6aaf6beb17b3758f5d0c5b2cf5feeacb0cc0c9267dbcd7536b247b1a5860e"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/model.mil",
+      "size": 193092,
+      "sha256": "423c358915acab0d440c99f5162c17456936c2c02f7394b05ab226b9a34c122a"
+    },
+    {
+      "path": "models/argmaxinc/speakerkit-coreml/speaker_segmenter/pyannote-v3/W8A16/SpeakerSegmenter.mlmodelc/weights/weight.bin",
+      "size": 1520986,
+      "sha256": "75ff1725ef4e58dacf9176466ec274a8a13a6132c296d6b571fb78ddad5455c4"
+    }
+  ]
+}
