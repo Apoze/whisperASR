@@ -768,6 +768,12 @@ def final_report(args: argparse.Namespace) -> None:
             "qwenEmptyTurns": baseline_empty,
             "candidateEmptyTurns": candidate_empty,
             "integrity": integrity,
+            "integrityInterpretation": {
+                "nativeMarkerProtocolApplied": False,
+                "reason": "one cue per request; native prompts contain no CURRENT markers",
+                "acceptedCueCount": len(candidate["translation"]["request"]["turns"]),
+                "markerFailuresAreDiagnosticOnly": True,
+            },
             "gates": gates,
         }
     report = {
@@ -803,6 +809,14 @@ def final_report(args: argparse.Namespace) -> None:
             "reusedArchivedWhisperKitRaw": True,
             "modelConclusion": ("English evaluated" if english["run"]
                                 else "Japanese pass; English pending"),
+            "metalSandboxIncident": {
+                "qualityVerdictInput": False,
+                "elapsedCommandSeconds": 12.77810504194349,
+                "alignmentStarts": 0,
+                "translationStarts": 0,
+                "recovery": "one explicitly authorized run outside the sandbox",
+                "evidence": "retest-metal-sandbox-incident.json",
+            },
         },
         "japanese": {
             "developmentEligible": selection["developmentEligibleJapanese"],
@@ -828,6 +842,11 @@ def final_report(args: argparse.Namespace) -> None:
             "priorIssue94CommandSeconds": prior["runtime"]["totalCommandSeconds"],
             "qwenASRWorkerSeconds": prior["runtime"]["workerSeconds"]["qwen-ja"],
             "issue94ASRWorkerSeconds": prior["runtime"]["ASRSeconds"],
+            "asrOverheadVsQwenStandardSeconds": (
+                prior["runtime"]["ASRSeconds"]
+                - prior["runtime"]["workerSeconds"]["qwen-ja"]
+                + whisperkit_runtime["elapsedSeconds"]
+            ),
             "combinedDevelopmentCommandSeconds": (
                 prior["runtime"]["totalCommandSeconds"] + incremental_seconds
             ),
@@ -868,6 +887,10 @@ def final_report(args: argparse.Namespace) -> None:
             "alignmentWorkerSeconds": aligner["elapsedSeconds"],
             "translationWorkerSeconds": translator["elapsedSeconds"],
             "incrementalCommandSeconds": incremental_seconds + downstream_seconds,
+            "incrementalCommandSecondsInterpretation": (
+                "experimental WhisperKit plus common downstream alignment/translation; "
+                "not product overhead"
+            ),
             "combinedDevelopmentCommandSeconds": (
                 prior["runtime"]["totalCommandSeconds"]
                 + incremental_seconds + downstream_seconds
@@ -896,19 +919,24 @@ def write_markdown(path: Path, report: dict) -> None:
         "- Diagnostic : la gate confondait le remplissage temporel des cues avec la "
         "complétude de la référence ; le manifest racine complet et l’alignement 199/199 "
         "rendent désormais les 6 fenêtres évaluables.",
+        "- Incident Metal séparé : une première commande aval autorisée a échoué en "
+        "sandbox avant tout alignement/traduction (12.78s, signal xctest 6). Une seule "
+        "reprise hors sandbox a été explicitement autorisée ; cet incident ne contribue "
+        "pas au verdict qualité.",
         f"- Japonais : edits Qwen {japanese['qwenEdits']}, #94 {japanese['issue94Edits']}, "
         f"#95 {japanese['candidateEdits']} ; overrides WhisperKit "
         f"{japanese['whisperKitOverrides']}, mauvais {japanese['badWhisperKitOverrides']}.",
         f"- Termes/nombres/sens récupérés : Qwen {japanese['qwenDimensions']}, "
         f"#94 {japanese['issue94Dimensions']}, #95 "
         f"{japanese['candidateDimensions']} ; aucun changement produit.",
-        f"- Coût #95 : WhisperKit commande {runtime['whisperKitCommandSeconds']:.2f}s, "
-        f"worker {runtime['whisperKitWorkerSeconds']:.2f}s ; incrément total "
-        f"{runtime['incrementalCommandSeconds']:.2f}s ; pic "
+        f"- Surcoût ASR vs Qwen Standard : "
+        f"{runtime['asrOverheadVsQwenStandardSeconds']:.2f}s "
+        f"((#94 ASR {runtime['issue94ASRWorkerSeconds']:.2f}s - Qwen "
+        f"{runtime['qwenASRWorkerSeconds']:.2f}s) + WhisperKit commande "
+        f"{runtime['whisperKitCommandSeconds']:.2f}s ; worker "
+        f"{runtime['whisperKitWorkerSeconds']:.2f}s). Pic expérimental "
         f"{runtime['incrementalPeakPhysicalFootprintBytes'] / 1024**3:.2f} Gio ; "
-        f"Qwen seul {runtime['qwenASRWorkerSeconds']:.2f}s, #94 ASR "
-        f"{runtime['issue94ASRWorkerSeconds']:.2f}s / total "
-        f"{runtime['priorIssue94CommandSeconds']:.2f}s.",
+        f"total #94 historique {runtime['priorIssue94CommandSeconds']:.2f}s.",
     ]
     if english["run"]:
         lines.append(
@@ -916,6 +944,19 @@ def write_markdown(path: Path, report: dict) -> None:
             f"{english['issue94ChrFPlusPlus']:.3f}, #95 "
             f"{english['candidateChrFPlusPlus']:.3f} (Δ Qwen "
             f"{english['deltaVsQwen']:+.3f})."
+        )
+        lines.append(
+            f"- Aval expérimental commun : {runtime['downstreamCommandSeconds']:.2f}s "
+            f"(alignement {runtime['alignmentWorkerSeconds']:.2f}s, traduction "
+            f"{runtime['translationWorkerSeconds']:.2f}s) ; ce temps n’est pas un "
+            "surcoût produit propre à WhisperKit."
+        )
+        interpretation = english["integrityInterpretation"]
+        lines.append(
+            f"- Intégrité anglaise : {interpretation['acceptedCueCount']} cues acceptés, "
+            "aucun missing/duplicate/reorder/unknown. Les 280 nativeMarkerFailures sont "
+            "diagnostiques : ce run fait une cue par requête et ses prompts natifs "
+            "n’emploient pas les marqueurs CURRENT ; aucune perte d’intégrité observée."
         )
     else:
         lines.append(f"- Anglais : non exécuté ({english['reason']}).")

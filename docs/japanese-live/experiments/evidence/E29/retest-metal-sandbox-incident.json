@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "ticket": 95,
+  "classification": "metal-unavailable-in-sandbox",
+  "qualityVerdictInput": false,
+  "cause": "The first authorized downstream command ran where MLX could not enumerate a Metal device and xctest terminated with signal 6.",
+  "recoveryAuthorization": "The parent granted one final run outside the sandbox; no model result from this incident was reused.",
+  "effect": {
+    "elapsedCommandSeconds": 12.77810504194349,
+    "exitCode": 1,
+    "alignmentStarts": 0,
+    "alignmentPasses": 0,
+    "translationStarts": 0,
+    "translationPasses": 0,
+    "completedOutput": false,
+    "holdoutOpened": false
+  },
+  "evidenceSHA256": {
+    "state": "34b2a2d324c4532208dcfdd78b22ed6825bce476c6323c49d0a3ba0dd305cb34",
+    "runtime": "5531aaa5c6e176c97ac9371201493e647bb6d01faa94e2fce2c22434dbb7f65c",
+    "logGzip": "a1c1e20a11b01048f5451b18f9e71fc7956290f7046e8afe08ae51a003a8f5ad"
+  }
+}
