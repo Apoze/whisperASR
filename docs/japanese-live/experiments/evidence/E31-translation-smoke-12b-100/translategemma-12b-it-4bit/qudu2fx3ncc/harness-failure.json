@@ -1,0 +1,9 @@
+{
+  "ticket": 106,
+  "status": "failed",
+  "route": "translation-smoke",
+  "detail": "Translation worker raw artifact missing: request-1.json",
+  "translator": "translategemma-12b-it-4bit",
+  "corpusID": "qudu2fx3ncc",
+  "modelVerdictAssigned": false
+}

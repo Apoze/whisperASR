@@ -487,6 +487,9 @@ verify_safe_12b_translation_smoke() {
   jq -e '.resident == false and .unloadVerified == true
     and .nativePressureLevel == "normal"' \
     "$directory/cleanup.json" >/dev/null || die "12B smoke cleanup gate failed"
+  for file in ready.json request-1.json response-1.json shutdown worker.log; do
+    [[ -f "$directory/worker-raw/$file" ]] || die "12B smoke raw worker evidence missing: $file"
+  done
 }
 
 run_job() {
@@ -590,57 +593,63 @@ record_translation_replay_cleanup() {
 }
 
 capture_translation_worker_raw() {
-  local marker="$1" destination="$2" ready worker file
-  ready="$(find "${TMPDIR:-/tmp}" -maxdepth 2 -type f -name ready.json \
-    -path '*/WhisperASR-TranslateGemma-*/*' -newer "$marker" -print 2>/dev/null \
-    | sort | tail -n 1)"
-  [[ -n "$ready" ]] || return 0
-  worker="$(dirname "$ready")"
+  local worker="$1" destination="$2" file
   mkdir -p "$destination"
   while IFS= read -r file; do cp "$file" "$destination/"; done \
     < <(find "$worker" -maxdepth 1 -type f -print | sort)
+  for file in ready.json request-1.json response-1.json shutdown worker.log; do
+    [[ -f "$destination/$file" ]] || die "Translation worker raw artifact missing: $file"
+  done
 }
 
 run_translation_smoke() {
   local translator=translategemma-12b-it-4bit corpus=qudu2fx3ncc
   local directory="$ARTIFACTS/$translator/$corpus" output="$ARTIFACTS/$translator/$corpus/smoke.json"
   local log="$directory/run.log" ready="$directory/translation-loaded"
-  local marker="$directory/job-started" watcher status=0 pid
+  local marker="$directory/job-started" watcher status=0 pid recovered=false
   CURRENT_TRANSLATOR="$translator"; CURRENT_CORPUS="$corpus"; PHASE=translation-smoke
   mkdir -p "$directory"
-  [[ ! -e "$output" ]] || die "Completed or partial smoke already exists; preserve it and choose a new artifact root"
-  write_metadata "$translator" "$corpus"
-  jq --arg mode "$MODE" --argjson cueLimit 100 \
-    --arg request "$SMOKE_12B_REQUEST" --arg requestHash "$SMOKE_12B_REQUEST_SHA256" \
-    '. + {runMode:$mode,cueLimit:$cueLimit,fullIntegratedRun:false,ticket106Concluded:false,
-      frozenTranslationRequestPath:$request,frozenTranslationRequestSHA256:$requestHash}' \
-    "$directory/run-meta.json" >"$directory/run-meta.updated.json"
-  mv "$directory/run-meta.updated.json" "$directory/run-meta.json"
-  touch "$marker"
-  (
-    trap - ERR
-    while [[ ! -f "$ready" ]]; do
-      translation_worker_ready_since "$marker" && { touch "$ready"; break; }
-      sleep 1
-    done
-  ) & watcher="$!"
-  WARNING_CLEANUP_RETRY_ENABLED=true
-  if run_guarded "$directory/safety.json" "$log" 900 "$ready" env \
-    WHISPERASR_RUN_DIRECT_TRANSLATION_EXPERIMENT=1 \
-    WHISPERASR_DIRECT_TRANSLATION_EVIDENCE="$ARTIFACTS/frozen/$corpus-raw-asr.json" \
-    WHISPERASR_DIRECT_TRANSLATION_REQUEST="$SMOKE_12B_REQUEST" \
-    WHISPERASR_DIRECT_TRANSLATION_OUTPUT="$output" \
-    WHISPERASR_DIRECT_TRANSLATION_CUE_LIMIT=100 \
-    xcrun swift test --skip-build \
-      --filter HighQualityLocalTranslationTests/testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn; then
-    status=0
+  if [[ -e "$output" ]]; then
+    jq -e '.stopReason == "completed" and .exitStatus == 0' \
+      "$directory/safety.json" >/dev/null \
+      || die "Existing 12B smoke is partial or unsafe; preserve it"
+    recovered=true
+    echo "Recovering completed 12B smoke post-processing without rerunning the model"
   else
-    status="$?"
+    write_metadata "$translator" "$corpus"
+    jq --arg mode "$MODE" --argjson cueLimit 100 \
+      --arg request "$SMOKE_12B_REQUEST" --arg requestHash "$SMOKE_12B_REQUEST_SHA256" \
+      '. + {runMode:$mode,cueLimit:$cueLimit,fullIntegratedRun:false,ticket106Concluded:false,
+        frozenTranslationRequestPath:$request,frozenTranslationRequestSHA256:$requestHash}' \
+      "$directory/run-meta.json" >"$directory/run-meta.updated.json"
+    mv "$directory/run-meta.updated.json" "$directory/run-meta.json"
+    touch "$marker"
+    (
+      trap - ERR
+      while [[ ! -f "$ready" ]]; do
+        translation_worker_ready_since "$marker" && { touch "$ready"; break; }
+        sleep 1
+      done
+    ) & watcher="$!"
+    WARNING_CLEANUP_RETRY_ENABLED=true
+    if run_guarded "$directory/safety.json" "$log" 900 "$ready" env \
+      WHISPERASR_RUN_DIRECT_TRANSLATION_EXPERIMENT=1 \
+      WHISPERASR_DIRECT_TRANSLATION_EVIDENCE="$ARTIFACTS/frozen/$corpus-raw-asr.json" \
+      WHISPERASR_DIRECT_TRANSLATION_REQUEST="$SMOKE_12B_REQUEST" \
+      WHISPERASR_DIRECT_TRANSLATION_OUTPUT="$output" \
+      WHISPERASR_DIRECT_TRANSLATION_CUE_LIMIT=100 \
+      xcrun swift test --skip-build \
+        --filter HighQualityLocalTranslationTests/testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn; then
+      status=0
+    else
+      status="$?"
+    fi
+    WARNING_CLEANUP_RETRY_ENABLED=false
+    kill "$watcher" 2>/dev/null || true
+    wait "$watcher" 2>/dev/null || true
   fi
-  WARNING_CLEANUP_RETRY_ENABLED=false
-  kill "$watcher" 2>/dev/null || true
-  wait "$watcher" 2>/dev/null || true
-  capture_translation_worker_raw "$marker" "$directory/worker-raw"
+  capture_translation_worker_raw \
+    "$(dirname "$(jq -er .worker.rawLogPath "$output")")" "$directory/worker-raw"
   find "$ARTIFACTS" -type f ! -name sha256.tsv -print0 | sort -z | \
     xargs -0 shasum -a 256 >"$ARTIFACTS/sha256.tsv"
   cat "$log"
@@ -669,11 +678,14 @@ run_translation_smoke() {
     --arg safety "$(sha256 "$directory/safety.json")" \
     --arg samples "$(sha256 "$directory/safety.samples.jsonl")" \
     --arg cleanup "$(sha256 "$directory/cleanup.json")" \
+    --argjson recovered "$recovered" --argjson implementation "$(implementation_hashes)" \
     --argjson memory "$(jq '{elapsedSeconds,peakResidentBytes,peakPhysicalFootprintBytes,
       minimumFreeMemoryPercent,nativePressureLevels,peakSwapDeltaBytes,stopReason,
       warningRecoveryGuard,systemBefore,systemAfter}' "$directory/safety.json")" \
     '{ticket:106,runMode:$mode,status:"completed",cueCount:100,
       freshProcessPerRun:true,modelQualityVerdictAssigned:false,ticket106Concluded:false,
+      harnessRecovery:(if $recovered then {reason:"raw worker capture find returned nonzero after the completed model run",modelWasNotRerun:true,
+        postProcessorImplementationSHA256:$implementation} else null end),
       memory:$memory,sha256:{"smoke.json":$output,"safety.json":$safety,
         "safety.samples.jsonl":$samples,"cleanup.json":$cleanup}}' \
     >"$ARTIFACTS/smoke-report.json"
@@ -918,6 +930,11 @@ preflight() {
   local tool command duration memory order smoke_request_hash=""
   PHASE=preflight; CURRENT_TRANSLATOR=""; CURRENT_CORPUS=""
   mkdir -p "$ARTIFACTS" "$ARTIFACTS/controls"
+  if [[ "$MODE" == TRANSLATION_SMOKE_12B_100 && -f "$ARTIFACTS/failure.json" \
+      && -f "$ARTIFACTS/translategemma-12b-it-4bit/qudu2fx3ncc/smoke.json" ]]; then
+    cp "$ARTIFACTS/failure.json" \
+      "$ARTIFACTS/translategemma-12b-it-4bit/qudu2fx3ncc/harness-failure.json"
+  fi
   rm -f "$ARTIFACTS/benchmark-ready.json" "$ARTIFACTS/failure.json"
   for tool in jq ffmpeg shasum xcrun python3 pgrep footprint memory_pressure vm_stat; do
     command -v "$tool" >/dev/null || die "Missing tool: $tool"
