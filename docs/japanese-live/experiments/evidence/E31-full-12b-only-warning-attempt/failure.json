@@ -1,0 +1,9 @@
+{
+  "ticket": 106,
+  "status": "failed",
+  "route": "run",
+  "detail": "Safety stop: native-pressure-warning-persisted",
+  "translator": "translategemma-12b-it-4bit",
+  "corpusID": "md62mmdz0m",
+  "modelVerdictAssigned": false
+}

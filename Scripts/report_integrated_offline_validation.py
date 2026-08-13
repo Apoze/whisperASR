@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
+import tempfile
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -25,11 +27,48 @@ from report_local_translator_bakeoff import (
 )
 
 CORPORA = ("qudu2fx3ncc", "md62mmdz0m")
+EXPORTS = ("japanese-transcript.txt", "english-translation-transcript.txt",
+           "english-subtitles.srt", "english-subtitles.vtt")
 ROLES = {CORPORA[0]: "development", CORPORA[1]: "holdout"}
 BASELINE = Path("docs/japanese-live/experiments/evidence/E22")
 PRESSURE_ATTEMPT = Path(
     "docs/japanese-live/experiments/evidence/E31-12b-pressure-attempt/report.json"
 )
+
+
+def verify_sha256_manifest(path: Path) -> None:
+    rows = [line.split("  ", 1) for line in path.read_text(encoding="utf-8").splitlines()]
+    assert rows and all(len(row) == 2 for row in rows)
+    assert all(sha256(Path(target) if Path(target).is_absolute() else path.parent / target)
+               == expected for expected, target in rows)
+
+
+def current_12b_jobs_complete(rows: list[dict]) -> bool:
+    return len(rows) == len(CORPORA) and all(
+        row["productStatus"] == "completed" and row["resultRoute"] == "completed"
+        and set(row["exportsSHA256"]) == set(EXPORTS) for row in rows
+    )
+
+
+def integrated_campaign_complete(jobs_complete: bool, gates: dict[str, bool]) -> bool:
+    return jobs_complete and all(gates.values())
+
+
+def reused_4b_replay(root: Path) -> tuple[dict | None, list[dict]]:
+    reuse_path = root / "4b-replay-reuse.json"
+    if not reuse_path.exists():
+        return None, []
+    reuse = read(reuse_path)
+    report_path = Path(reuse["report"]["path"])
+    manifest_path = Path(reuse["evidence"]["path"]) / "sha256.tsv"
+    assert reuse["audited"] is True and reuse["modelWeightsAccessed"] is False
+    assert sha256(report_path) == reuse["report"]["sha256"]
+    assert sha256(manifest_path) == reuse["evidence"]["manifestSHA256"]
+    verify_sha256_manifest(manifest_path)
+    report = read(report_path)
+    assert report["workflowAuditable"] is True
+    assert report["runMode"] == "TRANSLATION_ONLY_4B"
+    return reuse, report["rows"]
 
 
 def read(path: Path) -> dict:
@@ -51,6 +90,37 @@ def job_directory(root: Path, candidate: str, corpus: str) -> Path:
     manifests = list((root / candidate / corpus / "jobs").glob("*/manifest.json"))
     assert len(manifests) == 1, (candidate, corpus, manifests)
     return manifests[0].parent
+
+
+def verified_video1_resume(root: Path, corpus: str, job: Path, run_meta: Path) -> dict | None:
+    path = root / "resume-video1-reuse.json"
+    if corpus != CORPORA[0] or not path.exists():
+        return None
+    reuse = read(path)
+    retained_root = Path(reuse["retainedEvidence"]["path"])
+    retained = retained_root / "video1"
+    manifest = retained_root / "sha256.tsv"
+    assert reuse["reusedCompletedVideo1"] is True
+    assert reuse["modelExecutionAndOutputsUnchanged"] is True
+    assert sha256(manifest) == reuse["retainedEvidence"]["manifestSHA256"]
+    verify_sha256_manifest(manifest)
+    source = reuse["sourceSHA256"]
+    current = root / CANDIDATES[0] / corpus
+    assert sha256(run_meta) == source["runMetadata"] == sha256(retained / "run-meta.json")
+    assert sha256(current / "safety.json") == source["safety"] \
+        == sha256(retained / "safety.json")
+    assert sha256(current / "cleanup.json") == source["cleanup"] \
+        == sha256(retained / "cleanup.json")
+    assert sha256(job / "manifest.json") == source["manifest"] \
+        == sha256(retained / "manifest.json")
+    with gzip.open(retained / "raw-asr.json.gz", "rb") as stream:
+        retained_raw = hashlib.sha256(stream.read()).hexdigest()
+    assert sha256(job / "raw-asr.json") == source["rawEvidence"] == retained_raw
+    assert all(sha256(job / name) == digest == sha256(retained / name)
+               for name, digest in source["exports"].items())
+    historical_runtime = read(retained / "run-meta.json")["runtimeSHA256"]
+    assert historical_runtime == read(retained.parent / "benchmark-ready.json")["runtimeSHA256"]
+    return {**reuse, "runtimeProvenanceVerified": True}
 
 
 def wall_duration(manifest: dict) -> float:
@@ -216,21 +286,28 @@ def score_row(root: Path, candidate: str, corpus: str) -> tuple[dict, list[dict]
         and all(Path(item["locator"]).is_file()
                 and sha256(Path(item["locator"])) == item["sha256"]
                 for item in run_meta.get("localReferences", []))
+    resume = verified_video1_resume(
+        root, corpus, job, root / candidate / corpus / "run-meta.json"
+    )
     recovery = run_meta.get("harnessRecovery") or {}
     implementation = (recovery.get("validatorImplementationSHA256", {})
                       if recovery.get("runtimeImplementationUnchanged") is True
                       else run_meta.get("implementationSHA256", {}))
     implementation = {**implementation,
                       **(run_meta.get("reportRecovery") or {}).get("implementationSHA256", {})}
+    if resume:
+        implementation = resume["resumeImplementationSHA256"]
     implementation_match = bool(implementation) and all(
         Path(path).is_file() and sha256(Path(path)) == digest
         for path, digest in implementation.items()
     )
     runtime_provenance = run_meta.get("runtimeSHA256") or {}
-    runtime_match = runtime_provenance == {
+    runtime_match = (resume or {}).get("runtimeProvenanceVerified") is True \
+        or runtime_provenance == {
         "workerExecutable": sha256(Path(".build/debug/WhisperASR")),
         "mlxMetallib": sha256(Path(".build/debug/mlx.metallib")),
     }
+    exports = {name: sha256(job / name) for name in EXPORTS if (job / name).is_file()}
     return {
         "role": ROLES[corpus],
         "corpusID": corpus,
@@ -251,6 +328,7 @@ def score_row(root: Path, candidate: str, corpus: str) -> tuple[dict, list[dict]
         "timingSeconds": {**stages, "total": runtime, "source": source_duration},
         "realTimeFactor": runtime / source_duration,
         "resources": resources,
+        "exportsSHA256": exports,
         "provenance": {
             "rawArtifactsMatchMetadata": artifacts_match,
             "referencesMatchMetadata": references_match,
@@ -259,6 +337,7 @@ def score_row(root: Path, candidate: str, corpus: str) -> tuple[dict, list[dict]
             "manifestSHA256": sha256(job / "manifest.json"),
             "rawEvidenceSHA256": sha256(job / "raw-asr.json"),
             "runMetadataSHA256": sha256(root / candidate / corpus / "run-meta.json"),
+            "reusedCompletedVideo1": resume is not None,
         },
     }, rows
 
@@ -300,6 +379,15 @@ def build_report(root: Path, candidates: list[str]) -> tuple[dict, str]:
     translation_only = bool(rows) and all(
         row["runMode"].startswith("TRANSLATION_ONLY_") for row in rows
     )
+    resume_full_12b = len(rows) == len(CORPORA) and {
+        (row["corpusID"], row["runMode"]) for row in rows
+    } == {(CORPORA[0], "FULL_12B_ONLY"), (CORPORA[1], "RESUME_FULL_12B_VIDEO2")}
+    full_12b_only = bool(rows) and (
+        all(row["runMode"] == "FULL_12B_ONLY" for row in rows) or resume_full_12b
+    )
+    reuse, reused_rows = reused_4b_replay(root) if full_12b_only else (None, [])
+    report_rows = rows + reused_rows
+    current_12b_complete = full_12b_only and current_12b_jobs_complete(rows)
 
     handoff_path = root / "12b-to-4b-handoff.json"
     handoff = read(handoff_path) if handoff_path.exists() else None
@@ -308,32 +396,33 @@ def build_report(root: Path, candidates: list[str]) -> tuple[dict, str]:
         (row["productStatus"] == "completed" and row["resultRoute"] == "completed")
         or (row["productStatus"] == "failed"
             and row["resultRoute"] == "model-quality-rejection")
-        for row in rows
+        for row in report_rows
     )
     gates = {
-        "realJobsAuditable": len(rows) == len(candidates) * len(CORPORA),
+        "realJobsAuditable": len(rows) == len(candidates) * len(CORPORA)
+            and (not full_12b_only or len(reused_rows) == len(CORPORA)),
         "configurationIsStandard": all(
             row["modelID"].endswith(row["translator"])
-            and row["resources"]["fixedOfflineReserveBytes"] == 0 for row in rows
+            and row["resources"]["fixedOfflineReserveBytes"] == 0 for row in report_rows
         ),
         "strictLifecycle": all(
             row["resources"]["strictlySequential"]
             and row["resources"]["cleanWorkerExits"]
             and row["resources"]["distinctWorkerProcesses"]
             and row["resources"]["externalStopReason"] == "completed"
-            for row in rows
+            for row in report_rows
         ),
-        "12BExecutionPolicySatisfied": translation_only or (
+        "12BExecutionPolicySatisfied": translation_only or full_12b_only or (
             handoff is None and CANDIDATES[0] not in candidates
         ) or (
             handoff is not None and handoff.get("nativePressureLevel") == "normal"
             and all(not worker["resident"] for worker in handoff["translateGemma12BWorkers"])
         ),
-        "rawArtifactHashes": all(row["provenance"]["rawArtifactsMatchMetadata"] for row in rows),
+        "rawArtifactHashes": all(row["provenance"]["rawArtifactsMatchMetadata"] for row in report_rows),
         "referenceAndImplementationHashes": all(
             row["provenance"]["referencesMatchMetadata"]
             and row["provenance"]["implementationMatchesMetadata"]
-            and row["provenance"]["runtimeMatchesMetadata"] for row in rows
+            and row["provenance"]["runtimeMatchesMetadata"] for row in report_rows
         ),
         "resultRoutesExcludeHarnessFailures": routes_are_model_results,
         "liveUnchanged": test_status.get("livePassed") is True
@@ -343,16 +432,24 @@ def build_report(root: Path, candidates: list[str]) -> tuple[dict, str]:
             and test_status.get("sha256", {}).get("full-swift-test.log")
             == sha256(root / "full-swift-test.log"),
     }
+    if full_12b_only:
+        gates["audited4BReplayReused"] = reuse is not None
+        gates["current12BJobsCompletedWithExports"] = current_12b_complete
+    campaign_complete = integrated_campaign_complete(current_12b_complete, gates)
     pressure_attempt = read(PRESSURE_ATTEMPT) if four_b_only or translation_only else None
     if pressure_attempt:
         assert pressure_attempt["classification"] == "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE"
     report = {
         "schemaVersion": 1,
         "ticket": 106,
-        "runMode": rows[0]["runMode"] if translation_only
+        "runMode": ("RESUME_FULL_12B_VIDEO2" if resume_full_12b else rows[0]["runMode"])
+            if translation_only or full_12b_only
             else ("4B_ONLY" if four_b_only else "full"),
-        "ticket106Concluded": not (four_b_only or translation_only),
+        "ticket106Concluded": campaign_complete
+            if full_12b_only else not (four_b_only or translation_only),
         "campaignClassification": (
+            "COMPLETE" if campaign_complete else
+            "INCONCLUSIVE_INTEGRATED_12B_INCOMPLETE" if full_12b_only else
             "VALIDATED_PARTIAL_TRANSLATION_REPLAY"
             if translation_only and candidates == [CANDIDATES[0]] else
             "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE"
@@ -379,7 +476,8 @@ def build_report(root: Path, candidates: list[str]) -> tuple[dict, str]:
             "translationBetaLightweight": CANDIDATES[1],
             "paidAPI": False,
         },
-        "rows": rows,
+        "rows": report_rows,
+        "reused4BReplay": reuse,
         "relevantBaselineByCorpus": baselines,
         "representativeSubtitleDifferences": examples,
         "COMETAvailability": read(root / "comet-availability.json"),
@@ -414,13 +512,21 @@ def build_report(root: Path, candidates: list[str]) -> tuple[dict, str]:
             "E31 normalisées ; le HighQualityJob courant vérifie aussi la requête de traduction exacte. "
             "Ce n’est pas un run intégré complet.", "",
         ]
+    if full_12b_only:
+        lines += [
+            ("La vidéo 1 12B complète est réutilisée après vérification de tous ses hashes ; "
+             "la vidéo 2 12B vient de la reprise end-to-end actuelle. " if resume_full_12b else
+             "Les lignes 12B viennent des deux jobs intégrés actuels. ")
+            + "Les lignes 4B réutilisent "
+            "le replay exact déjà audité et hashé ; aucun poids 4B n’a été accédé par ce run.", "",
+        ]
     lines += [
         "Configuration réelle : Qwen JA Standard, alignement et SpeakerKit/cues Standard, "
         "aucune récupération d’overlap ; 12B reste le défaut et 4B l’option bêta légère.", "",
         "| Vidéo | Modèle | Route | CER JA | chrF++ | COMET | Total / RTF | ASR | Align. | SpeakerKit | Trad. | Mémoire | Intégrité/cues | Locuteurs/overlap |",
         "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|",
     ]
-    for row in rows:
+    for row in report_rows:
         time, quality, resource = row["timingSeconds"], row["quality"], row["resources"]
         reasons = sum(row["integrity"]["finalReasonCounts"].values())
         subtitles = row["subtitleQuality"]
@@ -480,6 +586,33 @@ def self_test() -> None:
     pressure_attempt = read(PRESSURE_ATTEMPT)
     assert pressure_attempt["classification"] == "INCONCLUSIVE_RUNTIME_MEMORY_PRESSURE"
     assert pressure_attempt["modelQualityVerdictAssigned"] is False
+    complete = {"productStatus": "completed", "resultRoute": "completed",
+                "exportsSHA256": dict.fromkeys(EXPORTS, "hash")}
+    assert current_12b_jobs_complete([complete, complete])
+    assert not current_12b_jobs_complete([complete, {**complete, "exportsSHA256": {}}])
+    assert integrated_campaign_complete(True, {"jobs": True, "tests": True})
+    assert not integrated_campaign_complete(True, {"jobs": True, "tests": False})
+    report = Path("docs/high-quality-integrated-e31-translation-only-4b.json")
+    evidence = Path("docs/japanese-live/experiments/evidence/E31-translation-only-4b")
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        reuse = {"audited": True, "modelWeightsAccessed": False,
+                 "report": {"path": str(report), "sha256": sha256(report)},
+                 "evidence": {"path": str(evidence),
+                              "manifestSHA256": sha256(evidence / "sha256.tsv")}}
+        (root / "4b-replay-reuse.json").write_text(json.dumps(reuse), encoding="utf-8")
+        assert len(reused_4b_replay(root)[1]) == len(CORPORA)
+        bad = root / "bad"
+        bad.mkdir()
+        (bad / "sha256.tsv").write_text(f'{"0" * 64}  {bad / "missing.raw"}\n')
+        reuse["evidence"] = {"path": str(bad),
+                             "manifestSHA256": sha256(bad / "sha256.tsv")}
+        (root / "4b-replay-reuse.json").write_text(json.dumps(reuse), encoding="utf-8")
+        try:
+            reused_4b_replay(root)
+            raise AssertionError("invalid 4B manifest accepted")
+        except FileNotFoundError:
+            pass
 
 
 def main() -> None:

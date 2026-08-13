@@ -1,0 +1,14 @@
+{
+  "ticket": 106,
+  "runMode": "FULL_12B_ONLY",
+  "modelWeightsAccessed": false,
+  "report": {
+    "path": "/Users/maz/.codex/worktrees/da40/whisperASR/docs/high-quality-integrated-e31-translation-only-4b.json",
+    "sha256": "e867a39ab57aced53d502de41d9b4b171d8c0139c11a47375bed4628eb89a841"
+  },
+  "evidence": {
+    "path": "/Users/maz/.codex/worktrees/da40/whisperASR/docs/japanese-live/experiments/evidence/E31-translation-only-4b",
+    "manifestSHA256": "c26aec983c22ce742eb0d52a8f00f21f310b46ddbae5ebd50f19e82986b609cb"
+  },
+  "audited": true
+}

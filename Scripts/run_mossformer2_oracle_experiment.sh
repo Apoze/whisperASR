@@ -25,6 +25,8 @@ RUNAWAY_GROWTH_PERCENT=25
 RUNAWAY_WINDOW_SAMPLES=30
 WARNING_RECOVERY_GROWTH_PERCENT=1
 WARNING_CLEANUP_RETRY_ENABLED=false
+WARNING_CONTINUES_WHILE_SAFE=false
+PAGEOUT_GUARD_FROM_PROCESS_START=false
 SHUTDOWN_GRACE_SECONDS=15
 RECOVERY_SAMPLE_DELAY_SECONDS=5
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
@@ -160,7 +162,11 @@ pressure_guard_decision() {
       if [[ "$WARNING_CLEANUP_RETRY_ENABLED" != true ]]; then
         PRESSURE_STOP_REASON="native-pressure-warning"
       elif [[ -n "$WARNING_CLEANUP_MEMORY" ]]; then
-        PRESSURE_STOP_REASON="native-pressure-warning-persisted"
+        if ((current_memory - WARNING_CLEANUP_MEMORY > growth_limit)); then
+          PRESSURE_STOP_REASON="post-warning-memory-growth"
+        elif [[ "$WARNING_CONTINUES_WHILE_SAFE" != true ]]; then
+          PRESSURE_STOP_REASON="native-pressure-warning-persisted"
+        fi
       else
         WARNING_CLEANUP_MEMORY="$current_memory"
         WARNING_CLEANUP_COUNT=$((WARNING_CLEANUP_COUNT + 1))
@@ -188,7 +194,8 @@ run_guarded() {
   local stop_forced=false
   local before_free before_swap before_pageouts after_free after_swap after_pageouts
   local swap_delta pageout_delta samples_sha pressure_levels
-  local runaway_history=()
+  local post_load_history=() pageout_memory_history=() pageout_history=()
+  local pageout_runaway=false index
   local WARNING_CLEANUP_MEMORY="" WARNING_CLEANUP_COUNT=0 PRESSURE_STOP_REASON=""
   physical_memory="$(/usr/sbin/sysctl -n hw.memsize)"
   catastrophic_limit="$((physical_memory * CATASTROPHIC_MEMORY_PERCENT / 100))"
@@ -237,9 +244,18 @@ run_guarded() {
     ((PROCESS_FOOTPRINT_BYTES > current_memory)) && current_memory="$PROCESS_FOOTPRINT_BYTES"
     [[ -n "$ready_file" && -f "$ready_file" ]] && model_loaded=true
     if [[ "$model_loaded" == true ]]; then
-      runaway_history+=("$current_memory")
-      ((${#runaway_history[@]} <= RUNAWAY_WINDOW_SAMPLES)) \
-        || runaway_history=("${runaway_history[@]:1}")
+      post_load_history+=("$current_memory")
+      ((${#post_load_history[@]} <= RUNAWAY_WINDOW_SAMPLES)) \
+        || post_load_history=("${post_load_history[@]:1}")
+    fi
+    if [[ "$model_loaded" == true || "$PAGEOUT_GUARD_FROM_PROCESS_START" == true ]]; then
+      pageout_memory_history+=("$current_memory")
+      pageout_history+=("$SYSTEM_PAGEOUTS")
+      ((${#pageout_memory_history[@]} <= RUNAWAY_WINDOW_SAMPLES)) \
+        || {
+          pageout_memory_history=("${pageout_memory_history[@]:1}")
+          pageout_history=("${pageout_history[@]:1}")
+        }
     fi
     pressure_guard_decision "$SYSTEM_PRESSURE_LEVEL" "$current_memory" \
       "$((physical_memory * WARNING_RECOVERY_GROWTH_PERCENT / 100))"
@@ -267,9 +283,18 @@ run_guarded() {
     elif ((swap_delta >= dangerous_swap_limit)); then
       reason="dangerous-swap-growth"
     elif [[ "$model_loaded" == true ]] \
-      && ((${#runaway_history[@]} == RUNAWAY_WINDOW_SAMPLES)) \
-      && ((current_memory - runaway_history[0] >= physical_memory * RUNAWAY_GROWTH_PERCENT / 100)); then
+      && ((${#post_load_history[@]} == RUNAWAY_WINDOW_SAMPLES)) \
+      && ((current_memory - post_load_history[0] >= physical_memory * RUNAWAY_GROWTH_PERCENT / 100)); then
       reason="post-load-runaway"
+    elif [[ "$model_loaded" == true || "$PAGEOUT_GUARD_FROM_PROCESS_START" == true ]] \
+      && ((${#pageout_history[@]} == RUNAWAY_WINDOW_SAMPLES)) \
+      && ((current_memory - pageout_memory_history[0] > physical_memory * WARNING_RECOVERY_GROWTH_PERCENT / 100)); then
+      pageout_runaway=true
+      for ((index = 1; index < ${#pageout_history[@]}; index++)); do
+        ((pageout_history[index] > pageout_history[index - 1])) \
+          || { pageout_runaway=false; break; }
+      done
+      [[ "$pageout_runaway" != true ]] || reason="pageout-runaway"
     fi
     if [[ "$reason" == completed ]] && ((elapsed >= timeout_seconds)); then
       reason="timeout"
@@ -327,7 +352,8 @@ run_guarded() {
     --argjson runawayGrowthPercent "$RUNAWAY_GROWTH_PERCENT" \
     --argjson runawayWindowSamples "$RUNAWAY_WINDOW_SAMPLES" \
     --argjson warningRecoveryGrowthBytes "$((physical_memory * WARNING_RECOVERY_GROWTH_PERCENT / 100))" \
-    --argjson warningCleanupRequests "$WARNING_CLEANUP_COUNT" \
+    --argjson warningObservations "$WARNING_CLEANUP_COUNT" \
+    --argjson pageoutFromStart "$PAGEOUT_GUARD_FROM_PROCESS_START" \
     --argjson forcedTermination "$stop_forced" --argjson exitStatus "$status" \
     '{schemaVersion:2,startedAt:$startedAt,exitedAt:$exitedAt,elapsedSeconds:$elapsedSeconds,
       timeoutSeconds:$timeoutSeconds,stopReason:$reason,exitStatus:$exitStatus,
@@ -341,8 +367,11 @@ run_guarded() {
         limitBytes:$dangerousSwapGrowthBytes},
       postLoadRunawayGuard:{modelLoadedObserved:$modelLoaded,
         growthPercent:$runawayGrowthPercent,windowSamples:$runawayWindowSamples},
-      warningRecoveryGuard:{cleanupRequests:$warningCleanupRequests,
-        growthLimitBytes:$warningRecoveryGrowthBytes},
+      pageoutRunawayGuard:{windowSamples:$runawayWindowSamples,
+        requiresConcurrentFootprintGrowthBytes:$warningRecoveryGrowthBytes,
+        fromProcessStart:$pageoutFromStart},
+      warningRecoveryGuard:{warningObservations:$warningObservations,
+        externalCleanupSignals:0,cleanupOwner:"product",growthLimitBytes:$warningRecoveryGrowthBytes},
       systemBefore:{freeMemoryPercent:$freeBefore,swapUsedBytes:$swapUsedBeforeBytes,
         pageouts:$pageoutsBefore},
       systemAfter:{freeMemoryPercent:$freeAfter,swapUsedBytes:$swapUsedAfterBytes,

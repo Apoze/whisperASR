@@ -1,0 +1,39 @@
+{
+  "ticket": 106,
+  "runMode": "FULL_12B_ONLY",
+  "at": "2026-08-13T02:50:19Z",
+  "translationWorkerPID": 31466,
+  "resident": false,
+  "unloadVerified": true,
+  "nativePressureLevel": "normal",
+  "nativePressureRaw": 1,
+  "freeMemoryPercent": 74,
+  "swapUsedBytes": 4889310659,
+  "pageouts": 1795296,
+  "workers": [
+    {
+      "stage": "ASR",
+      "processIdentifier": 26442,
+      "exitedAt": "2026-08-13T02:34:52Z",
+      "resident": false
+    },
+    {
+      "stage": "alignment",
+      "processIdentifier": 29423,
+      "exitedAt": "2026-08-13T02:35:25Z",
+      "resident": false
+    },
+    {
+      "stage": "SpeakerKit",
+      "processIdentifier": 30687,
+      "exitedAt": "2026-08-13T02:35:44Z",
+      "resident": false
+    },
+    {
+      "stage": "translation",
+      "processIdentifier": 31466,
+      "exitedAt": "2026-08-13T02:50:12Z",
+      "resident": false
+    }
+  ]
+}

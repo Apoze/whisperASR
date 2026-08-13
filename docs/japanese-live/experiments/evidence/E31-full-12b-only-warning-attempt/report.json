@@ -1,0 +1,32 @@
+{
+  "ticket": 106,
+  "retainedAt": "2026-08-13T03:00:12Z",
+  "sourceArtifactRoot": "/Users/maz/.codex/worktrees/da40/whisperASR/.build/benchmarks/high-quality/integrated-validation-106-full-12b-only",
+  "classification": "INCONCLUSIVE_HARNESS_SAFETY_POLICY_MISMATCH",
+  "modelQualityVerdictAssigned": false,
+  "ticket106Concluded": false,
+  "video1": {
+    "corpusID": "qudu2fx3ncc",
+    "status": "completed",
+    "manifestSHA256": "b2fc82f741f572bf3210f8d04a5054d96ee7764213459081c08b7a83c059d0ac",
+    "rawASRGzipSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
+    "exportsHashCovered": true,
+    "cleanupVerified": true
+  },
+  "video2": {
+    "corpusID": "md62mmdz0m",
+    "stageReached": "Qwen ASR",
+    "status": "stopped",
+    "stopReason": "native-pressure-warning-persisted",
+    "safetySHA256": "62d3244ec2d38a775b92ad8c4324565ab3891ad8751cb4971c02c48d32ff9df5",
+    "minimumFreeMemoryPercent": 31,
+    "peakSwapDeltaBytes": 0,
+    "cleanupRecovered": true,
+    "modelQualityVerdictAssigned": false
+  },
+  "diagnosis": {
+    "productQwenWorker": "SIGUSR1 clears Qwen cache; only critical native pressure cancels",
+    "externalGuard": "second warning sample stopped even while footprint fell",
+    "conclusion": "isolated native warning was an external guard policy mismatch, not a model result"
+  }
+}

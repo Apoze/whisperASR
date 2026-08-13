@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "runMode": "FULL_12B_ONLY",
+  "corpusID": "md62mmdz0m",
+  "translator": "translategemma-12b-it-4bit",
+  "translationModelID": "mlx-community/translategemma-12b-it-4bit",
+  "translationRevision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "commit": "a5c240bebf026e57f77394c53ae257f0d2b981a1",
+  "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+  "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/2/Video2_final_readable_transcript_pack.zip",
+  "referenceArchiveSHA256": "a95e73422dd0b8628f6d8a5cb064e41deb4a64b5a0024e1e1a5a62450e5aff86",
+  "corpusManifestSHA256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc",
+  "corpusPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "localReferences": [
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/reference.jsonl",
+      "sha256": "c1f08461fb393d40cc3e82dc22c3f3befd066b3dd091b6522547228db86996df"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/character-alignment.tsv",
+      "sha256": "446e7a00ad003b904e3de90786ef65f1829cc063217638535b134c084f2db925"
+    }
+  ],
+  "decisionsSHA256": "711f2f72266abcca7916e72c81af6cef7b4360c03f62d34381538184809d46ab",
+  "modelProvenanceSHA256": "d199240ef0dbfcacc23c198de334f8eba58ae5d4db13f49aacdc0f9899bd5020",
+  "implementationSHA256": {
+    "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "bf58409dc3aeab5abaf67c3302a947e00348b8dcf5ac72f04beab34c6fe058ae",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef",
+    "Tests/HighQualityConversationContextTests.swift": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f",
+    "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+    "Scripts/run_integrated_offline_validation.sh": "249f38d5ba31d692d482c6105ca5394e6d8b0ff31f0f2a6dec78c257c84a6faf",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "6316686c049f6b90a27b3eab2b63acc46d3d72710828b1e6eda16f04498489b5",
+    "Scripts/test_mossformer2_guard.sh": "865316ad8868ed9ddb259b65a2debafcb94c8976de497c63177e1d5b70ee3569",
+    "Scripts/report_integrated_offline_validation.py": "d4c886b4ffd4b53da84c395fcafaa62a592056d4ce1761de0468eafd87793721",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "runtimeSHA256": {
+    "workerExecutable": "f7ce56c58b08ce1906f69ea627050f014e2a4d6f18fad9ec00ed8af5d819b3a6",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  },
+  "configuration": {
+    "ASR": "Qwen Standard",
+    "alignment": "Qwen3 Forced Aligner",
+    "diarization": "SpeakerKit Standard",
+    "cues": "Standard",
+    "overlapRecovery": null,
+    "translation": "translategemma-12b-it-4bit"
+  }
+}

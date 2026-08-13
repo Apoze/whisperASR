@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "ticket": 106,
+  "runMode": "RESUME_FULL_12B_VIDEO2",
+  "corpusID": "md62mmdz0m",
+  "translator": "translategemma-12b-it-4bit",
+  "translationModelID": "mlx-community/translategemma-12b-it-4bit",
+  "translationRevision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+  "commit": "a5c240bebf026e57f77394c53ae257f0d2b981a1",
+  "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+  "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+  "referenceArchivePath": "/Users/maz/Documents/videos/jap/2/Video2_final_readable_transcript_pack.zip",
+  "referenceArchiveSHA256": "a95e73422dd0b8628f6d8a5cb064e41deb4a64b5a0024e1e1a5a62450e5aff86",
+  "corpusManifestSHA256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc",
+  "corpusPreflightSHA256": "08c2b301343c506024536c232034e8c8b38bfe7e935073979780d3d5cb72d374",
+  "localReferences": [
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/reference.jsonl",
+      "sha256": "c1f08461fb393d40cc3e82dc22c3f3befd066b3dd091b6522547228db86996df"
+    },
+    {
+      "locator": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/character-alignment.tsv",
+      "sha256": "446e7a00ad003b904e3de90786ef65f1829cc063217638535b134c084f2db925"
+    }
+  ],
+  "decisionsSHA256": "711f2f72266abcca7916e72c81af6cef7b4360c03f62d34381538184809d46ab",
+  "modelProvenanceSHA256": "d199240ef0dbfcacc23c198de334f8eba58ae5d4db13f49aacdc0f9899bd5020",
+  "implementationSHA256": {
+    "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+    "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+    "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+    "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+    "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+    "Sources/HeavyweightModelGate.swift": "0214c8835edf2cc5a4134525e48684a8e57b83705df7467fec791cb2a884b61a",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef",
+    "Tests/HighQualityConversationContextTests.swift": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f",
+    "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+    "Tests/HeavyweightModelGateTests.swift": "6344c2debac7879b93aaebaca1d29df31b6c917b3bc1cc6c8f506315a58afe60",
+    "Scripts/run_integrated_offline_validation.sh": "46b20d2692cdb857111972336be9cd23e86e9b5bee4ae07fa8fb79c5b3a100cf",
+    "Scripts/run_mossformer2_oracle_experiment.sh": "75939b0df1020e1069d1ece8d183ae2d4e1b94766d44d5767f846888ebe1646e",
+    "Scripts/test_mossformer2_guard.sh": "0bb04c67aa7df868bc82e4869e4001568fe00a7dc79cbf33805ae828bff89c5e",
+    "Scripts/report_integrated_offline_validation.py": "f58fadf88791ec489bf2556dbba93a54da3a09863a0e40580a1c1fa967822f55",
+    "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+    "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+    "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+    "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+  },
+  "runtimeSHA256": {
+    "workerExecutable": "abd3d1dcc91e18a8ccb808dee139a5eadd2dc6d82c2fec4841ae145eac19fb47",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3"
+  },
+  "configuration": {
+    "ASR": "Qwen Standard",
+    "alignment": "Qwen3 Forced Aligner",
+    "diarization": "SpeakerKit Standard",
+    "cues": "Standard",
+    "overlapRecovery": null,
+    "translation": "translategemma-12b-it-4bit"
+  },
+  "resultRoute": "completed",
+  "rawArtifactSHA256": {
+    "manifest.json": "f5a4b187a6208196d35202ea169fdfb020dea6834cbb6cfbd8c8e85ba580c362",
+    "raw-asr.json": "7aadc15c053791de97adccf3382d805531e1afb93063631465f30b13d57903e6"
+  },
+  "safetySHA256": {
+    "safety.json": "70c3f9690c3e3a78861c82f3a459de2d873f258f326e3d67a0ffcac28e3c8e2e",
+    "safety.samples.jsonl": "c4cef2e850378a70c061fbe7e9bc793c2f154ff32fb75fc4a2ae45778f208640"
+  },
+  "harnessRecovery": {
+    "reason": "reporter resolved retained video1 at the evidence root instead of its video1 directory",
+    "modelWasNotRerun": true,
+    "runtimeImplementationUnchanged": true,
+    "validatorImplementationSHA256": {
+      "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+      "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+      "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+      "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+      "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+      "Sources/HeavyweightModelGate.swift": "0214c8835edf2cc5a4134525e48684a8e57b83705df7467fec791cb2a884b61a",
+      "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+      "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef",
+      "Tests/HighQualityConversationContextTests.swift": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f",
+      "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+      "Tests/HeavyweightModelGateTests.swift": "6344c2debac7879b93aaebaca1d29df31b6c917b3bc1cc6c8f506315a58afe60",
+      "Scripts/run_integrated_offline_validation.sh": "a1858a76042afe7b2848086d1f3964cd8ba18c80e0c0b307cea971d9b9f23516",
+      "Scripts/run_mossformer2_oracle_experiment.sh": "75939b0df1020e1069d1ece8d183ae2d4e1b94766d44d5767f846888ebe1646e",
+      "Scripts/test_mossformer2_guard.sh": "0bb04c67aa7df868bc82e4869e4001568fe00a7dc79cbf33805ae828bff89c5e",
+      "Scripts/report_integrated_offline_validation.py": "8ad743ee8dedef508fff520309182ff39de54278edce3854b0fbb6cbff432abd",
+      "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+      "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+      "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+      "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+    },
+    "reporterSHA256": {
+      "executed": "f58fadf88791ec489bf2556dbba93a54da3a09863a0e40580a1c1fa967822f55",
+      "recovered": "8ad743ee8dedef508fff520309182ff39de54278edce3854b0fbb6cbff432abd"
+    },
+    "failureSHA256": "1d81330c1629dc2a58982dc3ca9f3c14442f5097f76c81707208d6c95a1a5072"
+  },
+  "reportRecovery": {
+    "reason": "final reporter and portable evidence manifest gates corrected after model execution",
+    "modelWasNotRerun": true,
+    "modelExecutionAndOutputsUnchanged": true,
+    "implementationSHA256": {
+      "Sources/HighQualityConversationContext.swift": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a",
+      "Sources/HighQualityJob.swift": "aa5d18e6552ecf1c6c400f50b96a352b423902b9a98ced640c44c4a10c77439c",
+      "Sources/HighQualityJobView.swift": "0e73de2aeb73825e2b8536ae076bb8daa5253d131af45a101adba1a495b72a7a",
+      "Sources/HighQualityWorkerProcess.swift": "997139ab1456d4de78673a643d6872ade5c8d87e3f7e40f2389b23a97029496d",
+      "Sources/HighQualityTranslationWorker.swift": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f",
+      "Sources/HeavyweightModelGate.swift": "0214c8835edf2cc5a4134525e48684a8e57b83705df7467fec791cb2a884b61a",
+      "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+      "Tests/HighQualityAcceptanceTests.swift": "ce0903865bf3170ba63c89c3af0c6a07e17bbf7a2bcc9cb5c42e66024a8c2aef",
+      "Tests/HighQualityConversationContextTests.swift": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f",
+      "Tests/HighQualityLocalTranslationTests.swift": "5a7323cf771835849f543dd26b9d739b5479da055694bd9aadc6be764daf007d",
+      "Tests/HeavyweightModelGateTests.swift": "6344c2debac7879b93aaebaca1d29df31b6c917b3bc1cc6c8f506315a58afe60",
+      "Scripts/run_integrated_offline_validation.sh": "a1858a76042afe7b2848086d1f3964cd8ba18c80e0c0b307cea971d9b9f23516",
+      "Scripts/run_mossformer2_oracle_experiment.sh": "75939b0df1020e1069d1ece8d183ae2d4e1b94766d44d5767f846888ebe1646e",
+      "Scripts/test_mossformer2_guard.sh": "0bb04c67aa7df868bc82e4869e4001568fe00a7dc79cbf33805ae828bff89c5e",
+      "Scripts/report_integrated_offline_validation.py": "8ad743ee8dedef508fff520309182ff39de54278edce3854b0fbb6cbff432abd",
+      "Scripts/report_high_quality_acceptance.py": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd",
+      "Scripts/report_local_translator_bakeoff.py": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5",
+      "Scripts/report_japanese_l7d.py": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f",
+      "Scripts/comet_score_compat.py": "a960641d8ee345ee4026a2aca3f1ee966f38a2ca7bb61765eb514edd9828176b"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "available": true,
+  "model": "Unbabel/wmt22-comet-da",
+  "revision": "2760a223ac957f30acfb18c8aa649b01cf1d75f2",
+  "executable": "/Users/maz/Documents/projets/whisperASR/.build/comet-venv/bin/python",
+  "checkpoint": "/Users/maz/.cache/huggingface/hub/models--Unbabel--wmt22-comet-da/snapshots/2760a223ac957f30acfb18c8aa649b01cf1d75f2/checkpoints/model.ckpt",
+  "checkpointSizeBytes": 2323649073,
+  "checkpointSHA256": "e213091cde220f97b89f8bdfa750c458cfea741ad62affb455b59900210ff2af"
+}

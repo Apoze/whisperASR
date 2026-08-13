@@ -1,0 +1,112 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/da40/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/da40/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (3.57s)
+Test Suite 'Selected tests' started at 2026-08-13 05:33:43.874.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-13 05:33:43.875.
+Test Suite 'HeavyweightModelGateTests' started at 2026-08-13 05:33:43.875.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCriticalPressureCancelsOfflineModelWithRecoverableFailure]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testCriticalPressureCancelsOfflineModelWithRecoverableFailure]' passed (0.004 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testFailedLoadAndCancellationStillUnloadAndReleaseLease]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testGrowthAfterWarningCleanupStopsTheModel]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testGrowthAfterWarningCleanupStopsTheModel]' passed (0.026 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveAndOfflineWorkflowsAreMutuallyExclusive]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveOwnerHoldsGateUntilItsModelIsActuallyUnloaded]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveWarningBehaviorRemainsUnchanged]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testLiveWarningBehaviorRemainsUnchanged]' passed (0.211 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testOfflineAdmissionUsesMemoryPressureInsteadOfFixedReserve]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testOfflineAdmissionUsesMemoryPressureInsteadOfFixedReserve]' passed (0.012 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testPersistentWarningContinuesAfterOneCleanupWhenFootprintIsStable]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testPersistentWarningContinuesAfterOneCleanupWhenFootprintIsStable]' passed (0.204 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testSecondModelIsRejectedUntilSequentialHandoffCompletes]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testWarningBlocksNextOfflineModelUntilPressureReturnsToNormal]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testWarningBlocksNextOfflineModelUntilPressureReturnsToNormal]' passed (0.013 seconds).
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testWarningCleansOnceAndContinuesAfterRecovery]' started.
+Test Case '-[WhisperASRTests.HeavyweightModelGateTests testWarningCleansOnceAndContinuesAfterRecovery]' passed (0.107 seconds).
+Test Suite 'HeavyweightModelGateTests' passed at 2026-08-13 05:33:44.455.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.579 (0.581) seconds
+Test Suite 'HighQualityConversationContextTests' started at 2026-08-13 05:33:44.456.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testContextResetsAtFrozenDiscontinuitiesAndStaysWithinBudget]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testContextResetsAtFrozenDiscontinuitiesAndStaysWithinBudget]' passed (0.035 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testCopiedNeighbourNeverBecomesAcceptedContext]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testCopiedNeighbourNeverBecomesAcceptedContext]' passed (0.009 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testFrozenReportPromotesContextAsTheHighQualityDefault]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testFrozenReportPromotesContextAsTheHighQualityDefault]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testJobUsesOnlyEarlierAcceptedPairsAndRetriesWithoutContext]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testJobUsesOnlyEarlierAcceptedPairsAndRetriesWithoutContext]' passed (0.009 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testLaterFailureRetainsCompletedContextEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testLaterFailureRetainsCompletedContextEvidence]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testNativeContextPromptAlternatesAcceptedRolesAndKeepsCurrentUserClean]' started.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testNativeContextPromptAlternatesAcceptedRolesAndKeepsCurrentUserClean]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testWritesFrozenContextCorpusWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/da40/whisperASR/Tests/HighQualityConversationContextTests.swift:264: -[WhisperASRTests.HighQualityConversationContextTests testWritesFrozenContextCorpusWhenOptedIn] : Test skipped - Set the previous-accepted-context experiment paths.
+Test Case '-[WhisperASRTests.HighQualityConversationContextTests testWritesFrozenContextCorpusWhenOptedIn]' skipped (0.001 seconds).
+Test Suite 'HighQualityConversationContextTests' passed at 2026-08-13 05:33:44.513.
+	 Executed 7 tests, with 1 test skipped and 0 failures (0 unexpected) in 0.057 (0.057) seconds
+Test Suite 'HighQualityJobTests' started at 2026-08-13 05:33:44.513.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationIsSafeForEveryOfflineBackend]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationIsSafeForEveryOfflineBackend]' passed (0.077 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testClassifiesSourcePreparationASRAndExportFailuresAtThePrincipalInterface]' passed (0.010 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testEnglishSubtitlesUseTheSameJobSeamForEveryOfflineBackend]' passed (0.017 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerBetaControlsVisibilityAndSafeDefaults]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerBetaControlsVisibilityAndSafeDefaults]' passed (0.000 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-13 05:33:44.618.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.105 (0.105) seconds
+Test Suite 'HighQualityLocalTranslationTests' started at 2026-08-13 05:33:44.618.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testCueBoundaryClearsCacheAfterSuccessRetryFailureCancellationAndUnload]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testCueBoundaryClearsCacheAfterSuccessRetryFailureCancellationAndUnload]' passed (0.064 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testEveryTranslationRequestClearsCacheBeforeTheNextRequest]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testEveryTranslationRequestClearsCacheBeforeTheNextRequest]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslateGemmaModelsArePinnedAndUseTheSameTranslationContract]' passed (0.001 seconds).
+Test Suite 'HighQualityLocalTranslationTests' passed at 2026-08-13 05:33:44.683.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.065 (0.065) seconds
+Test Suite 'HighQualityTranslationWorkerTests' started at 2026-08-13 05:33:44.683.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCancellingPendingRequestAllowsCleanWorkerExit]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCancellingPendingRequestAllowsCleanWorkerExit]' passed (0.185 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCrashDoesNotBlockANewWorkerAdmission]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCrashDoesNotBlockANewWorkerAdmission]' passed (0.312 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureDuringRequestPreservesPartialEvidenceAndFinalizesOnce]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureDuringRequestPreservesPartialEvidenceAndFinalizesOnce]' passed (0.153 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureForcesWorkerAfterBoundedCooperativeShutdown]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureForcesWorkerAfterBoundedCooperativeShutdown]' passed (0.180 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureReportedDuringPreparationIsRecoverable]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureReportedDuringPreparationIsRecoverable]' passed (0.140 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureTerminatesWorkerWithRecoverableError]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testCriticalPressureTerminatesWorkerWithRecoverableError]' passed (0.163 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testNormalShutdownWaitsForWorkerExitAndRecordsEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testNormalShutdownWaitsForWorkerExitAndRecordsEvidence]' passed (0.158 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testOneWorkerServesSequentialTranslations]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testOneWorkerServesSequentialTranslations]' passed (0.187 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testSelectedCandidateIsPassedToTheChildWorker]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testSelectedCandidateIsPassedToTheChildWorker]' passed (0.149 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testTranslationFailureCrossesWorkerBoundaryWithPartialEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testTranslationFailureCrossesWorkerBoundaryWithPartialEvidence]' passed (0.178 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testWarningBlocksWorkerLaunchUntilPressureReturnsToNormal]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testWarningBlocksWorkerLaunchUntilPressureReturnsToNormal]' passed (0.385 seconds).
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testWarningNotifiesWorkerAndRecordsPressureTransition]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testWarningNotifiesWorkerAndRecordsPressureTransition]' passed (0.181 seconds).
+Test Suite 'HighQualityTranslationWorkerTests' passed at 2026-08-13 05:33:47.054.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 2.370 (2.371) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-13 05:33:47.054.
+	 Executed 37 tests, with 1 test skipped and 0 failures (0 unexpected) in 3.175 (3.180) seconds
+Test Suite 'Selected tests' passed at 2026-08-13 05:33:47.055.
+	 Executed 37 tests, with 1 test skipped and 0 failures (0 unexpected) in 3.175 (3.181) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

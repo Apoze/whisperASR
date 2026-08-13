@@ -1,0 +1,37 @@
+{
+  "ticket": 106,
+  "retainedAt": "2026-08-13T03:37:40Z",
+  "classification": "INCONCLUSIVE_HARNESS_SAFETY_ATTRIBUTION",
+  "modelQualityVerdictAssigned": false,
+  "ticket106Concluded": false,
+  "runMode": "RESUME_FULL_12B_VIDEO2",
+  "video1": {
+    "reused": true,
+    "rerun": false,
+    "proof": "resume-video1-reuse.json"
+  },
+  "video2": {
+    "corpusID": "md62mmdz0m",
+    "stageReached": "Qwen ASR model load",
+    "alignerStarted": false,
+    "speakerKitStarted": false,
+    "translationStarted": false,
+    "status": "stopped",
+    "stopReason": "post-load-runaway",
+    "elapsedSeconds": 43,
+    "peakResidentBytes": 5405343744,
+    "peakPhysicalFootprintBytes": 9680950288,
+    "minimumFreeMemoryPercent": 36,
+    "nativePressureLevels": ["normal"],
+    "peakSwapDeltaBytes": 0,
+    "pageoutDelta": 190,
+    "recoveredFreeMemoryPercent": 68,
+    "workerResidentAfterStop": false
+  },
+  "diagnosis": {
+    "rootCause": "the external guard compared the nearly empty process at startup with the expected Qwen model load",
+    "observedTimeline": "footprint reached about 9.6 GiB and had plateaued for about 20 seconds before the 30-sample startup window fired",
+    "nativeDangerObserved": false,
+    "conclusion": "external harness attribution failure; not a Qwen or TranslateGemma quality result"
+  }
+}

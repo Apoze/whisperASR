@@ -1,0 +1,9 @@
+{
+  "ticket": 106,
+  "status": "failed",
+  "route": "scoring",
+  "detail": "Command failed at scoring (exit 1)",
+  "translator": "COMET",
+  "corpusID": "md62mmdz0m",
+  "modelVerdictAssigned": false
+}

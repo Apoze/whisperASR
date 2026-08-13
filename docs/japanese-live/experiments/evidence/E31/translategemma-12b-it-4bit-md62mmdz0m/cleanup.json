@@ -1,0 +1,39 @@
+{
+  "ticket": 106,
+  "runMode": "RESUME_FULL_12B_VIDEO2",
+  "at": "2026-08-13T04:07:29Z",
+  "translationWorkerPID": 31746,
+  "resident": false,
+  "unloadVerified": true,
+  "nativePressureLevel": "normal",
+  "nativePressureRaw": 1,
+  "freeMemoryPercent": 74,
+  "swapUsedBytes": 4880922051,
+  "pageouts": 1799372,
+  "workers": [
+    {
+      "stage": "ASR",
+      "processIdentifier": 27837,
+      "exitedAt": "2026-08-13T03:54:08Z",
+      "resident": false
+    },
+    {
+      "stage": "alignment",
+      "processIdentifier": 30365,
+      "exitedAt": "2026-08-13T03:54:29Z",
+      "resident": false
+    },
+    {
+      "stage": "SpeakerKit",
+      "processIdentifier": 31194,
+      "exitedAt": "2026-08-13T03:54:43Z",
+      "resident": false
+    },
+    {
+      "stage": "translation",
+      "processIdentifier": 31746,
+      "exitedAt": "2026-08-13T04:07:23Z",
+      "resident": false
+    }
+  ]
+}
