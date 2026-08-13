@@ -240,7 +240,7 @@ for corpus in qudu2fx3ncc md62mmdz0m; do
   "$COMET_PYTHON" Scripts/comet_score_compat.py -s "$metrics/source.ja.txt" \
     -t "$metrics/qwen-ja.en.txt" "$metrics/parakeet-ja.en.txt" "$metrics/whisperkit.en.txt" \
     -r "$metrics/reference.en.txt" --model Unbabel/wmt22-comet-da \
-    --gpus 0 --batch_size 8 --num_workers 1 --disable_cache --quiet \
+    --gpus "${COMET_GPUS:-1}" --batch_size 8 --num_workers 1 --disable_cache --quiet \
     --to_json "$metrics/comet-score.json" >"$metrics/comet-score.raw.txt" 2>&1
 done
 python3 Scripts/report_high_quality_acceptance.py "$ARTIFACTS" --json "$REPORT_JSON" --markdown "$REPORT_MD"

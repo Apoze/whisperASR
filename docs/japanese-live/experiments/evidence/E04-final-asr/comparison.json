@@ -1,0 +1,124 @@
+[
+  {
+    "baseline" : "qwen3-asr-1.7b",
+    "blockingReasons" : [
+      "neither the paired CER 10% quality gate nor critical correction passes",
+      "at least one corpus regresses by more than 2 CER points",
+      "critical terms are not human-annotated",
+      "English preview, final stability and backlog need exact product replay",
+      "all independent holdouts must be evaluated together"
+    ],
+    "candidate" : "whisper-large-v3-turbo",
+    "corpusCERDeltas" : [
+      {
+        "baselineRate" : 0.26916802610114193,
+        "candidateRate" : 0.636215334420881,
+        "corpusID" : "qudu2fx3ncc",
+        "delta" : 0.36704730831973903,
+        "noMoreThanTwoPointRegression" : false
+      },
+      {
+        "baselineRate" : 0.24737945492662475,
+        "candidateRate" : 0.24528301886792453,
+        "corpusID" : "md62mmdz0m",
+        "delta" : -0.0020964360587002184,
+        "noMoreThanTwoPointRegression" : true
+      }
+    ],
+    "criticalCorrectionPathPasses" : false,
+    "l5BlockingReasons" : [
+      "neither the paired CER 10% quality gate nor critical correction passes",
+      "at least one corpus regresses by more than 2 CER points"
+    ],
+    "l5GatePasses" : false,
+    "normalizedTextAgreement" : 0.1724137931034483,
+    "pairedCERBootstrap" : {
+      "lower95" : -2.7348242811501597,
+      "observedRelativeImprovement" : -0.7915194346289753,
+      "resamples" : 10000,
+      "upper95" : 0.1317567567567567
+    },
+    "previewPathStatus" : "not-measured-by-offline-ASR-oracle",
+    "qualityPathPasses" : false
+  },
+  {
+    "baseline" : "qwen3-asr-1.7b",
+    "blockingReasons" : [
+      "neither the paired CER 10% quality gate nor critical correction passes",
+      "critical terms are not human-annotated",
+      "English preview, final stability and backlog need exact product replay",
+      "all independent holdouts must be evaluated together"
+    ],
+    "candidate" : "kotoba-whisper-v2.0-q5",
+    "corpusCERDeltas" : [
+      {
+        "baselineRate" : 0.26916802610114193,
+        "candidateRate" : 0.2740619902120718,
+        "corpusID" : "qudu2fx3ncc",
+        "delta" : 0.004893964110929849,
+        "noMoreThanTwoPointRegression" : true
+      },
+      {
+        "baselineRate" : 0.24737945492662475,
+        "candidateRate" : 0.24737945492662475,
+        "corpusID" : "md62mmdz0m",
+        "delta" : 0,
+        "noMoreThanTwoPointRegression" : true
+      }
+    ],
+    "criticalCorrectionPathPasses" : false,
+    "l5BlockingReasons" : [
+      "neither the paired CER 10% quality gate nor critical correction passes"
+    ],
+    "l5GatePasses" : false,
+    "normalizedTextAgreement" : 0.22413793103448276,
+    "pairedCERBootstrap" : {
+      "lower95" : -0.3513513513513513,
+      "observedRelativeImprovement" : -0.010600706713780994,
+      "resamples" : 10000,
+      "upper95" : 0.26074498567335236
+    },
+    "previewPathStatus" : "not-measured-by-offline-ASR-oracle",
+    "qualityPathPasses" : false
+  },
+  {
+    "baseline" : "qwen3-asr-1.7b",
+    "blockingReasons" : [
+      "neither the paired CER 10% quality gate nor critical correction passes",
+      "critical terms are not human-annotated",
+      "English preview, final stability and backlog need exact product replay",
+      "all independent holdouts must be evaluated together"
+    ],
+    "candidate" : "parakeet-tdt-ja-coreml",
+    "corpusCERDeltas" : [
+      {
+        "baselineRate" : 0.26916802610114193,
+        "candidateRate" : 0.2300163132137031,
+        "corpusID" : "qudu2fx3ncc",
+        "delta" : -0.03915171288743882,
+        "noMoreThanTwoPointRegression" : true
+      },
+      {
+        "baselineRate" : 0.24737945492662475,
+        "candidateRate" : 0.2138364779874214,
+        "corpusID" : "md62mmdz0m",
+        "delta" : -0.033542976939203356,
+        "noMoreThanTwoPointRegression" : true
+      }
+    ],
+    "criticalCorrectionPathPasses" : false,
+    "l5BlockingReasons" : [
+      "neither the paired CER 10% quality gate nor critical correction passes"
+    ],
+    "l5GatePasses" : false,
+    "normalizedTextAgreement" : 0.034482758620689655,
+    "pairedCERBootstrap" : {
+      "lower95" : -0.1360544217687074,
+      "observedRelativeImprovement" : 0.14134275618374548,
+      "resamples" : 10000,
+      "upper95" : 0.36842105263157887
+    },
+    "previewPathStatus" : "not-measured-by-offline-ASR-oracle",
+    "qualityPathPasses" : false
+  }
+]

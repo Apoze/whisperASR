@@ -1,0 +1,1048 @@
+{
+  "corpusID" : "qudu2fx3ncc",
+  "corpusRole" : "development",
+  "excerpts" : [
+    {
+      "input" : {
+        "audioPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/opening-multispeaker.wav",
+        "audioSHA256" : "d1c3ec3a01b00953f61f9956d1ec035cded04c831aebe7e29055ceb7ac5cb272",
+        "durationSeconds" : 30,
+        "id" : "opening-multispeaker",
+        "offsetSeconds" : 0
+      },
+      "rawOutputPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/raw-output.txt",
+      "rawOutputSHA256" : "8a566c9bec14a3e8bca33216f7baf46dbde09d99be7b3ecb087e1b257124f16c",
+      "spans" : [
+        {
+          "end" : 5.25,
+          "speaker" : "S01",
+          "start" : 0.29,
+          "text" : "続いての対象戦ですが、甘いモカそして立川来ました。"
+        },
+        {
+          "end" : 6.79,
+          "speaker" : "S02",
+          "start" : 5.27,
+          "text" : "モカさん頑張れ。"
+        },
+        {
+          "end" : 7.82,
+          "speaker" : "S03",
+          "start" : 6.82,
+          "text" : "頑張れ。"
+        },
+        {
+          "end" : 8.86,
+          "speaker" : "S04",
+          "start" : 8.03,
+          "text" : "頑張れ。"
+        },
+        {
+          "end" : 13.11,
+          "speaker" : "S01",
+          "start" : 8.88,
+          "text" : "先ほどはね、立川もプロとしての意地を見せました。"
+        },
+        {
+          "end" : 17.32,
+          "speaker" : "S02",
+          "start" : 12.61,
+          "text" : "CRGTAで人のパンツ覗いてきた人のことなの、ボボボにしてくれ。"
+        },
+        {
+          "end" : 19.64,
+          "speaker" : "S04",
+          "start" : 17.74,
+          "text" : "えー、そうなの？最低だな。"
+        },
+        {
+          "end" : 24.12,
+          "speaker" : "S03",
+          "start" : 21.62,
+          "text" : "私とクロスさんのパンツ覗いてきたから。"
+        },
+        {
+          "end" : 25.82,
+          "speaker" : "S04",
+          "start" : 24.61,
+          "text" : "いや、許せない。"
+        },
+        {
+          "end" : 29.99,
+          "speaker" : "S05",
+          "start" : 27.24,
+          "text" : "立川さんとさ、トトの出会い知って。"
+        }
+      ],
+      "stderrPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/worker-stderr.log",
+      "stderrSHA256" : "21e4f64a19ddc468abf6f862fcf61e748592471e66e3345a08032e6056b8a9f7",
+      "worker" : {
+        "availableMemorySamples" : [
+          {
+            "at" : 808181218.848205,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181218.84829,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181218.953472,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.054404,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.162118,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.265223,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.375125,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.482244,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.59224,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.696797,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.799551,
+            "availableMemoryBytes" : 11402362880
+          },
+          {
+            "at" : 808181219.899985,
+            "availableMemoryBytes" : 11402952704
+          },
+          {
+            "at" : 808181220.002144,
+            "availableMemoryBytes" : 11400019968
+          },
+          {
+            "at" : 808181220.105423,
+            "availableMemoryBytes" : 11305615360
+          },
+          {
+            "at" : 808181220.205824,
+            "availableMemoryBytes" : 11300913152
+          },
+          {
+            "at" : 808181220.308026,
+            "availableMemoryBytes" : 11288838144
+          },
+          {
+            "at" : 808181220.411431,
+            "availableMemoryBytes" : 11288838144
+          },
+          {
+            "at" : 808181220.511967,
+            "availableMemoryBytes" : 11288838144
+          },
+          {
+            "at" : 808181220.61266,
+            "availableMemoryBytes" : 11288838144
+          },
+          {
+            "at" : 808181220.720588,
+            "availableMemoryBytes" : 11288838144
+          },
+          {
+            "at" : 808181220.821219,
+            "availableMemoryBytes" : 11288838144
+          },
+          {
+            "at" : 808181220.92152,
+            "availableMemoryBytes" : 11235426304
+          },
+          {
+            "at" : 808181221.028489,
+            "availableMemoryBytes" : 11208048640
+          },
+          {
+            "at" : 808181221.129031,
+            "availableMemoryBytes" : 11179524096
+          },
+          {
+            "at" : 808181221.230585,
+            "availableMemoryBytes" : 11160469504
+          },
+          {
+            "at" : 808181221.331199,
+            "availableMemoryBytes" : 11160469504
+          },
+          {
+            "at" : 808181221.437743,
+            "availableMemoryBytes" : 11160469504
+          },
+          {
+            "at" : 808181221.539066,
+            "availableMemoryBytes" : 11160469504
+          },
+          {
+            "at" : 808181221.639123,
+            "availableMemoryBytes" : 11160469504
+          },
+          {
+            "at" : 808181221.742619,
+            "availableMemoryBytes" : 11160469504
+          },
+          {
+            "at" : 808181221.84294,
+            "availableMemoryBytes" : 11160469504
+          },
+          {
+            "at" : 808181221.946154,
+            "availableMemoryBytes" : 11073683456
+          },
+          {
+            "at" : 808181222.047601,
+            "availableMemoryBytes" : 11067736064
+          },
+          {
+            "at" : 808181222.15183,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.257783,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.36025,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.465502,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.571918,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.672221,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.778562,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.888281,
+            "availableMemoryBytes" : 11058003968
+          },
+          {
+            "at" : 808181222.988555,
+            "availableMemoryBytes" : 10877878272
+          },
+          {
+            "at" : 808181223.090544,
+            "availableMemoryBytes" : 10854187008
+          },
+          {
+            "at" : 808181223.191024,
+            "availableMemoryBytes" : 10865328128
+          },
+          {
+            "at" : 808181223.291475,
+            "availableMemoryBytes" : 10823548928
+          },
+          {
+            "at" : 808181223.392839,
+            "availableMemoryBytes" : 10774413312
+          },
+          {
+            "at" : 808181223.497985,
+            "availableMemoryBytes" : 10799022080
+          },
+          {
+            "at" : 808181223.603189,
+            "availableMemoryBytes" : 10797613056
+          },
+          {
+            "at" : 808181223.703249,
+            "availableMemoryBytes" : 10797613056
+          },
+          {
+            "at" : 808181223.805289,
+            "availableMemoryBytes" : 10797613056
+          },
+          {
+            "at" : 808181223.909279,
+            "availableMemoryBytes" : 10797613056
+          },
+          {
+            "at" : 808181224.013854,
+            "availableMemoryBytes" : 10793828352
+          },
+          {
+            "at" : 808181224.120685,
+            "availableMemoryBytes" : 10795024384
+          },
+          {
+            "at" : 808181224.221735,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181224.32264,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181224.422752,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181224.528664,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181224.632057,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181224.735624,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181224.838821,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181224.948825,
+            "availableMemoryBytes" : 10794074112
+          },
+          {
+            "at" : 808181225.055939,
+            "availableMemoryBytes" : 10805411840
+          },
+          {
+            "at" : 808181225.164577,
+            "availableMemoryBytes" : 10806689792
+          },
+          {
+            "at" : 808181225.265292,
+            "availableMemoryBytes" : 10896687104
+          },
+          {
+            "at" : 808181225.371764,
+            "availableMemoryBytes" : 10900717568
+          },
+          {
+            "at" : 808181225.472337,
+            "availableMemoryBytes" : 10910810112
+          },
+          {
+            "at" : 808181225.573881,
+            "availableMemoryBytes" : 10910629888
+          },
+          {
+            "at" : 808181225.675133,
+            "availableMemoryBytes" : 10909712384
+          },
+          {
+            "at" : 808181225.776319,
+            "availableMemoryBytes" : 10908860416
+          },
+          {
+            "at" : 808181225.87751,
+            "availableMemoryBytes" : 10910040064
+          },
+          {
+            "at" : 808181225.978936,
+            "availableMemoryBytes" : 10912563200
+          },
+          {
+            "at" : 808181226.081309,
+            "availableMemoryBytes" : 10909188096
+          },
+          {
+            "at" : 808181226.188488,
+            "availableMemoryBytes" : 10910924800
+          },
+          {
+            "at" : 808181226.289983,
+            "availableMemoryBytes" : 10913546240
+          },
+          {
+            "at" : 808181226.390882,
+            "availableMemoryBytes" : 10910744576
+          },
+          {
+            "at" : 808181226.49118,
+            "availableMemoryBytes" : 10919575552
+          },
+          {
+            "at" : 808181226.591297,
+            "availableMemoryBytes" : 10919575552
+          },
+          {
+            "at" : 808181226.697136,
+            "availableMemoryBytes" : 10919575552
+          },
+          {
+            "at" : 808181226.797541,
+            "availableMemoryBytes" : 10919575552
+          },
+          {
+            "at" : 808181226.90715,
+            "availableMemoryBytes" : 10919575552
+          },
+          {
+            "at" : 808181227.0132,
+            "availableMemoryBytes" : 10919575552
+          },
+          {
+            "at" : 808181227.113865,
+            "availableMemoryBytes" : 10917281792
+          },
+          {
+            "at" : 808181227.218744,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181227.318939,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181227.4216,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181227.52253,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181227.623926,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181227.728185,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181227.829367,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181227.93018,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181228.030676,
+            "availableMemoryBytes" : 10918461440
+          },
+          {
+            "at" : 808181228.130786,
+            "availableMemoryBytes" : 10925326336
+          },
+          {
+            "at" : 808181228.232128,
+            "availableMemoryBytes" : 10924654592
+          },
+          {
+            "at" : 808181228.333002,
+            "availableMemoryBytes" : 10926653440
+          },
+          {
+            "at" : 808181228.438449,
+            "availableMemoryBytes" : 10925998080
+          },
+          {
+            "at" : 808181228.53968,
+            "availableMemoryBytes" : 10929602560
+          },
+          {
+            "at" : 808181228.639827,
+            "availableMemoryBytes" : 10929881088
+          },
+          {
+            "at" : 808181228.739985,
+            "availableMemoryBytes" : 10924965888
+          },
+          {
+            "at" : 808181228.846431,
+            "availableMemoryBytes" : 10924965888
+          },
+          {
+            "at" : 808181228.947536,
+            "availableMemoryBytes" : 10924965888
+          },
+          {
+            "at" : 808181229.048711,
+            "availableMemoryBytes" : 10924965888
+          },
+          {
+            "at" : 808181229.150749,
+            "availableMemoryBytes" : 10900439040
+          },
+          {
+            "at" : 808181229.257132,
+            "availableMemoryBytes" : 10873618432
+          },
+          {
+            "at" : 808181229.357369,
+            "availableMemoryBytes" : 10872897536
+          },
+          {
+            "at" : 808181229.460611,
+            "availableMemoryBytes" : 10878517248
+          },
+          {
+            "at" : 808181229.563688,
+            "availableMemoryBytes" : 10878517248
+          },
+          {
+            "at" : 808181229.665459,
+            "availableMemoryBytes" : 10878517248
+          },
+          {
+            "at" : 808181229.765705,
+            "availableMemoryBytes" : 10878517248
+          },
+          {
+            "at" : 808181229.873804,
+            "availableMemoryBytes" : 10878517248
+          },
+          {
+            "at" : 808181229.981505,
+            "availableMemoryBytes" : 10878517248
+          },
+          {
+            "at" : 808181230.083067,
+            "availableMemoryBytes" : 10878517248
+          },
+          {
+            "at" : 808181230.186998,
+            "availableMemoryBytes" : 9412771840
+          },
+          {
+            "at" : 808181230.290424,
+            "availableMemoryBytes" : 9420603392
+          },
+          {
+            "at" : 808181230.390982,
+            "availableMemoryBytes" : 9419636736
+          },
+          {
+            "at" : 808181230.492032,
+            "availableMemoryBytes" : 9420701696
+          },
+          {
+            "at" : 808181230.598073,
+            "availableMemoryBytes" : 9424125952
+          },
+          {
+            "at" : 808181230.701124,
+            "availableMemoryBytes" : 9396404224
+          },
+          {
+            "at" : 808181230.807006,
+            "availableMemoryBytes" : 9391161344
+          },
+          {
+            "at" : 808181230.908208,
+            "availableMemoryBytes" : 9391161344
+          },
+          {
+            "at" : 808181231.012747,
+            "availableMemoryBytes" : 9391161344
+          },
+          {
+            "at" : 808181231.119072,
+            "availableMemoryBytes" : 9391161344
+          },
+          {
+            "at" : 808181231.221727,
+            "availableMemoryBytes" : 8781103104
+          },
+          {
+            "at" : 808181231.321818,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181231.423873,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181231.529958,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181231.631232,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181231.732389,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181231.838899,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181231.946729,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181232.046916,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181232.147571,
+            "availableMemoryBytes" : 8781774848
+          },
+          {
+            "at" : 808181232.257136,
+            "availableMemoryBytes" : 8800141312
+          },
+          {
+            "at" : 808181232.357848,
+            "availableMemoryBytes" : 8801533952
+          },
+          {
+            "at" : 808181232.45931,
+            "availableMemoryBytes" : 8824029184
+          },
+          {
+            "at" : 808181232.561317,
+            "availableMemoryBytes" : 8823046144
+          },
+          {
+            "at" : 808181232.66195,
+            "availableMemoryBytes" : 8823046144
+          },
+          {
+            "at" : 808181232.76256,
+            "availableMemoryBytes" : 8823046144
+          },
+          {
+            "at" : 808181232.863566,
+            "availableMemoryBytes" : 8823046144
+          },
+          {
+            "at" : 808181232.964521,
+            "availableMemoryBytes" : 8823046144
+          },
+          {
+            "at" : 808181233.06466,
+            "availableMemoryBytes" : 8823046144
+          },
+          {
+            "at" : 808181233.170417,
+            "availableMemoryBytes" : 8823046144
+          },
+          {
+            "at" : 808181233.271779,
+            "availableMemoryBytes" : 8829321216
+          },
+          {
+            "at" : 808181233.38094,
+            "availableMemoryBytes" : 8828551168
+          },
+          {
+            "at" : 808181233.482288,
+            "availableMemoryBytes" : 8830877696
+          },
+          {
+            "at" : 808181233.583452,
+            "availableMemoryBytes" : 8829812736
+          },
+          {
+            "at" : 808181233.684076,
+            "availableMemoryBytes" : 8829190144
+          },
+          {
+            "at" : 808181233.789227,
+            "availableMemoryBytes" : 8828878848
+          },
+          {
+            "at" : 808181233.889746,
+            "availableMemoryBytes" : 8828878848
+          },
+          {
+            "at" : 808181233.99883,
+            "availableMemoryBytes" : 8828878848
+          },
+          {
+            "at" : 808181234.100137,
+            "availableMemoryBytes" : 8828878848
+          },
+          {
+            "at" : 808181234.203538,
+            "availableMemoryBytes" : 8828878848
+          },
+          {
+            "at" : 808181234.304078,
+            "availableMemoryBytes" : 8833662976
+          },
+          {
+            "at" : 808181234.407209,
+            "availableMemoryBytes" : 8835284992
+          },
+          {
+            "at" : 808181234.514658,
+            "availableMemoryBytes" : 8840822784
+          },
+          {
+            "at" : 808181234.622074,
+            "availableMemoryBytes" : 8842018816
+          },
+          {
+            "at" : 808181234.726236,
+            "availableMemoryBytes" : 9024421888
+          },
+          {
+            "at" : 808181234.827188,
+            "availableMemoryBytes" : 9024421888
+          }
+        ],
+        "command" : [
+          "/bin/bash",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/Scripts/run_moss_q8_worker.sh",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/tools/moss-transcribe.cpp/build/moss-transcribe",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/models/moss-transcribe-q8_0.gguf",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/opening-multispeaker.wav",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/raw-output.txt",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/worker-stderr.log",
+          "4096"
+        ],
+        "elapsedSeconds" : 16.084064960479736,
+        "exitStatus" : 6,
+        "exitedAt" : 808181234.931803,
+        "forcedTermination" : false,
+        "peakPhysicalFootprintBytes" : 1307805160,
+        "pressureTransitions" : [
+
+        ],
+        "processIdentifier" : 18963,
+        "rawLog" : "",
+        "rawLogPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/opening-multispeaker/worker.log",
+        "startedAt" : 808181218.847738,
+        "swapUsedAfterBytes" : 1909653504,
+        "swapUsedBeforeBytes" : 1909653504,
+        "terminationReason" : "uncaught-signal"
+      }
+    },
+    {
+      "input" : {
+        "audioPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/overlap-match.wav",
+        "audioSHA256" : "a7cb3b5154b4a714184ad7b53289a208fb9df8df8b7dc179cefffe80cf1e213d",
+        "durationSeconds" : 22,
+        "id" : "overlap-match",
+        "offsetSeconds" : 218
+      },
+      "rawOutputPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/raw-output.txt",
+      "rawOutputSHA256" : "b7a6f215e5ea99ed3f6a60a1eea5dd4eb0cfd7cd2feecd36261042f5ac756f8b",
+      "spans" : [
+        {
+          "end" : 1.88,
+          "speaker" : "S01",
+          "start" : 0,
+          "text" : "すごいよね。"
+        },
+        {
+          "end" : 3.42,
+          "speaker" : "S02",
+          "start" : 1.88,
+          "text" : "えー！"
+        },
+        {
+          "end" : 7.12,
+          "speaker" : "S03",
+          "start" : 5.18,
+          "text" : "えー、出たよ。"
+        },
+        {
+          "end" : 8.48,
+          "speaker" : "S01",
+          "start" : 7.28,
+          "text" : "すごい。"
+        },
+        {
+          "end" : 9.14,
+          "speaker" : "S02",
+          "start" : 8.52,
+          "text" : "は？"
+        },
+        {
+          "end" : 11.48,
+          "speaker" : "S04",
+          "start" : 9.14,
+          "text" : "今のはオーディンシャッカーの時点で、"
+        },
+        {
+          "end" : 12.88,
+          "speaker" : "S04",
+          "start" : 11.48,
+          "text" : "セッティングたまらなかった。"
+        },
+        {
+          "end" : 13.64,
+          "speaker" : "S03",
+          "start" : 12.88,
+          "text" : "だけど。"
+        },
+        {
+          "end" : 14.82,
+          "speaker" : "S04",
+          "start" : 13.76,
+          "text" : "完璧でした。"
+        },
+        {
+          "end" : 17.88,
+          "speaker" : "S05",
+          "start" : 15.16,
+          "text" : "さあ、これで甘いボカスで一セット勝利。"
+        },
+        {
+          "end" : 19.78,
+          "speaker" : "S02",
+          "start" : 18.18,
+          "text" : "やったー！"
+        },
+        {
+          "end" : 20.88,
+          "speaker" : "S05",
+          "start" : 20.28,
+          "text" : "金子。"
+        },
+        {
+          "end" : 21.98,
+          "speaker" : "S02",
+          "start" : 21.22,
+          "text" : "ガード。"
+        }
+      ],
+      "stderrPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/worker-stderr.log",
+      "stderrSHA256" : "d720d71f2dc371428bcaeed17611115f8f4aab880a4d5d76225461e03b4ae454",
+      "worker" : {
+        "availableMemorySamples" : [
+          {
+            "at" : 808181234.936683,
+            "availableMemoryBytes" : 9024421888
+          },
+          {
+            "at" : 808181234.93672,
+            "availableMemoryBytes" : 9024421888
+          },
+          {
+            "at" : 808181235.037751,
+            "availableMemoryBytes" : 9024421888
+          },
+          {
+            "at" : 808181235.141809,
+            "availableMemoryBytes" : 9024421888
+          },
+          {
+            "at" : 808181235.242549,
+            "availableMemoryBytes" : 9024421888
+          },
+          {
+            "at" : 808181235.348774,
+            "availableMemoryBytes" : 9736355840
+          },
+          {
+            "at" : 808181235.453122,
+            "availableMemoryBytes" : 9301147648
+          },
+          {
+            "at" : 808181235.563163,
+            "availableMemoryBytes" : 9196027904
+          },
+          {
+            "at" : 808181235.67069,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181235.775043,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181235.8768,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181235.977689,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181236.079495,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181236.180803,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181236.288509,
+            "availableMemoryBytes" : 8353890304
+          },
+          {
+            "at" : 808181236.391595,
+            "availableMemoryBytes" : 8299331584
+          },
+          {
+            "at" : 808181236.496276,
+            "availableMemoryBytes" : 8299724800
+          },
+          {
+            "at" : 808181236.5979,
+            "availableMemoryBytes" : 8295612416
+          },
+          {
+            "at" : 808181236.69928,
+            "availableMemoryBytes" : 8295628800
+          },
+          {
+            "at" : 808181236.805392,
+            "availableMemoryBytes" : 8662908928
+          },
+          {
+            "at" : 808181236.905937,
+            "availableMemoryBytes" : 8660123648
+          },
+          {
+            "at" : 808181237.006137,
+            "availableMemoryBytes" : 8589787136
+          },
+          {
+            "at" : 808181237.106707,
+            "availableMemoryBytes" : 8589787136
+          },
+          {
+            "at" : 808181237.206915,
+            "availableMemoryBytes" : 8589787136
+          },
+          {
+            "at" : 808181237.314958,
+            "availableMemoryBytes" : 8589787136
+          },
+          {
+            "at" : 808181237.423461,
+            "availableMemoryBytes" : 8586067968
+          },
+          {
+            "at" : 808181237.530045,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181237.631682,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181237.734192,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181237.840148,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181237.940458,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181238.045845,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181238.148897,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181238.249119,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181238.350222,
+            "availableMemoryBytes" : 8584970240
+          },
+          {
+            "at" : 808181238.454268,
+            "availableMemoryBytes" : 8643969024
+          },
+          {
+            "at" : 808181238.559648,
+            "availableMemoryBytes" : 8644755456
+          },
+          {
+            "at" : 808181238.662646,
+            "availableMemoryBytes" : 8645591040
+          },
+          {
+            "at" : 808181238.763923,
+            "availableMemoryBytes" : 8647114752
+          },
+          {
+            "at" : 808181238.865338,
+            "availableMemoryBytes" : 8647737344
+          },
+          {
+            "at" : 808181238.965688,
+            "availableMemoryBytes" : 8648720384
+          },
+          {
+            "at" : 808181239.067414,
+            "availableMemoryBytes" : 8737783808
+          }
+        ],
+        "command" : [
+          "/bin/bash",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/Scripts/run_moss_q8_worker.sh",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/tools/moss-transcribe.cpp/build/moss-transcribe",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/models/moss-transcribe-q8_0.gguf",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/inputs/overlap-match.wav",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/raw-output.txt",
+          "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/worker-stderr.log",
+          "4096"
+        ],
+        "elapsedSeconds" : 4.234442949295044,
+        "exitStatus" : 6,
+        "exitedAt" : 808181239.170761,
+        "forcedTermination" : false,
+        "peakPhysicalFootprintBytes" : 1301415472,
+        "pressureTransitions" : [
+
+        ],
+        "processIdentifier" : 18986,
+        "rawLog" : "",
+        "rawLogPath" : "/Users/maz/.codex/worktrees/1d49/whisperASR/.build/benchmarks/moss-q8-metal-97/run/evidence/overlap-match/worker.log",
+        "startedAt" : 808181234.936318,
+        "swapUsedAfterBytes" : 1909653504,
+        "swapUsedBeforeBytes" : 1909653504,
+        "terminationReason" : "uncaught-signal"
+      }
+    }
+  ],
+  "experiment" : "issue-97-moss-q8-metal-two-dev-excerpts",
+  "modelFile" : "moss-transcribe-q8_0.gguf",
+  "modelLicense" : "Apache-2.0",
+  "modelRepository" : "mudler/moss-transcribe.cpp-gguf",
+  "modelRevision" : "54e4bbd17da3f84adf1c1bcf7791b9b9266f741e",
+  "modelSHA256" : "ed6c35d0d527c5d03171c3eb448e2150a42c76a51e3e73aa821e351c3da8307c",
+  "portLicense" : "MIT",
+  "portRepository" : "localai-org/moss-transcribe.cpp",
+  "portRevision" : "190a569c13b4b247450f2fb3b2a431244e84833e",
+  "runnerSHA256" : "ccc542e611d9d7a65b1f05502d0628194f4d7053dbba25abb7a45f6f4941a807",
+  "schemaVersion" : 1,
+  "settings" : {
+    "device" : "metal",
+    "maxNewTokens" : "4096",
+    "output" : "raw transcript parsed without subtitle postprocessing",
+    "quantization" : "q8_0",
+    "threads" : "8"
+  },
+  "sourcePath" : "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256" : "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1"
+}

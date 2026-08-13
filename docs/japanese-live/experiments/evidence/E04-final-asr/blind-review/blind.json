@@ -1,0 +1,2219 @@
+{
+  "corpusIDs" : [
+    "qudu2fx3ncc",
+    "md62mmdz0m"
+  ],
+  "items" : [
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "やばすぎ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "わぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁぁ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "わー。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "うわ今日!"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "やったー！",
+      "turnID" : 147
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "イエーイ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "イエーイ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "飯尾元気屋です!"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "お前、お前。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "やるー！",
+      "turnID" : 148
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "はい"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "はい。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "はい"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "えっ?"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "えーーー！",
+      "turnID" : 149
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "マジか最後"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "マジか最後"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "マジか。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "まじか、最後。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "マジか、最後はもう……。",
+      "turnID" : 150
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "えすごい!"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "はこうそうですね立ち回る必要ないそうですね"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "今はこう言ってますマジだそうですね立ち方がいいですね"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "マジかそうですね"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "えーーー！ えーーー！",
+      "turnID" : 151
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "すっごすぎるー!"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "えー、すごすぎる!"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "すごいすぎる。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "すごいすぎる"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "え、すごすぎる！",
+      "turnID" : 152
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "おめでとうございます"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "だから好きです、やっぱり。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "すいません"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "あ、すいません。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "えーーー！",
+      "turnID" : 153
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "泣けるんだけど普通"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "え泣けるんだけど普通。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "え、泣けるんだけど普通"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "え、抜けるんだけど、普通に、"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "え、泣けるんだけど、普通に！",
+      "turnID" : 154
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "本当に感動しました。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "めちゃめちゃ感動しました!"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "手前で感動しました"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "マジで感動しました"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "マジで感動しました！",
+      "turnID" : 155
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "マジで感動しました"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "手前で感動しました"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "本当に感動しました。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "めちゃめちゃ感動しました!"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "え、泣けるんだけど、普通に！",
+      "turnID" : 156
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "マジで感動した。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "マジで感動した"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "マジで感動した"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "マジで感動した!"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "マジで感動しました！",
+      "turnID" : 157
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "マジで感動した。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "マジで感動した"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "マジで感動した!"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "マジで感動した"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "マジで感動した！",
+      "turnID" : 158
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "めっちゃくてのみだ出た?"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "やっ! クリノミダ出た!"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ついに涙出た。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "普通に涙出たわ。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "普通に涙出た。",
+      "turnID" : 159
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "めっちゃくてのみだ出た?"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ついに涙出た。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "普通に涙出たわ。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "やっ! クリノミダ出た!"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "マジで感動した！",
+      "turnID" : 160
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "分かる?"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "わかる。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "これわかる"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "分かる!"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "普通に涙出た。",
+      "turnID" : 161
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "分かる!"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "これわかる"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "分かる?"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "わかる。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "ね、わかる！",
+      "turnID" : 162
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "さあということでこれでVスペシャルの全勝です。おめでとうございます。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "え、全勝!すげー!おめでとうございます!"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "え?すごい!おめでとうございます"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "これでv6全勝しました。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "さあ、ということで、これでVSPO!チーム全勝！ おめでとうございます！",
+      "turnID" : 163
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "4つ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "4つ。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "安い!"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "やっつー"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "いや、すごい。",
+      "turnID" : 164
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "すごい おめでとう"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "5位おめでとう!"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "すごいお姫様。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "すごいおめでとう"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "すごい、おめでとう！",
+      "turnID" : 165
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "みんな勝ったよねこれが本当のプロになれやん"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "みんな買ってるよね。これが本当のプロになれやん。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "これが本当のプロになれやん。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "やばいこれが本当のプロになれやん"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "やばい、これが本当の「プロになれ」やん！",
+      "turnID" : 166
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "おかしい!プロになれ!"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "マジでプロになれ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "マジでプロになれ!"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "私プロになれ僕はお前ら"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "マジでプロになれ。",
+      "turnID" : 167
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "プロになれ!"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "プロになれ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "プロになる"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "プロになれ。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "もか、お前はプロになれ。",
+      "turnID" : 168
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "もかお前は世界見葉畑"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "この後はモカお前は世界に羽ばたけ。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "萌歌、お前は世界に羽ばたけ。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "この後はもっかお前は世界に羽ばたけ"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "もか、お前は世界にはばたけ！",
+      "turnID" : 169
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "すごい本当に泣ける感動してる"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "え、すごい、本当に泣ける。感動、"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "すごい本当に泣ける感動してる"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "すごい本当に泣ける感動した。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "え、すごい。本当に泣ける。感動した。",
+      "turnID" : 170
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "次のチーム大丈夫か。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "次のチーム大丈夫か?"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "次のチーム大丈夫か?"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "次のチーム大丈夫かいか。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "次のチーム、大丈夫か？",
+      "turnID" : 171
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "マジで泣いてる!"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "マジで泣ける"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "マジで泣ける"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "マジで泣ける。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "マジで泣ける。",
+      "turnID" : 172
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "またはそのサンシャイン"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "あとはその3試合"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "あとはそのサンシャインセント。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "の代用またはその3回で"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "また、その3先っていうのが……。",
+      "turnID" : 173
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "すごいすごい"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "え、すごい。山すぎる。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "え、すごすぎる?"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "やばすぎる。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "やばすぎる！ すごすぎる！",
+      "turnID" : 174
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "持つフォン感動もらった 用力そしてまあコーチの信頼関係"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "持つな本当に感動をもらった対応力そしてコーチとの信頼関係というところが出たのが"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "本当に感動をもらった対応力、そしてコーチとの信頼関係というところが出たのかな。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "本当に感動をもらったそしてコーチとの信頼関係すごい"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "本当に感動をもらった。対応力、そしてコーチとの信頼関係。そういうところが出たのかなと思います。",
+      "turnID" : 175
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "えうち人のゲームプレイ見て泣くの初めてなんだけど、"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "うち人のゲームプレイ見て泣くの初めてだったけど"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "うち人のゲームプレイみたいなの初めてだったけど"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "うち人のゲームプレー見て泣くの初めてなんだけど。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "うち、人のゲームプレイ見て泣くの初めてなんだけど（笑）。",
+      "turnID" : 176
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "え、マジですごい"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "えっマジですごい!"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "マジですごい"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "え、マジですごい。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "え、マジですごい。",
+      "turnID" : 177
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ただただうまいっていう"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ただただ上手いっていう"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ただただうまいっていう。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ただただ上手いっていう。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "ただただ、うまいっていう。",
+      "turnID" : 178
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "見ててほれぼれするようなプレー。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "すごい出ててボレボレするようなプレイ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "すごすぎてボレボレするようなプレイ"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "すごいってフレボレするようなプレー"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "すごすぎて、すごい。ほれぼれするようなプレー。",
+      "turnID" : 179
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "このすごい相手に勝つまでやってきた努力を考えたらマジで負ける"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "このすごい相手に勝つまでやってきた努力を考えたらマジでなせる。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "このすごい相手に勝つまでやってきた努力を考えたらマジで負ける"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "いやこのすごい相手に勝つまでやってきた努力を考えたらマジでなけりゃ"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "このすごい相手に勝つまでやってきた努力を考えたら、マジで泣ける。",
+      "turnID" : 180
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "それでは一度ですねこちら実況席からお送りしましたステージの平山さんお願いします"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "それでは1度ですねこちら実況席からお送りしましたステージの平山さんお願いします。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "それでは一度こちら実況席からお送りしましたステージの平岩さんお願いします。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "それでは一度ですねこちら実況席からお送りしましたステージの平岩さんお願いします"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "それでは一度、こちら実況席からお送りしました。ステージの平岩さん、お願いします。",
+      "turnID" : 181
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "話しかけづらさも多少あるんですが確かさん3先での敗北といういかがでしたか?"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "話しかけづらくも多少あるんですが、タシカさん、3先での敗北といういかがでしたか。2先にして欲しかったですね。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "話しかけづらさも多少あるんですが、立川さん、3先での敗北という、いかがでしたか?"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "話しかけづらさも多少あるんですが、立川さん3先での敗北といういかがでしたか?2先にしてほしかったですね"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "話しかけづらさも多少あるんですが、立川さん。3先での敗北ということで、いかがでしたか？",
+      "turnID" : 182
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ジェス"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ハハハハハハハハ!"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "笑"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ははは。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "2先にしてほしかったですね。（笑）",
+      "turnID" : 183
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "コーチね務めていただいた本社いかがでしたか。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "コーチで務めていただいた本社いかがでしたか"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "コーチね、務めていただいたもんじゃ、いかがでしたか?"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "コーチで務めていただいたボンジャいかがでしたか"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "コーチを務めていただいたボンちゃん、いかがでしたか？",
+      "turnID" : 193
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "いやー熱入っちゃいましたね応援もうすごかったですよ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "いや熱入っちゃいましたね。応援もすごかったですよ。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "いや熱入っちゃいましたね応援にもうすごかったですよ"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "いやー、熱入っちゃいましたね、応援に。すごかったですよ。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "いやー、熱入っちゃいましたね、応援に。もう、すごかったですよ。",
+      "turnID" : 194
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "いやいやいやすっごいやっぱ練習通りやれてる動きですか"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "すっごいいやでもやっぱね練習どおりやれてる動きですか?"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "いやいやいや、すごい。いやでもやっぱね、練習通りやれてる動きですか。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "いやでもやっぱり練習通りやれてる動きですか"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "いや、でもやっぱね、練習どおりやれてる動きですから。",
+      "turnID" : 195
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "それが反映されて勝ちにつながっている時にやっぱりお互いいい練習したんだなっていうのが結果でこうやって出たのが"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "それがやっぱ反映されて勝ちにつながってる時にやっぱなんかお互いいい練習したんだなっていうのがやっぱ結果でこうやって出たのが"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "それがやっぱ反映されて勝ちに繋がってる時にやっぱなんかお互いいい練習したんだなっていうのがやっぱ結果でこうやって出たのが"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "それがやっぱ反映されて、勝ちにつながってるときに、やっぱなんか、お互いいい練習したんだなっていうのが、やっぱ結果で、こうやって出たのが。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "それがやっぱ反映されて、勝ちにつながってる時に、やっぱなんか「いい練習したんだな」っていうのが、結果でこうやって出たのが本当に……。",
+      "turnID" : 196
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "本当に勝ちたそうにしてたんでモカさんがね立ちには悪いけど今回はモカさんの勝ちということでまたね色々やる機会はあると思うんでその時にまたいい試合が見れればなと思います残りもあるんでね頑張ってください"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "本当にやっぱ勝ちたそうにしてたんで、萌歌さんがね、舘には悪いけど、ちょっと今回は萌歌さんの勝ちということで、またね、いろいろやる機会はあると思うんで、そのときにまたいい試合が見れればなと思います。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "本当にやっぱ勝したそうにしてたんで、モコさんがね、まあ、立ちには悪いけど、ちょっと今回はモコさんの勝ちということで、またね、いろいろやる機会があると思うんで、その時にまたいい試合が見れればなと思います。残りもあるんでね、頑張ってください。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "本当にやっぱり勝ちには悪いけどちょっと今回はもかさんの勝ちということでまたねいろいろやる機会はあると思うんでそういう時にまたいい試合が見れればなと思います思います"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "本当にやっぱ勝ちたそうにしてたんで、もかさんがね。まあ立川には悪いけど、ちょっと今回はもかさんの勝ちということで。またいろいろやる機会はあると思うので、その時にまたいい試合が見られればなと思います。残りもあるんでね、頑張ってください。",
+      "turnID" : 197
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ありがとうございます。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "はいありがとうございます"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "はいありがとうございます"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "はい、ありがとうございます。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "はい、ありがとうございます。",
+      "turnID" : 198
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "まだね次の試合ありますから"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ますまだね次の試合ありますから"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "まだね、次の試合ありますから。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "まだね次の試合ありますから"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "qudu2fx3ncc",
+      "referenceJapanese" : "まだね、次の試合ありますから。",
+      "turnID" : 199
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "おいダメだ俺もう鼻に詰まってるティッシュが気になってしゃべれん!"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "俺ダメだ。俺もう鼻に詰まってるティッシュが気になって喋れん。ごめん、"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ダメだ俺もう腹に詰まってるティッシュが気になってしゃべれん"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ダメだ俺もう腹に詰まってるティッシュが気になってしゃべれん"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "あ、だめだ。俺もう、鼻に詰まってるティッシュが気になって喋れん。ごめん。さすがに。",
+      "turnID" : 149
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "喋りにくいです。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "サムリリックイング"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "しゃべりにくいです。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "サムリリーで行くね"
+        }
+      ],
+      "confidence" : "low",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "［不明瞭なつぶやき］",
+      "turnID" : 150
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "餌し送ろうか。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "写真送ろうか"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "写真送ろうか?"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "写真を送ろうか"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "写真送ろうか？",
+      "turnID" : 151
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "いいいい本当に本当にやめて。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "いいいい本当に本当にやめて"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "いいいい本当にやめて"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "いいいい本当に本当にやめ"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "いい、いい、いい。本当に。本当にやめて。",
+      "turnID" : 152
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ピースに来たらどうですよ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ってピーズに聞いたらどうせよ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "えってピザに聞いたらどうしよう。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "えい!ってピースきたらどうしよう。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "「イエーイ」ってピースしてきたらどうしよう。",
+      "turnID" : 153
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "詰まってます。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "待ってます。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "待ってます"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "待ってます"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "詰まってまーす。",
+      "turnID" : 154
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "砕けすぎじゃん。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "砕けすぎじゃない?"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "くだけすぎじゃない"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "砕けすぎじゃない"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "くだらなすぎじゃない？",
+      "turnID" : 155
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "え、でもうちも二人に穴詰めて送れるわ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "えでもうちも2人であんな詰めて送れるわ。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "でもうちも2人に穴詰めて送れるわ。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "でもうちも2人に穴詰めて遅れるわ"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "でも、うちも2人に鼻詰めて送れるわ。",
+      "turnID" : 156
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "はい"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "はい。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ほんとに。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "はい"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "本当に。",
+      "turnID" : 157
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "一番困るのレドさんだろ。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "本当にやめよう一番困るのレイドさんだろ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "本当にやめよう一番困るの冷蔵三段。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "一番困るの冷野さんだろ"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "本当にやめよう。一番困るの、レイドさんだろ（笑）。",
+      "turnID" : 158
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "別にいいよしたら俺も送る。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "別にいいよそしたら俺も送るんだから。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "いいよしたら俺も送る送るんだ"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "いいよしたら俺も送るんだ"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "いいよ。そしたら俺も送るんだ。「どう？」って。送るんだ。",
+      "turnID" : 159
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "じゃあ加工してスリショットみたいにする"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "じゃあ加工してスリーショットみたいなやつする"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "じゃあ、加工してスリーショットみたいにする。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "じゃあ加工してスリーショットみたいにする"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "じゃあ加工して、スリーショットみたいにする？",
+      "turnID" : 160
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ただ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "はい。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "きた!"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "確かに"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "汚ねえ。",
+      "turnID" : 161
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "行ってきゃんちがいいるだけでいてみたいな時代なかった"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "なんかいっときアンチガイドだけでいてみたいな時代なかった?"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "なんか一時アンチ街いるだけでいてみたいな時代なかった"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "なんか一時アンチがいるだけでいてみたいな時代なかった。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "なんか一時、安置外いるだけで「いてー」みたいな時代なかった？",
+      "turnID" : 162
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "あった、あっち替え体験、もうできませんみたいな。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "あった、違い待機がもうできませんみたいな"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "あったあちがい大器はもうできませんみたいな"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "あったあん違い対応できませんみたいな"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "あった！ 「安置外耐久、もうできません！」みたいな。",
+      "turnID" : 163
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "そうそうそう"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "そうそうそう。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "そう"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "そうそうそう。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "そうそうそうそう。",
+      "turnID" : 164
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "まず今いけんだ。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "今行けんだ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "今は行けんだ"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "今行けんだ。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "今いけんだ。",
+      "turnID" : 165
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "はい、そう"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "はいと"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "割と、"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ポイント。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "あ、いた。",
+      "turnID" : 166
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "外すわ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "外すわ。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "外すわ。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "はずすわ"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "外すわ。",
+      "turnID" : 167
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "安定がいたって思った一回待ってみたいな時ありましたよね"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "安定外気を持っていけませんみたいな時ありましたよね。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "安定があったんきょもってもうできまってみたいな時ありまったよね"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "安定が担保持って決まったみたいな時があったよね。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "「安置外耐久、もうできません」みたいな時ありましたよね。",
+      "turnID" : 168
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "悪意があるだろ、そのまねのしかた。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "悪意があるだろその真似の仕方"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "悪意があるだろうその場での叱責"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "悪意があるだろその場での仕方"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "悪意があるだろ、その真似の仕方。",
+      "turnID" : 169
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ありまってよ"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "あれ待ってよ。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "足りまってよ"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ありまってよ。"
+        }
+      ],
+      "confidence" : "low",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "［不明瞭な短い反応］",
+      "turnID" : 170
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ちょっとオタクが出てる。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ちょっとオタクが出てる"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ちょっとオタクが出てる"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ちょっとオタクが出てる。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ちょっとオタクが出てる。",
+      "turnID" : 171
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "僕もその時期は嫌いでした"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "僕もその時期は嫌いでした"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "僕もその時期は嫌いでした。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "僕もこの時期は嫌いでした。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "僕もその時期は嫌いでした。",
+      "turnID" : 172
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "悪意ありすぎでしょ。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "赤いやりすぎでしょ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "赤いありすぎでしょ"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "悪意ありすぎでしょ"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "悪意ありすぎでしょ（笑）。",
+      "turnID" : 173
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ちょっと寄ってる"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ちょっと寄ってる。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ちょっと寄ってる"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ちょっと寄ってる。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ちょっと寄ってる。",
+      "turnID" : 174
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ねえなんかアレンジ入れすぎじゃない?"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "アレンジ入れすぎじゃない?"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "アレンジ入れすぎじゃない"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ねなんかアレンジ入れすぎじゃない"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ね、なんか。アレンジ入れすぎじゃない？",
+      "turnID" : 175
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "あれって入ってる"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "あれって言ってる"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "アレンジ入ってる。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "あれじゃないって、"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "アレンジ入ってる。",
+      "turnID" : 176
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "そんな感じだったけどな。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "そんな感じだったけどな"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "そんなかんじだったケロな。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "そんな感じだったけどな"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "そんな感じだったけどな。",
+      "turnID" : 177
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "当たらない。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "当たらないぜ"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "あたらないぜ。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "当たらないぜ"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "当たらないぜ。",
+      "turnID" : 178
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "どうしよう。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "どうしよう。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "うしよう"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "どうしよう。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "どうしよう。",
+      "turnID" : 179
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "気まぐれって見るかマジで。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "キーマやってみるかマジで。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "キーマンやってみるかマジで"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "キーマンやってみるかマジで"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "キーマウやってみるか、マジで。",
+      "turnID" : 180
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ありのりの"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ありのりのあり。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ありよりのあり"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ありよりのあり。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ありよりのあり。",
+      "turnID" : 181
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ありやね。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ありやね。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ありやね"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ありやね"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ありやね。",
+      "turnID" : 182
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "マジで当たんない"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "マジで当たんない。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "まじで当たんない。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "まだだったんない"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "マジで当たんない。",
+      "turnID" : 183
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "でも絶対視点移動間に合わない"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "でも絶対視点移動間に合わない"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "でも絶対支点移動間に合わない。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "でも絶対視点移動間に合わない。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "でも絶対、視点移動、間に合わない。",
+      "turnID" : 184
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "としよくかな"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "どうしようかな。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "どうしよっかな。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "どうしようかな"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "どうしよっかな。",
+      "turnID" : 185
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "めっちゃ感度開ける"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "めっちゃ感度開ける"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "めっちゃ感度開ける。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "めっちゃかんだ開ける。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "めっちゃ感度上げる。",
+      "turnID" : 186
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "バカの発想"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "バカの発想。"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "バカの発想"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ばかな発想。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "バカの発想。",
+      "turnID" : 187
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ちゃっかりウサギは何かうちも結構いちずみたいな感じなんだけどただその人をいちずに愛すっていうより本当に大丈夫かみたいなのをちゃんと分析するらしい。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "チャッカリウサギはなんかうちも結構一途みたいな感じなんだけどただその人を一途に愛するより本当に大丈夫かみたいなのをちゃんと分析するらしい"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "うちも結構一途みたいな感じなんだけどただその人を一途に愛すってより本当に大丈夫かみたいなのをちゃんと分析するらしい"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "シャッカリウサギはなんかうちも結構一途みたいな感じなんだけどただその人を一途に愛すってより本当に大丈夫かみたいなのをちゃんと分析するらしい"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ちゃっかりうさぎは、うちも結構一途みたいな感じなんだけど。ただ、その人を一途に愛すってより、「本当に大丈夫か？」みたいなのをちゃんと分析するらしい。",
+      "turnID" : 265
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ちゃっかりウサギだから。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "出たチャッカリウサギ来たチャッカリウサギだから"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ちゃっかりうさぎ来たちゃっかりうさぎだから"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "出たちゃっかりウサギ来たちゃっかりウサギだから"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "出た。ちゃっかりうさぎ来た。ちゃっかりうさぎだから。",
+      "turnID" : 266
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ちゃんと。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "ちゃんと買う"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ちゃんと感じ"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "ちゃんと買ってる。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ちゃんと考えてるんだ。",
+      "turnID" : 267
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "ちゃっかりウサギと隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "シャッカリウサギと隠れベイビーは幸せな結婚をしやすい例に会いたいブラシー"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "ちゃっかりうさぎと隠れベイビーは幸せな結婚をしやすい例会いたい"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "サッカーユサギと隠れベイビーは幸せな結婚をしやすい恋愛タイプらしい"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "ちなみに、ちゃっかりうさぎと隠れベイビーは、幸せな結婚をしやすい恋愛タイプらしい。",
+      "turnID" : 268
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "やった"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "えーやったえー"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "やった、"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "えやった!"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "え、やった。",
+      "turnID" : 269
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "待って、最後の恋人は、なんか苦労しそうじゃない?"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "正面待って最後の声びたなんか苦労しそうじゃない"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "待って最後の声びたなんか苦労しそうじゃない"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "正面待って最後の恋人なんか苦労しそうじゃない"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "え、待って。「最後の恋人」は苦労しそうじゃない？",
+      "turnID" : 270
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "最後の小指って多分重すぎて苦労する"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "最後の恋人は多分重すぎて苦労する"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "最後の恋人は多分重すぎて苦労する"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "最後の恋人はたぶん重すぎて苦労する。"
+        }
+      ],
+      "confidence" : "high",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "「最後の恋人」は、たぶん重すぎて苦労する。",
+      "turnID" : 271
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "おもくない。"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "思うくない"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "重くない"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "重くない。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "重くない。",
+      "turnID" : 272
+    },
+    {
+      "candidates" : [
+        {
+          "alias" : "A",
+          "japanese" : "私でも重いのかな"
+        },
+        {
+          "alias" : "B",
+          "japanese" : "私でも重いのかな"
+        },
+        {
+          "alias" : "C",
+          "japanese" : "私でも重いのかな。"
+        },
+        {
+          "alias" : "D",
+          "japanese" : "私でも重いのかな。"
+        }
+      ],
+      "confidence" : "medium",
+      "corpusID" : "md62mmdz0m",
+      "referenceJapanese" : "私、でも重いのかな。",
+      "turnID" : 273
+    }
+  ],
+  "note" : "Aliases are randomized independently for each turn; the key is stored separately.",
+  "schemaVersion" : 1,
+  "scope" : "e4"
+}

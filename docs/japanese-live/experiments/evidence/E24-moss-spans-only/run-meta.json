@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "issue": 98,
+  "experiment": "E24-moss-spans-only-development",
+  "corpusID": "qudu2fx3ncc",
+  "corpusRole": "development",
+  "holdoutOpened": false,
+  "approvedCommand": "BENCHMARK_SLOT_GRANTED=98 bash Scripts/run_moss_spans_experiment.sh run",
+  "classification": "candidate-runtime",
+  "result": "no-go-material",
+  "candidateOutputProduced": false,
+  "issue99Authorized": false,
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "manifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+  "canonicalAudioSHA256": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+  "frozenBaselineSHA256": "6060f830c8c3b8febb186c540e992f3d70375a674adb4d48087f77e1ce97c2b2",
+  "runnerSHA256": "ccc542e611d9d7a65b1f05502d0628194f4d7053dbba25abb7a45f6f4941a807",
+  "modelSHA256": "ed6c35d0d527c5d03171c3eb448e2150a42c76a51e3e73aa821e351c3da8307c",
+  "rawOutputSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "workerEvidenceSHA256": "061424b81ce2c5cedf2a4d5eba9c127a2f2b2e08a95eff5bc8b0f9d4c6f317fb",
+  "workerStderrSHA256": "4a1ea0b51c88735f68fe4adb736f50f28f4d2df3533bf8ac5ab1572e9bd0d826",
+  "testLogSHA256": "f90137d62d2298ed2d68ec93d518ee0b42d75bffeaef9b5bf430f696a8a5a98b",
+  "fullSwiftTestLogSHA256": "0e03414a2fa80cf6b04f7f9e848a278dc3b8f4cddfa9df96305c2e08dea3c338",
+  "failure": "kIOGPUCommandBufferCallbackErrorOutOfMemory before first token",
+  "frozen": [
+    "audio",
+    "qwen",
+    "segmentation",
+    "alignment",
+    "translation",
+    "glossary",
+    "exports",
+    "references"
+  ],
+  "requestedVariable": [
+    "diarization.rawSpans",
+    "diarization.mappings",
+    "diarization.overlapRanges",
+    "diarization.modelEvidence"
+  ]
+}

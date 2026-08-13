@@ -1,0 +1,26 @@
+Test Suite 'Selected tests' started at 2026-08-10 21:00:23.512.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 21:00:23.512.
+Test Suite 'MultiASRDecisionTests' started at 2026-08-10 21:00:23.512.
+Test Case '-[WhisperASRTests.MultiASRDecisionTests testRealDevelopmentROVERWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/MultiASRDecisionTests.swift:184: error: -[WhisperASRTests.MultiASRDecisionTests testRealDevelopmentROVERWhenOptedIn] : failed: caught error: "elevated(23027)"
+Test Case '-[WhisperASRTests.MultiASRDecisionTests testRealDevelopmentROVERWhenOptedIn]' failed (5.309 seconds).
+Test Suite 'MultiASRDecisionTests' failed at 2026-08-10 21:00:28.822.
+	 Executed 1 test, with 1 failure (1 unexpected) in 5.309 (5.310) seconds
+Test Suite 'WhisperASRPackageTests.xctest' failed at 2026-08-10 21:00:28.822.
+	 Executed 1 test, with 1 failure (1 unexpected) in 5.309 (5.310) seconds
+Test Suite 'Selected tests' failed at 2026-08-10 21:00:28.822.
+	 Executed 1 test, with 1 failure (1 unexpected) in 5.309 (5.311) seconds
+[multi-asr][development] normalizing-source: Normalizing source audio…
+[multi-asr][development] preparing-asr: Preparing Qwen JA…
+[multi-asr][development] transcribing: Transcribing Japanese…
+[multi-asr][development] preparing-alignment: Preparing forced alignment…
+[multi-asr][development] preparing-alignment: Downloading Qwen3 ForcedAligner…
+[multi-asr][development] preparing-alignment: Downloading Qwen3 ForcedAligner…
+[multi-asr][development] preparing-alignment: Loading Qwen3 ForcedAligner…
+[multi-asr][development] preparing-alignment: Qwen3 ForcedAligner ready
+[multi-asr][development] aligning: Aligning Japanese transcript…
+[multi-asr][development] cancelled: Job cancelled.
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "classification": "preflight",
+  "result": "pass",
+  "buildRoute": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun",
+  "packageResolvedSHA256": "71d9161262d1962dd6775c3f9aacf0a9a677d8dfc042e2dfa8c49669e885e41f",
+  "cacheProvenanceSHA256": "7515f744d7158f57bb675e94199db50599f5c75d3296fd4611e333124adb86b2",
+  "sourceTreeSHA256": "7385d01d9e1e5e7cf67bd2d17a422a21d1e2fd863e08c77cb00790b0eaa5f44f",
+  "lightTestsSHA256": "763e4b78072fc2e8e3fddd66de90b312c7de02fa46b36be081401078de95234a"
+}

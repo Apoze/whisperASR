@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "scope": "Terms anchored by the two supplied videos, their local references, the pinned E0 output, and directly relevant official primary sources",
+  "scorePolicy": "External sources construct candidates only; every score uses supplied local references and pinned E0 output",
+  "budgetLimits": [8, 16, 32, 64],
+  "pinnedE0QwenSHA256": "b9e06277edb6c23d9b969f06f160a0a587dcb867255d593e7c17a6c7342f4658",
+  "sources": [
+    {
+      "id": "local-qudu-reference",
+      "kind": "local-reference",
+      "locator": "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json",
+      "detail": "Supplied Japanese turns and source metadata; only local evidence can score candidates"
+    },
+    {
+      "id": "local-md62-reference",
+      "kind": "local-reference",
+      "locator": "docs/japanese-live/corpora/md62mmdz0m/manifest.json",
+      "detail": "Supplied Japanese turns and source metadata; only local evidence can score candidates"
+    },
+    {
+      "id": "local-e0-qwen",
+      "kind": "local-baseline-output",
+      "locator": ".build/benchmarks/japanese-live/runs/e0-qwen-final-20260802T203033Z/live-replay.json",
+      "sha256": "b9e06277edb6c23d9b969f06f160a0a587dcb867255d593e7c17a6c7342f4658",
+      "detail": "Pinned raw Qwen fragments used to discover exact replacement candidates and measure false replacements"
+    },
+    {
+      "id": "local-product-glossary",
+      "kind": "local-source",
+      "locator": "Sources/JapaneseGlossary.swift",
+      "detail": "Existing canonical spellings and readings; not a scoring source"
+    },
+    {
+      "id": "madb-official",
+      "kind": "external-primary",
+      "locator": "https://mediag.bunka.go.jp/madb_lab/lod/",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official Media Arts Database catalogue; construction only"
+    },
+    {
+      "id": "vspo-official",
+      "kind": "external-primary",
+      "locator": "https://store.vspo.jp/collections/members",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official VSPO member catalogue; construction only"
+    },
+    {
+      "id": "vspo-showdown-official",
+      "kind": "external-primary",
+      "locator": "https://bravegroup.co.jp/news/8535/",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official event announcement; construction only"
+    },
+    {
+      "id": "neoporte-yui-official",
+      "kind": "external-primary",
+      "locator": "https://neo-porte.jp/member/hizuki-yui",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official member page; construction only"
+    },
+    {
+      "id": "neoporte-reid-official",
+      "kind": "external-primary",
+      "locator": "https://neo-porte.jp/member/shirayuki-reid",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official member page; construction only"
+    },
+    {
+      "id": "vcr-gta-official",
+      "kind": "external-primary",
+      "locator": "https://vaultroom.shop/pages/vcr-gta",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official event page; construction only"
+    },
+    {
+      "id": "vsaikyo-official",
+      "kind": "external-primary",
+      "locator": "https://vtuber-saikyo.jp/",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official tournament site; construction only"
+    },
+    {
+      "id": "apex-official",
+      "kind": "external-primary",
+      "locator": "https://www.ea.com/ja/games/apex-legends/apex-legends",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official game page; construction only"
+    },
+    {
+      "id": "apex-terms-official",
+      "kind": "external-primary",
+      "locator": "https://help.ea.com/ja/articles/apex-legends/terms-guide/",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official terminology guide; construction only"
+    },
+    {
+      "id": "apex-ranked-official",
+      "kind": "external-primary",
+      "locator": "https://help.ea.com/ja/articles/apex-legends/ranked/",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official ranked guide; construction only"
+    },
+    {
+      "id": "sf6-manual-official",
+      "kind": "external-primary",
+      "locator": "https://game.capcom.com/manual/SF6/ja/switch2/top",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official Capcom manual; construction only"
+    },
+    {
+      "id": "sf6-battle-official",
+      "kind": "external-primary",
+      "locator": "https://www.streetfighter.com/6/buckler/ja-jp/battle_change",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official Capcom battle terminology; construction only"
+    },
+    {
+      "id": "ace-attorney-official",
+      "kind": "external-primary",
+      "locator": "https://www.nintendo.com/jp/topics/article/761e2356-2f26-11e9-b104-0a6d14145cb1",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official Nintendo product page; construction only"
+    },
+    {
+      "id": "apple-iphone-official",
+      "kind": "external-primary",
+      "locator": "https://support.apple.com/ja-jp/108044",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official Apple model identification page; construction only"
+    },
+    {
+      "id": "unidic-official",
+      "kind": "external-primary",
+      "locator": "https://clrd.ninjal.ac.jp/unidic/download.html",
+      "retrievedAt": "2026-08-05",
+      "detail": "Official NINJAL lexical resource; ambiguity checks only, never scoring"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "anime",
+      "name": "Anime",
+      "corpora": [],
+      "authority": "insufficient-evidence-no-local-anime-reference",
+      "terms": []
+    },
+    {
+      "id": "vtuber",
+      "name": "VTuber",
+      "corpora": ["qudu2fx3ncc", "md62mmdz0m"],
+      "authority": "diagnostic-local-fit-only",
+      "terms": [
+        {"id":"amayui-moka","canonical":"甘結もか","reading":"あまゆい もか","aliases":["甘井隆","甘いボカ"],"mode":"replace","ambiguity":"profile-scoped","provenance":["local-qudu-reference","local-e0-qwen","local-product-glossary","vspo-official"]},
+        {"id":"tachikawa","canonical":"立川","reading":"たちかわ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference"]},
+        {"id":"nekota-tsuna","canonical":"猫汰つな","reading":"ねこた つな","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary","vspo-official"]},
+        {"id":"ichinose-uruha","canonical":"一ノ瀬うるは","reading":"いちのせ うるは","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary","vspo-official"]},
+        {"id":"yumeno-akari","canonical":"夢野あかり","reading":"ゆめの あかり","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary","vspo-official"]},
+        {"id":"shiranami-ramune","canonical":"白波らむね","reading":"しらなみ らむね","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary","vspo-official"]},
+        {"id":"sendo-yuuhi","canonical":"千燈ゆうひ","reading":"せんどう ゆうひ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary","vspo-official"]},
+        {"id":"aizawa-ema","canonical":"藍沢エマ","reading":"あいざわ えま","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-md62-reference","local-product-glossary","vspo-official"]},
+        {"id":"hizuki-yui","canonical":"緋月ゆい","reading":"ひづき ゆい","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-md62-reference","neoporte-yui-official"]},
+        {"id":"shirayuki-reid","canonical":"白雪レイド","reading":"しらゆき れいど","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-md62-reference","neoporte-reid-official"]},
+        {"id":"yano-kuromu","canonical":"夜乃くろむ","reading":"やの くろむ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary","vspo-official"]},
+        {"id":"vspo","canonical":"ぶいすぽっ！","reading":"ぶいすぽ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary","vspo-official"]},
+        {"id":"vspo-showdown","canonical":"VSPO! SHOWDOWN","reading":"ぶいすぽ しょうだうん","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","vspo-showdown-official"]},
+        {"id":"vcr-gta","canonical":"VCR GTA","reading":"ぶいしーあーる じーてぃーえー","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","vcr-gta-official"]},
+        {"id":"vtuber-saikyo","canonical":"VTuber最協決定戦","reading":"ぶいちゅーばー さいきょう けっていせん","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","vsaikyo-official"]},
+        {"id":"vtuber","canonical":"VTuber","reading":"ぶいちゅーばー","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","local-product-glossary"]},
+        {"id":"tasomaru","canonical":"たそまる","reading":"たそまる","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"ema-taso","canonical":"エマたそ","reading":"えまたそ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"kaga-sumire","canonical":"花芽すみれ","reading":"かが すみれ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"kaga-nazuna","canonical":"花芽なずな","reading":"かが なずな","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"kogara-toto","canonical":"小雀とと","reading":"こがら とと","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"kurumi-noah","canonical":"胡桃のあ","reading":"くるみ のあ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"tosaki-mimi","canonical":"兎咲ミミ","reading":"とさき みみ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"asumi-sena","canonical":"空澄セナ","reading":"あすみ せな","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"tachibana-hinano","canonical":"橘ひなの","reading":"たちばな ひなの","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"hanabusa-lisa","canonical":"英リサ","reading":"はなぶさ りさ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"kisaragi-ren","canonical":"如月れん","reading":"きさらぎ れん","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"kaminari-qpi","canonical":"神成きゅぴ","reading":"かみなり きゅぴ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"yakumo-beni","canonical":"八雲べに","reading":"やくも べに","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"shinomiya-runa","canonical":"紫宮るな","reading":"しのみや るな","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"komori-met","canonical":"小森めと","reading":"こもり めと","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"tsumugi-kokage","canonical":"紡木こかげ","reading":"つむぎ こかげ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"choya-hanabi","canonical":"蝶屋はなび","reading":"ちょうや はなび","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"ginjo-saine","canonical":"銀城サイネ","reading":"ぎんじょう さいね","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"tatsumaki-chise","canonical":"龍巻ちせ","reading":"たつまき ちせ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"aotsuki-remia","canonical":"青月レミア","reading":"あおつき れみあ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"kuroha-arya","canonical":"黒刃アリヤ","reading":"くろは ありや","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"jisaki-jira","canonical":"地崎ジラ","reading":"じさき じら","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"mikure-narin","canonical":"美暮ナリン","reading":"みくれ なりん","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"solari-riko","canonical":"ソラリリコ","reading":"そらり りこ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"suzukami-eris","canonical":"涼上エリス","reading":"すずかみ えりす","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]},
+        {"id":"umezono-juno","canonical":"梅園ジュノ","reading":"うめぞの じゅの","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-product-glossary","vspo-official"]}
+      ]
+    },
+    {
+      "id": "gaming",
+      "name": "Gaming",
+      "corpora": ["qudu2fx3ncc"],
+      "authority": "diagnostic-local-fit-only",
+      "terms": [
+        {"id":"street-fighter-6","canonical":"ストリートファイター6","reading":"すとりーとふぁいたー しっくす","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference","sf6-manual-official"]},
+        {"id":"vcr-gta","canonical":"VCR GTA","reading":"ぶいしーあーる じーてぃーえー","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","vcr-gta-official"]},
+        {"id":"first-to-two","canonical":"2先","reading":"にさき","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference"]},
+        {"id":"first-to-three","canonical":"3先","reading":"さんさき","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference"]},
+        {"id":"lethal","canonical":"リーサル","reading":"りーさる","aliases":["リソール"],"mode":"replace","ambiguity":"profile-scoped","provenance":["local-qudu-reference","local-e0-qwen"]},
+        {"id":"kill-line","canonical":"キルライン","reading":"きるらいん","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference"]},
+        {"id":"modern","canonical":"モダン","reading":"もだん","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference","sf6-manual-official"]},
+        {"id":"drive-gauge","canonical":"ドライブゲージ","reading":"どらいぶげーじ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","sf6-battle-official"]},
+        {"id":"drive-impact","canonical":"ドライブインパクト","reading":"どらいぶいんぱくと","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","sf6-battle-official"]},
+        {"id":"drive-parry","canonical":"ドライブパリィ","reading":"どらいぶぱりぃ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","sf6-battle-official"]},
+        {"id":"drive-rush","canonical":"ドライブラッシュ","reading":"どらいぶらっしゅ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["sf6-battle-official"]},
+        {"id":"burnout","canonical":"バーンアウト","reading":"ばーんあうと","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference","local-e0-qwen","sf6-battle-official"]},
+        {"id":"od-hyakki-shu","canonical":"OD百鬼襲","reading":"おーでぃー ひゃっきしゅう","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","sf6-manual-official"]},
+        {"id":"hyakki-shu","canonical":"百鬼襲","reading":"ひゃっきしゅう","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","sf6-manual-official"]},
+        {"id":"gouki","canonical":"豪鬼","reading":"ごうき","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","sf6-manual-official"]},
+        {"id":"super-arts","canonical":"スーパーアーツ","reading":"すーぱーあーつ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["sf6-manual-official"]},
+        {"id":"critical-arts","canonical":"クリティカルアーツ","reading":"くりてぃかるあーつ","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["sf6-manual-official"]},
+        {"id":"punish-counter","canonical":"パニッシュカウンター","reading":"ぱにっしゅかうんたー","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["sf6-battle-official"]},
+        {"id":"apex-legends","canonical":"APEX","reading":"えーぺっくす","aliases":["エペックス"],"mode":"replace","ambiguity":"profile-scoped","provenance":["local-md62-reference","local-e0-qwen","apex-official"]},
+        {"id":"mirage","canonical":"ミラージュ","reading":"みらーじゅ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","apex-official"]},
+        {"id":"rookie","canonical":"ルーキー","reading":"るーきー","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","apex-ranked-official"]},
+        {"id":"silver","canonical":"シルバー","reading":"しるばー","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","apex-ranked-official"]},
+        {"id":"legend","canonical":"レジェンド","reading":"れじぇんど","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","apex-terms-official"]},
+        {"id":"rank-points","canonical":"ランクポイント","reading":"らんくぽいんと","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["apex-ranked-official"]},
+        {"id":"mnk","canonical":"MnK","reading":"まうす あんど きーぼーど","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["apex-terms-official"]},
+        {"id":"ring","canonical":"リング","reading":"りんぐ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["apex-terms-official"]},
+        {"id":"third-party","canonical":"漁夫の利","reading":"ぎょふのり","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["apex-terms-official"]},
+        {"id":"finish","canonical":"確殺","reading":"かくさつ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["apex-terms-official"]},
+        {"id":"outside-ring-endurance","canonical":"安置外耐久","reading":"あんちがい たいきゅう","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"keyboard-mouse","canonical":"キーマウ","reading":"きーまう","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"ace-attorney","canonical":"逆転裁判","reading":"ぎゃくてんさいばん","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-qudu-reference","ace-attorney-official"]},
+        {"id":"objection","canonical":"異議あり！","reading":"いぎあり","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-qudu-reference","ace-attorney-official"]}
+      ]
+    },
+    {
+      "id": "conversation",
+      "name": "Conversation",
+      "corpora": ["md62mmdz0m"],
+      "authority": "diagnostic-local-fit-only",
+      "terms": [
+        {"id":"iphone-xr","canonical":"iPhone XR","reading":"あいふぉーん てんあーる","aliases":["iPhone10R"],"mode":"replace","ambiguity":"profile-scoped","provenance":["local-md62-reference","local-e0-qwen","apple-iphone-official"]},
+        {"id":"iphone-17-pro-max","canonical":"17 Pro Max","reading":"じゅうなな ぷろ まっくす","aliases":["17プロマックス"],"mode":"replace","ambiguity":"profile-scoped","provenance":["local-md62-reference","local-e0-qwen","apple-iphone-official"]},
+        {"id":"iphone-11-pro","canonical":"11 Pro","reading":"じゅういち ぷろ","aliases":["11プロ"],"mode":"replace","ambiguity":"profile-scoped","provenance":["local-md62-reference","local-e0-qwen","apple-iphone-official"]},
+        {"id":"one-terabyte","canonical":"1TB","reading":"いち てらばいと","aliases":["1000テラバイト"],"mode":"replace","ambiguity":"profile-scoped","provenance":["local-md62-reference","local-e0-qwen"]},
+        {"id":"iphone-x","canonical":"iPhone X","reading":"あいふぉーん てん","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","apple-iphone-official"]},
+        {"id":"iphone-15","canonical":"iPhone 15","reading":"あいふぉーん じゅうご","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","apple-iphone-official"]},
+        {"id":"iphone-16","canonical":"iPhone 16","reading":"あいふぉーん じゅうろく","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","apple-iphone-official"]},
+        {"id":"seiso","canonical":"清楚","reading":"せいそ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","unidic-official"]},
+        {"id":"love-type-test","canonical":"ラブタイプ診断","reading":"らぶたいぷ しんだん","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"last-lover","canonical":"最後の恋人","reading":"さいごの こいびと","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"shrewd-rabbit","canonical":"ちゃっかりうさぎ","reading":"ちゃっかり うさぎ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"hidden-baby","canonical":"隠れベイビー","reading":"かくれ べいびー","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","local-e0-qwen"]},
+        {"id":"boss-cat","canonical":"ボス猫","reading":"ぼすねこ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"baby-talk","canonical":"バブバブ","reading":"ばぶばぶ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference","unidic-official"]},
+        {"id":"aizawa-ema","canonical":"藍沢エマ","reading":"あいざわ えま","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-md62-reference","vspo-official"]},
+        {"id":"hizuki-yui","canonical":"緋月ゆい","reading":"ひづき ゆい","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-md62-reference","neoporte-yui-official"]},
+        {"id":"shirayuki-reid","canonical":"白雪レイド","reading":"しらゆき れいど","aliases":[],"mode":"hint","ambiguity":"exact","provenance":["local-md62-reference","neoporte-reid-official"]},
+        {"id":"tasomaru","canonical":"たそまる","reading":"たそまる","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]},
+        {"id":"ema-taso","canonical":"エマたそ","reading":"えまたそ","aliases":[],"mode":"hint","ambiguity":"profile-scoped","provenance":["local-md62-reference"]}
+      ]
+    }
+  ],
+  "exclusions": [
+    {"surface":"もか","target":"甘結もか","reason":"common short form; hint only","provenance":["local-qudu-reference","unidic-official"]},
+    {"surface":"甘井もか","target":"甘結もか","reason":"existing product rule but absent from the pinned local E0 output","provenance":["local-product-glossary"]},
+    {"surface":"甘い儲か","target":"甘結もか","reason":"the overlapping supplied reference does not support the target","provenance":["local-qudu-reference","local-e0-qwen"]},
+    {"surface":"甘いもんかわ","target":"甘結もか","reason":"the overlapping supplied reference does not support the target","provenance":["local-qudu-reference","local-e0-qwen"]},
+    {"surface":"雨もか","target":"甘結もか","reason":"can be ordinary Japanese across a fragment boundary","provenance":["local-e0-qwen"]},
+    {"surface":"雨雲カバー","target":"甘結もか","reason":"well-formed unrelated phrase","provenance":["local-e0-qwen"]},
+    {"surface":"タチカ","target":"立川","reason":"truncated name is not exact enough for replacement","provenance":["local-e0-qwen"]},
+    {"surface":"レイド","target":"白雪レイド","reason":"common gaming noun and surname fragment","provenance":["local-md62-reference","neoporte-reid-official"]},
+    {"surface":"たそ","target":"たそまる","reason":"productive nickname suffix","provenance":["local-md62-reference"]},
+    {"surface":"V最","target":"VTuber最協決定戦","reason":"hint only; do not expand shorthand in raw text","provenance":["local-qudu-reference","vsaikyo-official"]},
+    {"surface":"スト6","target":"ストリートファイター6","reason":"legitimate shorthand from local metadata; preserve instead of expanding","provenance":["local-qudu-reference","sf6-manual-official"]},
+    {"surface":"エペ","target":"Apex Legends","reason":"hint only; do not translate established shorthand","provenance":["local-md62-reference","apex-official"]},
+    {"surface":"パリ","target":"パリィ","reason":"collides with Paris","provenance":["local-e0-qwen","sf6-battle-official"]},
+    {"surface":"バーバート","target":"バーンアウト","reason":"officially plausible but worsens the strict overlapping supplied reference","provenance":["local-qudu-reference","local-e0-qwen","sf6-battle-official"]},
+    {"surface":"後期","target":"豪鬼","reason":"ordinary Japanese homophone","provenance":["local-e0-qwen","sf6-manual-official"]},
+    {"surface":"強気","target":"豪鬼","reason":"ordinary Japanese homophone","provenance":["local-e0-qwen","sf6-manual-official"]},
+    {"surface":"ゴキ","target":"豪鬼","reason":"common unrelated word fragment","provenance":["local-e0-qwen","sf6-manual-official"]},
+    {"surface":"10","target":"iPhone X","reason":"number is globally ambiguous","provenance":["local-e0-qwen","apple-iphone-official"]},
+    {"surface":"X","target":"iPhone X","reason":"single Latin letter is globally ambiguous","provenance":["local-md62-reference","apple-iphone-official"]},
+    {"surface":"清掃","target":"清楚","reason":"valid unrelated word","provenance":["local-e0-qwen","unidic-official"]},
+    {"surface":"生徒","target":"清楚","reason":"valid unrelated word","provenance":["local-e0-qwen","unidic-official"]},
+    {"surface":"隠れ赤ちゃん","target":"隠れベイビー","reason":"the supplied reference intentionally retains this wording in the overlapping turn","provenance":["local-md62-reference","local-e0-qwen"]},
+    {"surface":"最後の恋人","target":"semantic English label","reason":"never semantically translate with deterministic replacement","provenance":["local-md62-reference"]},
+    {"surface":"ボス猫","target":"semantic English label","reason":"never semantically translate with deterministic replacement","provenance":["local-md62-reference"]}
+  ]
+}

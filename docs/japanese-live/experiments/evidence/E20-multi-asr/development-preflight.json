@@ -1,0 +1,396 @@
+{
+  "schemaVersion": 1,
+  "ticket": 64,
+  "corpusID": "qudu2fx3ncc",
+  "holdoutOpened": false,
+  "artifactAudit": [
+    {
+      "corpusID": "qudu2fx3ncc",
+      "role": "development",
+      "backend": "qwen-ja",
+      "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+      "model": {
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+        "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+      },
+      "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+      "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+      "manifest": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/manifest.json",
+        "sha256": "3f31b861f8a59ab5fbed35561d58c8921ce2d4c7a46f5a222a6ad4548109275a"
+      },
+      "rawASR": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000001/raw-asr.json",
+        "sha256": "b7281fdd3226930a4dc59758eb5e192642747ad6f9d18d942b850288ad42a394"
+      }
+    },
+    {
+      "corpusID": "qudu2fx3ncc",
+      "role": "development",
+      "backend": "parakeet-ja",
+      "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+      "model": {
+        "modelID": "FluidInference/parakeet-0.6b-ja-coreml",
+        "revision": "2952296ff1da4a6d6a7aec545e226367db80c612"
+      },
+      "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+      "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+      "manifest": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000002/manifest.json",
+        "sha256": "13d517d82f1fe704196bce102817282e0a929ec5b7c0eb93e635774c8232d7fa"
+      },
+      "rawASR": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000002/raw-asr.json",
+        "sha256": "2ab8678481b4ad22a08c015a2332c25e85309e0e327158e127a3bd3351611c6d"
+      }
+    },
+    {
+      "corpusID": "qudu2fx3ncc",
+      "role": "development",
+      "backend": "whisperkit",
+      "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+      "model": {
+        "modelID": "argmaxinc/whisperkit-coreml/openai_whisper-large-v3",
+        "revision": "97a5bf9bbc74c7d9c12c755d04dea59e672e3808"
+      },
+      "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+      "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+      "manifest": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000003/manifest.json",
+        "sha256": "3cb34f2a7eb39b741024b4bf1039665d2eedbaf8d1eeafa903e9a7e6a30e2471"
+      },
+      "rawASR": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/qudu2fx3ncc/jobs/44000001-0000-4000-8000-000000000003/raw-asr.json",
+        "sha256": "30fdb2f4e5f2e5ef92b02c3bfa1121edd205f739a06fa7253e499999dce8f0fb"
+      }
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "role": "untouched-final-holdout",
+      "backend": "qwen-ja",
+      "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+      "model": {
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+        "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0"
+      },
+      "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+      "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+      "manifest": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000001/manifest.json",
+        "sha256": "ab4b1c21e1fd02488502e31458271aa6bc85e92b665ff3bd52ea2000dc770411"
+      },
+      "rawASR": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/qwen-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000001/raw-asr.json",
+        "sha256": "00b986ccb47e1da4e6532682ef8006086ad0dca8865459ba972fee297f3af5c1"
+      }
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "role": "untouched-final-holdout",
+      "backend": "parakeet-ja",
+      "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+      "model": {
+        "modelID": "FluidInference/parakeet-0.6b-ja-coreml",
+        "revision": "2952296ff1da4a6d6a7aec545e226367db80c612"
+      },
+      "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+      "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+      "manifest": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000002/manifest.json",
+        "sha256": "bdff00cb4c3dacb3e10360a1f62dfd0c689056545229cceb2f52eedcf57940a7"
+      },
+      "rawASR": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/parakeet-ja/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000002/raw-asr.json",
+        "sha256": "0cdb4764bc139c24220c797a08858632e30b5dee00f9d73bb1e6ce29e2f8a7ec"
+      }
+    },
+    {
+      "corpusID": "md62mmdz0m",
+      "role": "untouched-final-holdout",
+      "backend": "whisperkit",
+      "commit": "4be3c3f3f9517fc49924e46adb07ae842a044d2a",
+      "model": {
+        "modelID": "argmaxinc/whisperkit-coreml/openai_whisper-large-v3",
+        "revision": "97a5bf9bbc74c7d9c12c755d04dea59e672e3808"
+      },
+      "sourcePath": "/Users/maz/Documents/videos/jap/2/Video2.webm",
+      "sourceSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+      "manifest": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000003/manifest.json",
+        "sha256": "0dec0d24daecfa409ef2cc7d2128b95ced13acd9ddca8ebf638d80ea0ba3bd15"
+      },
+      "rawASR": {
+        "path": "/Users/maz/Documents/projets/whisperASR/.build/benchmarks/high-quality/offline-acceptance/whisperkit/md62mmdz0m/jobs/44000002-0000-4000-8000-000000000003/raw-asr.json",
+        "sha256": "c4d804e3e4db34b944a12eb0db90ab60e0dc27f97ab65e14565b9f199c8767eb"
+      }
+    }
+  ],
+  "protocol": {
+    "baseline": "qwen-ja",
+    "firstCandidate": "complete-hypothesis-medoid",
+    "tieOrder": [
+      "whisperkit",
+      "parakeet-ja",
+      "qwen-ja"
+    ],
+    "whisperKitUse": "only-qwen-parakeet-disagreement",
+    "rover": "exact-character-majority-2-of-3-with-medoid-fallback",
+    "translationRuns": 0,
+    "networkAccess": false
+  },
+  "windows": {
+    "count": 16,
+    "qwenParakeetDisagreements": 16,
+    "medoidSelections": {
+      "parakeet-ja": 4,
+      "qwen-ja": 3,
+      "whisperkit": 9
+    },
+    "roverBackbones": {
+      "parakeet-ja": 4,
+      "qwen-ja": 3,
+      "whisperkit": 9
+    },
+    "commonBoundaries": true,
+    "completePCM": true
+  },
+  "development": {
+    "qwenHighNonOverlapCER": {
+      "editDistance": 1608,
+      "referenceCharacterCount": 1852,
+      "turnCount": 111,
+      "ratePercent": 86.82505399568035
+    },
+    "medoidHighNonOverlapCER": {
+      "editDistance": 1480,
+      "referenceCharacterCount": 1852,
+      "turnCount": 111,
+      "ratePercent": 79.91360691144709
+    },
+    "medoidPairedRelativeGain": {
+      "baselineEdits": 1608,
+      "candidateEdits": 1480,
+      "relativeGainPercent": 7.960199004975125,
+      "low95Percent": -2.516091281451141,
+      "high95Percent": 16.40461215932914,
+      "seed": 46,
+      "samples": 10000
+    },
+    "qwenAllTimedCER": {
+      "editDistance": 3966,
+      "referenceCharacterCount": 2989,
+      "turnCount": 199,
+      "ratePercent": 132.68651722984276
+    },
+    "medoidAllTimedCER": {
+      "editDistance": 2849,
+      "referenceCharacterCount": 2989,
+      "turnCount": 199,
+      "ratePercent": 95.31615925058549
+    },
+    "oracleHighNonOverlapCER": {
+      "editDistance": 1067,
+      "referenceCharacterCount": 1852,
+      "turnCount": 111,
+      "ratePercent": 57.6133909287257
+    },
+    "oraclePairedRelativeGain": {
+      "baselineEdits": 1608,
+      "candidateEdits": 1067,
+      "relativeGainPercent": 33.64427860696517,
+      "low95Percent": 17.21518987341772,
+      "high95Percent": 47.78543307086614,
+      "seed": 46,
+      "samples": 10000
+    },
+    "medoidGatePassed": false,
+    "roverAdmissionGatePassed": true,
+    "examples": {
+      "gained": [
+        {
+          "turnID": 32,
+          "startSeconds": 179.0,
+          "endSeconds": 185.0,
+          "reference": "リーサルだー！ ドーーーン!!!",
+          "qwen": "あああああああリーサルの時最後の一撃これで決まるみたいなモカちゃんがリーザルの形はこのぐらいの長さみたいなこれで死ぬなキルラインみたいなこれはやったまみたいな手に入りますから前側の立ち回りが強くなるやっぱりおお止まってるエラーとこれエラーエラーログに完全に反映してるけど入って見てました",
+          "candidate": "最後のなんていうんだろう一撃これで決まるみたいな萌歌ちゃんがリーサルのケージはこのぐらいの長さみたいなのやっててこれで死ぬなみたいな着るラインみたいな感じこれはやったなみたいな舞川の立ち回りが完璧でしたおっすごい攻め",
+          "editGain": 33
+        },
+        {
+          "turnID": 163,
+          "startSeconds": 742.0,
+          "endSeconds": 748.0,
+          "reference": "さあ、ということで、これでVSPO!チーム全勝！ おめでとうございます！",
+          "qwen": "さあということでこれでv勝利ですえ全勝ですおめでとうございますすごいおめだとうみんな勝ったよやばいこれが本当のプロになれやんマジでプロになれモカお前はプロになれえこの後はモカお前は世界に羽ばたけえすごい本当に泣ける感動したいいのチームだ大丈夫かっておかしくないマジで泣けるよあとはその選手っていうすごいすごいすぎるまあ持つな本当に感動をもらった対応力としてまあコーチとの",
+          "candidate": "さあということでこれはvsカーブリースの全勝ですおめとくございますすごいおめでとうみんな勝ったよねこれが本当のプロになれやんマジでプロになれモカお前はプロになれモカお前は世界見羽ばたけすごい本当に泊ける感動した次のチーム大丈夫かな本当に泣けるまた三試合選手っていう人もヤバすぎる本当に感動をもらったコーチとの",
+          "editGain": 31
+        },
+        {
+          "turnID": 38,
+          "startSeconds": 217.5,
+          "endSeconds": 220.0,
+          "reference": "すごいよね。",
+          "qwen": "そうなんだよすごい試合ですよすごいよねすごいねすごいすごいすごいスカッカーの時",
+          "candidate": "",
+          "editGain": 29
+        },
+        {
+          "turnID": 52,
+          "startSeconds": 292.0,
+          "endSeconds": 297.0,
+          "reference": "ちなみに豪鬼は、他のキャラよりもHPが少ない。",
+          "qwen": "対抗されているのではいそうだねこれすごい激戦に突っ込んで甘えもかの技を突き出していく次にゴキは他のキャラよりもhpが少ないさすがですね",
+          "candidate": "ユムカの技を突き出していますちなみにゴウキは他のキャラよりもhpが少ないさすがです",
+          "editGain": 29
+        },
+        {
+          "turnID": 11,
+          "startSeconds": 57.0,
+          "endSeconds": 60.0,
+          "reference": "（笑）怖っ。",
+          "qwen": "ておろにそう柄の悪い人の絡みみたいなそこからなんかポータ",
+          "candidate": "",
+          "editGain": 26
+        },
+        {
+          "turnID": 181,
+          "startSeconds": 801.86,
+          "endSeconds": 806.26,
+          "reference": "それでは一度、こちら実況席からお送りしました。ステージの平岩さん、お願いします。",
+          "qwen": "します",
+          "candidate": "らお送りしましたステージの平岩さんお願いします",
+          "editGain": 20
+        },
+        {
+          "turnID": 180,
+          "startSeconds": 796.74,
+          "endSeconds": 801.86,
+          "reference": "このすごい相手に勝つまでやってきた努力を考えたら、マジで泣ける。",
+          "qwen": "やってたんですけどいやこのすごい相手に勝つまでやってきた努力を考えたらマじで泣けそれでは1位とですねこちら実況生から送りしましたステージの平山さんお願い",
+          "candidate": "きた努力を考えたらマジで負けるそれでは一度ですねこちら実況席から",
+          "editGain": 17
+        },
+        {
+          "turnID": 29,
+          "startSeconds": 165.0,
+          "endSeconds": 169.0,
+          "reference": "そっか、時間もあるのか。",
+          "qwen": "欲しい時間もかなり少ない状況ですそこそこ時間もあるのかあとこれ時間20",
+          "candidate": "です地名そっか時間もあるのかこれ時間20秒",
+          "editGain": 16
+        }
+      ],
+      "lost": [
+        {
+          "turnID": 4,
+          "startSeconds": 13.0,
+          "endSeconds": 18.0,
+          "reference": "VCR GTAで人のパンツ覗いてきた人のことなんか、ボコボコにしてくれ。",
+          "qwen": "たgtaで人のパンツ覗いてきた人のことなんか報告にしてくれ",
+          "candidate": "何",
+          "editGain": -26
+        },
+        {
+          "turnID": 1,
+          "startSeconds": 0.0,
+          "endSeconds": 4.0,
+          "reference": "続いての大将戦ですが、甘結もか、そして立川。",
+          "qwen": "続いての対象戦ですが甘いモカそして立川",
+          "candidate": "何",
+          "editGain": -14
+        },
+        {
+          "turnID": 8,
+          "startSeconds": 46.0,
+          "endSeconds": 51.0,
+          "reference": "肩に鳥乗っけてるVTuberいるから、こいつにしようぜ、みたいな感じで（笑）。",
+          "qwen": "のメンターに取り残してくるクイチュバいるぞこいつにしようぜみたいな",
+          "candidate": "",
+          "editGain": -12
+        },
+        {
+          "turnID": 30,
+          "startSeconds": 169.0,
+          "endSeconds": 175.0,
+          "reference": "この間合いで、僕たちには考えられない、とんでもない量のいろんなこと考えてんの？",
+          "qwen": "秒この前で僕たちには考えられないとんでもない量のいろんなこと考えちゃったよ",
+          "candidate": "このままいけじゃん僕たちには考えられないとでもないよ",
+          "editGain": -11
+        },
+        {
+          "turnID": 3,
+          "startSeconds": 9.0,
+          "endSeconds": 13.0,
+          "reference": "立川も、プロとしての意地を見せます。",
+          "qwen": "ほどはね立川もプロとしての意地を見せました",
+          "candidate": "何",
+          "editGain": -10
+        },
+        {
+          "turnID": 179,
+          "startSeconds": 792.58,
+          "endSeconds": 796.74,
+          "reference": "すごすぎて、すごい。ほれぼれするようなプレー。",
+          "qwen": "のすごい見てて俺俺するようなプレー",
+          "candidate": "相手に勝つまでやってき",
+          "editGain": -10
+        },
+        {
+          "turnID": 87,
+          "startSeconds": 466.5,
+          "endSeconds": 479.5,
+          "reference": "なんか後ろで腕組んで見てるの、なんかゲーセンでさ、ゲーム機の後ろで見てるみたいな構図じゃない？ いいな、私も後ろで見たい。",
+          "qwen": "んか後ろで腕組んで見てるのなんかゲーセンでさゲーム機の後ろ見てるみたいな構図じゃないわいいな私後ろでも見たいドライブはリードしているよなしおあらカマジ",
+          "candidate": "って感じなんか後ろで腕組んで見ているのがなんかゲーセンでさぁゲーム機の後ろで見ているみたいなポーズじゃないわぁいいなぁ私も後ろで見たいドライブはリードしているラッシュはカメラ地",
+          "editGain": -9
+        },
+        {
+          "turnID": 6,
+          "startSeconds": 20.0,
+          "endSeconds": 25.0,
+          "reference": "私とくろむさんのパンツ覗いてきたから、立川さん（笑）。",
+          "qwen": "最低だな私とクロスさんのパンツを覗いたから",
+          "candidate": "何",
+          "editGain": -8
+        }
+      ]
+    }
+  },
+  "roverPreAlignment": {
+    "overallCER": {
+      "editDistance": 1899,
+      "referenceCharacterCount": 2989,
+      "hypothesisCharacterCount": 3130,
+      "ratePercent": 63.53295416527266
+    },
+    "primaryGate": "pending-frozen-forced-alignment"
+  },
+  "cost": {
+    "reusedASRSeconds": {
+      "qwen-ja": 125.9823739528656,
+      "parakeet-ja": 4.901591062545776,
+      "whisperkit": 522.4569610357285
+    },
+    "heavyModelsLaunched": 0,
+    "selectionWallSeconds": 3.7307942090556026,
+    "memoryBefore": {
+      "at": "2026-08-10T18:47:00.235651+00:00",
+      "memoryPressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 84%",
+      "vmMemoryPressure": "0",
+      "memorystatusLevel": "84",
+      "swapUsage": "total = 4096.00M  used = 2890.56M  free = 1205.44M  (encrypted)",
+      "processPeakRSSBytes": 28622848
+    },
+    "memoryAfter": {
+      "at": "2026-08-10T18:47:02.855091+00:00",
+      "memoryPressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 83%",
+      "vmMemoryPressure": "0",
+      "memorystatusLevel": "83",
+      "swapUsage": "total = 4096.00M  used = 2890.56M  free = 1205.44M  (encrypted)",
+      "processPeakRSSBytes": 66355200
+    }
+  },
+  "next": "run-rover-development-once",
+  "startedAt": "2026-08-10T18:47:00.235479+00:00",
+  "finishedAt": "2026-08-10T18:47:03.966479+00:00"
+}

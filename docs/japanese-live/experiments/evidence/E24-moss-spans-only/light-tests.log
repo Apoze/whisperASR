@@ -1,0 +1,29 @@
+warning: '--skip-update' option is deprecated and will be removed in a future release
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.26s)
+Test Suite 'Selected tests' started at 2026-08-12 01:27:29.065.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-12 01:27:29.066.
+Test Suite 'HighQualityTranslationWorkerTests' started at 2026-08-12 01:27:29.066.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testFiniteWorkerExitCanBeAwaitedAndRecorded]' started.
+Test Case '-[WhisperASRTests.HighQualityTranslationWorkerTests testFiniteWorkerExitCanBeAwaitedAndRecorded]' passed (0.210 seconds).
+Test Suite 'HighQualityTranslationWorkerTests' passed at 2026-08-12 01:27:29.277.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.210 (0.211) seconds
+Test Suite 'MOSSQ8SmokeTests' started at 2026-08-12 01:27:29.277.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testRawSpansAreCompleteOrderedAndBounded]' started.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testRawSpansAreCompleteOrderedAndBounded]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testSpansOnlyUsesPrincipalMappingsAndSeparateRawOverlap]' started.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testSpansOnlyUsesPrincipalMappingsAndSeparateRawOverlap]' passed (0.000 seconds).
+Test Suite 'MOSSQ8SmokeTests' passed at 2026-08-12 01:27:29.280.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-12 01:27:29.280.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.213 (0.214) seconds
+Test Suite 'Selected tests' passed at 2026-08-12 01:27:29.280.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.213 (0.215) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

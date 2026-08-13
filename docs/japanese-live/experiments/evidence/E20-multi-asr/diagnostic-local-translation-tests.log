@@ -1,0 +1,52 @@
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (0.25s)
+Test Suite 'Selected tests' started at 2026-08-10 21:19:29.972.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-10 21:19:29.973.
+Test Suite 'HighQualityLocalTranslationTests' started at 2026-08-10 21:19:29.973.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testCleanupMemoryFailureIsRecordedAsGuardEvidence]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testCleanupMemoryFailureIsRecordedAsGuardEvidence]' passed (0.019 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testFailedTranslationLoadUnloadsAndReleasesOfflineWorkflow]' started.
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:275: error: -[WhisperASRTests.HighQualityLocalTranslationTests testFailedTranslationLoadUnloadsAndReleasesOfflineWorkflow] : XCTAssertEqual failed: ("modelPreparation") is not equal to ("translation")
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:279: error: -[WhisperASRTests.HighQualityLocalTranslationTests testFailedTranslationLoadUnloadsAndReleasesOfflineWorkflow] : XCTAssertEqual failed: ("0") is not equal to ("1")
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:288: error: -[WhisperASRTests.HighQualityLocalTranslationTests testFailedTranslationLoadUnloadsAndReleasesOfflineWorkflow] : XCTAssertEqual failed: ("nil") is not equal to ("Optional("mlx-community/translategemma-12b-it-4bit")")
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:289: error: -[WhisperASRTests.HighQualityLocalTranslationTests testFailedTranslationLoadUnloadsAndReleasesOfflineWorkflow] : XCTAssertEqual failed: ("nil") is not equal to ("Optional("f3dcfd54df14672fbcf0731086fb47a797a943ae")")
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testFailedTranslationLoadUnloadsAndReleasesOfflineWorkflow]' failed (0.015 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testLegacyEvidenceDecodesWithoutNewLocalTranslationFields]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testLegacyEvidenceDecodesWithoutNewLocalTranslationFields]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testLocalTranslationRunsOnlyAfterASRUnloadWithoutHostedCredentials]' started.
+/Users/maz/.codex/worktrees/eaca/whisperASR/Sources/HighQualityJob.swift:2397: error: -[WhisperASRTests.HighQualityLocalTranslationTests testLocalTranslationRunsOnlyAfterASRUnloadWithoutHostedCredentials] : failed: caught error: "HighQualityJobError(stage: WhisperASRApp.HighQualityJobFailureStage.modelPreparation, message: "Cannot load ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit: only 14487748608 bytes are currently available, below its declared peak (7516192768 bytes) plus the system reserve (8589934592 bytes).", resultDirectory: Optional(file:///var/folders/v8/3ypw00f54l5ct6nnmdr67r8c0000gn/T/15E47201-45C8-4535-B5D7-5517E7EC667C/21C9648A-1F1D-4023-B744-CC71AC5C1318/))"
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testLocalTranslationRunsOnlyAfterASRUnloadWithoutHostedCredentials]' failed (0.002 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testMissingLegacyMarkersNeverAcceptTheWholeModelResponse]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testMissingLegacyMarkersNeverAcceptTheWholeModelResponse]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:716: -[WhisperASRTests.HighQualityLocalTranslationTests testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn] : Test skipped - Set the direct-translation experiment evidence and output paths.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testOfficialDirectProtocolOnFrozenSemanticUnitsWhenOptedIn]' skipped (0.001 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaDevelopmentSmokeWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:517: -[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaDevelopmentSmokeWhenOptedIn] : Test skipped - Set WHISPERASR_RUN_TRANSLATEGEMMA_SMOKE=1 for the local 12B smoke run.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaDevelopmentSmokeWhenOptedIn]' skipped (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:564: -[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn] : Test skipped - Run the ticket #62 bounded TranslateGemma memory smoke.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testRealTranslateGemmaMemoryReserveSmokeWhenOptedIn]' skipped (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslateGemmaIsPinnedAndUsesOnlyTheCurrentJapaneseAsItsPrompt]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslateGemmaIsPinnedAndUsesOnlyTheCurrentJapaneseAsItsPrompt]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslationCancellationUnloadsAndReleasesOfflineWorkflow]' started.
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:324: error: -[WhisperASRTests.HighQualityLocalTranslationTests testTranslationCancellationUnloadsAndReleasesOfflineWorkflow] : Asynchronous wait failed: Exceeded timeout of 2 seconds, with unfulfilled expectations: "translation started".
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:331: error: -[WhisperASRTests.HighQualityLocalTranslationTests testTranslationCancellationUnloadsAndReleasesOfflineWorkflow] : XCTAssertEqual failed: ("modelPreparation") is not equal to ("cancelled")
+/Users/maz/.codex/worktrees/eaca/whisperASR/Tests/HighQualityLocalTranslationTests.swift:334: error: -[WhisperASRTests.HighQualityLocalTranslationTests testTranslationCancellationUnloadsAndReleasesOfflineWorkflow] : XCTAssertEqual failed: ("0") is not equal to ("1")
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslationCancellationUnloadsAndReleasesOfflineWorkflow]' failed (2.065 seconds).
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslationRuntimeReserveViolationSurvivesContextAndUnloads]' started.
+Test Case '-[WhisperASRTests.HighQualityLocalTranslationTests testTranslationRuntimeReserveViolationSurvivesContextAndUnloads]' passed (0.009 seconds).
+Test Suite 'HighQualityLocalTranslationTests' failed at 2026-08-10 21:19:32.086.
+	 Executed 11 tests, with 3 tests skipped and 8 failures (1 unexpected) in 2.112 (2.113) seconds
+Test Suite 'WhisperASRPackageTests.xctest' failed at 2026-08-10 21:19:32.086.
+	 Executed 11 tests, with 3 tests skipped and 8 failures (1 unexpected) in 2.112 (2.113) seconds
+Test Suite 'Selected tests' failed at 2026-08-10 21:19:32.086.
+	 Executed 11 tests, with 3 tests skipped and 8 failures (1 unexpected) in 2.112 (2.114) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

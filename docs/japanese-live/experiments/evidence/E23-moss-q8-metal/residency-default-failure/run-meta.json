@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "issue": 97,
+  "corpusRole": "development",
+  "referenceAvailable": false,
+  "preparationSeconds": 157,
+  "sourcePath": "/Users/maz/Documents/videos/jap/1/Video1.webm",
+  "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+  "port": {
+    "repository": "localai-org/moss-transcribe.cpp",
+    "revision": "190a569c13b4b247450f2fb3b2a431244e84833e",
+    "license": "MIT",
+    "runnerSHA256": "ccc542e611d9d7a65b1f05502d0628194f4d7053dbba25abb7a45f6f4941a807",
+    "metal": true
+  },
+  "model": {
+    "repository": "mudler/moss-transcribe.cpp-gguf",
+    "revision": "54e4bbd17da3f84adf1c1bcf7791b9b9266f741e",
+    "file": "moss-transcribe-q8_0.gguf",
+    "sha256": "ed6c35d0d527c5d03171c3eb448e2150a42c76a51e3e73aa821e351c3da8307c",
+    "sizeBytes": 986881024,
+    "license": "Apache-2.0"
+  },
+  "buildTool": {
+    "name": "CMake",
+    "version": "4.3.3",
+    "archiveSHA256": "5221a13450c7a0219a2a0d1b6c9085eb06489721fafd8488ccebc1584175d2fb"
+  },
+  "sourceTreeSHA256": "79d52b30cd85970d49881f38021b41441ba64421998adfab0d46e7b7cb7a8839",
+  "cacheProvenanceSHA256": "7515f744d7158f57bb675e94199db50599f5c75d3296fd4611e333124adb86b2"
+}

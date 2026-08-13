@@ -1,0 +1,29 @@
+warning: '--skip-update' option is deprecated and will be removed in a future release
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/Documents/projets/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/Documents/projets/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (11.97s)
+Test Suite 'Selected tests' started at 2026-08-12 01:27:44.686.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-12 01:27:44.687.
+Test Suite 'MOSSQ8SmokeTests' started at 2026-08-12 01:27:44.687.
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalFullDevelopmentWhenOptedIn]' started.
+/Users/maz/.codex/worktrees/c7bf/whisperASR/Tests/MOSSQ8SmokeTests.swift:483: error: -[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalFullDevelopmentWhenOptedIn] : failed: caught error: "failed("worker exit was not zero")"
+Test Case '-[WhisperASRTests.MOSSQ8SmokeTests testMOSSQ8MetalFullDevelopmentWhenOptedIn]' failed (16.551 seconds).
+Test Suite 'MOSSQ8SmokeTests' failed at 2026-08-12 01:28:01.238.
+	 Executed 1 test, with 1 failure (1 unexpected) in 16.551 (16.551) seconds
+Test Suite 'WhisperASRPackageTests.xctest' failed at 2026-08-12 01:28:01.239.
+	 Executed 1 test, with 1 failure (1 unexpected) in 16.551 (16.552) seconds
+Test Suite 'Selected tests' failed at 2026-08-12 01:28:01.239.
+	 Executed 1 test, with 1 failure (1 unexpected) in 16.551 (16.552) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

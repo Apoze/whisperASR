@@ -1,0 +1,14 @@
+{
+  "ticket": 104,
+  "experiment": "readable-cues-dev-v1",
+  "split": "development",
+  "sourceCorpus": "qudu2fx3ncc",
+  "maximumCharactersPerLine": 42,
+  "maximumLinesPerCue": 2,
+  "minimumDurationSeconds": 1.0,
+  "maximumDurationSeconds": 7.0,
+  "maximumCharactersPerSecond": 20.0,
+  "textIdentity": "Unicode text with whitespace collapsed; Speaker labels excluded as metadata",
+  "timingPolicy": "Preserve each source-aligned unit and every inter-unit gap exactly; introduce no boundary",
+  "holdoutStatus": "closed"
+}

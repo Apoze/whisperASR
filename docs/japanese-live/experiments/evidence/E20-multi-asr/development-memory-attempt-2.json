@@ -1,0 +1,151 @@
+{
+  "fixedReserveBytes" : 0,
+  "policy" : "admit only at vm.memory_pressure=normal; stop on warning\/critical",
+  "samples" : [
+    {
+      "at" : "2026-08-10T19:00:23Z",
+      "availableMemoryBytes" : 11971133440,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 13681456,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:23Z",
+      "availableMemoryBytes" : 11946672128,
+      "memorystatusLevel" : 82,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 19170096,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:24Z",
+      "availableMemoryBytes" : 11936038912,
+      "memorystatusLevel" : 82,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 28443440,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:24Z",
+      "availableMemoryBytes" : 11924193280,
+      "memorystatusLevel" : 82,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 37274416,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:24Z",
+      "availableMemoryBytes" : 11919343616,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 46580552,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:24Z",
+      "availableMemoryBytes" : 11912183808,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 55591752,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:25Z",
+      "availableMemoryBytes" : 11902599168,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 64668488,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:25Z",
+      "availableMemoryBytes" : 11896307712,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 73401160,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:25Z",
+      "availableMemoryBytes" : 11813470208,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 164938688,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:25Z",
+      "availableMemoryBytes" : 11797954560,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 181093360,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:26Z",
+      "availableMemoryBytes" : 11785175040,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 192267248,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:26Z",
+      "availableMemoryBytes" : 11779604480,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 202671112,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:26Z",
+      "availableMemoryBytes" : 11770937344,
+      "memorystatusLevel" : 83,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 125109232,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:26Z",
+      "availableMemoryBytes" : 10944102400,
+      "memorystatusLevel" : 82,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 1231619848,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:27Z",
+      "availableMemoryBytes" : 10944102400,
+      "memorystatusLevel" : 65,
+      "pressureLevel" : 0,
+      "processMemoryBytes" : 4334094328,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    },
+    {
+      "at" : "2026-08-10T19:00:27Z",
+      "availableMemoryBytes" : 10944102400,
+      "memorystatusLevel" : 64,
+      "pressureLevel" : 23027,
+      "processMemoryBytes" : 4401645560,
+      "swapTotalBytes" : 4294967296,
+      "swapUsedBytes" : 2930245632
+    }
+  ],
+  "schemaVersion" : 1
+}

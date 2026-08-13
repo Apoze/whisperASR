@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-08-10T21:17:00+02:00",
+  "currentBranch": "codex/ticket-64-multi-asr",
+  "currentBaseCommit": "9768f968d0cc042f884f499951a06b4415c9f2b1",
+  "finalProofBranch": "codex/ticket-62-offline-validation",
+  "finalProofCommit": "9768f968d0cc042f884f499951a06b4415c9f2b1",
+  "basedOnFinalProof": true,
+  "finalProofWorktree": {
+    "path": "/private/tmp/whisperASR-ticket62.T0MjTn",
+    "commit": "9768f968d0cc042f884f499951a06b4415c9f2b1",
+    "clean": true,
+    "modifiedByTicket64": false
+  },
+  "mainProject": {
+    "path": "/Users/maz/Documents/projets/whisperASR",
+    "commit": "8c78b405305ff43d05e88161fa3041975116c351",
+    "preExistingDirtyStatePreserved": true,
+    "modifiedByTicket64": false
+  }
+}
