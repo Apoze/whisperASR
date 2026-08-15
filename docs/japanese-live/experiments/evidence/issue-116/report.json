@@ -142,7 +142,8 @@
         "wordConfidence": { "availability": "native" },
         "confidence": { "availability": "absent" },
         "averageLogProbability": {
-          "availability": "native",
+          "availability": "derived",
+          "derivation": "Token-count-weighted mean of native segment average log probabilities.",
           "value": -0.35305967926979065
         },
         "noSpeechProbability": {

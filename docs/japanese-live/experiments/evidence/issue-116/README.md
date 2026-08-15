@@ -4,11 +4,11 @@ Durable summary of the three real, sequential Standard ASR worker smokes run und
 
 The original manifests and raw-ASR files are archived here byte-for-byte. Their hashes, exact command template, model revisions, weight hashes, lifecycle results, and compact field evidence are indexed by [`report.json`](report.json). The review correction reused those captured artifacts and did not run a model again.
 
-| Backend | Native evidence | Absent evidence |
-| --- | --- | --- |
-| Qwen | none | timing, confidence, average log probability |
-| Parakeet | overall confidence, token timing and token confidence | segment/word timing, average log probability |
-| WhisperKit | segment/word timing, word confidence, average log probability | overall confidence, token timing, no-speech probability |
+| Backend | Native evidence | Derived evidence | Absent evidence |
+| --- | --- | --- | --- |
+| Qwen | none | empty-output diagnostic | timing, confidence, average log probability |
+| Parakeet | overall confidence, token timing and token confidence | empty-output diagnostic | segment/word timing, average log probability |
+| WhisperKit | segment timing and log probability, word timing and confidence | token-weighted average log probability, empty-output diagnostic | overall confidence, token timing, no-speech probability |
 
 The raw files are [`Qwen`](qwen-ja-raw-asr.json), [`Parakeet`](parakeet-ja-raw-asr.json), and [`WhisperKit`](whisperkit-raw-asr.json); each corresponding manifest is linked from `report.json`.
 
