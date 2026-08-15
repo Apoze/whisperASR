@@ -1436,26 +1436,49 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(loadCalls.count, 1)
     }
 
-    func testSchemaTwoAndIssue110SchemaThreeSavedResultsStillReopen() async throws {
+    func testSchemaTwoThreeAndFourSavedResultsStillReopenAfterSchemaFive() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let completed = try await HighQualityJob(services: .init(
-            loadSource: { _ in [0] },
-            prepareASR: { _ in },
-            transcribeJapanese: { _ in "旧結果。" },
-            unloadASR: {}
-        )).run(.init(
+        let completed = try await speakerSubtitleFixtureJob().run(.init(
             sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
-            deliverables: [.japaneseTranscript],
+            deliverables: [.japaneseTranscript, .englishSubtitles],
             backend: .qwenJA,
             outputRoot: root
         ))
         let manifestURL = completed.directory.appendingPathComponent("manifest.json")
+        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
         var manifest = try XCTUnwrap(
             try JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL))
                 as? [String: Any]
         )
+        var evidence = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: evidenceURL))
+                as? [String: Any]
+        )
+        XCTAssertEqual(HighQualityJobManifest.currentSchemaVersion, 5)
+        manifest["schemaVersion"] = 4
+        manifest.removeValue(forKey: "readableSubtitles")
+        evidence.removeValue(forKey: "readableSubtitles")
+        var schemaFourCues = try XCTUnwrap(evidence["subtitleCues"] as? [[String: Any]])
+        XCTAssertFalse(schemaFourCues.isEmpty)
+        for index in schemaFourCues.indices {
+            schemaFourCues[index].removeValue(forKey: "renderedLines")
+        }
+        evidence["subtitleCues"] = schemaFourCues
+        try JSONSerialization.data(withJSONObject: evidence, options: [.sortedKeys])
+            .write(to: evidenceURL, options: .atomic)
+        manifest["rawEvidenceSHA256"] = try JapaneseBenchmarkSupport.sha256(at: evidenceURL)
+        try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
+            .write(to: manifestURL, options: .atomic)
+
+        let schemaFourSaved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopenedSchemaFour = try HighQualityJob.reopen(schemaFourSaved)
+        XCTAssertEqual(reopenedSchemaFour.manifest.schemaVersion, 4)
+        XCTAssertNil(reopenedSchemaFour.manifest.readableSubtitles)
+        XCTAssertFalse(reopenedSchemaFour.subtitleCues.isEmpty)
+        XCTAssertTrue(reopenedSchemaFour.subtitleCues.allSatisfy { $0.renderedLines == nil })
+
         manifest["schemaVersion"] = 3
         try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
             .write(to: manifestURL, options: .atomic)
@@ -1470,11 +1493,6 @@ final class HighQualityJobTests: XCTestCase {
         manifest.removeValue(forKey: "rawEvidenceSHA256")
         try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
             .write(to: manifestURL, options: .atomic)
-        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
-        var evidence = try XCTUnwrap(
-            try JSONSerialization.jsonObject(with: Data(contentsOf: evidenceURL))
-                as? [String: Any]
-        )
         evidence.removeValue(forKey: "resultTurns")
         evidence.removeValue(forKey: "subtitleCues")
         evidence.removeValue(forKey: "japaneseTranscript")
