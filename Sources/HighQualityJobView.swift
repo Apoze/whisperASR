@@ -83,7 +83,7 @@ struct HighQualityJobView: View {
     @State private var includeEnglishSubtitles = false
     @State private var readableSubtitleBeta = HighQualityReadableSubtitleBetaControls()
     @State private var speakerBeta = HighQualitySpeakerBetaControls()
-    @State private var backend: HighQualityASRBackend? = .productDefault
+    @State private var asrMode: HighQualityASRMode? = .productDefault
     @State private var translator: HighQualityTranslator = .productDefault
     @State private var progress = HighQualityJobProgress(
         stage: .validating,
@@ -107,7 +107,7 @@ struct HighQualityJobView: View {
     private var canStart: Bool {
         workspace.selectedSourceURL != nil
             && (includeJapaneseTranscript || includeEnglishTranscript || includeEnglishSubtitles)
-            && backend != nil
+            && asrMode != nil
             && !isRunning
             && (workspace.selectedProjectID == nil || selectedProject != nil)
             && selectedProject?.folderRelocationMessage == nil
@@ -358,13 +358,18 @@ struct HighQualityJobView: View {
                 .accessibilityIdentifier("speaker-beta-settings")
             }
 
-            Picker("Japanese ASR", selection: $backend) {
-                Text("Choose a backend…").tag(nil as HighQualityASRBackend?)
-                ForEach(HighQualityASRBackend.allCases) {
+            Picker("Japanese ASR", selection: $asrMode) {
+                Text("Choose a mode…").tag(nil as HighQualityASRMode?)
+                ForEach(HighQualityASRMode.selectableCases) {
                     Text($0.displayName).tag(Optional($0))
                 }
             }
             .disabled(isRunning)
+            if let detail = asrMode?.detail {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             HStack {
                 if isRunning {
@@ -583,7 +588,7 @@ struct HighQualityJobView: View {
         if includeJapaneseTranscript { deliverables.insert(.japaneseTranscript) }
         if includeEnglishTranscript { deliverables.insert(.englishTranslationTranscript) }
         if includeEnglishSubtitles { deliverables.insert(.englishSubtitles) }
-        guard workspace.selectedSourceURL != nil, let backend, !deliverables.isEmpty else {
+        guard workspace.selectedSourceURL != nil, let asrMode, !deliverables.isEmpty else {
             errorMessage = "Select a source and at least one Deliverable."
             return
         }
@@ -593,7 +598,7 @@ struct HighQualityJobView: View {
             do {
                 let completed = try await workspace.runSelectedJob(
                     deliverables: deliverables,
-                    backend: backend,
+                    asrMode: asrMode,
                     translator: translator,
                     speakerLabels: speakerBeta.includeLabels,
                     readableSubtitles: readableSubtitleBeta.enabled,
@@ -866,7 +871,11 @@ struct HighQualityJobView: View {
                 speakerBeta.expectedSpeakerCount = count
             }
         }
-        backend = reopened.manifest.selectedBackend
+        let savedASRMode = reopened.manifest.selectedASRMode
+            ?? .backend(reopened.manifest.selectedBackend)
+        asrMode = HighQualityASRMode.selectableCases.contains(savedASRMode)
+            ? savedASRMode
+            : .backend(reopened.manifest.selectedBackend)
         if let savedTranslator = reopened.manifest.translationModel?.translator {
             translator = savedTranslator
         }

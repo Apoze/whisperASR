@@ -1031,7 +1031,10 @@ final class HighQualityASRWorkerTests: XCTestCase {
 
         let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
         let reopened = try HighQualityJob.reopen(saved)
-        XCTAssertEqual(reopened.manifest.schemaVersion, HighQualityJobManifest.currentSchemaVersion)
+        XCTAssertEqual(
+            reopened.manifest.schemaVersion,
+            HighQualityJobManifest.currentSchemaVersion
+        )
         XCTAssertNotNil(reopened.manifest.rawEvidenceSHA256)
         XCTAssertEqual(reopened.evidence.asrWorker, reopened.manifest.asrWorker)
         XCTAssertEqual(reopened.evidence.asrWorker?.result, workerEvidence.result)
@@ -1041,6 +1044,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
                 JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
             )
             if let schemaVersion { object["schemaVersion"] = schemaVersion }
+            object.removeValue(forKey: "selectedASRMode")
+            object.removeValue(forKey: "adaptiveASR")
             var worker = try XCTUnwrap(object["asrWorker"] as? [String: Any])
             worker.removeValue(forKey: "result")
             object["asrWorker"] = worker
@@ -1058,6 +1063,8 @@ final class HighQualityASRWorkerTests: XCTestCase {
             from: legacyData(at: result.directory.appendingPathComponent("raw-asr.json"))
         )
         XCTAssertEqual(legacyManifest.schemaVersion, 2)
+        XCTAssertNil(legacyManifest.selectedASRMode)
+        XCTAssertNil(legacyEvidence.adaptiveASR)
         XCTAssertNil(legacyManifest.asrWorker?.result)
         XCTAssertNil(legacyEvidence.asrWorker?.result)
 
@@ -1068,6 +1075,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
         )
         issue116Manifest["schemaVersion"] = 3
         issue116Manifest.removeValue(forKey: "rawEvidenceSHA256")
+        issue116Manifest.removeValue(forKey: "selectedASRMode")
         try JSONSerialization.data(withJSONObject: issue116Manifest, options: [.sortedKeys])
             .write(to: manifestURL, options: .atomic)
         let evidenceURL = result.directory.appendingPathComponent("raw-asr.json")
@@ -1077,6 +1085,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
         )
         ["resultTurns", "subtitleCues", "japaneseTranscript", "englishTranscript"]
             .forEach { issue116Evidence.removeValue(forKey: $0) }
+        issue116Evidence.removeValue(forKey: "adaptiveASR")
         try JSONSerialization.data(withJSONObject: issue116Evidence, options: [.sortedKeys])
             .write(to: evidenceURL, options: .atomic)
 

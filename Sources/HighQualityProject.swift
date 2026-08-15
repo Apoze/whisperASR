@@ -1555,6 +1555,30 @@ struct HighQualityProjectWorkspace {
         using job: HighQualityJob = HighQualityJob(),
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        try await runSelectedJob(
+            deliverables: deliverables,
+            asrMode: .backend(backend),
+            translator: translator,
+            speakerLabels: speakerLabels,
+            readableSubtitles: readableSubtitles,
+            speakerConfiguration: speakerConfiguration,
+            translationContextPolicy: translationContextPolicy,
+            using: job,
+            progress: progress
+        )
+    }
+
+    func runSelectedJob(
+        deliverables: Set<HighQualityDeliverable>,
+        asrMode: HighQualityASRMode,
+        translator: HighQualityTranslator = .productDefault,
+        speakerLabels: Bool = false,
+        readableSubtitles: Bool = false,
+        speakerConfiguration: HighQualitySpeakerConfiguration = .standard,
+        translationContextPolicy: HighQualityConversationContextPolicy = .productDefault,
+        using job: HighQualityJob = HighQualityJob(),
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
+    ) async throws -> HighQualityJobResult {
         if selectedProjectID != nil, selectedProject == nil {
             throw HighQualityProjectError(
                 message: selectedProjectEntry?.errorMessage
@@ -1567,7 +1591,7 @@ struct HighQualityProjectWorkspace {
         return try await job.run(.init(
             sourceURL: sourceURL,
             deliverables: deliverables,
-            backend: backend,
+            asrMode: asrMode,
             translator: translator,
             speakerLabels: speakerLabels,
             readableSubtitles: readableSubtitles,
