@@ -1236,7 +1236,10 @@ final class HighQualityJobTests: XCTestCase {
             backend: .qwenJA,
             outputRoot: root
         ))
-        XCTAssertEqual(completed.manifest.schemaVersion, 3)
+        XCTAssertEqual(
+            completed.manifest.schemaVersion,
+            HighQualityJobManifest.currentSchemaVersion
+        )
         XCTAssertNotNil(completed.manifest.rawEvidenceSHA256)
         let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
         var data = try Data(contentsOf: evidenceURL)
@@ -1390,7 +1393,7 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(loadCalls.count, 1)
     }
 
-    func testSchemaTwoSavedResultWithoutEvidenceHashStillReopens() async throws {
+    func testSchemaTwoAndIssue110SchemaThreeSavedResultsStillReopen() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -1410,6 +1413,16 @@ final class HighQualityJobTests: XCTestCase {
             try JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL))
                 as? [String: Any]
         )
+        manifest["schemaVersion"] = 3
+        try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
+            .write(to: manifestURL, options: .atomic)
+
+        let issue110Saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopenedIssue110 = try HighQualityJob.reopen(issue110Saved)
+        XCTAssertEqual(reopenedIssue110.manifest.schemaVersion, 3)
+        XCTAssertNotNil(reopenedIssue110.manifest.rawEvidenceSHA256)
+        XCTAssertNil(reopenedIssue110.manifest.asrWorker)
+
         manifest["schemaVersion"] = 2
         manifest.removeValue(forKey: "rawEvidenceSHA256")
         try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
@@ -1746,7 +1759,11 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.characters?.map(\.chunkIndex), [0, 0, 0, 1])
         XCTAssertEqual(result.characters?.last?.sourceStart, 20)
         XCTAssertEqual(result.characters?.last?.sourceEnd, 21)
-        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+        XCTAssertEqual(
+            result.windows?.last?.result.characters?.last?.sourceEnd,
+            Double(3).nextUp
+        )
+        XCTAssertFalse(HighQualityASRWorkerClient.isValid(
             result, sampleCount: samples.count, anchored: true
         ))
     }

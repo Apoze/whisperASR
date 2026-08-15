@@ -482,9 +482,9 @@ struct HighQualityJobView: View {
                         errorMessage = error.localizedDescription
                     }
                 }
-                .disabled(result.manifest.schemaVersion < 3)
+                .disabled(!result.manifest.usesDurableSavedResultEvidence)
             }
-            if result.manifest.schemaVersion < 3 {
+            if !result.manifest.usesDurableSavedResultEvidence {
                 Text("Speaker label edits require a result saved with the current schema.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

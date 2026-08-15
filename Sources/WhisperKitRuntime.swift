@@ -13,12 +13,15 @@ extension LocalPrototypeModelID {
 actor WhisperKitRuntime {
     struct Transcription: Sendable {
         let text: String
+        let segments: [HighQualityASRSegmentEvidence]
+        let wordTimings: [HighQualityASRTimingEvidence]?
         let averageLogProbability: Double?
     }
 
     nonisolated static let decodingOptions = DecodingOptions(
         task: .transcribe,
-        language: "ja"
+        language: "ja",
+        wordTimestamps: true
     )
 
     private var pipeline: WhisperKit?
@@ -75,8 +78,32 @@ actor WhisperKitRuntime {
         try Task.checkCancellation()
         let segments = results.flatMap(\.segments)
         let tokenCount = segments.reduce(0) { $0 + $1.tokens.count }
+        let hasWordTimings = segments.contains { $0.words != nil }
         return .init(
             text: results.map(\.text).joined(separator: " "),
+            segments: segments.map {
+                .init(
+                    index: $0.id,
+                    text: $0.text,
+                    tokenIDs: $0.tokens,
+                    sourceStart: Double($0.start),
+                    sourceEnd: Double($0.end),
+                    averageLogProbability: Double($0.avgLogprob),
+                    noSpeechProbability: nil,
+                    compressionRatio: Double($0.compressionRatio)
+                )
+            },
+            wordTimings: hasWordTimings ? segments.flatMap { segment in
+                (segment.words ?? []).map {
+                    .init(
+                        text: $0.word,
+                        tokenIDs: $0.tokens,
+                        sourceStart: Double($0.start),
+                        sourceEnd: Double($0.end),
+                        confidence: Double($0.probability)
+                    )
+                }
+            } : nil,
             averageLogProbability: tokenCount == 0 ? nil : Double(
                 segments.reduce(Float.zero) {
                     $0 + $1.avgLogprob * Float($1.tokens.count)

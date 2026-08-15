@@ -303,22 +303,76 @@ struct HighQualityASRCharacter: Codable, Equatable, Sendable {
     let sourceEnd: TimeInterval
 }
 
+struct HighQualityASRTimingEvidence: Codable, Equatable, Sendable {
+    let text: String
+    let tokenIDs: [Int]
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let confidence: Double?
+}
+
+struct HighQualityASRSegmentEvidence: Codable, Equatable, Sendable {
+    let index: Int
+    let text: String
+    let tokenIDs: [Int]
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let averageLogProbability: Double?
+    let noSpeechProbability: Double?
+    let compressionRatio: Double?
+}
+
+struct HighQualityASRDiagnostics: Codable, Equatable, Sendable {
+    let emptyOutput: Bool?
+
+    init(emptyOutput: Bool? = nil) {
+        self.emptyOutput = emptyOutput
+    }
+}
+
+struct HighQualityASRWindowEvidence: Codable, Equatable, Sendable {
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let result: HighQualityASRExchange
+}
+
 struct HighQualityASRExchange: Codable, Equatable, Sendable {
     let rawTranscript: String
     let chunks: [HighQualityASRChunk]
     let characters: [HighQualityASRCharacter]?
+    var model: HighQualityModelEvidence?
+    let segments: [HighQualityASRSegmentEvidence]?
+    let tokenTimings: [HighQualityASRTimingEvidence]?
+    let wordTimings: [HighQualityASRTimingEvidence]?
+    let confidence: Double?
     let averageLogProbability: Double?
+    let diagnostics: HighQualityASRDiagnostics?
+    let windows: [HighQualityASRWindowEvidence]?
 
     init(
         rawTranscript: String,
         chunks: [HighQualityASRChunk],
         characters: [HighQualityASRCharacter]? = nil,
-        averageLogProbability: Double? = nil
+        model: HighQualityModelEvidence? = nil,
+        segments: [HighQualityASRSegmentEvidence]? = nil,
+        tokenTimings: [HighQualityASRTimingEvidence]? = nil,
+        wordTimings: [HighQualityASRTimingEvidence]? = nil,
+        confidence: Double? = nil,
+        averageLogProbability: Double? = nil,
+        diagnostics: HighQualityASRDiagnostics? = nil,
+        windows: [HighQualityASRWindowEvidence]? = nil
     ) {
         self.rawTranscript = rawTranscript
         self.chunks = chunks
         self.characters = characters
+        self.model = model
+        self.segments = segments
+        self.tokenTimings = tokenTimings
+        self.wordTimings = wordTimings
+        self.confidence = confidence
         self.averageLogProbability = averageLogProbability
+        self.diagnostics = diagnostics
+        self.windows = windows
     }
 }
 
@@ -1043,7 +1097,7 @@ struct HighQualityGeneratedFile: Codable, Equatable, Sendable {
 }
 
 struct HighQualityJobManifest: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     enum Status: String, Codable, Sendable {
         case completed
@@ -1072,6 +1126,17 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var failures: [HighQualityJobFailure]
     var generatedFiles: [HighQualityGeneratedFile]
     var rawEvidenceSHA256: String? = nil
+
+    var usesLegacySavedResultFallback: Bool {
+        schemaVersion == 2
+            || (schemaVersion == 3
+                && rawEvidenceSHA256 == nil
+                && asrWorker?.result != nil)
+    }
+
+    var usesDurableSavedResultEvidence: Bool {
+        schemaVersion >= 4 || (schemaVersion == 3 && rawEvidenceSHA256 != nil)
+    }
 }
 
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
@@ -1424,6 +1489,8 @@ struct HighQualityJob: Sendable {
         ) async throws -> HighQualityASRExchange {
             var chunks: [HighQualityASRChunk] = []
             var characters: [HighQualityASRCharacter]? = nil
+            var model: HighQualityModelEvidence?
+            var backendWindows: [HighQualityASRWindowEvidence] = []
             var start = 0
             var alignmentAnchorStart = 0
             var previousBoundaryWasSilent = true
@@ -1440,6 +1507,14 @@ struct HighQualityJob: Sendable {
                 let windowEnd = boundary.isSilent
                     ? boundary.index : min(samples.count, boundary.index + overlap)
                 let rawExchange = try await transcribe(Array(samples[windowStart..<windowEnd]))
+                if model == nil { model = rawExchange.model }
+                var windowResult = rawExchange
+                windowResult.model = nil
+                backendWindows.append(.init(
+                    sourceStart: Double(windowStart) / 16_000,
+                    sourceEnd: Double(windowEnd) / 16_000,
+                    result: windowResult
+                ))
                 let raw = rawExchange.rawTranscript
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 let transcript = removingTranscriptOverlap(
@@ -1483,7 +1558,9 @@ struct HighQualityJob: Sendable {
             return .init(
                 rawTranscript: chunks.map(\.transcript).joined(separator: "\n"),
                 chunks: chunks,
-                characters: characters
+                characters: characters,
+                model: model,
+                windows: backendWindows.isEmpty ? nil : backendWindows
             )
         }
 
@@ -1581,13 +1658,15 @@ struct HighQualityJob: Sendable {
         }
         let evidenceURL = saved.directory.appendingPathComponent("raw-asr.json")
         let evidence: HighQualityRawEvidence
+        let usesLegacyFallback = manifest.usesLegacySavedResultFallback
+        let usesDurableEvidence = manifest.usesDurableSavedResultEvidence
         do {
             let data = try Data(contentsOf: evidenceURL)
             if let expected = manifest.rawEvidenceSHA256 {
                 guard sha256(data) == expected else {
                     throw savedResultError("Raw evidence verification failed.", saved)
                 }
-            } else if manifest.schemaVersion >= 3 {
+            } else if !usesLegacyFallback {
                 throw savedResultError("Raw evidence verification data is missing.", saved)
             }
             evidence = try decoder.decode(HighQualityRawEvidence.self, from: data)
@@ -1598,11 +1677,12 @@ struct HighQualityJob: Sendable {
         }
         guard evidence.source == manifest.source,
               evidence.model == manifest.model,
+              evidence.asrWorker == manifest.asrWorker,
               evidence.generatedFiles == manifest.generatedFiles else {
             throw savedResultError("The saved manifest and raw evidence do not match.", saved)
         }
         for file in manifest.generatedFiles
-            where manifest.schemaVersion < 3 && file.kind == .deliverable {
+            where usesLegacyFallback && file.kind == .deliverable {
             guard FileManager.default.fileExists(
                 atPath: saved.directory.appendingPathComponent(file.path).path
             ) else {
@@ -1614,7 +1694,7 @@ struct HighQualityJob: Sendable {
             throw savedResultError("The saved raw transcript is missing.", saved)
         }
         let transcript = rawASR.trimmingCharacters(in: .whitespacesAndNewlines)
-        if manifest.schemaVersion >= 3,
+        if usesDurableEvidence,
            evidence.resultTurns == nil
             || evidence.subtitleCues == nil
             || evidence.japaneseTranscript == nil {
@@ -1678,7 +1758,7 @@ struct HighQualityJob: Sendable {
         if deliverables.contains(.englishTranslationTranscript) {
             if let persistedTranscript = evidence.englishTranscript {
                 englishTranscript = persistedTranscript
-            } else if manifest.schemaVersion < 3 {
+            } else if usesLegacyFallback {
                 englishTranscript = try storedText(at: saved.directory.appendingPathComponent(
                     "english-translation-transcript.txt"
                 ))
@@ -1722,7 +1802,7 @@ struct HighQualityJob: Sendable {
                 to: result
             )
         }
-        if manifest.schemaVersion >= 3 {
+        if usesDurableEvidence {
             do {
                 try restoreDeliverablesIfNeeded(for: result)
             } catch {
@@ -3026,7 +3106,7 @@ struct HighQualityJob: Sendable {
         names: [String: String],
         beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
-        guard result.manifest.schemaVersion >= 3 else {
+        guard result.manifest.usesDurableSavedResultEvidence else {
             throw HighQualityJobError(
                 stage: .export,
                 message: "Speaker label edits require a result saved with the current schema.",

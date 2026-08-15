@@ -1,0 +1,1998 @@
+{
+  "asrWorker" : {
+    "backend" : "qwen-ja",
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-15T11:53:59Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:53:59Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:53:59Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:53:59Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 11049123840
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 9568763904
+        },
+        {
+          "at" : "2026-08-15T11:54:00Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 9430908928
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:01Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 8981938176
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 6667468800
+        },
+        {
+          "at" : "2026-08-15T11:54:02Z",
+          "availableMemoryBytes" : 6671646720
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6673858560
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6676119552
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6676119552
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6676119552
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6676119552
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6676119552
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6676119552
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6676119552
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6750420992
+        },
+        {
+          "at" : "2026-08-15T11:54:03Z",
+          "availableMemoryBytes" : 6792413184
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 6793953280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 5923553280
+        },
+        {
+          "at" : "2026-08-15T11:54:04Z",
+          "availableMemoryBytes" : 5912117248
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5873582080
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5862604800
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5865046016
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5865046016
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5865046016
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5865046016
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5865046016
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5865046016
+        },
+        {
+          "at" : "2026-08-15T11:54:05Z",
+          "availableMemoryBytes" : 5650251776
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5600739328
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5618434048
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5619154944
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5537529856
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5537529856
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5537529856
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5537529856
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5537529856
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5537529856
+        },
+        {
+          "at" : "2026-08-15T11:54:06Z",
+          "availableMemoryBytes" : 5312790528
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        },
+        {
+          "at" : "2026-08-15T11:54:07Z",
+          "availableMemoryBytes" : 5204606976
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/debug\/WhisperASR",
+        "--high-quality-asr-worker",
+        "qwen-ja",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-qwen-ja-E7A70C03-1C5C-4A93-8AE2-8D0870D676FF"
+      ],
+      "elapsedSeconds" : 8.227280020713806,
+      "exitStatus" : 0,
+      "exitedAt" : "2026-08-15T11:54:08Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 7541265256,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 61660,
+      "rawLog" : "Loaded 62 added tokens from tokenizer_config.json\nLoaded tokenizer with 151705 tokens, 151291 merges\nFound 1 safetensor files\nLoading: model.safetensors\nApplied weights to audio encoder (24 layers, 397 tensors)\nApplied weights to text decoder (28 layers, 704 tensors)\n",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-qwen-ja-E7A70C03-1C5C-4A93-8AE2-8D0870D676FF\/worker.log",
+      "startedAt" : "2026-08-15T11:53:59Z",
+      "swapUsedAfterBytes" : 1703477248,
+      "swapUsedBeforeBytes" : 1703477248,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "qwen-ja",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+      "weightSHA256" : {
+        "merges.txt" : "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+        "model.safetensors" : "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954",
+        "vocab.json" : "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+      }
+    },
+    "result" : {
+      "chunks" : [
+
+      ],
+      "diagnostics" : {
+        "emptyOutput" : false
+      },
+      "model" : {
+        "backend" : "qwen-ja",
+        "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+        "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+        "weightSHA256" : {
+          "merges.txt" : "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+          "model.safetensors" : "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954",
+          "vocab.json" : "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+        }
+      },
+      "rawTranscript" : "続いての対象戦ですが、甘いモカそして立川来ました。モカさん頑張れ頑张れ頼む。先ほどはね、立川もプロとしての意地を見せました。GTAで人のパンツ覗いてきた人のことをなんか保護にしてくれ。え、そうなの？最低だな。私、プロのパンツを覗いたから許せない。それぐらいのつもり多分来てる。立川さんとトトの出会いして、"
+    }
+  },
+  "failures" : [
+
+  ],
+  "generatedFiles" : [
+    {
+      "kind" : "deliverable",
+      "path" : "japanese-transcript.txt"
+    },
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "glossary" : {
+    "budget" : {
+      "maxEncodedBytes" : 2048,
+      "maxEntries" : 12,
+      "maxFalseCorrectionRisk" : 0,
+      "maxInputTokenShare" : 0.25,
+      "maxScoringOperations" : 512
+    },
+    "contextBytes" : 2679,
+    "coverageLimit" : "Sourced high-frequency terms only; coverage is not universal and new releases, source names, slang, and context-dependent translations may be absent.",
+    "decisions" : [
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 109,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Akuma",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Gouki"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "akuma",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "豪鬼",
+            "ごうき",
+            "Gouki",
+            "Akuma"
+          ],
+          "officialJapanese" : "豪鬼",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/character\/akuma",
+            "https:\/\/www.streetfighter.com\/6\/en-us\/character\/akuma"
+          ],
+          "sourceScope" : "Street Fighter character",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+          "cue-0001"
+        ],
+        "encodedSize" : 155,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "selected",
+        "score" : 16,
+        "selected" : true,
+        "selectedCueIDs" : [
+          "cue-0001"
+        ],
+        "signals" : [
+          {
+            "cueID" : "cue-0001",
+            "matchedForm" : "甘いモカ",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          }
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Amayui Moka",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Moka Amayui"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "amayui-moka",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "甘結もか",
+            "あまゆいもか",
+            "Amayui Moka",
+            "甘いモカ"
+          ],
+          "officialJapanese" : "甘結もか",
+          "provenance" : [
+            "https:\/\/vspo.jp\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 139,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "エペ"
+          ],
+          "canonicalEnglish" : "Apex Legends",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "apex-legends",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "エーペックスレジェンズ",
+            "Apex Legends",
+            "エペ"
+          ],
+          "officialJapanese" : "エーペックスレジェンズ",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja-jp\/games\/apex-legends\/about\/frequently-asked-questions"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 116,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "リング",
+            "安置",
+            "あんち"
+          ],
+          "canonicalEnglish" : "the Ring",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "safe zone"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "apex-ring",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "リング",
+            "安置",
+            "あんち"
+          ],
+          "officialJapanese" : "リング",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja-jp\/games\/apex-legends\/about\/frequently-asked-questions"
+          ],
+          "sourceScope" : "Apex Legends play area",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "進撃"
+          ],
+          "canonicalEnglish" : "Attack on Titan",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "attack-on-titan",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "進撃の巨人",
+            "進撃"
+          ],
+          "officialJapanese" : "進撃の巨人",
+          "provenance" : [
+            "https:\/\/shingeki.tv\/final\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 100,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Burnout",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "burnout",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "バーンアウト",
+            "Burnout"
+          ],
+          "officialJapanese" : "バーンアウト",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6\/ja\/steam\/page\/3\/2",
+            "https:\/\/game.capcom.com\/manual\/SF6\/en\/switch2\/page\/3\/3"
+          ],
+          "sourceScope" : "Street Fighter 6 system state",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 142,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Chainsaw Man",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "chainsaw-man",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "チェンソーマン",
+            "ちぇんそーまん",
+            "Chainsaw Man"
+          ],
+          "officialJapanese" : "チェンソーマン",
+          "provenance" : [
+            "https:\/\/chainsawman.dog\/",
+            "https:\/\/www.viz.com\/chainsaw-man"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 136,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Demon Raid",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Hyakki Shu"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "demon-raid",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "百鬼襲",
+            "ひゃっきしゅう",
+            "Hyakki Shu"
+          ],
+          "officialJapanese" : "百鬼襲",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/character\/akuma",
+            "https:\/\/www.streetfighter.com\/6\/en-us\/character\/akuma"
+          ],
+          "sourceScope" : "Street Fighter 6 move",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 135,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "鬼滅"
+          ],
+          "canonicalEnglish" : "Demon Slayer: Kimetsu no Yaiba",
+          "domain" : "anime",
+          "englishAliases" : [
+            "Demon Slayer"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "demon-slayer",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "鬼滅の刃",
+            "鬼滅"
+          ],
+          "officialJapanese" : "鬼滅の刃",
+          "provenance" : [
+            "https:\/\/demonslayer-anime.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 124,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Drive Impact",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "drive-impact",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ドライブインパクト",
+            "Drive Impact"
+          ],
+          "officialJapanese" : "ドライブインパクト",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6"
+          ],
+          "sourceScope" : "Street Fighter 6 system mechanic",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 180,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Frieren: Beyond Journey's End",
+          "domain" : "anime",
+          "englishAliases" : [
+            "Frieren"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "frieren",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "葬送のフリーレン",
+            "そうそうのフリーレン",
+            "Sousou no Frieren"
+          ],
+          "officialJapanese" : "葬送のフリーレン",
+          "provenance" : [
+            "https:\/\/frieren-anime.jp\/",
+            "https:\/\/www.viz.com\/frieren-beyond-journeys-end"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 167,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thank you for the meal",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "gochisosama",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "ごちそうさまでした",
+            "ご馳走さまでした",
+            "gochisosama deshita"
+          ],
+          "officialJapanese" : "ごちそうさまでした",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 139,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Nice to meet you",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "hajimemashite",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "初めまして",
+            "はじめまして",
+            "hajimemashite"
+          ],
+          "officialJapanese" : "初めまして",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/en\/starter\/pdf.html"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 119,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ホロ"
+          ],
+          "canonicalEnglish" : "hololive",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "hololive production"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "hololive",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ホロライブ",
+            "ホロ"
+          ],
+          "officialJapanese" : "ホロライブ",
+          "provenance" : [
+            "https:\/\/hololive.hololivepro.com\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 134,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Let's eat",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Thank you for the food"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "itadakimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "いただきます",
+            "itadakimasu"
+          ],
+          "officialJapanese" : "いただきます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 146,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "I'm leaving",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "See you later"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "ittekimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "行ってきます",
+            "いってきます",
+            "ittekimasu"
+          ],
+          "officialJapanese" : "行ってきます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "呪術"
+          ],
+          "canonicalEnglish" : "JUJUTSU KAISEN",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "jujutsu-kaisen",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "呪術廻戦",
+            "呪術"
+          ],
+          "officialJapanese" : "呪術廻戦",
+          "provenance" : [
+            "https:\/\/jujutsukaisen.jp\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 156,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "keyboard and mouse",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "mouse and keyboard"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "keyboard-and-mouse",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "キーボードとマウス",
+            "キーマウ"
+          ],
+          "officialJapanese" : "キーボードとマウス",
+          "provenance" : [
+            "https:\/\/www.playstation.com\/ja-jp\/support\/hardware\/keyboard-mouse-ps5\/"
+          ],
+          "sourceScope" : "gaming input method",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "マイクラ"
+          ],
+          "canonicalEnglish" : "Minecraft",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "minecraft",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "マインクラフト",
+            "マイクラ"
+          ],
+          "officialJapanese" : "マインクラフト",
+          "provenance" : [
+            "https:\/\/www.minecraft.net\/ja-jp"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 94,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ミラージュ"
+          ],
+          "canonicalEnglish" : "Mirage",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "mirage",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ミラージュ",
+            "Mirage"
+          ],
+          "officialJapanese" : "ミラージュ",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja\/games\/apex-legends\/apex-legends\/characters-hub\/mirage"
+          ],
+          "sourceScope" : "Apex Legends character",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 166,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "モダン"
+          ],
+          "canonicalEnglish" : "Modern controls",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Modern control type"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "modern-controls",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "モダン操作",
+            "モダンコントロール",
+            "モダン"
+          ],
+          "officialJapanese" : "モダン操作",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6"
+          ],
+          "sourceScope" : "Street Fighter 6 control type",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 138,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "My Hero Academia",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "my-hero-academia",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "僕のヒーローアカデミア",
+            "ヒロアカ"
+          ],
+          "officialJapanese" : "僕のヒーローアカデミア",
+          "provenance" : [
+            "https:\/\/heroaca.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 106,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "NIJISANJI",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "nijisanji",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "にじさんじ",
+            "虹さんじ"
+          ],
+          "officialJapanese" : "にじさんじ",
+          "provenance" : [
+            "https:\/\/www.nijisanji.jp\/en"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 130,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Good morning",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "ohayo-gozaimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "おはようございます",
+            "ohayo gozaimasu"
+          ],
+          "officialJapanese" : "おはようございます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/en\/starter\/pdf.html"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 132,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "ONE PIECE",
+          "domain" : "anime",
+          "englishAliases" : [
+            "One Piece"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "one-piece",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ONE PIECE",
+            "ワンピース",
+            "わんぴーす"
+          ],
+          "officialJapanese" : "ONE PIECE",
+          "provenance" : [
+            "https:\/\/one-piece.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 153,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Oshi No Ko",
+          "domain" : "anime",
+          "englishAliases" : [
+            "[Oshi No Ko]"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "oshi-no-ko",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "【推しの子】",
+            "推しの子",
+            "おしのこ",
+            "Oshi no Ko"
+          ],
+          "officialJapanese" : "【推しの子】",
+          "provenance" : [
+            "https:\/\/ichigoproduction.com\/",
+            "https:\/\/yenpress.com\/series\/oshi-no-ko"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 151,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thanks for your hard work",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Good work"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "otsukaresama",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "お疲れさま",
+            "お疲れ様",
+            "otsukaresama"
+          ],
+          "officialJapanese" : "お疲れさま",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 108,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "senior",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "senpai"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "senpai",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "先輩",
+            "せんぱい",
+            "senpai"
+          ],
+          "officialJapanese" : "先輩",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 170,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "レイド"
+          ],
+          "canonicalEnglish" : "Shirayuki Reid",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Reid Shirayuki"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "shirayuki-reid",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "白雪レイド",
+            "しらゆきレイド",
+            "Shirayuki Reid",
+            "レイド"
+          ],
+          "officialJapanese" : "白雪レイド",
+          "provenance" : [
+            "https:\/\/neo-porte.jp\/member\/shirayuki-reid"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 141,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ストロク"
+          ],
+          "canonicalEnglish" : "Street Fighter 6",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "SF6"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "street-fighter-6",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ストリートファイター6",
+            "ストロク"
+          ],
+          "officialJapanese" : "ストリートファイター6",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 124,
+        "falseCorrectionRisk" : 1,
+        "guidance" : "hard",
+        "reason" : "false-correction-risk budget",
+        "score" : 48,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+          {
+            "cueID" : "cue-0001",
+            "matchedForm" : "立川",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          },
+          {
+            "cueID" : "cue-0003",
+            "matchedForm" : "立川",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          },
+          {
+            "cueID" : "cue-0009",
+            "matchedForm" : "立川",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          }
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "立川",
+            "たちかわ"
+          ],
+          "canonicalEnglish" : "Tachikawa",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "tachikawa",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "立川選手",
+            "Tachikawa",
+            "立川",
+            "たちかわ"
+          ],
+          "officialJapanese" : "立川選手",
+          "provenance" : [
+            "https:\/\/burning-core.com\/teams\/tachikawa"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 103,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VALORANT",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "valorant",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ヴァロラント",
+            "VALORANT"
+          ],
+          "officialJapanese" : "ヴァロラント",
+          "provenance" : [
+            "https:\/\/playvalorant.com\/ja-jp\/"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VSPO!",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "vspo",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ぶいすぽっ！",
+            "ぶいすぽ",
+            "VSPO"
+          ],
+          "officialJapanese" : "ぶいすぽっ！",
+          "provenance" : [
+            "https:\/\/vspo.jp\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 152,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "くろむ"
+          ],
+          "canonicalEnglish" : "Yano Kuromu",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Kuromu Yano"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "yano-kuromu",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "夜乃くろむ",
+            "やのくろむ",
+            "Yano Kuromu",
+            "くろむ"
+          ],
+          "officialJapanese" : "夜乃くろむ",
+          "provenance" : [
+            "https:\/\/www.youtube.com\/@YanoKuromu"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 175,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thank you in advance",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Nice to meet you"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "yoroshiku-onegaishimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "よろしくお願いします",
+            "yoroshiku onegaishimasu"
+          ],
+          "officialJapanese" : "よろしくお願いします",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      }
+    ],
+    "encodedSize" : 157,
+    "scoringOperations" : 230,
+    "terminologyRegister" : {
+      "amayui-moka" : "Amayui Moka"
+    },
+    "tokenShareByCueID" : {
+      "cue-0001" : 0.02099609375,
+      "cue-0002" : 0.00048828125,
+      "cue-0003" : 0.00048828125,
+      "cue-0004" : 0.00048828125,
+      "cue-0005" : 0.00048828125,
+      "cue-0006" : 0.00048828125,
+      "cue-0007" : 0.00048828125,
+      "cue-0008" : 0.00048828125,
+      "cue-0009" : 0.00048828125
+    }
+  },
+  "model" : {
+    "backend" : "qwen-ja",
+    "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit",
+    "revision" : "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+    "weightSHA256" : {
+      "merges.txt" : "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+      "model.safetensors" : "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954",
+      "vocab.json" : "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    }
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-15T11:53:59Z",
+      "backend" : "qwen-ja",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=7516192768 reserve=0 total=25769803776 available=11049074688 baseline=27935536",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-15T11:53:59Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-started",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-15T11:54:04Z",
+      "backend" : "qwen-ja",
+      "kind" : "load-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-15T11:54:08Z",
+      "backend" : "qwen-ja",
+      "kind" : "unload-completed",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    },
+    {
+      "at" : "2026-08-15T11:54:08Z",
+      "backend" : "qwen-ja",
+      "kind" : "memory-release-checked",
+      "message" : "memory=28803912 runtimePeak=29049672 minimumAvailable=5204606976 maximum=25769803776 reserve=0",
+      "modelID" : "ph0ryn\/Qwen3-ASR-1.7B-JA-MLX-8bit"
+    }
+  ],
+  "peakMemoryBytes" : 7541265256,
+  "rawASR" : "続いての対象戦ですが、甘いモカそして立川来ました。モカさん頑張れ頑张れ頼む。先ほどはね、立川もプロとしての意地を見せました。GTAで人のパンツ覗いてきた人のことをなんか保護にしてくれ。え、そうなの？最低だな。私、プロのパンツを覗いたから許せない。それぐらいのつもり多分来てる。立川さんとトトの出会いして、",
+  "sampleCount" : 480000,
+  "sampleRate" : 16000,
+  "source" : {
+    "byteCount" : 960078,
+    "fileName" : "dev-30s.wav",
+    "modifiedAt" : "2026-08-15T11:53:29Z",
+    "path" : "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/benchmarks\/issue-116\/controls\/dev-30s.wav"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "stageDurations" : [
+    "normalizing-source",
+    0.09089899063110352,
+    "exporting",
+    0.003242015838623047,
+    "transcribing",
+    3.9285489320755005,
+    "preparing-asr",
+    4.333035111427307
+  ]
+}
