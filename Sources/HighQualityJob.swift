@@ -1,4 +1,5 @@
 import CryptoKit
+import Darwin
 import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
@@ -1110,9 +1111,22 @@ struct HighQualityJobResult: Sendable {
 struct HighQualitySavedResult: Identifiable, Sendable {
     let directory: URL
     let manifest: HighQualityJobManifest
+    let relocatedSourcePath: String?
+
+    init(
+        directory: URL,
+        manifest: HighQualityJobManifest,
+        relocatedSourcePath: String? = nil
+    ) {
+        self.directory = directory
+        self.manifest = manifest
+        self.relocatedSourcePath = relocatedSourcePath
+    }
 
     var id: UUID { manifest.jobID }
-    var sourceURL: URL { URL(fileURLWithPath: manifest.source.path) }
+    var sourceURL: URL {
+        URL(fileURLWithPath: relocatedSourcePath ?? manifest.source.path)
+    }
     var sourceRelocationMessage: String? {
         guard !FileManager.default.fileExists(atPath: sourceURL.path) else { return nil }
         if manifest.source.youtube != nil {
@@ -1127,6 +1141,7 @@ private struct HighQualityResultTransformations: Codable {
 
     let schemaVersion: Int
     let customSpeakerLabels: [String: String]
+    var relocatedSourcePath: String? = nil
 }
 
 struct HighQualityJobError: LocalizedError, Equatable, Sendable {
@@ -1546,7 +1561,12 @@ struct HighQualityJob: Sendable {
                   let manifest = try? readManifest(in: directory),
                   manifest.status == .completed,
                   directory.lastPathComponent == manifest.jobID.uuidString else { return nil }
-            return HighQualitySavedResult(directory: directory, manifest: manifest)
+            return HighQualitySavedResult(
+                directory: directory,
+                manifest: manifest,
+                relocatedSourcePath: (try? readTransformations(in: directory))?
+                    .relocatedSourcePath
+            )
         }.sorted {
             ($0.manifest.finishedAt ?? $0.manifest.startedAt)
                 > ($1.manifest.finishedAt ?? $1.manifest.startedAt)
@@ -1696,29 +1716,11 @@ struct HighQualityJob: Sendable {
             manifest: manifest,
             evidence: evidence
         )
-        let transformationsURL = saved.directory.appendingPathComponent("transformations.json")
-        if FileManager.default.fileExists(atPath: transformationsURL.path) {
-            do {
-                let transformations = try decoder.decode(
-                    HighQualityResultTransformations.self,
-                    from: Data(contentsOf: transformationsURL)
-                )
-                guard transformations.schemaVersion
-                        == HighQualityResultTransformations.currentSchemaVersion,
-                      transformations.customSpeakerLabels.values.allSatisfy({
-                          !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                      }) else {
-                    throw savedResultError("The saved transformations are unsupported.", saved)
-                }
-                result = applyingCustomSpeakerLabels(
-                    transformations.customSpeakerLabels,
-                    to: result
-                )
-            } catch let error as HighQualityJobError {
-                throw error
-            } catch {
-                throw savedResultError("The saved transformations are unreadable.", saved)
-            }
+        if let transformations = try readTransformations(in: saved.directory) {
+            result = applyingCustomSpeakerLabels(
+                transformations.customSpeakerLabels,
+                to: result
+            )
         }
         if manifest.schemaVersion >= 3 {
             do {
@@ -1733,12 +1735,39 @@ struct HighQualityJob: Sendable {
         return result
     }
 
+    static func relocateSource(
+        _ saved: HighQualitySavedResult,
+        to sourceURL: URL
+    ) throws -> HighQualitySavedResult {
+        guard saved.manifest.source.youtube == nil,
+              sourceURL.isFileURL,
+              (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
+                == true else {
+            throw savedResultError("Choose an existing local media file.", saved)
+        }
+        _ = try reopen(saved)
+        let previous = try readTransformations(in: saved.directory)
+        let relocatedPath = sourceURL.standardizedFileURL.path
+        let transformations = try encoder.encode(HighQualityResultTransformations(
+            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+            customSpeakerLabels: previous?.customSpeakerLabels ?? [:],
+            relocatedSourcePath: relocatedPath
+        ))
+        try transactionallyWrite(
+            ["transformations.json": transformations],
+            in: saved.directory
+        )
+        return HighQualitySavedResult(
+            directory: saved.directory,
+            manifest: saved.manifest,
+            relocatedSourcePath: relocatedPath
+        )
+    }
+
     func run(
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
-        let services = servicesForSelection(request.backend, request.translator)
-        let translationModel = request.translator.model
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
         let needsTranslation = request.deliverables.contains(.englishTranslationTranscript)
@@ -1759,27 +1788,26 @@ struct HighQualityJob: Sendable {
             request.id.uuidString,
             isDirectory: true
         )
-        if let data = try? Data(contentsOf: directory.appendingPathComponent("manifest.json")),
-           let existing = try? Self.decoder.decode(HighQualityJobManifest.self, from: data),
-           existing.status == .completed {
-            throw HighQualityJobError(
-                stage: .application,
-                message: "A completed High-quality job already exists for this identifier.",
-                resultDirectory: directory
-            )
-        }
         do {
             try FileManager.default.createDirectory(
-                at: directory,
+                at: request.outputRoot,
                 withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: false
             )
         } catch {
             throw HighQualityJobError(
                 stage: .application,
-                message: "Could not create the job result directory: \(error.localizedDescription)",
-                resultDirectory: nil
+                message: FileManager.default.fileExists(atPath: directory.path)
+                    ? "A High-quality job destination already exists for this identifier."
+                    : "Could not reserve the job result directory: \(error.localizedDescription)",
+                resultDirectory: directory
             )
         }
+        let services = servicesForSelection(request.backend, request.translator)
+        let translationModel = request.translator.model
 
         let startedAt = Date()
         var currentStage = HighQualityJobStage.validating
@@ -2801,12 +2829,11 @@ struct HighQualityJob: Sendable {
                     ? Self.transcript(resultTurns, text: \.japanese)
                     : transcript)
                 : nil
-            try Self.writeDeliverables(
+            try Self.writeFiles(Self.deliverableFiles(
                 japaneseTranscript: japaneseOutput,
                 englishTranscript: englishTranscript,
-                subtitleCues: needsSubtitles ? subtitleCues : nil,
-                to: directory
-            )
+                subtitleCues: needsSubtitles ? subtitleCues : nil
+            ), to: directory)
             japaneseTranscriptWritten = japaneseOutput != nil
             englishTranscriptWritten = englishTranscript != nil
             subtitlesWritten = needsSubtitles
@@ -2996,7 +3023,8 @@ struct HighQualityJob: Sendable {
 
     static func renameSpeakers(
         in result: HighQualityJobResult,
-        names: [String: String]
+        names: [String: String],
+        beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
         guard result.manifest.schemaVersion >= 3 else {
             throw HighQualityJobError(
@@ -3023,20 +3051,23 @@ struct HighQualityJob: Sendable {
                 labels[label] = customLabel
             }
         }
+        let previous = try readTransformations(in: result.directory)
         let transformations = try encoder.encode(HighQualityResultTransformations(
             schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
-            customSpeakerLabels: customLabels
+            customSpeakerLabels: customLabels,
+            relocatedSourcePath: previous?.relocatedSourcePath
         ))
-        try writeDeliverables(
+        var files = deliverableFiles(
             japaneseTranscript: deliverables.contains(.japaneseTranscript)
                 ? renamed.japaneseTranscript : nil,
             englishTranscript: renamed.englishTranscript,
-            subtitleCues: deliverables.contains(.englishSubtitles) ? renamed.subtitleCues : nil,
-            to: result.directory
+            subtitleCues: deliverables.contains(.englishSubtitles) ? renamed.subtitleCues : nil
         )
-        try transformations.write(
-            to: result.directory.appendingPathComponent("transformations.json"),
-            options: .atomic
+        files["transformations.json"] = transformations
+        try transactionallyWrite(
+            files,
+            in: result.directory,
+            beforeCommit: beforeCommit
         )
         return renamed
     }
@@ -4044,80 +4075,129 @@ struct HighQualityJob: Sendable {
 
     private static func restoreDeliverablesIfNeeded(for result: HighQualityJobResult) throws {
         let deliverables = Set(result.manifest.deliverables)
-        var expected: [(url: URL, data: Data)] = []
-        if deliverables.contains(.japaneseTranscript) {
-            expected.append((
-                result.directory.appendingPathComponent("japanese-transcript.txt"),
-                Data((result.japaneseTranscript + "\n").utf8)
-            ))
-        }
-        if deliverables.contains(.englishTranslationTranscript),
-           let englishTranscript = result.englishTranscript {
-            expected.append((
-                result.directory.appendingPathComponent("english-translation-transcript.txt"),
-                Data((englishTranscript + "\n").utf8)
-            ))
-        }
-        if deliverables.contains(.englishSubtitles) {
-            expected.append((
-                result.directory.appendingPathComponent("english-subtitles.vtt"),
-                Data(webVTT(result.subtitleCues).utf8)
-            ))
-            expected.append((
-                result.directory.appendingPathComponent("english-subtitles.srt"),
-                Data(srt(result.subtitleCues).utf8)
-            ))
-        }
-        guard expected.contains(where: {
-            (try? Data(contentsOf: $0.url)) != $0.data
-        }) else { return }
-        try writeDeliverables(
+        let files = deliverableFiles(
             japaneseTranscript: deliverables.contains(.japaneseTranscript)
                 ? result.japaneseTranscript : nil,
             englishTranscript: result.englishTranscript,
-            subtitleCues: deliverables.contains(.englishSubtitles) ? result.subtitleCues : nil,
-            to: result.directory
+            subtitleCues: deliverables.contains(.englishSubtitles) ? result.subtitleCues : nil
         )
+        guard files.contains(where: { path, data in
+            (try? Data(contentsOf: result.directory.appendingPathComponent(path))) != data
+        }) else { return }
+        try transactionallyWrite(files, in: result.directory)
     }
 
-    private static func writeDeliverables(
+    private static func deliverableFiles(
         japaneseTranscript: String?,
         englishTranscript: String?,
-        subtitleCues: [HighQualitySubtitleCue]?,
-        to directory: URL
-    ) throws {
+        subtitleCues: [HighQualitySubtitleCue]?
+    ) -> [String: Data] {
+        var files: [String: Data] = [:]
         if let japaneseTranscript {
-            try (japaneseTranscript + "\n").write(
-                to: directory.appendingPathComponent("japanese-transcript.txt"),
-                atomically: true,
-                encoding: .utf8
-            )
+            files["japanese-transcript.txt"] = Data((japaneseTranscript + "\n").utf8)
         }
         if let englishTranscript {
-            try (englishTranscript + "\n").write(
-                to: directory.appendingPathComponent("english-translation-transcript.txt"),
-                atomically: true,
-                encoding: .utf8
+            files["english-translation-transcript.txt"] = Data(
+                (englishTranscript + "\n").utf8
             )
         }
         if let subtitleCues {
-            let webVTTURL = directory.appendingPathComponent("english-subtitles.vtt")
-            do {
-                try webVTT(subtitleCues).write(
-                    to: webVTTURL,
-                    atomically: true,
-                    encoding: .utf8
+            files["english-subtitles.vtt"] = Data(webVTT(subtitleCues).utf8)
+            files["english-subtitles.srt"] = Data(srt(subtitleCues).utf8)
+        }
+        return files
+    }
+
+    private static func writeFiles(_ files: [String: Data], to directory: URL) throws {
+        for (path, data) in files.sorted(by: { $0.key < $1.key }) {
+            try data.write(
+                to: directory.appendingPathComponent(path),
+                options: .atomic
+            )
+        }
+    }
+
+    private static func transactionallyWrite(
+        _ files: [String: Data],
+        in directory: URL,
+        beforeCommit: () throws -> Void = {}
+    ) throws {
+        let fileManager = FileManager.default
+        let staging = directory.deletingLastPathComponent().appendingPathComponent(
+            ".\(directory.lastPathComponent).staging-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
+        defer { try? fileManager.removeItem(at: staging) }
+        try hardLinkContents(of: directory, to: staging)
+        try writeFiles(files, to: staging)
+        guard files.allSatisfy({ path, data in
+            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
+        }) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        try beforeCommit()
+        let status = staging.path.withCString { stagedPath in
+            directory.path.withCString { activePath in
+                renameatx_np(
+                    AT_FDCWD,
+                    stagedPath,
+                    AT_FDCWD,
+                    activePath,
+                    UInt32(RENAME_SWAP)
                 )
-                try srt(subtitleCues).write(
-                    to: directory.appendingPathComponent("english-subtitles.srt"),
-                    atomically: true,
-                    encoding: .utf8
-                )
-            } catch {
-                try? FileManager.default.removeItem(at: webVTTURL)
-                throw error
             }
         }
+        guard status == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+    }
+
+    private static func hardLinkContents(of source: URL, to destination: URL) throws {
+        let fileManager = FileManager.default
+        let canonicalSourcePath = source.resolvingSymlinksInPath().path
+        var traversalError: Error?
+        guard let enumerator = fileManager.enumerator(
+            at: source,
+            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+            errorHandler: { _, error in
+                traversalError = error
+                return false
+            }
+        ) else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        for case let item as URL in enumerator {
+            let sourcePath: String
+            let itemPath: String
+            if item.path.hasPrefix(source.path + "/") {
+                sourcePath = source.path
+                itemPath = item.path
+            } else {
+                sourcePath = canonicalSourcePath
+                itemPath = item.resolvingSymlinksInPath().path
+            }
+            guard itemPath.hasPrefix(sourcePath + "/") else {
+                throw CocoaError(.fileReadInvalidFileName)
+            }
+            let relativePath = String(itemPath.dropFirst(sourcePath.count + 1))
+            let target = destination.appendingPathComponent(relativePath)
+            let values = try item.resourceValues(forKeys: [
+                .isDirectoryKey,
+                .isSymbolicLinkKey,
+            ])
+            if values.isSymbolicLink == true {
+                try fileManager.createSymbolicLink(
+                    atPath: target.path,
+                    withDestinationPath: fileManager.destinationOfSymbolicLink(atPath: item.path)
+                )
+            } else if values.isDirectory == true {
+                try fileManager.createDirectory(at: target, withIntermediateDirectories: false)
+            } else {
+                try fileManager.linkItem(at: item, to: target)
+            }
+        }
+        if let traversalError { throw traversalError }
     }
 
     private static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
@@ -4310,6 +4390,40 @@ struct HighQualityJob: Sendable {
             )
         }
         return manifest
+    }
+
+    private static func readTransformations(
+        in directory: URL
+    ) throws -> HighQualityResultTransformations? {
+        let url = directory.appendingPathComponent("transformations.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        do {
+            let transformations = try decoder.decode(
+                HighQualityResultTransformations.self,
+                from: Data(contentsOf: url)
+            )
+            guard transformations.schemaVersion
+                    == HighQualityResultTransformations.currentSchemaVersion,
+                  transformations.customSpeakerLabels.values.allSatisfy({
+                      !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                  }),
+                  transformations.relocatedSourcePath?.hasPrefix("/") != false else {
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: "The saved transformations are unsupported.",
+                    resultDirectory: directory
+                )
+            }
+            return transformations
+        } catch let error as HighQualityJobError {
+            throw error
+        } catch {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "The saved transformations are unreadable.",
+                resultDirectory: directory
+            )
+        }
     }
 
     private static func storedText(at url: URL) throws -> String {

@@ -61,10 +61,11 @@ struct HighQualityJobView: View {
                 Picker("Saved result", selection: $selectedSavedResultID) {
                     Text("New High-quality job").tag(nil as UUID?)
                     ForEach(savedResults) { saved in
-                        Text(saved.manifest.source.fileName).tag(Optional(saved.id))
+                        Text(saved.sourceURL.lastPathComponent).tag(Optional(saved.id))
                     }
                 }
                 .disabled(isRunning)
+                .accessibilityIdentifier("high-quality-saved-result")
                 .onChange(of: selectedSavedResultID) { _, id in
                     reopenSavedResult(id)
                 }
@@ -189,10 +190,17 @@ struct HighQualityJobView: View {
                     .textSelection(.enabled)
             }
 
-            if let message = selectedSavedResult?.sourceRelocationMessage {
-                Text(message)
-                    .foregroundStyle(.orange)
-                    .textSelection(.enabled)
+            if let saved = selectedSavedResult,
+               let message = saved.sourceRelocationMessage {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(message)
+                        .foregroundStyle(.orange)
+                        .textSelection(.enabled)
+                    if saved.manifest.source.youtube == nil {
+                        Button("Locate Source…") { locateSource(for: saved) }
+                            .accessibilityIdentifier("high-quality-locate-source")
+                    }
+                }
             }
 
             if let result {
@@ -329,26 +337,49 @@ struct HighQualityJobView: View {
         }
         guard let saved = savedResults.first(where: { $0.id == id }) else { return }
         do {
-            let reopened = try HighQualityJob.reopen(saved)
-            let deliverables = Set(reopened.manifest.deliverables)
-            sourceURL = saved.sourceURL
-            youtubeURL = ""
-            includeJapaneseTranscript = deliverables.contains(.japaneseTranscript)
-            includeEnglishTranscript = deliverables.contains(.englishTranslationTranscript)
-            includeEnglishSubtitles = deliverables.contains(.englishSubtitles)
-            speakerBeta.includeLabels = reopened.manifest.speakerLabels
-            backend = reopened.manifest.selectedBackend
-            if let savedTranslator = reopened.manifest.translationModel?.translator {
-                translator = savedTranslator
-            }
-            result = reopened
-            errorMessage = nil
-            progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
-            customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
+            try showSavedResult(saved)
         } catch {
             result = nil
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func locateSource(for saved: HighQualitySavedResult) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = [.audio, .movie]
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            do {
+                let relocated = try HighQualityJob.relocateSource(saved, to: url)
+                refreshSavedResults()
+                selectedSavedResultID = relocated.id
+                try showSavedResult(
+                    savedResults.first(where: { $0.id == relocated.id }) ?? relocated
+                )
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func showSavedResult(_ saved: HighQualitySavedResult) throws {
+        let reopened = try HighQualityJob.reopen(saved)
+        let deliverables = Set(reopened.manifest.deliverables)
+        sourceURL = saved.sourceURL
+        youtubeURL = ""
+        includeJapaneseTranscript = deliverables.contains(.japaneseTranscript)
+        includeEnglishTranscript = deliverables.contains(.englishTranslationTranscript)
+        includeEnglishSubtitles = deliverables.contains(.englishSubtitles)
+        speakerBeta.includeLabels = reopened.manifest.speakerLabels
+        backend = reopened.manifest.selectedBackend
+        if let savedTranslator = reopened.manifest.translationModel?.translator {
+            translator = savedTranslator
+        }
+        result = reopened
+        errorMessage = nil
+        progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
+        customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
     }
 
     private func initialCustomSpeakerLabels(
