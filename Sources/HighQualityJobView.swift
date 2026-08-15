@@ -22,11 +22,6 @@ struct HighQualitySpeakerBetaControls: Equatable {
     }
 }
 
-private enum HighQualityProjectDestructiveAction: Equatable {
-    case reset
-    case delete
-}
-
 struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
@@ -52,8 +47,7 @@ struct HighQualityJobView: View {
     @State private var selectedProjectID: UUID?
     @State private var projectName = ""
     @State private var isRenamingProject = false
-    @State private var projectDestructiveAction: HighQualityProjectDestructiveAction?
-    @State private var showsProjectConfirmation = false
+    @State private var showsDeleteProjectConfirmation = false
 
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
@@ -94,11 +88,8 @@ struct HighQualityJobView: View {
                         }
                         Button("Locate Folder…") { locateFolder(for: project) }
                         Divider()
-                        Button("Reset Results…", role: .destructive) {
-                            confirmProjectAction(.reset)
-                        }
                         Button("Delete Project…", role: .destructive) {
-                            confirmProjectAction(.delete)
+                            showsDeleteProjectConfirmation = true
                         }
                     }
                     .disabled(isRunning)
@@ -290,22 +281,14 @@ struct HighQualityJobView: View {
             Button("Rename", action: renameProject)
         }
         .confirmationDialog(
-            "Confirm Project Action",
-            isPresented: $showsProjectConfirmation,
-            titleVisibility: .visible,
-            presenting: projectDestructiveAction
-        ) { action in
-            switch action {
-            case .reset:
-                Button("Reset Project Results", role: .destructive, action: resetProject)
-            case .delete:
-                Button("Delete Project", role: .destructive, action: deleteProject)
-            }
+            "Delete Project?",
+            isPresented: $showsDeleteProjectConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Project", role: .destructive, action: deleteProject)
             Button("Cancel", role: .cancel) {}
-        } message: { action in
-            Text(action == .reset
-                ? "This removes only this Project's saved results. Source media is not deleted."
-                : "This removes only this Project and its saved results. Source media is not deleted.")
+        } message: {
+            Text("This removes only this Project and its saved results. Source media is not deleted.")
         }
     }
 
@@ -495,31 +478,12 @@ struct HighQualityJobView: View {
                 _ = try project.relocated(to: folder)
                 refreshProjects()
                 selectedProjectID = project.id
+                refreshSavedResults()
                 errorMessage = nil
             } catch {
                 errorMessage = error.localizedDescription
             }
         }
-    }
-
-    private func confirmProjectAction(_ action: HighQualityProjectDestructiveAction) {
-        projectDestructiveAction = action
-        showsProjectConfirmation = true
-    }
-
-    private func resetProject() {
-        guard let project = selectedProject else { return }
-        do {
-            _ = try project.reset()
-            selectedSavedResultID = nil
-            result = nil
-            refreshSavedResults()
-            errorMessage = nil
-            progress = .init(stage: .validating, fraction: 0, message: "Project reset")
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        projectDestructiveAction = nil
     }
 
     private func deleteProject() {
@@ -533,7 +497,6 @@ struct HighQualityJobView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
-        projectDestructiveAction = nil
     }
 
     private func reopenSavedResult(_ id: UUID?) {

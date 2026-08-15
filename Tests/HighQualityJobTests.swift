@@ -46,6 +46,34 @@ final class HighQualityJobTests: XCTestCase {
             .appendingPathComponent(source.lastPathComponent)), Data("source-audio".utf8))
     }
 
+    func testProjectRejectsItsManagedStorageAsTheSourceFolder() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let folder = root.appendingPathComponent("Media", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let project = try HighQualityProject.create(
+            named: "Safe",
+            folder: folder,
+            in: root.appendingPathComponent("Projects", isDirectory: true)
+        )
+
+        XCTAssertThrowsError(try project.relocated(to: project.jobsDirectory))
+        XCTAssertEqual(try HighQualityProject.open(
+            project.id,
+            in: project.directory.deletingLastPathComponent()
+        ).folderURL, folder)
+
+        let outside = root.appendingPathComponent("Outside", isDirectory: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        try FileManager.default.removeItem(at: project.jobsDirectory)
+        try FileManager.default.createSymbolicLink(
+            at: project.jobsDirectory,
+            withDestinationURL: outside
+        )
+        XCTAssertThrowsError(try project.validateForJob())
+    }
+
     func testProjectJobsUseExistingAcquisitionAndKeepResultsAndGlossariesIsolated() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -137,14 +165,50 @@ final class HighQualityJobTests: XCTestCase {
             backend: .qwenJA,
             outputRoot: standaloneRoot
         ))
+        struct FixtureError: Error {}
+        let failedJobID = UUID()
+        do {
+            _ = try await HighQualityJob(services: .init(
+                loadSource: { _ in throw FixtureError() },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in "unreachable" },
+                unloadASR: {}
+            )).run(.init(
+                id: failedJobID,
+                sourceURL: sourceA,
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                project: projectA
+            ))
+            XCTFail("The fixture job must fail after its Project reference is indexed.")
+        } catch is HighQualityJobError {}
 
         let reopenedA = try HighQualityProject.open(projectA.id, in: projectsRoot)
         let reopenedB = try HighQualityProject.open(projectB.id, in: projectsRoot)
         XCTAssertEqual(Set(reopenedA.savedResults.map(\.id)), [localA.manifest.jobID, youtubeA.manifest.jobID])
         XCTAssertEqual(reopenedB.savedResults.map(\.id), [localB.manifest.jobID])
+        XCTAssertEqual(Set(reopenedA.manifest.jobReferences.map(\.id)), [
+            localA.manifest.jobID,
+            youtubeA.manifest.jobID,
+            failedJobID,
+        ])
+        XCTAssertEqual(reopenedB.manifest.jobReferences.map(\.id), [localB.manifest.jobID])
+        XCTAssertEqual(
+            reopenedA.manifest.jobReferences.first { $0.id == localA.manifest.jobID }?
+                .sourceRelativePath,
+            sourceA.lastPathComponent
+        )
+        XCTAssertEqual(
+            reopenedA.manifest.jobReferences.first { $0.id == youtubeA.manifest.jobID }?
+                .source.sourceURL,
+            youtubeURL.absoluteString
+        )
+        XCTAssertTrue(reopenedA.manifest.jobReferences.allSatisfy {
+            $0.resultPath == "Jobs/\($0.id.uuidString)"
+        })
         XCTAssertEqual(Set(reopenedA.jobReferences.map(\.source.fileName)), [
             sourceA.lastPathComponent,
-            "youtube.m4a",
+            youtubeURL.lastPathComponent,
         ])
         XCTAssertTrue(reopenedA.savedResults.allSatisfy { $0.manifest.projectID == projectA.id })
         XCTAssertTrue(reopenedB.savedResults.allSatisfy { $0.manifest.projectID == projectB.id })
@@ -187,7 +251,6 @@ final class HighQualityJobTests: XCTestCase {
             folder: folder,
             in: root.appendingPathComponent("Projects", isDirectory: true)
         )
-        try FileManager.default.moveItem(at: folder, to: relocatedFolder)
         let calls = CallLog()
         let job = HighQualityJob(services: .init(
             loadSource: { _ in
@@ -201,6 +264,14 @@ final class HighQualityJobTests: XCTestCase {
             },
             unloadASR: { await calls.append("unload") }
         ))
+        let original = try await job.run(.init(
+            sourceURL: source,
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            project: project
+        ))
+        let callsBeforeMove = await calls.values
+        try FileManager.default.moveItem(at: folder, to: relocatedFolder)
 
         do {
             _ = try await job.run(.init(
@@ -215,10 +286,19 @@ final class HighQualityJobTests: XCTestCase {
             XCTAssertTrue(error.message.contains("Project folder is missing or moved"))
         }
         let callsBeforeRelocation = await calls.values
-        XCTAssertTrue(callsBeforeRelocation.isEmpty)
-        XCTAssertTrue(project.savedResults.isEmpty)
+        XCTAssertEqual(callsBeforeRelocation, callsBeforeMove)
+        XCTAssertNotNil(project.savedResults.first?.sourceRelocationMessage)
 
         let relocated = try project.relocated(to: relocatedFolder)
+        let recovered = try XCTUnwrap(relocated.savedResults.first {
+            $0.id == original.manifest.jobID
+        })
+        XCTAssertEqual(recovered.sourceURL, relocatedFolder
+            .appendingPathComponent(source.lastPathComponent))
+        XCTAssertNil(recovered.sourceRelocationMessage)
+        XCTAssertEqual(try HighQualityJob.reopen(recovered).japaneseTranscript, "復旧。")
+        let callsAfterReopen = await calls.values
+        XCTAssertEqual(callsAfterReopen, callsBeforeMove)
         let completed = try await job.run(.init(
             sourceURL: relocatedFolder.appendingPathComponent(source.lastPathComponent),
             deliverables: [.japaneseTranscript],
@@ -227,10 +307,13 @@ final class HighQualityJobTests: XCTestCase {
         ))
 
         XCTAssertEqual(completed.manifest.projectID, project.id)
-        XCTAssertEqual(relocated.savedResults.map(\.id), [completed.manifest.jobID])
+        XCTAssertEqual(Set(relocated.savedResults.map(\.id)), [
+            original.manifest.jobID,
+            completed.manifest.jobID,
+        ])
     }
 
-    func testResettingAndDeletingOneProjectKeepsOtherProjectAndUserFoldersUntouched() async throws {
+    func testDeletingOneProjectKeepsOtherProjectAndUserFoldersUntouched() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
@@ -264,28 +347,14 @@ final class HighQualityJobTests: XCTestCase {
             project: projectB
         ))
 
-        let resetA = try projectA.reset()
+        try projectA.delete()
 
-        XCTAssertTrue(resetA.savedResults.isEmpty)
-        XCTAssertTrue(try HighQualityProject.open(projectA.id, in: projectsRoot)
-            .savedResults.isEmpty)
+        XCTAssertThrowsError(try HighQualityProject.open(projectA.id, in: projectsRoot))
         XCTAssertEqual(
             try HighQualityProject.open(projectB.id, in: projectsRoot).savedResults.map(\.id),
             [resultB.manifest.jobID]
         )
-        XCTAssertEqual(Set(HighQualityProject.all(in: projectsRoot).map(\.id)), [
-            projectA.id,
-            projectB.id,
-        ])
-        XCTAssertEqual(try Data(contentsOf: sourceA), Data("a".utf8))
-        XCTAssertEqual(try Data(contentsOf: sourceB), Data("b".utf8))
-
-        try resetA.delete()
         XCTAssertEqual(HighQualityProject.all(in: projectsRoot).map(\.id), [projectB.id])
-        XCTAssertEqual(
-            try HighQualityProject.open(projectB.id, in: projectsRoot).savedResults.map(\.id),
-            [resultB.manifest.jobID]
-        )
         XCTAssertEqual(try Data(contentsOf: sourceA), Data("a".utf8))
         XCTAssertEqual(try Data(contentsOf: sourceB), Data("b".utf8))
     }

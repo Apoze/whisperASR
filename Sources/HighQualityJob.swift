@@ -1,4 +1,5 @@
 import CryptoKit
+import Darwin
 import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
@@ -1821,6 +1822,22 @@ struct HighQualityJob: Sendable {
                     : "Could not reserve the job result directory: \(error.localizedDescription)",
                 resultDirectory: directory
             )
+        }
+        if let project = request.project {
+            do {
+                try project.indexJob(
+                    id: request.id,
+                    source: Self.provenance(for: request.sourceURL),
+                    resultDirectory: directory
+                )
+            } catch {
+                try? FileManager.default.removeItem(at: directory)
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: "Could not index the Project job: \(error.localizedDescription)",
+                    resultDirectory: nil
+                )
+            }
         }
         let services = servicesForSelection(request.backend, request.translator)
         let translationModel = request.translator.model
@@ -4154,7 +4171,20 @@ struct HighQualityJob: Sendable {
             throw CocoaError(.fileWriteUnknown)
         }
         try beforeCommit()
-        try AtomicDirectory.swap(staging, with: directory)
+        let status = staging.path.withCString { stagedPath in
+            directory.path.withCString { activePath in
+                renameatx_np(
+                    AT_FDCWD,
+                    stagedPath,
+                    AT_FDCWD,
+                    activePath,
+                    UInt32(RENAME_SWAP)
+                )
+            }
+        }
+        guard status == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
     }
 
     private static func hardLinkContents(of source: URL, to destination: URL) throws {
