@@ -1,0 +1,47 @@
+[0/1] Planning build
+Test Suite 'Selected tests' started at 2026-08-15 16:12:39.556.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 16:12:39.557.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-15 16:12:39.557.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testRealSavedSpeakerReanalysisWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testRealSavedSpeakerReanalysisWhenOptedIn]' passed (20.245 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-15 16:12:59.803.
+	 Executed 1 test, with 0 failures (0 unexpected) in 20.245 (20.245) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 16:12:59.803.
+	 Executed 1 test, with 0 failures (0 unexpected) in 20.245 (20.246) seconds
+Test Suite 'Selected tests' passed at 2026-08-15 16:12:59.803.
+	 Executed 1 test, with 0 failures (0 unexpected) in 20.245 (20.246) seconds
+[speaker-reanalysis] normalizing-source: Loading saved source audio…
+[speaker-reanalysis] preparing-diarization: Preparing SpeakerKit…
+[speaker-reanalysis] preparing-diarization: SpeakerKit worker 43301 starting…
+[speaker-reanalysis] preparing-diarization: SpeakerKit worker 43301 ready
+[speaker-reanalysis] diarizing: Reanalyzing speakers…
+[speaker-reanalysis] exporting: Replacing speaker results atomically…
+[speaker-reanalysis] completed: Speakers reanalyzed
+[speaker-reanalysis][runtime] seed=E31-saved-evidence rerun=SpeakerKit-only
+[speaker-reanalysis][upstream] asr=f4995cd584b541d5be819fa976e1620cdda1195826728589613a0417e88bffb0 alignment=78c91972154879250199b02b601e69024fecf3a83c838a50b8c0f98c387814cb translation=4fe9006afe8ab3f6b72b54da7d91b8eb383e5ecc96088d73c28f1125dcdba930 unchanged=true
+[speaker-reanalysis][lifecycle] memory-pressure-checked,load-started,load-completed,unload-completed,memory-release-checked
+[speaker-reanalysis][result] wall=16.41529893875122s peak=741131728 directory=/tmp/whisperasr-112-heavy-92b4c9a-jobs-attempt6/11211211-1121-4112-8112-112112112112
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+real 28.65
+user 47.37
+sys 5.45
+           829259776  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              527728  page reclaims
+                9469  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   8  messages sent
+                   6  messages received
+                   0  signals received
+               89444  voluntary context switches
+              437755  involuntary context switches
+         25927217648  instructions retired
+          5283160226  cycles elapsed
+            89916232  peak memory footprint

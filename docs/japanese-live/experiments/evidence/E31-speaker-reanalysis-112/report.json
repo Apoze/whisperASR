@@ -1,0 +1,96 @@
+{
+  "ticket": 112,
+  "slot": "BENCHMARK_SLOT_GRANTED=112",
+  "test": "HighQualityAcceptanceTests/testRealSavedSpeakerReanalysisWhenOptedIn",
+  "corpus": "Video1.webm/E31",
+  "result": "pass",
+  "configuration": {
+    "runtime": "SpeakerKit",
+    "precision": "quantized",
+    "segmenterVariant": "W8A16",
+    "embedderVariant": "W8A16",
+    "enhancedPrecision": false,
+    "sensitiveDetection": false,
+    "speakerCount": "automatic",
+    "exclusiveReconciliation": false
+  },
+  "timingSeconds": {
+    "speakerReanalysis": 16.41529893875122,
+    "xctest": 20.245,
+    "commandReal": 28.65,
+    "commandUser": 47.37,
+    "commandSystem": 5.45
+  },
+  "memoryBytes": {
+    "speakerReanalysisPeak": 741131728,
+    "commandMaximumResidentSet": 829259776,
+    "commandPeakFootprint": 89916232,
+    "declaredSpeakerKitPeak": 4294967296
+  },
+  "lifecycle": [
+    "memory-pressure-checked",
+    "load-started",
+    "load-completed",
+    "unload-completed",
+    "memory-release-checked"
+  ],
+  "upstreamUnchanged": {
+    "asr": true,
+    "alignment": true,
+    "translation": true,
+    "asrSHA256": "f4995cd584b541d5be819fa976e1620cdda1195826728589613a0417e88bffb0",
+    "alignmentSHA256": "78c91972154879250199b02b601e69024fecf3a83c838a50b8c0f98c387814cb",
+    "translationSHA256": "4fe9006afe8ab3f6b72b54da7d91b8eb383e5ecc96088d73c28f1125dcdba930"
+  },
+  "candidate": {
+    "modelID": "argmaxinc/speakerkit-coreml",
+    "revision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+    "runtimeRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+    "rawSpanCount": 498,
+    "mappingCount": 2842
+  },
+  "sha256": {
+    "sourceVideo": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+    "sourcePCM": "1d55323f228f68cdb5df23fcf0909edd47940ce554244c712658fb14cace80b9",
+    "frozenE31Evidence": "95b5089cf630f717cabf4c4c545673c46fa6bd62d74d2722e7930f084b6d48c5",
+    "worker": "093edd22789af14a6dac0135355948fb10609d217e884e1a10e5bf18087f4b7b",
+    "metalLibrary": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+    "resultManifest": "04a75935d4e6b527bbe3cc2e0f45ca46d5b2f745e9b3330380a2a28ee374ee21",
+    "resultEvidence": "a45df60a14475bcfd429f19d48fbc52df51e4e9036b547447234af9ba79c9760",
+    "resultEvidenceGzip": "0972e2f6911948b6f1fe301d5c6914c332b4651e6a16c785a523250864cc807c",
+    "speakerKitResponse": "bb3daf80c2be3b2ff29097ef098557e9fa7d0253035977e6de3e2446d5fe49e8",
+    "runLog": "b16c429eb4eec9cfd373a706b8f57e0367ef9081551fda7d91e8d477c4abad59"
+  },
+  "diagnostics": [
+    {
+      "attempt": 1,
+      "classification": "harness/reference",
+      "result": "alignment replay rejected cue-0055 before SpeakerKit"
+    },
+    {
+      "attempt": 2,
+      "classification": "runner/sandbox",
+      "result": "MLX Metal device list unavailable before SpeakerKit"
+    },
+    {
+      "attempt": 3,
+      "classification": "harness/assertion",
+      "result": "candidate completed; comparison used the in-memory seed instead of the reopened saved baseline"
+    },
+    {
+      "attempt": 4,
+      "classification": "review/evidence",
+      "result": "candidate passed, but the harness seed normalized E31 alignment and translation"
+    },
+    {
+      "attempt": 5,
+      "classification": "candidate",
+      "result": "exact E31 evidence passed; corrected the runtime log label"
+    },
+    {
+      "attempt": 6,
+      "classification": "candidate",
+      "result": "final pass with exact E31 ASR, alignment and translation hashes"
+    }
+  ]
+}
