@@ -1208,17 +1208,33 @@ struct HighQualityJobResult: Sendable {
     }
 
     var editableSpeakerLabels: [String] {
-        (manifest.speakerEdits ?? []).reduce(into: automaticSpeakerLabels) { labels, edit in
-            switch edit.kind {
-            case .merge:
-                if let source = edit.speakerLabel { labels.remove(source) }
-            case .reset:
-                labels = automaticSpeakerLabels
-            case .rename, .reassign:
-                break
-            }
-        }.sorted()
+        (try? HighQualityJob.speakerEditState(
+            manifest.speakerEdits ?? [],
+            for: self
+        ).activeLabels.sorted()) ?? automaticSpeakerLabels.sorted()
     }
+
+    var editableSpeakerNames: [String: String] {
+        guard let state = try? HighQualityJob.speakerEditState(
+            manifest.speakerEdits ?? [],
+            for: self
+        ) else { return [:] }
+        var names = state.names
+        for turn in turns {
+            if let label = turn.speakerLabel, let name = turn.speakerName {
+                names[label] = name
+            }
+        }
+        return Dictionary(uniqueKeysWithValues: state.activeLabels.map {
+            ($0, names[$0] ?? $0)
+        })
+    }
+}
+
+fileprivate struct HighQualitySpeakerEditState {
+    var assignments: [String: String]
+    var names: [String: String]
+    var activeLabels: Set<String>
 }
 
 struct HighQualitySavedResult: Identifiable, Sendable {
@@ -2386,6 +2402,7 @@ struct HighQualityJob: Sendable {
             manifest.modelEvents += analysis.modelEvents
             manifest.finishedAt = finishedAt
             manifest.speakerReanalysisCount = reanalyses.count
+            manifest.speakerEdits = []
 
             var evidence = previous.evidence
             evidence.speakerConfiguration = configuration
@@ -2453,6 +2470,18 @@ struct HighQualityJob: Sendable {
                 beforeCommit: {
                     try Task.checkCancellation()
                     try beforeCommit()
+                },
+                validateActive: {
+                    guard try Self.activeSpeakerResultMatches(
+                        previous.manifest,
+                        in: saved.directory
+                    ) else {
+                        throw HighQualityJobError(
+                            stage: .export,
+                            message: "The saved Speaker result changed during reanalysis. Reopen it and try again.",
+                            resultDirectory: saved.directory
+                        )
+                    }
                 }
             )
             progress(.init(stage: .completed, fraction: 1, message: "Speakers reanalyzed"))
@@ -3662,29 +3691,8 @@ struct HighQualityJob: Sendable {
         names: [String: String],
         beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
-        let currentNames = result.turns.reduce(into: [String: String]()) { values, turn in
-            if let label = turn.speakerLabel {
-                values[label] = turn.speakerName ?? label
-            }
-        }
-        let edits: [HighQualitySpeakerEdit] = try names
-            .sorted(by: { $0.key < $1.key })
-            .compactMap { label, value in
-                let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !value.isEmpty else {
-                    throw HighQualityJobError(
-                        stage: .export,
-                        message: "Custom Speaker labels cannot be empty.",
-                        resultDirectory: result.directory
-                    )
-                }
-                guard let currentName = currentNames[label], currentName != value else {
-                    return nil
-                }
-                return HighQualitySpeakerEdit.rename(label, to: value)
-            }
         return try saveSpeakerEdits(
-            edits,
+            try speakerRenameEdits(names, in: result),
             in: result,
             beforeCommit: beforeCommit
         )
@@ -3692,10 +3700,36 @@ struct HighQualityJob: Sendable {
 
     static func editSpeakers(
         in result: HighQualityJobResult,
+        names: [String: String] = [:],
         edit: HighQualitySpeakerEdit,
         beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
-        try saveSpeakerEdits([edit], in: result, beforeCommit: beforeCommit)
+        try saveSpeakerEdits(
+            try speakerRenameEdits(names, in: result) + [edit],
+            in: result,
+            beforeCommit: beforeCommit
+        )
+    }
+
+    private static func speakerRenameEdits(
+        _ names: [String: String],
+        in result: HighQualityJobResult
+    ) throws -> [HighQualitySpeakerEdit] {
+        let currentNames = result.editableSpeakerNames
+        return try names.sorted(by: { $0.key < $1.key }).compactMap { label, value in
+            let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else {
+                throw HighQualityJobError(
+                    stage: .export,
+                    message: "Custom Speaker labels cannot be empty.",
+                    resultDirectory: result.directory
+                )
+            }
+            guard let currentName = currentNames[label], currentName != value else {
+                return nil
+            }
+            return HighQualitySpeakerEdit.rename(label, to: value)
+        }
     }
 
     private static func saveSpeakerEdits(
@@ -3718,6 +3752,7 @@ struct HighQualityJob: Sendable {
         let activeManifest = try readManifest(in: result.directory)
         guard activeManifest.status == .completed,
               activeManifest.jobID == result.manifest.jobID,
+              activeManifest.rawEvidenceSHA256 == result.manifest.rawEvidenceSHA256,
               activeManifest.speakerEdits == result.manifest.speakerEdits else {
             throw speakerEditError(
                 "Speaker edits changed since this result was opened. Reopen it and try again.",
@@ -3779,7 +3814,22 @@ struct HighQualityJob: Sendable {
         )
         files["transformations.json"] = transformations
         files["manifest.json"] = try encoder.encode(manifest)
-        try transactionallyWrite(files, in: result.directory, beforeCommit: beforeCommit)
+        try transactionallyWrite(
+            files,
+            in: result.directory,
+            beforeCommit: beforeCommit,
+            validateActive: {
+                guard try activeSpeakerResultMatches(
+                    result.manifest,
+                    in: result.directory
+                ) else {
+                    throw speakerEditError(
+                        "Speaker result changed since this edit was prepared. Reopen it and try again.",
+                        in: result.directory
+                    )
+                }
+            }
+        )
         return saved
     }
 
@@ -3808,6 +3858,17 @@ struct HighQualityJob: Sendable {
                 && manifest.speakerEdits?.isEmpty != false
         }
         return (manifest.speakerEdits ?? []) == edits
+    }
+
+    private static func activeSpeakerResultMatches(
+        _ expected: HighQualityJobManifest,
+        in directory: URL
+    ) throws -> Bool {
+        let active = try readManifest(in: directory)
+        return active.status == .completed
+            && active.jobID == expected.jobID
+            && active.rawEvidenceSHA256 == expected.rawEvidenceSHA256
+            && active.speakerEdits == expected.speakerEdits
     }
 
     private static func normalizedSpeakerEdit(
@@ -3869,12 +3930,11 @@ struct HighQualityJob: Sendable {
         }
     }
 
-    private static func applyingSpeakerEdits(
+    fileprivate static func speakerEditState(
         _ edits: [HighQualitySpeakerEdit],
-        to result: HighQualityJobResult
-    ) throws -> HighQualityJobResult {
-        guard let rawTurns = result.evidence.resultTurns,
-              let rawCues = result.evidence.subtitleCues else {
+        for result: HighQualityJobResult
+    ) throws -> HighQualitySpeakerEditState {
+        guard let rawTurns = result.evidence.resultTurns else {
             throw speakerEditError(
                 "The immutable Speaker result evidence is incomplete.",
                 in: result.directory
@@ -3963,6 +4023,29 @@ struct HighQualityJob: Sendable {
                 activeLabels = rawLabels
             }
         }
+
+        return .init(
+            assignments: assignments,
+            names: names,
+            activeLabels: activeLabels
+        )
+    }
+
+    private static func applyingSpeakerEdits(
+        _ edits: [HighQualitySpeakerEdit],
+        to result: HighQualityJobResult
+    ) throws -> HighQualityJobResult {
+        guard let rawTurns = result.evidence.resultTurns,
+              let rawCues = result.evidence.subtitleCues else {
+            throw speakerEditError(
+                "The immutable Speaker result evidence is incomplete.",
+                in: result.directory
+            )
+        }
+        let turnIDs = Set(rawTurns.map(\.id))
+        let state = try speakerEditState(edits, for: result)
+        let assignments = state.assignments
+        let names = state.names
 
         let turns: [HighQualityTranscriptTurn] = rawTurns.map { turn in
             let label = assignments[turn.id]
@@ -5009,7 +5092,8 @@ struct HighQualityJob: Sendable {
     private static func transactionallyWrite(
         _ files: [String: Data],
         in directory: URL,
-        beforeCommit: () throws -> Void = {}
+        beforeCommit: () throws -> Void = {},
+        validateActive: () throws -> Void = {}
     ) throws {
         let fileManager = FileManager.default
         let staging = directory.deletingLastPathComponent().appendingPathComponent(
@@ -5026,6 +5110,23 @@ struct HighQualityJob: Sendable {
             throw CocoaError(.fileWriteUnknown)
         }
         try beforeCommit()
+        let lockURL = directory.deletingLastPathComponent().appendingPathComponent(
+            ".\(directory.lastPathComponent).update.lock"
+        )
+        let descriptor = open(
+            lockURL.path,
+            O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW,
+            S_IRUSR | S_IWUSR
+        )
+        guard descriptor >= 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        defer { _ = close(descriptor) }
+        guard flock(descriptor, LOCK_EX) == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        defer { _ = flock(descriptor, LOCK_UN) }
+        try validateActive()
         let status = staging.path.withCString { stagedPath in
             directory.path.withCString { activePath in
                 renameatx_np(

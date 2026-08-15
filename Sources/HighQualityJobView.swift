@@ -440,11 +440,7 @@ struct HighQualityJobView: View {
     private func initialCustomSpeakerLabels(
         for result: HighQualityJobResult
     ) -> [String: String] {
-        result.turns.reduce(into: [:]) { names, turn in
-            if let label = turn.speakerLabel {
-                names[label] = turn.speakerName ?? label
-            }
-        }
+        result.editableSpeakerNames
     }
 
     @ViewBuilder
@@ -493,6 +489,7 @@ struct HighQualityJobView: View {
         deliverables: Set<HighQualityDeliverable>
     ) -> some View {
         let speakerLabels = result.editableSpeakerLabels
+        let speakerNames = result.editableSpeakerNames
         Text("Results").font(.headline)
         if let reanalysis = result.evidence.speakerReanalyses?.last {
             Text(
@@ -538,7 +535,7 @@ struct HighQualityJobView: View {
                                     Text("Unassigned").tag(String?.none)
                                 }
                                 ForEach(speakerLabels, id: \.self) { label in
-                                    Text(speakerName(label, in: result)).tag(String?.some(label))
+                                    Text(speakerNames[label] ?? label).tag(String?.some(label))
                                 }
                             }
                             .labelsHidden()
@@ -588,9 +585,9 @@ struct HighQualityJobView: View {
                 if speakerLabels.count > 1 {
                     Menu("Merge Speakers…") {
                         ForEach(speakerLabels, id: \.self) { source in
-                            Menu(speakerName(source, in: result)) {
+                            Menu(speakerNames[source] ?? source) {
                                 ForEach(speakerLabels.filter { $0 != source }, id: \.self) { target in
-                                    Button("Into \(speakerName(target, in: result))") {
+                                    Button("Into \(speakerNames[target] ?? target)") {
                                         applySpeakerEdit(
                                             .merge(source, into: target),
                                             to: result
@@ -621,16 +618,16 @@ struct HighQualityJobView: View {
         }
     }
 
-    private func speakerName(_ label: String, in result: HighQualityJobResult) -> String {
-        result.turns.first { $0.speakerLabel == label }?.speakerName ?? label
-    }
-
     private func applySpeakerEdit(
         _ edit: HighQualitySpeakerEdit,
         to result: HighQualityJobResult
     ) {
         do {
-            let updated = try HighQualityJob.editSpeakers(in: result, edit: edit)
+            let updated = try HighQualityJob.editSpeakers(
+                in: result,
+                names: edit.kind == .reset ? [:] : customSpeakerLabels,
+                edit: edit
+            )
             self.result = updated
             customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
             errorMessage = nil
