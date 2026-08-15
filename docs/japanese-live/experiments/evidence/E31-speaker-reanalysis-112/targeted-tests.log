@@ -5,22 +5,22 @@ warning: 'whisperasr': failed storing manifest for 'whisperasr' in cache: attemp
 warning: 'flyingfox': failed storing manifest for 'flyingfox' in cache: attempt to write a readonly database
 warning: 'swift-huggingface': failed storing manifest for 'swift-huggingface' in cache: attempt to write a readonly database
 warning: 'swift-transformers': failed storing manifest for 'swift-transformers' in cache: attempt to write a readonly database
+warning: 'mlx-audio-swift': failed storing manifest for 'mlx-audio-swift' in cache: attempt to write a readonly database
 warning: 'mlx-swift-lm': failed storing manifest for 'mlx-swift-lm' in cache: attempt to write a readonly database
+warning: 'speechswiftprototype': failed storing manifest for 'speechswiftprototype' in cache: attempt to write a readonly database
 warning: 'mlx-swift': failed storing manifest for 'mlx-swift' in cache: attempt to write a readonly database
 warning: 'fluidaudio': failed storing manifest for 'fluidaudio' in cache: attempt to write a readonly database
-warning: 'speechswiftprototype': failed storing manifest for 'speechswiftprototype' in cache: attempt to write a readonly database
-warning: 'mlx-audio-swift': failed storing manifest for 'mlx-audio-swift' in cache: attempt to write a readonly database
 warning: 'whisperkit': failed storing manifest for 'whisperkit' in cache: attempt to write a readonly database
 warning: 'swift-argument-parser': failed storing manifest for 'swift-argument-parser' in cache: attempt to write a readonly database
 warning: 'eventsource': failed storing manifest for 'eventsource' in cache: attempt to write a readonly database
 warning: 'swift-crypto': failed storing manifest for 'swift-crypto' in cache: attempt to write a readonly database
 warning: 'swift-asn1': failed storing manifest for 'swift-asn1' in cache: attempt to write a readonly database
 warning: 'swift-nio': failed storing manifest for 'swift-nio' in cache: attempt to write a readonly database
-warning: 'swift-atomics': failed storing manifest for 'swift-atomics' in cache: attempt to write a readonly database
 warning: 'swift-system': failed storing manifest for 'swift-system' in cache: attempt to write a readonly database
+warning: 'swift-atomics': failed storing manifest for 'swift-atomics' in cache: attempt to write a readonly database
 warning: 'swift-collections': failed storing manifest for 'swift-collections' in cache: attempt to write a readonly database
-warning: 'swift-jinja': failed storing manifest for 'swift-jinja' in cache: attempt to write a readonly database
 warning: 'yyjson': failed storing manifest for 'yyjson' in cache: attempt to write a readonly database
+warning: 'swift-jinja': failed storing manifest for 'swift-jinja' in cache: attempt to write a readonly database
 warning: 'swift-syntax': failed storing manifest for 'swift-syntax' in cache: attempt to write a readonly database
 warning: 'swift-numerics': failed storing manifest for 'swift-numerics' in cache: attempt to write a readonly database
 [0/3] Write swift-version--58304C5D6DBC2206.txt
@@ -34,39 +34,43 @@ warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly decl
 [3/3] Compiling plugin CudaBuild
 Building for debugging...
 [3/7] Write swift-version--58304C5D6DBC2206.txt
-Build complete! (10.33s)
-Test Suite 'Selected tests' started at 2026-08-15 17:18:25.973.
-Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 17:18:25.974.
-Test Suite 'HighQualityAcceptanceTests' started at 2026-08-15 17:18:25.974.
+Build complete! (14.05s)
+Test Suite 'Selected tests' started at 2026-08-15 17:59:55.093.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 17:59:55.094.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-15 17:59:55.094.
 Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testArchivedE31SpeakerReanalysisDeliverablesMatchEvidence]' started.
-Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testArchivedE31SpeakerReanalysisDeliverablesMatchEvidence]' passed (0.189 seconds).
-Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-15 17:18:26.163.
-	 Executed 1 test, with 0 failures (0 unexpected) in 0.189 (0.189) seconds
-Test Suite 'HighQualityJobTests' started at 2026-08-15 17:18:26.163.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testArchivedE31SpeakerReanalysisDeliverablesMatchEvidence]' passed (0.215 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-15 17:59:55.309.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.215 (0.215) seconds
+Test Suite 'HighQualityJobTests' started at 2026-08-15 17:59:55.309.
 Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringSpeakerKitReleasesDiarizationRuntime]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringSpeakerKitReleasesDiarizationRuntime]' passed (0.007 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancellationDuringSpeakerKitReleasesDiarizationRuntime]' passed (0.015 seconds).
 Test Case '-[WhisperASRTests.HighQualityJobTests testCancelledSpeakerReanalysisUnloadsAndKeepsPreviousResult]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testCancelledSpeakerReanalysisUnloadsAndKeepsPreviousResult]' passed (0.018 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testCancelledSpeakerReanalysisUnloadsAndKeepsPreviousResult]' passed (0.038 seconds).
 Test Case '-[WhisperASRTests.HighQualityJobTests testFailedOrInterruptedSpeakerReanalysisKeepsPreviousResult]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testFailedOrInterruptedSpeakerReanalysisKeepsPreviousResult]' passed (0.042 seconds).
-Test Case '-[WhisperASRTests.HighQualityJobTests testLegacySpeakerResultStaysDisabledAfterLocateAndCancellation]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testLegacySpeakerResultStaysDisabledAfterLocateAndCancellation]' passed (0.025 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testFailedOrInterruptedSpeakerReanalysisKeepsPreviousResult]' passed (0.117 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testLegacySpeakerResultStaysDisabledWhenLocateCannotVerifySource]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testLegacySpeakerResultStaysDisabledWhenLocateCannotVerifySource]' passed (0.057 seconds).
 Test Case '-[WhisperASRTests.HighQualityJobTests testMissingSavedSourceRejectsSpeakerReanalysisBeforeServicesRun]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testMissingSavedSourceRejectsSpeakerReanalysisBeforeServicesRun]' passed (0.014 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testMissingSavedSourceRejectsSpeakerReanalysisBeforeServicesRun]' passed (0.029 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testRelaunchListsRelocatesAndReopensSavedResultWithoutChangingLiveMode]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testRelaunchListsRelocatesAndReopensSavedResultWithoutChangingLiveMode]' passed (0.028 seconds).
 Test Case '-[WhisperASRTests.HighQualityJobTests testSameSizeAndModificationDateSourceSubstitutionRejectsSpeakerReanalysis]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testSameSizeAndModificationDateSourceSubstitutionRejectsSpeakerReanalysis]' passed (0.014 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSameSizeAndModificationDateSourceSubstitutionRejectsSpeakerReanalysis]' passed (0.030 seconds).
 Test Case '-[WhisperASRTests.HighQualityJobTests testSavedSpeakerReanalysisReportsDiarizationWhenLiveOwnsGate]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testSavedSpeakerReanalysisReportsDiarizationWhenLiveOwnsGate]' passed (0.014 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSavedSpeakerReanalysisReportsDiarizationWhenLiveOwnsGate]' passed (0.028 seconds).
 Test Case '-[WhisperASRTests.HighQualityJobTests testSavedSpeakerReanalysisRunsOnlySpeakerKitAndUpdatesEveryArtifact]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testSavedSpeakerReanalysisRunsOnlySpeakerKitAndUpdatesEveryArtifact]' passed (0.042 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSavedSpeakerReanalysisRunsOnlySpeakerKitAndUpdatesEveryArtifact]' passed (0.062 seconds).
 Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerKitRuntimeFailurePersistsDiarizationDiagnostic]' started.
-Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerKitRuntimeFailurePersistsDiarizationDiagnostic]' passed (0.004 seconds).
-Test Suite 'HighQualityJobTests' passed at 2026-08-15 17:18:26.342.
-	 Executed 9 tests, with 0 failures (0 unexpected) in 0.179 (0.180) seconds
-Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 17:18:26.342.
-	 Executed 10 tests, with 0 failures (0 unexpected) in 0.367 (0.369) seconds
-Test Suite 'Selected tests' passed at 2026-08-15 17:18:26.342.
-	 Executed 10 tests, with 0 failures (0 unexpected) in 0.367 (0.369) seconds
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerKitRuntimeFailurePersistsDiarizationDiagnostic]' passed (0.005 seconds).
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerSourceRelocationRejectsWrongMediaThenAcceptsValidAlternative]' started.
+Test Case '-[WhisperASRTests.HighQualityJobTests testSpeakerSourceRelocationRejectsWrongMediaThenAcceptsValidAlternative]' passed (0.027 seconds).
+Test Suite 'HighQualityJobTests' passed at 2026-08-15 17:59:55.748.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.437 (0.439) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 17:59:55.748.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.652 (0.654) seconds
+Test Suite 'Selected tests' passed at 2026-08-15 17:59:55.748.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.652 (0.655) seconds
 ◇ Test run started.
 ↳ Testing Library Version: 1902
 ↳ Target Platform: arm64e-apple-macos14.0

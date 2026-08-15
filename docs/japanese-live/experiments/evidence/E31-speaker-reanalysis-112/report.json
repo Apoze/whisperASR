@@ -1,6 +1,7 @@
 {
   "ticket": 112,
-  "slot": "BENCHMARK_SLOT_GRANTED=112",
+  "slot": "BENCHMARK_SLOT_GRANTED=112-FINAL",
+  "executionCommit": "82bc5eea63538fd4e6e42aaf51026b01308effef",
   "test": "HighQualityAcceptanceTests/testRealSavedSpeakerReanalysisWhenOptedIn",
   "corpus": "Video1.webm/E31",
   "result": "pass",
@@ -15,16 +16,16 @@
     "exclusiveReconciliation": false
   },
   "timingSeconds": {
-    "speakerReanalysis": 16.41529893875122,
-    "xctest": 20.245,
-    "commandReal": 28.65,
-    "commandUser": 47.37,
-    "commandSystem": 5.45
+    "speakerReanalysis": 25.954408049583435,
+    "xctest": 31.744,
+    "commandReal": 51.23,
+    "commandUser": 67.01,
+    "commandSystem": 11.03
   },
   "memoryBytes": {
-    "speakerReanalysisPeak": 741131728,
-    "commandMaximumResidentSet": 829259776,
-    "commandPeakFootprint": 89916232,
+    "speakerReanalysisPeak": 750093752,
+    "commandMaximumResidentSet": 828391424,
+    "commandPeakFootprint": 103465824,
     "declaredSpeakerKitPeak": 4294967296
   },
   "lifecycle": [
@@ -52,8 +53,8 @@
   },
   "verification": {
     "targeted": {
-      "command": "swift test --disable-sandbox --filter 'HighQualityJobTests/(testSavedSpeakerReanalysisRunsOnlySpeakerKitAndUpdatesEveryArtifact|testMissingSavedSourceRejectsSpeakerReanalysisBeforeServicesRun|testSameSizeAndModificationDateSourceSubstitutionRejectsSpeakerReanalysis|testSavedSpeakerReanalysisReportsDiarizationWhenLiveOwnsGate|testLegacySpeakerResultStaysDisabledAfterLocateAndCancellation|testCancellationDuringSpeakerKitReleasesDiarizationRuntime|testSpeakerKitRuntimeFailurePersistsDiarizationDiagnostic|testCancelledSpeakerReanalysisUnloadsAndKeepsPreviousResult|testFailedOrInterruptedSpeakerReanalysisKeepsPreviousResult)|HighQualityAcceptanceTests/testArchivedE31SpeakerReanalysisDeliverablesMatchEvidence'",
-      "executed": 10,
+      "command": "swift test --disable-sandbox --filter 'HighQualityJobTests/(testSavedSpeakerReanalysisRunsOnlySpeakerKitAndUpdatesEveryArtifact|testMissingSavedSourceRejectsSpeakerReanalysisBeforeServicesRun|testSameSizeAndModificationDateSourceSubstitutionRejectsSpeakerReanalysis|testSavedSpeakerReanalysisReportsDiarizationWhenLiveOwnsGate|testLegacySpeakerResultStaysDisabledWhenLocateCannotVerifySource|testCancellationDuringSpeakerKitReleasesDiarizationRuntime|testSpeakerKitRuntimeFailurePersistsDiarizationDiagnostic|testCancelledSpeakerReanalysisUnloadsAndKeepsPreviousResult|testFailedOrInterruptedSpeakerReanalysisKeepsPreviousResult|testSpeakerSourceRelocationRejectsWrongMediaThenAcceptsValidAlternative|testRelaunchListsRelocatesAndReopensSavedResultWithoutChangingLiveMode)|HighQualityAcceptanceTests/testArchivedE31SpeakerReanalysisDeliverablesMatchEvidence'",
+      "executed": 12,
       "failures": 0,
       "log": "targeted-tests.log"
     },
@@ -66,7 +67,7 @@
     },
     "full": {
       "command": "swift test --disable-sandbox",
-      "executed": 466,
+      "executed": 467,
       "skippedOptIn": 62,
       "failures": 0,
       "log": "full-swift-test.log",
@@ -80,28 +81,46 @@
     "rawSpanCount": 498,
     "mappingCount": 2842
   },
+  "finalReplay": {
+    "directory": "final-replay",
+    "providedSourcePathPersisted": true,
+    "rawHistoricalRelabeled": false,
+    "onlySpeakerKitExecuted": true,
+    "manifestSHA256": "d7e5fb60b9d3576c57de22256bd1b3b1e4574929dbedc6e152c540e644f3640b",
+    "rawEvidenceSHA256": "dfac88c01eecd0e598c4609dd9a8626af4fa35c3137794ea13074b14b3c55ea8",
+    "transformationsSHA256": "d58b2f5dff7711e7d7af6af5c11c89caa77f25855223aef2ec84ab365a13c594",
+    "runLogSHA256": "7e44c40a410c56130d30289e23e38242c8c9dcc47e495b545d9ebdde4dcc3ba7",
+    "integrityIndexSHA256": "a3902b0c9fefce1138d589b862751cea71b0afd14bc23f459abf5deb5e4039eb"
+  },
+  "historicalReference": {
+    "executionCommit": "a80c9a9fe0222b0225100839c6770f98d6ebaf10",
+    "rawHistoricalRelabeled": false,
+    "sha256": {
+      "worker": "093edd22789af14a6dac0135355948fb10609d217e884e1a10e5bf18087f4b7b",
+      "metalLibrary": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+      "resultManifest": "04a75935d4e6b527bbe3cc2e0f45ca46d5b2f745e9b3330380a2a28ee374ee21",
+      "resultEvidence": "a45df60a14475bcfd429f19d48fbc52df51e4e9036b547447234af9ba79c9760",
+      "resultEvidenceGzip": "0972e2f6911948b6f1fe301d5c6914c332b4651e6a16c785a523250864cc807c",
+      "speakerKitResponse": "bb3daf80c2be3b2ff29097ef098557e9fa7d0253035977e6de3e2446d5fe49e8",
+      "runLog": "b16c429eb4eec9cfd373a706b8f57e0367ef9081551fda7d91e8d477c4abad59"
+    }
+  },
   "sha256": {
     "sourceVideo": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
     "sourcePCM": "1d55323f228f68cdb5df23fcf0909edd47940ce554244c712658fb14cace80b9",
     "frozenE31Evidence": "95b5089cf630f717cabf4c4c545673c46fa6bd62d74d2722e7930f084b6d48c5",
     "frozenE31EvidenceGzip": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
-    "worker": "093edd22789af14a6dac0135355948fb10609d217e884e1a10e5bf18087f4b7b",
-    "metalLibrary": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
-    "resultManifest": "04a75935d4e6b527bbe3cc2e0f45ca46d5b2f745e9b3330380a2a28ee374ee21",
-    "resultEvidence": "a45df60a14475bcfd429f19d48fbc52df51e4e9036b547447234af9ba79c9760",
-    "resultEvidenceGzip": "0972e2f6911948b6f1fe301d5c6914c332b4651e6a16c785a523250864cc807c",
-    "speakerKitResponse": "bb3daf80c2be3b2ff29097ef098557e9fa7d0253035977e6de3e2446d5fe49e8",
     "japaneseTranscript": "31b1782879958d1a4da736b03ce3be1361130aeae096be9f80e86f48b2d65694",
     "englishTranslationTranscript": "f7d85a26bb7fd427860fe7f69e50e64b82082fa27cb6ad45614ca3812a9c88aa",
     "englishVTT": "9342816e56f086ce7c131e2132428eba14bfefd35acdba3b59d1a9f6e9fc1c4a",
     "englishSRT": "7579150bea92eaae5a61e91d9a28e16c59797c7c69c86c3daf6ffeb1c8c5f9da",
-    "runLog": "b16c429eb4eec9cfd373a706b8f57e0367ef9081551fda7d91e8d477c4abad59",
-    "targetedTestsLog": "a4a85833b24e7888ee9b520dab4e37150b934d264f6d43ddd0d3640dad1a31e2",
-    "liveTestsLog": "719b3091c330538f7c3037c7078b2f65a55a1bf6b2042074616e535d003a9314",
-    "fullSwiftTestLog": "c9627bb88e64a29e2217e3deb6885c4dd2f682d43cbb72a98af9309675c022e9",
+    "targetedTestsLog": "315ef83b2d694853ae5e50cb13030194a1c8370bb3ffe3cc5389404503fa4c48",
+    "liveTestsLog": "bc39f68b8f616c969c53bd53f49368940da9344c9c9dc376c66fcdeae405f5fc",
+    "fullSwiftTestLog": "e10f84547191e9a18ebcd768310f070639a3105b9dbd473e7ccbfcf968fe0f48",
     "reproductionCommand": "98583b07f9492da1fcb8cee8defce87c65e7bffc389ed0426b7f209e1b06f678",
     "reproductionScript": "57b4d8b33258620791f8c52906cb86449d0c462ae560a4f7d11488a2c7c56391",
-    "executionProvenance": "c84aff5bf97e5a7b3bca122212c4182529113714f0753fab54f28cbf4536ff9a"
+    "executionProvenance": "5846298f6754aeabced1cc95667dee939c2b9100c4161c6f2628e0bfc2c4e4be",
+    "finalReplayIntegrityIndex": "a3902b0c9fefce1138d589b862751cea71b0afd14bc23f459abf5deb5e4039eb"
   },
   "diagnostics": [
     {

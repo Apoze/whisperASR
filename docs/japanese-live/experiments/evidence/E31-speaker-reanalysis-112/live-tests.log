@@ -9,36 +9,36 @@ warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly decl
 [3/3] Compiling plugin CudaBuild
 Building for debugging...
 [3/7] Write swift-version--58304C5D6DBC2206.txt
-Build complete! (5.63s)
-Test Suite 'Selected tests' started at 2026-08-15 17:18:43.380.
-Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 17:18:43.383.
-Test Suite 'LiveCaptionTests' started at 2026-08-15 17:18:43.383.
+Build complete! (5.09s)
+Test Suite 'Selected tests' started at 2026-08-15 18:00:11.637.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 18:00:11.639.
+Test Suite 'LiveCaptionTests' started at 2026-08-15 18:00:11.639.
 Test Case '-[WhisperASRTests.LiveCaptionTests testAcceptedForcedRangeAndFinishCoverTimelineWithoutHole]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testAcceptedForcedRangeAndFinishCoverTimelineWithoutHole]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testAcceptedForcedRangeAndFinishCoverTimelineWithoutHole]' passed (0.004 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testAdaptiveIsTheDefaultAppleTranslationMode]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testAdaptiveIsTheDefaultAppleTranslationMode]' passed (0.003 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testApplePreparationCallbackIsScopedToCapturedSelection]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testApplePreparationCallbackIsScopedToCapturedSelection]' passed (0.074 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testApplePreparationCallbackIsScopedToCapturedSelection]' passed (0.083 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testAppleSpeechFeedCursorsAreContiguousAndIndependent]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testAppleSpeechFeedCursorsAreContiguousAndIndependent]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testAppleSpeechFeedCursorsAreContiguousAndIndependent]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testAppleTranslationModeReadinessRequirements]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testAppleTranslationModeReadinessRequirements]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testAsyncDeadlineDoesNotWaitForNonCooperativeWork]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testAsyncDeadlineDoesNotWaitForNonCooperativeWork]' passed (0.023 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testAsyncDeadlineDoesNotWaitForNonCooperativeWork]' passed (0.027 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testAsyncDeadlineReturnsCompletedWork]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testAsyncDeadlineReturnsCompletedWork]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testBenchmarkWhisperOverrideRejectsUnknownOrMissingCandidate]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testBenchmarkWhisperOverrideRejectsUnknownOrMissingCandidate]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testBenchmarkWhisperOverrideRejectsUnknownOrMissingCandidate]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testCanonicalCorpusUsesTwelveEqualMultiSentencePassages]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testCanonicalCorpusUsesTwelveEqualMultiSentencePassages]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testCanonicalCorpusUsesTwelveEqualMultiSentencePassages]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testCatalogRejectsKnownNonTranslationModels]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testCatalogRejectsKnownNonTranslationModels]' passed (0.000 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testCatalogRejectsKnownNonTranslationModels]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testClearlyNonEnglishTranslationIsRejected]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testClearlyNonEnglishTranslationIsRejected]' passed (0.007 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testClearlyNonEnglishTranslationIsRejected]' passed (0.025 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testCohereFailureFallsBackToVoxtralOnlyWhenVoxtralIsValid]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testCohereFailureFallsBackToVoxtralOnlyWhenVoxtralIsValid]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testCoherePrototypeQuantizationCanBeSelectedWithoutLoadingModels]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testCoherePrototypeQuantizationCanBeSelectedWithoutLoadingModels]' passed (0.058 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testCoherePrototypeQuantizationCanBeSelectedWithoutLoadingModels]' passed (0.038 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testContinuousVoxtralRotatesOnlyAfterTargetAndSafeSilence]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testContinuousVoxtralRotatesOnlyAfterTargetAndSafeSilence]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testEachPrototypeLoadsOnlyItsRequiredModels]' started.
@@ -46,15 +46,15 @@ Test Case '-[WhisperASRTests.LiveCaptionTests testEachPrototypeLoadsOnlyItsRequi
 Test Case '-[WhisperASRTests.LiveCaptionTests testEliminatedGranitePreferenceFallsBackToQwenJA]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testEliminatedGranitePreferenceFallsBackToQwenJA]' passed (0.003 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testEndpointFIFOCarriesTheVoxtralFinalWithoutValidatingPCM]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testEndpointFIFOCarriesTheVoxtralFinalWithoutValidatingPCM]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testEndpointFIFOCarriesTheVoxtralFinalWithoutValidatingPCM]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testEndpointFIFOStagesAheadWithoutValidatingPCM]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testEndpointFIFOStagesAheadWithoutValidatingPCM]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testEndpointFIFOStagesAheadWithoutValidatingPCM]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testEnglishSubtitleScriptValidation]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testEnglishSubtitleScriptValidation]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testExplicitAppleTranslationModeWinsOverMigratedPreference]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testExplicitAppleTranslationModeWinsOverMigratedPreference]' passed (0.003 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testExplicitAppleTranslationModeWinsOverMigratedPreference]' passed (0.002 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testExplicitCaptionModeWinsOverLegacyPreference]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testExplicitCaptionModeWinsOverLegacyPreference]' passed (0.004 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testExplicitCaptionModeWinsOverLegacyPreference]' passed (0.002 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testFinalBoundaryInvalidatesLatePreviewWithoutAdvancingPCM]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testFinalBoundaryInvalidatesLatePreviewWithoutAdvancingPCM]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testForcedCutRetainsExactly800Milliseconds]' started.
@@ -62,7 +62,7 @@ Test Case '-[WhisperASRTests.LiveCaptionTests testForcedCutRetainsExactly800Mill
 Test Case '-[WhisperASRTests.LiveCaptionTests testIneligiblePreviewRevisionDoesNotErasePendingEligiblePrefix]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testIneligiblePreviewRevisionDoesNotErasePendingEligiblePrefix]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testKotobaOverrideIsIgnoredOutsideBenchmark]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testKotobaOverrideIsIgnoredOutsideBenchmark]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testKotobaOverrideIsIgnoredOutsideBenchmark]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testKotobaOverrideUsesPinnedModelOnlyInsideBenchmark]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testKotobaOverrideUsesPinnedModelOnlyInsideBenchmark]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testLegacyLiveTranslationPreferenceMigratesToAPI]' started.
@@ -80,15 +80,15 @@ Test Case '-[WhisperASRTests.LiveCaptionTests testModelDownloaderComputesStreami
 Test Case '-[WhisperASRTests.LiveCaptionTests testOlderBackupWithoutSubtitlePolicyStillDecodes]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testOlderBackupWithoutSubtitlePolicyStillDecodes]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testOldFastPreviewPreferenceMigratesToAdaptiveAppleTranslation]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testOldFastPreviewPreferenceMigratesToAdaptiveAppleTranslation]' passed (0.003 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testOldFastPreviewPreferenceMigratesToAdaptiveAppleTranslation]' passed (0.002 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testOldFinalClearsOnlyAnOverlappingPreview]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testOldFinalClearsOnlyAnOverlappingPreview]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testOldNemotronPipelinePreferenceMigratesToQwenOnly]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testOldNemotronPipelinePreferenceMigratesToQwenOnly]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testOldNemotronPipelinePreferenceMigratesToQwenOnly]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testOldStableOnlyPreferenceMigratesToHighFidelityAppleTranslation]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testOldStableOnlyPreferenceMigratesToHighFidelityAppleTranslation]' passed (0.002 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testPCMEncoderProducesCanonical16KMonoWAV]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testPCMEncoderProducesCanonical16KMonoWAV]' passed (0.001 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testPCMEncoderProducesCanonical16KMonoWAV]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testPreviewAccumulatesOnlyTheCurrentBoundedPhrase]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testPreviewAccumulatesOnlyTheCurrentBoundedPhrase]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testPreviewCursorCannotAdvanceStableOrPCMCursor]' started.
@@ -96,7 +96,7 @@ Test Case '-[WhisperASRTests.LiveCaptionTests testPreviewCursorCannotAdvanceStab
 Test Case '-[WhisperASRTests.LiveCaptionTests testPreviewWaitsForTwoGraphemesAndMarksFirstEligiblePerGeneration]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testPreviewWaitsForTwoGraphemesAndMarksFirstEligiblePerGeneration]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testRetrySourceCompletenessRoundTripsWithoutTouchingUserStorage]' started.
-Test Case '-[WhisperASRTests.LiveCaptionTests testRetrySourceCompletenessRoundTripsWithoutTouchingUserStorage]' passed (0.002 seconds).
+Test Case '-[WhisperASRTests.LiveCaptionTests testRetrySourceCompletenessRoundTripsWithoutTouchingUserStorage]' passed (0.001 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testShortPhraseIsCoalescedToAvoidInferenceBacklog]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testShortPhraseIsCoalescedToAvoidInferenceBacklog]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testStagedAttemptDoesNotReleasePCMOrBlockLaterSegmentation]' started.
@@ -105,12 +105,12 @@ Test Case '-[WhisperASRTests.LiveCaptionTests testTranslationOnlyPrimarySegments
 Test Case '-[WhisperASRTests.LiveCaptionTests testTranslationOnlyPrimarySegmentsDropMissingTranslations]' passed (0.000 seconds).
 Test Case '-[WhisperASRTests.LiveCaptionTests testVoxtralBoundaryAcceptsTheNextPhraseWhileRejectingLateOldWork]' started.
 Test Case '-[WhisperASRTests.LiveCaptionTests testVoxtralBoundaryAcceptsTheNextPhraseWhileRejectingLateOldWork]' passed (0.000 seconds).
-Test Suite 'LiveCaptionTests' passed at 2026-08-15 17:18:43.595.
-	 Executed 46 tests, with 0 failures (0 unexpected) in 0.207 (0.212) seconds
-Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 17:18:43.595.
-	 Executed 46 tests, with 0 failures (0 unexpected) in 0.207 (0.213) seconds
-Test Suite 'Selected tests' passed at 2026-08-15 17:18:43.595.
-	 Executed 46 tests, with 0 failures (0 unexpected) in 0.207 (0.215) seconds
+Test Suite 'LiveCaptionTests' passed at 2026-08-15 18:00:11.854.
+	 Executed 46 tests, with 0 failures (0 unexpected) in 0.210 (0.215) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 18:00:11.854.
+	 Executed 46 tests, with 0 failures (0 unexpected) in 0.210 (0.215) seconds
+Test Suite 'Selected tests' passed at 2026-08-15 18:00:11.854.
+	 Executed 46 tests, with 0 failures (0 unexpected) in 0.210 (0.217) seconds
 ◇ Test run started.
 ↳ Testing Library Version: 1902
 ↳ Target Platform: arm64e-apple-macos14.0
