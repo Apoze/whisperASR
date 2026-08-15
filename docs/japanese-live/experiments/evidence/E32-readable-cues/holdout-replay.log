@@ -1,0 +1,23 @@
+warning: /Users/maz/Library/org.swift.swiftpm/configuration is not accessible or not writable, disabling user-level cache features.
+warning: /Users/maz/Library/org.swift.swiftpm/security is not accessible or not writable, disabling user-level cache features.
+warning: /Users/maz/Library/Caches/org.swift.swiftpm is not accessible or not writable, disabling user-level cache features.
+warning: 'whisperasr': failed storing manifest for 'whisperasr' in cache: attempt to write a readonly database
+Test Suite 'Selected tests' started at 2026-08-15 18:16:56.921.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 18:16:56.923.
+Test Suite 'ReadableSubtitleReflowTests' started at 2026-08-15 18:16:56.923.
+Test Case '-[WhisperASRTests.ReadableSubtitleReflowTests testFrozenHoldoutReplayImprovesReadabilityWithoutRegression]' started.
+Test Case '-[WhisperASRTests.ReadableSubtitleReflowTests testFrozenHoldoutReplayImprovesReadabilityWithoutRegression]' passed (0.916 seconds).
+Test Suite 'ReadableSubtitleReflowTests' passed at 2026-08-15 18:16:57.839.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.916 (0.917) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 18:16:57.840.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.916 (0.917) seconds
+Test Suite 'Selected tests' passed at 2026-08-15 18:16:57.840.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.916 (0.918) seconds
+READABLE_SUBTITLE_HOLDOUT: cues 260->286, readable 97->146, >84 41->21, >20cps 129->129, short 65->65, long 17->2, splits 23
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+real 3.33
+user 2.36
+sys 0.55

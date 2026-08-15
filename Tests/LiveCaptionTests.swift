@@ -3,6 +3,23 @@ import XCTest
 @testable import WhisperASRApp
 
 final class LiveCaptionTests: XCTestCase {
+    func testReadableSubtitleBetaOptionIsOfflineOnlyAndLeavesLiveDefaults() {
+        let (defaults, name) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        var controls = HighQualityReadableSubtitleBetaControls()
+        controls.enabled = true
+        let request = HighQualityJobRequest(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishSubtitles],
+            backend: .qwenJA,
+            readableSubtitles: controls.enabled
+        )
+
+        XCTAssertTrue(request.readableSubtitles)
+        XCTAssertEqual(LiveCaptionMode.stored(in: defaults), .original)
+        XCTAssertEqual(AppleTranslationMode.stored(in: defaults), .adaptive)
+    }
+
     func testContinuousVoxtralRotatesOnlyAfterTargetAndSafeSilence() {
         let target = AppState.continuousVoxtralRotationTargetSamples
         func decision(

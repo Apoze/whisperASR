@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "ticket": 120,
+  "freezeCommit": "c44df8420e830f8014473b9e6135969c8439ceea",
+  "evaluatedCommit": "1649c87ea943b3831995cb9d20605f3dd1bd8cd3",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --disable-sandbox --skip-build --filter LiveCaptionTests/testReadableSubtitleBetaOptionIsOfflineOnlyAndLeavesLiveDefaults",
+  "executedAtUTC": "2026-08-15T16:17:03Z",
+  "result": {
+    "exitCode": 0,
+    "executed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "testSeconds": 0.003,
+    "wallSeconds": 2.74
+  },
+  "test": {
+    "path": "Tests/LiveCaptionTests.swift",
+    "sha256": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
+  },
+  "log": {
+    "path": "docs/japanese-live/experiments/evidence/E32-readable-cues/live-gate.log",
+    "sha256": "53dcbd0971ab18c401d6b70150c110f58ce7f718d937c09792b8372a5c17431b"
+  },
+  "sourceDiff": {
+    "baseCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
+    "evaluatedCommit": "1649c87ea943b3831995cb9d20605f3dd1bd8cd3",
+    "command": "git diff --name-only 75619a715d0cb6bfecc991e4855b7b229654d908...1649c87ea943b3831995cb9d20605f3dd1bd8cd3 -- Sources",
+    "changedSourceFiles": [
+      "Sources/HighQualityJob.swift",
+      "Sources/HighQualityJobView.swift",
+      "Sources/ReadableSubtitleReflow.swift"
+    ],
+    "liveSourceChangedFiles": [],
+    "outputSHA256": "34a085d31864e6a907989b9aa88fa930fdb230c8656419f619c27bb1e5f47e60"
+  },
+  "modelsLoaded": []
+}
