@@ -50,7 +50,6 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
             "Sources/ReadableSubtitleReflow.swift",
             "Tests/HighQualityJobTests.swift",
             "Tests/LiveCaptionTests.swift",
-            "Tests/ReadableSubtitleReflowTests.swift",
         ]))
         for (path, expectedSHA256) in files {
             XCTAssertEqual(
@@ -62,11 +61,19 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
         }
 
         let verification = try dictionary(report, "verification")
-        let contractPath = try string(verification, "contractTestPath")
-        XCTAssertEqual(
-            try JapaneseBenchmarkSupport.sha256(at: root.appendingPathComponent(contractPath)),
-            verification["contractTestSHA256"] as? String
-        )
+        let snapshotFiles = try stringDictionary(verification, "snapshotFilesSHA256")
+        XCTAssertEqual(Set(snapshotFiles.keys), Set([
+            "Tests/ReadableSubtitleEvidenceContractTests.swift",
+            "Tests/ReadableSubtitleReflowTests.swift",
+            "Tests/ReadableSubtitleReplaySupport.swift",
+        ]))
+        for (path, expectedSHA256) in snapshotFiles {
+            XCTAssertEqual(
+                try JapaneseBenchmarkSupport.sha256(at: root.appendingPathComponent(path)),
+                expectedSHA256,
+                path
+            )
+        }
         let liveGatePath = try string(verification, "liveGatePath")
         let liveGateURL = root.appendingPathComponent(liveGatePath)
         XCTAssertEqual(
@@ -164,7 +171,7 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
         let relativePath = String(inputPath.dropFirst(
             "docs/japanese-live/experiments/evidence/".count
         ))
-        let replay = try replay(relativePath)
+        let replay = try ReadableSubtitleReplaySupport.replay(relativePath)
         XCTAssertEqual(baseline as NSDictionary, metrics(replay.evidence.baseline) as NSDictionary)
         XCTAssertEqual(candidate as NSDictionary, metrics(replay.evidence.candidate) as NSDictionary)
         XCTAssertEqual(replay.evidence.splitSourceCueCount, expectedSplits)
@@ -182,45 +189,6 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
             "gapCount": value.gapCount,
             "overlapCount": value.overlapCount,
         ]
-    }
-
-    private func replay(_ relativePath: String) throws -> HighQualityReadableSubtitleResult {
-        let path = root.appendingPathComponent(
-            "docs/japanese-live/experiments/evidence/\(relativePath)"
-        )
-        let process = Process()
-        let output = Pipe()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/gzip")
-        process.arguments = ["-dc", path.path]
-        process.standardOutput = output
-        try process.run()
-        let data = try output.fileHandleForReading.readToEnd() ?? Data()
-        process.waitUntilExit()
-        XCTAssertEqual(process.terminationStatus, 0)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let raw = try decoder.decode(HighQualityRawEvidence.self, from: data)
-        let alignment = try XCTUnwrap(raw.alignment)
-        let translation = try XCTUnwrap(raw.translation)
-        let outputs = Dictionary(uniqueKeysWithValues: translation.integrityVerdicts.map {
-            ($0.cueID, $0.generatedOutput)
-        })
-        let units = try XCTUnwrap(alignment.semanticUnits)
-        let fragments = try XCTUnwrap(alignment.semanticFragments)
-        XCTAssertEqual(Set(outputs.keys), Set(units.map(\.id)))
-        return try HighQualityReadableSubtitleReflow.apply(
-            to: units.map { unit in
-                HighQualitySubtitleCue(
-                    id: unit.id,
-                    start: unit.start,
-                    end: unit.end,
-                    text: outputs[unit.id]!,
-                    speakerLabel: unit.speakerLabel
-                )
-            },
-            units: units,
-            fragments: fragments
-        )
     }
 
     private func json(at url: URL) throws -> [String: Any] {

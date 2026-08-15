@@ -12,13 +12,15 @@
       "Sources/HighQualityJobView.swift": "bb907641b3d6e12c11260e8f0fd9cbe1c70ab939e50bd948b11e44b9fd1ae0d2",
       "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
       "Tests/HighQualityJobTests.swift": "f812505408a639f0908c7fa26fb336fc63549eb65ab5a1a486f8348b9b3445dd",
-      "Tests/LiveCaptionTests.swift": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e",
-      "Tests/ReadableSubtitleReflowTests.swift": "7a062c6104c37173314f76bbdec7e5e8257ec806f876a0e616ff430ea1ad0324"
+      "Tests/LiveCaptionTests.swift": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
     }
   },
   "verification": {
-    "contractTestPath": "Tests/ReadableSubtitleEvidenceContractTests.swift",
-    "contractTestSHA256": "04cc676c0622907772680d4cf0856de583e2ed070947020ecacdf919b0934759",
+    "snapshotFilesSHA256": {
+      "Tests/ReadableSubtitleEvidenceContractTests.swift": "7be301462c47976008b2bd85787550c97496f50f006d240c0ec00c81081ec71f",
+      "Tests/ReadableSubtitleReflowTests.swift": "1475ea1c337826f1d1320bce7e4d0556e5ba52be2b089492c4fa79e28174221d",
+      "Tests/ReadableSubtitleReplaySupport.swift": "60b30150e368c6a8c04d997c95b2beecdbf74585431fe2952fd253225314cfab"
+    },
     "liveGatePath": "docs/japanese-live/experiments/evidence/E32-readable-cues/live-gate.json",
     "liveGateSHA256": "e5a5735f111cd1ba5b706af6c3bad6e68fb35c3b62cc8a885401ff85efe72c83"
   },

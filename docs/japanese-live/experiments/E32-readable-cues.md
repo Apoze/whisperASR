@@ -38,5 +38,5 @@ Budgets were frozen before holdout in
 Full metrics, provenance, gates and infra/harness/candidate routing are in
 `evidence/E32-readable-cues/report.json`. That report is contract-tested against
 implementation commit `8e250fbf2d361d05bfb581ff6f99f49700cd8353`, its exact
-source/test blobs, both replay inputs and
+source/test blobs, the shared replay-harness snapshot, both replay inputs and
 `evidence/E32-readable-cues/live-gate.json`; silent drift fails the test suite.
