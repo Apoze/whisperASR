@@ -2936,6 +2936,7 @@ struct HighQualityJob: Sendable {
                     ? Self.transcript(resultTurns, text: \.japanese)
                     : transcript)
                 : nil
+            try Task.checkCancellation()
             try Self.writeFiles(Self.deliverableFiles(
                 japaneseTranscript: japaneseOutput,
                 englishTranscript: englishTranscript,

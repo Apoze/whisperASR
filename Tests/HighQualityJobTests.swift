@@ -2010,6 +2010,65 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(reopened.evidence.readableSubtitles, audit)
     }
 
+    func testReadableSubtitleCancellationBeforeExportKeepsPreviousCompletedResult() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let cues = [HighQualityAlignedCue(
+            id: "cue-0001",
+            text: "一。",
+            start: 1,
+            end: 4
+        )]
+        let completed = try await subtitleFixtureJob(cues: cues).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishSubtitles],
+            backend: .qwenJA,
+            readableSubtitles: true,
+            outputRoot: root
+        ))
+        let completedURLs = completed.manifest.generatedFiles
+            .filter { $0.kind == .deliverable }
+            .map { completed.directory.appendingPathComponent($0.path) }
+        let completedData = try completedURLs.map { try Data(contentsOf: $0) }
+        let cancelledID = UUID()
+        let exportStarted = expectation(description: "readable subtitle export started")
+        let task = Task {
+            try await subtitleFixtureJob(cues: cues).run(.init(
+                id: cancelledID,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishSubtitles],
+                backend: .qwenJA,
+                readableSubtitles: true,
+                outputRoot: root
+            )) { progress in
+                guard progress.stage == .exporting else { return }
+                exportStarted.fulfill()
+                withUnsafeCurrentTask { $0?.cancel() }
+            }
+        }
+
+        do {
+            _ = try await task.value
+            XCTFail("Cancellation at the export boundary must stop the job.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .cancelled)
+        }
+        await fulfillment(of: [exportStarted], timeout: 1)
+
+        XCTAssertEqual(try completedURLs.map { try Data(contentsOf: $0) }, completedData)
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(
+                atPath: root.appendingPathComponent(cancelledID.uuidString).path
+            ).sorted(),
+            ["manifest.json", "raw-asr.json"]
+        )
+        let saved = try XCTUnwrap(
+            HighQualityJob.savedResults(in: root).first { $0.id == completed.manifest.jobID }
+        )
+        XCTAssertEqual(try HighQualityJob.reopen(saved).subtitleCues, completed.subtitleCues)
+    }
+
     func testReadableSubtitlesRequireEnglishSubtitleDeliverable() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

@@ -170,6 +170,92 @@ final class ReadableSubtitleReflowTests: XCTestCase {
         }
     }
 
+    func testLateCancellationDuringLastCueDPPreservesLastValidResult() throws {
+        let first = HighQualitySubtitleCue(
+            id: "unit-0001",
+            start: 0,
+            end: 2,
+            text: "A valid cue."
+        )
+        let last = HighQualitySubtitleCue(
+            id: "unit-0002",
+            start: 2,
+            end: 8,
+            text: "The first measured subtitle clause stays clear and calm as "
+                + "the second measured clause remains equally easy to read."
+        )
+        let unit = HighQualitySemanticUnitEvidence(
+            id: last.id,
+            japanese: "前半、後半。",
+            sourceFragmentIndices: [0, 1],
+            sourceCueIDs: ["cue-0002"],
+            start: last.start,
+            end: last.end,
+            decisions: [],
+            speakerMappingIndices: []
+        )
+        let fragments = [
+            HighQualitySemanticFragmentEvidence(
+                index: 0,
+                alignmentItemIndex: 0,
+                sourceCueID: "cue-0002",
+                text: "前半、",
+                start: 2,
+                end: 4.5
+            ),
+            HighQualitySemanticFragmentEvidence(
+                index: 1,
+                alignmentItemIndex: 1,
+                sourceCueID: "cue-0002",
+                text: "後半。",
+                start: 5,
+                end: 8
+            ),
+        ]
+        let lastValid = try HighQualityReadableSubtitleReflow.apply(
+            to: [first],
+            units: [],
+            fragments: []
+        )
+        var visibleResult = lastValid
+        var checks = 0
+
+        XCTAssertThrowsError(try {
+            visibleResult = try HighQualityReadableSubtitleReflow.apply(
+                to: [first, last],
+                units: [unit],
+                fragments: fragments,
+                cancellationCheck: {
+                    checks += 1
+                    if checks == 3 { throw CancellationError() }
+                }
+            )
+        }()) { error in
+            XCTAssertTrue(error is CancellationError)
+        }
+
+        XCTAssertEqual(checks, 3)
+        XCTAssertEqual(visibleResult.cues, lastValid.cues)
+        XCTAssertEqual(visibleResult.evidence, lastValid.evidence)
+    }
+
+    func testCancellationIsCheckedImmediatelyBeforeReturningResult() {
+        var checks = 0
+
+        XCTAssertThrowsError(try HighQualityReadableSubtitleReflow.apply(
+            to: [.init(id: "unit-0001", start: 0, end: 2, text: "A valid cue.")],
+            units: [],
+            fragments: [],
+            cancellationCheck: {
+                checks += 1
+                if checks == 2 { throw CancellationError() }
+            }
+        )) { error in
+            XCTAssertTrue(error is CancellationError)
+        }
+        XCTAssertEqual(checks, 2)
+    }
+
     func testFrozenDevelopmentReplayImprovesReadabilityWithoutRegression() throws {
         let replay = try replay("E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz")
 

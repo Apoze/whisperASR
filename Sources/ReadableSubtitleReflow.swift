@@ -103,7 +103,8 @@ enum HighQualityReadableSubtitleReflow {
         to sourceCues: [HighQualitySubtitleCue],
         units: [HighQualitySemanticUnitEvidence],
         fragments: [HighQualitySemanticFragmentEvidence],
-        policy: HighQualityReadableSubtitlePolicy = .product
+        policy: HighQualityReadableSubtitlePolicy = .product,
+        cancellationCheck: () throws -> Void = { try Task.checkCancellation() }
     ) throws -> HighQualityReadableSubtitleResult {
         let unitsByID = Dictionary(uniqueKeysWithValues: units.map { ($0.id, $0) })
         let fragmentsByIndex = Dictionary(uniqueKeysWithValues: fragments.map { ($0.index, $0) })
@@ -112,20 +113,24 @@ enum HighQualityReadableSubtitleReflow {
         var decisions: [HighQualityReadableSubtitleDecision] = []
 
         for source in sourceCues {
-            try Task.checkCancellation()
+            try cancellationCheck()
             let sourceViolations = violations(source, policy: policy)
-            let split: Split? = sourceViolations.isEmpty
-                ? nil
-                : unitsByID[source.id].flatMap { unit in
-                    Self.split(
-                        source,
-                        unit: unit,
-                        fragments: unit.sourceFragmentIndices.compactMap {
-                            fragmentsByIndex[$0]
-                        },
-                        policy: policy
-                    )
-                }
+            let split: Split?
+            if sourceViolations.isEmpty {
+                split = nil
+            } else if let unit = unitsByID[source.id] {
+                split = try Self.split(
+                    source,
+                    unit: unit,
+                    fragments: unit.sourceFragmentIndices.compactMap {
+                        fragmentsByIndex[$0]
+                    },
+                    policy: policy,
+                    cancellationCheck: cancellationCheck
+                )
+            } else {
+                split = nil
+            }
             let outputs: [HighQualitySubtitleCue]
             if let split {
                 outputs = split.cues
@@ -199,8 +204,10 @@ enum HighQualityReadableSubtitleReflow {
                 noNewOverlap: true,
                 integrityFallback: true
             )
+            try cancellationCheck()
             return .init(cues: sourceCues, evidence: fallback)
         }
+        try cancellationCheck()
         return .init(cues: candidate, evidence: evidence)
     }
 
@@ -234,8 +241,9 @@ enum HighQualityReadableSubtitleReflow {
         _ source: HighQualitySubtitleCue,
         unit: HighQualitySemanticUnitEvidence,
         fragments: [HighQualitySemanticFragmentEvidence],
-        policy: HighQualityReadableSubtitlePolicy
-    ) -> Split? {
+        policy: HighQualityReadableSubtitlePolicy,
+        cancellationCheck: () throws -> Void
+    ) throws -> Split? {
         let sourceWords = words(source.text)
         guard sourceWords.count >= 2,
               unit.start == source.start,
@@ -265,7 +273,9 @@ enum HighQualityReadableSubtitleReflow {
         )
 
         for boundaryIndex in 0..<(boundaries.count - 1) {
+            try cancellationCheck()
             for wordIndex in 0..<wordCount {
+                try cancellationCheck()
                 guard let path = best[boundaryIndex][wordIndex] else { continue }
                 for nextBoundaryIndex in (boundaryIndex + 1)..<boundaries.count {
                     let duration = boundaries[nextBoundaryIndex].time
