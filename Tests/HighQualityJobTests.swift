@@ -1000,6 +1000,388 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(renamed.subtitleCues.map(\.end), [4])
     }
 
+    func testCompletedStandaloneJobReopensFromSavedManifestAndEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let source = root.appendingPathComponent("source.wav")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data("audio-reference".utf8).write(to: source)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let completed = try await speakerSubtitleFixtureJob().run(.init(
+            sourceURL: source,
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+        let rawEvidence = try Data(contentsOf: completed.directory
+            .appendingPathComponent("raw-asr.json"))
+        let deliverableURLs = completed.manifest.generatedFiles
+            .filter { $0.kind == .deliverable }
+            .map { completed.directory.appendingPathComponent($0.path) }
+        let deliverableData = try deliverableURLs.map { try Data(contentsOf: $0) }
+        try Data("interrupted replacement".utf8).write(
+            to: completed.directory.appendingPathComponent("japanese-transcript.txt"),
+            options: .atomic
+        )
+        try FileManager.default.removeItem(
+            at: completed.directory.appendingPathComponent("english-subtitles.srt")
+        )
+
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+
+        XCTAssertEqual(saved.id, completed.manifest.jobID)
+        XCTAssertEqual(saved.sourceURL, source)
+        XCTAssertNil(saved.sourceRelocationMessage)
+        XCTAssertEqual(reopened.japaneseTranscript, completed.japaneseTranscript)
+        XCTAssertEqual(reopened.englishTranscript, completed.englishTranscript)
+        XCTAssertEqual(reopened.turns, completed.turns)
+        XCTAssertEqual(reopened.subtitleCues, completed.subtitleCues)
+        XCTAssertEqual(reopened.manifest.jobID, completed.manifest.jobID)
+        XCTAssertEqual(reopened.manifest.status, .completed)
+        XCTAssertEqual(reopened.manifest.source.path, completed.manifest.source.path)
+        XCTAssertEqual(reopened.manifest.source.fileName, completed.manifest.source.fileName)
+        XCTAssertEqual(reopened.manifest.deliverables, completed.manifest.deliverables)
+        XCTAssertEqual(reopened.evidence.rawASR, completed.evidence.rawASR)
+        XCTAssertEqual(reopened.evidence.alignment, completed.evidence.alignment)
+        XCTAssertEqual(reopened.evidence.diarization, completed.evidence.diarization)
+        XCTAssertEqual(
+            reopened.evidence.translation?.request.turns,
+            completed.evidence.translation?.request.turns
+        )
+        XCTAssertEqual(
+            reopened.evidence.translation?.response,
+            completed.evidence.translation?.response
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: completed.directory.appendingPathComponent("raw-asr.json")),
+            rawEvidence
+        )
+        XCTAssertEqual(try deliverableURLs.map { try Data(contentsOf: $0) }, deliverableData)
+    }
+
+    func testSavedYouTubeJobReopensFromRetainedAudioWithoutRepeatingServices() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = CallLog()
+        let sourceURL = try XCTUnwrap(URL(string: "https://youtu.be/saved123"))
+        let job = HighQualityJob(services: .init(
+            loadSource: { url in
+                await calls.append("load:\(url.lastPathComponent)")
+                return [0]
+            },
+            acquireYouTube: { url, directory in
+                await calls.append("acquire")
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
+                let audio = directory.appendingPathComponent("source.m4a")
+                try Data("retained-audio".utf8).write(to: audio)
+                return .init(
+                    audioURL: audio,
+                    evidence: .init(
+                        sourceURL: url.absoluteString,
+                        title: "Saved video",
+                        channel: "Saved channel",
+                        description: "Saved description",
+                        ytDLPVersion: "fixture",
+                        diagnostics: "fixture"
+                    )
+                )
+            },
+            prepareASR: { _ in await calls.append("prepare") },
+            transcribeJapanese: { _ in
+                await calls.append("transcribe")
+                return "保存済み。"
+            },
+            unloadASR: { await calls.append("unload") }
+        ))
+
+        let completed = try await job.run(.init(
+            sourceURL: sourceURL,
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+        let callsAfterRun = await calls.values
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+        let callsAfterReopen = await calls.values
+
+        XCTAssertEqual(callsAfterReopen, callsAfterRun)
+        XCTAssertEqual(saved.sourceURL, completed.directory
+            .appendingPathComponent("acquisition/source.m4a"))
+        XCTAssertNil(saved.sourceRelocationMessage)
+        XCTAssertEqual(reopened.japaneseTranscript, completed.japaneseTranscript)
+        XCTAssertEqual(reopened.manifest.source.youtube?.sourceURL, sourceURL.absoluteString)
+        XCTAssertEqual(reopened.evidence.source.youtube, reopened.manifest.source.youtube)
+    }
+
+    func testMissingLocalSourceRequestsRelocationWithoutCopyingOrHidingResult() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let source = root.appendingPathComponent("moved-source.wav")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data("external-source".utf8).write(to: source)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "結果。" },
+            unloadASR: {}
+        )).run(.init(
+            sourceURL: source,
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: completed.directory.appendingPathComponent(source.lastPathComponent).path
+        ))
+        try FileManager.default.removeItem(at: source)
+
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+
+        XCTAssertEqual(saved.sourceURL, source)
+        XCTAssertTrue(saved.sourceRelocationMessage?.contains("Locate moved-source.wav") == true)
+        XCTAssertEqual(reopened.japaneseTranscript, completed.japaneseTranscript)
+    }
+
+    func testCompletedJobRejectsTamperedRawEvidenceByManifestHash() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "検証。" },
+            unloadASR: {}
+        )).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+        XCTAssertEqual(completed.manifest.schemaVersion, 3)
+        XCTAssertNotNil(completed.manifest.rawEvidenceSHA256)
+        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
+        var data = try Data(contentsOf: evidenceURL)
+        data.append(contentsOf: "\n".utf8)
+        try data.write(to: evidenceURL, options: .atomic)
+
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        XCTAssertThrowsError(try HighQualityJob.reopen(saved)) { error in
+            XCTAssertTrue(error.localizedDescription.contains("verification"))
+        }
+    }
+
+    func testCompletedJobCannotBeOverwrittenByRepeatedIdentifier() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = UUID()
+        let request = HighQualityJobRequest(
+            id: id,
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        )
+        let completed = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "最初。" },
+            unloadASR: {}
+        )).run(request)
+        let persistedURLs = ["manifest.json", "raw-asr.json", "japanese-transcript.txt"]
+            .map(completed.directory.appendingPathComponent)
+        let persistedData = try persistedURLs.map { try Data(contentsOf: $0) }
+        let calls = CallLog()
+        let replacement = HighQualityJob(services: .init(
+            loadSource: { _ in
+                await calls.append("load")
+                return [0]
+            },
+            prepareASR: { _ in await calls.append("prepare") },
+            transcribeJapanese: { _ in
+                await calls.append("transcribe")
+                return "置換。"
+            },
+            unloadASR: { await calls.append("unload") }
+        ))
+
+        do {
+            _ = try await replacement.run(request)
+            XCTFail("Expected the completed saved result to be protected.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .application)
+            XCTAssertTrue(error.localizedDescription.contains("already exists"))
+        }
+
+        let replacementCalls = await calls.values
+        XCTAssertTrue(replacementCalls.isEmpty)
+        XCTAssertEqual(try persistedURLs.map { try Data(contentsOf: $0) }, persistedData)
+    }
+
+    func testSchemaTwoSavedResultWithoutEvidenceHashStillReopens() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "旧結果。" },
+            unloadASR: {}
+        )).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+        let manifestURL = completed.directory.appendingPathComponent("manifest.json")
+        var manifest = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL))
+                as? [String: Any]
+        )
+        manifest["schemaVersion"] = 2
+        manifest.removeValue(forKey: "rawEvidenceSHA256")
+        try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
+            .write(to: manifestURL, options: .atomic)
+        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
+        var evidence = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: evidenceURL))
+                as? [String: Any]
+        )
+        evidence.removeValue(forKey: "resultTurns")
+        evidence.removeValue(forKey: "subtitleCues")
+        evidence.removeValue(forKey: "japaneseTranscript")
+        evidence.removeValue(forKey: "englishTranscript")
+        try JSONSerialization.data(withJSONObject: evidence, options: [.sortedKeys])
+            .write(to: evidenceURL, options: .atomic)
+
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+
+        XCTAssertEqual(reopened.manifest.schemaVersion, 2)
+        XCTAssertNil(reopened.manifest.rawEvidenceSHA256)
+        XCTAssertEqual(reopened.japaneseTranscript, completed.japaneseTranscript)
+        XCTAssertThrowsError(try HighQualityJob.renameSpeakers(in: reopened, names: [:])) {
+            XCTAssertTrue($0.localizedDescription.contains("current schema"))
+        }
+    }
+
+    func testFutureSavedResultSchemaIsRejected() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "未来。" },
+            unloadASR: {}
+        )).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            outputRoot: root
+        ))
+        let manifestURL = completed.directory.appendingPathComponent("manifest.json")
+        var manifest = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL))
+                as? [String: Any]
+        )
+        manifest["schemaVersion"] = HighQualityJobManifest.currentSchemaVersion + 1
+        try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
+            .write(to: manifestURL, options: .atomic)
+        let saved = HighQualitySavedResult(
+            directory: completed.directory,
+            manifest: completed.manifest
+        )
+
+        XCTAssertTrue(HighQualityJob.savedResults(in: root).isEmpty)
+        XCTAssertThrowsError(try HighQualityJob.reopen(saved)) { error in
+            XCTAssertTrue(error.localizedDescription.contains("unsupported schema"))
+        }
+        manifest["schemaVersion"] = 1
+        try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
+            .write(to: manifestURL, options: .atomic)
+        XCTAssertThrowsError(try HighQualityJob.reopen(saved)) { error in
+            XCTAssertTrue(error.localizedDescription.contains("unsupported schema"))
+        }
+    }
+
+    func testSpeakerRenamePersistsSeparatelyAndReopensWithoutChangingRawEvidence() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await speakerSubtitleFixtureJob().run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
+        let originalEvidence = try Data(contentsOf: evidenceURL)
+        let renamed = try HighQualityJob.renameSpeakers(
+            in: completed,
+            names: ["SPEAKER_00": "Alice"]
+        )
+        let transformedURLs = completed.manifest.generatedFiles
+            .filter { $0.kind == .deliverable }
+            .map { completed.directory.appendingPathComponent($0.path) }
+        let transformedData = try transformedURLs.map { try Data(contentsOf: $0) }
+        try Data("interrupted replacement".utf8).write(
+            to: completed.directory.appendingPathComponent(
+                "english-translation-transcript.txt"
+            ),
+            options: .atomic
+        )
+
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: completed.directory.appendingPathComponent("transformations.json").path
+        ))
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+
+        XCTAssertEqual(reopened.turns, renamed.turns)
+        XCTAssertEqual(reopened.subtitleCues, renamed.subtitleCues)
+        XCTAssertEqual(reopened.japaneseTranscript, renamed.japaneseTranscript)
+        XCTAssertEqual(reopened.englishTranscript, renamed.englishTranscript)
+        XCTAssertEqual(try Data(contentsOf: evidenceURL), originalEvidence)
+        XCTAssertEqual(reopened.manifest.rawEvidenceSHA256, completed.manifest.rawEvidenceSHA256)
+        XCTAssertEqual(try transformedURLs.map { try Data(contentsOf: $0) }, transformedData)
+    }
+
+    func testSavedResultKeepsVisibleTurnsFromTheCompletedJob() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。二。" },
+            unloadASR: {}
+        )).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabelsByCueID: ["cue-0001": "Narrator"],
+            outputRoot: root
+        ))
+
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+
+        XCTAssertEqual(reopened.turns, completed.turns)
+        XCTAssertEqual(reopened.subtitleCues, completed.subtitleCues)
+    }
+
     func testCancellationDuringSpeakerKitReleasesDiarizationRuntime() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

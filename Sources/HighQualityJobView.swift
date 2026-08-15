@@ -40,7 +40,9 @@ struct HighQualityJobView: View {
     @State private var errorMessage: String?
     @State private var task: Task<Void, Never>?
     @State private var isDropTargeted = false
-    @State private var speakerNames: [String: String] = [:]
+    @State private var customSpeakerLabels: [String: String] = [:]
+    @State private var savedResults: [HighQualitySavedResult] = []
+    @State private var selectedSavedResultID: UUID?
 
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
@@ -55,6 +57,19 @@ struct HighQualityJobView: View {
             Text("High-quality transcript")
                 .font(.title2.bold())
 
+            if !savedResults.isEmpty {
+                Picker("Saved result", selection: $selectedSavedResultID) {
+                    Text("New High-quality job").tag(nil as UUID?)
+                    ForEach(savedResults) { saved in
+                        Text(saved.manifest.source.fileName).tag(Optional(saved.id))
+                    }
+                }
+                .disabled(isRunning)
+                .onChange(of: selectedSavedResultID) { _, id in
+                    reopenSavedResult(id)
+                }
+            }
+
             sourcePicker
 
             TextField("Public YouTube video URL", text: $youtubeURL)
@@ -62,6 +77,7 @@ struct HighQualityJobView: View {
                 .disabled(isRunning)
                 .onChange(of: youtubeURL) { _, value in
                     guard !value.isEmpty else { return }
+                    selectedSavedResultID = nil
                     sourceURL = nil
                     result = nil
                     errorMessage = nil
@@ -173,6 +189,12 @@ struct HighQualityJobView: View {
                     .textSelection(.enabled)
             }
 
+            if let message = selectedSavedResult?.sourceRelocationMessage {
+                Text(message)
+                    .foregroundStyle(.orange)
+                    .textSelection(.enabled)
+            }
+
             if let result {
                 Divider()
                 resultView(result)
@@ -180,7 +202,12 @@ struct HighQualityJobView: View {
         }
         .padding(20)
         .frame(minWidth: 560, minHeight: 460)
+        .onAppear { refreshSavedResults() }
         .onDisappear { task?.cancel() }
+    }
+
+    private var selectedSavedResult: HighQualitySavedResult? {
+        savedResults.first { $0.id == selectedSavedResultID }
     }
 
     private var sourcePicker: some View {
@@ -239,6 +266,7 @@ struct HighQualityJobView: View {
     }
 
     private func selectLocalSource(_ url: URL?) {
+        selectedSavedResultID = nil
         sourceURL = url
         youtubeURL = ""
         result = nil
@@ -256,6 +284,7 @@ struct HighQualityJobView: View {
             errorMessage = "Select a source and at least one Deliverable."
             return
         }
+        selectedSavedResultID = nil
         result = nil
         errorMessage = nil
         progress = .init(stage: .validating, fraction: 0, message: "Starting…")
@@ -274,15 +303,61 @@ struct HighQualityJobView: View {
                     Task { @MainActor in progress = update }
                 }
                 result = completed
-                speakerNames = Dictionary(uniqueKeysWithValues: Set(
-                    completed.turns.compactMap(\.speakerLabel)
-                ).sorted().map { ($0, $0) })
+                customSpeakerLabels = initialCustomSpeakerLabels(for: completed)
+                refreshSavedResults()
+                selectedSavedResultID = completed.manifest.jobID
             } catch let error as HighQualityJobError {
                 errorMessage = error.localizedDescription
             } catch {
                 errorMessage = error.localizedDescription
             }
             task = nil
+        }
+    }
+
+    private func refreshSavedResults() {
+        savedResults = HighQualityJob.savedResults()
+    }
+
+    private func reopenSavedResult(_ id: UUID?) {
+        guard let id else {
+            guard !isRunning else { return }
+            result = nil
+            errorMessage = nil
+            customSpeakerLabels = [:]
+            return
+        }
+        guard let saved = savedResults.first(where: { $0.id == id }) else { return }
+        do {
+            let reopened = try HighQualityJob.reopen(saved)
+            let deliverables = Set(reopened.manifest.deliverables)
+            sourceURL = saved.sourceURL
+            youtubeURL = ""
+            includeJapaneseTranscript = deliverables.contains(.japaneseTranscript)
+            includeEnglishTranscript = deliverables.contains(.englishTranslationTranscript)
+            includeEnglishSubtitles = deliverables.contains(.englishSubtitles)
+            speakerBeta.includeLabels = reopened.manifest.speakerLabels
+            backend = reopened.manifest.selectedBackend
+            if let savedTranslator = reopened.manifest.translationModel?.translator {
+                translator = savedTranslator
+            }
+            result = reopened
+            errorMessage = nil
+            progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
+            customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
+        } catch {
+            result = nil
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func initialCustomSpeakerLabels(
+        for result: HighQualityJobResult
+    ) -> [String: String] {
+        result.turns.reduce(into: [:]) { names, turn in
+            if let label = turn.speakerLabel {
+                names[label] = turn.speakerName ?? label
+            }
         }
     }
 
@@ -357,25 +432,31 @@ struct HighQualityJobView: View {
             }
             .textSelection(.enabled)
         }
-        if !speakerNames.isEmpty {
+        if !customSpeakerLabels.isEmpty {
             HStack {
-                ForEach(speakerNames.keys.sorted(), id: \.self) { label in
+                ForEach(customSpeakerLabels.keys.sorted(), id: \.self) { label in
                     TextField(label, text: Binding(
-                        get: { speakerNames[label] ?? label },
-                        set: { speakerNames[label] = $0 }
+                        get: { customSpeakerLabels[label] ?? label },
+                        set: { customSpeakerLabels[label] = $0 }
                     ))
                     .textFieldStyle(.roundedBorder)
                 }
-                Button("Apply Names") {
+                Button("Apply Labels") {
                     do {
                         self.result = try HighQualityJob.renameSpeakers(
                             in: result,
-                            names: speakerNames
+                            names: customSpeakerLabels
                         )
                     } catch {
                         errorMessage = error.localizedDescription
                     }
                 }
+                .disabled(result.manifest.schemaVersion < 3)
+            }
+            if result.manifest.schemaVersion < 3 {
+                Text("Speaker label edits require a result saved with the current schema.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
