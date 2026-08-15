@@ -1031,7 +1031,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
 
         let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
         let reopened = try HighQualityJob.reopen(saved)
-        XCTAssertEqual(reopened.manifest.schemaVersion, 4)
+        XCTAssertEqual(reopened.manifest.schemaVersion, HighQualityJobManifest.currentSchemaVersion)
         XCTAssertNotNil(reopened.manifest.rawEvidenceSHA256)
         XCTAssertEqual(reopened.evidence.asrWorker, reopened.manifest.asrWorker)
         XCTAssertEqual(reopened.evidence.asrWorker?.result, workerEvidence.result)

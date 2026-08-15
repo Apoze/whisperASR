@@ -222,6 +222,7 @@ struct HighQualityJobRequest: Sendable {
     let backend: HighQualityASRBackend
     let translator: HighQualityTranslator
     let speakerLabels: Bool
+    let readableSubtitles: Bool
     let useExclusiveReconciliation: Bool
     let speakerConfiguration: HighQualitySpeakerConfiguration
     var speakerCountPolicy: HighQualitySpeakerCountPolicy { speakerConfiguration.countPolicy }
@@ -237,6 +238,7 @@ struct HighQualityJobRequest: Sendable {
         backend: HighQualityASRBackend,
         translator: HighQualityTranslator = .productDefault,
         speakerLabels: Bool = false,
+        readableSubtitles: Bool = false,
         useExclusiveReconciliation: Bool = false,
         speakerConfiguration: HighQualitySpeakerConfiguration = .standard,
         speakerLabelsByCueID: [String: String] = [:],
@@ -252,6 +254,7 @@ struct HighQualityJobRequest: Sendable {
         self.backend = backend
         self.translator = translator
         self.speakerLabels = speakerLabels
+        self.readableSubtitles = readableSubtitles
         self.useExclusiveReconciliation = useExclusiveReconciliation
         self.speakerConfiguration = speakerConfiguration
         self.speakerLabelsByCueID = speakerLabelsByCueID
@@ -953,6 +956,7 @@ struct HighQualitySubtitleCue: Codable, Equatable, Sendable {
     let text: String
     let speakerLabel: String?
     let speakerName: String?
+    let renderedLines: [String]?
 
     init(
         id: String,
@@ -960,7 +964,8 @@ struct HighQualitySubtitleCue: Codable, Equatable, Sendable {
         end: TimeInterval,
         text: String,
         speakerLabel: String? = nil,
-        speakerName: String? = nil
+        speakerName: String? = nil,
+        renderedLines: [String]? = nil
     ) {
         self.id = id
         self.start = start
@@ -968,6 +973,7 @@ struct HighQualitySubtitleCue: Codable, Equatable, Sendable {
         self.text = text
         self.speakerLabel = speakerLabel
         self.speakerName = speakerName
+        self.renderedLines = renderedLines
     }
 }
 
@@ -1097,7 +1103,7 @@ struct HighQualityGeneratedFile: Codable, Equatable, Sendable {
 }
 
 struct HighQualityJobManifest: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 5
 
     enum Status: String, Codable, Sendable {
         case completed
@@ -1113,6 +1119,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     let selectedBackend: HighQualityASRBackend
     let translationModel: HighQualityTranslationModelEvidence?
     let speakerLabels: Bool
+    let readableSubtitles: Bool?
     let speakerConfiguration: HighQualitySpeakerConfiguration?
     let speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let dependencies: [HighQualityJobDependency]
@@ -1161,6 +1168,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     var subtitleCues: [HighQualitySubtitleCue]? = nil
     var japaneseTranscript: String? = nil
     var englishTranscript: String? = nil
+    var readableSubtitles: HighQualityReadableSubtitleEvidence? = nil
 }
 
 struct HighQualityJobResult: Sendable {
@@ -1678,6 +1686,7 @@ struct HighQualityJob: Sendable {
         guard evidence.source == manifest.source,
               evidence.model == manifest.model,
               evidence.asrWorker == manifest.asrWorker,
+              (manifest.readableSubtitles == true) == (evidence.readableSubtitles != nil),
               evidence.generatedFiles == manifest.generatedFiles else {
             throw savedResultError("The saved manifest and raw evidence do not match.", saved)
         }
@@ -1860,6 +1869,13 @@ struct HighQualityJob: Sendable {
                 resultDirectory: nil
             )
         }
+        guard !request.readableSubtitles || needsSubtitles else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "Readable subtitles require English WebVTT and SRT subtitles.",
+                resultDirectory: nil
+            )
+        }
         if isYouTubeSource {
             try Self.validateYouTubeURL(request.sourceURL)
         }
@@ -1902,6 +1918,7 @@ struct HighQualityJob: Sendable {
         var diarizationEvidence: HighQualityDiarizationEvidence?
         var alignedItems: [HighQualityAlignmentItem] = []
         var translationEvidence: HighQualityTranslationEvidence?
+        var readableSubtitleEvidence: HighQualityReadableSubtitleEvidence?
         var acquiredAudioURL: URL?
         var asrLoadStarted = false
         var asrUnloaded = false
@@ -1927,6 +1944,7 @@ struct HighQualityJob: Sendable {
             selectedBackend: request.backend,
             translationModel: needsTranslation ? translationModel : nil,
             speakerLabels: request.speakerLabels || !request.speakerLabelsByCueID.isEmpty,
+            readableSubtitles: request.readableSubtitles ? true : nil,
             speakerConfiguration: request.speakerConfiguration,
             speakerCountPolicy: request.speakerCountPolicy,
             dependencies: (isYouTubeSource ? [.sourceAcquisition] : [])
@@ -2882,7 +2900,7 @@ struct HighQualityJob: Sendable {
             let englishTranscript = request.deliverables.contains(.englishTranslationTranscript)
                 ? Self.transcript(resultTurns, text: \.english)
                 : nil
-            let subtitleCues: [HighQualitySubtitleCue]
+            var subtitleCues: [HighQualitySubtitleCue]
             if needsSubtitles {
                 subtitleCues = resultTurns.compactMap { turn in
                     guard let start = turn.start,
@@ -2899,6 +2917,15 @@ struct HighQualityJob: Sendable {
             } else {
                 subtitleCues = []
             }
+            if request.readableSubtitles {
+                let reflow = try HighQualityReadableSubtitleReflow.apply(
+                    to: subtitleCues,
+                    units: alignmentEvidence?.semanticUnits ?? [],
+                    fragments: alignmentEvidence?.semanticFragments ?? []
+                )
+                subtitleCues = reflow.cues
+                readableSubtitleEvidence = reflow.evidence
+            }
             begin(.exporting, fraction: 0.9, message: "Writing results…")
             manifest.generatedFiles = Self.generatedFiles(
                 deliverables: request.deliverables,
@@ -2909,6 +2936,7 @@ struct HighQualityJob: Sendable {
                     ? Self.transcript(resultTurns, text: \.japanese)
                     : transcript)
                 : nil
+            try Task.checkCancellation()
             try Self.writeFiles(Self.deliverableFiles(
                 japaneseTranscript: japaneseOutput,
                 englishTranscript: englishTranscript,
@@ -2931,6 +2959,7 @@ struct HighQualityJob: Sendable {
                 subtitleCues: subtitleCues,
                 japaneseTranscript: japaneseOutput ?? transcript,
                 englishTranscript: englishTranscript,
+                readableSubtitles: readableSubtitleEvidence,
                 manifest: &manifest,
                 to: directory
             )
@@ -3174,7 +3203,8 @@ struct HighQualityJob: Sendable {
                 end: cue.end,
                 text: cue.text,
                 speakerLabel: cue.speakerLabel,
-                speakerName: cue.speakerLabel.flatMap { labels[$0] } ?? cue.speakerName
+                speakerName: cue.speakerLabel.flatMap { labels[$0] } ?? cue.speakerName,
+                renderedLines: cue.renderedLines
             )
         }
         let deliverables = Set(result.manifest.deliverables)
@@ -4280,9 +4310,9 @@ struct HighQualityJob: Sendable {
         if let traversalError { throw traversalError }
     }
 
-    private static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
+    static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
         "WEBVTT\n\n" + cues.map { cue in
-            let content = subtitleText(cue.text)
+            let content = subtitleText(cue)
             let text = (cue.speakerName ?? cue.speakerLabel).map {
                 "<v \(webVTTSpeaker($0))>\(content)"
             }
@@ -4291,9 +4321,9 @@ struct HighQualityJob: Sendable {
         }.joined(separator: "\n") + (cues.isEmpty ? "" : "\n")
     }
 
-    private static func srt(_ cues: [HighQualitySubtitleCue]) -> String {
+    static func srt(_ cues: [HighQualitySubtitleCue]) -> String {
         cues.enumerated().map { index, cue in
-            let content = subtitleText(cue.text)
+            let content = subtitleText(cue)
             let text = (cue.speakerName ?? cue.speakerLabel).map { "[\($0)] \(content)" }
                 ?? content
             return "\(index + 1)\n\(SubtitleTimecode.srt(cue.start)) --> \(SubtitleTimecode.srt(cue.end))\n\(text)\n"
@@ -4302,6 +4332,11 @@ struct HighQualityJob: Sendable {
 
     private static func subtitleText(_ text: String) -> String {
         text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    private static func subtitleText(_ cue: HighQualitySubtitleCue) -> String {
+        cue.renderedLines?.map(subtitleText).joined(separator: "\n")
+            ?? subtitleText(cue.text)
     }
 
     private static func webVTTSpeaker(_ value: String) -> String {
@@ -4376,6 +4411,7 @@ struct HighQualityJob: Sendable {
         subtitleCues: [HighQualitySubtitleCue]? = nil,
         japaneseTranscript: String? = nil,
         englishTranscript: String? = nil,
+        readableSubtitles: HighQualityReadableSubtitleEvidence? = nil,
         manifest: HighQualityJobManifest
     ) -> HighQualityRawEvidence {
         HighQualityRawEvidence(
@@ -4399,7 +4435,8 @@ struct HighQualityJob: Sendable {
             resultTurns: resultTurns,
             subtitleCues: subtitleCues,
             japaneseTranscript: japaneseTranscript,
-            englishTranscript: englishTranscript
+            englishTranscript: englishTranscript,
+            readableSubtitles: readableSubtitles
         )
     }
 
@@ -4415,6 +4452,7 @@ struct HighQualityJob: Sendable {
         subtitleCues: [HighQualitySubtitleCue]? = nil,
         japaneseTranscript: String? = nil,
         englishTranscript: String? = nil,
+        readableSubtitles: HighQualityReadableSubtitleEvidence? = nil,
         manifest: inout HighQualityJobManifest,
         to directory: URL
     ) throws -> HighQualityRawEvidence {
@@ -4429,6 +4467,7 @@ struct HighQualityJob: Sendable {
             subtitleCues: subtitleCues,
             japaneseTranscript: japaneseTranscript,
             englishTranscript: englishTranscript,
+            readableSubtitles: readableSubtitles,
             manifest: manifest
         )
         let data = try encoder.encode(evidence)
