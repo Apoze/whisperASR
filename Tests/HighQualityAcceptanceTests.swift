@@ -321,8 +321,27 @@ final class HighQualityAcceptanceTests: XCTestCase {
 
     func testDuplicateSpeakerDevelopmentCalibrationWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
+        let expectedSpeakerCount: Int?
+        if let rawExpectedCount = environment[
+            "WHISPERASR_DUPLICATE_SPEAKER_EXPECTED_COUNT"
+        ] {
+            guard rawExpectedCount == "12" else {
+                throw NSError(
+                    domain: "HighQualityAcceptanceTests",
+                    code: 114,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "Ticket #114 calibration permits only Expected=12.",
+                    ]
+                )
+            }
+            expectedSpeakerCount = 12
+        } else {
+            expectedSpeakerCount = nil
+        }
+        let requiredSlot = expectedSpeakerCount == nil ? "114" : "114-CALIBRATION"
         guard environment["WHISPERASR_RUN_DUPLICATE_SPEAKER_DEV"] == "1",
-              environment["BENCHMARK_SLOT_GRANTED"] == "114",
+              environment["BENCHMARK_SLOT_GRANTED"] == requiredSlot,
               let manifestPath = environment["WHISPERASR_DUPLICATE_SPEAKER_MANIFEST"],
               let sourcePath = environment["WHISPERASR_DUPLICATE_SPEAKER_SOURCE"],
               let reportPath = environment["WHISPERASR_DUPLICATE_SPEAKER_REPORT"],
@@ -354,9 +373,15 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
         let startedAt = Date()
         let exchange: HighQualityDiarizationExchange
+        let speakerCountPolicy = expectedSpeakerCount.map(
+            HighQualitySpeakerCountPolicy.expected
+        ) ?? .automatic
         do {
             try await runtime.prepare(progress: { _, _ in })
-            exchange = try await runtime.diarize(samples: samples)
+            exchange = try await runtime.diarize(
+                samples: samples,
+                speakerCountPolicy: speakerCountPolicy
+            )
         } catch {
             await runtime.unload()
             throw error
@@ -373,7 +398,10 @@ final class HighQualityAcceptanceTests: XCTestCase {
             manifest: manifest,
             evidence: evidence,
             elapsedSeconds: elapsedSeconds,
-            sourceSHA256: manifest.fixture.sha256
+            sourceSHA256: manifest.fixture.sha256,
+            sourceJobID: jobID,
+            benchmarkSlot: requiredSlot,
+            speakerCountPolicy: speakerCountPolicy
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -1159,6 +1187,10 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let corpusID: String
         let purpose: String
         let holdoutOpened: Bool
+        let benchmarkSlot: String
+        let sourceJobID: UUID
+        let speakerCountPolicy: HighQualitySpeakerCountPolicy
+        let calibrationRole: String
         let sourceSHA256: String
         let modelID: String
         let modelRevision: String
@@ -1201,7 +1233,10 @@ final class HighQualityAcceptanceTests: XCTestCase {
         manifest: JapaneseBenchmarkSupport.Manifest,
         evidence: HighQualityDiarizationEvidence,
         elapsedSeconds: TimeInterval,
-        sourceSHA256: String
+        sourceSHA256: String,
+        sourceJobID: UUID,
+        benchmarkSlot: String,
+        speakerCountPolicy: HighQualitySpeakerCountPolicy
     ) throws -> DuplicateSpeakerDevelopmentReport {
         let centroids = try XCTUnwrap(evidence.speakerCentroids)
         let mappings = referenceMappings(
@@ -1254,6 +1289,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
             corpusID: manifest.corpusID,
             purpose: manifest.purpose.rawValue,
             holdoutOpened: false,
+            benchmarkSlot: benchmarkSlot,
+            sourceJobID: sourceJobID,
+            speakerCountPolicy: speakerCountPolicy,
+            calibrationRole: speakerCountPolicy.mode == .expected
+                ? "over-clustering-pair-generator" : "baseline",
             sourceSHA256: sourceSHA256,
             modelID: first.modelID,
             modelRevision: first.modelRevision,

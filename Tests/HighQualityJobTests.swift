@@ -1067,22 +1067,38 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
     }
 
-    func testDuplicateSpeakerSuggestionRejectsIncompatibleCentroids() async throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-        let result = try await speakerSubtitleFixtureJob(speakerCentroids: [
-            0: [1, 0],
-            1: [1, 0, 0],
-        ]).run(.init(
-            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
-            deliverables: [.japaneseTranscript],
-            backend: .qwenJA,
-            speakerLabels: true,
-            outputRoot: root
-        ))
+    func testDuplicateSpeakerSuggestionRejectsIncompatibleModelID() {
+        assertDuplicateSpeakerSuggestionAbstains(
+            second: speakerCentroid(speakerID: "SPEAKER_01", modelID: "other-model")
+        )
+    }
 
-        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
+    func testDuplicateSpeakerSuggestionRejectsIncompatibleModelRevision() {
+        assertDuplicateSpeakerSuggestionAbstains(
+            second: speakerCentroid(speakerID: "SPEAKER_01", modelRevision: "other-revision")
+        )
+    }
+
+    func testDuplicateSpeakerSuggestionRejectsIncompatibleRuntimeRevision() {
+        assertDuplicateSpeakerSuggestionAbstains(
+            second: speakerCentroid(speakerID: "SPEAKER_01", runtimeRevision: "other-runtime")
+        )
+    }
+
+    func testDuplicateSpeakerSuggestionRejectsIncompatibleEmbeddingVariant() {
+        assertDuplicateSpeakerSuggestionAbstains(
+            second: speakerCentroid(speakerID: "SPEAKER_01", embeddingVariant: "W16A16")
+        )
+    }
+
+    func testDuplicateSpeakerSuggestionRejectsIncompatibleVectorDimension() {
+        assertDuplicateSpeakerSuggestionAbstains(
+            second: speakerCentroid(
+                speakerID: "SPEAKER_01",
+                vectorDimension: 3,
+                vector: [0.999, 0.001, 0]
+            )
+        )
     }
 
     func testDuplicateSpeakerSuggestionAbstainsForWeakSimilarity() async throws {
@@ -1103,57 +1119,107 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
     }
 
-    func testSpeakerCentroidValidationFailsClosedForInvalidVectors() async throws {
+    func testCompletedJobDiscardsInvalidCentroidsWithoutLosingDiarization() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
-        do {
-            _ = try await speakerSubtitleFixtureJob(speakerCentroids: [0: [0, 0]])
-                .run(.init(
-                    sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
-                    deliverables: [.japaneseTranscript],
-                    backend: .qwenJA,
-                    speakerLabels: true,
-                    outputRoot: root
-                ))
-            XCTFail("Invalid centroids must fail closed.")
-        } catch let error as HighQualityJobError {
-            XCTAssertEqual(error.stage, .diarization)
-            XCTAssertEqual(error.message, "SpeakerKit returned an invalid speaker centroid.")
-        }
+        let result = try await speakerSubtitleFixtureJob(speakerCentroids: [
+            0: [1, 0],
+            1: [0, 0],
+            2: [.nan, 0],
+        ]).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        let evidence = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(evidence.rawSpans.map(\.speakerID), [0, 1, 2])
+        XCTAssertEqual(evidence.mappings.map(\.speakerLabel), ["SPEAKER_00"])
+        XCTAssertEqual(evidence.speakerCentroids?.map(\.speakerID), ["SPEAKER_00"])
+        XCTAssertEqual(evidence.validationDiagnostics, [
+            "Discarded SpeakerKit centroid SPEAKER_01: vector has zero norm.",
+            "Discarded SpeakerKit centroid SPEAKER_02: vector contains non-finite values.",
+        ])
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
+        XCTAssertEqual(
+            try HighQualityJob.reopen(XCTUnwrap(HighQualityJob.savedResults(in: root).first))
+                .evidence.diarization,
+            evidence
+        )
     }
 
-    func testSpeakerCentroidValidationFailsClosedForIncompleteProvenance() async throws {
+    func testCompletedJobDiscardsCentroidsWithoutProvenance() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
 
-        do {
-            _ = try await speakerSubtitleFixtureJob(
-                speakerCentroids: [0: [1, 0]],
-                speakerCentroidConfiguration: nil
-            ).run(.init(
-                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
-                deliverables: [.japaneseTranscript],
-                backend: .qwenJA,
-                speakerLabels: true,
-                outputRoot: root
-            ))
-            XCTFail("Incomplete centroid provenance must fail closed.")
-        } catch let error as HighQualityJobError {
-            XCTAssertEqual(error.stage, .diarization)
-            XCTAssertEqual(error.message, "SpeakerKit centroid provenance is incomplete.")
-        }
+        let result = try await speakerSubtitleFixtureJob(
+            speakerCentroids: [0: [1, 0]],
+            speakerCentroidConfiguration: nil
+        ).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        let evidence = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(evidence.rawSpans.map(\.speakerID), [0])
+        XCTAssertEqual(evidence.mappings.map(\.speakerLabel), ["SPEAKER_00"])
+        XCTAssertEqual(evidence.speakerCentroids, [])
+        XCTAssertEqual(evidence.validationDiagnostics, [
+            "Discarded 1 SpeakerKit centroid(s): provenance is incomplete.",
+        ])
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
     }
 
-    func testDuplicateSpeakerBetaCopyExplainsSimilarityAndUncertainty() {
-        let description = HighQualityDuplicateSpeakerSuggestion.betaDescription
+    func testDuplicateSpeakerThresholdsMatchFrozenDecisionContract() throws {
+        let evidenceDirectory = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent(
+                "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids"
+            )
+        let decision = try XCTUnwrap(
+            try JSONSerialization.jsonObject(
+                with: Data(contentsOf: evidenceDirectory.appendingPathComponent("decision.json"))
+            ) as? [String: Any]
+        )
+        let thresholds = try XCTUnwrap(decision["thresholdsFrozen"] as? [String: Any])
+        let contractPath = try XCTUnwrap(thresholds["contractPath"] as? String)
+        let contractURL = evidenceDirectory.appendingPathComponent(contractPath)
+        let contract = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: contractURL))
+                as? [String: NSNumber]
+        )
 
-        XCTAssertFalse(HighQualityDuplicateSpeakerSuggestion.isBetaAvailable)
-        XCTAssertTrue(description.contains("acoustic similarity"))
-        XCTAssertTrue(description.contains("uncertain"))
-        XCTAssertTrue(description.contains("merge"))
+        XCTAssertEqual(
+            try JapaneseBenchmarkSupport.sha256(at: contractURL),
+            thresholds["contractSHA256"] as? String
+        )
+        XCTAssertEqual(
+            contract["maximumCosineDistance"]?.floatValue,
+            HighQualityDuplicateSpeakerSuggestion.maximumCosineDistance
+        )
+        XCTAssertEqual(
+            contract["uncertaintyMargin"]?.floatValue,
+            HighQualityDuplicateSpeakerSuggestion.uncertaintyMargin
+        )
+        XCTAssertEqual(
+            thresholds["maximumCosineDistance"] as? NSNumber,
+            contract["maximumCosineDistance"]
+        )
+        XCTAssertEqual(
+            thresholds["uncertaintyMargin"] as? NSNumber,
+            contract["uncertaintyMargin"]
+        )
     }
 
     func testCompletedStandaloneJobReopensFromSavedManifestAndEvidence() async throws {
@@ -2193,6 +2259,42 @@ final class HighQualityJobTests: XCTestCase {
                 )
             }
         ))
+    }
+
+    private func speakerCentroid(
+        speakerID: String,
+        modelID: String = "speakerkit",
+        modelRevision: String = "revision",
+        runtimeRevision: String = "runtime-revision",
+        embeddingVariant: String = "W8A16",
+        vectorDimension: Int = 2,
+        vector: [Float] = [0.999, 0.001]
+    ) -> HighQualitySpeakerCentroidEvidence {
+        .init(
+            speakerID: speakerID,
+            modelID: modelID,
+            modelRevision: modelRevision,
+            runtimeRevision: runtimeRevision,
+            embeddingVariant: embeddingVariant,
+            vectorDimension: vectorDimension,
+            sourceJobID: UUID(uuidString: "00000114-0000-0000-0000-000000000001")!,
+            vector: vector
+        )
+    }
+
+    private func assertDuplicateSpeakerSuggestionAbstains(
+        second: HighQualitySpeakerCentroidEvidence,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertTrue(
+            HighQualityJob.duplicateSpeakerSuggestions(from: [
+                speakerCentroid(speakerID: "SPEAKER_00", vector: [1, 0]),
+                second,
+            ]).isEmpty,
+            file: file,
+            line: line
+        )
     }
 
     private func speakerSubtitleFixtureJob(

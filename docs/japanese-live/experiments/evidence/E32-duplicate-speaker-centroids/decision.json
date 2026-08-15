@@ -1,10 +1,50 @@
 {
   "ticket": 114,
-  "developmentReportSHA256": "6ff365618798421fae4abf5f80007ea31d84021beeb1cf7d7ce5d865e0c2899d",
-  "rawDevelopmentReportSHA256": "1e7c28c830cffaf2cbb6b5f96ce62bdce05d963cd2e1d8fb12da0dc51e8fc203",
   "corpusID": "easy-japanese-1",
   "holdoutOpened": false,
+  "provenance": {
+    "implementationCommitSHA": "af238727f0d526be360a155d5fb5eefdd6fbebf5",
+    "manifest": {
+      "path": "docs/japanese-live/corpora/easy-japanese-1/manifest.json",
+      "sha256": "362c207395071b463fecd0f6fdba6ad13c9c27a857cb2df869261897dc18e21c"
+    },
+    "source": {
+      "pathFromCorpusRoot": "easy-japanese-1/audio-16k-mono.wav",
+      "sha256": "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c"
+    },
+    "capturedRawArtifact": {
+      "locator": "urn:sha256:1e7c28c830cffaf2cbb6b5f96ce62bdce05d963cd2e1d8fb12da0dc51e8fc203",
+      "localPath": "/tmp/whisperasr-114-dev-report.json",
+      "sha256": "1e7c28c830cffaf2cbb6b5f96ce62bdce05d963cd2e1d8fb12da0dc51e8fc203"
+    },
+    "sanitizedVersionedArtifact": {
+      "containsCentroidVectors": false,
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/development-report.json",
+      "sha256": "6ff365618798421fae4abf5f80007ea31d84021beeb1cf7d7ce5d865e0c2899d",
+      "transformation": "The report already omits centroid vectors; the versioned copy adds one trailing LF."
+    }
+  },
+  "reproductionProtocol": {
+    "scope": "One quantized SpeakerKit DEV run; no ASR, translation or holdout.",
+    "maximumWallClockSeconds": 60,
+    "maximumResidentBytes": 4294967296,
+    "preconditions": [
+      "Checkout implementationCommitSHA.",
+      "Set WHISPERASR_CORPUS_ROOT and SPEAKERKIT_MODEL_CACHE to local read-only roots.",
+      "Verify the manifest and source SHA-256 values above before loading SpeakerKit.",
+      "Obtain the explicit BENCHMARK_SLOT_GRANTED=114 authorization."
+    ],
+    "command": "env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-swiftpm-cache BENCHMARK_SLOT_GRANTED=114 WHISPERASR_RUN_DUPLICATE_SPEAKER_DEV=1 WHISPERASR_DUPLICATE_SPEAKER_MANIFEST=$PWD/docs/japanese-live/corpora/easy-japanese-1/manifest.json WHISPERASR_DUPLICATE_SPEAKER_SOURCE=$WHISPERASR_CORPUS_ROOT/easy-japanese-1/audio-16k-mono.wav WHISPERASR_DUPLICATE_SPEAKER_REPORT=/tmp/whisperasr-114-dev-report.json WHISPERASR_DUPLICATE_SPEAKER_MODEL_CACHE=$SPEAKERKIT_MODEL_CACHE WHISPERASR_DUPLICATE_SPEAKER_JOB_ID=00000114-0000-0000-0000-000000000001 /usr/bin/xcrun swift test --filter HighQualityAcceptanceTests/testDuplicateSpeakerDevelopmentCalibrationWhenOptedIn",
+    "verification": [
+      "Confirm exactly one selected test ran and passed.",
+      "Confirm SpeakerKit unloaded and no WhisperASRPackageTests process remains.",
+      "Verify the raw report against capturedRawArtifact.sha256.",
+      "Confirm holdoutOpened is false and the report contains no centroid vector field."
+    ]
+  },
   "thresholdsFrozen": {
+    "contractPath": "threshold-contract.json",
+    "contractSHA256": "bfc99c6151256465c102015c1a4bb200bc0cc19f9f601325b0b46eacd68c57ff",
     "maximumCosineDistance": 0.1,
     "uncertaintyMargin": 0.02
   },
@@ -24,7 +64,8 @@
     "elapsedSeconds": 21.283066987991333,
     "observedPeakMemoryBytes": 517539184
   },
+  "evidenceStatus": "CALIBRATION_PENDING",
   "decision": "NO_HOLDOUT",
   "reason": "DEV produced no same-reference centroid pair, so real-world usefulness cannot be measured. It produced no false suggestion and a 0.488 cosine-distance safety gap to the closest different-reference pair. A holdout would not supply missing DEV calibration without leaking the final evaluation.",
-  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. Result UI exposure stays disabled until positive real-speaker DEV evidence exists; no real-world recall claim is made."
+  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. The result UI is absent until positive real-speaker DEV evidence exists; no real-world recall claim is made."
 }

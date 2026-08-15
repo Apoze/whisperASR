@@ -830,12 +830,8 @@ struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
 }
 
 struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
-    // ponytail: keep UI gated until positive real-speaker DEV evidence exists.
-    static let isBetaAvailable = false
     static let maximumCosineDistance: Float = 0.1
     static let uncertaintyMargin: Float = 0.02
-    static let betaDescription = "Suggestions indicate uncertain acoustic similarity only; "
-        + "they do not establish identity or merge speakers automatically."
 
     let firstSpeakerID: String
     let secondSpeakerID: String
@@ -3540,42 +3536,60 @@ struct HighQualityJob: Sendable {
         }
         let labels = Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
             .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
+        var centroidDiagnostics: [String] = []
         let speakerCentroids: [HighQualitySpeakerCentroidEvidence]?
         if let vectors = exchange.speakerCentroids {
-            guard let sourceJobID,
-                  !exchange.modelID.isEmpty,
-                  !exchange.revision.isEmpty,
-                  let runtimeRevision = exchange.configuration?["runtimeRevision"],
-                  !runtimeRevision.isEmpty,
-                  let embeddingVariant = exchange.configuration?["embedderVariant"],
-                  !embeddingVariant.isEmpty else {
-                throw HighQualityJobError(
-                    stage: .diarization,
-                    message: "SpeakerKit centroid provenance is incomplete.",
-                    resultDirectory: nil
-                )
-            }
-            speakerCentroids = try vectors.keys.sorted().map { speakerID in
-                guard let label = labels[speakerID],
-                      let vector = vectors[speakerID],
-                      !vector.isEmpty,
-                      vector.allSatisfy(\.isFinite),
-                      vector.contains(where: { $0 != 0 }) else {
-                    throw HighQualityJobError(
-                        stage: .diarization,
-                        message: "SpeakerKit returned an invalid speaker centroid.",
-                        resultDirectory: nil
-                    )
+            if vectors.isEmpty {
+                speakerCentroids = []
+            } else if let sourceJobID,
+                      !exchange.modelID.isEmpty,
+                      !exchange.revision.isEmpty,
+                      let runtimeRevision = exchange.configuration?["runtimeRevision"],
+                      !runtimeRevision.isEmpty,
+                      let embeddingVariant = exchange.configuration?["embedderVariant"],
+                      !embeddingVariant.isEmpty {
+                var retained: [HighQualitySpeakerCentroidEvidence] = []
+                for speakerID in vectors.keys.sorted() {
+                    guard let label = labels[speakerID] else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(speakerID): speaker has no diarization span."
+                        )
+                        continue
+                    }
+                    guard let vector = vectors[speakerID], !vector.isEmpty else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector is empty."
+                        )
+                        continue
+                    }
+                    guard vector.allSatisfy(\.isFinite) else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector contains non-finite values."
+                        )
+                        continue
+                    }
+                    guard vector.contains(where: { $0 != 0 }) else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector has zero norm."
+                        )
+                        continue
+                    }
+                    retained.append(.init(
+                        speakerID: label,
+                        modelID: exchange.modelID,
+                        modelRevision: exchange.revision,
+                        runtimeRevision: runtimeRevision,
+                        embeddingVariant: embeddingVariant,
+                        vectorDimension: vector.count,
+                        sourceJobID: sourceJobID,
+                        vector: vector
+                    ))
                 }
-                return .init(
-                    speakerID: label,
-                    modelID: exchange.modelID,
-                    modelRevision: exchange.revision,
-                    runtimeRevision: runtimeRevision,
-                    embeddingVariant: embeddingVariant,
-                    vectorDimension: vector.count,
-                    sourceJobID: sourceJobID,
-                    vector: vector
+                speakerCentroids = retained
+            } else {
+                speakerCentroids = []
+                centroidDiagnostics.append(
+                    "Discarded \(vectors.count) SpeakerKit centroid(s): provenance is incomplete."
                 )
             }
         } else {
@@ -3665,7 +3679,7 @@ struct HighQualityJob: Sendable {
             useExclusiveReconciliation: exchange.useExclusiveReconciliation,
             speakerCountPolicy: exchange.speakerCountPolicy,
             configuration: exchange.configuration,
-            validationDiagnostics: [],
+            validationDiagnostics: centroidDiagnostics,
             speakerCentroids: speakerCentroids
         )
     }
