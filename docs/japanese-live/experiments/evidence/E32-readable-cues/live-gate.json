@@ -1,22 +1,30 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "ticket": 120,
-  "implementationCommit": "8e250fbf2d361d05bfb581ff6f99f49700cd8353",
-  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --filter LiveCaptionTests/testReadableSubtitleBetaOptionIsOfflineOnlyAndLeavesLiveDefaults",
+  "freezeCommit": "c44df8420e830f8014473b9e6135969c8439ceea",
+  "evaluatedCommit": "c44df8420e830f8014473b9e6135969c8439ceea",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --disable-sandbox --skip-build --filter LiveCaptionTests/testReadableSubtitleBetaOptionIsOfflineOnlyAndLeavesLiveDefaults",
+  "executedAtUTC": "2026-08-15T15:47:57Z",
   "result": {
     "exitCode": 0,
     "executed": 1,
     "failed": 0,
     "skipped": 0,
-    "testSeconds": 0.006,
-    "wallSeconds": 8.195,
-    "executionLogSHA256": "2070ca9715763a8e2bd903516293a14ab5fff84854ad24c813c1789918677992"
+    "testSeconds": 0.005,
+    "wallSeconds": 1.50
   },
-  "testPath": "Tests/LiveCaptionTests.swift",
-  "testSHA256": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e",
+  "test": {
+    "path": "Tests/LiveCaptionTests.swift",
+    "sha256": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
+  },
+  "log": {
+    "path": "docs/japanese-live/experiments/evidence/E32-readable-cues/live-gate.log",
+    "sha256": "b8b5b5f94308154f16388c83065556afc48cc3cf1cdd7b6f70a2af8df68883d3"
+  },
   "sourceDiff": {
     "baseCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
-    "command": "git diff --name-only 75619a715d0cb6bfecc991e4855b7b229654d908...8e250fbf2d361d05bfb581ff6f99f49700cd8353 -- Sources",
+    "evaluatedCommit": "c44df8420e830f8014473b9e6135969c8439ceea",
+    "command": "git diff --name-only 75619a715d0cb6bfecc991e4855b7b229654d908...c44df8420e830f8014473b9e6135969c8439ceea -- Sources",
     "changedSourceFiles": [
       "Sources/HighQualityJob.swift",
       "Sources/HighQualityJobView.swift",

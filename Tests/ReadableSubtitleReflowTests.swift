@@ -274,36 +274,48 @@ final class ReadableSubtitleReflowTests: XCTestCase {
         printReport("READABLE_SUBTITLE_HOLDOUT", replay.evidence)
     }
 
-    func testFrozen4BReplaysPreserveWordsTimingAndSpeakers() throws {
-        for path in [
-            "E31-translation-only-4b/translategemma-4b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
-            "E31-translation-only-4b/translategemma-4b-it-4bit-md62mmdz0m/raw-asr.json.gz",
-        ] {
-            let replay = try ReadableSubtitleReplaySupport.replay(path)
+    func testFrozen12BAnd4BReplaysPreserveContractWithSpeakersOnAndOff() throws {
+        let matrix = [
+            "12B": [
+                "E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+                "E31/translategemma-12b-it-4bit-md62mmdz0m/raw-asr.json.gz",
+            ],
+            "4B": [
+                "E31-translation-only-4b/translategemma-4b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+                "E31-translation-only-4b/translategemma-4b-it-4bit-md62mmdz0m/raw-asr.json.gz",
+            ],
+        ]
+        var combinationCount = 0
 
-            XCTAssertTrue(replay.evidence.integrityPassed)
-            XCTAssertTrue(replay.evidence.exactWordOrder)
-            XCTAssertTrue(replay.evidence.exactTimingCoverage)
-            XCTAssertTrue(replay.evidence.exactInterCueGaps)
-            XCTAssertTrue(replay.evidence.speakerMetadataPreserved)
+        for paths in matrix.values {
+            for path in paths {
+                let speakerOn = try ReadableSubtitleReplaySupport.replay(path)
+                let speakerOff = try ReadableSubtitleReplaySupport.replay(
+                    path,
+                    includeSpeakers: false
+                )
+                combinationCount += 2
+
+                for replay in [speakerOn, speakerOff] {
+                    XCTAssertTrue(replay.evidence.integrityPassed)
+                    XCTAssertTrue(replay.evidence.exactWordOrder)
+                    XCTAssertTrue(replay.evidence.exactTimingCoverage)
+                    XCTAssertTrue(replay.evidence.exactInterCueGaps)
+                    XCTAssertTrue(replay.evidence.speakerMetadataPreserved)
+                }
+                XCTAssertEqual(speakerOff.cues.map(\.text), speakerOn.cues.map(\.text))
+                XCTAssertEqual(speakerOff.cues.map(\.start), speakerOn.cues.map(\.start))
+                XCTAssertEqual(speakerOff.cues.map(\.end), speakerOn.cues.map(\.end))
+                XCTAssertEqual(
+                    speakerOff.cues.map(\.renderedLines),
+                    speakerOn.cues.map(\.renderedLines)
+                )
+                XCTAssertTrue(speakerOff.cues.allSatisfy { $0.speakerLabel == nil })
+                XCTAssertEqual(speakerOff.evidence.baseline, speakerOn.evidence.baseline)
+                XCTAssertEqual(speakerOff.evidence.candidate, speakerOn.evidence.candidate)
+            }
         }
-    }
-
-    func testFrozenReplaySpeakerOffChangesNoTextTimingOrMetrics() throws {
-        let path = "E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz"
-        let speakerOn = try ReadableSubtitleReplaySupport.replay(path)
-        let speakerOff = try ReadableSubtitleReplaySupport.replay(
-            path,
-            includeSpeakers: false
-        )
-
-        XCTAssertEqual(speakerOff.cues.map(\.text), speakerOn.cues.map(\.text))
-        XCTAssertEqual(speakerOff.cues.map(\.start), speakerOn.cues.map(\.start))
-        XCTAssertEqual(speakerOff.cues.map(\.end), speakerOn.cues.map(\.end))
-        XCTAssertEqual(speakerOff.cues.map(\.renderedLines), speakerOn.cues.map(\.renderedLines))
-        XCTAssertTrue(speakerOff.cues.allSatisfy { $0.speakerLabel == nil })
-        XCTAssertEqual(speakerOff.evidence.baseline, speakerOn.evidence.baseline)
-        XCTAssertEqual(speakerOff.evidence.candidate, speakerOn.evidence.candidate)
+        XCTAssertEqual(combinationCount, 8)
     }
 
     private func printReport(_ name: String, _ evidence: HighQualityReadableSubtitleEvidence) {

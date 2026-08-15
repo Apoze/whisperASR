@@ -19,8 +19,8 @@ sources stay unchanged and are audited as unresolved.
 
 All exact gates pass: normalized English, word order, source timing coverage,
 inter-cue gaps, Speaker metadata, Speaker on/off equivalence, zero new overlap,
-and identical SRT/VTT timestamps. Replay plus production export took 0.404 s
-on DEV and 0.689 s on holdout. No model was loaded.
+and identical SRT/VTT timestamps. The exact tests took 0.411 s on DEV and
+0.624 s on holdout (10.27 s and 2.15 s wall time). No model was loaded.
 
 Cancellation is checked inside the partition DP, immediately before returning
 its result, and at the High-quality export boundary. A deterministic late
@@ -29,14 +29,18 @@ The explicit Live gate enables the offline Bêta request while retaining the
 original Live mode and adaptive Apple translation defaults; the source diff
 contains only the three High-quality/readable-cue files.
 
-The 12B retained evidence is quality-scored. Both retained 4B corpora pass the
-same structural reflow contract, but are not quality-scored because their E31
-translations contain upstream validation failures.
+The 12B retained evidence is quality-scored. The structural replay matrix
+explicitly covers 12B and 4B, DEV and holdout, with Speaker both on and off.
+The 4B translations are not quality-scored because their E31 validation
+failures are upstream of this reflow.
 
-Budgets were frozen before holdout in
-`evidence/E32-readable-cues/budgets.json` (SHA-256 `0fb5d1d626b5780d7578a93513dd6901526122f510cb097f20ee4154ac749720`).
-Full metrics, provenance, gates and infra/harness/candidate routing are in
-`evidence/E32-readable-cues/report.json`. That report is contract-tested against
-implementation commit `8e250fbf2d361d05bfb581ff6f99f49700cd8353`, its exact
-source/test blobs, the shared replay-harness snapshot, both replay inputs and
-`evidence/E32-readable-cues/live-gate.json`; silent drift fails the test suite.
+This is a prospective revalidation, not a retroactive blind-holdout claim.
+Commit `c44df8420e830f8014473b9e6135969c8439ceea` contains only the DEV proof
+and frozen budgets (SHA-256
+`dac12f6f75baf1702fa7a0e5c953135365f7b1625045e1c8dbb19a7ab82418a8`).
+The exact holdout and Live replays were then run from that commit and their
+raw logs archived. Full metrics, provenance, gates and routing are in
+`evidence/E32-readable-cues/report.json`. Its contract binds implementation
+commit `6f74780974264d08ad4382ce5c94ab44a7ea85f1`, the freeze parent and paths,
+every JSON schema/key, source/test/harness blobs, replay inputs and archived
+log hashes; silent drift fails the test suite.

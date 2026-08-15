@@ -1,0 +1,22 @@
+warning: /Users/maz/Library/org.swift.swiftpm/configuration is not accessible or not writable, disabling user-level cache features.
+warning: /Users/maz/Library/org.swift.swiftpm/security is not accessible or not writable, disabling user-level cache features.
+warning: /Users/maz/Library/Caches/org.swift.swiftpm is not accessible or not writable, disabling user-level cache features.
+warning: 'whisperasr': failed storing manifest for 'whisperasr' in cache: attempt to write a readonly database
+Test Suite 'Selected tests' started at 2026-08-15 17:47:57.182.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 17:47:57.183.
+Test Suite 'LiveCaptionTests' started at 2026-08-15 17:47:57.183.
+Test Case '-[WhisperASRTests.LiveCaptionTests testReadableSubtitleBetaOptionIsOfflineOnlyAndLeavesLiveDefaults]' started.
+Test Case '-[WhisperASRTests.LiveCaptionTests testReadableSubtitleBetaOptionIsOfflineOnlyAndLeavesLiveDefaults]' passed (0.005 seconds).
+Test Suite 'LiveCaptionTests' passed at 2026-08-15 17:47:57.187.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 17:47:57.187.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
+Test Suite 'Selected tests' passed at 2026-08-15 17:47:57.187.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+real 1.50
+user 1.03
+sys 0.32

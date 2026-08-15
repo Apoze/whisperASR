@@ -1,85 +1,113 @@
 {
+  "schemaVersion": 2,
   "ticket": 120,
   "decision": "GO-beta",
+  "claimScope": "Prospective exact-replay revalidation after a fresh DEV freeze; the historical holdout result was already known, so this is not a blind-holdout claim.",
   "baseCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
-  "budgetFreezePath": "docs/japanese-live/experiments/evidence/E32-readable-cues/budgets.json",
-  "budgetFreezeSHA256": "0fb5d1d626b5780d7578a93513dd6901526122f510cb097f20ee4154ac749720",
-  "holdoutOpenedAfterBudgetFreeze": true,
-  "implementation": {
-    "commit": "8e250fbf2d361d05bfb581ff6f99f49700cd8353",
-    "filesSHA256": {
-      "Sources/HighQualityJob.swift": "92f509dc518c94d62139661732ce585c5f49e91499554f9dab047389e413f15b",
-      "Sources/HighQualityJobView.swift": "bb907641b3d6e12c11260e8f0fd9cbe1c70ab939e50bd948b11e44b9fd1ae0d2",
-      "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
-      "Tests/HighQualityJobTests.swift": "f812505408a639f0908c7fa26fb336fc63549eb65ab5a1a486f8348b9b3445dd",
-      "Tests/LiveCaptionTests.swift": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
-    }
-  },
-  "verification": {
-    "snapshotFilesSHA256": {
-      "Tests/ReadableSubtitleEvidenceContractTests.swift": "7be301462c47976008b2bd85787550c97496f50f006d240c0ec00c81081ec71f",
-      "Tests/ReadableSubtitleReflowTests.swift": "1475ea1c337826f1d1320bce7e4d0556e5ba52be2b089492c4fa79e28174221d",
-      "Tests/ReadableSubtitleReplaySupport.swift": "60b30150e368c6a8c04d997c95b2beecdbf74585431fe2952fd253225314cfab"
-    },
-    "liveGatePath": "docs/japanese-live/experiments/evidence/E32-readable-cues/live-gate.json",
-    "liveGateSHA256": "e5a5735f111cd1ba5b706af6c3bad6e68fb35c3b62cc8a885401ff85efe72c83"
-  },
-  "modelsLoaded": [],
-  "replayCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --filter ReadableSubtitleReflowTests",
-  "development": {
-    "corpus": "qudu2fx3ncc",
-    "inputPath": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
-    "inputSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
-    "replayAndExportSeconds": 0.404,
-    "splitSourceCueCount": 11,
-    "unresolvedSourceCueCount": 177,
-    "baseline": {
-      "cueCount": 307,
-      "readableCueCount": 119,
-      "over84Characters": 37,
-      "over20CPS": 156,
-      "under1Second": 74,
-      "over7Seconds": 11,
-      "gapCount": 165,
-      "overlapCount": 0
-    },
-    "candidate": {
-      "cueCount": 318,
-      "readableCueCount": 141,
-      "over84Characters": 29,
-      "over20CPS": 156,
-      "under1Second": 74,
-      "over7Seconds": 3,
-      "gapCount": 165,
-      "overlapCount": 0
-    }
+  "implementationCommit": "6f74780974264d08ad4382ce5c94ab44a7ea85f1",
+  "freeze": {
+    "commit": "c44df8420e830f8014473b9e6135969c8439ceea",
+    "parentCommit": "6f74780974264d08ad4382ce5c94ab44a7ea85f1",
+    "budgetsPath": "docs/japanese-live/experiments/evidence/E32-readable-cues/budgets.json",
+    "budgetsSHA256": "dac12f6f75baf1702fa7a0e5c953135365f7b1625045e1c8dbb19a7ab82418a8",
+    "developmentPath": "docs/japanese-live/experiments/evidence/E32-readable-cues/development.json",
+    "developmentSHA256": "412629e0215e4439efcfbdb0d43c7d0797c27bf8202bc115cbd4f4207906a83e",
+    "changedFiles": [
+      "docs/japanese-live/experiments/evidence/E32-readable-cues/budgets.json",
+      "docs/japanese-live/experiments/evidence/E32-readable-cues/development.json"
+    ]
   },
   "holdout": {
-    "corpus": "md62mmdz0m",
-    "inputPath": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-md62mmdz0m/raw-asr.json.gz",
-    "inputSHA256": "431ad2a2ca756f478e04b79fbd53e8529a45a9479b16e8bd28647af3fe33bb58",
-    "replayAndExportSeconds": 0.689,
-    "splitSourceCueCount": 23,
-    "unresolvedSourceCueCount": 140,
-    "baseline": {
-      "cueCount": 260,
-      "readableCueCount": 97,
-      "over84Characters": 41,
-      "over20CPS": 129,
-      "under1Second": 65,
-      "over7Seconds": 17,
-      "gapCount": 168,
-      "overlapCount": 0
+    "replayedAfterFreeze": true,
+    "blind": false,
+    "historicalResultWasKnown": true,
+    "executedAtUTC": "2026-08-15T15:47:49Z",
+    "executedCommit": "c44df8420e830f8014473b9e6135969c8439ceea",
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --disable-sandbox --skip-build --filter ReadableSubtitleReflowTests/testFrozenHoldoutReplayImprovesReadabilityWithoutRegression",
+    "input": {
+      "corpus": "md62mmdz0m",
+      "path": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-md62mmdz0m/raw-asr.json.gz",
+      "sha256": "431ad2a2ca756f478e04b79fbd53e8529a45a9479b16e8bd28647af3fe33bb58"
     },
-    "candidate": {
-      "cueCount": 286,
-      "readableCueCount": 146,
-      "over84Characters": 21,
-      "over20CPS": 129,
-      "under1Second": 65,
-      "over7Seconds": 2,
-      "gapCount": 168,
-      "overlapCount": 0
+    "result": {
+      "exitCode": 0,
+      "executed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "testSeconds": 0.624,
+      "wallSeconds": 2.15
+    },
+    "metrics": {
+      "splitSourceCueCount": 23,
+      "unresolvedSourceCueCount": 140,
+      "baseline": {
+        "cueCount": 260,
+        "readableCueCount": 97,
+        "over84Characters": 41,
+        "over20CPS": 129,
+        "under1Second": 65,
+        "over7Seconds": 17,
+        "gapCount": 168,
+        "overlapCount": 0
+      },
+      "candidate": {
+        "cueCount": 286,
+        "readableCueCount": 146,
+        "over84Characters": 21,
+        "over20CPS": 129,
+        "under1Second": 65,
+        "over7Seconds": 2,
+        "gapCount": 168,
+        "overlapCount": 0
+      }
+    },
+    "log": {
+      "path": "docs/japanese-live/experiments/evidence/E32-readable-cues/holdout-replay.log",
+      "sha256": "1c2589c4aa2480a109ef8c08fdd50536c41d40dd50c434d2b5679f3c0a3af5b1"
+    }
+  },
+  "implementationFilesSHA256": {
+    "Sources/HighQualityJob.swift": "92f509dc518c94d62139661732ce585c5f49e91499554f9dab047389e413f15b",
+    "Sources/HighQualityJobView.swift": "21f29ca98d5677f5b65d69acc7a673dd69c4eb4cd5dcc24bc47994d1c17448c8",
+    "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+    "Tests/HighQualityJobTests.swift": "421834d8daf0cb25b1c469675071aab7bcdf5bea74b79fcfcb6e8e25fb736fad",
+    "Tests/LiveCaptionTests.swift": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
+  },
+  "verificationFilesSHA256": {
+    "Tests/ReadableSubtitleEvidenceContractTests.swift": "c7fb0eccffc8aa9f0118a92e9114831ef2f3f732c866191c1f5d9168dcfedc7a",
+    "Tests/ReadableSubtitleReflowTests.swift": "ceded1d9816a2d5b50790f76b0ba8da81199995faffa584c7cef4e88762c0c2f",
+    "Tests/ReadableSubtitleReplaySupport.swift": "60b30150e368c6a8c04d997c95b2beecdbf74585431fe2952fd253225314cfab"
+  },
+  "liveGatePath": "docs/japanese-live/experiments/evidence/E32-readable-cues/live-gate.json",
+  "liveGateSHA256": "555c4998af2c50b25746cf786b27bbbbc26fa42fb81f09ea201895bbbcee3ac8",
+  "translatorSpeakerMatrix": {
+    "12B": {
+      "development": {
+        "inputPath": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+        "inputSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
+        "speakerOn": true,
+        "speakerOff": true
+      },
+      "holdout": {
+        "inputPath": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-md62mmdz0m/raw-asr.json.gz",
+        "inputSHA256": "431ad2a2ca756f478e04b79fbd53e8529a45a9479b16e8bd28647af3fe33bb58",
+        "speakerOn": true,
+        "speakerOff": true
+      }
+    },
+    "4B": {
+      "development": {
+        "inputPath": "docs/japanese-live/experiments/evidence/E31-translation-only-4b/translategemma-4b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+        "inputSHA256": "6daad7eb946026f2dbe74a5c9589d3887ce9d7e47385d5620ba24268ec254208",
+        "speakerOn": true,
+        "speakerOff": true
+      },
+      "holdout": {
+        "inputPath": "docs/japanese-live/experiments/evidence/E31-translation-only-4b/translategemma-4b-it-4bit-md62mmdz0m/raw-asr.json.gz",
+        "inputSHA256": "f0aa50133fd3ba8af0d93aceb22327596f48adbd1dba8549d260d7b5d7c11fd3",
+        "speakerOn": true,
+        "speakerOff": true
+      }
     }
   },
   "gates": {
@@ -89,24 +117,20 @@
     "exactWordOrder": true,
     "exactTimingCoverage": true,
     "exactInterCueGaps": true,
-    "speakerOnOffEquivalent": true,
+    "speakerMatrixPassed": true,
     "speakerMetadataPreserved": true,
     "noNewOverlap": true,
     "noMetricRegression": true,
     "srtVttTimestampsIdentical": true,
     "cancellationSafe": true,
+    "lastValidResultPreserved": true,
     "liveUnchanged": true,
     "defaultOff": true
   },
-  "translatorContracts": {
-    "12B": "quality-scored on development and holdout",
-    "4B": "word, timing and Speaker contract passed on both corpora; quality not scored because retained E31 translation evidence contains upstream validation failures",
-    "4BDevelopmentInputSHA256": "6daad7eb946026f2dbe74a5c9589d3887ce9d7e47385d5620ba24268ec254208",
-    "4BHoldoutInputSHA256": "f0aa50133fd3ba8af0d93aceb22327596f48adbd1dba8549d260d7b5d7c11fd3"
-  },
+  "modelsLoaded": [],
   "routing": {
-    "infra": "The default Command Line Tools SDK and sandbox-exec failed before tests; the Xcode toolchain command passed.",
-    "harness": "The first synthetic sentence had no English word boundary satisfying 20 CPS at the retained Japanese timestamp; the fixture wording was corrected without changing policy.",
-    "candidate": "The retained 4B translator artifacts contain upstream translation validation failures; reflow contract tests passed and no invalid 4B quality claim is made."
+    "infra": "Exact replays passed. The full suite is blocked in this sandbox by MLX indexing an empty Metal-device list; an unsandboxed rerun was denied to avoid model-loading risk. No model was loaded.",
+    "harness": "The shared replay harness is hashed and the contract checks every evidence-object key, frozen commit parent, file digest and archived log.",
+    "candidate": "The retained 4B artifacts contain upstream translation-validation failures, so only the exact word/timing/Speaker contract is claimed for 4B."
   }
 }
