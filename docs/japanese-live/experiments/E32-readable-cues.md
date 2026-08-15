@@ -19,12 +19,13 @@ sources stay unchanged and are audited as unresolved.
 
 All exact gates pass: normalized English, word order, source timing coverage,
 inter-cue gaps, Speaker metadata, Speaker on/off equivalence, zero new overlap,
-and identical SRT/VTT timestamps. The exact tests took 0.411 s on DEV and
-0.624 s on holdout (10.27 s and 2.15 s wall time). No model was loaded.
+and identical SRT/VTT timestamps. The final exact replays took 0.506 s on DEV
+and 0.916 s on holdout (14.90 s and 3.33 s wall time). No model was loaded.
 
 Cancellation is checked inside the partition DP, immediately before returning
 its result, and at the High-quality export boundary. A deterministic late
 cancellation on the final cue leaves the previous completed result unchanged.
+The new persistent fields use schema 5; saved schemas 2, 3 and 4 still reopen.
 The explicit Live gate enables the offline Bêta request while retaining the
 original Live mode and adaptive Apple translation defaults; the source diff
 contains only the three High-quality/readable-cue files.
@@ -38,9 +39,10 @@ This is a prospective revalidation, not a retroactive blind-holdout claim.
 Commit `c44df8420e830f8014473b9e6135969c8439ceea` contains only the DEV proof
 and frozen budgets (SHA-256
 `dac12f6f75baf1702fa7a0e5c953135365f7b1625045e1c8dbb19a7ab82418a8`).
-The exact holdout and Live replays were then run from that commit and their
-raw logs archived. Full metrics, provenance, gates and routing are in
-`evidence/E32-readable-cues/report.json`. Its contract binds implementation
-commit `6f74780974264d08ad4382ce5c94ab44a7ea85f1`, the freeze parent and paths,
-every JSON schema/key, source/test/harness blobs, replay inputs and archived
-log hashes; silent drift fails the test suite.
+After the final persistence correction, DEV, holdout and Live were replayed in
+that order from commit `1649c87ea943b3831995cb9d20605f3dd1bd8cd3`; their raw
+logs are archived. Full metrics, provenance, gates and routing are in
+`evidence/E32-readable-cues/report.json`. Its contract binds that final
+implementation commit, the earlier freeze parent and paths, every JSON
+schema/key, source/test/harness blobs, replay inputs and archived log hashes;
+silent drift fails the test suite.

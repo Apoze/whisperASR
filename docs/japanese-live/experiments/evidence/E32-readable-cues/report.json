@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "ticket": 120,
   "decision": "GO-beta",
   "claimScope": "Prospective exact-replay revalidation after a fresh DEV freeze; the historical holdout result was already known, so this is not a blind-holdout claim.",
   "baseCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
-  "implementationCommit": "6f74780974264d08ad4382ce5c94ab44a7ea85f1",
+  "implementationCommit": "1649c87ea943b3831995cb9d20605f3dd1bd8cd3",
   "freeze": {
     "commit": "c44df8420e830f8014473b9e6135969c8439ceea",
     "parentCommit": "6f74780974264d08ad4382ce5c94ab44a7ea85f1",
@@ -17,12 +17,29 @@
       "docs/japanese-live/experiments/evidence/E32-readable-cues/development.json"
     ]
   },
+  "developmentRevalidation": {
+    "executedAtUTC": "2026-08-15T16:16:34Z",
+    "executedCommit": "1649c87ea943b3831995cb9d20605f3dd1bd8cd3",
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --disable-sandbox --skip-build --filter ReadableSubtitleReflowTests/testFrozenDevelopmentReplayImprovesReadabilityWithoutRegression",
+    "result": {
+      "exitCode": 0,
+      "executed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "testSeconds": 0.506,
+      "wallSeconds": 14.90
+    },
+    "log": {
+      "path": "docs/japanese-live/experiments/evidence/E32-readable-cues/development-revalidation.log",
+      "sha256": "2aca3802dce3ab959e6ce5648436eec24d16729e95684fd27d1946dfe599b4c4"
+    }
+  },
   "holdout": {
     "replayedAfterFreeze": true,
     "blind": false,
     "historicalResultWasKnown": true,
-    "executedAtUTC": "2026-08-15T15:47:49Z",
-    "executedCommit": "c44df8420e830f8014473b9e6135969c8439ceea",
+    "executedAtUTC": "2026-08-15T16:16:54Z",
+    "executedCommit": "1649c87ea943b3831995cb9d20605f3dd1bd8cd3",
     "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --disable-sandbox --skip-build --filter ReadableSubtitleReflowTests/testFrozenHoldoutReplayImprovesReadabilityWithoutRegression",
     "input": {
       "corpus": "md62mmdz0m",
@@ -34,8 +51,8 @@
       "executed": 1,
       "failed": 0,
       "skipped": 0,
-      "testSeconds": 0.624,
-      "wallSeconds": 2.15
+      "testSeconds": 0.916,
+      "wallSeconds": 3.33
     },
     "metrics": {
       "splitSourceCueCount": 23,
@@ -63,23 +80,23 @@
     },
     "log": {
       "path": "docs/japanese-live/experiments/evidence/E32-readable-cues/holdout-replay.log",
-      "sha256": "1c2589c4aa2480a109ef8c08fdd50536c41d40dd50c434d2b5679f3c0a3af5b1"
+      "sha256": "7e97cb7c65fa6ebb3c07b0af53c8549482ec3d8a1d9b0633b60ed9e1293a1d78"
     }
   },
   "implementationFilesSHA256": {
-    "Sources/HighQualityJob.swift": "92f509dc518c94d62139661732ce585c5f49e91499554f9dab047389e413f15b",
+    "Sources/HighQualityJob.swift": "e0dac0b7bae389a47ca28377692ee9e3cae6eaef87747adb30edbc2fe4d8e3f2",
     "Sources/HighQualityJobView.swift": "21f29ca98d5677f5b65d69acc7a673dd69c4eb4cd5dcc24bc47994d1c17448c8",
     "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
-    "Tests/HighQualityJobTests.swift": "421834d8daf0cb25b1c469675071aab7bcdf5bea74b79fcfcb6e8e25fb736fad",
+    "Tests/HighQualityJobTests.swift": "5053b271f0fa2739b74af7584e2170b243e9e4d4aeab5772c7198b096a9bed72",
     "Tests/LiveCaptionTests.swift": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
   },
   "verificationFilesSHA256": {
-    "Tests/ReadableSubtitleEvidenceContractTests.swift": "c7fb0eccffc8aa9f0118a92e9114831ef2f3f732c866191c1f5d9168dcfedc7a",
+    "Tests/ReadableSubtitleEvidenceContractTests.swift": "d30ce190951a729a550449b275d97f3843abc41a7c49f7d094bcd8fc1aed2b7f",
     "Tests/ReadableSubtitleReflowTests.swift": "ceded1d9816a2d5b50790f76b0ba8da81199995faffa584c7cef4e88762c0c2f",
     "Tests/ReadableSubtitleReplaySupport.swift": "60b30150e368c6a8c04d997c95b2beecdbf74585431fe2952fd253225314cfab"
   },
   "liveGatePath": "docs/japanese-live/experiments/evidence/E32-readable-cues/live-gate.json",
-  "liveGateSHA256": "555c4998af2c50b25746cf786b27bbbbc26fa42fb81f09ea201895bbbcee3ac8",
+  "liveGateSHA256": "bfe0f9a6e2b4a7c9b2fdd63963c01672a6e0f6bc99fefdc56f5decf1f6ab0e12",
   "translatorSpeakerMatrix": {
     "12B": {
       "development": {
@@ -124,6 +141,7 @@
     "srtVttTimestampsIdentical": true,
     "cancellationSafe": true,
     "lastValidResultPreserved": true,
+    "schemaFivePersistence": true,
     "liveUnchanged": true,
     "defaultOff": true
   },

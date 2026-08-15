@@ -109,11 +109,12 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
 
         assertKeys(report, [
             "schemaVersion", "ticket", "decision", "claimScope", "baseCommit",
-            "implementationCommit", "freeze", "holdout", "implementationFilesSHA256",
-            "verificationFilesSHA256", "liveGatePath", "liveGateSHA256",
-            "translatorSpeakerMatrix", "gates", "modelsLoaded", "routing",
+            "implementationCommit", "freeze", "developmentRevalidation", "holdout",
+            "implementationFilesSHA256", "verificationFilesSHA256", "liveGatePath",
+            "liveGateSHA256", "translatorSpeakerMatrix", "gates", "modelsLoaded",
+            "routing",
         ])
-        XCTAssertEqual(number(report, "schemaVersion"), 2)
+        XCTAssertEqual(number(report, "schemaVersion"), 3)
         XCTAssertEqual(number(report, "ticket"), 120)
         XCTAssertEqual(report["decision"] as? String, "GO-beta")
         XCTAssertEqual(
@@ -130,13 +131,15 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
         ])
         let freezeCommit = try string(freeze, "commit")
         let parentCommit = try string(freeze, "parentCommit")
+        let implementationCommit = try string(report, "implementationCommit")
         XCTAssertEqual(freezeCommit, "c44df8420e830f8014473b9e6135969c8439ceea")
         XCTAssertEqual(parentCommit, "6f74780974264d08ad4382ce5c94ab44a7ea85f1")
-        XCTAssertEqual(report["implementationCommit"] as? String, parentCommit)
+        XCTAssertEqual(implementationCommit, "1649c87ea943b3831995cb9d20605f3dd1bd8cd3")
         XCTAssertEqual(budgets["implementationCommit"] as? String, parentCommit)
         XCTAssertEqual(development["executedCommit"] as? String, parentCommit)
         XCTAssertEqual(trimmed(try git(["rev-parse", "\(freezeCommit)^"])), parentCommit)
-        _ = try git(["merge-base", "--is-ancestor", freezeCommit, "HEAD"])
+        _ = try git(["merge-base", "--is-ancestor", freezeCommit, implementationCommit])
+        _ = try git(["merge-base", "--is-ancestor", implementationCommit, "HEAD"])
 
         let frozenPaths = [
             "docs/japanese-live/experiments/evidence/E32-readable-cues/budgets.json",
@@ -169,12 +172,17 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
             "Tests/HighQualityJobTests.swift",
             "Tests/LiveCaptionTests.swift",
         ]))
-        try assertFiles(implementationFiles, commit: parentCommit, current: true)
-        XCTAssertEqual(
-            try stringDictionary(development, "implementationFilesSHA256")
-                .filter { $0.key != "Tests/LiveCaptionTests.swift" },
-            implementationFiles.filter { $0.key != "Tests/LiveCaptionTests.swift" }
-        )
+        try assertFiles(implementationFiles, commit: implementationCommit, current: true)
+        XCTAssertEqual(HighQualityJobManifest.currentSchemaVersion, 5)
+        XCTAssertEqual(Set(try stringDictionary(
+            development,
+            "implementationFilesSHA256"
+        ).keys), Set([
+            "Sources/HighQualityJob.swift",
+            "Sources/HighQualityJobView.swift",
+            "Sources/ReadableSubtitleReflow.swift",
+            "Tests/HighQualityJobTests.swift",
+        ]))
         try assertFiles(
             try stringDictionary(development, "harnessFilesSHA256"),
             commit: parentCommit,
@@ -207,6 +215,35 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
             expectedUnresolved: 177
         )
 
+        let developmentRevalidation = try dictionary(report, "developmentRevalidation")
+        assertKeys(developmentRevalidation, [
+            "executedAtUTC", "executedCommit", "command", "result", "log",
+        ])
+        XCTAssertEqual(
+            developmentRevalidation["executedAtUTC"] as? String,
+            "2026-08-15T16:16:34Z"
+        )
+        XCTAssertEqual(
+            developmentRevalidation["executedCommit"] as? String,
+            implementationCommit
+        )
+        XCTAssertTrue((developmentRevalidation["command"] as? String)?.contains(
+            "testFrozenDevelopmentReplayImprovesReadabilityWithoutRegression"
+        ) == true)
+        assertResult(
+            try dictionary(developmentRevalidation, "result"),
+            testSeconds: 0.506,
+            wallSeconds: 14.90
+        )
+        try assertLog(
+            try dictionary(developmentRevalidation, "log"),
+            containing: [
+                "testFrozenDevelopmentReplayImprovesReadabilityWithoutRegression",
+                "Executed 1 test, with 0 failures",
+                "READABLE_SUBTITLE_DEV: cues 307->318",
+            ]
+        )
+
         let holdout = try dictionary(report, "holdout")
         assertKeys(holdout, [
             "replayedAfterFreeze", "blind", "historicalResultWasKnown", "executedAtUTC",
@@ -215,13 +252,13 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
         XCTAssertEqual(holdout["replayedAfterFreeze"] as? Bool, true)
         XCTAssertEqual(holdout["blind"] as? Bool, false)
         XCTAssertEqual(holdout["historicalResultWasKnown"] as? Bool, true)
-        XCTAssertEqual(holdout["executedAtUTC"] as? String, "2026-08-15T15:47:49Z")
-        XCTAssertEqual(holdout["executedCommit"] as? String, freezeCommit)
+        XCTAssertEqual(holdout["executedAtUTC"] as? String, "2026-08-15T16:16:54Z")
+        XCTAssertEqual(holdout["executedCommit"] as? String, implementationCommit)
         XCTAssertTrue((holdout["command"] as? String)?.contains(
             "testFrozenHoldoutReplayImprovesReadabilityWithoutRegression"
         ) == true)
         let holdoutResult = try dictionary(holdout, "result")
-        assertResult(holdoutResult, testSeconds: 0.624, wallSeconds: 2.15)
+        assertResult(holdoutResult, testSeconds: 0.916, wallSeconds: 3.33)
         let holdoutInput = try dictionary(holdout, "input")
         assertKeys(holdoutInput, ["corpus", "path", "sha256"])
         XCTAssertEqual(holdoutInput["corpus"] as? String, "md62mmdz0m")
@@ -254,11 +291,20 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
         let freezeDate = try XCTUnwrap(formatter.date(from: trimmed(try git([
             "show", "-s", "--format=%cI", freezeCommit,
         ]))))
+        let implementationDate = try XCTUnwrap(formatter.date(from: trimmed(try git([
+            "show", "-s", "--format=%cI", implementationCommit,
+        ]))))
         let developmentDate = try XCTUnwrap(formatter.date(
             from: try string(development, "executedAtUTC")
         ))
+        let revalidationDate = try XCTUnwrap(formatter.date(
+            from: try string(developmentRevalidation, "executedAtUTC")
+        ))
         let holdoutDate = try XCTUnwrap(formatter.date(from: try string(holdout, "executedAtUTC")))
         XCTAssertLessThan(developmentDate, freezeDate)
+        XCTAssertLessThan(freezeDate, implementationDate)
+        XCTAssertLessThan(implementationDate, revalidationDate)
+        XCTAssertLessThan(revalidationDate, holdoutDate)
         XCTAssertGreaterThan(holdoutDate, freezeDate)
 
         let liveGatePath = try string(report, "liveGatePath")
@@ -275,13 +321,17 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
         XCTAssertEqual(number(liveGate, "schemaVersion"), 2)
         XCTAssertEqual(number(liveGate, "ticket"), 120)
         XCTAssertEqual(liveGate["freezeCommit"] as? String, freezeCommit)
-        XCTAssertEqual(liveGate["evaluatedCommit"] as? String, freezeCommit)
-        XCTAssertEqual(liveGate["executedAtUTC"] as? String, "2026-08-15T15:47:57Z")
+        XCTAssertEqual(liveGate["evaluatedCommit"] as? String, implementationCommit)
+        XCTAssertEqual(liveGate["executedAtUTC"] as? String, "2026-08-15T16:17:03Z")
+        let liveDate = try XCTUnwrap(formatter.date(
+            from: try string(liveGate, "executedAtUTC")
+        ))
+        XCTAssertGreaterThan(liveDate, holdoutDate)
         XCTAssertEqual(liveGate["modelsLoaded"] as? [String], [])
         XCTAssertTrue((liveGate["command"] as? String)?.contains(
             "testReadableSubtitleBetaOptionIsOfflineOnlyAndLeavesLiveDefaults"
         ) == true)
-        assertResult(try dictionary(liveGate, "result"), testSeconds: 0.005, wallSeconds: 1.50)
+        assertResult(try dictionary(liveGate, "result"), testSeconds: 0.003, wallSeconds: 2.74)
         let liveTest = try dictionary(liveGate, "test")
         assertKeys(liveTest, ["path", "sha256"])
         XCTAssertEqual(liveTest["path"] as? String, "Tests/LiveCaptionTests.swift")
@@ -301,9 +351,9 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
         ])
         let baseCommit = try string(sourceDiff, "baseCommit")
         XCTAssertEqual(baseCommit, report["baseCommit"] as? String)
-        XCTAssertEqual(sourceDiff["evaluatedCommit"] as? String, freezeCommit)
+        XCTAssertEqual(sourceDiff["evaluatedCommit"] as? String, implementationCommit)
         let sourceDiffOutput = try git([
-            "diff", "--name-only", "\(baseCommit)...\(freezeCommit)", "--", "Sources",
+            "diff", "--name-only", "\(baseCommit)...\(implementationCommit)", "--", "Sources",
         ])
         let changedSources = lines(sourceDiffOutput)
         XCTAssertEqual(changedSources, [
@@ -356,7 +406,8 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
             "exactNormalizedEnglishIdentity", "exactWordOrder", "exactTimingCoverage",
             "exactInterCueGaps", "speakerMatrixPassed", "speakerMetadataPreserved",
             "noNewOverlap", "noMetricRegression", "srtVttTimestampsIdentical",
-            "cancellationSafe", "lastValidResultPreserved", "liveUnchanged", "defaultOff",
+            "cancellationSafe", "lastValidResultPreserved", "schemaFivePersistence",
+            "liveUnchanged", "defaultOff",
         ])
         assertKeys(try dictionary(report, "routing"), ["infra", "harness", "candidate"])
     }
