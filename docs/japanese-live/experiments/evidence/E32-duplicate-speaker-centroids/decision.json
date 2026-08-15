@@ -64,8 +64,84 @@
     "elapsedSeconds": 21.283066987991333,
     "observedPeakMemoryBytes": 517539184
   },
-  "evidenceStatus": "CALIBRATION_PENDING",
+  "calibration": {
+    "implementationCommitSHA": "127da3e3f127d8aafb0a1417c74f37281027b05d",
+    "benchmarkSlot": "114-CALIBRATION",
+    "purpose": "over-clustering-pair-generator",
+    "scope": "One quantized SpeakerKit W8A16 DEV run with Expected=12; no ASR, translation or holdout.",
+    "model": {
+      "modelID": "argmaxinc/speakerkit-coreml",
+      "modelRevision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+      "runtimeRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+      "embeddingVariant": "W8A16",
+      "vectorDimension": 256
+    },
+    "inputs": {
+      "manifestPath": "docs/japanese-live/corpora/easy-japanese-1/manifest.json",
+      "manifestSHA256": "362c207395071b463fecd0f6fdba6ad13c9c27a857cb2df869261897dc18e21c",
+      "sourcePathFromCorpusRoot": "easy-japanese-1/audio-16k-mono.wav",
+      "sourceSHA256": "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c"
+    },
+    "artifacts": {
+      "capturedRawReport": {
+        "locator": "urn:sha256:4ff7cd397621ef5ff2e4c526aae2f32f8e049700a3ac6bf7e1fb5830809b8c30",
+        "localPath": "/tmp/whisperasr-114-calibration-report.json",
+        "sha256": "4ff7cd397621ef5ff2e4c526aae2f32f8e049700a3ac6bf7e1fb5830809b8c30"
+      },
+      "sanitizedVersionedReport": {
+        "containsCentroidVectors": false,
+        "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/calibration-report.json",
+        "sha256": "3637bb04f8d6186bc6b0f14676e5aa3a8d64deafee94fd4ecc348ff35ba2469a",
+        "transformation": "The report already omits centroid vectors; the versioned copy adds one trailing LF."
+      },
+      "sanitizedLog": {
+        "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/calibration.log",
+        "sha256": "5b6a13df70c82dafb3a6311c72555fa4aab65f9d1e7f257811a5270709aaee7f"
+      }
+    },
+    "thresholdContractSHA256": "bfc99c6151256465c102015c1a4bb200bc0cc19f9f601325b0b46eacd68c57ff",
+    "metrics": {
+      "elapsedSeconds": 1.792944073677063,
+      "testSeconds": 2.056,
+      "peakPhysicalFootprintBytes": 578602352,
+      "declaredPeakMemoryBytes": 4294967296,
+      "centroidCount": 12,
+      "suggestionCount": 0,
+      "usefulSuggestionCount": 0,
+      "falseSuggestionCount": 0,
+      "underFrozenThresholdPairCount": 0
+    },
+    "concreteExamples": {
+      "closestSameReferencePair": {
+        "firstSpeakerID": "SPEAKER_00",
+        "secondSpeakerID": "SPEAKER_07",
+        "referenceSpeaker": "P10",
+        "firstReferenceShare": 0.8108966891318315,
+        "secondReferenceShare": 1.0,
+        "cosineDistance": 0.25772017,
+        "suggested": false
+      },
+      "closestDifferentReferencePair": {
+        "firstSpeakerID": "SPEAKER_04",
+        "firstReferenceSpeaker": "INT",
+        "firstReferenceShare": 0.6039746287074377,
+        "secondSpeakerID": "SPEAKER_11",
+        "secondReferenceSpeaker": "P03",
+        "secondReferenceShare": 0.5828693311361359,
+        "cosineDistance": 0.44497204,
+        "suggested": false
+      }
+    },
+    "lifecycle": {
+      "runtimeUnloadAwaited": true,
+      "postRunProcessFound": false,
+      "externalPeakRSSAvailable": false,
+      "memoryEvidence": "task_vm_info.phys_footprint sampled every 100 ms; the test ended before the first matching external ps sample."
+    },
+    "result": "PARTIAL/BLOCKED_EVIDENCE"
+  },
+  "evidenceStatus": "PARTIAL/BLOCKED_EVIDENCE",
   "decision": "NO_HOLDOUT",
-  "reason": "DEV produced no same-reference centroid pair, so real-world usefulness cannot be measured. It produced no false suggestion and a 0.488 cosine-distance safety gap to the closest different-reference pair. A holdout would not supply missing DEV calibration without leaking the final evaluation.",
-  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. The result UI is absent until positive real-speaker DEV evidence exists; no real-world recall claim is made."
+  "reason": "Expected=12 produced real same-reference pairs, but the closest was distance 0.25772017, above the frozen 0.1 threshold. No pair was under threshold, so there was no useful suggestion and no false suggestion. A holdout remains unopened because it cannot replace missing positive DEV evidence without leaking final evaluation.",
+  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. The result UI remains absent; no usefulness, recall or promotion claim is made."
 }

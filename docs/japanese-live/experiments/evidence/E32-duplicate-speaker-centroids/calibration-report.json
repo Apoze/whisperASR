@@ -1,0 +1,718 @@
+{
+  "benchmarkSlot" : "114-CALIBRATION",
+  "calibrationRole" : "over-clustering-pair-generator",
+  "centroidCount" : 12,
+  "closestFalseCandidate" : {
+    "cosineDistance" : 0.44497204,
+    "firstReferenceSpeaker" : "INT",
+    "firstSpeakerID" : "SPEAKER_04",
+    "sameReferenceSpeaker" : false,
+    "secondReferenceSpeaker" : "P03",
+    "secondSpeakerID" : "SPEAKER_11",
+    "suggested" : false
+  },
+  "closestUsefulCandidate" : {
+    "cosineDistance" : 0.25772017,
+    "firstReferenceSpeaker" : "P10",
+    "firstSpeakerID" : "SPEAKER_00",
+    "sameReferenceSpeaker" : true,
+    "secondReferenceSpeaker" : "P10",
+    "secondSpeakerID" : "SPEAKER_07",
+    "suggested" : false
+  },
+  "comparisons" : [
+    {
+      "cosineDistance" : 0.25772017,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.37128484,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.3945846,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.44497204,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.48947877,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5802254,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5869018,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5921718,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.59898216,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6170118,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6459173,
+      "firstReferenceSpeaker" : "P06",
+      "firstSpeakerID" : "SPEAKER_10",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6467719,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6641598,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.66767037,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.67959535,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_02",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.70216155,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7101231,
+      "firstReferenceSpeaker" : "P04",
+      "firstSpeakerID" : "SPEAKER_08",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7276614,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.73265374,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.73954296,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_01",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7518426,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.75770783,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.76502395,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7663415,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7834973,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7842889,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7846521,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.78825593,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7908261,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P01",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7948373,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8062488,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.82528013,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.82941455,
+      "firstReferenceSpeaker" : "P04",
+      "firstSpeakerID" : "SPEAKER_08",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.83475876,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.83496225,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.835124,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.83683115,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.83712345,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8387378,
+      "firstReferenceSpeaker" : "P04",
+      "firstSpeakerID" : "SPEAKER_08",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.84038407,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.84591275,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8492175,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.85697234,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.85721374,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8659866,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8705118,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_02",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8724458,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.87753737,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.87804145,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.89217615,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P01",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.89351946,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8935606,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8964341,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.90129524,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9079405,
+      "firstReferenceSpeaker" : "P12",
+      "firstSpeakerID" : "SPEAKER_09",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P06",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.90800786,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.91673255,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9269354,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9310513,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9327769,
+      "firstReferenceSpeaker" : "P12",
+      "firstSpeakerID" : "SPEAKER_09",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P03",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.934096,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.93710876,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.94457364,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9462427,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9724891,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 1.0131077,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P01",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    }
+  ],
+  "corpusID" : "easy-japanese-1",
+  "declaredPeakMemoryBytes" : 4294967296,
+  "elapsedSeconds" : 1.792944073677063,
+  "embeddingVariant" : "W8A16",
+  "falseSuggestionCount" : 0,
+  "holdoutOpened" : false,
+  "mappings" : [
+    {
+      "referenceOverlapSeconds" : 5.713396728515647,
+      "referenceShare" : 0.8108966891318315,
+      "referenceSpeaker" : "P10",
+      "speakerID" : "SPEAKER_00"
+    },
+    {
+      "referenceOverlapSeconds" : 4.770181701660135,
+      "referenceShare" : 0.35341270288082993,
+      "referenceSpeaker" : "P09",
+      "speakerID" : "SPEAKER_01"
+    },
+    {
+      "referenceOverlapSeconds" : 5.808960205078122,
+      "referenceShare" : 0.26814138883479116,
+      "referenceSpeaker" : "INT",
+      "speakerID" : "SPEAKER_02"
+    },
+    {
+      "referenceOverlapSeconds" : 10.194674865722654,
+      "referenceShare" : 0.9684939459906478,
+      "referenceSpeaker" : "P01",
+      "speakerID" : "SPEAKER_03"
+    },
+    {
+      "referenceOverlapSeconds" : 45.46572567749026,
+      "referenceShare" : 0.6039746287074377,
+      "referenceSpeaker" : "INT",
+      "speakerID" : "SPEAKER_04"
+    },
+    {
+      "referenceOverlapSeconds" : 16.26506048583984,
+      "referenceShare" : 0.9097928829492409,
+      "referenceSpeaker" : "P09",
+      "speakerID" : "SPEAKER_05"
+    },
+    {
+      "referenceOverlapSeconds" : 10.201662574768067,
+      "referenceShare" : 1,
+      "referenceSpeaker" : "INT",
+      "speakerID" : "SPEAKER_06"
+    },
+    {
+      "referenceOverlapSeconds" : 37.011871337890625,
+      "referenceShare" : 1,
+      "referenceSpeaker" : "P10",
+      "speakerID" : "SPEAKER_07"
+    },
+    {
+      "referenceOverlapSeconds" : 8.57941583251953,
+      "referenceShare" : 0.9272076873097382,
+      "referenceSpeaker" : "P04",
+      "speakerID" : "SPEAKER_08"
+    },
+    {
+      "referenceOverlapSeconds" : 7.710192626953102,
+      "referenceShare" : 0.6727868045717431,
+      "referenceSpeaker" : "P12",
+      "speakerID" : "SPEAKER_09"
+    },
+    {
+      "referenceOverlapSeconds" : 4.931166259765632,
+      "referenceShare" : 0.5459506096922321,
+      "referenceSpeaker" : "P06",
+      "speakerID" : "SPEAKER_10"
+    },
+    {
+      "referenceOverlapSeconds" : 7.2537108154296845,
+      "referenceShare" : 0.5828693311361359,
+      "referenceSpeaker" : "P03",
+      "speakerID" : "SPEAKER_11"
+    }
+  ],
+  "maximumCosineDistance" : 0.1,
+  "modelID" : "argmaxinc\/speakerkit-coreml",
+  "modelRevision" : "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+  "observedPeakMemoryBytes" : 578602352,
+  "purpose" : "development",
+  "runtimeRevision" : "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+  "sourceJobID" : "00000114-0000-0000-0000-000000000002",
+  "sourceSHA256" : "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c",
+  "speakerCountPolicy" : {
+    "expectedCount" : 12,
+    "mode" : "expected"
+  },
+  "suggestionCount" : 0,
+  "ticket" : 114,
+  "uncertaintyMargin" : 0.02,
+  "usefulSuggestionCount" : 0,
+  "vectorDimensions" : [
+    256
+  ]
+}

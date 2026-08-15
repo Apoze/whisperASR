@@ -1,0 +1,9 @@
+2026-08-15T16:04:18+02:00 scope: one quantized SpeakerKit W8A16 DEV run, Expected=12; no ASR, translation or holdout
+command: env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-swiftpm-cache BENCHMARK_SLOT_GRANTED=114-CALIBRATION WHISPERASR_RUN_DUPLICATE_SPEAKER_DEV=1 WHISPERASR_DUPLICATE_SPEAKER_EXPECTED_COUNT=12 WHISPERASR_DUPLICATE_SPEAKER_MANIFEST=$REPO_ROOT/docs/japanese-live/corpora/easy-japanese-1/manifest.json WHISPERASR_DUPLICATE_SPEAKER_SOURCE=$CORPUS_ROOT/easy-japanese-1/audio-16k-mono.wav WHISPERASR_DUPLICATE_SPEAKER_REPORT=/tmp/whisperasr-114-calibration-report.json WHISPERASR_DUPLICATE_SPEAKER_MODEL_CACHE=$SPEAKERKIT_MODEL_CACHE WHISPERASR_DUPLICATE_SPEAKER_JOB_ID=00000114-0000-0000-0000-000000000002 /usr/bin/xcrun swift test --filter HighQualityAcceptanceTests/testDuplicateSpeakerDevelopmentCalibrationWhenOptedIn
+build: complete in 11.61 seconds
+test: HighQualityAcceptanceTests.testDuplicateSpeakerDevelopmentCalibrationWhenOptedIn passed in 2.056 seconds
+result: centroids=12 suggestions=0 useful=0 false=0 runtimeSeconds=1.792944073677063 peakPhysicalFootprintBytes=578602352
+memory: in-process task_vm_info.phys_footprint sampled every 100 ms; declared ceiling=4294967296 bytes; no pressure or ceiling breach observed
+lifecycle: HighQualitySpeakerKitRuntime.unload awaited before report encoding; post-run ps found no WhisperASRPackageTests or swift-test process
+externalRSS: the 2.056-second test body ended before the first matching ps sample; no external peak RSS claim is made
+2026-08-15T16:04:20+02:00 status: PASS, PARTIAL/BLOCKED_EVIDENCE for UI exposure
