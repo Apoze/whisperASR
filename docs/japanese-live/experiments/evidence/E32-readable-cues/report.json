@@ -1,0 +1,89 @@
+{
+  "ticket": 120,
+  "decision": "GO-beta",
+  "baseCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
+  "budgetFreezeSHA256": "0fb5d1d626b5780d7578a93513dd6901526122f510cb097f20ee4154ac749720",
+  "holdoutOpenedAfterBudgetFreeze": true,
+  "modelsLoaded": [],
+  "replayCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --filter ReadableSubtitleReflowTests",
+  "development": {
+    "corpus": "qudu2fx3ncc",
+    "inputSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
+    "replayAndExportSeconds": 0.387,
+    "splitSourceCueCount": 11,
+    "unresolvedSourceCueCount": 177,
+    "baseline": {
+      "cueCount": 307,
+      "readableCueCount": 119,
+      "over84Characters": 37,
+      "over20CPS": 156,
+      "under1Second": 74,
+      "over7Seconds": 11,
+      "gapCount": 165,
+      "overlapCount": 0
+    },
+    "candidate": {
+      "cueCount": 318,
+      "readableCueCount": 141,
+      "over84Characters": 29,
+      "over20CPS": 156,
+      "under1Second": 74,
+      "over7Seconds": 3,
+      "gapCount": 165,
+      "overlapCount": 0
+    }
+  },
+  "holdout": {
+    "corpus": "md62mmdz0m",
+    "inputSHA256": "431ad2a2ca756f478e04b79fbd53e8529a45a9479b16e8bd28647af3fe33bb58",
+    "replayAndExportSeconds": 0.663,
+    "splitSourceCueCount": 23,
+    "unresolvedSourceCueCount": 140,
+    "baseline": {
+      "cueCount": 260,
+      "readableCueCount": 97,
+      "over84Characters": 41,
+      "over20CPS": 129,
+      "under1Second": 65,
+      "over7Seconds": 17,
+      "gapCount": 168,
+      "overlapCount": 0
+    },
+    "candidate": {
+      "cueCount": 286,
+      "readableCueCount": 146,
+      "over84Characters": 21,
+      "over20CPS": 129,
+      "under1Second": 65,
+      "over7Seconds": 2,
+      "gapCount": 168,
+      "overlapCount": 0
+    }
+  },
+  "gates": {
+    "developmentReadableGain": true,
+    "holdoutReadableGain": true,
+    "exactNormalizedEnglishIdentity": true,
+    "exactWordOrder": true,
+    "exactTimingCoverage": true,
+    "exactInterCueGaps": true,
+    "speakerOnOffEquivalent": true,
+    "speakerMetadataPreserved": true,
+    "noNewOverlap": true,
+    "noMetricRegression": true,
+    "srtVttTimestampsIdentical": true,
+    "cancellationSafe": true,
+    "defaultOff": true
+  },
+  "translatorContracts": {
+    "12B": "quality-scored on development and holdout",
+    "4B": "word, timing and Speaker contract passed on both corpora; quality not scored because retained E31 translation evidence contains upstream validation failures",
+    "4BDevelopmentInputSHA256": "6daad7eb946026f2dbe74a5c9589d3887ce9d7e47385d5620ba24268ec254208",
+    "4BHoldoutInputSHA256": "f0aa50133fd3ba8af0d93aceb22327596f48adbd1dba8549d260d7b5d7c11fd3"
+  },
+  "routing": {
+    "infra": "The default Command Line Tools SDK and sandbox-exec failed before tests; the Xcode toolchain command passed.",
+    "harness": "The first synthetic sentence had no English word boundary satisfying 20 CPS at the retained Japanese timestamp; the fixture wording was corrected without changing policy.",
+    "candidate": "The retained 4B translator artifacts contain upstream translation validation failures; reflow contract tests passed and no invalid 4B quality claim is made."
+  }
+}

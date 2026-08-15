@@ -1,0 +1,24 @@
+{
+  "ticket": 120,
+  "experiment": "readable-cues-v2",
+  "split": "development",
+  "sourceCorpus": "qudu2fx3ncc",
+  "sourceArtifact": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+  "sourceArtifactSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
+  "maximumCharactersPerLine": 42,
+  "maximumLinesPerCue": 2,
+  "minimumDurationSeconds": 1.0,
+  "maximumDurationSeconds": 7.0,
+  "maximumCharactersPerSecond": 20.0,
+  "minimumJapanesePauseSeconds": 0.12,
+  "boundaryEvidence": [
+    "Japanese pause",
+    "Japanese punctuation",
+    "source cue change"
+  ],
+  "timingPolicy": "Keep every source cue outer bound; split only at the next retained Japanese fragment timestamp; make children exactly adjacent.",
+  "textPolicy": "Collapse whitespace only; preserve every English word and its strict order.",
+  "fallbackPolicy": "Replace a source cue only when a complete all-budget partition exists; otherwise keep it valid and audit every unresolved violation.",
+  "developmentGate": "Measurable readable-cue gain with exact text, timing, gap and speaker integrity and no metric regression.",
+  "holdoutStatus": "closed"
+}

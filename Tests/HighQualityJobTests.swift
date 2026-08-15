@@ -3,6 +3,18 @@ import XCTest
 @testable import WhisperASRApp
 
 final class HighQualityJobTests: XCTestCase {
+    func testReadableSubtitleBetaControlsVisibilityAndSafeDefault() {
+        var controls = HighQualityReadableSubtitleBetaControls()
+
+        XCTAssertFalse(controls.enabled)
+        XCTAssertFalse(controls.isVisible(hasEnglishSubtitles: false))
+        XCTAssertTrue(controls.isVisible(hasEnglishSubtitles: true))
+
+        controls.enabled = true
+        controls.reconcile(hasEnglishSubtitles: false)
+        XCTAssertFalse(controls.enabled)
+    }
+
     func testSpeakerBetaControlsVisibilityAndSafeDefaults() {
         var controls = HighQualitySpeakerBetaControls()
 
@@ -1879,6 +1891,9 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.subtitleCues.map(\.start), [1.5, 6.25])
         XCTAssertEqual(result.subtitleCues.map(\.end), [2.75, 8])
         XCTAssertEqual(result.subtitleCues.map(\.text), ["One\n\ncontinued", "Two"])
+        XCTAssertTrue(result.subtitleCues.allSatisfy { $0.renderedLines == nil })
+        XCTAssertNil(result.manifest.readableSubtitles)
+        XCTAssertNil(result.evidence.readableSubtitles)
         XCTAssertNil(result.englishTranscript)
         XCTAssertEqual(result.evidence.alignment?.modelID, "fixture-aligner")
         XCTAssertEqual(result.evidence.alignment?.revision, "fixture-revision")
@@ -1904,6 +1919,111 @@ final class HighQualityJobTests: XCTestCase {
             "1\n00:00:01,500 --> 00:00:02,750\nOne continued\n\n"
                 + "2\n00:00:06,250 --> 00:00:08,000\nTwo\n\n"
         )
+    }
+
+    func testReadableSubtitlesSplitAtJapanesePauseWithoutChangingWordsOrTimeline() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let english = "The first measured subtitle clause stays clear and calm as the second measured clause remains equally easy to read."
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 96_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "前半、後半。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, turns in
+                .init(
+                    chunks: [.init(
+                        index: 0,
+                        sourceStart: 0,
+                        sourceEnd: 6,
+                        cues: [.init(
+                            id: turns[0].id,
+                            text: turns[0].japanese,
+                            start: 0,
+                            end: 6
+                        )],
+                        rawItems: [
+                            .init(cueID: turns[0].id, text: "前半、", start: 0, end: 2.5),
+                            .init(cueID: turns[0].id, text: "後半。", start: 3, end: 6),
+                        ]
+                    )],
+                    modelID: "fixture-aligner",
+                    revision: "fixture-revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {},
+            translateEnglish: { request in
+                let response = try JSONSerialization.data(withJSONObject: [
+                    "translations": [["id": request.turns[0].id, "text": english]],
+                ])
+                return .init(
+                    model: "fixture-translator",
+                    response: String(decoding: response, as: UTF8.self),
+                    attempts: []
+                )
+            }
+        ))
+
+        let result = try await job.run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.englishSubtitles],
+            backend: .qwenJA,
+            readableSubtitles: true,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.subtitleCues.count, 2)
+        XCTAssertEqual(result.subtitleCues.first?.start, 0)
+        XCTAssertEqual(result.subtitleCues.first?.end, 3)
+        XCTAssertEqual(result.subtitleCues.last?.start, 3)
+        XCTAssertEqual(result.subtitleCues.last?.end, 6)
+        XCTAssertEqual(
+            result.subtitleCues.flatMap { $0.text.split(whereSeparator: \.isWhitespace) },
+            english.split(whereSeparator: \.isWhitespace)
+        )
+        XCTAssertTrue(result.subtitleCues.allSatisfy {
+            guard let lines = $0.renderedLines else { return false }
+            return lines.count <= 2 && lines.allSatisfy { $0.count <= 42 }
+        })
+        let audit = try XCTUnwrap(result.evidence.readableSubtitles)
+        XCTAssertEqual(result.manifest.readableSubtitles, true)
+        XCTAssertEqual(audit.policy, .product)
+        XCTAssertTrue(audit.integrityPassed)
+        XCTAssertEqual(audit.splitSourceCueCount, 1)
+        XCTAssertEqual(audit.unresolvedSourceCueCount, 0)
+        XCTAssertEqual(audit.decisions.first?.boundaries.first?.seconds, 3)
+        XCTAssertEqual(
+            audit.decisions.first?.boundaries.first?.reasons,
+            ["japanese-pause", "japanese-punctuation"]
+        )
+        let srt = try String(
+            contentsOf: result.directory.appendingPathComponent("english-subtitles.srt"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(srt.contains(result.subtitleCues[0].renderedLines!.joined(separator: "\n")))
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+        XCTAssertEqual(reopened.subtitleCues, result.subtitleCues)
+        XCTAssertEqual(reopened.evidence.readableSubtitles, audit)
+    }
+
+    func testReadableSubtitlesRequireEnglishSubtitleDeliverable() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        await assertFailure(.application) {
+            try await subtitleFixtureJob(cues: []).run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                readableSubtitles: true,
+                outputRoot: root
+            ))
+        }
     }
 
     func testEnglishSubtitlesRejectInvalidCuesAndRetainAlignmentDiagnostics() async throws {
