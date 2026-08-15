@@ -3383,6 +3383,22 @@ struct HighQualityJob: Sendable {
             return try await gate.withMemoryGuard(lease, operation: operation)
         }
 
+        func transcribeAdaptiveSegment(
+            _ segment: HighQualityAdaptiveASRSegment,
+            samples: [Float],
+            using segmentServices: Services,
+            lease: HeavyweightModelLease?
+        ) async throws -> (exchange: HighQualityASRExchange, duration: TimeInterval) {
+            try Task.checkCancellation()
+            let started = Date()
+            let exchange = try await withMemoryGuard(lease) {
+                try await segmentServices.transcribeJapaneseEvidence(
+                    Array(samples[segment.startSample..<segment.endSample])
+                )
+            }
+            return (exchange, Date().timeIntervalSince(started))
+        }
+
         func releaseModel(
             _ lease: HeavyweightModelLease?,
             unload: @escaping @Sendable () async -> Void
@@ -3596,16 +3612,16 @@ struct HighQualityJob: Sendable {
             var asrExchange: HighQualityASRExchange
             if request.asrMode == .adaptiveQwenParakeet {
                 for segment in HighQualityAdaptiveASR.plan(samples: samples) {
-                    let started = Date()
-                    let exchange = try await withMemoryGuard(asrLease) {
-                        try await services.transcribeJapaneseEvidence(
-                            Array(samples[segment.startSample..<segment.endSample])
-                        )
-                    }
+                    let result = try await transcribeAdaptiveSegment(
+                        segment,
+                        samples: samples,
+                        using: services,
+                        lease: asrLease
+                    )
                     adaptiveQwenResults.append((
                         segment,
-                        exchange,
-                        Date().timeIntervalSince(started)
+                        result.exchange,
+                        result.duration
                     ))
                 }
                 asrExchange = HighQualityAdaptiveASR.compose(adaptiveQwenResults.map {
@@ -3718,15 +3734,15 @@ struct HighQualityJob: Sendable {
                         )
                         for suspect in suspects {
                             do {
-                                let started = Date()
-                                let exchange = try await withMemoryGuard(parakeetLease) {
-                                    try await parakeet.transcribeJapaneseEvidence(Array(
-                                        samples[suspect.segment.startSample..<suspect.segment.endSample]
-                                    ))
-                                }
+                                let result = try await transcribeAdaptiveSegment(
+                                    suspect.segment,
+                                    samples: samples,
+                                    using: parakeet,
+                                    lease: parakeetLease
+                                )
                                 alternates[suspect.segment.id] = (
-                                    exchange,
-                                    Date().timeIntervalSince(started)
+                                    result.exchange,
+                                    result.duration
                                 )
                             } catch is CancellationError {
                                 throw CancellationError()

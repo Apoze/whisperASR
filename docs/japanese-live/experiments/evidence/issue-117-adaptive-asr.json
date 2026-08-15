@@ -113,7 +113,9 @@
     "repair": {
       "rawASRReused": true,
       "holdoutOpened": false,
-      "SHA256": "e86ce6aea327ac3ea981c243e62fa6477ab9b792a01e7cef61e75c7f0035fef5"
+      "SHA256": "e86ce6aea327ac3ea981c243e62fa6477ab9b792a01e7cef61e75c7f0035fef5",
+      "provenance": "issue-117-historical-run-provenance.json",
+      "reusableByCurrentCode": false
     }
   },
   "rawArtifacts": {
@@ -129,16 +131,22 @@
   },
   "verification": {
     "targeted": {
-      "executed": 16,
+      "executed": 19,
       "skipped": 2,
       "failures": 0
     },
     "full": {
-      "executed": 480,
+      "executed": 483,
       "skipped": 64,
       "failures": 0
     },
+    "live": {
+      "executed": 46,
+      "skipped": 0,
+      "failures": 0
+    },
     "pythonSelfTest": "PASS",
+    "runnerProvenanceSelfTest": "PASS",
     "shellSyntax": "PASS"
   },
   "scope": {

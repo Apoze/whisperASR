@@ -11,6 +11,8 @@
 - Temps ASR : Qwen segmenté 141,54 s, Parakeet incrémental 18,32 s, total 159,87 s ; incrément vs Qwen standard 33,89 s (1,269×).
 - Pics : Qwen 7 314 019 080 octets (6,81 Gio), Parakeet 689 489 600 octets (0,64 Gio) ; swap inchangé, aucune terminaison forcée.
 - Une erreur de mapping de références a été routée `harness`, corrigée avec un mapping indépendant par caractère, puis les bruts ASR DEV ont été réutilisés sous contrôle de hashes. La conclusion finale est routée `candidate`.
-- Vérification : 16 tests ciblés, 0 échec, 2 lourds ignorés ; suite complète 480 tests, 0 échec, 64 opt-in ignorés.
+- Vérification : 19 tests ciblés, 0 échec, 2 lourds ignorés ; suite complète 483 tests, 0 échec, 64 opt-in ignorés ; contrôle Live 46 tests, 0 échec.
 
 La provenance compacte est dans `evidence/issue-117-adaptive-asr.json`. Les bruts sont conservés localement sous `.build/benchmarks/issue-117/` avec leurs SHA-256.
+
+Le plan JSON canonique v1 est produit par `Scripts/adaptive_asr_117.py` (clés et paramètres acoustiques figés ci-dessus) puis comparé segment par segment au planificateur Swift par le test modèle-léger. Le brut DEV existant reste historique : `evidence/issue-117-historical-run-provenance.json` en conserve les hashes producteurs. Le runner courant refuse sa réutilisation ou tout nouveau preflight qui remplacerait son READY ; pour un nouveau run, il capture les hashes producteurs avant l'ASR, les revérifie après, puis écrit la provenance atomiquement.

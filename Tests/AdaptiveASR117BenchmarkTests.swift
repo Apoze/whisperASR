@@ -4,6 +4,11 @@ import XCTest
 
 final class AdaptiveASR117BenchmarkTests: XCTestCase {
     private struct Algorithm: Codable {
+        let activeFrameDBFS: Double
+        let boundary: String
+        let frameMilliseconds: Int
+        let maximumSeconds: Int
+        let minimumSeconds: Int
         let usesReference: Bool
     }
 
@@ -46,7 +51,46 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         let errors: [HighQualityAdaptiveASRErrorEvidence]
     }
 
-    func testIssue117FrozenDevelopmentPlanWhenOptedIn() async throws {
+    func testIssue117RunnerProvenanceFailsClosed() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let process = Process()
+        let output = Pipe()
+        process.currentDirectoryURL = root
+        process.executableURL = URL(fileURLWithPath: "/bin/bash")
+        process.arguments = [
+            root.appendingPathComponent("Scripts/run_adaptive_asr_117.sh").path,
+            "self-test",
+        ]
+        process.standardOutput = output
+        process.standardError = output
+
+        try process.run()
+        process.waitUntilExit()
+        let message = String(
+            decoding: output.fileHandleForReading.readDataToEndOfFile(),
+            as: UTF8.self
+        )
+        XCTAssertEqual(process.terminationStatus, 0, message)
+        XCTAssertTrue(message.contains("provenance self-test: PASS"), message)
+    }
+
+    func testIssue117RawRunOnlyCompletesCandidateFailures() throws {
+        XCTAssertThrowsError(try Self.candidateEvidence(
+            for: HighQualityASRWorkerError.protocolFailure("bad response"),
+            stage: "parakeet-transcription",
+            segmentID: "segment-0001"
+        ))
+        let evidence = try Self.candidateEvidence(
+            for: HighQualityASRWorkerError.backendFailure("model rejected audio"),
+            stage: "parakeet-transcription",
+            segmentID: "segment-0001"
+        )
+        XCTAssertEqual(evidence.route, .candidate)
+    }
+
+    func testIssue117CanonicalPythonPlanMatchesSwiftPlannerWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_ADAPTIVE_117_PLAN"] == "1",
               let audioPath = environment["WHISPERASR_ADAPTIVE_117_AUDIO"],
@@ -117,6 +161,7 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
                 backend: .parakeetJA,
                 executableURL: executableURL
             )
+            var infrastructureError: (any Error)?
             do {
                 try await parakeet.prepare { _, message in
                     print("[issue-117/parakeet] \(message)")
@@ -143,31 +188,43 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
                             scopedTerms: []
                         )
                     } catch is CancellationError {
-                        throw CancellationError()
+                        infrastructureError = CancellationError()
+                        break
                     } catch {
-                        windows[index].error = .init(
-                            route: HighQualityAdaptiveASR.route(error),
-                            stage: "parakeet-transcription",
-                            segmentID: windows[index].segment.id,
-                            message: error.localizedDescription
-                        )
+                        do {
+                            windows[index].error = try Self.candidateEvidence(
+                                for: error,
+                                stage: "parakeet-transcription",
+                                segmentID: windows[index].segment.id
+                            )
+                        } catch {
+                            infrastructureError = error
+                            break
+                        }
                     }
                 }
             } catch {
-                let route = error is CancellationError
-                    ? HighQualityAdaptiveASRErrorRoute.infrastructure
-                    : HighQualityAdaptiveASR.route(error)
-                for index in suspectIndices where windows[index].parakeet == nil {
-                    windows[index].error = .init(
-                        route: route,
+                do {
+                    let evidence = try Self.candidateEvidence(
+                        for: error,
                         stage: "parakeet-preparation",
-                        segmentID: windows[index].segment.id,
-                        message: error.localizedDescription
+                        segmentID: nil
                     )
+                    for index in suspectIndices where windows[index].parakeet == nil {
+                        windows[index].error = .init(
+                            route: evidence.route,
+                            stage: evidence.stage,
+                            segmentID: windows[index].segment.id,
+                            message: evidence.message
+                        )
+                    }
+                } catch {
+                    infrastructureError = error
                 }
             }
             await parakeet.unload()
             if let evidence = await parakeet.evidence { workers.append(evidence) }
+            if let infrastructureError { throw infrastructureError }
         }
         let errors = windows.compactMap(\.error)
         let strictlySequential = workers.count < 2
@@ -315,6 +372,21 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         try encoder.encode(value).write(to: url, options: .atomic)
     }
 
+    private static func candidateEvidence(
+        for error: any Error,
+        stage: String,
+        segmentID: String?
+    ) throws -> HighQualityAdaptiveASRErrorEvidence {
+        let route = HighQualityAdaptiveASR.route(error)
+        guard route == .candidate else { throw error }
+        return .init(
+            route: route,
+            stage: stage,
+            segmentID: segmentID,
+            message: error.localizedDescription
+        )
+    }
+
     private func verifiedPlan(
         audioPath: String,
         planPath: String
@@ -322,9 +394,22 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         let audioURL = URL(fileURLWithPath: audioPath)
         let data = try Data(contentsOf: URL(fileURLWithPath: planPath))
         let plan = try JSONDecoder().decode(Plan.self, from: data)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        XCTAssertEqual(Set(object.keys), [
+            "algorithm", "audioSHA256", "corpusID", "corpusRole", "holdoutOpened",
+            "sampleCount", "sampleRate", "schemaVersion", "segments", "ticket",
+        ])
         XCTAssertEqual(plan.ticket, 117)
+        XCTAssertEqual(plan.schemaVersion, 1)
         XCTAssertEqual(plan.sampleRate, 16_000)
         XCTAssertEqual(plan.audioSHA256, try JapaneseBenchmarkSupport.sha256(at: audioURL))
+        XCTAssertEqual(plan.algorithm.activeFrameDBFS, -42)
+        XCTAssertEqual(plan.algorithm.boundary, "lowest-energy-frame-latest-tie")
+        XCTAssertEqual(plan.algorithm.frameMilliseconds, 20)
+        XCTAssertEqual(plan.algorithm.minimumSeconds, 3)
+        XCTAssertEqual(plan.algorithm.maximumSeconds, 8)
         XCTAssertFalse(plan.algorithm.usesReference)
         let samples = try await AudioLoader.loadSamples(url: audioURL)
         XCTAssertEqual(samples.count, plan.sampleCount)

@@ -11,11 +11,11 @@ export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 MODE="${1:-preflight}"
 START_SECONDS=$SECONDS
 HARD_TIMEOUT_SECONDS=13200
-[[ "$MODE" == preflight || "$MODE" == full ]] || {
-  echo "usage: $0 [preflight|full]" >&2
+[[ "$MODE" == preflight || "$MODE" == full || "$MODE" == self-test ]] || {
+  echo "usage: $0 [preflight|full|self-test]" >&2
   exit 2
 }
-[[ "$MODE" == preflight || "${BENCHMARK_SLOT_GRANTED:-}" == 117 ]] || {
+[[ "$MODE" != full || "${BENCHMARK_SLOT_GRANTED:-}" == 117 ]] || {
   echo "Refusing heavyweight #117 run without BENCHMARK_SLOT_GRANTED=117" >&2
   exit 2
 }
@@ -157,6 +157,89 @@ implementation_hashes() {
   printf '%s\n' "$value"
 }
 
+capture_run_producer() {
+  local directory="$1" ready="${2:-$READY}" worker="${3:-$WORKER}"
+  local implementation="${4:-$(implementation_hashes)}"
+  [[ -f "$directory/plan.json" && -f "$ready" && -f "$worker" ]] || return 1
+  jq -cn --arg plan "$(hash_file "$directory/plan.json")" \
+    --arg ready "$(hash_file "$ready")" \
+    --arg worker "$(hash_file "$worker")" --arg commit "$(git rev-parse HEAD)" \
+    --argjson implementation "$implementation" \
+    '{workingCommit:$commit,planSHA256:$plan,readySHA256:$ready,
+      workerSHA256:$worker,implementationSHA256:$implementation}'
+}
+
+write_run_provenance() {
+  local directory="$1" producer="$2" ready="${3:-$READY}" worker="${4:-$WORKER}"
+  local implementation="${5:-$(implementation_hashes)}"
+  local provenance="$directory/run-provenance.json" temporary="$directory/run-provenance.json.tmp"
+  [[ -f "$directory/run.json" && ! -e "$provenance" && ! -e "$temporary" ]] || return 1
+  [[ "$(capture_run_producer "$directory" "$ready" "$worker" "$implementation")" \
+    == "$producer" ]] || return 1
+  if ! jq -n --arg run "$(hash_file "$directory/run.json")" --argjson producer "$producer" \
+      '$producer + {schemaVersion:1,ticket:117,status:"recorded-at-execution",runSHA256:$run}' \
+      >"$temporary"; then
+    rm -f "$temporary"
+    return 1
+  fi
+  mv "$temporary" "$provenance"
+}
+
+verify_run_provenance() {
+  local directory="$1" ready="${2:-$READY}" worker="${3:-$WORKER}"
+  local implementation="${4:-$(implementation_hashes)}"
+  local provenance="$directory/run-provenance.json" producer
+  [[ -f "$directory/run.json" && -f "$provenance" ]] || return 1
+  producer="$(capture_run_producer "$directory" "$ready" "$worker" "$implementation")"
+  jq -e --arg run "$(hash_file "$directory/run.json")" --argjson producer "$producer" \
+    '.schemaVersion == 1 and .ticket == 117 and .status == "recorded-at-execution"
+      and (.workingCommit | type) == "string" and .runSHA256 == $run
+      and .planSHA256 == $producer.planSHA256 and .readySHA256 == $producer.readySHA256
+      and .workerSHA256 == $producer.workerSHA256
+      and .implementationSHA256 == $producer.implementationSHA256' \
+    "$provenance" >/dev/null
+}
+
+preflight_has_no_raw() { [[ ! -e "${1:-$DEV/run.json}" ]]; }
+
+provenance_self_test() {
+  local test_root
+  test_root="$(mktemp -d "${TMPDIR:-/tmp}/adaptive-asr-117-provenance.XXXXXX")"
+  mkdir -p "$test_root/development"
+  printf ready >"$test_root/ready.json"
+  printf worker >"$test_root/worker"
+  printf plan >"$test_root/development/plan.json"
+  printf run >"$test_root/development/run.json"
+  local implementation='{"runner":"same","scorer":"same"}'
+  local producer
+  producer="$(capture_run_producer "$test_root/development" "$test_root/ready.json" \
+    "$test_root/worker" "$implementation")"
+  write_run_provenance "$test_root/development" "$producer" "$test_root/ready.json" \
+    "$test_root/worker" "$implementation"
+  verify_run_provenance "$test_root/development" "$test_root/ready.json" \
+    "$test_root/worker" "$implementation"
+  ! verify_run_provenance "$test_root/development" "$test_root/ready.json" \
+    "$test_root/worker" '{"runner":"changed","scorer":"same"}'
+  ! verify_run_provenance "$test_root/development" "$test_root/ready.json" \
+    "$test_root/worker" '{"runner":"same","scorer":"changed"}'
+  printf changed >>"$test_root/development/run.json"
+  ! verify_run_provenance "$test_root/development" "$test_root/ready.json" \
+    "$test_root/worker" "$implementation"
+  mkdir -p "$test_root/race"
+  printf plan >"$test_root/race/plan.json"
+  printf run >"$test_root/race/run.json"
+  producer="$(capture_run_producer "$test_root/race" "$test_root/ready.json" \
+    "$test_root/worker" "$implementation")"
+  printf changed >>"$test_root/race/plan.json"
+  ! write_run_provenance "$test_root/race" "$producer" "$test_root/ready.json" \
+    "$test_root/worker" "$implementation"
+  [[ ! -e "$test_root/race/run-provenance.json" ]]
+  preflight_has_no_raw "$test_root/fresh-run.json"
+  ! preflight_has_no_raw "$test_root/development/run.json"
+  rm -rf "$test_root"
+  echo "provenance self-test: PASS"
+}
+
 write_ready() {
   local free_disk total_ram implementation
   free_disk="$(df -k "$ROOT" | awk 'NR==2 {printf "%.0f", $4 * 1024}')"
@@ -237,14 +320,20 @@ run_test() {
 run_asr() {
   local split="$1" corpus="$2" directory="$3"
   if [[ -e "$directory/run.json" ]]; then
-    [[ "$split" == development && -f "$HARNESS_REPAIR" ]] || {
-      write_failure harness "$split-asr" "refusing unverified raw ASR reuse"
+    if ! verify_run_provenance "$directory"; then
+      write_failure harness "$split-asr" \
+        "refusing raw ASR reuse: producer provenance differs or is missing"
       return 1
-    }
-    echo "Reusing retained DEV raw ASR after verified harness repair"
+    fi
+    echo "Reusing retained $split raw ASR with exact producer provenance"
     return 0
   fi
   mkdir -p "$directory"
+  local producer
+  if ! producer="$(capture_run_producer "$directory")"; then
+    write_failure harness "$split-asr-provenance" "cannot capture producer provenance"
+    return 1
+  fi
   run_test "$split-asr" 2400 "$directory/asr.log" "$directory/asr-runtime.json" \
     env BENCHMARK_SLOT_GRANTED=117 WHISPERASR_RUN_ADAPTIVE_117_ASR=1 \
       WHISPERASR_ADAPTIVE_117_AUDIO="$(pcm_for "$corpus")" \
@@ -252,7 +341,12 @@ run_asr() {
       WHISPERASR_ADAPTIVE_117_RUN="$directory/run.json" \
       WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE="$WORKER" \
       xcrun swift test --skip-build \
-        --filter AdaptiveASR117BenchmarkTests/testIssue117RawASRWhenOptedIn
+        --filter AdaptiveASR117BenchmarkTests/testIssue117RawASRWhenOptedIn || return 1
+  if ! write_run_provenance "$directory" "$producer"; then
+    write_failure harness "$split-asr-provenance" \
+      "producer changed during ASR; retained raw has no current provenance claim"
+    return 1
+  fi
 }
 
 run_downstream() {
@@ -293,6 +387,11 @@ score_split() {
 
 preflight() {
   mkdir -p "$ARTIFACTS"
+  if ! preflight_has_no_raw; then
+    write_failure harness preflight-existing-raw \
+      "refusing to replace READY while historical DEV raw ASR exists"
+    return 1
+  fi
   if ! verify_development_inputs; then
     write_failure harness preflight-inputs "frozen input or baseline integrity failed"
     return 1
@@ -385,4 +484,10 @@ full() {
   mv "$STATE.tmp" "$STATE"
 }
 
-if [[ "$MODE" == preflight ]]; then preflight; else full; fi
+if [[ "$MODE" == self-test ]]; then
+  provenance_self_test
+elif [[ "$MODE" == preflight ]]; then
+  preflight
+else
+  full
+fi

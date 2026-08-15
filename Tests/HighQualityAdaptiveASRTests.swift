@@ -466,6 +466,42 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
         )
     }
 
+    func testAdaptiveJobChecksCancellationBetweenSegments() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let calls = AdaptiveASRCallLog()
+        let job = HighQualityJob(servicesForBackend: { _ in
+            .init(
+                loadSource: { _ in Array(repeating: 0.01, count: 12 * 16_000) },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in "" },
+                transcribeJapaneseEvidence: { _ in
+                    await calls.append("transcribe")
+                    if await calls.values.count == 1 {
+                        withUnsafeCurrentTask { $0?.cancel() }
+                    }
+                    return .init(rawTranscript: "正常な文章です。", chunks: [])
+                },
+                unloadASR: {}
+            )
+        })
+
+        do {
+            _ = try await job.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                asrMode: .adaptiveQwenParakeet,
+                outputRoot: root
+            ))
+            XCTFail("Cancellation must stop the adaptive segment loop.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .cancelled)
+        }
+        let transcriptionCount = await calls.values.filter { $0 == "transcribe" }.count
+        XCTAssertEqual(transcriptionCount, 1)
+    }
+
     func testErrorRoutingSeparatesInfrastructureFromCandidateFailures() {
         XCTAssertEqual(
             HighQualityAdaptiveASR.route(HighQualityASRWorkerError.protocolFailure("bad JSON")),
