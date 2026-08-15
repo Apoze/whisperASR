@@ -32,6 +32,14 @@ struct HighQualitySpeakerBetaControls: Equatable {
     }
 }
 
+struct HighQualityJobResultPresentation {
+    private(set) var visibleResult: HighQualityJobResult?
+
+    mutating func publish(_ completed: HighQualityJobResult?) {
+        if let completed { visibleResult = completed }
+    }
+}
+
 struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
@@ -47,7 +55,7 @@ struct HighQualityJobView: View {
         fraction: 0,
         message: "Choose a local audio or video file."
     )
-    @State private var result: HighQualityJobResult?
+    @State private var resultPresentation = HighQualityJobResultPresentation()
     @State private var errorMessage: String?
     @State private var task: Task<Void, Never>?
     @State private var isDropTargeted = false
@@ -56,6 +64,7 @@ struct HighQualityJobView: View {
     @State private var selectedSavedResultID: UUID?
 
     private var isRunning: Bool { task != nil }
+    private var result: HighQualityJobResult? { resultPresentation.visibleResult }
     private var canStart: Bool {
         (sourceURL != nil || !youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             && (includeJapaneseTranscript || includeEnglishTranscript || includeEnglishSubtitles)
@@ -91,7 +100,6 @@ struct HighQualityJobView: View {
                     guard !value.isEmpty else { return }
                     selectedSavedResultID = nil
                     sourceURL = nil
-                    result = nil
                     errorMessage = nil
                 }
 
@@ -303,7 +311,6 @@ struct HighQualityJobView: View {
         selectedSavedResultID = nil
         sourceURL = url
         youtubeURL = ""
-        result = nil
         errorMessage = nil
     }
 
@@ -319,7 +326,6 @@ struct HighQualityJobView: View {
             return
         }
         selectedSavedResultID = nil
-        result = nil
         errorMessage = nil
         progress = .init(stage: .validating, fraction: 0, message: "Starting…")
         let job = HighQualityJob()
@@ -337,7 +343,7 @@ struct HighQualityJobView: View {
                 )) { update in
                     Task { @MainActor in progress = update }
                 }
-                result = completed
+                resultPresentation.publish(completed)
                 customSpeakerLabels = initialCustomSpeakerLabels(for: completed)
                 refreshSavedResults()
                 selectedSavedResultID = completed.manifest.jobID
@@ -357,16 +363,13 @@ struct HighQualityJobView: View {
     private func reopenSavedResult(_ id: UUID?) {
         guard let id else {
             guard !isRunning else { return }
-            result = nil
             errorMessage = nil
-            customSpeakerLabels = [:]
             return
         }
         guard let saved = savedResults.first(where: { $0.id == id }) else { return }
         do {
             try showSavedResult(saved)
         } catch {
-            result = nil
             errorMessage = error.localizedDescription
         }
     }
@@ -404,7 +407,7 @@ struct HighQualityJobView: View {
         if let savedTranslator = reopened.manifest.translationModel?.translator {
             translator = savedTranslator
         }
-        result = reopened
+        resultPresentation.publish(reopened)
         errorMessage = nil
         progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
         customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
@@ -502,10 +505,10 @@ struct HighQualityJobView: View {
                 }
                 Button("Apply Labels") {
                     do {
-                        self.result = try HighQualityJob.renameSpeakers(
+                        resultPresentation.publish(try HighQualityJob.renameSpeakers(
                             in: result,
                             names: customSpeakerLabels
-                        )
+                        ))
                     } catch {
                         errorMessage = error.localizedDescription
                     }

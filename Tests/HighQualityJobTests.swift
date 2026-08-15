@@ -41,6 +41,37 @@ final class HighQualityJobTests: XCTestCase {
         ))
     }
 
+    func testPresentationKeepsLastResultUntilANewJobCompletesSuccessfully() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let cue = HighQualityAlignedCue(
+            id: "cue-0001",
+            text: "一。",
+            start: 1,
+            end: 4
+        )
+        func run() async throws -> HighQualityJobResult {
+            try await subtitleFixtureJob(cues: [cue]).run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.englishSubtitles],
+                backend: .qwenJA,
+                outputRoot: root
+            ))
+        }
+        let previous = try await run()
+        let replacement = try await run()
+        var presentation = HighQualityJobResultPresentation(visibleResult: previous)
+
+        presentation.publish(nil) // Candidate cancelled.
+        XCTAssertEqual(presentation.visibleResult?.manifest.jobID, previous.manifest.jobID)
+        presentation.publish(nil) // Candidate failed.
+        XCTAssertEqual(presentation.visibleResult?.manifest.jobID, previous.manifest.jobID)
+
+        presentation.publish(replacement)
+        XCTAssertEqual(presentation.visibleResult?.manifest.jobID, replacement.manifest.jobID)
+    }
+
     func testIndependentSpeakerBetaSettingsReachSpeakerKitManifestAndRawEvidence() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
