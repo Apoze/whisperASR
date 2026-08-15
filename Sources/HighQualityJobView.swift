@@ -95,7 +95,7 @@ struct HighQualityJobView: View {
                 .disabled(isRunning)
             Toggle("Speaker labels", isOn: $speakerBeta.includeLabels)
                 .toggleStyle(.checkbox)
-                .disabled(isRunning)
+                .disabled(isRunning || selectedSavedResultID != nil)
 
             if includeEnglishTranscript || includeEnglishSubtitles {
                 Picker("Local translator", selection: $translator) {
@@ -173,6 +173,18 @@ struct HighQualityJobView: View {
                 }
 
                 if let result {
+                    if let saved = selectedSavedResult,
+                       HighQualityJob.canRerunSpeakers(result) {
+                        Button("Reanalyze Speakers") { rerunSpeakers(saved) }
+                            .disabled(
+                                isRunning || !speakerBeta.includeLabels
+                                    || saved.sourceRelocationMessage != nil
+                            )
+                            .accessibilityIdentifier("high-quality-rerun-speakers")
+                            .accessibilityHint(
+                                "Runs SpeakerKit only and keeps the previous result until completion."
+                            )
+                    }
                     Button("Open Results Folder") {
                         NSWorkspace.shared.open(result.directory)
                     }
@@ -372,6 +384,19 @@ struct HighQualityJobView: View {
         includeEnglishTranscript = deliverables.contains(.englishTranslationTranscript)
         includeEnglishSubtitles = deliverables.contains(.englishSubtitles)
         speakerBeta.includeLabels = reopened.manifest.speakerLabels
+        let configuration = reopened.manifest.speakerConfiguration ?? .standard
+        speakerBeta.enhancedPrecision = configuration.enhancedPrecision
+        speakerBeta.sensitiveDetection = configuration.sensitiveDetection
+        switch configuration.countPolicy.mode {
+        case .automatic:
+            speakerBeta.knowsSpeakerCount = false
+        case .expected:
+            speakerBeta.knowsSpeakerCount = true
+            if let count = configuration.countPolicy.expectedCount,
+               HighQualitySpeakerCountPolicy.validExpectedCounts.contains(count) {
+                speakerBeta.expectedSpeakerCount = count
+            }
+        }
         backend = reopened.manifest.selectedBackend
         if let savedTranslator = reopened.manifest.translationModel?.translator {
             translator = savedTranslator
@@ -380,6 +405,36 @@ struct HighQualityJobView: View {
         errorMessage = nil
         progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
         customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
+    }
+
+    private func rerunSpeakers(_ saved: HighQualitySavedResult) {
+        errorMessage = nil
+        progress = .init(
+            stage: .validating,
+            fraction: 0,
+            message: "Starting SpeakerKit reanalysis…"
+        )
+        let configuration = speakerBeta.configuration
+        let job = HighQualityJob()
+        task = Task {
+            do {
+                let updated = try await job.rerunSpeakers(
+                    saved,
+                    configuration: configuration
+                ) { update in
+                    Task { @MainActor in progress = update }
+                }
+                result = updated
+                customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                refreshSavedResults()
+                selectedSavedResultID = updated.manifest.jobID
+            } catch let error as HighQualityJobError {
+                errorMessage = error.localizedDescription
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            task = nil
+        }
     }
 
     private func initialCustomSpeakerLabels(
@@ -438,6 +493,16 @@ struct HighQualityJobView: View {
         deliverables: Set<HighQualityDeliverable>
     ) -> some View {
         Text("Results").font(.headline)
+        if let reanalysis = result.evidence.speakerReanalyses?.last {
+            Text(
+                "Last SpeakerKit reanalysis: "
+                    + String(format: "%.1f s", reanalysis.wallTime)
+                    + " · peak " + memory(reanalysis.peakMemoryBytes)
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .accessibilityIdentifier("high-quality-speaker-reanalysis-evidence")
+        }
         ScrollView {
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
                 GridRow {
@@ -495,5 +560,12 @@ struct HighQualityJobView: View {
     private func time(_ start: TimeInterval?, _ end: TimeInterval?) -> String {
         guard let start, let end else { return "—" }
         return "\(SubtitleTimecode.webVTT(start))–\(SubtitleTimecode.webVTT(end))"
+    }
+
+    private func memory(_ bytes: UInt64) -> String {
+        ByteCountFormatter.string(
+            fromByteCount: Int64(min(bytes, UInt64(Int64.max))),
+            countStyle: .memory
+        )
     }
 }

@@ -932,6 +932,84 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
     }
 
+    func testRealSavedSpeakerReanalysisWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_SPEAKER_REANALYSIS"] == "1",
+              let evidencePath = environment["WHISPERASR_SPEAKER_REANALYSIS_EVIDENCE"],
+              let sourcePath = environment["WHISPERASR_SPEAKER_REANALYSIS_SOURCE"],
+              let outputPath = environment["WHISPERASR_SPEAKER_REANALYSIS_OUTPUT"],
+              let rawJobID = environment["WHISPERASR_SPEAKER_REANALYSIS_JOB_ID"],
+              let jobID = UUID(uuidString: rawJobID) else {
+            throw XCTSkip("Set the saved evidence, local video, output and job ID for ticket #112.")
+        }
+        let baseline = try Self.frozenEvidence(at: evidencePath)
+        let alignment = try XCTUnwrap(baseline.alignment)
+        let storedDiarization = try XCTUnwrap(baseline.diarization)
+        let stored = FrozenDiarizer(
+            name: "stored-speakerkit-evidence",
+            modelID: storedDiarization.modelID,
+            declaredPeakMemoryBytes: 0,
+            prepare: { _ in },
+            diarize: { _, exclusive, policy in
+                .init(
+                    spans: storedDiarization.rawSpans,
+                    modelID: storedDiarization.modelID,
+                    revision: storedDiarization.revision,
+                    peakMemoryBytes: storedDiarization.peakMemoryBytes,
+                    useExclusiveReconciliation: exclusive,
+                    speakerCountPolicy: policy,
+                    configuration: storedDiarization.configuration
+                )
+            },
+            unload: {}
+        )
+        let initial = try await Self.runFrozenDiarizationExperiment(
+            baseline: baseline,
+            alignment: alignment,
+            sourcePath: sourcePath,
+            outputPath: outputPath,
+            jobID: jobID,
+            diarizer: stored,
+            enforceMemoryGate: false,
+            useExclusiveReconciliation: storedDiarization.useExclusiveReconciliation ?? false,
+            speakerCountPolicy: storedDiarization.speakerCountPolicy ?? .automatic
+        )
+        let saved = try XCTUnwrap(
+            HighQualityJob.savedResults(in: URL(fileURLWithPath: outputPath)).first {
+                $0.id == jobID
+            }
+        )
+
+        let rerun = try await HighQualityJob().rerunSpeakers(
+            saved,
+            configuration: .standard
+        ) { progress in
+            print("[speaker-reanalysis] \(progress.stage.rawValue): \(progress.message)")
+        }
+
+        XCTAssertEqual(rerun.evidence.rawASR, initial.evidence.rawASR)
+        XCTAssertEqual(rerun.evidence.alignment, initial.evidence.alignment)
+        XCTAssertEqual(rerun.evidence.translation, initial.evidence.translation)
+        XCTAssertEqual(
+            rerun.evidence.speakerAttachment?.semanticUnits.map(\.speakerLabel),
+            rerun.turns.map(\.speakerLabel)
+        )
+        XCTAssertEqual(rerun.manifest.asrWorker, initial.manifest.asrWorker)
+        XCTAssertEqual(rerun.evidence.alignment?.worker, initial.evidence.alignment?.worker)
+        XCTAssertEqual(rerun.evidence.translation?.worker, initial.evidence.translation?.worker)
+        XCTAssertEqual(rerun.manifest.speakerReanalysisCount, 1)
+        let evidence = try XCTUnwrap(rerun.evidence.speakerReanalyses?.last)
+        XCTAssertEqual(evidence.configuration, .standard)
+        XCTAssertFalse(evidence.diarization.rawSpans.isEmpty)
+        XCTAssertTrue(evidence.modelEvents.map(\.kind).contains(.unloadCompleted))
+        XCTAssertTrue(evidence.modelEvents.map(\.kind).contains(.memoryReleaseChecked))
+        XCTAssertEqual(try HighQualityJob.reopen(saved).evidence, rerun.evidence)
+        print(
+            "[speaker-reanalysis][result] wall=\(evidence.wallTime)s "
+                + "peak=\(evidence.peakMemoryBytes) directory=\(rerun.directory.path)"
+        )
+    }
+
     private static func frozenEvidence(at path: String) throws -> HighQualityRawEvidence {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
