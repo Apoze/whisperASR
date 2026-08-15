@@ -1,0 +1,2741 @@
+{
+  "asrWorker" : {
+    "backend" : "parakeet-ja",
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11795677184
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11795677184
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11157061632
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11155636224
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11150426112
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11024728064
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11015143424
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10976231424
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967973888
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10850140160
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10751803392
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10739302400
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10437967872
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10281811968
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10279272448
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276339712
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10252664832
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10253238272
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10184032256
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10187096064
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10185834496
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10183229440
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10099671040
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9912156160
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9790259200
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9939779584
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9803628544
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9802334208
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9802334208
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/debug\/WhisperASR",
+        "--high-quality-asr-worker",
+        "parakeet-ja",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-parakeet-ja-5E4EF2FC-BC31-457B-BF6A-D34F066A3310"
+      ],
+      "elapsedSeconds" : 13.402642965316772,
+      "exitStatus" : 0,
+      "exitedAt" : "2026-08-15T11:54:49Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 688260872,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 62021,
+      "rawLog" : "[13:54:37.008] [INFO] [FluidAudio.AsrModels] Downloading ASR models to: \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\n[13:54:37.012] [INFO] [FluidAudio.AsrModels] ASR models already present at: \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\n[13:54:37.012] [INFO] [FluidAudio.AsrModels] Loading ASR models from: \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\n[13:54:37.012] [INFO] [FluidAudio.DownloadUtils] Host environment: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:37.013] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:37.083] [INFO] [FluidAudio.DownloadUtils] Compiled model Preprocessor.mlmodelc in 69.64 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:37.083] [INFO] [FluidAudio.AsrModels] Loaded Preprocessor.mlmodelc with compute units: cpuOnly\n[13:54:37.083] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:48.904] [INFO] [FluidAudio.DownloadUtils] Compiled model Encoder.mlmodelc in 11821.50 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:48.905] [INFO] [FluidAudio.AsrModels] Loaded Encoder.mlmodelc with compute units: cpuAndNeuralEngine\n[13:54:48.905] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:48.916] [INFO] [FluidAudio.DownloadUtils] Compiled model Decoderv2.mlmodelc in 11.04 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:48.916] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:48.928] [INFO] [FluidAudio.DownloadUtils] Compiled model Jointerv2.mlmodelc in 11.83 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:48.928] [INFO] [FluidAudio.AsrModels] Loaded Jointerv2.mlmodelc\n[13:54:48.929] [INFO] [FluidAudio.AsrModels] Loaded vocabulary with 3072 tokens from \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\/vocab.json\n[13:54:48.930] [INFO] [FluidAudio.AsrModels] Successfully loaded all ASR models with optimized compute units\n[13:54:49.330] [DEBUG] [FluidAudio.ChunkProcessor] ChunkProcessor using worker pool of size 4\n[13:54:49.654] [INFO] [FluidAudio.ASR] AsrManager resources cleaned up\n",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-parakeet-ja-5E4EF2FC-BC31-457B-BF6A-D34F066A3310\/worker.log",
+      "startedAt" : "2026-08-15T11:54:36Z",
+      "swapUsedAfterBytes" : 1703477248,
+      "swapUsedBeforeBytes" : 1703477248,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "parakeet-ja",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml",
+      "revision" : "2952296ff1da4a6d6a7aec545e226367db80c612",
+      "weightSHA256" : {
+        "Decoderv2.mlmodelc\/weights\/weight.bin" : "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+        "Encoder.mlmodelc\/weights\/weight.bin" : "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+        "Jointerv2.mlmodelc\/weights\/weight.bin" : "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+        "Preprocessor.mlmodelc\/weights\/weight.bin" : "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9",
+        "vocab.json" : "9db0aa7ab1f5d2714c20a7880cb452d753da91cb10de88cb289cda4fd473d50a"
+      }
+    },
+    "result" : {
+      "chunks" : [
+
+      ],
+      "confidence" : 0.919145405292511,
+      "diagnostics" : {
+        "emptyOutput" : false
+      },
+      "model" : {
+        "backend" : "parakeet-ja",
+        "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml",
+        "revision" : "2952296ff1da4a6d6a7aec545e226367db80c612",
+        "weightSHA256" : {
+          "Decoderv2.mlmodelc\/weights\/weight.bin" : "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+          "Encoder.mlmodelc\/weights\/weight.bin" : "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+          "Jointerv2.mlmodelc\/weights\/weight.bin" : "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+          "Preprocessor.mlmodelc\/weights\/weight.bin" : "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9",
+          "vocab.json" : "9db0aa7ab1f5d2714c20a7880cb452d753da91cb10de88cb289cda4fd473d50a"
+        }
+      },
+      "rawTranscript" : "続いての大将戦ですが天夢萌歌そして立川きました先ほどはね立川もプロとしての意地を見せました。 ぼこぼこにしてくれへん? 達川さんとさ都との出会い知ってる?",
+      "tokenTimings" : [
+        {
+          "confidence" : 0.98681640625,
+          "sourceEnd" : 0.32,
+          "sourceStart" : 0,
+          "text" : " ",
+          "tokenIDs" : [
+            2
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 0.72,
+          "sourceStart" : 0.48,
+          "text" : "続いて",
+          "tokenIDs" : [
+            408
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 0.88,
+          "sourceStart" : 0.72,
+          "text" : "の",
+          "tokenIDs" : [
+            3
+          ]
+        },
+        {
+          "confidence" : 0.99560546875,
+          "sourceEnd" : 1.04,
+          "sourceStart" : 0.88,
+          "text" : "大",
+          "tokenIDs" : [
+            57
+          ]
+        },
+        {
+          "confidence" : 0.9990234375,
+          "sourceEnd" : 1.2,
+          "sourceStart" : 1.04,
+          "text" : "将",
+          "tokenIDs" : [
+            1251
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 1.3599999999999999,
+          "sourceStart" : 1.2,
+          "text" : "戦",
+          "tokenIDs" : [
+            159
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 1.4400000000000002,
+          "sourceStart" : 1.36,
+          "text" : "です",
+          "tokenIDs" : [
+            24
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 1.5999999999999999,
+          "sourceStart" : 1.44,
+          "text" : "が",
+          "tokenIDs" : [
+            4
+          ]
+        },
+        {
+          "confidence" : 0.64306640625,
+          "sourceEnd" : 1.76,
+          "sourceStart" : 1.6,
+          "text" : "天",
+          "tokenIDs" : [
+            825
+          ]
+        },
+        {
+          "confidence" : 0.76318359375,
+          "sourceEnd" : 2,
+          "sourceStart" : 1.84,
+          "text" : "夢",
+          "tokenIDs" : [
+            1239
+          ]
+        },
+        {
+          "confidence" : 0.69970703125,
+          "sourceEnd" : 2.3200000000000003,
+          "sourceStart" : 2.16,
+          "text" : "萌",
+          "tokenIDs" : [
+            2436
+          ]
+        },
+        {
+          "confidence" : 0.73193359375,
+          "sourceEnd" : 2.48,
+          "sourceStart" : 2.32,
+          "text" : "歌",
+          "tokenIDs" : [
+            662
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 2.88,
+          "sourceStart" : 2.56,
+          "text" : "そして",
+          "tokenIDs" : [
+            711
+          ]
+        },
+        {
+          "confidence" : 0.88818359375,
+          "sourceEnd" : 3.04,
+          "sourceStart" : 2.88,
+          "text" : "立",
+          "tokenIDs" : [
+            310
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 3.52,
+          "sourceStart" : 3.2,
+          "text" : "川",
+          "tokenIDs" : [
+            330
+          ]
+        },
+        {
+          "confidence" : 0.888671875,
+          "sourceEnd" : 4.640000000000001,
+          "sourceStart" : 4.32,
+          "text" : "きました",
+          "tokenIDs" : [
+            323
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 8.8,
+          "sourceStart" : 8.48,
+          "text" : "先",
+          "tokenIDs" : [
+            229
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 8.96,
+          "sourceStart" : 8.8,
+          "text" : "ほど",
+          "tokenIDs" : [
+            558
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 9.120000000000001,
+          "sourceStart" : 8.96,
+          "text" : "は",
+          "tokenIDs" : [
+            7
+          ]
+        },
+        {
+          "confidence" : 0.99267578125,
+          "sourceEnd" : 9.360000000000001,
+          "sourceStart" : 9.120000000000001,
+          "text" : "ね",
+          "tokenIDs" : [
+            31
+          ]
+        },
+        {
+          "confidence" : 0.89306640625,
+          "sourceEnd" : 9.52,
+          "sourceStart" : 9.36,
+          "text" : "立",
+          "tokenIDs" : [
+            310
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 10.08,
+          "sourceStart" : 9.76,
+          "text" : "川",
+          "tokenIDs" : [
+            330
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 10.4,
+          "sourceStart" : 10.08,
+          "text" : "も",
+          "tokenIDs" : [
+            11
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 10.72,
+          "sourceStart" : 10.4,
+          "text" : "プロ",
+          "tokenIDs" : [
+            942
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 11.360000000000001,
+          "sourceStart" : 11.040000000000001,
+          "text" : "として",
+          "tokenIDs" : [
+            148
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 11.68,
+          "sourceStart" : 11.36,
+          "text" : "の",
+          "tokenIDs" : [
+            3
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.08,
+          "sourceStart" : 11.84,
+          "text" : "意",
+          "tokenIDs" : [
+            362
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.24,
+          "sourceStart" : 12.08,
+          "text" : "地",
+          "tokenIDs" : [
+            126
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.4,
+          "sourceStart" : 12.24,
+          "text" : "を",
+          "tokenIDs" : [
+            5
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.56,
+          "sourceStart" : 12.4,
+          "text" : "見",
+          "tokenIDs" : [
+            62
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.64,
+          "sourceStart" : 12.56,
+          "text" : "せ",
+          "tokenIDs" : [
+            82
+          ]
+        },
+        {
+          "confidence" : 0.5341796875,
+          "sourceEnd" : 12.8,
+          "sourceStart" : 12.64,
+          "text" : "ました",
+          "tokenIDs" : [
+            48
+          ]
+        },
+        {
+          "confidence" : 0.94921875,
+          "sourceEnd" : 13.280000000000001,
+          "sourceStart" : 12.96,
+          "text" : "。",
+          "tokenIDs" : [
+            1
+          ]
+        },
+        {
+          "confidence" : 0.93017578125,
+          "sourceEnd" : 16.16,
+          "sourceStart" : 15.92,
+          "text" : " ",
+          "tokenIDs" : [
+            2
+          ]
+        },
+        {
+          "confidence" : 0.54931640625,
+          "sourceEnd" : 16.32,
+          "sourceStart" : 16.16,
+          "text" : "ぼ",
+          "tokenIDs" : [
+            664
+          ]
+        },
+        {
+          "confidence" : 0.9990234375,
+          "sourceEnd" : 16.4,
+          "sourceStart" : 16.32,
+          "text" : "こ",
+          "tokenIDs" : [
+            105
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.56,
+          "sourceStart" : 16.4,
+          "text" : "ぼ",
+          "tokenIDs" : [
+            664
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 16.639999999999997,
+          "sourceStart" : 16.56,
+          "text" : "こ",
+          "tokenIDs" : [
+            105
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.8,
+          "sourceStart" : 16.64,
+          "text" : "に",
+          "tokenIDs" : [
+            6
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.88,
+          "sourceStart" : 16.8,
+          "text" : "して",
+          "tokenIDs" : [
+            30
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.959999999999997,
+          "sourceStart" : 16.88,
+          "text" : "く",
+          "tokenIDs" : [
+            26
+          ]
+        },
+        {
+          "confidence" : 0.9921875,
+          "sourceEnd" : 17.12,
+          "sourceStart" : 16.96,
+          "text" : "れ",
+          "tokenIDs" : [
+            74
+          ]
+        },
+        {
+          "confidence" : 0.58544921875,
+          "sourceEnd" : 17.2,
+          "sourceStart" : 17.12,
+          "text" : "へ",
+          "tokenIDs" : [
+            316
+          ]
+        },
+        {
+          "confidence" : 0.9990234375,
+          "sourceEnd" : 17.279999999999998,
+          "sourceStart" : 17.2,
+          "text" : "ん",
+          "tokenIDs" : [
+            33
+          ]
+        },
+        {
+          "confidence" : 0.5732421875,
+          "sourceEnd" : 17.6,
+          "sourceStart" : 17.28,
+          "text" : "?",
+          "tokenIDs" : [
+            25
+          ]
+        },
+        {
+          "confidence" : 0.99755859375,
+          "sourceEnd" : 27.44,
+          "sourceStart" : 27.28,
+          "text" : " ",
+          "tokenIDs" : [
+            2
+          ]
+        },
+        {
+          "confidence" : 0.51513671875,
+          "sourceEnd" : 27.68,
+          "sourceStart" : 27.44,
+          "text" : "達",
+          "tokenIDs" : [
+            783
+          ]
+        },
+        {
+          "confidence" : 0.99755859375,
+          "sourceEnd" : 27.919999999999998,
+          "sourceStart" : 27.68,
+          "text" : "川",
+          "tokenIDs" : [
+            330
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 28.080000000000002,
+          "sourceStart" : 27.92,
+          "text" : "さん",
+          "tokenIDs" : [
+            46
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 28.240000000000002,
+          "sourceStart" : 28.080000000000002,
+          "text" : "と",
+          "tokenIDs" : [
+            10
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 28.560000000000002,
+          "sourceStart" : 28.240000000000002,
+          "text" : "さ",
+          "tokenIDs" : [
+            45
+          ]
+        },
+        {
+          "confidence" : 0.3056640625,
+          "sourceEnd" : 28.8,
+          "sourceStart" : 28.560000000000002,
+          "text" : "都",
+          "tokenIDs" : [
+            419
+          ]
+        },
+        {
+          "confidence" : 0.955078125,
+          "sourceEnd" : 28.96,
+          "sourceStart" : 28.8,
+          "text" : "と",
+          "tokenIDs" : [
+            10
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 29.12,
+          "sourceStart" : 28.96,
+          "text" : "の",
+          "tokenIDs" : [
+            3
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.28,
+          "sourceStart" : 29.12,
+          "text" : "出",
+          "tokenIDs" : [
+            64
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.36,
+          "sourceStart" : 29.28,
+          "text" : "会",
+          "tokenIDs" : [
+            139
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.52,
+          "sourceStart" : 29.36,
+          "text" : "い",
+          "tokenIDs" : [
+            12
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 29.68,
+          "sourceStart" : 29.52,
+          "text" : "知",
+          "tokenIDs" : [
+            266
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 29.759999999999998,
+          "sourceStart" : 29.68,
+          "text" : "って",
+          "tokenIDs" : [
+            17
+          ]
+        },
+        {
+          "confidence" : 0.845703125,
+          "sourceEnd" : 29.84,
+          "sourceStart" : 29.76,
+          "text" : "る",
+          "tokenIDs" : [
+            14
+          ]
+        },
+        {
+          "confidence" : 0.8603515625,
+          "sourceEnd" : 29.919999999999998,
+          "sourceStart" : 29.84,
+          "text" : "?",
+          "tokenIDs" : [
+            25
+          ]
+        }
+      ]
+    }
+  },
+  "failures" : [
+
+  ],
+  "generatedFiles" : [
+    {
+      "kind" : "deliverable",
+      "path" : "japanese-transcript.txt"
+    },
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "glossary" : {
+    "budget" : {
+      "maxEncodedBytes" : 2048,
+      "maxEntries" : 12,
+      "maxFalseCorrectionRisk" : 0,
+      "maxInputTokenShare" : 0.25,
+      "maxScoringOperations" : 512
+    },
+    "contextBytes" : 1036,
+    "coverageLimit" : "Sourced high-frequency terms only; coverage is not universal and new releases, source names, slang, and context-dependent translations may be absent.",
+    "decisions" : [
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 109,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Akuma",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Gouki"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "akuma",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "豪鬼",
+            "ごうき",
+            "Gouki",
+            "Akuma"
+          ],
+          "officialJapanese" : "豪鬼",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/character\/akuma",
+            "https:\/\/www.streetfighter.com\/6\/en-us\/character\/akuma"
+          ],
+          "sourceScope" : "Street Fighter character",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 155,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Amayui Moka",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Moka Amayui"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "amayui-moka",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "甘結もか",
+            "あまゆいもか",
+            "Amayui Moka",
+            "甘いモカ"
+          ],
+          "officialJapanese" : "甘結もか",
+          "provenance" : [
+            "https:\/\/vspo.jp\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 139,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "エペ"
+          ],
+          "canonicalEnglish" : "Apex Legends",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "apex-legends",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "エーペックスレジェンズ",
+            "Apex Legends",
+            "エペ"
+          ],
+          "officialJapanese" : "エーペックスレジェンズ",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja-jp\/games\/apex-legends\/about\/frequently-asked-questions"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 116,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "リング",
+            "安置",
+            "あんち"
+          ],
+          "canonicalEnglish" : "the Ring",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "safe zone"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "apex-ring",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "リング",
+            "安置",
+            "あんち"
+          ],
+          "officialJapanese" : "リング",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja-jp\/games\/apex-legends\/about\/frequently-asked-questions"
+          ],
+          "sourceScope" : "Apex Legends play area",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "進撃"
+          ],
+          "canonicalEnglish" : "Attack on Titan",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "attack-on-titan",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "進撃の巨人",
+            "進撃"
+          ],
+          "officialJapanese" : "進撃の巨人",
+          "provenance" : [
+            "https:\/\/shingeki.tv\/final\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 100,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Burnout",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "burnout",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "バーンアウト",
+            "Burnout"
+          ],
+          "officialJapanese" : "バーンアウト",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6\/ja\/steam\/page\/3\/2",
+            "https:\/\/game.capcom.com\/manual\/SF6\/en\/switch2\/page\/3\/3"
+          ],
+          "sourceScope" : "Street Fighter 6 system state",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 142,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Chainsaw Man",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "chainsaw-man",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "チェンソーマン",
+            "ちぇんそーまん",
+            "Chainsaw Man"
+          ],
+          "officialJapanese" : "チェンソーマン",
+          "provenance" : [
+            "https:\/\/chainsawman.dog\/",
+            "https:\/\/www.viz.com\/chainsaw-man"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 136,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Demon Raid",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Hyakki Shu"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "demon-raid",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "百鬼襲",
+            "ひゃっきしゅう",
+            "Hyakki Shu"
+          ],
+          "officialJapanese" : "百鬼襲",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/character\/akuma",
+            "https:\/\/www.streetfighter.com\/6\/en-us\/character\/akuma"
+          ],
+          "sourceScope" : "Street Fighter 6 move",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 135,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "鬼滅"
+          ],
+          "canonicalEnglish" : "Demon Slayer: Kimetsu no Yaiba",
+          "domain" : "anime",
+          "englishAliases" : [
+            "Demon Slayer"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "demon-slayer",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "鬼滅の刃",
+            "鬼滅"
+          ],
+          "officialJapanese" : "鬼滅の刃",
+          "provenance" : [
+            "https:\/\/demonslayer-anime.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 124,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Drive Impact",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "drive-impact",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ドライブインパクト",
+            "Drive Impact"
+          ],
+          "officialJapanese" : "ドライブインパクト",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6"
+          ],
+          "sourceScope" : "Street Fighter 6 system mechanic",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 180,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Frieren: Beyond Journey's End",
+          "domain" : "anime",
+          "englishAliases" : [
+            "Frieren"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "frieren",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "葬送のフリーレン",
+            "そうそうのフリーレン",
+            "Sousou no Frieren"
+          ],
+          "officialJapanese" : "葬送のフリーレン",
+          "provenance" : [
+            "https:\/\/frieren-anime.jp\/",
+            "https:\/\/www.viz.com\/frieren-beyond-journeys-end"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 167,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thank you for the meal",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "gochisosama",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "ごちそうさまでした",
+            "ご馳走さまでした",
+            "gochisosama deshita"
+          ],
+          "officialJapanese" : "ごちそうさまでした",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 139,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Nice to meet you",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "hajimemashite",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "初めまして",
+            "はじめまして",
+            "hajimemashite"
+          ],
+          "officialJapanese" : "初めまして",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/en\/starter\/pdf.html"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 119,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ホロ"
+          ],
+          "canonicalEnglish" : "hololive",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "hololive production"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "hololive",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ホロライブ",
+            "ホロ"
+          ],
+          "officialJapanese" : "ホロライブ",
+          "provenance" : [
+            "https:\/\/hololive.hololivepro.com\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 134,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Let's eat",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Thank you for the food"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "itadakimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "いただきます",
+            "itadakimasu"
+          ],
+          "officialJapanese" : "いただきます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 146,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "I'm leaving",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "See you later"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "ittekimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "行ってきます",
+            "いってきます",
+            "ittekimasu"
+          ],
+          "officialJapanese" : "行ってきます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "呪術"
+          ],
+          "canonicalEnglish" : "JUJUTSU KAISEN",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "jujutsu-kaisen",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "呪術廻戦",
+            "呪術"
+          ],
+          "officialJapanese" : "呪術廻戦",
+          "provenance" : [
+            "https:\/\/jujutsukaisen.jp\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 156,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "keyboard and mouse",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "mouse and keyboard"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "keyboard-and-mouse",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "キーボードとマウス",
+            "キーマウ"
+          ],
+          "officialJapanese" : "キーボードとマウス",
+          "provenance" : [
+            "https:\/\/www.playstation.com\/ja-jp\/support\/hardware\/keyboard-mouse-ps5\/"
+          ],
+          "sourceScope" : "gaming input method",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 112,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "マイクラ"
+          ],
+          "canonicalEnglish" : "Minecraft",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "minecraft",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "マインクラフト",
+            "マイクラ"
+          ],
+          "officialJapanese" : "マインクラフト",
+          "provenance" : [
+            "https:\/\/www.minecraft.net\/ja-jp"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 94,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ミラージュ"
+          ],
+          "canonicalEnglish" : "Mirage",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "mirage",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ミラージュ",
+            "Mirage"
+          ],
+          "officialJapanese" : "ミラージュ",
+          "provenance" : [
+            "https:\/\/www.ea.com\/ja\/games\/apex-legends\/apex-legends\/characters-hub\/mirage"
+          ],
+          "sourceScope" : "Apex Legends character",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 166,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "モダン"
+          ],
+          "canonicalEnglish" : "Modern controls",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "Modern control type"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "modern-controls",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "モダン操作",
+            "モダンコントロール",
+            "モダン"
+          ],
+          "officialJapanese" : "モダン操作",
+          "provenance" : [
+            "https:\/\/game.capcom.com\/manual\/SF6"
+          ],
+          "sourceScope" : "Street Fighter 6 control type",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 138,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "My Hero Academia",
+          "domain" : "anime",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "my-hero-academia",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "僕のヒーローアカデミア",
+            "ヒロアカ"
+          ],
+          "officialJapanese" : "僕のヒーローアカデミア",
+          "provenance" : [
+            "https:\/\/heroaca.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 106,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "NIJISANJI",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "nijisanji",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "にじさんじ",
+            "虹さんじ"
+          ],
+          "officialJapanese" : "にじさんじ",
+          "provenance" : [
+            "https:\/\/www.nijisanji.jp\/en"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 130,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Good morning",
+          "domain" : "conversation",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "ohayo-gozaimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "おはようございます",
+            "ohayo gozaimasu"
+          ],
+          "officialJapanese" : "おはようございます",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/en\/starter\/pdf.html"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 132,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "ONE PIECE",
+          "domain" : "anime",
+          "englishAliases" : [
+            "One Piece"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "one-piece",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ONE PIECE",
+            "ワンピース",
+            "わんぴーす"
+          ],
+          "officialJapanese" : "ONE PIECE",
+          "provenance" : [
+            "https:\/\/one-piece.com\/"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 153,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Oshi No Ko",
+          "domain" : "anime",
+          "englishAliases" : [
+            "[Oshi No Ko]"
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "oshi-no-ko",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "【推しの子】",
+            "推しの子",
+            "おしのこ",
+            "Oshi no Ko"
+          ],
+          "officialJapanese" : "【推しの子】",
+          "provenance" : [
+            "https:\/\/ichigoproduction.com\/",
+            "https:\/\/yenpress.com\/series\/oshi-no-ko"
+          ],
+          "sourceScope" : "anime",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 151,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thanks for your hard work",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Good work"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "otsukaresama",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "お疲れさま",
+            "お疲れ様",
+            "otsukaresama"
+          ],
+          "officialJapanese" : "お疲れさま",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/wordlist_X.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 108,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "senior",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "senpai"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "senpai",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "先輩",
+            "せんぱい",
+            "senpai"
+          ],
+          "officialJapanese" : "先輩",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 170,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "レイド"
+          ],
+          "canonicalEnglish" : "Shirayuki Reid",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Reid Shirayuki"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "shirayuki-reid",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "白雪レイド",
+            "しらゆきレイド",
+            "Shirayuki Reid",
+            "レイド"
+          ],
+          "officialJapanese" : "白雪レイド",
+          "provenance" : [
+            "https:\/\/neo-porte.jp\/member\/shirayuki-reid"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 141,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "ストロク"
+          ],
+          "canonicalEnglish" : "Street Fighter 6",
+          "domain" : "gaming",
+          "englishAliases" : [
+            "SF6"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "street-fighter-6",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "ストリートファイター6",
+            "ストロク"
+          ],
+          "officialJapanese" : "ストリートファイター6",
+          "provenance" : [
+            "https:\/\/www.streetfighter.com\/6\/ja-jp\/"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 124,
+        "falseCorrectionRisk" : 1,
+        "guidance" : "hard",
+        "reason" : "false-correction-risk budget",
+        "score" : 16,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+          {
+            "cueID" : "cue-0001",
+            "matchedForm" : "立川",
+            "source" : "recognized-japanese",
+            "weight" : 16
+          }
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "立川",
+            "たちかわ"
+          ],
+          "canonicalEnglish" : "Tachikawa",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "tachikawa",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "立川選手",
+            "Tachikawa",
+            "立川",
+            "たちかわ"
+          ],
+          "officialJapanese" : "立川選手",
+          "provenance" : [
+            "https:\/\/burning-core.com\/teams\/tachikawa"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 103,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VALORANT",
+          "domain" : "gaming",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "valorant",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ヴァロラント",
+            "VALORANT"
+          ],
+          "officialJapanese" : "ヴァロラント",
+          "provenance" : [
+            "https:\/\/playvalorant.com\/ja-jp\/"
+          ],
+          "sourceScope" : "gaming",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 107,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "fixed",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "VSPO!",
+          "domain" : "vtuber",
+          "englishAliases" : [
+
+          ],
+          "exclusionRule" : "Reject when no exact source relevance signal is present.",
+          "id" : "vspo",
+          "inclusionRule" : "Select only when an exact Japanese or metadata form is present.",
+          "japaneseForms" : [
+            "ぶいすぽっ！",
+            "ぶいすぽ",
+            "VSPO"
+          ],
+          "officialJapanese" : "ぶいすぽっ！",
+          "provenance" : [
+            "https:\/\/vspo.jp\/en\/"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 152,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "hard",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "common-word",
+          "ambiguousJapaneseForms" : [
+            "くろむ"
+          ],
+          "canonicalEnglish" : "Yano Kuromu",
+          "domain" : "vtuber",
+          "englishAliases" : [
+            "Kuromu Yano"
+          ],
+          "exclusionRule" : "Reject an ambiguous short form unless metadata or the full Japanese form confirms it.",
+          "id" : "yano-kuromu",
+          "inclusionRule" : "Select an ambiguous form only when source metadata or an unambiguous full form confirms it.",
+          "japaneseForms" : [
+            "夜乃くろむ",
+            "やのくろむ",
+            "Yano Kuromu",
+            "くろむ"
+          ],
+          "officialJapanese" : "夜乃くろむ",
+          "provenance" : [
+            "https:\/\/www.youtube.com\/@YanoKuromu"
+          ],
+          "sourceScope" : "vtuber",
+          "verifiedOn" : "2026-08-10"
+        }
+      },
+      {
+        "applicableCueIDs" : [
+
+        ],
+        "encodedSize" : 175,
+        "falseCorrectionRisk" : 0,
+        "guidance" : "soft",
+        "reason" : "no cue-local relevance signal",
+        "score" : 0,
+        "selected" : false,
+        "selectedCueIDs" : [
+
+        ],
+        "signals" : [
+
+        ],
+        "term" : {
+          "ambiguityClass" : "context-dependent",
+          "ambiguousJapaneseForms" : [
+
+          ],
+          "canonicalEnglish" : "Thank you in advance",
+          "domain" : "conversation",
+          "englishAliases" : [
+            "Nice to meet you"
+          ],
+          "exclusionRule" : "Reject without an exact form and never require the canonical wording when context favors another translation.",
+          "id" : "yoroshiku-onegaishimasu",
+          "inclusionRule" : "Select as soft guidance only when an exact Japanese form is present.",
+          "japaneseForms" : [
+            "よろしくお願いします",
+            "yoroshiku onegaishimasu"
+          ],
+          "officialJapanese" : "よろしくお願いします",
+          "provenance" : [
+            "https:\/\/www.irodori.jpf.go.jp\/assets\/data\/Grammar_all.pdf"
+          ],
+          "sourceScope" : "conversation",
+          "verifiedOn" : "2026-08-10"
+        }
+      }
+    ],
+    "encodedSize" : 2,
+    "scoringOperations" : 231,
+    "terminologyRegister" : {
+
+    },
+    "tokenShareByCueID" : {
+      "cue-0001" : 0.00048828125,
+      "cue-0002" : 0.00048828125,
+      "cue-0003" : 0.00048828125
+    }
+  },
+  "model" : {
+    "backend" : "parakeet-ja",
+    "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml",
+    "revision" : "2952296ff1da4a6d6a7aec545e226367db80c612",
+    "weightSHA256" : {
+      "Decoderv2.mlmodelc\/weights\/weight.bin" : "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+      "Encoder.mlmodelc\/weights\/weight.bin" : "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+      "Jointerv2.mlmodelc\/weights\/weight.bin" : "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+      "Preprocessor.mlmodelc\/weights\/weight.bin" : "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9",
+      "vocab.json" : "9db0aa7ab1f5d2714c20a7880cb452d753da91cb10de88cb289cda4fd473d50a"
+    }
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-15T11:54:36Z",
+      "backend" : "parakeet-ja",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=4294967296 reserve=0 total=25769803776 available=11795595264 baseline=26116984",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:36Z",
+      "backend" : "parakeet-ja",
+      "kind" : "load-started",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:49Z",
+      "backend" : "parakeet-ja",
+      "kind" : "load-completed",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:49Z",
+      "backend" : "parakeet-ja",
+      "kind" : "unload-completed",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:49Z",
+      "backend" : "parakeet-ja",
+      "kind" : "memory-release-checked",
+      "message" : "memory=27214712 runtimePeak=27083640 minimumAvailable=9790291968 maximum=25769803776 reserve=0",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    }
+  ],
+  "peakMemoryBytes" : 688260872,
+  "rawASR" : "続いての大将戦ですが天夢萌歌そして立川きました先ほどはね立川もプロとしての意地を見せました。 ぼこぼこにしてくれへん? 達川さんとさ都との出会い知ってる?",
+  "sampleCount" : 480000,
+  "sampleRate" : 16000,
+  "source" : {
+    "byteCount" : 960078,
+    "fileName" : "dev-30s.wav",
+    "modifiedAt" : "2026-08-15T11:53:29Z",
+    "path" : "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/benchmarks\/issue-116\/controls\/dev-30s.wav"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "stageDurations" : [
+    "transcribing",
+    0.4262399673461914,
+    "exporting",
+    0.003719925880432129,
+    "preparing-asr",
+    13.006732106208801,
+    "normalizing-source",
+    0.08290994167327881
+  ]
+}

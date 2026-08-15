@@ -321,11 +321,9 @@ struct HighQualityASRSegmentEvidence: Codable, Equatable, Sendable {
 }
 
 struct HighQualityASRDiagnostics: Codable, Equatable, Sendable {
-    let speechDetected: Bool?
     let emptyOutput: Bool?
 
-    init(speechDetected: Bool? = nil, emptyOutput: Bool? = nil) {
-        self.speechDetected = speechDetected
+    init(emptyOutput: Bool? = nil) {
         self.emptyOutput = emptyOutput
     }
 }
@@ -1499,28 +1497,12 @@ struct HighQualityJob: Sendable {
                 start = boundary.index
                 previousBoundaryWasSilent = boundary.isSilent
             }
-            let result = backendWindows.count == 1 ? backendWindows[0].result : nil
-            let hasWindowEvidence = backendWindows.contains {
-                $0.result.model != nil
-                    || $0.result.segments != nil
-                    || $0.result.tokenTimings != nil
-                    || $0.result.wordTimings != nil
-                    || $0.result.confidence != nil
-                    || $0.result.averageLogProbability != nil
-                    || $0.result.diagnostics != nil
-            }
             return .init(
                 rawTranscript: chunks.map(\.transcript).joined(separator: "\n"),
                 chunks: chunks,
                 characters: characters,
                 model: model,
-                segments: result?.segments,
-                tokenTimings: result?.tokenTimings,
-                wordTimings: result?.wordTimings,
-                confidence: result?.confidence,
-                averageLogProbability: result?.averageLogProbability,
-                diagnostics: result?.diagnostics,
-                windows: backendWindows.count > 1 && hasWindowEvidence ? backendWindows : nil
+                windows: backendWindows.isEmpty ? nil : backendWindows
             )
         }
 

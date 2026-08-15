@@ -1,0 +1,2663 @@
+{
+  "asrWorker" : {
+    "backend" : "whisperkit",
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-15T11:59:20Z",
+          "availableMemoryBytes" : 8743092224
+        },
+        {
+          "at" : "2026-08-15T11:59:20Z",
+          "availableMemoryBytes" : 8743092224
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8742354944
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 8642347008
+        },
+        {
+          "at" : "2026-08-15T11:59:21Z",
+          "availableMemoryBytes" : 7995801600
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7995146240
+        },
+        {
+          "at" : "2026-08-15T11:59:22Z",
+          "availableMemoryBytes" : 7926726656
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7927021568
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7928020992
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7928020992
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7929413632
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7929413632
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7929413632
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7929413632
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7929413632
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7929413632
+        },
+        {
+          "at" : "2026-08-15T11:59:23Z",
+          "availableMemoryBytes" : 7932067840
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7932264448
+        },
+        {
+          "at" : "2026-08-15T11:59:24Z",
+          "availableMemoryBytes" : 7998734336
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7998881792
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:25Z",
+          "availableMemoryBytes" : 7997685760
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7879376896
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7562936320
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7068073984
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7332806656
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7332806656
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7332806656
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7332806656
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7332806656
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7332806656
+        },
+        {
+          "at" : "2026-08-15T11:59:26Z",
+          "availableMemoryBytes" : 7332806656
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6120882176
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:27Z",
+          "availableMemoryBytes" : 6123847680
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120243200
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:28Z",
+          "availableMemoryBytes" : 6120259584
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6185943040
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:29Z",
+          "availableMemoryBytes" : 6241976320
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6159302656
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:30Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6089785344
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6089326592
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6091259904
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6091685888
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6085574656
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6087016448
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6087016448
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6087016448
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6087016448
+        },
+        {
+          "at" : "2026-08-15T11:59:31Z",
+          "availableMemoryBytes" : 6087016448
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6094340096
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6093651968
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090063872
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090244096
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090244096
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090244096
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090244096
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090244096
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090244096
+        },
+        {
+          "at" : "2026-08-15T11:59:32Z",
+          "availableMemoryBytes" : 6090244096
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6157303808
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158155776
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:33Z",
+          "availableMemoryBytes" : 6158106624
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6165233664
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6164168704
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6166364160
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6097977344
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6097977344
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6097977344
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6097977344
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6097977344
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6097977344
+        },
+        {
+          "at" : "2026-08-15T11:59:34Z",
+          "availableMemoryBytes" : 6097977344
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6094602240
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6092357632
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6092242944
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6088392704
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6088392704
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6088392704
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6088392704
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6088392704
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6088392704
+        },
+        {
+          "at" : "2026-08-15T11:59:35Z",
+          "availableMemoryBytes" : 6088392704
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6096994304
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:36Z",
+          "availableMemoryBytes" : 6098845696
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6159990784
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6161842176
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6163857408
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6159548416
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6159433728
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6159433728
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6159433728
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6159433728
+        },
+        {
+          "at" : "2026-08-15T11:59:37Z",
+          "availableMemoryBytes" : 6159433728
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6159433728
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6166560768
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6164545536
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:38Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6162432000
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6043631616
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6044319744
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6047596544
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6047105024
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6047105024
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6047203328
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6047203328
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6047203328
+        },
+        {
+          "at" : "2026-08-15T11:59:39Z",
+          "availableMemoryBytes" : 6047203328
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6047203328
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6105120768
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:40Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6106857472
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6182502400
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:41Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6184304640
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6205784064
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6207373312
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6207651840
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6144589824
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6147096576
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6147096576
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6147096576
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6147096576
+        },
+        {
+          "at" : "2026-08-15T11:59:42Z",
+          "availableMemoryBytes" : 6147096576
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6147096576
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6141165568
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6145064960
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6138675200
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6145294336
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6145294336
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6145294336
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6145294336
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6145294336
+        },
+        {
+          "at" : "2026-08-15T11:59:43Z",
+          "availableMemoryBytes" : 6145294336
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6145294336
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6148603904
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6147571712
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:44Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:45Z",
+          "availableMemoryBytes" : 6154829824
+        },
+        {
+          "at" : "2026-08-15T11:59:45Z",
+          "availableMemoryBytes" : 6154829824
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/debug\/WhisperASR",
+        "--high-quality-asr-worker",
+        "whisperkit",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-whisperkit-28C56FAB-38CD-4E69-9F76-1B6C5D682D48"
+      ],
+      "elapsedSeconds" : 24.263280987739563,
+      "exitStatus" : 0,
+      "exitedAt" : "2026-08-15T11:59:45Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 3114404792,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 63156,
+      "rawLog" : "",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-whisperkit-28C56FAB-38CD-4E69-9F76-1B6C5D682D48\/worker.log",
+      "startedAt" : "2026-08-15T11:59:20Z",
+      "swapUsedAfterBytes" : 1703477248,
+      "swapUsedBeforeBytes" : 1703477248,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "whisperkit",
+      "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3",
+      "revision" : "97a5bf9bbc74c7d9c12c755d04dea59e672e3808",
+      "runtimeVersion" : "1.1.0",
+      "weightSHA256" : {
+        "AudioEncoder.mlmodelc\/weights\/weight.bin" : "eb07bab32dcd62ce653b5b288bd6c27bdc5a538be309f242e33ed05e1cb53457",
+        "MelSpectrogram.mlmodelc\/weights\/weight.bin" : "97a66b915cd3fc97dcba6806d92381e1a56024b8f68c1a1cd370d4c92505fe87",
+        "TextDecoder.mlmodelc\/weights\/weight.bin" : "680f398925225a313c62da0221aa0a58c9f1bffac5c36f20c449a70a7c9b1e55"
+      }
+    },
+    "result" : {
+      "averageLogProbability" : -0.35305967926979065,
+      "chunks" : [
+
+      ],
+      "diagnostics" : {
+        "emptyOutput" : false
+      },
+      "model" : {
+        "backend" : "whisperkit",
+        "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3",
+        "revision" : "97a5bf9bbc74c7d9c12c755d04dea59e672e3808",
+        "runtimeVersion" : "1.1.0",
+        "weightSHA256" : {
+          "AudioEncoder.mlmodelc\/weights\/weight.bin" : "eb07bab32dcd62ce653b5b288bd6c27bdc5a538be309f242e33ed05e1cb53457",
+          "MelSpectrogram.mlmodelc\/weights\/weight.bin" : "97a66b915cd3fc97dcba6806d92381e1a56024b8f68c1a1cd370d4c92505fe87",
+          "TextDecoder.mlmodelc\/weights\/weight.bin" : "680f398925225a313c62da0221aa0a58c9f1bffac5c36f20c449a70a7c9b1e55"
+        }
+      },
+      "rawTranscript" : "続いての対処戦ですが、アマユミ、モカ、そして立川来ましたモカさん頑張れ頑張れ頑張れ先程は立川もプロとしての意地を見せましたPCR GTAで人のパンツ覗いてきた人のことなんかボコボコにしてくれんええそうなの?最低だなそうなんやろ私とクロンさんのパンツ覗いてきたから立川さんえぇ許せないそれくらいの都合に来てると立川さんとさぁ 都との出会い知ってるの?",
+      "segments" : [
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 0,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 3.359999895095825,
+          "sourceStart" : 0.019999999552965164,
+          "text" : "<|startoftranscript|><|ja|><|transcribe|><|0.00|>続いての対処戦ですが、アマユミ、モカ、そして立川<|4.00|>",
+          "tokenIDs" : [
+            50258,
+            50266,
+            50360,
+            50365,
+            44985,
+            18549,
+            2972,
+            35252,
+            6336,
+            99,
+            1486,
+            99,
+            4767,
+            5142,
+            1231,
+            12817,
+            13258,
+            1047,
+            99,
+            23196,
+            1231,
+            29183,
+            10111,
+            1231,
+            25092,
+            24409,
+            27905,
+            50565
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 1,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 4.900000095367432,
+          "sourceStart" : 4.610000133514404,
+          "text" : "<|4.00|>来ました<|5.00|>",
+          "tokenIDs" : [
+            50565,
+            6912,
+            12072,
+            50615
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 2,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 6.199999809265137,
+          "sourceStart" : 5.050000190734863,
+          "text" : "<|5.00|>モカさん頑張れ<|7.00|>",
+          "tokenIDs" : [
+            50615,
+            29183,
+            10111,
+            15567,
+            8313,
+            239,
+            18889,
+            4132,
+            50715
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 3,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 7.460000038146973,
+          "sourceStart" : 6.760000228881836,
+          "text" : "<|7.00|>頑張れ<|8.00|>",
+          "tokenIDs" : [
+            50715,
+            8313,
+            239,
+            18889,
+            4132,
+            50765
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 4,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 8.65999984741211,
+          "sourceStart" : 8.020000457763672,
+          "text" : "<|8.00|>頑張れ<|9.00|>",
+          "tokenIDs" : [
+            50765,
+            8313,
+            239,
+            18889,
+            4132,
+            50815
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 5,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 12.9399995803833,
+          "sourceStart" : 8.680000305175781,
+          "text" : "<|9.00|>先程は立川もプロとしての意地を見せました<|13.00|>",
+          "tokenIDs" : [
+            50815,
+            10108,
+            29649,
+            3065,
+            24409,
+            27905,
+            4801,
+            20953,
+            17164,
+            3193,
+            8822,
+            2972,
+            9042,
+            10928,
+            5998,
+            10470,
+            13702,
+            12072,
+            51015
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 6,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 17.18000030517578,
+          "sourceStart" : 13.029999732971191,
+          "text" : "<|13.00|>PCR GTAで人のパンツ覗いてきた人のことなんかボコボコにしてくれん<|17.00|>",
+          "tokenIDs" : [
+            51015,
+            12986,
+            49,
+            35575,
+            2474,
+            4035,
+            2972,
+            23268,
+            14121,
+            226,
+            2888,
+            245,
+            18549,
+            49809,
+            4035,
+            2972,
+            13235,
+            27646,
+            37626,
+            18066,
+            37626,
+            18066,
+            4108,
+            8822,
+            6134,
+            4132,
+            3225,
+            51215
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 7,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 19.360000610351562,
+          "sourceStart" : 17.280000686645508,
+          "text" : "<|17.00|>ええそうなの?最低だな<|19.00|>",
+          "tokenIDs" : [
+            51215,
+            39643,
+            9955,
+            3203,
+            2972,
+            30,
+            8661,
+            41377,
+            5362,
+            3203,
+            51315
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 8,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 20.079999923706055,
+          "sourceStart" : 19.420000076293945,
+          "text" : "<|19.00|>そうなんやろ<|20.00|>",
+          "tokenIDs" : [
+            51315,
+            9955,
+            11847,
+            7355,
+            12488,
+            51365
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 9,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 24.479999542236328,
+          "sourceStart" : 21.299999237060547,
+          "text" : "<|20.00|>私とクロンさんのパンツ覗いてきたから立川さん<|24.00|>",
+          "tokenIDs" : [
+            51365,
+            20083,
+            3193,
+            10825,
+            17164,
+            4824,
+            15567,
+            2972,
+            23268,
+            14121,
+            226,
+            2888,
+            245,
+            18549,
+            49809,
+            11046,
+            24409,
+            27905,
+            15567,
+            51565
+          ]
+        },
+        {
+          "averageLogProbability" : -0.33141663670539856,
+          "compressionRatio" : 1.6585365533828735,
+          "index" : 10,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 26,
+          "sourceStart" : 24.559999465942383,
+          "text" : "<|24.00|>えぇ許せない<|26.00|>",
+          "tokenIDs" : [
+            51565,
+            6474,
+            20861,
+            40914,
+            13702,
+            9311,
+            51665
+          ]
+        },
+        {
+          "averageLogProbability" : -0.4421052038669586,
+          "compressionRatio" : 1.1546391248703003,
+          "index" : 11,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 27.280000686645508,
+          "sourceStart" : 26.020000457763672,
+          "text" : "<|startoftranscript|><|ja|><|transcribe|><|0.00|>それくらいの都合に来てると<|2.00|>",
+          "tokenIDs" : [
+            50258,
+            50266,
+            50360,
+            50365,
+            13873,
+            6134,
+            38052,
+            2972,
+            7182,
+            14245,
+            4108,
+            6912,
+            2996,
+            4895,
+            3193,
+            50465
+          ]
+        },
+        {
+          "averageLogProbability" : -0.4421052038669586,
+          "compressionRatio" : 1.1546391248703003,
+          "index" : 12,
+          "noSpeechProbability" : 0,
+          "sourceEnd" : 30,
+          "sourceStart" : 27.280000686645508,
+          "text" : "<|2.00|>立川さんとさぁ 都との出会い知ってるの?<|4.00|>",
+          "tokenIDs" : [
+            50465,
+            24409,
+            27905,
+            15567,
+            3193,
+            6722,
+            11951,
+            220,
+            7182,
+            3193,
+            2972,
+            7781,
+            12949,
+            1764,
+            6498,
+            45350,
+            2972,
+            30,
+            50565
+          ]
+        }
+      ],
+      "wordTimings" : [
+        {
+          "confidence" : 0.36000001430511475,
+          "sourceEnd" : 0.5199999809265137,
+          "sourceStart" : 0.019999999552965164,
+          "text" : "続",
+          "tokenIDs" : [
+            44985
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 0.8600000143051147,
+          "sourceStart" : 0.5199999809265137,
+          "text" : "いて",
+          "tokenIDs" : [
+            18549
+          ]
+        },
+        {
+          "confidence" : 0.9300000071525574,
+          "sourceEnd" : 0.9599999785423279,
+          "sourceStart" : 0.8600000143051147,
+          "text" : "の",
+          "tokenIDs" : [
+            2972
+          ]
+        },
+        {
+          "confidence" : 0.9599999785423279,
+          "sourceEnd" : 1.1399999856948853,
+          "sourceStart" : 0.9599999785423279,
+          "text" : "対",
+          "tokenIDs" : [
+            35252
+          ]
+        },
+        {
+          "confidence" : 0.6200000047683716,
+          "sourceEnd" : 1.2599999904632568,
+          "sourceStart" : 1.1399999856948853,
+          "text" : "処",
+          "tokenIDs" : [
+            6336,
+            99
+          ]
+        },
+        {
+          "confidence" : 0.9399999976158142,
+          "sourceEnd" : 1.3600000143051147,
+          "sourceStart" : 1.2599999904632568,
+          "text" : "戦",
+          "tokenIDs" : [
+            1486,
+            99
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 1.5399999618530273,
+          "sourceStart" : 1.3600000143051147,
+          "text" : "です",
+          "tokenIDs" : [
+            4767
+          ]
+        },
+        {
+          "confidence" : 0.9599999785423279,
+          "sourceEnd" : 1.6799999475479126,
+          "sourceStart" : 1.5399999618530273,
+          "text" : "が、",
+          "tokenIDs" : [
+            5142,
+            1231
+          ]
+        },
+        {
+          "confidence" : 0.20999999344348907,
+          "sourceEnd" : 1.8200000524520874,
+          "sourceStart" : 1.7599999904632568,
+          "text" : "ア",
+          "tokenIDs" : [
+            12817
+          ]
+        },
+        {
+          "confidence" : 0.9399999976158142,
+          "sourceEnd" : 1.9199999570846558,
+          "sourceStart" : 1.8200000524520874,
+          "text" : "マ",
+          "tokenIDs" : [
+            13258
+          ]
+        },
+        {
+          "confidence" : 0.9700000286102295,
+          "sourceEnd" : 2.0199999809265137,
+          "sourceStart" : 1.9199999570846558,
+          "text" : "ユ",
+          "tokenIDs" : [
+            1047,
+            99
+          ]
+        },
+        {
+          "confidence" : 0.8500000238418579,
+          "sourceEnd" : 2.0999999046325684,
+          "sourceStart" : 2.0199999809265137,
+          "text" : "ミ、",
+          "tokenIDs" : [
+            23196,
+            1231
+          ]
+        },
+        {
+          "confidence" : 0.9100000262260437,
+          "sourceEnd" : 2.240000009536743,
+          "sourceStart" : 2.140000104904175,
+          "text" : "モ",
+          "tokenIDs" : [
+            29183
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 2.359999895095825,
+          "sourceStart" : 2.240000009536743,
+          "text" : "カ、",
+          "tokenIDs" : [
+            10111,
+            1231
+          ]
+        },
+        {
+          "confidence" : 0.8899999856948853,
+          "sourceEnd" : 2.7200000286102295,
+          "sourceStart" : 2.5,
+          "text" : "そして",
+          "tokenIDs" : [
+            25092
+          ]
+        },
+        {
+          "confidence" : 0.28999999165534973,
+          "sourceEnd" : 3.0199999809265137,
+          "sourceStart" : 2.7200000286102295,
+          "text" : "立",
+          "tokenIDs" : [
+            24409
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 3.359999895095825,
+          "sourceStart" : 3.0199999809265137,
+          "text" : "川",
+          "tokenIDs" : [
+            27905
+          ]
+        },
+        {
+          "confidence" : 0.3199999928474426,
+          "sourceEnd" : 4.739999771118164,
+          "sourceStart" : 4.610000133514404,
+          "text" : "来",
+          "tokenIDs" : [
+            6912
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 4.900000095367432,
+          "sourceStart" : 4.739999771118164,
+          "text" : "ました",
+          "tokenIDs" : [
+            12072
+          ]
+        },
+        {
+          "confidence" : 0.8600000143051147,
+          "sourceEnd" : 5.179999828338623,
+          "sourceStart" : 5.050000190734863,
+          "text" : "モ",
+          "tokenIDs" : [
+            29183
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 5.340000152587891,
+          "sourceStart" : 5.179999828338623,
+          "text" : "カ",
+          "tokenIDs" : [
+            10111
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 5.559999942779541,
+          "sourceStart" : 5.340000152587891,
+          "text" : "さん",
+          "tokenIDs" : [
+            15567
+          ]
+        },
+        {
+          "confidence" : 0.6499999761581421,
+          "sourceEnd" : 5.860000133514404,
+          "sourceStart" : 5.559999942779541,
+          "text" : "頑",
+          "tokenIDs" : [
+            8313,
+            239
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 6.019999980926514,
+          "sourceStart" : 5.860000133514404,
+          "text" : "張",
+          "tokenIDs" : [
+            18889
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 6.199999809265137,
+          "sourceStart" : 6.019999980926514,
+          "text" : "れ",
+          "tokenIDs" : [
+            4132
+          ]
+        },
+        {
+          "confidence" : 0.9100000262260437,
+          "sourceEnd" : 6.920000076293945,
+          "sourceStart" : 6.760000228881836,
+          "text" : "頑",
+          "tokenIDs" : [
+            8313,
+            239
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 7.139999866485596,
+          "sourceStart" : 6.920000076293945,
+          "text" : "張",
+          "tokenIDs" : [
+            18889
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 7.460000038146973,
+          "sourceStart" : 7.139999866485596,
+          "text" : "れ",
+          "tokenIDs" : [
+            4132
+          ]
+        },
+        {
+          "confidence" : 0.7300000190734863,
+          "sourceEnd" : 8.119999885559082,
+          "sourceStart" : 8.020000457763672,
+          "text" : "頑",
+          "tokenIDs" : [
+            8313,
+            239
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 8.34000015258789,
+          "sourceStart" : 8.119999885559082,
+          "text" : "張",
+          "tokenIDs" : [
+            18889
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 8.65999984741211,
+          "sourceStart" : 8.34000015258789,
+          "text" : "れ",
+          "tokenIDs" : [
+            4132
+          ]
+        },
+        {
+          "confidence" : 0.9700000286102295,
+          "sourceEnd" : 8.880000114440918,
+          "sourceStart" : 8.680000305175781,
+          "text" : "先",
+          "tokenIDs" : [
+            10108
+          ]
+        },
+        {
+          "confidence" : 0.5299999713897705,
+          "sourceEnd" : 9.020000457763672,
+          "sourceStart" : 8.880000114440918,
+          "text" : "程",
+          "tokenIDs" : [
+            29649
+          ]
+        },
+        {
+          "confidence" : 0.949999988079071,
+          "sourceEnd" : 9.199999809265137,
+          "sourceStart" : 9.020000457763672,
+          "text" : "は",
+          "tokenIDs" : [
+            3065
+          ]
+        },
+        {
+          "confidence" : 0.5299999713897705,
+          "sourceEnd" : 9.5600004196167,
+          "sourceStart" : 9.199999809265137,
+          "text" : "立",
+          "tokenIDs" : [
+            24409
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 9.779999732971191,
+          "sourceStart" : 9.5600004196167,
+          "text" : "川",
+          "tokenIDs" : [
+            27905
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 10.079999923706055,
+          "sourceStart" : 9.779999732971191,
+          "text" : "も",
+          "tokenIDs" : [
+            4801
+          ]
+        },
+        {
+          "confidence" : 0.75,
+          "sourceEnd" : 10.84000015258789,
+          "sourceStart" : 10.079999923706055,
+          "text" : "プ",
+          "tokenIDs" : [
+            20953
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 10.979999542236328,
+          "sourceStart" : 10.84000015258789,
+          "text" : "ロ",
+          "tokenIDs" : [
+            17164
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 11.180000305175781,
+          "sourceStart" : 10.979999542236328,
+          "text" : "と",
+          "tokenIDs" : [
+            3193
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 11.479999542236328,
+          "sourceStart" : 11.180000305175781,
+          "text" : "して",
+          "tokenIDs" : [
+            8822
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 11.619999885559082,
+          "sourceStart" : 11.479999542236328,
+          "text" : "の",
+          "tokenIDs" : [
+            2972
+          ]
+        },
+        {
+          "confidence" : 0.8299999833106995,
+          "sourceEnd" : 12.359999656677246,
+          "sourceStart" : 11.619999885559082,
+          "text" : "意",
+          "tokenIDs" : [
+            9042
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.539999961853027,
+          "sourceStart" : 12.359999656677246,
+          "text" : "地",
+          "tokenIDs" : [
+            10928
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.619999885559082,
+          "sourceStart" : 12.539999961853027,
+          "text" : "を",
+          "tokenIDs" : [
+            5998
+          ]
+        },
+        {
+          "confidence" : 0.949999988079071,
+          "sourceEnd" : 12.699999809265137,
+          "sourceStart" : 12.619999885559082,
+          "text" : "見",
+          "tokenIDs" : [
+            10470
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 12.819999694824219,
+          "sourceStart" : 12.699999809265137,
+          "text" : "せ",
+          "tokenIDs" : [
+            13702
+          ]
+        },
+        {
+          "confidence" : 0.5299999713897705,
+          "sourceEnd" : 12.9399995803833,
+          "sourceStart" : 12.819999694824219,
+          "text" : "ました",
+          "tokenIDs" : [
+            12072
+          ]
+        },
+        {
+          "confidence" : 0.2199999988079071,
+          "sourceEnd" : 13.140000343322754,
+          "sourceStart" : 13.029999732971191,
+          "text" : "PC",
+          "tokenIDs" : [
+            12986
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 13.140000343322754,
+          "sourceStart" : 13.140000343322754,
+          "text" : "R",
+          "tokenIDs" : [
+            49
+          ]
+        },
+        {
+          "confidence" : 0.6499999761581421,
+          "sourceEnd" : 13.34000015258789,
+          "sourceStart" : 13.140000343322754,
+          "text" : " GTA",
+          "tokenIDs" : [
+            35575
+          ]
+        },
+        {
+          "confidence" : 0.9100000262260437,
+          "sourceEnd" : 13.84000015258789,
+          "sourceStart" : 13.34000015258789,
+          "text" : "で",
+          "tokenIDs" : [
+            2474
+          ]
+        },
+        {
+          "confidence" : 0.8399999737739563,
+          "sourceEnd" : 13.920000076293945,
+          "sourceStart" : 13.84000015258789,
+          "text" : "人",
+          "tokenIDs" : [
+            4035
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 14.140000343322754,
+          "sourceStart" : 13.920000076293945,
+          "text" : "の",
+          "tokenIDs" : [
+            2972
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 14.34000015258789,
+          "sourceStart" : 14.140000343322754,
+          "text" : "パ",
+          "tokenIDs" : [
+            23268
+          ]
+        },
+        {
+          "confidence" : 0.9300000071525574,
+          "sourceEnd" : 14.5,
+          "sourceStart" : 14.34000015258789,
+          "text" : "ンツ",
+          "tokenIDs" : [
+            14121,
+            226
+          ]
+        },
+        {
+          "confidence" : 0.699999988079071,
+          "sourceEnd" : 14.760000228881836,
+          "sourceStart" : 14.5,
+          "text" : "覗",
+          "tokenIDs" : [
+            2888,
+            245
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 14.859999656677246,
+          "sourceStart" : 14.760000228881836,
+          "text" : "いて",
+          "tokenIDs" : [
+            18549
+          ]
+        },
+        {
+          "confidence" : 0.9200000166893005,
+          "sourceEnd" : 15.199999809265137,
+          "sourceStart" : 14.859999656677246,
+          "text" : "きた",
+          "tokenIDs" : [
+            49809
+          ]
+        },
+        {
+          "confidence" : 0.7599999904632568,
+          "sourceEnd" : 15.579999923706055,
+          "sourceStart" : 15.199999809265137,
+          "text" : "人",
+          "tokenIDs" : [
+            4035
+          ]
+        },
+        {
+          "confidence" : 0.8999999761581421,
+          "sourceEnd" : 15.739999771118164,
+          "sourceStart" : 15.579999923706055,
+          "text" : "の",
+          "tokenIDs" : [
+            2972
+          ]
+        },
+        {
+          "confidence" : 0.5699999928474426,
+          "sourceEnd" : 15.9399995803833,
+          "sourceStart" : 15.739999771118164,
+          "text" : "こと",
+          "tokenIDs" : [
+            13235
+          ]
+        },
+        {
+          "confidence" : 0.28999999165534973,
+          "sourceEnd" : 16.18000030517578,
+          "sourceStart" : 15.9399995803833,
+          "text" : "なんか",
+          "tokenIDs" : [
+            27646
+          ]
+        },
+        {
+          "confidence" : 0.20000000298023224,
+          "sourceEnd" : 16.420000076293945,
+          "sourceStart" : 16.18000030517578,
+          "text" : "ボ",
+          "tokenIDs" : [
+            37626
+          ]
+        },
+        {
+          "confidence" : 0.5799999833106995,
+          "sourceEnd" : 16.540000915527344,
+          "sourceStart" : 16.420000076293945,
+          "text" : "コ",
+          "tokenIDs" : [
+            18066
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.600000381469727,
+          "sourceStart" : 16.540000915527344,
+          "text" : "ボ",
+          "tokenIDs" : [
+            37626
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.6200008392334,
+          "sourceStart" : 16.600000381469727,
+          "text" : "コ",
+          "tokenIDs" : [
+            18066
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 16.760000228881836,
+          "sourceStart" : 16.6200008392334,
+          "text" : "に",
+          "tokenIDs" : [
+            4108
+          ]
+        },
+        {
+          "confidence" : 0.5799999833106995,
+          "sourceEnd" : 16.84000015258789,
+          "sourceStart" : 16.760000228881836,
+          "text" : "して",
+          "tokenIDs" : [
+            8822
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 17.020000457763672,
+          "sourceStart" : 16.84000015258789,
+          "text" : "く",
+          "tokenIDs" : [
+            6134
+          ]
+        },
+        {
+          "confidence" : 0.8600000143051147,
+          "sourceEnd" : 17.020000457763672,
+          "sourceStart" : 17.020000457763672,
+          "text" : "れ",
+          "tokenIDs" : [
+            4132
+          ]
+        },
+        {
+          "confidence" : 0.4000000059604645,
+          "sourceEnd" : 17.18000030517578,
+          "sourceStart" : 17.020000457763672,
+          "text" : "ん",
+          "tokenIDs" : [
+            3225
+          ]
+        },
+        {
+          "confidence" : 0.30000001192092896,
+          "sourceEnd" : 17.8799991607666,
+          "sourceStart" : 17.280000686645508,
+          "text" : "ええ",
+          "tokenIDs" : [
+            39643
+          ]
+        },
+        {
+          "confidence" : 0.36000001430511475,
+          "sourceEnd" : 18.15999984741211,
+          "sourceStart" : 17.8799991607666,
+          "text" : "そう",
+          "tokenIDs" : [
+            9955
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 18.299999237060547,
+          "sourceStart" : 18.15999984741211,
+          "text" : "な",
+          "tokenIDs" : [
+            3203
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 18.440000534057617,
+          "sourceStart" : 18.299999237060547,
+          "text" : "の?",
+          "tokenIDs" : [
+            2972,
+            30
+          ]
+        },
+        {
+          "confidence" : 0.4399999976158142,
+          "sourceEnd" : 18.799999237060547,
+          "sourceStart" : 18.579999923706055,
+          "text" : "最",
+          "tokenIDs" : [
+            8661
+          ]
+        },
+        {
+          "confidence" : 0.9599999785423279,
+          "sourceEnd" : 19.079999923706055,
+          "sourceStart" : 18.799999237060547,
+          "text" : "低",
+          "tokenIDs" : [
+            41377
+          ]
+        },
+        {
+          "confidence" : 0.9200000166893005,
+          "sourceEnd" : 19.219999313354492,
+          "sourceStart" : 19.079999923706055,
+          "text" : "だ",
+          "tokenIDs" : [
+            5362
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 19.360000610351562,
+          "sourceStart" : 19.219999313354492,
+          "text" : "な",
+          "tokenIDs" : [
+            3203
+          ]
+        },
+        {
+          "confidence" : 0.3199999928474426,
+          "sourceEnd" : 19.479999542236328,
+          "sourceStart" : 19.420000076293945,
+          "text" : "そう",
+          "tokenIDs" : [
+            9955
+          ]
+        },
+        {
+          "confidence" : 0.1899999976158142,
+          "sourceEnd" : 19.65999984741211,
+          "sourceStart" : 19.479999542236328,
+          "text" : "なん",
+          "tokenIDs" : [
+            11847
+          ]
+        },
+        {
+          "confidence" : 0.20000000298023224,
+          "sourceEnd" : 19.860000610351562,
+          "sourceStart" : 19.65999984741211,
+          "text" : "や",
+          "tokenIDs" : [
+            7355
+          ]
+        },
+        {
+          "confidence" : 0.3499999940395355,
+          "sourceEnd" : 20.079999923706055,
+          "sourceStart" : 19.860000610351562,
+          "text" : "ろ",
+          "tokenIDs" : [
+            12488
+          ]
+        },
+        {
+          "confidence" : 0.6700000166893005,
+          "sourceEnd" : 21.65999984741211,
+          "sourceStart" : 21.299999237060547,
+          "text" : "私",
+          "tokenIDs" : [
+            20083
+          ]
+        },
+        {
+          "confidence" : 0.23999999463558197,
+          "sourceEnd" : 22.020000457763672,
+          "sourceStart" : 21.65999984741211,
+          "text" : "と",
+          "tokenIDs" : [
+            3193
+          ]
+        },
+        {
+          "confidence" : 0.9200000166893005,
+          "sourceEnd" : 22.139999389648438,
+          "sourceStart" : 22.020000457763672,
+          "text" : "ク",
+          "tokenIDs" : [
+            10825
+          ]
+        },
+        {
+          "confidence" : 0.9700000286102295,
+          "sourceEnd" : 22.200000762939453,
+          "sourceStart" : 22.139999389648438,
+          "text" : "ロ",
+          "tokenIDs" : [
+            17164
+          ]
+        },
+        {
+          "confidence" : 0.18000000715255737,
+          "sourceEnd" : 22.34000015258789,
+          "sourceStart" : 22.200000762939453,
+          "text" : "ン",
+          "tokenIDs" : [
+            4824
+          ]
+        },
+        {
+          "confidence" : 0.9200000166893005,
+          "sourceEnd" : 22.520000457763672,
+          "sourceStart" : 22.34000015258789,
+          "text" : "さん",
+          "tokenIDs" : [
+            15567
+          ]
+        },
+        {
+          "confidence" : 0.9700000286102295,
+          "sourceEnd" : 22.68000030517578,
+          "sourceStart" : 22.520000457763672,
+          "text" : "の",
+          "tokenIDs" : [
+            2972
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 22.719999313354492,
+          "sourceStart" : 22.68000030517578,
+          "text" : "パ",
+          "tokenIDs" : [
+            23268
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 22.899999618530273,
+          "sourceStart" : 22.719999313354492,
+          "text" : "ンツ",
+          "tokenIDs" : [
+            14121,
+            226
+          ]
+        },
+        {
+          "confidence" : 0.9599999785423279,
+          "sourceEnd" : 23.299999237060547,
+          "sourceStart" : 22.899999618530273,
+          "text" : "覗",
+          "tokenIDs" : [
+            2888,
+            245
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 23.3799991607666,
+          "sourceStart" : 23.299999237060547,
+          "text" : "いて",
+          "tokenIDs" : [
+            18549
+          ]
+        },
+        {
+          "confidence" : 0.9700000286102295,
+          "sourceEnd" : 23.639999389648438,
+          "sourceStart" : 23.3799991607666,
+          "text" : "きた",
+          "tokenIDs" : [
+            49809
+          ]
+        },
+        {
+          "confidence" : 0.949999988079071,
+          "sourceEnd" : 23.899999618530273,
+          "sourceStart" : 23.639999389648438,
+          "text" : "から",
+          "tokenIDs" : [
+            11046
+          ]
+        },
+        {
+          "confidence" : 0.8299999833106995,
+          "sourceEnd" : 24.100000381469727,
+          "sourceStart" : 23.899999618530273,
+          "text" : "立",
+          "tokenIDs" : [
+            24409
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 24.280000686645508,
+          "sourceStart" : 24.100000381469727,
+          "text" : "川",
+          "tokenIDs" : [
+            27905
+          ]
+        },
+        {
+          "confidence" : 0.9399999976158142,
+          "sourceEnd" : 24.479999542236328,
+          "sourceStart" : 24.280000686645508,
+          "text" : "さん",
+          "tokenIDs" : [
+            15567
+          ]
+        },
+        {
+          "confidence" : 0.3499999940395355,
+          "sourceEnd" : 24.799999237060547,
+          "sourceStart" : 24.559999465942383,
+          "text" : "え",
+          "tokenIDs" : [
+            6474
+          ]
+        },
+        {
+          "confidence" : 0.46000000834465027,
+          "sourceEnd" : 24.799999237060547,
+          "sourceStart" : 24.799999237060547,
+          "text" : "ぇ",
+          "tokenIDs" : [
+            20861
+          ]
+        },
+        {
+          "confidence" : 0.4399999976158142,
+          "sourceEnd" : 24.940000534057617,
+          "sourceStart" : 24.799999237060547,
+          "text" : "許",
+          "tokenIDs" : [
+            40914
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 25.239999771118164,
+          "sourceStart" : 24.940000534057617,
+          "text" : "せ",
+          "tokenIDs" : [
+            13702
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 26,
+          "sourceStart" : 25.239999771118164,
+          "text" : "ない",
+          "tokenIDs" : [
+            9311
+          ]
+        },
+        {
+          "confidence" : 0.28999999165534973,
+          "sourceEnd" : 26.059999465942383,
+          "sourceStart" : 26.020000457763672,
+          "text" : "それ",
+          "tokenIDs" : [
+            13873
+          ]
+        },
+        {
+          "confidence" : 0.4099999964237213,
+          "sourceEnd" : 26.219999313354492,
+          "sourceStart" : 26.059999465942383,
+          "text" : "く",
+          "tokenIDs" : [
+            6134
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 26.34000015258789,
+          "sourceStart" : 26.219999313354492,
+          "text" : "らい",
+          "tokenIDs" : [
+            38052
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 26.440000534057617,
+          "sourceStart" : 26.34000015258789,
+          "text" : "の",
+          "tokenIDs" : [
+            2972
+          ]
+        },
+        {
+          "confidence" : 0.28999999165534973,
+          "sourceEnd" : 26.540000915527344,
+          "sourceStart" : 26.440000534057617,
+          "text" : "都",
+          "tokenIDs" : [
+            7182
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 26.6200008392334,
+          "sourceStart" : 26.540000915527344,
+          "text" : "合",
+          "tokenIDs" : [
+            14245
+          ]
+        },
+        {
+          "confidence" : 0.8899999856948853,
+          "sourceEnd" : 26.739999771118164,
+          "sourceStart" : 26.6200008392334,
+          "text" : "に",
+          "tokenIDs" : [
+            4108
+          ]
+        },
+        {
+          "confidence" : 0.6700000166893005,
+          "sourceEnd" : 26.920000076293945,
+          "sourceStart" : 26.739999771118164,
+          "text" : "来",
+          "tokenIDs" : [
+            6912
+          ]
+        },
+        {
+          "confidence" : 0.9700000286102295,
+          "sourceEnd" : 27.139999389648438,
+          "sourceStart" : 26.920000076293945,
+          "text" : "て",
+          "tokenIDs" : [
+            2996
+          ]
+        },
+        {
+          "confidence" : 0.8999999761581421,
+          "sourceEnd" : 27.219999313354492,
+          "sourceStart" : 27.139999389648438,
+          "text" : "る",
+          "tokenIDs" : [
+            4895
+          ]
+        },
+        {
+          "confidence" : 0.25,
+          "sourceEnd" : 27.280000686645508,
+          "sourceStart" : 27.219999313354492,
+          "text" : "と",
+          "tokenIDs" : [
+            3193
+          ]
+        },
+        {
+          "confidence" : 0.8899999856948853,
+          "sourceEnd" : 27.31999969482422,
+          "sourceStart" : 27.280000686645508,
+          "text" : "立",
+          "tokenIDs" : [
+            24409
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 27.6200008392334,
+          "sourceStart" : 27.31999969482422,
+          "text" : "川",
+          "tokenIDs" : [
+            27905
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 28,
+          "sourceStart" : 27.6200008392334,
+          "text" : "さん",
+          "tokenIDs" : [
+            15567
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 28.239999771118164,
+          "sourceStart" : 28,
+          "text" : "と",
+          "tokenIDs" : [
+            3193
+          ]
+        },
+        {
+          "confidence" : 0.3700000047683716,
+          "sourceEnd" : 28.479999542236328,
+          "sourceStart" : 28.239999771118164,
+          "text" : "さ",
+          "tokenIDs" : [
+            6722
+          ]
+        },
+        {
+          "confidence" : 0.14000000059604645,
+          "sourceEnd" : 28.639999389648438,
+          "sourceStart" : 28.479999542236328,
+          "text" : "ぁ",
+          "tokenIDs" : [
+            11951
+          ]
+        },
+        {
+          "confidence" : 0.15000000596046448,
+          "sourceEnd" : 28.65999984741211,
+          "sourceStart" : 28.639999389648438,
+          "text" : " ",
+          "tokenIDs" : [
+            220
+          ]
+        },
+        {
+          "confidence" : 0.27000001072883606,
+          "sourceEnd" : 28.899999618530273,
+          "sourceStart" : 28.65999984741211,
+          "text" : "都",
+          "tokenIDs" : [
+            7182
+          ]
+        },
+        {
+          "confidence" : 0.9900000095367432,
+          "sourceEnd" : 29.079999923706055,
+          "sourceStart" : 28.899999618530273,
+          "text" : "と",
+          "tokenIDs" : [
+            3193
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.200000762939453,
+          "sourceStart" : 29.079999923706055,
+          "text" : "の",
+          "tokenIDs" : [
+            2972
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.399999618530273,
+          "sourceStart" : 29.200000762939453,
+          "text" : "出",
+          "tokenIDs" : [
+            7781
+          ]
+        },
+        {
+          "confidence" : 0.9800000190734863,
+          "sourceEnd" : 29.559999465942383,
+          "sourceStart" : 29.399999618530273,
+          "text" : "会",
+          "tokenIDs" : [
+            12949
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.6200008392334,
+          "sourceStart" : 29.559999465942383,
+          "text" : "い",
+          "tokenIDs" : [
+            1764
+          ]
+        },
+        {
+          "confidence" : 0.9599999785423279,
+          "sourceEnd" : 29.780000686645508,
+          "sourceStart" : 29.6200008392334,
+          "text" : "知",
+          "tokenIDs" : [
+            6498
+          ]
+        },
+        {
+          "confidence" : 0.6800000071525574,
+          "sourceEnd" : 29.979999542236328,
+          "sourceStart" : 29.780000686645508,
+          "text" : "ってる",
+          "tokenIDs" : [
+            45350
+          ]
+        },
+        {
+          "confidence" : 0.14000000059604645,
+          "sourceEnd" : 30,
+          "sourceStart" : 29.979999542236328,
+          "text" : "の?",
+          "tokenIDs" : [
+            2972,
+            30
+          ]
+        }
+      ]
+    }
+  },
+  "deliverables" : [
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "export"
+  ],
+  "failures" : [
+
+  ],
+  "finishedAt" : "2026-08-15T11:59:45Z",
+  "generatedFiles" : [
+    {
+      "kind" : "deliverable",
+      "path" : "japanese-transcript.txt"
+    },
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "2BF3B3DB-212F-45CE-B84C-2A13BB0507DD",
+  "model" : {
+    "backend" : "whisperkit",
+    "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3",
+    "revision" : "97a5bf9bbc74c7d9c12c755d04dea59e672e3808",
+    "runtimeVersion" : "1.1.0",
+    "weightSHA256" : {
+      "AudioEncoder.mlmodelc\/weights\/weight.bin" : "eb07bab32dcd62ce653b5b288bd6c27bdc5a538be309f242e33ed05e1cb53457",
+      "MelSpectrogram.mlmodelc\/weights\/weight.bin" : "97a66b915cd3fc97dcba6806d92381e1a56024b8f68c1a1cd370d4c92505fe87",
+      "TextDecoder.mlmodelc\/weights\/weight.bin" : "680f398925225a313c62da0221aa0a58c9f1bffac5c36f20c449a70a7c9b1e55"
+    }
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-15T11:59:20Z",
+      "backend" : "whisperkit",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=8589934592 reserve=0 total=25769803776 available=8742928384 baseline=25789280",
+      "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3"
+    },
+    {
+      "at" : "2026-08-15T11:59:20Z",
+      "backend" : "whisperkit",
+      "kind" : "load-started",
+      "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3"
+    },
+    {
+      "at" : "2026-08-15T11:59:29Z",
+      "backend" : "whisperkit",
+      "kind" : "load-completed",
+      "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3"
+    },
+    {
+      "at" : "2026-08-15T11:59:45Z",
+      "backend" : "whisperkit",
+      "kind" : "unload-completed",
+      "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3"
+    },
+    {
+      "at" : "2026-08-15T11:59:45Z",
+      "backend" : "whisperkit",
+      "kind" : "memory-release-checked",
+      "message" : "memory=27083664 runtimePeak=26887056 minimumAvailable=6043631616 maximum=25769803776 reserve=0",
+      "modelID" : "argmaxinc\/whisperkit-coreml\/openai_whisper-large-v3"
+    }
+  ],
+  "peakMemoryBytes" : 3114404792,
+  "schemaVersion" : 3,
+  "selectedBackend" : "whisperkit",
+  "source" : {
+    "byteCount" : 960078,
+    "fileName" : "dev-30s.wav",
+    "modifiedAt" : "2026-08-15T11:53:29Z",
+    "path" : "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/benchmarks\/issue-116\/controls\/dev-30s.wav"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : false,
+  "stageDurations" : [
+    "preparing-asr",
+    8.571396112442017,
+    "transcribing",
+    15.74084198474884,
+    "normalizing-source",
+    0.0944739580154419,
+    "exporting",
+    0.0050809383392333984
+  ],
+  "startedAt" : "2026-08-15T11:59:20Z",
+  "status" : "completed"
+}

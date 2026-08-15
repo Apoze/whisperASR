@@ -1168,7 +1168,11 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(result.characters?.map(\.chunkIndex), [0, 0, 0, 1])
         XCTAssertEqual(result.characters?.last?.sourceStart, 20)
         XCTAssertEqual(result.characters?.last?.sourceEnd, 21)
-        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+        XCTAssertEqual(
+            result.windows?.last?.result.characters?.last?.sourceEnd,
+            Double(3).nextUp
+        )
+        XCTAssertFalse(HighQualityASRWorkerClient.isValid(
             result, sampleCount: samples.count, anchored: true
         ))
     }

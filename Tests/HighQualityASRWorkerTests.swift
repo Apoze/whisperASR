@@ -169,7 +169,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
             XCTAssertNotNil(backendResult.averageLogProbability)
             let segments = try XCTUnwrap(backendResult.segments)
             XCTAssertFalse(segments.isEmpty)
-            XCTAssertTrue(segments.contains { $0.noSpeechProbability != nil })
+            XCTAssertTrue(segments.allSatisfy { $0.noSpeechProbability == nil })
             XCTAssertFalse(try XCTUnwrap(backendResult.wordTimings).isEmpty)
         case .funASRNanoInt8, .reazonSpeechK2V2:
             break
@@ -412,7 +412,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
                     sourceStart: 0.2,
                     sourceEnd: 0.9,
                     averageLogProbability: -0.42,
-                    noSpeechProbability: 0.08,
+                    noSpeechProbability: nil,
                     compressionRatio: 1.1
                 ),
             ],
@@ -429,15 +429,19 @@ final class HighQualityASRWorkerTests: XCTestCase {
             diagnostics: .init(emptyOutput: false)
         )
 
+        let data = try JSONEncoder().encode(exchange)
         let decoded = try JSONDecoder().decode(
             HighQualityASRExchange.self,
-            from: JSONEncoder().encode(exchange)
+            from: data
         )
 
         XCTAssertEqual(decoded, exchange)
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let segments = try XCTUnwrap(object["segments"] as? [[String: Any]])
+        XCTAssertNil(segments[0]["noSpeechProbability"])
     }
 
-    func testAnchoredASRRetainsBackendEvidence() async throws {
+    func testAnchoredASRRetainsBackendEvidenceInRawWindow() async throws {
         let backendResult = HighQualityASRExchange(
             rawTranscript: "日本語",
             chunks: [],
@@ -460,13 +464,14 @@ final class HighQualityASRWorkerTests: XCTestCase {
             transcribe: { _ in backendResult }
         )
 
-        XCTAssertEqual(anchored.tokenTimings, backendResult.tokenTimings)
         XCTAssertEqual(anchored.model, backendResult.model)
-        XCTAssertEqual(anchored.confidence, backendResult.confidence)
-        XCTAssertEqual(anchored.diagnostics, backendResult.diagnostics)
+        XCTAssertNil(anchored.tokenTimings)
+        XCTAssertNil(anchored.confidence)
+        XCTAssertNil(anchored.diagnostics)
+        XCTAssertEqual(anchored.windows?.first?.result, backendResult)
     }
 
-    func testAnchoredASRRetainsWhisperKitSegmentAndWordEvidence() async throws {
+    func testAnchoredASRRetainsWhisperKitEvidenceInRawWindow() async throws {
         let backendResult = HighQualityASRExchange(
             rawTranscript: "日本語",
             chunks: [],
@@ -479,7 +484,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
                     sourceStart: 0.2,
                     sourceEnd: 0.9,
                     averageLogProbability: -0.42,
-                    noSpeechProbability: 0.08,
+                    noSpeechProbability: nil,
                     compressionRatio: 1.1
                 ),
             ],
@@ -501,9 +506,61 @@ final class HighQualityASRWorkerTests: XCTestCase {
             transcribe: { _ in backendResult }
         )
 
-        XCTAssertEqual(anchored.segments, backendResult.segments)
-        XCTAssertEqual(anchored.wordTimings, backendResult.wordTimings)
-        XCTAssertEqual(anchored.averageLogProbability, backendResult.averageLogProbability)
+        XCTAssertNil(anchored.segments)
+        XCTAssertNil(anchored.wordTimings)
+        XCTAssertNil(anchored.averageLogProbability)
+        XCTAssertEqual(anchored.windows?.first?.result, backendResult)
+    }
+
+    func testAnchoredASRSeparatesSelectedTranscriptFromExactBackendEvidence() async throws {
+        let backendResult = HighQualityASRExchange(
+            rawTranscript: "  日本語!?  ",
+            chunks: [],
+            model: HighQualityASRBackend.parakeetJA.model,
+            confidence: 0.81,
+            diagnostics: .init(emptyOutput: false)
+        )
+
+        let anchored = try await HighQualityJob.Services.chunkedASR(
+            Array(repeating: 0, count: 16_000),
+            transcribe: { _ in backendResult }
+        )
+
+        XCTAssertEqual(anchored.rawTranscript, "日本語!?")
+        XCTAssertNil(anchored.confidence)
+        XCTAssertNil(anchored.diagnostics)
+        XCTAssertEqual(anchored.windows?.count, 1)
+        let window = try XCTUnwrap(anchored.windows?.first)
+        XCTAssertEqual(window.result, backendResult)
+    }
+
+    func testReazonAnchoredASRKeepsClientModelOutOfRawWindows() async throws {
+        let backendResult = HighQualityASRExchange(rawTranscript: "日本語", chunks: [])
+        let fixture = try ASRWorkerFixture(
+            backend: .reazonSpeechK2V2,
+            response: try responseJSON(backendResult),
+            responseCount: 2
+        )
+        let worker = fixture.worker(backend: .reazonSpeechK2V2)
+        try await worker.prepare(progress: { _, _ in })
+
+        let anchored: HighQualityASRExchange
+        do {
+            anchored = try await worker.transcribe(
+                Array(repeating: 0.1, count: 21 * 16_000),
+                anchored: true
+            )
+        } catch {
+            await worker.unload()
+            throw error
+        }
+        await worker.unload()
+
+        XCTAssertEqual(anchored.windows?.count, 2)
+        XCTAssertEqual(anchored.model?.backend, .reazonSpeechK2V2)
+        XCTAssertTrue(anchored.windows?.allSatisfy {
+            $0.result.model == nil
+        } ?? false)
     }
 
     func testLegacyASRExchangeDecodesWithNewEvidenceAbsent() throws {
@@ -742,9 +799,9 @@ final class HighQualityASRWorkerTests: XCTestCase {
         ]
         let invalidResults = [
             HighQualityASRExchange(
-                rawTranscript: "一",
-                chunks: [chunks[0]],
-                windows: [windows[0]]
+                rawTranscript: "",
+                chunks: [],
+                windows: []
             ),
             HighQualityASRExchange(
                 rawTranscript: "一\n二",
@@ -755,6 +812,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
             HighQualityASRExchange(
                 rawTranscript: "一\n二",
                 chunks: chunks,
+                model: HighQualityASRBackend.parakeetJA.model,
                 windows: [
                     .init(
                         sourceStart: 0,
@@ -762,7 +820,7 @@ final class HighQualityASRWorkerTests: XCTestCase {
                         result: .init(
                             rawTranscript: "一",
                             chunks: [],
-                            model: HighQualityASRBackend.parakeetJA.model
+                            model: HighQualityASRBackend.whisperKit.model
                         )
                     ),
                     windows[1],
@@ -1100,6 +1158,7 @@ private struct ASRWorkerFixture {
         backend: HighQualityASRBackend,
         readyOverride: String? = nil,
         response: String?,
+        responseCount: Int = 1,
         exitAfterReady: Bool = false
     ) throws {
         directory = FileManager.default.temporaryDirectory
@@ -1122,12 +1181,14 @@ private struct ASRWorkerFixture {
                 as: UTF8.self
             )
         }
-        let responseBlock = response.map {
-            """
-            while [ ! -f "$directory/request-1.json" ]; do sleep 0.01; done
-            printf '%s' '\($0)' > "$directory/response-1.tmp"
-            mv "$directory/response-1.tmp" "$directory/response-1.json"
-            """
+        let responseBlock = response.map { response in
+            (1...responseCount).map { sequence in
+                """
+                while [ ! -f "$directory/request-\(sequence).json" ]; do sleep 0.01; done
+                printf '%s' '\(response)' > "$directory/response-\(sequence).tmp"
+                mv "$directory/response-\(sequence).tmp" "$directory/response-\(sequence).json"
+                """
+            }.joined(separator: "\n")
         } ?? ""
         let script = """
         #!/bin/sh

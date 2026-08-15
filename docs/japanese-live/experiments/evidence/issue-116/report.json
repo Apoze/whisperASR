@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "ticket": 116,
+  "captureCommit": "ca283715fe5977cb545baaef08a3e7063de286af",
+  "benchmarkSlot": 116,
+  "backendOrder": [
+    "qwen-ja",
+    "parakeet-ja",
+    "whisperkit"
+  ],
+  "reporterPolicy": {
+    "native": "A real backend runtime produced the measurement.",
+    "absent": "The backend exposed no trustworthy measurement; no value is synthesized.",
+    "derived": "The product derived the value from another captured field.",
+    "placeholderValuesAreAbsent": true
+  },
+  "fixture": {
+    "sourceSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+    "audioSHA256": "d1c3ec3a01b00953f61f9956d1ec035cded04c831aebe7e29055ceb7ac5cb272",
+    "durationSeconds": 30,
+    "command": "ffmpeg -hide_banner -loglevel error -y -i /Users/maz/Documents/videos/jap/1/Video1.webm -t 30 -vn -ac 1 -ar 16000 -c:a pcm_s16le .build/benchmarks/issue-116/controls/dev-30s.wav"
+  },
+  "execution": {
+    "workingDirectory": "/Users/maz/.codex/worktrees/50e4/whisperASR",
+    "commandTemplate": "env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=.build/module-cache SWIFTPM_MODULECACHE_OVERRIDE=.build/module-cache BENCHMARK_SLOT_GRANTED=116 WHISPERASR_ASR_WORKER_SLOT=116 WHISPERASR_RUN_ASR_WORKER_SMOKE=1 WHISPERASR_ASR_WORKER_BACKEND=<backend> WHISPERASR_HIGH_QUALITY_ASR_FIXTURE=.build/benchmarks/issue-116/controls/dev-30s.wav WHISPERASR_HIGH_QUALITY_ASR_FIXTURE_SHA256=d1c3ec3a01b00953f61f9956d1ec035cded04c831aebe7e29055ceb7ac5cb272 /usr/bin/time -l swift test --disable-sandbox --skip-build --filter HighQualityASRWorkerTests/testRealBackendCompletesFrozenJapaneseJobWhenOptedIn",
+    "strictlySequential": true,
+    "modelRunsLaunched": 5,
+    "acceptedCaptures": 3,
+    "diagnosticRuns": 2,
+    "reusedForReviewCorrection": true,
+    "rerunForReviewCorrection": false
+  },
+  "backends": [
+    {
+      "backend": "qwen-ja",
+      "jobID": "D7BC9176-FFAC-42EF-A371-644C6A85E2B7",
+      "model": {
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+        "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+        "weightSHA256": {
+          "merges.txt": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+          "model.safetensors": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954",
+          "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+        }
+      },
+      "artifacts": {
+        "manifestStatus": "completed",
+        "manifestResultMatchesRawEvidence": true,
+        "rawTranscriptMatchesEvidenceText": true,
+        "manifestPath": "qwen-ja-manifest.json",
+        "manifestSHA256": "e404ece74476cbdef8934da0ecd2e3c80849ad545d9922fa45aa6196e33a0624",
+        "rawASRPath": "qwen-ja-raw-asr.json",
+        "rawASRSHA256": "4aadd52a688c8fa569f25081eb55331aa95797facc0d248e33ff73ff6979169e",
+        "transcriptSHA256": "1feb6c346dbe907ea15f6eb4b5b86e1ab329e709afc7ea0d738b9f51ae268863"
+      },
+      "lifecycle": {
+        "exitStatus": 0,
+        "forcedTermination": false,
+        "peakPhysicalFootprintBytes": 7541265256
+      },
+      "fieldEvidence": {
+        "segments": { "availability": "absent" },
+        "tokenTimings": { "availability": "absent" },
+        "wordTimings": { "availability": "absent" },
+        "confidence": { "availability": "absent" },
+        "averageLogProbability": { "availability": "absent" },
+        "emptyOutput": { "availability": "derived", "value": false }
+      }
+    },
+    {
+      "backend": "parakeet-ja",
+      "jobID": "1B2FEFFE-1532-407C-8C15-283CDDFE3352",
+      "model": {
+        "modelID": "FluidInference/parakeet-0.6b-ja-coreml",
+        "revision": "2952296ff1da4a6d6a7aec545e226367db80c612",
+        "weightSHA256": {
+          "Decoderv2.mlmodelc/weights/weight.bin": "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+          "Encoder.mlmodelc/weights/weight.bin": "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+          "Jointerv2.mlmodelc/weights/weight.bin": "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+          "Preprocessor.mlmodelc/weights/weight.bin": "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9",
+          "vocab.json": "9db0aa7ab1f5d2714c20a7880cb452d753da91cb10de88cb289cda4fd473d50a"
+        }
+      },
+      "artifacts": {
+        "manifestStatus": "completed",
+        "manifestResultMatchesRawEvidence": true,
+        "rawTranscriptMatchesEvidenceText": true,
+        "manifestPath": "parakeet-ja-manifest.json",
+        "manifestSHA256": "0b8fb3a38cca6664916f4c776d6c46374a98d68e9107da882a248f52be89f4fd",
+        "rawASRPath": "parakeet-ja-raw-asr.json",
+        "rawASRSHA256": "8776109300ff5c2ff845b7a4e5f40eed01ec418a1a0aa2133942aba5d0c23e20",
+        "transcriptSHA256": "3cad6a614de6a0526a8b96ee07fc142ca1b431fe8c4997319092c7fccbd48bfb"
+      },
+      "lifecycle": {
+        "exitStatus": 0,
+        "forcedTermination": false,
+        "peakPhysicalFootprintBytes": 688260872
+      },
+      "fieldEvidence": {
+        "segments": { "availability": "absent" },
+        "tokenTimings": { "availability": "native", "count": 61 },
+        "wordTimings": { "availability": "absent" },
+        "confidence": { "availability": "native", "value": 0.919145405292511 },
+        "averageLogProbability": { "availability": "absent" },
+        "emptyOutput": { "availability": "derived", "value": false }
+      }
+    },
+    {
+      "backend": "whisperkit",
+      "jobID": "2BF3B3DB-212F-45CE-B84C-2A13BB0507DD",
+      "model": {
+        "modelID": "argmaxinc/whisperkit-coreml/openai_whisper-large-v3",
+        "revision": "97a5bf9bbc74c7d9c12c755d04dea59e672e3808",
+        "runtimeVersion": "1.1.0",
+        "runtimeRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+        "weightSHA256": {
+          "AudioEncoder.mlmodelc/weights/weight.bin": "eb07bab32dcd62ce653b5b288bd6c27bdc5a538be309f242e33ed05e1cb53457",
+          "MelSpectrogram.mlmodelc/weights/weight.bin": "97a66b915cd3fc97dcba6806d92381e1a56024b8f68c1a1cd370d4c92505fe87",
+          "TextDecoder.mlmodelc/weights/weight.bin": "680f398925225a313c62da0221aa0a58c9f1bffac5c36f20c449a70a7c9b1e55"
+        }
+      },
+      "artifacts": {
+        "manifestStatus": "completed",
+        "manifestResultMatchesRawEvidence": true,
+        "rawTranscriptMatchesEvidenceText": true,
+        "manifestPath": "whisperkit-manifest.json",
+        "manifestSHA256": "006dd5307673210c4c86a56e7bcd5c963744aa5afa7ed55a0146aab70e4302b3",
+        "rawASRPath": "whisperkit-raw-asr.json",
+        "rawASRSHA256": "6d048cb495ca7a89cae4563605d3c7c8268351b52e70df01027c2775d3c599f5",
+        "transcriptSHA256": "b68a3d9cd99d4a9f26d2cc574448b29175579d17ef9e960e7797c9bd156769c1"
+      },
+      "lifecycle": {
+        "exitStatus": 0,
+        "forcedTermination": false,
+        "peakPhysicalFootprintBytes": 3114404792
+      },
+      "fieldEvidence": {
+        "segments": { "availability": "native", "count": 13 },
+        "segmentTimings": { "availability": "native", "count": 13 },
+        "tokenTimings": { "availability": "absent" },
+        "wordTimings": { "availability": "native", "count": 132 },
+        "wordConfidence": { "availability": "native" },
+        "confidence": { "availability": "absent" },
+        "averageLogProbability": {
+          "availability": "native",
+          "value": -0.35305967926979065
+        },
+        "noSpeechProbability": {
+          "availability": "absent",
+          "observedUpstreamPlaceholder": 0,
+          "reason": "WhisperKit 1.1.0 hardcodes zero with an implementation TODO; the product omits it.",
+          "upstreamSource": "https://github.com/argmaxinc/WhisperKit/blob/1e2a163736dfa5a198e637ae44c114e1c6d5cc2d/Sources/WhisperKit/Core/TextDecoder.swift#L817"
+        },
+        "emptyOutput": { "availability": "derived", "value": false }
+      }
+    }
+  ],
+  "scope": {
+    "standardASROnly": true,
+    "translationChanged": false,
+    "alignmentChanged": false,
+    "diarizationChanged": false,
+    "liveChanged": false,
+    "uiChanged": false,
+    "ticket117Included": false
+  }
+}

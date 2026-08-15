@@ -89,7 +89,7 @@ actor WhisperKitRuntime {
                     sourceStart: Double($0.start),
                     sourceEnd: Double($0.end),
                     averageLogProbability: Double($0.avgLogprob),
-                    noSpeechProbability: Double($0.noSpeechProb),
+                    noSpeechProbability: nil,
                     compressionRatio: Double($0.compressionRatio)
                 )
             },

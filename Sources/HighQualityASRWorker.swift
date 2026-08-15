@@ -176,7 +176,9 @@ actor HighQualityASRWorkerClient {
         if anchored && backend == .reazonSpeechK2V2 {
             let operation: @Sendable () async throws -> HighQualityASRExchange = {
                 try await HighQualityJob.Services.chunkedASR(samples) { chunk in
-                    try await self.transcribe(chunk, anchored: false)
+                    var result = try await self.transcribe(chunk, anchored: false)
+                    result.model = nil
+                    return result
                 }
             }
             let exchange = try await withAsyncDeadline(
@@ -310,7 +312,7 @@ actor HighQualityASRWorkerClient {
         }
         let windowsValid = exchange.windows.map { windows in
             anchored
-                && windows.count > 1
+                && !windows.isEmpty
                 && windows.allSatisfy { window in
                     window.sourceStart.isFinite
                         && window.sourceEnd.isFinite
