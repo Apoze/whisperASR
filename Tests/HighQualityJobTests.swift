@@ -1234,6 +1234,47 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(transformations["customSpeakerLabels"] as? [String: String], [:])
     }
 
+    func testSpeakerEditorRejectsDowngradedAuditWithoutChangingCurrentResult() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await speakerEditorFixtureJob().run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+        let active = try HighQualityJob.editSpeakers(
+            in: completed,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        let stableURLs = active.manifest.generatedFiles.map {
+            active.directory.appendingPathComponent($0.path)
+        }
+        let stableData = try stableURLs.map { try Data(contentsOf: $0) }
+        try JSONSerialization.data(withJSONObject: [
+            "schemaVersion": 1,
+            "customSpeakerLabels": ["SPEAKER_00": "Mallory"],
+        ], options: [.sortedKeys]).write(
+            to: active.directory.appendingPathComponent("transformations.json"),
+            options: .atomic
+        )
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+
+        XCTAssertThrowsError(try HighQualityJob.reopen(saved)) { error in
+            XCTAssertTrue(error.localizedDescription.contains("manifest and audit"))
+        }
+        XCTAssertEqual(try stableURLs.map { try Data(contentsOf: $0) }, stableData)
+        XCTAssertThrowsError(try HighQualityJob.editSpeakers(
+            in: active,
+            edit: .rename("SPEAKER_00", to: "Bob")
+        )) { error in
+            XCTAssertTrue(error.localizedDescription.contains("manifest and audit"))
+        }
+        XCTAssertEqual(try stableURLs.map { try Data(contentsOf: $0) }, stableData)
+    }
+
     func testCompletedStandaloneJobReopensFromSavedManifestAndEvidence() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

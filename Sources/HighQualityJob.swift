@@ -2126,8 +2126,11 @@ struct HighQualityJob: Sendable {
         )
         if let transformations = try readTransformations(in: saved.directory) {
             let edits = migratedSpeakerEdits(transformations, manifest: manifest)
-            if transformations.schemaVersion == HighQualityResultTransformations.currentSchemaVersion,
-               manifest.speakerEdits ?? [] != edits {
+            guard speakerEditAuditMatchesManifest(
+                transformations,
+                edits: edits,
+                manifest: manifest
+            ) else {
                 throw savedResultError(
                     "The saved Speaker edit manifest and audit do not match.",
                     saved
@@ -3729,8 +3732,11 @@ struct HighQualityJob: Sendable {
             )
         }
         let persistedEdits = migratedSpeakerEdits(previous, manifest: activeManifest)
-        guard previous?.schemaVersion != HighQualityResultTransformations.currentSchemaVersion
-                || (activeManifest.speakerEdits ?? []) == persistedEdits else {
+        guard speakerEditAuditMatchesManifest(
+            previous,
+            edits: persistedEdits,
+            manifest: activeManifest
+        ) else {
             throw speakerEditError(
                 "The saved Speaker edit manifest and audit do not match.",
                 in: result.directory
@@ -3787,6 +3793,21 @@ struct HighQualityJob: Sendable {
             HighQualitySpeakerEdit.rename($0.key, to: $0.value, at: migrationDate)
         }
         return legacy + transformations.speakerEdits
+    }
+
+    private static func speakerEditAuditMatchesManifest(
+        _ transformations: HighQualityResultTransformations?,
+        edits: [HighQualitySpeakerEdit],
+        manifest: HighQualityJobManifest
+    ) -> Bool {
+        guard let transformations else {
+            return manifest.speakerEdits?.isEmpty != false
+        }
+        if transformations.schemaVersion == 1 {
+            return manifest.schemaVersion < HighQualityJobManifest.currentSchemaVersion
+                && manifest.speakerEdits?.isEmpty != false
+        }
+        return (manifest.speakerEdits ?? []) == edits
     }
 
     private static func normalizedSpeakerEdit(
