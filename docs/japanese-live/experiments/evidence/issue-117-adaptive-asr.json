@@ -115,6 +115,7 @@
       "holdoutOpened": false,
       "SHA256": "e86ce6aea327ac3ea981c243e62fa6477ab9b792a01e7cef61e75c7f0035fef5",
       "provenance": "issue-117-historical-run-provenance.json",
+      "provenanceStatus": "LEGACY_PROVENANCE_INCOMPLETE",
       "reusableByCurrentCode": false
     }
   },
@@ -132,7 +133,7 @@
   "verification": {
     "targeted": {
       "executed": 19,
-      "skipped": 2,
+      "skipped": 6,
       "failures": 0
     },
     "full": {
@@ -147,6 +148,11 @@
     },
     "pythonSelfTest": "PASS",
     "runnerProvenanceSelfTest": "PASS",
+    "xctestSubstitutionAfterReady": "PASS_INFRASTRUCTURE",
+    "xctestSubstitutionAfterRun": "PASS_INFRASTRUCTURE",
+    "xctestExecutableSubstitutionOnReuse": "PASS_INFRASTRUCTURE",
+    "xctestResourceSubstitutionOnReuse": "PASS_INFRASTRUCTURE",
+    "workerResourceSubstitutionOnReuse": "PASS_INFRASTRUCTURE",
     "shellSyntax": "PASS"
   },
   "scope": {

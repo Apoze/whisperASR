@@ -1,8 +1,15 @@
 {
   "schemaVersion": 1,
   "ticket": 117,
-  "status": "HISTORICAL_RAW_NOT_REUSABLE_BY_CURRENT_CODE",
-  "claim": "Metadata reconstructed from the retained READY and repair artifacts; this is not a current execution.",
+  "status": "LEGACY_PROVENANCE_INCOMPLETE",
+  "claim": "Metadata reconstructed from retained artifacts; the execution did not record the XCTest executable or required-resource hashes, so none are inferred here.",
+  "scientificVerdict": "RETAIN_HIDDEN_DEV_NO_GO",
+  "missingExecutionProof": [
+    "canonical XCTest executable path",
+    "XCTest executable SHA256 before and after execution",
+    "XCTest bundle mlx.metallib SHA256 before and after execution",
+    "worker mlx.metallib SHA256 before and after execution"
+  ],
   "raw": {
     "path": ".build/benchmarks/issue-117/development/run.json",
     "SHA256": "432644bc55fb1180c47aa096c0a5cbb25dbb5fff6d51491a27f12a1a7637dcd7"
@@ -39,7 +46,7 @@
     "exactProducerHashesRequired": true,
     "newPreflightMayReplaceReadyWhileRawExists": false,
     "currentReuseAllowed": false,
-    "reason": "Current implementation hashes differ from the retained raw producer; the runner must fail closed rather than relabel the historical raw.",
+    "reason": "The retained run predates XCTest executable provenance and is permanently non-reusable; current implementation hashes also differ from its producer.",
     "verification": {
       "command": "bash Scripts/run_adaptive_asr_117.sh preflight",
       "exitStatus": 1,

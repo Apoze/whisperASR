@@ -32,6 +32,10 @@ STATE="$ARTIFACTS/state.json"
 FINAL="$ARTIFACTS/final-report.json"
 HARNESS_REPAIR="$ARTIFACTS/harness-repair.json"
 WORKER="$ROOT/.build/debug/WhisperASR"
+TEST_BUNDLE="$ROOT/.build/debug/WhisperASRPackageTests.xctest"
+TEST_EXECUTABLE="$TEST_BUNDLE/Contents/MacOS/WhisperASRPackageTests"
+TEST_RESOURCE="$TEST_BUNDLE/Contents/MacOS/mlx.metallib"
+WORKER_RESOURCE="$ROOT/.build/debug/mlx.metallib"
 HARNESS="$ROOT/Scripts/adaptive_asr_117.py"
 E23="$ROOT/docs/japanese-live/experiments/evidence/E23/segments.json"
 CALIBRATION="$DEV/calibration.json"
@@ -49,6 +53,56 @@ baseline_job() {
     || printf '%s/%s/jobs/44000002-0000-4000-8000-000000000001\n' "$BASELINE_ROOT" "$1"
 }
 hash_file() { shasum -a 256 "$1" | awk '{print $1}'; }
+test_artifact_evidence() {
+  local bundle="${1:-$TEST_BUNDLE}" executable="${2:-$TEST_EXECUTABLE}"
+  local resource="${3:-$TEST_RESOURCE}" worker_resource="${4:-$WORKER_RESOURCE}"
+  [[ -d "$bundle" && -x "$executable" && -f "$resource" \
+    && -f "$worker_resource" ]] || return 1
+  jq -cn --arg bundle "$(realpath "$bundle")" \
+    --arg executable "$(realpath "$executable")" --arg executableSHA "$(hash_file "$executable")" \
+    --arg resource "$(realpath "$resource")" --arg resourceSHA "$(hash_file "$resource")" \
+    --arg workerResource "$(realpath "$worker_resource")" \
+    --arg workerResourceSHA "$(hash_file "$worker_resource")" \
+    '{schemaVersion:1,bundlePath:$bundle,
+      executable:{path:$executable,SHA256:$executableSHA},
+      requiredResources:[{path:$resource,SHA256:$resourceSHA},
+        {path:$workerResource,SHA256:$workerResourceSHA}]}'
+}
+
+verify_test_artifact() {
+  local expected="$1" bundle="${2:-$TEST_BUNDLE}" executable="${3:-$TEST_EXECUTABLE}"
+  local resource="${4:-$TEST_RESOURCE}" worker_resource="${5:-$WORKER_RESOURCE}" actual
+  actual="$(test_artifact_evidence "$bundle" "$executable" "$resource" \
+    "$worker_resource")" || return 1
+  jq -en --argjson expected "$expected" --argjson actual "$actual" \
+    '$expected == $actual' >/dev/null
+}
+
+ready_test_artifact() {
+  jq -ce '.testArtifact | select(.schemaVersion == 1)' "$READY"
+}
+
+require_test_artifact() {
+  local phase="$1" expected="$2"
+  shift 2
+  if ! verify_test_artifact "$expected" "$@"; then
+    write_failure infrastructure "$phase" \
+      "XCTest executable or required resource differs from READY"
+    return 1
+  fi
+}
+
+require_ready_test_artifact() {
+  local phase="$1"
+  shift
+  local expected
+  if ! expected="$(ready_test_artifact)"; then
+    write_failure infrastructure "$phase" "READY lacks complete XCTest provenance"
+    return 1
+  fi
+  require_test_artifact "$phase" "$expected" "$@"
+}
+
 assert_hash() {
   [[ -f "$1" ]] || { echo "missing input: $1" >&2; return 1; }
   local observed
@@ -70,7 +124,7 @@ write_failure() {
 
 verify_development_inputs() {
   [[ "$(uname -s)/$(uname -m)" == Darwin/arm64 ]]
-  command -v jq python3 shasum xcrun >/dev/null
+  command -v jq python3 realpath shasum xcrun >/dev/null
   git merge-base --is-ancestor "$BASE_COMMIT" HEAD
   assert_hash "$(manifest_for qudu2fx3ncc)" \
     a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b
@@ -160,13 +214,18 @@ implementation_hashes() {
 capture_run_producer() {
   local directory="$1" ready="${2:-$READY}" worker="${3:-$WORKER}"
   local implementation="${4:-$(implementation_hashes)}"
+  local test_artifact="${5:-}"
+  if [[ -z "$test_artifact" ]]; then
+    test_artifact="$(test_artifact_evidence)" || return 1
+  fi
   [[ -f "$directory/plan.json" && -f "$ready" && -f "$worker" ]] || return 1
   jq -cn --arg plan "$(hash_file "$directory/plan.json")" \
     --arg ready "$(hash_file "$ready")" \
     --arg worker "$(hash_file "$worker")" --arg commit "$(git rev-parse HEAD)" \
-    --argjson implementation "$implementation" \
+    --argjson implementation "$implementation" --argjson testArtifact "$test_artifact" \
     '{workingCommit:$commit,planSHA256:$plan,readySHA256:$ready,
-      workerSHA256:$worker,implementationSHA256:$implementation}'
+      workerSHA256:$worker,implementationSHA256:$implementation,
+      testArtifact:$testArtifact}'
 }
 
 write_run_provenance() {
@@ -196,7 +255,8 @@ verify_run_provenance() {
       and (.workingCommit | type) == "string" and .runSHA256 == $run
       and .planSHA256 == $producer.planSHA256 and .readySHA256 == $producer.readySHA256
       and .workerSHA256 == $producer.workerSHA256
-      and .implementationSHA256 == $producer.implementationSHA256' \
+      and .implementationSHA256 == $producer.implementationSHA256
+      and .testArtifact == $producer.testArtifact' \
     "$provenance" >/dev/null
 }
 
@@ -205,8 +265,38 @@ preflight_has_no_raw() { [[ ! -e "${1:-$DEV/run.json}" ]]; }
 provenance_self_test() {
   local test_root
   test_root="$(mktemp -d "${TMPDIR:-/tmp}/adaptive-asr-117-provenance.XXXXXX")"
-  mkdir -p "$test_root/development"
-  printf ready >"$test_root/ready.json"
+  local ARTIFACTS="$test_root/artifacts" STATE="$test_root/state.json"
+  local READY="$test_root/ready.json"
+  local test_bundle="$test_root/WhisperASRPackageTests.xctest"
+  local test_executable="$test_bundle/Contents/MacOS/WhisperASRPackageTests"
+  local test_resource="$test_bundle/Contents/MacOS/mlx.metallib"
+  local worker_resource="$test_root/worker-mlx.metallib"
+  local TEST_BUNDLE="$test_bundle" TEST_EXECUTABLE="$test_executable"
+  local TEST_RESOURCE="$test_resource" WORKER_RESOURCE="$worker_resource"
+  mkdir -p "$test_root/development" "$(dirname "$test_executable")"
+  printf xctest >"$test_executable"
+  chmod +x "$test_executable"
+  printf metallib >"$test_resource"
+  printf worker-metallib >"$worker_resource"
+  local test_artifact
+  test_artifact="$(test_artifact_evidence "$test_bundle" "$test_executable" "$test_resource")"
+  jq -n --argjson testArtifact "$test_artifact" '{testArtifact:$testArtifact}' >"$READY"
+  printf replaced >>"$test_executable"
+  ! require_ready_test_artifact ready-xctest-substitution \
+    "$test_bundle" "$test_executable" "$test_resource"
+  jq -e '.route == "infrastructure" and .phase == "ready-xctest-substitution"' \
+    "$ARTIFACTS/failure.json" >/dev/null
+  printf xctest >"$test_executable"
+  test_artifact="$(test_artifact_evidence)"
+  jq -n --argjson testArtifact "$test_artifact" '{testArtifact:$testArtifact}' >"$READY"
+  ! run_test run-xctest-substitution 10 "$test_root/run.log" "$test_root/runtime.json" \
+    /bin/sh -c 'printf replaced >>"$1"; exit 7' sh "$test_executable" \
+    2>"$test_root/expected-run-failure.stderr"
+  jq -e '.route == "infrastructure" and .phase == "run-xctest-substitution-xctest-post"' \
+    "$ARTIFACTS/failure.json" >/dev/null
+  printf xctest >"$test_executable"
+  test_artifact="$(test_artifact_evidence)"
+  jq -n --argjson testArtifact "$test_artifact" '{testArtifact:$testArtifact}' >"$READY"
   printf worker >"$test_root/worker"
   printf plan >"$test_root/development/plan.json"
   printf run >"$test_root/development/run.json"
@@ -218,6 +308,27 @@ provenance_self_test() {
     "$test_root/worker" "$implementation"
   verify_run_provenance "$test_root/development" "$test_root/ready.json" \
     "$test_root/worker" "$implementation"
+  printf replaced >>"$test_executable"
+  if run_asr executable-reuse ignored "$test_root/development"; then
+    return 1
+  fi
+  jq -e '.route == "infrastructure" and .phase == "executable-reuse-asr-reuse-xctest"' \
+    "$ARTIFACTS/failure.json" >/dev/null
+  printf xctest >"$test_executable"
+  printf replaced >>"$test_resource"
+  if run_asr xctest-resource-reuse ignored "$test_root/development"; then
+    return 1
+  fi
+  jq -e '.route == "infrastructure" and .phase == "xctest-resource-reuse-asr-reuse-xctest"' \
+    "$ARTIFACTS/failure.json" >/dev/null
+  printf metallib >"$test_resource"
+  printf replaced >>"$worker_resource"
+  if run_asr worker-resource-reuse ignored "$test_root/development"; then
+    return 1
+  fi
+  jq -e '.route == "infrastructure" and .phase == "worker-resource-reuse-asr-reuse-xctest"' \
+    "$ARTIFACTS/failure.json" >/dev/null
+  printf worker-metallib >"$worker_resource"
   ! verify_run_provenance "$test_root/development" "$test_root/ready.json" \
     "$test_root/worker" '{"runner":"changed","scorer":"same"}'
   ! verify_run_provenance "$test_root/development" "$test_root/ready.json" \
@@ -241,15 +352,17 @@ provenance_self_test() {
 }
 
 write_ready() {
-  local free_disk total_ram implementation
+  local free_disk total_ram implementation test_artifact
   free_disk="$(df -k "$ROOT" | awk 'NR==2 {printf "%.0f", $4 * 1024}')"
   total_ram="$(sysctl -n hw.memsize)"
   (( free_disk >= 20 * 1024 * 1024 * 1024 ))
   implementation="$(implementation_hashes)"
+  test_artifact="$(test_artifact_evidence)"
   jq -n \
     --arg command 'BENCHMARK_SLOT_GRANTED=117 bash Scripts/run_adaptive_asr_117.sh full' \
     --arg commit "$(git rev-parse HEAD)" --arg plan "$(hash_file "$DEV/plan.json")" \
     --arg binary "$(hash_file "$WORKER")" --argjson implementation "$implementation" \
+    --argjson testArtifact "$test_artifact" \
     --argjson freeDisk "$free_disk" --argjson totalRAM "$total_ram" \
     '{status:"READY_FOR_HEAVY_BENCHMARK",ticket:117,heavyRunsLaunched:0,
       command:$command,baseCommit:"75619a715d0cb6bfecc991e4855b7b229654d908",
@@ -270,7 +383,8 @@ write_ready() {
         "useful holdout recovery","bounded ASR cost <=5x Qwen",
         "peak workflow memory <=14 GiB",
         "one selected alignment and translation","English chrF++ non-regression on both"],
-      implementationSHA256:$implementation,workerSHA256:$binary,developmentPlanSHA256:$plan}' \
+      implementationSHA256:$implementation,workerSHA256:$binary,
+      testArtifact:$testArtifact,developmentPlanSHA256:$plan}' \
     >"$READY"
 }
 
@@ -304,14 +418,22 @@ verify_ready() {
 run_test() {
   local phase="$1" timeout="$2" log="$3" runtime="$4"
   shift 4
-  local remaining=$((HARD_TIMEOUT_SECONDS - (SECONDS - START_SECONDS)))
+  local remaining=$((HARD_TIMEOUT_SECONDS - (SECONDS - START_SECONDS))) test_artifact
+  if ! test_artifact="$(ready_test_artifact)"; then
+    write_failure infrastructure "$phase-xctest-pre" "READY lacks complete XCTest provenance"
+    return 1
+  fi
+  require_test_artifact "$phase-xctest-pre" "$test_artifact" || return 1
   if (( remaining <= 0 )); then
     write_failure infrastructure "$phase" "heavy benchmark exceeded 220 minutes"
     return 1
   fi
   (( timeout <= remaining )) || timeout=$remaining
-  if ! python3 Scripts/qwen_voice_music_harness.py run-command --timeout "$timeout" \
-      --log "$log" --runtime "$runtime" -- "$@"; then
+  local run_failed=0
+  python3 Scripts/qwen_voice_music_harness.py run-command --timeout "$timeout" \
+    --log "$log" --runtime "$runtime" -- "$@" || run_failed=$?
+  require_test_artifact "$phase-xctest-post" "$test_artifact" || return 1
+  if (( run_failed != 0 )); then
     write_failure infrastructure "$phase" "heavy test failed; inspect $log and $runtime"
     return 1
   fi
@@ -320,6 +442,9 @@ run_test() {
 run_asr() {
   local split="$1" corpus="$2" directory="$3"
   if [[ -e "$directory/run.json" ]]; then
+    if ! require_ready_test_artifact "$split-asr-reuse-xctest"; then
+      return 1
+    fi
     if ! verify_run_provenance "$directory"; then
       write_failure harness "$split-asr" \
         "refusing raw ASR reuse: producer provenance differs or is missing"
@@ -413,6 +538,9 @@ preflight() {
 full() {
   if ! verify_development_inputs; then
     write_failure harness full-inputs "frozen input or baseline integrity changed"
+    return 1
+  fi
+  if ! require_ready_test_artifact full-ready-xctest; then
     return 1
   fi
   if ! verify_models; then
