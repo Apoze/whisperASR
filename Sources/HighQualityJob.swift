@@ -795,6 +795,7 @@ struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
     let useExclusiveReconciliation: Bool
     let speakerCountPolicy: HighQualitySpeakerCountPolicy
     let configuration: [String: String]?
+    let speakerCentroids: [Int: [Float]]?
 
     init(
         spans: [HighQualityDiarizationSpan],
@@ -803,7 +804,8 @@ struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
         peakMemoryBytes: UInt64,
         useExclusiveReconciliation: Bool = false,
         speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
-        configuration: [String: String]? = nil
+        configuration: [String: String]? = nil,
+        speakerCentroids: [Int: [Float]]? = nil
     ) {
         self.spans = spans
         self.modelID = modelID
@@ -812,7 +814,32 @@ struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
         self.useExclusiveReconciliation = useExclusiveReconciliation
         self.speakerCountPolicy = speakerCountPolicy
         self.configuration = configuration
+        self.speakerCentroids = speakerCentroids
     }
+}
+
+struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
+    let speakerID: String
+    let modelID: String
+    let modelRevision: String
+    let runtimeRevision: String
+    let embeddingVariant: String
+    let vectorDimension: Int
+    let sourceJobID: UUID
+    let vector: [Float]
+}
+
+struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
+    // ponytail: keep UI gated until positive real-speaker DEV evidence exists.
+    static let isBetaAvailable = false
+    static let maximumCosineDistance: Float = 0.1
+    static let uncertaintyMargin: Float = 0.02
+    static let betaDescription = "Suggestions indicate uncertain acoustic similarity only; "
+        + "they do not establish identity or merge speakers automatically."
+
+    let firstSpeakerID: String
+    let secondSpeakerID: String
+    let cosineDistance: Float
 }
 
 struct HighQualitySpeakerMapping: Codable, Equatable, Sendable {
@@ -864,6 +891,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
     let configuration: [String: String]?
     var validationDiagnostics: [String]
     var worker: HighQualityWorkerEvidence?
+    var speakerCentroids: [HighQualitySpeakerCentroidEvidence]?
 
     init(
         modelID: String,
@@ -876,7 +904,8 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         speakerCountPolicy: HighQualitySpeakerCountPolicy? = nil,
         configuration: [String: String]? = nil,
         validationDiagnostics: [String],
-        worker: HighQualityWorkerEvidence? = nil
+        worker: HighQualityWorkerEvidence? = nil,
+        speakerCentroids: [HighQualitySpeakerCentroidEvidence]? = nil
     ) {
         self.modelID = modelID
         self.revision = revision
@@ -889,6 +918,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         self.configuration = configuration
         self.validationDiagnostics = validationDiagnostics
         self.worker = worker
+        self.speakerCentroids = speakerCentroids
     }
 }
 
@@ -1043,7 +1073,7 @@ struct HighQualityGeneratedFile: Codable, Equatable, Sendable {
 }
 
 struct HighQualityJobManifest: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     enum Status: String, Codable, Sendable {
         case completed
@@ -1106,6 +1136,12 @@ struct HighQualityJobResult: Sendable {
     let subtitleCues: [HighQualitySubtitleCue]
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
+
+    var duplicateSpeakerSuggestions: [HighQualityDuplicateSpeakerSuggestion] {
+        HighQualityJob.duplicateSpeakerSuggestions(
+            from: evidence.diarization?.speakerCentroids ?? []
+        )
+    }
 }
 
 struct HighQualitySavedResult: Identifiable, Sendable {
@@ -2370,7 +2406,8 @@ struct HighQualityJob: Sendable {
                         exchange,
                         items: alignedItems,
                         duration: Double(samples.count) / 16_000,
-                        completeAttribution: services.completeDiarizationAttribution
+                        completeAttribution: services.completeDiarizationAttribution,
+                        sourceJobID: request.id
                     )
                 } catch {
                     diarizationEvidence?.validationDiagnostics = [error.localizedDescription]
@@ -3485,7 +3522,8 @@ struct HighQualityJob: Sendable {
         _ exchange: HighQualityDiarizationExchange,
         items: [HighQualityAlignmentItem],
         duration: TimeInterval,
-        completeAttribution: Bool = false
+        completeAttribution: Bool = false,
+        sourceJobID: UUID? = nil
     ) throws -> HighQualityDiarizationEvidence {
         let spans = exchange.spans.sorted {
             ($0.start, $0.end, $0.speakerID) < ($1.start, $1.end, $1.speakerID)
@@ -3502,6 +3540,47 @@ struct HighQualityJob: Sendable {
         }
         let labels = Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
             .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
+        let speakerCentroids: [HighQualitySpeakerCentroidEvidence]?
+        if let vectors = exchange.speakerCentroids {
+            guard let sourceJobID,
+                  !exchange.modelID.isEmpty,
+                  !exchange.revision.isEmpty,
+                  let runtimeRevision = exchange.configuration?["runtimeRevision"],
+                  !runtimeRevision.isEmpty,
+                  let embeddingVariant = exchange.configuration?["embedderVariant"],
+                  !embeddingVariant.isEmpty else {
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit centroid provenance is incomplete.",
+                    resultDirectory: nil
+                )
+            }
+            speakerCentroids = try vectors.keys.sorted().map { speakerID in
+                guard let label = labels[speakerID],
+                      let vector = vectors[speakerID],
+                      !vector.isEmpty,
+                      vector.allSatisfy(\.isFinite),
+                      vector.contains(where: { $0 != 0 }) else {
+                    throw HighQualityJobError(
+                        stage: .diarization,
+                        message: "SpeakerKit returned an invalid speaker centroid.",
+                        resultDirectory: nil
+                    )
+                }
+                return .init(
+                    speakerID: label,
+                    modelID: exchange.modelID,
+                    modelRevision: exchange.revision,
+                    runtimeRevision: runtimeRevision,
+                    embeddingVariant: embeddingVariant,
+                    vectorDimension: vector.count,
+                    sourceJobID: sourceJobID,
+                    vector: vector
+                )
+            }
+        } else {
+            speakerCentroids = nil
+        }
         var mappings: [HighQualitySpeakerMapping] = []
         for (itemIndex, item) in items.enumerated() {
             let candidates = spans.enumerated().compactMap { spanIndex, span -> HighQualitySpeakerMapping? in
@@ -3586,8 +3665,77 @@ struct HighQualityJob: Sendable {
             useExclusiveReconciliation: exchange.useExclusiveReconciliation,
             speakerCountPolicy: exchange.speakerCountPolicy,
             configuration: exchange.configuration,
-            validationDiagnostics: []
+            validationDiagnostics: [],
+            speakerCentroids: speakerCentroids
         )
+    }
+
+    static func duplicateSpeakerSuggestions(
+        from centroids: [HighQualitySpeakerCentroidEvidence]
+    ) -> [HighQualityDuplicateSpeakerSuggestion] {
+        var comparisons: [(left: Int, right: Int, distance: Float)] = []
+        for leftIndex in centroids.indices {
+            for rightIndex in centroids.indices where rightIndex > leftIndex {
+                let left = centroids[leftIndex]
+                let right = centroids[rightIndex]
+                guard left.modelID == right.modelID,
+                      left.modelRevision == right.modelRevision,
+                      left.runtimeRevision == right.runtimeRevision,
+                      left.embeddingVariant == right.embeddingVariant,
+                      left.vectorDimension == right.vectorDimension,
+                      let distance = cosineDistance(left.vector, right.vector) else { continue }
+                comparisons.append((leftIndex, rightIndex, distance))
+            }
+        }
+        func isUnambiguous(
+            _ comparison: (left: Int, right: Int, distance: Float),
+            for centroidIndex: Int
+        ) -> Bool {
+            let ranked = comparisons.filter {
+                $0.left == centroidIndex || $0.right == centroidIndex
+            }.sorted {
+                ($0.distance, centroids[$0.left == centroidIndex ? $0.right : $0.left].speakerID)
+                    < ($1.distance, centroids[$1.left == centroidIndex ? $1.right : $1.left].speakerID)
+            }
+            guard let nearest = ranked.first,
+                  nearest.left == comparison.left,
+                  nearest.right == comparison.right else { return false }
+            return ranked.count == 1
+                || ranked[1].distance - comparison.distance
+                    >= HighQualityDuplicateSpeakerSuggestion.uncertaintyMargin
+        }
+        return comparisons.compactMap { comparison in
+            guard comparison.distance
+                    <= HighQualityDuplicateSpeakerSuggestion.maximumCosineDistance,
+                  isUnambiguous(comparison, for: comparison.left),
+                  isUnambiguous(comparison, for: comparison.right) else { return nil }
+            let left = centroids[comparison.left]
+            let right = centroids[comparison.right]
+            return HighQualityDuplicateSpeakerSuggestion(
+                firstSpeakerID: min(left.speakerID, right.speakerID),
+                secondSpeakerID: max(left.speakerID, right.speakerID),
+                cosineDistance: comparison.distance
+            )
+        }.sorted {
+            ($0.cosineDistance, $0.firstSpeakerID, $0.secondSpeakerID)
+                < ($1.cosineDistance, $1.firstSpeakerID, $1.secondSpeakerID)
+        }
+    }
+
+    static func cosineDistance(_ left: [Float], _ right: [Float]) -> Float? {
+        guard !left.isEmpty, left.count == right.count else { return nil }
+        var dot: Float = 0
+        var leftMagnitude: Float = 0
+        var rightMagnitude: Float = 0
+        for index in left.indices {
+            dot += left[index] * right[index]
+            leftMagnitude += left[index] * left[index]
+            rightMagnitude += right[index] * right[index]
+        }
+        guard leftMagnitude > 0, rightMagnitude > 0 else { return nil }
+        let distance = 1 - dot / sqrt(leftMagnitude * rightMagnitude)
+        guard distance.isFinite else { return nil }
+        return max(0, min(2, distance))
     }
 
     private static func distance(

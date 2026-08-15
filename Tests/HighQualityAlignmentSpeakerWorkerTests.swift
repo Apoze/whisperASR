@@ -164,7 +164,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
         directory="$2"
         printf '{"ready":true}' > "$directory/ready.json"
         while [ ! -f "$directory/request.json" ]; do sleep 0.01; done
-        printf '{"diarization":{"spans":[{"speakerID":3,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":34,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"automatic"},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"quantized","segmenterVariant":"W8A16","embedderVariant":"W8A16","speakerCount":"automatic","clusterDistanceThreshold":"library-default","overlap":"non-exclusive","attribution":"principal"}}}' > "$directory/response.tmp"
+        printf '{"diarization":{"spans":[{"speakerID":3,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":34,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"automatic"},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"quantized","segmenterVariant":"W8A16","embedderVariant":"W8A16","speakerCount":"automatic","clusterDistanceThreshold":"library-default","overlap":"non-exclusive","attribution":"principal"},"speakerCentroids":{"3":[0.25,0.75]}}}' > "$directory/response.tmp"
         mv "$directory/response.tmp" "$directory/response.json"
         while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
         """)
@@ -251,6 +251,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
             configuration: .standard
         )
         XCTAssertEqual(diarization.spans, [.init(speakerID: 3, start: 0, end: 1)])
+        XCTAssertEqual(diarization.speakerCentroids, [3: [0.25, 0.75]])
         XCTAssertEqual(diarization.speakerCountPolicy, .automatic)
         XCTAssertEqual(diarization.configuration?["precision"], "quantized")
         XCTAssertEqual(diarization.configuration?["overlap"], "non-exclusive")

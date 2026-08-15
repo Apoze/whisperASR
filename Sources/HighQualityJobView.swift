@@ -490,6 +490,32 @@ struct HighQualityJobView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        if HighQualityDuplicateSpeakerSuggestion.isBetaAvailable,
+           result.evidence.diarization?.speakerCentroids != nil {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Similar Voices (Beta)").font(.headline)
+                Text(HighQualityDuplicateSpeakerSuggestion.betaDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if result.duplicateSpeakerSuggestions.isEmpty {
+                    Text(
+                        "No reliable suggestion; weak or ambiguous matches remain Unknown."
+                    )
+                } else {
+                    ForEach(
+                        Array(result.duplicateSpeakerSuggestions.enumerated()),
+                        id: \.offset
+                    ) { _, suggestion in
+                        Text(
+                            "\(suggestion.firstSpeakerID) and "
+                                + "\(suggestion.secondSpeakerID) may be duplicate speaker labels."
+                        )
+                    }
+                }
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("duplicate-speaker-suggestions")
+        }
     }
 
     private func time(_ start: TimeInterval?, _ end: TimeInterval?) -> String {

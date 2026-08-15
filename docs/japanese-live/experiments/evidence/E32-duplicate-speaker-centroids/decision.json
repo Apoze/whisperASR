@@ -1,0 +1,30 @@
+{
+  "ticket": 114,
+  "developmentReportSHA256": "6ff365618798421fae4abf5f80007ea31d84021beeb1cf7d7ce5d865e0c2899d",
+  "rawDevelopmentReportSHA256": "1e7c28c830cffaf2cbb6b5f96ce62bdce05d963cd2e1d8fb12da0dc51e8fc203",
+  "corpusID": "easy-japanese-1",
+  "holdoutOpened": false,
+  "thresholdsFrozen": {
+    "maximumCosineDistance": 0.1,
+    "uncertaintyMargin": 0.02
+  },
+  "observations": {
+    "centroidCount": 6,
+    "suggestionCount": 0,
+    "usefulSuggestionCount": 0,
+    "falseSuggestionCount": 0,
+    "closestDifferentReferencePair": {
+      "firstSpeakerID": "SPEAKER_02",
+      "firstReferenceSpeaker": "P04",
+      "secondSpeakerID": "SPEAKER_03",
+      "secondReferenceSpeaker": "P09",
+      "cosineDistance": 0.5882647
+    },
+    "closestSameReferencePair": null,
+    "elapsedSeconds": 21.283066987991333,
+    "observedPeakMemoryBytes": 517539184
+  },
+  "decision": "NO_HOLDOUT",
+  "reason": "DEV produced no same-reference centroid pair, so real-world usefulness cannot be measured. It produced no false suggestion and a 0.488 cosine-distance safety gap to the closest different-reference pair. A holdout would not supply missing DEV calibration without leaking the final evaluation.",
+  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. Result UI exposure stays disabled until positive real-speaker DEV evidence exists; no real-world recall claim is made."
+}

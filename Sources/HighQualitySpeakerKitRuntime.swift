@@ -115,7 +115,8 @@ actor HighQualitySpeakerKitRuntime {
             peakMemoryBytes: measured.peakMemoryBytes,
             useExclusiveReconciliation: useExclusiveReconciliation,
             speakerCountPolicy: speakerCountPolicy,
-            configuration: configuration
+            configuration: configuration,
+            speakerCentroids: result.speakerCentroidEmbeddings
         )
     }
 

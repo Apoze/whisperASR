@@ -1,0 +1,207 @@
+{
+  "centroidCount" : 6,
+  "closestFalseCandidate" : {
+    "cosineDistance" : 0.5882647,
+    "firstReferenceSpeaker" : "P04",
+    "firstSpeakerID" : "SPEAKER_02",
+    "sameReferenceSpeaker" : false,
+    "secondReferenceSpeaker" : "P09",
+    "secondSpeakerID" : "SPEAKER_03",
+    "suggested" : false
+  },
+  "comparisons" : [
+    {
+      "cosineDistance" : 0.5882647,
+      "firstReferenceSpeaker" : "P04",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6540382,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.70829916,
+      "firstReferenceSpeaker" : "P04",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.70880795,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_02",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.72602916,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.76514,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P04",
+      "secondSpeakerID" : "SPEAKER_02",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.78063935,
+      "firstReferenceSpeaker" : "INT",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8362822,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.83711296,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.84030116,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P09",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.85622436,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.87894344,
+      "firstReferenceSpeaker" : "P04",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8969398,
+      "firstReferenceSpeaker" : "P01",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "INT",
+      "secondSpeakerID" : "SPEAKER_01",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9244248,
+      "firstReferenceSpeaker" : "P09",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P10",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.93636054,
+      "firstReferenceSpeaker" : "P10",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "P12",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    }
+  ],
+  "corpusID" : "easy-japanese-1",
+  "declaredPeakMemoryBytes" : 4294967296,
+  "elapsedSeconds" : 21.283066987991333,
+  "embeddingVariant" : "W8A16",
+  "falseSuggestionCount" : 0,
+  "holdoutOpened" : false,
+  "mappings" : [
+    {
+      "referenceOverlapSeconds" : 10.194674865722654,
+      "referenceShare" : 0.8270883063844746,
+      "referenceSpeaker" : "P01",
+      "speakerID" : "SPEAKER_00"
+    },
+    {
+      "referenceOverlapSeconds" : 68.70370766448983,
+      "referenceShare" : 0.5096710758319852,
+      "referenceSpeaker" : "INT",
+      "speakerID" : "SPEAKER_01"
+    },
+    {
+      "referenceOverlapSeconds" : 8.57941583251953,
+      "referenceShare" : 0.9272076873097382,
+      "referenceSpeaker" : "P04",
+      "speakerID" : "SPEAKER_02"
+    },
+    {
+      "referenceOverlapSeconds" : 16.26506048583984,
+      "referenceShare" : 0.9097928829492409,
+      "referenceSpeaker" : "P09",
+      "speakerID" : "SPEAKER_03"
+    },
+    {
+      "referenceOverlapSeconds" : 42.70826977539065,
+      "referenceShare" : 0.8807848239986744,
+      "referenceSpeaker" : "P10",
+      "speakerID" : "SPEAKER_04"
+    },
+    {
+      "referenceOverlapSeconds" : 8.660967773437477,
+      "referenceShare" : 0.6213541850712136,
+      "referenceSpeaker" : "P12",
+      "speakerID" : "SPEAKER_05"
+    }
+  ],
+  "maximumCosineDistance" : 0.1,
+  "modelID" : "argmaxinc\/speakerkit-coreml",
+  "modelRevision" : "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+  "observedPeakMemoryBytes" : 517539184,
+  "purpose" : "development",
+  "runtimeRevision" : "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+  "sourceSHA256" : "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c",
+  "suggestionCount" : 0,
+  "ticket" : 114,
+  "uncertaintyMargin" : 0.02,
+  "usefulSuggestionCount" : 0,
+  "vectorDimensions" : [
+    256
+  ]
+}

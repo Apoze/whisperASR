@@ -1000,6 +1000,162 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(renamed.subtitleCues.map(\.end), [4])
     }
 
+    func testSavedResultRetainsCentroidsAndSuggestsStrongDuplicateSpeakers() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = UUID()
+        let completed = try await speakerSubtitleFixtureJob(speakerCentroids: [
+            0: [1, 0],
+            1: [0.999, 0.001],
+        ]).run(.init(
+            id: id,
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        let centroids = try XCTUnwrap(completed.evidence.diarization?.speakerCentroids)
+        XCTAssertEqual(centroids.map(\.speakerID), ["SPEAKER_00", "SPEAKER_01"])
+        XCTAssertTrue(centroids.allSatisfy {
+            $0.modelID == "speakerkit"
+                && $0.modelRevision == "revision"
+                && $0.runtimeRevision == "runtime-revision"
+                && $0.embeddingVariant == "W8A16"
+                && $0.vectorDimension == 2
+                && $0.sourceJobID == id
+        })
+        XCTAssertEqual(
+            completed.duplicateSpeakerSuggestions.map {
+                [$0.firstSpeakerID, $0.secondSpeakerID]
+            },
+            [["SPEAKER_00", "SPEAKER_01"]]
+        )
+        XCTAssertEqual(
+            try HighQualityJob.reopen(XCTUnwrap(HighQualityJob.savedResults(in: root).first))
+                .evidence.diarization?.speakerCentroids,
+            centroids
+        )
+        for file in completed.manifest.generatedFiles where file.kind == .deliverable {
+            let contents = try String(
+                contentsOf: completed.directory.appendingPathComponent(file.path),
+                encoding: .utf8
+            )
+            XCTAssertFalse(contents.contains("0.999"), file.path)
+        }
+        XCTAssertTrue(completed.turns.allSatisfy { $0.speakerName == nil })
+    }
+
+    func testDuplicateSpeakerSuggestionAbstainsWhenNearestMatchesAreAmbiguous() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let result = try await speakerSubtitleFixtureJob(speakerCentroids: [
+            0: [1, 0],
+            1: [0.999, 0.001],
+            2: [0.999, -0.001],
+        ]).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
+    }
+
+    func testDuplicateSpeakerSuggestionRejectsIncompatibleCentroids() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let result = try await speakerSubtitleFixtureJob(speakerCentroids: [
+            0: [1, 0],
+            1: [1, 0, 0],
+        ]).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
+    }
+
+    func testDuplicateSpeakerSuggestionAbstainsForWeakSimilarity() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let result = try await speakerSubtitleFixtureJob(speakerCentroids: [
+            0: [1, 0],
+            1: [0, 1],
+        ]).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
+    }
+
+    func testSpeakerCentroidValidationFailsClosedForInvalidVectors() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        do {
+            _ = try await speakerSubtitleFixtureJob(speakerCentroids: [0: [0, 0]])
+                .run(.init(
+                    sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                    deliverables: [.japaneseTranscript],
+                    backend: .qwenJA,
+                    speakerLabels: true,
+                    outputRoot: root
+                ))
+            XCTFail("Invalid centroids must fail closed.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .diarization)
+            XCTAssertEqual(error.message, "SpeakerKit returned an invalid speaker centroid.")
+        }
+    }
+
+    func testSpeakerCentroidValidationFailsClosedForIncompleteProvenance() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        do {
+            _ = try await speakerSubtitleFixtureJob(
+                speakerCentroids: [0: [1, 0]],
+                speakerCentroidConfiguration: nil
+            ).run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                speakerLabels: true,
+                outputRoot: root
+            ))
+            XCTFail("Incomplete centroid provenance must fail closed.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .diarization)
+            XCTAssertEqual(error.message, "SpeakerKit centroid provenance is incomplete.")
+        }
+    }
+
+    func testDuplicateSpeakerBetaCopyExplainsSimilarityAndUncertainty() {
+        let description = HighQualityDuplicateSpeakerSuggestion.betaDescription
+
+        XCTAssertFalse(HighQualityDuplicateSpeakerSuggestion.isBetaAvailable)
+        XCTAssertTrue(description.contains("acoustic similarity"))
+        XCTAssertTrue(description.contains("uncertain"))
+        XCTAssertTrue(description.contains("merge"))
+    }
+
     func testCompletedStandaloneJobReopensFromSavedManifestAndEvidence() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -1236,7 +1392,10 @@ final class HighQualityJobTests: XCTestCase {
             backend: .qwenJA,
             outputRoot: root
         ))
-        XCTAssertEqual(completed.manifest.schemaVersion, 3)
+        XCTAssertEqual(
+            completed.manifest.schemaVersion,
+            HighQualityJobManifest.currentSchemaVersion
+        )
         XCTAssertNotNil(completed.manifest.rawEvidenceSHA256)
         let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
         var data = try Data(contentsOf: evidenceURL)
@@ -2036,7 +2195,13 @@ final class HighQualityJobTests: XCTestCase {
         ))
     }
 
-    private func speakerSubtitleFixtureJob() -> HighQualityJob {
+    private func speakerSubtitleFixtureJob(
+        speakerCentroids: [Int: [Float]]? = nil,
+        speakerCentroidConfiguration: [String: String]? = [
+            "runtimeRevision": "runtime-revision",
+            "embedderVariant": "W8A16",
+        ]
+    ) -> HighQualityJob {
         HighQualityJob(services: .init(
             loadSource: { _ in Array(repeating: 0, count: 160_000) },
             prepareASR: { _ in },
@@ -2065,15 +2230,23 @@ final class HighQualityJobTests: XCTestCase {
             unloadAlignment: {},
             prepareDiarization: { _, _ in },
             diarizeSpeakers: { _, useExclusiveReconciliation, _ in
-                .init(
-                    spans: [
-                        .init(speakerID: 0, start: 1, end: 4),
-                        .init(speakerID: 1, start: 4, end: 5),
-                    ],
+                let speakerIDs = speakerCentroids?.keys.sorted() ?? [0, 1]
+                return .init(
+                    spans: speakerIDs.enumerated().map { index, speakerID in
+                        .init(
+                            speakerID: speakerID,
+                            start: index == 0 ? 1 : Double(index + 3),
+                            end: index == 0 ? 4 : Double(index + 4)
+                        )
+                    },
                     modelID: "speakerkit",
                     revision: "revision",
                     peakMemoryBytes: 0,
-                    useExclusiveReconciliation: useExclusiveReconciliation
+                    useExclusiveReconciliation: useExclusiveReconciliation,
+                    configuration: speakerCentroids == nil
+                        ? nil
+                        : speakerCentroidConfiguration,
+                    speakerCentroids: speakerCentroids
                 )
             },
             unloadDiarization: {},
