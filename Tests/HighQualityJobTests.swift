@@ -1056,6 +1056,17 @@ final class HighQualityJobTests: XCTestCase {
                     ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
                 )
             }
+            if index == 2 {
+                XCTAssertEqual(edited.turns, completed.turns)
+                XCTAssertEqual(edited.subtitleCues, completed.subtitleCues)
+                XCTAssertEqual(edited.manifest.speakerEdits, Array(edits.prefix(3)))
+                let reopened = try HighQualityJob.reopen(try XCTUnwrap(
+                    HighQualityJob.savedResults(in: root).first
+                ))
+                XCTAssertEqual(reopened.turns, completed.turns)
+                XCTAssertEqual(reopened.subtitleCues, completed.subtitleCues)
+                XCTAssertEqual(reopened.manifest.speakerEdits, Array(edits.prefix(3)))
+            }
         }
 
         XCTAssertEqual(
@@ -1107,8 +1118,13 @@ final class HighQualityJobTests: XCTestCase {
     func testConcurrentSpeakerReanalysisRejectsAStaleEditorCommit() async throws {
         let fixture = try await savedSpeakerFixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
-        let staleResult = fixture.previous
-        let staged = expectation(description: "Stale Speaker edit staged")
+        let baseline = try await speakerRerunJob(
+            CallLog(),
+            speakerIDs: [7, 8, 9]
+        ).rerunSpeakers(fixture.saved, configuration: .standard)
+        let baselineSaved = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first)
+        let staleResult = baseline
+        let ready = expectation(description: "Stale Speaker edit ready to commit")
         let resumeStaleCommit = DispatchSemaphore(value: 0)
         defer { resumeStaleCommit.signal() }
         let staleEdit = Task.detached {
@@ -1116,17 +1132,26 @@ final class HighQualityJobTests: XCTestCase {
                 in: staleResult,
                 edit: .rename("SPEAKER_00", to: "Stale")
             ) {
-                staged.fulfill()
+                ready.fulfill()
                 resumeStaleCommit.wait()
             }
         }
-        await fulfillment(of: [staged], timeout: 1)
+        await fulfillment(of: [ready], timeout: 1)
 
         let calls = CallLog()
-        let reanalyzed = try await speakerRerunJob(calls).rerunSpeakers(
-            fixture.saved,
+        let reanalyzed = try await speakerRerunJob(
+            calls,
+            speakerIDs: [8, 7, 9]
+        ).rerunSpeakers(
+            baselineSaved,
             configuration: .standard
         )
+        XCTAssertEqual(baseline.manifest.speakerEdits, reanalyzed.manifest.speakerEdits)
+        XCTAssertNotEqual(
+            baseline.manifest.rawEvidenceSHA256,
+            reanalyzed.manifest.rawEvidenceSHA256
+        )
+        XCTAssertNotEqual(baseline.turns, reanalyzed.turns)
         resumeStaleCommit.signal()
 
         do {
@@ -1144,6 +1169,77 @@ final class HighQualityJobTests: XCTestCase {
         ))
         XCTAssertEqual(reopened.manifest.rawEvidenceSHA256, reanalyzed.manifest.rawEvidenceSHA256)
         XCTAssertEqual(reopened.turns, reanalyzed.turns)
+    }
+
+    func testConcurrentSourceRelocationRejectsAStaleSpeakerEdit() async throws {
+        let fixture = try await savedSpeakerFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let relocatedSource = fixture.root.appendingPathComponent("relocated.wav")
+        try Data("audio-reference".utf8).write(to: relocatedSource)
+        let ready = expectation(description: "Stale Speaker edit ready to commit")
+        let resumeStaleCommit = DispatchSemaphore(value: 0)
+        defer { resumeStaleCommit.signal() }
+        let staleEdit = Task.detached {
+            try HighQualityJob.editSpeakers(
+                in: fixture.previous,
+                edit: .rename("SPEAKER_00", to: "Stale")
+            ) {
+                ready.fulfill()
+                resumeStaleCommit.wait()
+            }
+        }
+        await fulfillment(of: [ready], timeout: 1)
+
+        _ = try HighQualityJob.relocateSource(fixture.saved, to: relocatedSource)
+        resumeStaleCommit.signal()
+
+        do {
+            _ = try await staleEdit.value
+            XCTFail("A stale editor must not replace a newer source relocation.")
+        } catch let error as HighQualityJobError {
+            XCTAssertTrue(error.message.contains("changed"), error.message)
+        }
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first)
+        XCTAssertEqual(saved.sourceURL, relocatedSource.standardizedFileURL)
+        XCTAssertEqual(try HighQualityJob.reopen(saved).manifest, fixture.previous.manifest)
+    }
+
+    func testConcurrentSourceRelocationRejectsSpeakerReanalysisInProgress() async throws {
+        let fixture = try await savedSpeakerFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let relocatedSource = fixture.root.appendingPathComponent("relocated.wav")
+        try FileManager.default.copyItem(at: fixture.source, to: relocatedSource)
+        let diarizationStarted = AsyncStream<Void>.makeStream()
+        let resumeDiarization = AsyncStream<Void>.makeStream()
+        defer { resumeDiarization.continuation.finish() }
+        let calls = CallLog()
+        let rerun = Task {
+            try await speakerRerunJob(calls) {
+                diarizationStarted.continuation.yield()
+                var iterator = resumeDiarization.stream.makeAsyncIterator()
+                _ = await iterator.next()
+            }.rerunSpeakers(fixture.saved, configuration: .standard)
+        }
+        var started = diarizationStarted.stream.makeAsyncIterator()
+        _ = await started.next()
+
+        _ = try HighQualityJob.relocateSource(fixture.saved, to: relocatedSource)
+        resumeDiarization.continuation.finish()
+
+        do {
+            _ = try await rerun.value
+            XCTFail("A relocation must invalidate Speaker reanalysis already in progress.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .export)
+            XCTAssertTrue(error.message.contains("changed"), error.message)
+        }
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first)
+        XCTAssertEqual(saved.sourceURL, relocatedSource.standardizedFileURL)
+        XCTAssertEqual(try HighQualityJob.reopen(saved).turns, fixture.previous.turns)
+        let workerCalls = await calls.values
+        XCTAssertEqual(workerCalls, [
+            "load", "prepare-speakerkit", "diarize-speakerkit", "unload-speakerkit",
+        ])
     }
 
     func testConfirmedSpeakerNameSurvivesReassigningItsLastTurn() async throws {
@@ -2239,11 +2335,15 @@ final class HighQualityJobTests: XCTestCase {
             .write(to: evidenceURL, options: .atomic)
 
         let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
-        let reopened = try HighQualityJob.reopen(saved)
+        let relocatedSource = root.appendingPathComponent("legacy-source.wav")
+        try Data("legacy-source".utf8).write(to: relocatedSource)
+        let relocated = try HighQualityJob.relocateSource(saved, to: relocatedSource)
+        let reopened = try HighQualityJob.reopen(relocated)
 
         XCTAssertEqual(reopened.manifest.schemaVersion, 2)
         XCTAssertNil(reopened.manifest.rawEvidenceSHA256)
         XCTAssertEqual(reopened.japaneseTranscript, completed.japaneseTranscript)
+        XCTAssertEqual(relocated.sourceURL, relocatedSource)
         XCTAssertThrowsError(try HighQualityJob.renameSpeakers(in: reopened, names: [:])) {
             XCTAssertTrue($0.localizedDescription.contains("current schema"))
         }
@@ -3051,7 +3151,11 @@ final class HighQualityJobTests: XCTestCase {
         ))
     }
 
-    private func speakerRerunJob(_ calls: CallLog) -> HighQualityJob {
+    private func speakerRerunJob(
+        _ calls: CallLog,
+        speakerIDs: [Int] = [7, 8, 9],
+        beforeDiarizationResult: @escaping @Sendable () async -> Void = {}
+    ) -> HighQualityJob {
         HighQualityJob(services: .init(
             loadSource: { _ in
                 await calls.append("load")
@@ -3072,11 +3176,12 @@ final class HighQualityJobTests: XCTestCase {
             prepareDiarization: { _, _ in await calls.append("prepare-speakerkit") },
             diarizeSpeakers: { _, exclusive, configuration in
                 await calls.append("diarize-speakerkit")
+                await beforeDiarizationResult()
                 return .init(
                     spans: [
-                        .init(speakerID: 7, start: 1, end: 3),
-                        .init(speakerID: 8, start: 4, end: 6),
-                        .init(speakerID: 9, start: 9, end: 10),
+                        .init(speakerID: speakerIDs[0], start: 1, end: 3),
+                        .init(speakerID: speakerIDs[1], start: 4, end: 6),
+                        .init(speakerID: speakerIDs[2], start: 9, end: 10),
                     ],
                     modelID: "speakerkit-rerun",
                     revision: "rerun-revision",

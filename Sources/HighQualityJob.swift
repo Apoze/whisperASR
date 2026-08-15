@@ -1265,7 +1265,7 @@ struct HighQualitySavedResult: Identifiable, Sendable {
     }
 }
 
-private struct HighQualityResultTransformations: Codable {
+private struct HighQualityResultTransformations: Codable, Equatable {
     static let currentSchemaVersion = 2
 
     let schemaVersion: Int
@@ -2152,7 +2152,9 @@ struct HighQualityJob: Sendable {
                     saved
                 )
             }
-            result = try applyingSpeakerEdits(edits, to: result)
+            if !edits.isEmpty {
+                result = try applyingSpeakerEdits(edits, to: result)
+            }
         } else if manifest.speakerEdits?.isEmpty == false {
             throw savedResultError("The saved Speaker edit audit is missing.", saved)
         }
@@ -2179,7 +2181,7 @@ struct HighQualityJob: Sendable {
                 == true else {
             throw savedResultError("Choose an existing local media file.", saved)
         }
-        _ = try reopen(saved)
+        let reopened = try reopen(saved)
         let previous = try readTransformations(in: saved.directory)
         let relocatedPath = sourceURL.standardizedFileURL.path
         let transformations = try encoder.encode(HighQualityResultTransformations(
@@ -2191,11 +2193,23 @@ struct HighQualityJob: Sendable {
         ))
         try transactionallyWrite(
             ["transformations.json": transformations],
-            in: saved.directory
+            in: saved.directory,
+            validateActive: {
+                guard try activeResultMatches(
+                    reopened.manifest,
+                    transformations: previous,
+                    in: saved.directory
+                ) else {
+                    throw savedResultError(
+                        "The saved result changed during source relocation. Reopen it and try again.",
+                        saved
+                    )
+                }
+            }
         )
         return HighQualitySavedResult(
             directory: saved.directory,
-            manifest: saved.manifest,
+            manifest: reopened.manifest,
             relocatedSourcePath: relocatedPath
         )
     }
@@ -2237,13 +2251,30 @@ struct HighQualityJob: Sendable {
                 resultDirectory: saved.directory
             )
         }
-        let sourceURL = saved.sourceURL
+        let transformations = try Self.readTransformations(in: saved.directory)
+        guard try Self.activeResultMatches(
+            previous.manifest,
+            transformations: transformations,
+            in: saved.directory
+        ) else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "The saved Speaker result changed before reanalysis. Reopen it and try again.",
+                resultDirectory: saved.directory
+            )
+        }
+        let activeSaved = HighQualitySavedResult(
+            directory: saved.directory,
+            manifest: previous.manifest,
+            relocatedSourcePath: transformations?.relocatedSourcePath
+        )
+        let sourceURL = activeSaved.sourceURL
         guard sourceURL.isFileURL,
               (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
                 == true else {
             throw HighQualityJobError(
                 stage: .source,
-                message: saved.sourceRelocationMessage
+                message: activeSaved.sourceRelocationMessage
                     ?? "The saved source audio is unavailable. Locate it before reanalysis.",
                 resultDirectory: saved.directory
             )
@@ -2454,7 +2485,6 @@ struct HighQualityJob: Sendable {
             )
             files["raw-asr.json"] = evidenceData
             files["manifest.json"] = manifestData
-            let transformations = try Self.readTransformations(in: saved.directory)
             if let transformations {
                 files["transformations.json"] = try Self.encoder.encode(
                     HighQualityResultTransformations(
@@ -2472,8 +2502,9 @@ struct HighQualityJob: Sendable {
                     try beforeCommit()
                 },
                 validateActive: {
-                    guard try Self.activeSpeakerResultMatches(
+                    guard try Self.activeResultMatches(
                         previous.manifest,
+                        transformations: transformations,
                         in: saved.directory
                     ) else {
                         throw HighQualityJobError(
@@ -3819,8 +3850,9 @@ struct HighQualityJob: Sendable {
             in: result.directory,
             beforeCommit: beforeCommit,
             validateActive: {
-                guard try activeSpeakerResultMatches(
-                    result.manifest,
+                guard try activeResultMatches(
+                    activeManifest,
+                    transformations: previous,
                     in: result.directory
                 ) else {
                     throw speakerEditError(
@@ -3860,15 +3892,13 @@ struct HighQualityJob: Sendable {
         return (manifest.speakerEdits ?? []) == edits
     }
 
-    private static func activeSpeakerResultMatches(
+    private static func activeResultMatches(
         _ expected: HighQualityJobManifest,
+        transformations: HighQualityResultTransformations?,
         in directory: URL
     ) throws -> Bool {
-        let active = try readManifest(in: directory)
-        return active.status == .completed
-            && active.jobID == expected.jobID
-            && active.rawEvidenceSHA256 == expected.rawEvidenceSHA256
-            && active.speakerEdits == expected.speakerEdits
+        try readManifest(in: directory) == expected
+            && readTransformations(in: directory) == transformations
     }
 
     private static func normalizedSpeakerEdit(
@@ -5056,7 +5086,24 @@ struct HighQualityJob: Sendable {
         guard files.contains(where: { path, data in
             (try? Data(contentsOf: result.directory.appendingPathComponent(path))) != data
         }) else { return }
-        try transactionallyWrite(files, in: result.directory)
+        let transformations = try readTransformations(in: result.directory)
+        try transactionallyWrite(
+            files,
+            in: result.directory,
+            validateActive: {
+                guard try activeResultMatches(
+                    result.manifest,
+                    transformations: transformations,
+                    in: result.directory
+                ) else {
+                    throw HighQualityJobError(
+                        stage: .export,
+                        message: "The saved result changed while restoring Deliverables.",
+                        resultDirectory: result.directory
+                    )
+                }
+            }
+        )
     }
 
     private static func deliverableFiles(
@@ -5096,19 +5143,6 @@ struct HighQualityJob: Sendable {
         validateActive: () throws -> Void = {}
     ) throws {
         let fileManager = FileManager.default
-        let staging = directory.deletingLastPathComponent().appendingPathComponent(
-            ".\(directory.lastPathComponent).staging-\(UUID().uuidString)",
-            isDirectory: true
-        )
-        try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
-        defer { try? fileManager.removeItem(at: staging) }
-        try hardLinkContents(of: directory, to: staging)
-        try writeFiles(files, to: staging)
-        guard files.allSatisfy({ path, data in
-            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
-        }) else {
-            throw CocoaError(.fileWriteUnknown)
-        }
         try beforeCommit()
         let lockURL = directory.deletingLastPathComponent().appendingPathComponent(
             ".\(directory.lastPathComponent).update.lock"
@@ -5127,6 +5161,19 @@ struct HighQualityJob: Sendable {
         }
         defer { _ = flock(descriptor, LOCK_UN) }
         try validateActive()
+        let staging = directory.deletingLastPathComponent().appendingPathComponent(
+            ".\(directory.lastPathComponent).staging-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
+        defer { try? fileManager.removeItem(at: staging) }
+        try hardLinkContents(of: directory, to: staging)
+        try writeFiles(files, to: staging)
+        guard files.allSatisfy({ path, data in
+            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
+        }) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
         let status = staging.path.withCString { stagedPath in
             directory.path.withCString { activePath in
                 renameatx_np(
