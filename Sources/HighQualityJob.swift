@@ -1,5 +1,4 @@
 import CryptoKit
-import Darwin
 import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
@@ -4171,20 +4170,7 @@ struct HighQualityJob: Sendable {
             throw CocoaError(.fileWriteUnknown)
         }
         try beforeCommit()
-        let status = staging.path.withCString { stagedPath in
-            directory.path.withCString { activePath in
-                renameatx_np(
-                    AT_FDCWD,
-                    stagedPath,
-                    AT_FDCWD,
-                    activePath,
-                    UInt32(RENAME_SWAP)
-                )
-            }
-        }
-        guard status == 0 else {
-            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-        }
+        try AtomicDirectory.swap(staging, with: directory)
     }
 
     private static func hardLinkContents(of source: URL, to destination: URL) throws {

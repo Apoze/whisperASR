@@ -1,7 +1,51 @@
 import Foundation
 
+struct HighQualityProjectVoiceCentroid: Codable, Equatable, Sendable {
+    let anonymousSpeakerID: String
+    let vectorDimension: Int
+    let values: [Float]
+    let modelID: String
+    let modelRevision: String
+    let runtimeRevision: String
+    let embeddingVariant: String
+    let sourceJobID: UUID
+}
+
+enum HighQualityProjectDestructiveAction: Equatable {
+    case reset
+    case delete
+}
+
+struct HighQualityProjectVoiceProfile: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    let displayName: String
+    let centroids: [HighQualityProjectVoiceCentroid]
+}
+
+struct HighQualityProjectHistoryEntry: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    let action: String
+    let createdAt: Date
+    let jobID: UUID?
+    let details: [String: String]
+}
+
+struct HighQualityProjectScope: Codable, Equatable, Sendable {
+    let metadata: [String: String]
+    let glossarySelection: [String]
+    let voiceProfiles: [HighQualityProjectVoiceProfile]
+    let history: [HighQualityProjectHistoryEntry]
+
+    static let empty = Self(
+        metadata: [:],
+        glossarySelection: [],
+        voiceProfiles: [],
+        history: []
+    )
+}
+
 struct HighQualityProjectManifest: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     let schemaVersion: Int
     let id: UUID
@@ -10,6 +54,7 @@ struct HighQualityProjectManifest: Codable, Equatable, Sendable {
     let createdAt: Date
     let updatedAt: Date
     let jobReferences: [HighQualityProjectJobReference]
+    let scope: HighQualityProjectScope?
 }
 
 struct HighQualityProjectError: LocalizedError, Equatable, Sendable {
@@ -38,6 +83,7 @@ struct HighQualityProject: Identifiable, Sendable {
     var name: String { manifest.name }
     var folderURL: URL { URL(fileURLWithPath: manifest.folderPath) }
     var jobsDirectory: URL { directory.appendingPathComponent("Jobs", isDirectory: true) }
+    var scope: HighQualityProjectScope { manifest.scope ?? .empty }
     var savedResults: [HighQualitySavedResult] {
         let references = Dictionary(uniqueKeysWithValues: jobReferences.map { ($0.id, $0) })
         return HighQualityJob.savedResults(in: jobsDirectory)
@@ -83,7 +129,8 @@ struct HighQualityProject: Identifiable, Sendable {
                 folderPath: folder.path,
                 createdAt: now,
                 updatedAt: now,
-                jobReferences: []
+                jobReferences: [],
+                scope: .empty
             )
         )
         do {
@@ -109,12 +156,15 @@ struct HighQualityProject: Identifiable, Sendable {
     static func all(
         in root: URL = AppStoragePaths.highQualityProjects
     ) -> [Self] {
-        guard let directories = try? FileManager.default.contentsOfDirectory(
-            at: root,
-            includingPropertiesForKeys: [.isDirectoryKey]
-        ) else { return [] }
-        return directories.compactMap { try? load(from: $0) }.sorted {
-            $0.manifest.createdAt < $1.manifest.createdAt
+        withMetadataLock {
+            cleanupResetDirectories(in: root)
+            guard let directories = try? FileManager.default.contentsOfDirectory(
+                at: root,
+                includingPropertiesForKeys: [.isDirectoryKey]
+            ) else { return [] }
+            return directories.compactMap { try? load(from: $0) }.sorted {
+                $0.manifest.createdAt < $1.manifest.createdAt
+            }
         }
     }
 
@@ -122,7 +172,10 @@ struct HighQualityProject: Identifiable, Sendable {
         _ id: UUID,
         in root: URL = AppStoragePaths.highQualityProjects
     ) throws -> Self {
-        try load(from: root.appendingPathComponent(id.uuidString, isDirectory: true))
+        try withMetadataLock {
+            cleanupResetDirectories(in: root)
+            return try load(from: root.appendingPathComponent(id.uuidString, isDirectory: true))
+        }
     }
 
     func renamed(to name: String) throws -> Self {
@@ -139,6 +192,62 @@ struct HighQualityProject: Identifiable, Sendable {
                 folder,
                 managedRoot: directory.deletingLastPathComponent()
             ))
+        }
+    }
+
+    func updatingScope(_ scope: HighQualityProjectScope) throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory)
+            guard Self.validScope(scope, jobIDs: Set(current.jobReferences.map(\.id))) else {
+                throw HighQualityProjectError(message: "This Project scope is invalid.")
+            }
+            return try current.updating(scope: scope)
+        }
+    }
+
+    func reset() throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory)
+            let staging = directory.deletingLastPathComponent().appendingPathComponent(
+                ".\(id.uuidString).reset-\(UUID().uuidString)",
+                isDirectory: true
+            )
+            let reset = Self(
+                directory: directory,
+                manifest: .init(
+                    schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
+                    id: current.id,
+                    name: current.name,
+                    folderPath: current.folderURL.path,
+                    createdAt: current.manifest.createdAt,
+                    updatedAt: Date(),
+                    jobReferences: [],
+                    scope: .empty
+                )
+            )
+            do {
+                try FileManager.default.createDirectory(
+                    at: staging,
+                    withIntermediateDirectories: false
+                )
+                try FileManager.default.createDirectory(
+                    at: staging.appendingPathComponent("Jobs", isDirectory: true),
+                    withIntermediateDirectories: false
+                )
+                try Self.write(reset.manifest, to: staging)
+                try AtomicDirectory.swap(staging, with: directory)
+            } catch {
+                try? FileManager.default.removeItem(at: staging)
+                throw HighQualityProjectError(
+                    message: "Could not reset the Project: \(error.localizedDescription)"
+                )
+            }
+            do {
+                try FileManager.default.removeItem(at: staging)
+            } catch {
+                Self.removeResetDirectory(staging)
+            }
+            return reset
         }
     }
 
@@ -205,18 +314,20 @@ struct HighQualityProject: Identifiable, Sendable {
     private func updating(
         name: String? = nil,
         folder: URL? = nil,
-        jobReferences: [HighQualityProjectJobReference]? = nil
+        jobReferences: [HighQualityProjectJobReference]? = nil,
+        scope: HighQualityProjectScope? = nil
     ) throws -> Self {
         let updated = Self(
             directory: directory,
             manifest: .init(
-                schemaVersion: manifest.schemaVersion,
+                schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
                 id: id,
                 name: name ?? self.name,
                 folderPath: folder?.path ?? manifest.folderPath,
                 createdAt: manifest.createdAt,
                 updatedAt: Date(),
-                jobReferences: jobReferences ?? manifest.jobReferences
+                jobReferences: jobReferences ?? manifest.jobReferences,
+                scope: scope ?? self.scope
             )
         )
         do {
@@ -240,7 +351,11 @@ struct HighQualityProject: Identifiable, Sendable {
                 HighQualityProjectManifest.self,
                 from: Data(contentsOf: directory.appendingPathComponent("project.json"))
             )
-            guard manifest.schemaVersion == HighQualityProjectManifest.currentSchemaVersion,
+            let scope = manifest.scope ?? .empty
+            guard (1...HighQualityProjectManifest.currentSchemaVersion).contains(
+                    manifest.schemaVersion
+                  ),
+                  (manifest.schemaVersion == 1 || manifest.scope != nil),
                   directory.lastPathComponent == manifest.id.uuidString,
                   manifest.folderPath.hasPrefix("/"),
                   !manifest.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -249,7 +364,8 @@ struct HighQualityProject: Identifiable, Sendable {
                     root: directory.deletingLastPathComponent()
                   ),
                   Set(manifest.jobReferences.map(\.id)).count == manifest.jobReferences.count,
-                  manifest.jobReferences.allSatisfy(validReference) else {
+                  manifest.jobReferences.allSatisfy(validReference),
+                  validScope(scope, jobIDs: Set(manifest.jobReferences.map(\.id))) else {
                 throw HighQualityProjectError(message: "This Project metadata is unsupported.")
             }
             return Self(directory: directory, manifest: manifest)
@@ -274,7 +390,8 @@ struct HighQualityProject: Identifiable, Sendable {
         let folder = url.standardizedFileURL.resolvingSymlinksInPath()
         guard url.isFileURL,
               isDirectory(folder),
-              !isInsideManagedRoot(folder, root: managedRoot) else {
+              !isInsideManagedRoot(folder, root: managedRoot),
+              !isInsideManagedRoot(managedRoot, root: folder) else {
             throw HighQualityProjectError(
                 message: "Choose an existing local folder outside Project storage."
             )
@@ -303,6 +420,96 @@ struct HighQualityProject: Identifiable, Sendable {
         return !components.isEmpty && components.allSatisfy {
             !$0.isEmpty && $0 != "." && $0 != ".."
         }
+    }
+
+    private static func validScope(
+        _ scope: HighQualityProjectScope,
+        jobIDs: Set<UUID>
+    ) -> Bool {
+        let glossary = scope.glossarySelection
+        let profiles = scope.voiceProfiles
+        let history = scope.history
+        return scope.metadata.keys.allSatisfy(validIdentifier)
+            && Set(glossary).count == glossary.count
+            && glossary.allSatisfy(validIdentifier)
+            && Set(profiles.map(\.id)).count == profiles.count
+            && profiles.allSatisfy { profile in
+                guard validIdentifier(profile.displayName),
+                      let first = profile.centroids.first else { return false }
+                return profile.centroids.allSatisfy { centroid in
+                    validIdentifier(centroid.anonymousSpeakerID)
+                        && centroid.vectorDimension == centroid.values.count
+                        && centroid.vectorDimension > 0
+                        && centroid.values.allSatisfy(\.isFinite)
+                        && jobIDs.contains(centroid.sourceJobID)
+                        && compatible(centroid, with: first)
+                        && [
+                            centroid.modelID,
+                            centroid.modelRevision,
+                            centroid.runtimeRevision,
+                            centroid.embeddingVariant,
+                        ].allSatisfy(validIdentifier)
+                }
+            }
+            && Set(history.map(\.id)).count == history.count
+            && history.allSatisfy {
+                validIdentifier($0.action)
+                    && $0.details.keys.allSatisfy(validIdentifier)
+                    && $0.jobID.map(jobIDs.contains) != false
+            }
+    }
+
+    private static func compatible(
+        _ centroid: HighQualityProjectVoiceCentroid,
+        with reference: HighQualityProjectVoiceCentroid
+    ) -> Bool {
+        centroid.vectorDimension == reference.vectorDimension
+            && centroid.modelID == reference.modelID
+            && centroid.modelRevision == reference.modelRevision
+            && centroid.runtimeRevision == reference.runtimeRevision
+            && centroid.embeddingVariant == reference.embeddingVariant
+    }
+
+    private static func cleanupResetDirectories(in root: URL) {
+        guard let directories = try? FileManager.default.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey]
+        ) else { return }
+        for directory in directories where isResetDirectory(directory) {
+            removeResetDirectory(directory)
+        }
+    }
+
+    private static func isResetDirectory(_ directory: URL) -> Bool {
+        let parts = directory.lastPathComponent.dropFirst().components(separatedBy: ".reset-")
+        return directory.lastPathComponent.hasPrefix(".")
+            && parts.count == 2
+            && parts.allSatisfy { UUID(uuidString: $0) != nil }
+    }
+
+    private static func removeResetDirectory(_ directory: URL) {
+        if let enumerator = FileManager.default.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.isSymbolicLinkKey]
+        ) {
+            for case let item as URL in enumerator
+                where (try? item.resourceValues(forKeys: [.isSymbolicLinkKey]))?
+                    .isSymbolicLink != true {
+                try? FileManager.default.setAttributes(
+                    [.immutable: false],
+                    ofItemAtPath: item.path
+                )
+            }
+        }
+        try? FileManager.default.setAttributes(
+            [.immutable: false],
+            ofItemAtPath: directory.path
+        )
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    private static func validIdentifier(_ value: String) -> Bool {
+        !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private static func withMetadataLock<T>(_ operation: () throws -> T) rethrows -> T {
@@ -346,5 +553,195 @@ struct HighQualityProject: Identifiable, Sendable {
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return encoder
+    }
+}
+
+struct HighQualityProjectWorkspace {
+    let projectsRoot: URL
+    let standaloneJobsRoot: URL
+    private(set) var projects: [HighQualityProject]
+    private(set) var selectedProjectID: UUID?
+    private(set) var savedResults: [HighQualitySavedResult]
+    private(set) var selectedSavedResultID: UUID?
+    private(set) var sourceURL: URL?
+    private(set) var youtubeURL: String
+    private(set) var pendingProjectAction: HighQualityProjectDestructiveAction?
+
+    init(
+        projectsRoot: URL = AppStoragePaths.highQualityProjects,
+        standaloneJobsRoot: URL = AppStoragePaths.highQualityJobs
+    ) {
+        self.projectsRoot = projectsRoot
+        self.standaloneJobsRoot = standaloneJobsRoot
+        projects = HighQualityProject.all(in: projectsRoot)
+        selectedProjectID = nil
+        savedResults = HighQualityJob.savedResults(in: standaloneJobsRoot)
+        selectedSavedResultID = nil
+        sourceURL = nil
+        youtubeURL = ""
+        pendingProjectAction = nil
+    }
+
+    var selectedProject: HighQualityProject? {
+        projects.first { $0.id == selectedProjectID }
+    }
+
+    var selectedSavedResult: HighQualitySavedResult? {
+        savedResults.first { $0.id == selectedSavedResultID }
+    }
+
+    var selectedSourceURL: URL? {
+        let value = youtubeURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? sourceURL : URL(string: value)
+    }
+
+    func runSelectedJob(
+        deliverables: Set<HighQualityDeliverable>,
+        backend: HighQualityASRBackend,
+        translator: HighQualityTranslator = .productDefault,
+        speakerLabels: Bool = false,
+        speakerConfiguration: HighQualitySpeakerConfiguration = .standard,
+        translationContextPolicy: HighQualityConversationContextPolicy = .productDefault,
+        using job: HighQualityJob = HighQualityJob(),
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
+    ) async throws -> HighQualityJobResult {
+        guard let sourceURL = selectedSourceURL else {
+            throw HighQualityProjectError(message: "Select a source first.")
+        }
+        return try await job.run(.init(
+            sourceURL: sourceURL,
+            deliverables: deliverables,
+            backend: backend,
+            translator: translator,
+            speakerLabels: speakerLabels,
+            speakerConfiguration: speakerConfiguration,
+            translationContextPolicy: translationContextPolicy,
+            project: selectedProject,
+            outputRoot: standaloneJobsRoot
+        ), progress: progress)
+    }
+
+    mutating func refresh() {
+        projects = HighQualityProject.all(in: projectsRoot)
+        if let id = selectedProjectID, !projects.contains(where: { $0.id == id }) {
+            selectedProjectID = nil
+            clearInput()
+        }
+        refreshSavedResults()
+    }
+
+    mutating func selectProject(_ id: UUID?) {
+        selectedProjectID = id.flatMap { candidate in
+            projects.contains(where: { $0.id == candidate }) ? candidate : nil
+        }
+        pendingProjectAction = nil
+        clearInput()
+        refreshSavedResults()
+    }
+
+    mutating func selectLocalSource(_ url: URL?) {
+        selectedSavedResultID = nil
+        sourceURL = url
+        youtubeURL = ""
+    }
+
+    mutating func selectYouTube(_ value: String) {
+        youtubeURL = value
+        guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        selectedSavedResultID = nil
+        sourceURL = nil
+    }
+
+    mutating func selectSavedResult(_ id: UUID?) {
+        guard let saved = savedResults.first(where: { $0.id == id }) else {
+            clearInput()
+            return
+        }
+        selectedSavedResultID = saved.id
+        sourceURL = saved.sourceURL
+        youtubeURL = ""
+    }
+
+    @discardableResult
+    mutating func createProject(named name: String, folder: URL) throws -> HighQualityProject {
+        let project = try HighQualityProject.create(named: name, folder: folder, in: projectsRoot)
+        refresh()
+        selectProject(project.id)
+        return selectedProject ?? project
+    }
+
+    @discardableResult
+    mutating func renameSelectedProject(to name: String) throws -> HighQualityProject {
+        let project = try requiredSelectedProject().renamed(to: name)
+        refresh()
+        return selectedProject ?? project
+    }
+
+    @discardableResult
+    mutating func relocateSelectedProject(to folder: URL) throws -> HighQualityProject {
+        let project = try requiredSelectedProject().relocated(to: folder)
+        clearInput()
+        refresh()
+        return selectedProject ?? project
+    }
+
+    mutating func requestProjectAction(_ action: HighQualityProjectDestructiveAction) {
+        guard selectedProject != nil else { return }
+        pendingProjectAction = action
+    }
+
+    mutating func cancelProjectAction() {
+        pendingProjectAction = nil
+    }
+
+    @discardableResult
+    mutating func confirmProjectAction() throws -> HighQualityProjectDestructiveAction {
+        guard let action = pendingProjectAction else {
+            throw HighQualityProjectError(message: "Choose a Project action first.")
+        }
+        defer { pendingProjectAction = nil }
+        switch action {
+        case .reset:
+            _ = try resetSelectedProject()
+        case .delete:
+            try deleteSelectedProject()
+        }
+        return action
+    }
+
+    private mutating func resetSelectedProject() throws -> HighQualityProject {
+        let project = try requiredSelectedProject().reset()
+        clearInput()
+        refresh()
+        return selectedProject ?? project
+    }
+
+    private mutating func deleteSelectedProject() throws {
+        try requiredSelectedProject().delete()
+        selectedProjectID = nil
+        clearInput()
+        refresh()
+    }
+
+    private mutating func refreshSavedResults() {
+        savedResults = selectedProject?.savedResults
+            ?? HighQualityJob.savedResults(in: standaloneJobsRoot)
+        if let id = selectedSavedResultID,
+           !savedResults.contains(where: { $0.id == id }) {
+            clearInput()
+        }
+    }
+
+    private mutating func clearInput() {
+        selectedSavedResultID = nil
+        sourceURL = nil
+        youtubeURL = ""
+    }
+
+    private func requiredSelectedProject() throws -> HighQualityProject {
+        guard let selectedProject else {
+            throw HighQualityProjectError(message: "Select a Project first.")
+        }
+        return selectedProject
     }
 }

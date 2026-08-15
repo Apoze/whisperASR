@@ -59,6 +59,7 @@ final class HighQualityJobTests: XCTestCase {
         )
 
         XCTAssertThrowsError(try project.relocated(to: project.jobsDirectory))
+        XCTAssertThrowsError(try project.relocated(to: root))
         XCTAssertEqual(try HighQualityProject.open(
             project.id,
             in: project.directory.deletingLastPathComponent()
@@ -72,6 +73,170 @@ final class HighQualityJobTests: XCTestCase {
             withDestinationURL: outside
         )
         XCTAssertThrowsError(try project.validateForJob())
+    }
+
+    func testVersionOneProjectScopeDefaultsEmptyAndMigratesOnUpdate() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let folder = root.appendingPathComponent("Media", isDirectory: true)
+        let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let created = try HighQualityProject.create(named: "Legacy", folder: folder, in: projectsRoot)
+        let manifestURL = created.directory.appendingPathComponent("project.json")
+        var document = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL))
+                as? [String: Any]
+        )
+        document["schemaVersion"] = 1
+        document.removeValue(forKey: "scope")
+        try JSONSerialization.data(withJSONObject: document).write(to: manifestURL, options: .atomic)
+
+        let legacy = try HighQualityProject.open(created.id, in: projectsRoot)
+        XCTAssertEqual(legacy.scope, .empty)
+        let migrated = try legacy.renamed(to: "Migrated")
+        XCTAssertEqual(migrated.manifest.schemaVersion, HighQualityProjectManifest.currentSchemaVersion)
+        XCTAssertEqual(migrated.manifest.scope, HighQualityProjectScope.empty)
+    }
+
+    // This Swift package has no XCUIApplication target; the SwiftUI view binds to this seam.
+    func testProjectWorkspaceDrivesPickerActionsAndPersistentAcquisition() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
+        let standaloneRoot = root.appendingPathComponent("Standalone", isDirectory: true)
+        let folder = root.appendingPathComponent("Original", isDirectory: true)
+        let movedFolder = root.appendingPathComponent("Moved", isDirectory: true)
+        let source = folder.appendingPathComponent("episode.wav")
+        let movedSource = movedFolder.appendingPathComponent(source.lastPathComponent)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data("audio".utf8).write(to: source)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        var workspace = HighQualityProjectWorkspace(
+            projectsRoot: projectsRoot,
+            standaloneJobsRoot: standaloneRoot
+        )
+        XCTAssertNil(workspace.selectedProject)
+        XCTAssertTrue(workspace.projects.isEmpty)
+
+        let project = try workspace.createProject(named: "Episodes", folder: folder)
+        XCTAssertEqual(workspace.selectedProject?.id, project.id)
+        workspace.selectLocalSource(source)
+        XCTAssertEqual(workspace.selectedSourceURL, source)
+
+        let calls = CallLog()
+        let youtubeURL = try XCTUnwrap(URL(string: "https://youtu.be/workspace123"))
+        let job = HighQualityJob(services: .init(
+            loadSource: { url in
+                await calls.append("load:\(url.path)")
+                return [0]
+            },
+            acquireYouTube: { url, directory in
+                await calls.append("acquire:\(url.absoluteString)")
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
+                let audio = directory.appendingPathComponent("youtube.m4a")
+                try Data("youtube".utf8).write(to: audio)
+                return .init(
+                    audioURL: audio,
+                    evidence: .init(
+                        sourceURL: url.absoluteString,
+                        title: "Episode",
+                        channel: "Channel",
+                        description: "Description",
+                        ytDLPVersion: "fixture",
+                        diagnostics: "fixture"
+                    )
+                )
+            },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "結果。" },
+            unloadASR: {}
+        ))
+        let local = try await workspace.runSelectedJob(
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            using: job
+        )
+        workspace.refresh()
+        XCTAssertEqual(workspace.savedResults.map(\.id), [local.manifest.jobID])
+
+        workspace.selectYouTube(youtubeURL.absoluteString)
+        let youtube = try await workspace.runSelectedJob(
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            using: job
+        )
+        workspace.refresh()
+        XCTAssertEqual(Set(workspace.savedResults.map(\.id)), [
+            local.manifest.jobID,
+            youtube.manifest.jobID,
+        ])
+
+        try workspace.renameSelectedProject(to: "Renamed")
+        XCTAssertEqual(workspace.selectedProject?.name, "Renamed")
+        workspace.selectSavedResult(local.manifest.jobID)
+        XCTAssertEqual(workspace.sourceURL, source)
+        let callsBeforeRelocation = await calls.values
+        try FileManager.default.moveItem(at: folder, to: movedFolder)
+        try workspace.relocateSelectedProject(to: movedFolder)
+
+        XCTAssertNil(workspace.sourceURL)
+        XCTAssertNil(workspace.selectedSavedResultID)
+        let relocated = try XCTUnwrap(workspace.savedResults.first {
+            $0.id == local.manifest.jobID
+        })
+        XCTAssertEqual(relocated.sourceURL, movedSource)
+        XCTAssertNotEqual(relocated.sourceURL, source)
+        workspace.selectSavedResult(local.manifest.jobID)
+        XCTAssertEqual(workspace.sourceURL, movedSource)
+        XCTAssertEqual(try HighQualityJob.reopen(relocated).japaneseTranscript, "結果。")
+        let callsAfterRelocation = await calls.values
+        XCTAssertEqual(callsAfterRelocation, callsBeforeRelocation)
+
+        _ = try await workspace.runSelectedJob(
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            using: job
+        )
+        let callsAfterRerun = await calls.values
+        XCTAssertEqual(Array(callsAfterRerun.dropFirst(callsBeforeRelocation.count)), [
+            "load:\(movedSource.path)",
+        ])
+
+        workspace.selectProject(nil)
+        workspace.selectLocalSource(movedSource)
+        let standalone = try await workspace.runSelectedJob(
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            using: job
+        )
+        workspace.refresh()
+        XCTAssertNil(workspace.selectedProject)
+        XCTAssertEqual(workspace.savedResults.map(\.id), [standalone.manifest.jobID])
+
+        workspace.selectProject(project.id)
+        XCTAssertFalse(workspace.savedResults.isEmpty)
+        workspace.requestProjectAction(.reset)
+        XCTAssertEqual(workspace.pendingProjectAction, .reset)
+        XCTAssertFalse(workspace.savedResults.isEmpty)
+        XCTAssertEqual(try workspace.confirmProjectAction(), .reset)
+        XCTAssertEqual(workspace.selectedProject?.id, project.id)
+        XCTAssertEqual(workspace.selectedProject?.folderURL, movedFolder)
+        XCTAssertEqual(workspace.selectedProject?.name, "Renamed")
+        XCTAssertTrue(workspace.savedResults.isEmpty)
+
+        workspace.requestProjectAction(.delete)
+        XCTAssertEqual(workspace.pendingProjectAction, .delete)
+        XCTAssertNotNil(workspace.selectedProject)
+        XCTAssertEqual(try workspace.confirmProjectAction(), .delete)
+        XCTAssertNil(workspace.selectedProject)
+        XCTAssertTrue(workspace.projects.isEmpty)
+        XCTAssertEqual(workspace.savedResults.map(\.id), [standalone.manifest.jobID])
+        XCTAssertEqual(try Data(contentsOf: movedSource), Data("audio".utf8))
     }
 
     func testProjectJobsUseExistingAcquisitionAndKeepResultsAndGlossariesIsolated() async throws {
@@ -313,7 +478,7 @@ final class HighQualityJobTests: XCTestCase {
         ])
     }
 
-    func testDeletingOneProjectKeepsOtherProjectAndUserFoldersUntouched() async throws {
+    func testResettingAndDeletingOneProjectKeepsOtherProjectAndUserFoldersUntouched() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
@@ -334,7 +499,7 @@ final class HighQualityJobTests: XCTestCase {
             transcribeJapanese: { _ in "結果。" },
             unloadASR: {}
         ))
-        _ = try await job.run(.init(
+        let resultA = try await job.run(.init(
             sourceURL: sourceA,
             deliverables: [.japaneseTranscript],
             backend: .qwenJA,
@@ -346,17 +511,160 @@ final class HighQualityJobTests: XCTestCase {
             backend: .qwenJA,
             project: projectB
         ))
+        let scopeA = HighQualityProjectScope(
+            metadata: ["channel": "Project A"],
+            glossarySelection: ["amayui-moka"],
+            voiceProfiles: [.init(
+                id: UUID(),
+                displayName: "Voice A",
+                centroids: [.init(
+                    anonymousSpeakerID: "speaker-a",
+                    vectorDimension: 2,
+                    values: [1, 0],
+                    modelID: "speakerkit",
+                    modelRevision: "a",
+                    runtimeRevision: "runtime",
+                    embeddingVariant: "default",
+                    sourceJobID: resultA.manifest.jobID
+                )]
+            )],
+            history: [.init(
+                id: UUID(),
+                action: "confirmed-voice",
+                createdAt: Date(timeIntervalSince1970: 1),
+                jobID: resultA.manifest.jobID,
+                details: ["speaker": "Voice A"]
+            )]
+        )
+        let scopeB = HighQualityProjectScope(
+            metadata: ["channel": "Project B"],
+            glossarySelection: ["apex-legends"],
+            voiceProfiles: [.init(
+                id: UUID(),
+                displayName: "Voice B",
+                centroids: [.init(
+                    anonymousSpeakerID: "speaker-b",
+                    vectorDimension: 2,
+                    values: [0, 1],
+                    modelID: "speakerkit",
+                    modelRevision: "b",
+                    runtimeRevision: "runtime",
+                    embeddingVariant: "default",
+                    sourceJobID: resultB.manifest.jobID
+                )]
+            )],
+            history: [.init(
+                id: UUID(),
+                action: "confirmed-voice",
+                createdAt: Date(timeIntervalSince1970: 2),
+                jobID: resultB.manifest.jobID,
+                details: ["speaker": "Voice B"]
+            )]
+        )
+        XCTAssertThrowsError(try projectA.updatingScope(scopeB))
+        let incompatibleScope = HighQualityProjectScope(
+            metadata: [:],
+            glossarySelection: [],
+            voiceProfiles: [.init(
+                id: UUID(),
+                displayName: "Incompatible",
+                centroids: [
+                    .init(
+                        anonymousSpeakerID: "speaker-a",
+                        vectorDimension: 2,
+                        values: [1, 0],
+                        modelID: "speakerkit",
+                        modelRevision: "a",
+                        runtimeRevision: "runtime",
+                        embeddingVariant: "default",
+                        sourceJobID: resultA.manifest.jobID
+                    ),
+                    .init(
+                        anonymousSpeakerID: "speaker-a-2",
+                        vectorDimension: 2,
+                        values: [0, 1],
+                        modelID: "speakerkit",
+                        modelRevision: "other",
+                        runtimeRevision: "runtime",
+                        embeddingVariant: "default",
+                        sourceJobID: resultA.manifest.jobID
+                    ),
+                ]
+            )],
+            history: []
+        )
+        XCTAssertThrowsError(try projectA.updatingScope(incompatibleScope))
+        let scopedA = try projectA.updatingScope(scopeA)
+        _ = try projectB.updatingScope(scopeB)
 
-        try projectA.delete()
+        let resetA = try scopedA.reset()
 
-        XCTAssertThrowsError(try HighQualityProject.open(projectA.id, in: projectsRoot))
+        XCTAssertEqual(resetA.id, projectA.id)
+        XCTAssertEqual(resetA.name, projectA.name)
+        XCTAssertEqual(resetA.folderURL, folderA)
+        XCTAssertEqual(resetA.scope, .empty)
+        XCTAssertTrue(resetA.jobReferences.isEmpty)
+        XCTAssertTrue(resetA.savedResults.isEmpty)
         XCTAssertEqual(
             try HighQualityProject.open(projectB.id, in: projectsRoot).savedResults.map(\.id),
             [resultB.manifest.jobID]
         )
-        XCTAssertEqual(HighQualityProject.all(in: projectsRoot).map(\.id), [projectB.id])
+        XCTAssertEqual(try HighQualityProject.open(projectB.id, in: projectsRoot).scope, scopeB)
+        XCTAssertEqual(Set(HighQualityProject.all(in: projectsRoot).map(\.id)), [
+            projectA.id,
+            projectB.id,
+        ])
         XCTAssertEqual(try Data(contentsOf: sourceA), Data("a".utf8))
         XCTAssertEqual(try Data(contentsOf: sourceB), Data("b".utf8))
+
+        try resetA.delete()
+        XCTAssertThrowsError(try HighQualityProject.open(projectA.id, in: projectsRoot))
+        XCTAssertEqual(HighQualityProject.all(in: projectsRoot).map(\.id), [projectB.id])
+        XCTAssertEqual(try HighQualityProject.open(projectB.id, in: projectsRoot).scope, scopeB)
+    }
+
+    func testProjectResetCommitsAndCleansOldDataWithImmutableFile() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let folder = root.appendingPathComponent("Media", isDirectory: true)
+        let source = folder.appendingPathComponent("episode.wav")
+        let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data("audio".utf8).write(to: source)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let project = try HighQualityProject.create(named: "Reset", folder: folder, in: projectsRoot)
+        let result = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "result" },
+            unloadASR: {}
+        )).run(.init(
+            sourceURL: source,
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            project: project
+        ))
+        let protectedFile = result.directory.appendingPathComponent("manifest.json")
+        try FileManager.default.setAttributes(
+            [.immutable: true],
+            ofItemAtPath: protectedFile.path
+        )
+        defer {
+            try? FileManager.default.setAttributes(
+                [.immutable: false],
+                ofItemAtPath: protectedFile.path
+            )
+        }
+
+        let reset = try project.reset()
+        let reopened = try HighQualityProject.open(project.id, in: projectsRoot)
+        XCTAssertEqual(reset.id, project.id)
+        XCTAssertTrue(reopened.savedResults.isEmpty)
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: projectsRoot.path),
+            [project.id.uuidString]
+        )
+        XCTAssertEqual(try Data(contentsOf: source), Data("audio".utf8))
     }
 
     func testSpeakerBetaControlsVisibilityAndSafeDefaults() {
