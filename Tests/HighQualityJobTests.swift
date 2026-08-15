@@ -1012,14 +1012,21 @@ final class HighQualityJobTests: XCTestCase {
             speakerLabels: true,
             outputRoot: root
         ))
-        XCTAssertEqual(completed.turns.map(\.id), ["unit-0001", "unit-0002"])
+        XCTAssertEqual(
+            completed.turns.map(\.speakerLabel),
+            ["SPEAKER_00", "SPEAKER_01", nil]
+        )
+        XCTAssertEqual(
+            completed.editableSpeakerLabels,
+            ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
+        )
         let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
         let originalEvidence = try Data(contentsOf: evidenceURL)
         let edits: [HighQualitySpeakerEdit] = [
             .rename("SPEAKER_00", to: "Alice", at: Date(timeIntervalSince1970: 1)),
             .reassign(
-                turnID: "unit-0002",
-                to: "SPEAKER_00",
+                turnID: "unit-0003",
+                to: "SPEAKER_02",
                 at: Date(timeIntervalSince1970: 2)
             ),
             .reset(at: Date(timeIntervalSince1970: 3)),
@@ -1028,7 +1035,17 @@ final class HighQualityJobTests: XCTestCase {
                 into: "SPEAKER_00",
                 at: Date(timeIntervalSince1970: 4)
             ),
-            .rename("SPEAKER_00", to: "Alice <&>", at: Date(timeIntervalSince1970: 5)),
+            .reassign(
+                turnID: "unit-0003",
+                to: "SPEAKER_02",
+                at: Date(timeIntervalSince1970: 5)
+            ),
+            .merge(
+                "SPEAKER_02",
+                into: "SPEAKER_00",
+                at: Date(timeIntervalSince1970: 6)
+            ),
+            .rename("SPEAKER_00", to: "Alice <&>", at: Date(timeIntervalSince1970: 7)),
         ]
         var edited = completed
         for (index, edit) in edits.enumerated() {
@@ -1036,13 +1053,19 @@ final class HighQualityJobTests: XCTestCase {
             if index == 1 {
                 XCTAssertEqual(
                     edited.editableSpeakerLabels,
-                    ["SPEAKER_00", "SPEAKER_01"]
+                    ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
                 )
             }
         }
 
-        XCTAssertEqual(edited.turns.map(\.speakerLabel), ["SPEAKER_00", "SPEAKER_00"])
-        XCTAssertEqual(edited.turns.map(\.speakerName), ["Alice <&>", "Alice <&>"])
+        XCTAssertEqual(
+            edited.turns.map(\.speakerLabel),
+            ["SPEAKER_00", "SPEAKER_00", "SPEAKER_00"]
+        )
+        XCTAssertEqual(
+            edited.turns.map(\.speakerName),
+            ["Alice <&>", "Alice <&>", "Alice <&>"]
+        )
         XCTAssertEqual(edited.editableSpeakerLabels, ["SPEAKER_00"])
         XCTAssertEqual(edited.manifest.speakerEdits, edits)
         XCTAssertEqual(try Data(contentsOf: evidenceURL), originalEvidence)
@@ -1060,13 +1083,13 @@ final class HighQualityJobTests: XCTestCase {
             .appendingPathComponent("english-subtitles.vtt"), encoding: .utf8)
         let srt = try String(contentsOf: completed.directory
             .appendingPathComponent("english-subtitles.srt"), encoding: .utf8)
-        XCTAssertTrue(japanese.contains("Alice <&>: 一。\nAlice <&>: 二。"))
-        XCTAssertTrue(english.contains("Alice <&>: One\nAlice <&>: Two"))
+        XCTAssertTrue(japanese.contains("Alice <&>: 一。\nAlice <&>: 二。\nAlice <&>: 三。"))
+        XCTAssertTrue(english.contains("Alice <&>: One\nAlice <&>: Two\nAlice <&>: Three"))
         XCTAssertEqual(
             webVTT.components(separatedBy: "<v Alice &lt;&amp;&gt;>").count - 1,
-            2
+            3
         )
-        XCTAssertEqual(srt.components(separatedBy: "[Alice <&>]").count - 1, 2)
+        XCTAssertEqual(srt.components(separatedBy: "[Alice <&>]").count - 1, 3)
 
         let manifest = try JSONSerialization.jsonObject(with: Data(contentsOf: completed.directory
             .appendingPathComponent("manifest.json"))) as? [String: Any]
@@ -1090,7 +1113,7 @@ final class HighQualityJobTests: XCTestCase {
             sensitiveDetection: true,
             countPolicy: .expected(2)
         )
-        let completed = try await speakerEditorFixtureJob().run(.init(
+        let completed = try await speakerEditorFixtureJob(speakerReanalysis: true).run(.init(
             sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
             deliverables: Set(HighQualityDeliverable.allCases),
             backend: .qwenJA,
@@ -1098,6 +1121,10 @@ final class HighQualityJobTests: XCTestCase {
             speakerConfiguration: configuration,
             outputRoot: root
         ))
+        XCTAssertEqual(
+            completed.evidence.diarization?.configuration?["result-origin"],
+            "speaker-reanalysis"
+        )
         let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
         let immutableEvidence = try Data(contentsOf: evidenceURL)
         var active = try HighQualityJob.editSpeakers(
@@ -1132,11 +1159,23 @@ final class HighQualityJobTests: XCTestCase {
             beforeCommit: { throw CocoaError(.fileWriteUnknown) }
         ))
         XCTAssertEqual(try activeURLs.map { try Data(contentsOf: $0) }, activeData)
+        XCTAssertThrowsError(try HighQualityJob.editSpeakers(
+            in: active,
+            edit: .reassign(turnID: "unit-0003", to: "SPEAKER_02"),
+            beforeCommit: { throw CancellationError() }
+        )) { error in
+            XCTAssertTrue(error is CancellationError)
+        }
+        XCTAssertEqual(try activeURLs.map { try Data(contentsOf: $0) }, activeData)
         let reopened = try HighQualityJob.reopen(try XCTUnwrap(
             HighQualityJob.savedResults(in: root).first
         ))
         XCTAssertEqual(reopened.turns, active.turns)
         XCTAssertEqual(reopened.manifest.speakerConfiguration, configuration)
+        XCTAssertEqual(
+            reopened.evidence.diarization?.configuration?["result-origin"],
+            "speaker-reanalysis"
+        )
         XCTAssertEqual(try Data(contentsOf: evidenceURL), immutableEvidence)
         XCTAssertEqual(
             reopened.manifest.modelEvents.map { "\($0.kind.rawValue):\($0.modelID)" },
@@ -2767,17 +2806,20 @@ final class HighQualityJobTests: XCTestCase {
             })
     }
 
-    private func speakerEditorFixtureJob() -> HighQualityJob {
+    private func speakerEditorFixtureJob(
+        speakerReanalysis: Bool = false
+    ) -> HighQualityJob {
         HighQualityJob(services: .init(
             loadSource: { _ in Array(repeating: 0, count: 160_000) },
             prepareASR: { _ in },
-            transcribeJapanese: { _ in "一。二。" },
+            transcribeJapanese: { _ in "一。二。三。" },
             transcribeJapaneseAnchored: { _ in
                 .init(
-                    rawTranscript: "一。二。",
+                    rawTranscript: "一。二。三。",
                     chunks: [
-                        .init(index: 0, sourceStart: 0, sourceEnd: 5, transcript: "一。"),
-                        .init(index: 1, sourceStart: 5, sourceEnd: 10, transcript: "二。"),
+                        .init(index: 0, sourceStart: 0, sourceEnd: 4, transcript: "一。"),
+                        .init(index: 1, sourceStart: 4, sourceEnd: 7, transcript: "二。"),
+                        .init(index: 2, sourceStart: 7, sourceEnd: 10, transcript: "三。"),
                     ]
                 )
             },
@@ -2789,14 +2831,20 @@ final class HighQualityJobTests: XCTestCase {
                         .init(
                             index: 0,
                             sourceStart: 0,
-                            sourceEnd: 5,
-                            cues: [.init(id: "cue-0001", text: "一。", start: 1, end: 4)]
+                            sourceEnd: 4,
+                            cues: [.init(id: "cue-0001", text: "一。", start: 1, end: 3)]
                         ),
                         .init(
                             index: 1,
-                            sourceStart: 5,
+                            sourceStart: 4,
+                            sourceEnd: 7,
+                            cues: [.init(id: "cue-0002", text: "二。", start: 4, end: 6)]
+                        ),
+                        .init(
+                            index: 2,
+                            sourceStart: 7,
                             sourceEnd: 10,
-                            cues: [.init(id: "cue-0002", text: "二。", start: 5, end: 8)]
+                            cues: [.init(id: "cue-0003", text: "三。", start: 7, end: 8)]
                         ),
                     ],
                     modelID: "aligner",
@@ -2809,20 +2857,24 @@ final class HighQualityJobTests: XCTestCase {
             diarizeSpeakers: { _, useExclusiveReconciliation, configuration in
                 .init(
                     spans: [
-                        .init(speakerID: 0, start: 1, end: 4),
-                        .init(speakerID: 1, start: 5, end: 8),
+                        .init(speakerID: 0, start: 1, end: 3),
+                        .init(speakerID: 1, start: 4, end: 6),
+                        .init(speakerID: 2, start: 9, end: 10),
                     ],
                     modelID: "speakerkit",
                     revision: "revision",
                     peakMemoryBytes: 0,
                     useExclusiveReconciliation: useExclusiveReconciliation,
-                    speakerCountPolicy: configuration.countPolicy
+                    speakerCountPolicy: configuration.countPolicy,
+                    configuration: speakerReanalysis
+                        ? ["result-origin": "speaker-reanalysis"] : nil
                 )
             },
             unloadDiarization: {},
             translateEnglish: { request in
+                let english = ["One", "Two", "Three"]
                 let translations = request.turns.enumerated().map { index, turn in
-                    #"{"id":"\#(turn.id)","text":"\#(index == 0 ? "One" : "Two")"}"#
+                    #"{"id":"\#(turn.id)","text":"\#(english[index])"}"#
                 }.joined(separator: ",")
                 return .init(
                     model: "translator",

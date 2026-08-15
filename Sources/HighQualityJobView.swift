@@ -518,14 +518,15 @@ struct HighQualityJobView: View {
                 ForEach(result.turns, id: \.id) { turn in
                     GridRow(alignment: .top) {
                         Text(time(turn.start, turn.end))
-                        if let selected = turn.speakerLabel,
-                           speakerLabels.count > 1,
-                           result.manifest.schemaVersion >= 3 {
+                        if result.manifest.schemaVersion >= 3,
+                           !speakerLabels.isEmpty,
+                           turn.speakerLabel == nil || speakerLabels.count > 1 {
                             Picker(
                                 "Speaker for \(turn.id)",
-                                selection: Binding(
-                                    get: { selected },
+                                selection: Binding<String?>(
+                                    get: { turn.speakerLabel },
                                     set: { label in
+                                        guard let label else { return }
                                         applySpeakerEdit(
                                             .reassign(turnID: turn.id, to: label),
                                             to: result
@@ -533,8 +534,11 @@ struct HighQualityJobView: View {
                                     }
                                 )
                             ) {
+                                if turn.speakerLabel == nil {
+                                    Text("Unassigned").tag(String?.none)
+                                }
                                 ForEach(speakerLabels, id: \.self) { label in
-                                    Text(speakerName(label, in: result)).tag(label)
+                                    Text(speakerName(label, in: result)).tag(String?.some(label))
                                 }
                             }
                             .labelsHidden()

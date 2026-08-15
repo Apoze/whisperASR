@@ -791,6 +791,13 @@ struct HighQualityDiarizationSpan: Codable, Equatable, Sendable {
     let end: TimeInterval
 }
 
+private func highQualitySpeakerLabelsByID(
+    _ spans: [HighQualityDiarizationSpan]
+) -> [Int: String] {
+    Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
+        .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
+}
+
 struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
     let spans: [HighQualityDiarizationSpan]
     let modelID: String
@@ -1192,16 +1199,21 @@ struct HighQualityJobResult: Sendable {
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
 
+    fileprivate var automaticSpeakerLabels: Set<String> {
+        var labels = Set(evidence.resultTurns?.compactMap(\.speakerLabel) ?? [])
+        if let spans = evidence.diarization?.rawSpans {
+            labels.formUnion(highQualitySpeakerLabelsByID(spans).values)
+        }
+        return labels
+    }
+
     var editableSpeakerLabels: [String] {
-        let automatic: Set<String> = Set(
-            evidence.resultTurns?.compactMap(\.speakerLabel) ?? []
-        )
-        return (manifest.speakerEdits ?? []).reduce(into: automatic) { labels, edit in
+        (manifest.speakerEdits ?? []).reduce(into: automaticSpeakerLabels) { labels, edit in
             switch edit.kind {
             case .merge:
                 if let source = edit.speakerLabel { labels.remove(source) }
             case .reset:
-                labels = automatic
+                labels = automaticSpeakerLabels
             case .rename, .reassign:
                 break
             }
@@ -3647,13 +3659,6 @@ struct HighQualityJob: Sendable {
         names: [String: String],
         beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
-        guard result.manifest.schemaVersion >= 3 else {
-            throw HighQualityJobError(
-                stage: .export,
-                message: "Speaker label edits require a result saved with the current schema.",
-                resultDirectory: result.directory
-            )
-        }
         let currentNames = result.turns.reduce(into: [String: String]()) { values, turn in
             if let label = turn.speakerLabel {
                 values[label] = turn.speakerName ?? label
@@ -3869,7 +3874,7 @@ struct HighQualityJob: Sendable {
                 names[label] = name
             }
         }
-        let rawLabels = Set(rawTurns.compactMap(\.speakerLabel))
+        let rawLabels = result.automaticSpeakerLabels
         var assignments = rawAssignments
         var names = rawNames
         var activeLabels = rawLabels
@@ -4364,8 +4369,7 @@ struct HighQualityJob: Sendable {
                 resultDirectory: nil
             )
         }
-        let labels = Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
-            .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
+        let labels = highQualitySpeakerLabelsByID(spans)
         var mappings: [HighQualitySpeakerMapping] = []
         for (itemIndex, item) in items.enumerated() {
             let candidates = spans.enumerated().compactMap { spanIndex, span -> HighQualitySpeakerMapping? in
