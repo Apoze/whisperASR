@@ -1001,6 +1001,200 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(renamed.subtitleCues.map(\.end), [4])
     }
 
+    func testSpeakerEditorAppliesOrderedEditsAndRegeneratesSavedResult() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await speakerEditorFixtureJob().run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+        XCTAssertEqual(completed.turns.map(\.id), ["unit-0001", "unit-0002"])
+        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
+        let originalEvidence = try Data(contentsOf: evidenceURL)
+        let edits: [HighQualitySpeakerEdit] = [
+            .rename("SPEAKER_00", to: "Alice", at: Date(timeIntervalSince1970: 1)),
+            .reassign(
+                turnID: "unit-0002",
+                to: "SPEAKER_00",
+                at: Date(timeIntervalSince1970: 2)
+            ),
+            .reset(at: Date(timeIntervalSince1970: 3)),
+            .merge(
+                "SPEAKER_01",
+                into: "SPEAKER_00",
+                at: Date(timeIntervalSince1970: 4)
+            ),
+            .rename("SPEAKER_00", to: "Alice <&>", at: Date(timeIntervalSince1970: 5)),
+        ]
+        var edited = completed
+        for (index, edit) in edits.enumerated() {
+            edited = try HighQualityJob.editSpeakers(in: edited, edit: edit)
+            if index == 1 {
+                XCTAssertEqual(
+                    edited.editableSpeakerLabels,
+                    ["SPEAKER_00", "SPEAKER_01"]
+                )
+            }
+        }
+
+        XCTAssertEqual(edited.turns.map(\.speakerLabel), ["SPEAKER_00", "SPEAKER_00"])
+        XCTAssertEqual(edited.turns.map(\.speakerName), ["Alice <&>", "Alice <&>"])
+        XCTAssertEqual(edited.editableSpeakerLabels, ["SPEAKER_00"])
+        XCTAssertEqual(edited.manifest.speakerEdits, edits)
+        XCTAssertEqual(try Data(contentsOf: evidenceURL), originalEvidence)
+        let saved = try XCTUnwrap(HighQualityJob.savedResults(in: root).first)
+        let reopened = try HighQualityJob.reopen(saved)
+        XCTAssertEqual(reopened.turns, edited.turns)
+        XCTAssertEqual(reopened.subtitleCues, edited.subtitleCues)
+        XCTAssertEqual(reopened.manifest.speakerEdits, edits)
+
+        let japanese = try String(contentsOf: completed.directory
+            .appendingPathComponent("japanese-transcript.txt"), encoding: .utf8)
+        let english = try String(contentsOf: completed.directory
+            .appendingPathComponent("english-translation-transcript.txt"), encoding: .utf8)
+        let webVTT = try String(contentsOf: completed.directory
+            .appendingPathComponent("english-subtitles.vtt"), encoding: .utf8)
+        let srt = try String(contentsOf: completed.directory
+            .appendingPathComponent("english-subtitles.srt"), encoding: .utf8)
+        XCTAssertTrue(japanese.contains("Alice <&>: 一。\nAlice <&>: 二。"))
+        XCTAssertTrue(english.contains("Alice <&>: One\nAlice <&>: Two"))
+        XCTAssertEqual(
+            webVTT.components(separatedBy: "<v Alice &lt;&amp;&gt;>").count - 1,
+            2
+        )
+        XCTAssertEqual(srt.components(separatedBy: "[Alice <&>]").count - 1, 2)
+
+        let manifest = try JSONSerialization.jsonObject(with: Data(contentsOf: completed.directory
+            .appendingPathComponent("manifest.json"))) as? [String: Any]
+        let audit = try JSONSerialization.jsonObject(with: Data(contentsOf: completed.directory
+            .appendingPathComponent("transformations.json"))) as? [String: Any]
+        let manifestEdits = try XCTUnwrap(manifest?["speakerEdits"] as? [[String: Any]])
+        let auditEdits = try XCTUnwrap(audit?["speakerEdits"] as? [[String: Any]])
+        XCTAssertEqual(manifestEdits.count, edits.count)
+        XCTAssertEqual(
+            try JSONSerialization.data(withJSONObject: manifestEdits, options: .sortedKeys),
+            try JSONSerialization.data(withJSONObject: auditEdits, options: .sortedKeys)
+        )
+    }
+
+    func testSpeakerEditorKeepsReanalysisResultWhenEditsOrCommitFail() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let configuration = HighQualitySpeakerConfiguration(
+            enhancedPrecision: true,
+            sensitiveDetection: true,
+            countPolicy: .expected(2)
+        )
+        let completed = try await speakerEditorFixtureJob().run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            speakerConfiguration: configuration,
+            outputRoot: root
+        ))
+        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
+        let immutableEvidence = try Data(contentsOf: evidenceURL)
+        var active = try HighQualityJob.editSpeakers(
+            in: completed,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        active = try HighQualityJob.editSpeakers(
+            in: active,
+            edit: .rename("SPEAKER_01", to: "Bob")
+        )
+        let activeURLs = active.manifest.generatedFiles.map {
+            active.directory.appendingPathComponent($0.path)
+        } + [active.directory.appendingPathComponent("transformations.json")]
+        let activeData = try activeURLs.map { try Data(contentsOf: $0) }
+
+        for (edit, message) in [
+            (HighQualitySpeakerEdit.merge("SPEAKER_00", into: "SPEAKER_00"), "itself"),
+            (HighQualitySpeakerEdit.merge("SPEAKER_00", into: "SPEAKER_01"), "conflicting"),
+            (HighQualitySpeakerEdit.merge("UNKNOWN", into: "SPEAKER_00"), "unknown"),
+            (HighQualitySpeakerEdit.reassign(turnID: "missing", to: "SPEAKER_00"), "unknown"),
+            (HighQualitySpeakerEdit.rename("SPEAKER_00", to: "Alice\nMallory"), "control"),
+        ] {
+            XCTAssertThrowsError(try HighQualityJob.editSpeakers(in: active, edit: edit)) {
+                XCTAssertTrue($0.localizedDescription.contains(message), $0.localizedDescription)
+            }
+            XCTAssertEqual(try activeURLs.map { try Data(contentsOf: $0) }, activeData)
+        }
+
+        XCTAssertThrowsError(try HighQualityJob.editSpeakers(
+            in: active,
+            edit: .reassign(turnID: "unit-0002", to: "SPEAKER_00"),
+            beforeCommit: { throw CocoaError(.fileWriteUnknown) }
+        ))
+        XCTAssertEqual(try activeURLs.map { try Data(contentsOf: $0) }, activeData)
+        let reopened = try HighQualityJob.reopen(try XCTUnwrap(
+            HighQualityJob.savedResults(in: root).first
+        ))
+        XCTAssertEqual(reopened.turns, active.turns)
+        XCTAssertEqual(reopened.manifest.speakerConfiguration, configuration)
+        XCTAssertEqual(try Data(contentsOf: evidenceURL), immutableEvidence)
+        XCTAssertEqual(
+            reopened.manifest.modelEvents.map { "\($0.kind.rawValue):\($0.modelID)" },
+            completed.manifest.modelEvents.map { "\($0.kind.rawValue):\($0.modelID)" }
+        )
+    }
+
+    func testSpeakerEditorMigratesSchemaThreeCustomLabelsOnNextEdit() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await speakerEditorFixtureJob().run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+        let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
+        let immutableEvidence = try Data(contentsOf: evidenceURL)
+        let manifestURL = completed.directory.appendingPathComponent("manifest.json")
+        var manifest = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL))
+                as? [String: Any]
+        )
+        manifest["schemaVersion"] = 3
+        manifest.removeValue(forKey: "speakerEdits")
+        try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
+            .write(to: manifestURL, options: .atomic)
+        let transformationsURL = completed.directory.appendingPathComponent(
+            "transformations.json"
+        )
+        try JSONSerialization.data(withJSONObject: [
+            "schemaVersion": 1,
+            "customSpeakerLabels": ["SPEAKER_00": "Alice"],
+        ], options: [.sortedKeys]).write(to: transformationsURL, options: .atomic)
+
+        let reopened = try HighQualityJob.reopen(try XCTUnwrap(
+            HighQualityJob.savedResults(in: root).first
+        ))
+        XCTAssertEqual(reopened.turns.first?.speakerName, "Alice")
+        let edited = try HighQualityJob.editSpeakers(
+            in: reopened,
+            edit: .rename("SPEAKER_01", to: "Bob")
+        )
+
+        XCTAssertEqual(edited.manifest.schemaVersion, 4)
+        XCTAssertEqual(edited.turns.compactMap(\.speakerName), ["Alice", "Bob"])
+        XCTAssertEqual(edited.manifest.speakerEdits?.map(\.kind), [.rename, .rename])
+        XCTAssertEqual(try Data(contentsOf: evidenceURL), immutableEvidence)
+        let transformations = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(contentsOf: transformationsURL))
+                as? [String: Any]
+        )
+        XCTAssertEqual(transformations["schemaVersion"] as? Int, 2)
+        XCTAssertEqual(transformations["customSpeakerLabels"] as? [String: String], [:])
+    }
+
     func testCompletedStandaloneJobReopensFromSavedManifestAndEvidence() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -1642,7 +1836,10 @@ final class HighQualityJobTests: XCTestCase {
             backend: .qwenJA,
             outputRoot: root
         ))
-        XCTAssertEqual(completed.manifest.schemaVersion, HighQualityJobManifest.currentSchemaVersion)
+        XCTAssertEqual(
+            completed.manifest.schemaVersion,
+            HighQualityJobManifest.currentSchemaVersion
+        )
         XCTAssertNotNil(completed.manifest.rawEvidenceSHA256)
         let evidenceURL = completed.directory.appendingPathComponent("raw-asr.json")
         var data = try Data(contentsOf: evidenceURL)
@@ -2568,6 +2765,72 @@ final class HighQualityJobTests: XCTestCase {
                 guard let data = try? Data(contentsOf: url) else { return nil }
                 return (url.lastPathComponent, data)
             })
+    }
+
+    private func speakerEditorFixtureJob() -> HighQualityJob {
+        HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 160_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。二。" },
+            transcribeJapaneseAnchored: { _ in
+                .init(
+                    rawTranscript: "一。二。",
+                    chunks: [
+                        .init(index: 0, sourceStart: 0, sourceEnd: 5, transcript: "一。"),
+                        .init(index: 1, sourceStart: 5, sourceEnd: 10, transcript: "二。"),
+                    ]
+                )
+            },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [
+                        .init(
+                            index: 0,
+                            sourceStart: 0,
+                            sourceEnd: 5,
+                            cues: [.init(id: "cue-0001", text: "一。", start: 1, end: 4)]
+                        ),
+                        .init(
+                            index: 1,
+                            sourceStart: 5,
+                            sourceEnd: 10,
+                            cues: [.init(id: "cue-0002", text: "二。", start: 5, end: 8)]
+                        ),
+                    ],
+                    modelID: "aligner",
+                    revision: "revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _, _ in },
+            diarizeSpeakers: { _, useExclusiveReconciliation, configuration in
+                .init(
+                    spans: [
+                        .init(speakerID: 0, start: 1, end: 4),
+                        .init(speakerID: 1, start: 5, end: 8),
+                    ],
+                    modelID: "speakerkit",
+                    revision: "revision",
+                    peakMemoryBytes: 0,
+                    useExclusiveReconciliation: useExclusiveReconciliation,
+                    speakerCountPolicy: configuration.countPolicy
+                )
+            },
+            unloadDiarization: {},
+            translateEnglish: { request in
+                let translations = request.turns.enumerated().map { index, turn in
+                    #"{"id":"\#(turn.id)","text":"\#(index == 0 ? "One" : "Two")"}"#
+                }.joined(separator: ",")
+                return .init(
+                    model: "translator",
+                    response: #"{"translations":[\#(translations)]}"#,
+                    attempts: []
+                )
+            }
+        ))
     }
 
     func testJobSelectsSourceRelevantGlossaryAndPreservesRawASR() async throws {

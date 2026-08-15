@@ -492,6 +492,7 @@ struct HighQualityJobView: View {
         _ result: HighQualityJobResult,
         deliverables: Set<HighQualityDeliverable>
     ) -> some View {
+        let speakerLabels = result.editableSpeakerLabels
         Text("Results").font(.headline)
         if let reanalysis = result.evidence.speakerReanalyses?.last {
             Text(
@@ -517,7 +518,30 @@ struct HighQualityJobView: View {
                 ForEach(result.turns, id: \.id) { turn in
                     GridRow(alignment: .top) {
                         Text(time(turn.start, turn.end))
-                        Text(turn.speakerName ?? turn.speakerLabel ?? "—")
+                        if let selected = turn.speakerLabel,
+                           speakerLabels.count > 1,
+                           result.manifest.schemaVersion >= 3 {
+                            Picker(
+                                "Speaker for \(turn.id)",
+                                selection: Binding(
+                                    get: { selected },
+                                    set: { label in
+                                        applySpeakerEdit(
+                                            .reassign(turnID: turn.id, to: label),
+                                            to: result
+                                        )
+                                    }
+                                )
+                            ) {
+                                ForEach(speakerLabels, id: \.self) { label in
+                                    Text(speakerName(label, in: result)).tag(label)
+                                }
+                            }
+                            .labelsHidden()
+                            .accessibilityLabel("Speaker for transcript turn \(turn.id)")
+                        } else {
+                            Text(turn.speakerName ?? turn.speakerLabel ?? "—")
+                        }
                         Text(turn.japanese)
                         if deliverables.contains(.englishTranslationTranscript)
                             || deliverables.contains(.englishSubtitles) {
@@ -536,24 +560,79 @@ struct HighQualityJobView: View {
                         set: { customSpeakerLabels[label] = $0 }
                     ))
                     .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel("Name for \(label)")
                 }
-                Button("Apply Labels") {
+                Button("Regenerate Deliverables") {
                     do {
                         self.result = try HighQualityJob.renameSpeakers(
                             in: result,
                             names: customSpeakerLabels
                         )
+                        if let updated = self.result {
+                            customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                        }
+                        errorMessage = nil
+                        refreshSavedResults()
                     } catch {
                         errorMessage = error.localizedDescription
                     }
                 }
+                .accessibilityIdentifier("high-quality-regenerate-deliverables")
                 .disabled(result.manifest.schemaVersion < 3)
             }
+            HStack {
+                if speakerLabels.count > 1 {
+                    Menu("Merge Speakers…") {
+                        ForEach(speakerLabels, id: \.self) { source in
+                            Menu(speakerName(source, in: result)) {
+                                ForEach(speakerLabels.filter { $0 != source }, id: \.self) { target in
+                                    Button("Into \(speakerName(target, in: result))") {
+                                        applySpeakerEdit(
+                                            .merge(source, into: target),
+                                            to: result
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("high-quality-merge-speakers")
+                }
+
+                Button("Reset Speaker Edits", role: .destructive) {
+                    applySpeakerEdit(.reset(), to: result)
+                }
+                .accessibilityIdentifier("high-quality-reset-speaker-edits")
+                .accessibilityHint("Restores the immutable automatic SpeakerKit assignments.")
+            }
+            .disabled(result.manifest.schemaVersion < 3)
+            Text("Speaker edits only regenerate saved Deliverables; no model is loaded.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             if result.manifest.schemaVersion < 3 {
                 Text("Speaker label edits require a result saved with the current schema.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    private func speakerName(_ label: String, in result: HighQualityJobResult) -> String {
+        result.turns.first { $0.speakerLabel == label }?.speakerName ?? label
+    }
+
+    private func applySpeakerEdit(
+        _ edit: HighQualitySpeakerEdit,
+        to result: HighQualityJobResult
+    ) {
+        do {
+            let updated = try HighQualityJob.editSpeakers(in: result, edit: edit)
+            self.result = updated
+            customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+            errorMessage = nil
+            refreshSavedResults()
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 

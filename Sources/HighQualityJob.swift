@@ -949,6 +949,69 @@ struct HighQualityTranscriptTurn: Codable, Equatable, Sendable {
     }
 }
 
+struct HighQualitySpeakerEdit: Codable, Equatable, Sendable {
+    enum Kind: String, Codable, Sendable {
+        case rename
+        case merge
+        case reassign
+        case reset
+    }
+
+    let kind: Kind
+    let speakerLabel: String?
+    let targetSpeakerLabel: String?
+    let turnID: String?
+    let displayName: String?
+    let at: Date
+
+    private init(
+        kind: Kind,
+        speakerLabel: String? = nil,
+        targetSpeakerLabel: String? = nil,
+        turnID: String? = nil,
+        displayName: String? = nil,
+        at: Date
+    ) {
+        self.kind = kind
+        self.speakerLabel = speakerLabel
+        self.targetSpeakerLabel = targetSpeakerLabel
+        self.turnID = turnID
+        self.displayName = displayName
+        self.at = at
+    }
+
+    static func rename(_ speakerLabel: String, to displayName: String, at: Date = Date()) -> Self {
+        .init(
+            kind: .rename,
+            speakerLabel: speakerLabel,
+            displayName: displayName,
+            at: at
+        )
+    }
+
+    static func merge(_ speakerLabel: String, into target: String, at: Date = Date()) -> Self {
+        .init(
+            kind: .merge,
+            speakerLabel: speakerLabel,
+            targetSpeakerLabel: target,
+            at: at
+        )
+    }
+
+    static func reassign(turnID: String, to speakerLabel: String, at: Date = Date()) -> Self {
+        .init(
+            kind: .reassign,
+            targetSpeakerLabel: speakerLabel,
+            turnID: turnID,
+            at: at
+        )
+    }
+
+    static func reset(at: Date = Date()) -> Self {
+        .init(kind: .reset, at: at)
+    }
+}
+
 struct HighQualityModelEvidence: Codable, Equatable, Sendable {
     let backend: HighQualityASRBackend
     let modelID: String
@@ -1077,6 +1140,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var generatedFiles: [HighQualityGeneratedFile]
     var rawEvidenceSHA256: String? = nil
     var speakerReanalysisCount: Int? = nil
+    var speakerEdits: [HighQualitySpeakerEdit]? = nil
 }
 
 struct HighQualitySpeakerReanalysisEvidence: Codable, Equatable, Sendable {
@@ -1127,6 +1191,22 @@ struct HighQualityJobResult: Sendable {
     let subtitleCues: [HighQualitySubtitleCue]
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
+
+    var editableSpeakerLabels: [String] {
+        let automatic: Set<String> = Set(
+            evidence.resultTurns?.compactMap(\.speakerLabel) ?? []
+        )
+        return (manifest.speakerEdits ?? []).reduce(into: automatic) { labels, edit in
+            switch edit.kind {
+            case .merge:
+                if let source = edit.speakerLabel { labels.remove(source) }
+            case .reset:
+                labels = automatic
+            case .rename, .reassign:
+                break
+            }
+        }.sorted()
+    }
 }
 
 struct HighQualitySavedResult: Identifiable, Sendable {
@@ -1158,11 +1238,45 @@ struct HighQualitySavedResult: Identifiable, Sendable {
 }
 
 private struct HighQualityResultTransformations: Codable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     let schemaVersion: Int
     let customSpeakerLabels: [String: String]
+    let speakerEdits: [HighQualitySpeakerEdit]
     var relocatedSourcePath: String? = nil
+
+    init(
+        schemaVersion: Int = currentSchemaVersion,
+        customSpeakerLabels: [String: String] = [:],
+        speakerEdits: [HighQualitySpeakerEdit] = [],
+        relocatedSourcePath: String? = nil
+    ) {
+        self.schemaVersion = schemaVersion
+        self.customSpeakerLabels = customSpeakerLabels
+        self.speakerEdits = speakerEdits
+        self.relocatedSourcePath = relocatedSourcePath
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, customSpeakerLabels, speakerEdits, relocatedSourcePath
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try values.decode(Int.self, forKey: .schemaVersion)
+        customSpeakerLabels = try values.decodeIfPresent(
+            [String: String].self,
+            forKey: .customSpeakerLabels
+        ) ?? [:]
+        speakerEdits = try values.decodeIfPresent(
+            [HighQualitySpeakerEdit].self,
+            forKey: .speakerEdits
+        ) ?? []
+        relocatedSourcePath = try values.decodeIfPresent(
+            String.self,
+            forKey: .relocatedSourcePath
+        )
+    }
 }
 
 struct HighQualityJobError: LocalizedError, Equatable, Sendable {
@@ -1999,10 +2113,17 @@ struct HighQualityJob: Sendable {
             evidence: evidence
         )
         if let transformations = try readTransformations(in: saved.directory) {
-            result = applyingCustomSpeakerLabels(
-                transformations.customSpeakerLabels,
-                to: result
-            )
+            let edits = migratedSpeakerEdits(transformations, manifest: manifest)
+            if transformations.schemaVersion == HighQualityResultTransformations.currentSchemaVersion,
+               manifest.speakerEdits ?? [] != edits {
+                throw savedResultError(
+                    "The saved Speaker edit manifest and audit do not match.",
+                    saved
+                )
+            }
+            result = try applyingSpeakerEdits(edits, to: result)
+        } else if manifest.speakerEdits?.isEmpty == false {
+            throw savedResultError("The saved Speaker edit audit is missing.", saved)
         }
         if manifest.schemaVersion >= 3 {
             do {
@@ -2031,8 +2152,10 @@ struct HighQualityJob: Sendable {
         let previous = try readTransformations(in: saved.directory)
         let relocatedPath = sourceURL.standardizedFileURL.path
         let transformations = try encoder.encode(HighQualityResultTransformations(
-            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+            schemaVersion: previous?.schemaVersion
+                ?? HighQualityResultTransformations.currentSchemaVersion,
             customSpeakerLabels: previous?.customSpeakerLabels ?? [:],
+            speakerEdits: previous?.speakerEdits ?? [],
             relocatedSourcePath: relocatedPath
         ))
         try transactionallyWrite(
@@ -3531,68 +3654,311 @@ struct HighQualityJob: Sendable {
                 resultDirectory: result.directory
             )
         }
-        let normalizedLabels = try Dictionary(uniqueKeysWithValues: names.map { label, value in
-            let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !value.isEmpty else {
-                throw HighQualityJobError(
-                    stage: .export,
-                    message: "Custom Speaker labels cannot be empty.",
-                    resultDirectory: result.directory
-                )
-            }
-            return (label, value)
-        })
-        let renamed = applyingCustomSpeakerLabels(normalizedLabels, to: result)
-        let deliverables = Set(result.manifest.deliverables)
-        let customLabels = renamed.turns.reduce(into: [String: String]()) { labels, turn in
-            if let label = turn.speakerLabel, let customLabel = turn.speakerName {
-                labels[label] = customLabel
+        let currentNames = result.turns.reduce(into: [String: String]()) { values, turn in
+            if let label = turn.speakerLabel {
+                values[label] = turn.speakerName ?? label
             }
         }
-        let previous = try readTransformations(in: result.directory)
-        let transformations = try encoder.encode(HighQualityResultTransformations(
-            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
-            customSpeakerLabels: customLabels,
-            relocatedSourcePath: previous?.relocatedSourcePath
-        ))
-        var files = deliverableFiles(
-            japaneseTranscript: deliverables.contains(.japaneseTranscript)
-                ? renamed.japaneseTranscript : nil,
-            englishTranscript: renamed.englishTranscript,
-            subtitleCues: deliverables.contains(.englishSubtitles) ? renamed.subtitleCues : nil
-        )
-        files["transformations.json"] = transformations
-        try transactionallyWrite(
-            files,
-            in: result.directory,
+        let edits: [HighQualitySpeakerEdit] = try names
+            .sorted(by: { $0.key < $1.key })
+            .compactMap { label, value in
+                let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !value.isEmpty else {
+                    throw HighQualityJobError(
+                        stage: .export,
+                        message: "Custom Speaker labels cannot be empty.",
+                        resultDirectory: result.directory
+                    )
+                }
+                guard let currentName = currentNames[label], currentName != value else {
+                    return nil
+                }
+                return HighQualitySpeakerEdit.rename(label, to: value)
+            }
+        return try saveSpeakerEdits(
+            edits,
+            in: result,
             beforeCommit: beforeCommit
         )
-        return renamed
     }
 
-    private static func applyingCustomSpeakerLabels(
-        _ labels: [String: String],
+    static func editSpeakers(
+        in result: HighQualityJobResult,
+        edit: HighQualitySpeakerEdit,
+        beforeCommit: () throws -> Void = {}
+    ) throws -> HighQualityJobResult {
+        try saveSpeakerEdits([edit], in: result, beforeCommit: beforeCommit)
+    }
+
+    private static func saveSpeakerEdits(
+        _ newEdits: [HighQualitySpeakerEdit],
+        in result: HighQualityJobResult,
+        beforeCommit: () throws -> Void
+    ) throws -> HighQualityJobResult {
+        guard result.manifest.schemaVersion >= 3 else {
+            throw speakerEditError(
+                "Speaker label edits require a result saved with the current schema.",
+                in: result.directory
+            )
+        }
+        guard result.manifest.speakerLabels else {
+            throw speakerEditError(
+                "This saved result has no Speaker assignments to edit.",
+                in: result.directory
+            )
+        }
+        let activeManifest = try readManifest(in: result.directory)
+        guard activeManifest.status == .completed,
+              activeManifest.jobID == result.manifest.jobID,
+              activeManifest.speakerEdits == result.manifest.speakerEdits else {
+            throw speakerEditError(
+                "Speaker edits changed since this result was opened. Reopen it and try again.",
+                in: result.directory
+            )
+        }
+        let previous = try readTransformations(in: result.directory)
+        guard previous != nil || activeManifest.speakerEdits?.isEmpty != false else {
+            throw speakerEditError(
+                "The saved Speaker edit audit is missing.",
+                in: result.directory
+            )
+        }
+        let persistedEdits = migratedSpeakerEdits(previous, manifest: activeManifest)
+        guard previous?.schemaVersion != HighQualityResultTransformations.currentSchemaVersion
+                || (activeManifest.speakerEdits ?? []) == persistedEdits else {
+            throw speakerEditError(
+                "The saved Speaker edit manifest and audit do not match.",
+                in: result.directory
+            )
+        }
+        let current = HighQualityJobResult(
+            directory: result.directory,
+            japaneseTranscript: result.japaneseTranscript,
+            englishTranscript: result.englishTranscript,
+            turns: result.turns,
+            subtitleCues: result.subtitleCues,
+            manifest: activeManifest,
+            evidence: result.evidence
+        )
+        let edits = persistedEdits
+            + (try newEdits.map { try normalizedSpeakerEdit($0, in: result.directory) })
+        let edited = try applyingSpeakerEdits(edits, to: current)
+        var manifest = current.manifest
+        manifest.schemaVersion = HighQualityJobManifest.currentSchemaVersion
+        manifest.speakerEdits = edits
+        let saved = HighQualityJobResult(
+            directory: edited.directory,
+            japaneseTranscript: edited.japaneseTranscript,
+            englishTranscript: edited.englishTranscript,
+            turns: edited.turns,
+            subtitleCues: edited.subtitleCues,
+            manifest: manifest,
+            evidence: edited.evidence
+        )
+        let transformations = try encoder.encode(HighQualityResultTransformations(
+            speakerEdits: edits,
+            relocatedSourcePath: previous?.relocatedSourcePath
+        ))
+        let deliverables = Set(manifest.deliverables)
+        var files = deliverableFiles(
+            japaneseTranscript: deliverables.contains(.japaneseTranscript)
+                ? saved.japaneseTranscript : nil,
+            englishTranscript: saved.englishTranscript,
+            subtitleCues: deliverables.contains(.englishSubtitles) ? saved.subtitleCues : nil
+        )
+        files["transformations.json"] = transformations
+        files["manifest.json"] = try encoder.encode(manifest)
+        try transactionallyWrite(files, in: result.directory, beforeCommit: beforeCommit)
+        return saved
+    }
+
+    private static func migratedSpeakerEdits(
+        _ transformations: HighQualityResultTransformations?,
+        manifest: HighQualityJobManifest
+    ) -> [HighQualitySpeakerEdit] {
+        guard let transformations else { return [] }
+        let migrationDate = manifest.finishedAt ?? manifest.startedAt
+        let legacy = transformations.customSpeakerLabels.sorted(by: { $0.key < $1.key }).map {
+            HighQualitySpeakerEdit.rename($0.key, to: $0.value, at: migrationDate)
+        }
+        return legacy + transformations.speakerEdits
+    }
+
+    private static func normalizedSpeakerEdit(
+        _ edit: HighQualitySpeakerEdit,
+        in directory: URL
+    ) throws -> HighQualitySpeakerEdit {
+        let seconds = edit.at.timeIntervalSince1970
+        guard seconds.isFinite else {
+            throw speakerEditError("The Speaker edit timestamp is invalid.", in: directory)
+        }
+        let at = Date(timeIntervalSince1970: seconds.rounded(.down))
+        let nonempty: (String?) -> String? = { value in
+            guard let value else { return nil }
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        switch edit.kind {
+        case .rename:
+            guard let label = nonempty(edit.speakerLabel),
+                  let name = nonempty(edit.displayName),
+                  edit.targetSpeakerLabel == nil,
+                  edit.turnID == nil else {
+                throw speakerEditError("The Speaker rename operation is invalid.", in: directory)
+            }
+            guard name.rangeOfCharacter(from: .controlCharacters) == nil else {
+                throw speakerEditError(
+                    "Custom Speaker names cannot contain control characters or line breaks.",
+                    in: directory
+                )
+            }
+            return .rename(label, to: name, at: at)
+        case .merge:
+            guard let label = nonempty(edit.speakerLabel),
+                  let target = nonempty(edit.targetSpeakerLabel),
+                  edit.displayName == nil,
+                  edit.turnID == nil else {
+                throw speakerEditError("The Speaker merge operation is invalid.", in: directory)
+            }
+            return .merge(label, into: target, at: at)
+        case .reassign:
+            guard let turnID = nonempty(edit.turnID),
+                  let target = nonempty(edit.targetSpeakerLabel),
+                  edit.speakerLabel == nil,
+                  edit.displayName == nil else {
+                throw speakerEditError(
+                    "The Speaker reassignment operation is invalid.",
+                    in: directory
+                )
+            }
+            return .reassign(turnID: turnID, to: target, at: at)
+        case .reset:
+            guard edit.speakerLabel == nil,
+                  edit.targetSpeakerLabel == nil,
+                  edit.turnID == nil,
+                  edit.displayName == nil else {
+                throw speakerEditError("The Speaker reset operation is invalid.", in: directory)
+            }
+            return .reset(at: at)
+        }
+    }
+
+    private static func applyingSpeakerEdits(
+        _ edits: [HighQualitySpeakerEdit],
         to result: HighQualityJobResult
-    ) -> HighQualityJobResult {
-        let turns: [HighQualityTranscriptTurn] = result.turns.map { turn in
-            .init(
+    ) throws -> HighQualityJobResult {
+        guard let rawTurns = result.evidence.resultTurns,
+              let rawCues = result.evidence.subtitleCues else {
+            throw speakerEditError(
+                "The immutable Speaker result evidence is incomplete.",
+                in: result.directory
+            )
+        }
+        let turnIDs = Set(rawTurns.map(\.id))
+        guard turnIDs.count == rawTurns.count else {
+            throw speakerEditError(
+                "The immutable Speaker result contains duplicate turn identifiers.",
+                in: result.directory
+            )
+        }
+        let rawAssignments = rawTurns.reduce(into: [String: String]()) { labels, turn in
+            if let label = turn.speakerLabel { labels[turn.id] = label }
+        }
+        let rawNames = rawTurns.reduce(into: [String: String]()) { names, turn in
+            if let label = turn.speakerLabel, let name = turn.speakerName {
+                names[label] = name
+            }
+        }
+        let rawLabels = Set(rawTurns.compactMap(\.speakerLabel))
+        var assignments = rawAssignments
+        var names = rawNames
+        var activeLabels = rawLabels
+
+        for storedEdit in edits {
+            let edit = try normalizedSpeakerEdit(storedEdit, in: result.directory)
+            switch edit.kind {
+            case .rename:
+                let label = edit.speakerLabel!
+                guard activeLabels.contains(label) else {
+                    throw speakerEditError(
+                        "Cannot rename unknown or merged Speaker label \(label).",
+                        in: result.directory
+                    )
+                }
+                let name = edit.displayName!
+                if name == label { names.removeValue(forKey: label) }
+                else { names[label] = name }
+            case .merge:
+                let label = edit.speakerLabel!
+                let target = edit.targetSpeakerLabel!
+                guard label != target else {
+                    throw speakerEditError(
+                        "A Speaker label cannot be merged into itself.",
+                        in: result.directory
+                    )
+                }
+                guard activeLabels.contains(label), activeLabels.contains(target) else {
+                    throw speakerEditError(
+                        "Cannot merge unknown or already merged Speaker labels.",
+                        in: result.directory
+                    )
+                }
+                if let sourceName = names[label],
+                   let targetName = names[target],
+                   sourceName != targetName {
+                    throw speakerEditError(
+                        "Cannot merge Speaker labels with conflicting confirmed names.",
+                        in: result.directory
+                    )
+                }
+                if names[target] == nil { names[target] = names[label] }
+                names.removeValue(forKey: label)
+                assignments = assignments.mapValues { $0 == label ? target : $0 }
+                activeLabels.remove(label)
+            case .reassign:
+                let turnID = edit.turnID!
+                let target = edit.targetSpeakerLabel!
+                guard turnIDs.contains(turnID) else {
+                    throw speakerEditError(
+                        "Cannot reassign unknown transcript turn \(turnID).",
+                        in: result.directory
+                    )
+                }
+                guard activeLabels.contains(target) else {
+                    throw speakerEditError(
+                        "Cannot reassign a turn to unknown or merged Speaker label \(target).",
+                        in: result.directory
+                    )
+                }
+                assignments[turnID] = target
+            case .reset:
+                assignments = rawAssignments
+                names = rawNames
+                activeLabels = rawLabels
+            }
+        }
+
+        let turns: [HighQualityTranscriptTurn] = rawTurns.map { turn in
+            let label = assignments[turn.id]
+            return .init(
                 id: turn.id,
                 japanese: turn.japanese,
                 english: turn.english,
-                speakerLabel: turn.speakerLabel,
-                speakerName: turn.speakerLabel.flatMap { labels[$0] } ?? turn.speakerName,
+                speakerLabel: label,
+                speakerName: label.flatMap { names[$0] },
                 start: turn.start,
                 end: turn.end
             )
         }
-        let subtitleCues: [HighQualitySubtitleCue] = result.subtitleCues.map { cue in
-            .init(
+        let subtitleCues: [HighQualitySubtitleCue] = rawCues.map { cue in
+            let label = turnIDs.contains(cue.id) ? assignments[cue.id] : cue.speakerLabel
+            return .init(
                 id: cue.id,
                 start: cue.start,
                 end: cue.end,
                 text: cue.text,
-                speakerLabel: cue.speakerLabel,
-                speakerName: cue.speakerLabel.flatMap { labels[$0] } ?? cue.speakerName
+                speakerLabel: label,
+                speakerName: label.flatMap { names[$0] }
             )
         }
         let deliverables = Set(result.manifest.deliverables)
@@ -4724,6 +5090,7 @@ struct HighQualityJob: Sendable {
 
     private static func webVTTSpeaker(_ value: String) -> String {
         value.replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
     }
 
@@ -4939,8 +5306,15 @@ struct HighQualityJob: Sendable {
                 HighQualityResultTransformations.self,
                 from: Data(contentsOf: url)
             )
-            guard transformations.schemaVersion
-                    == HighQualityResultTransformations.currentSchemaVersion,
+            let normalizedEdits = try transformations.speakerEdits.map {
+                try normalizedSpeakerEdit($0, in: directory)
+            }
+            guard (1...HighQualityResultTransformations.currentSchemaVersion)
+                    .contains(transformations.schemaVersion),
+                  transformations.schemaVersion != 1 || transformations.speakerEdits.isEmpty,
+                  transformations.schemaVersion == 1
+                    || transformations.customSpeakerLabels.isEmpty,
+                  normalizedEdits == transformations.speakerEdits,
                   transformations.customSpeakerLabels.values.allSatisfy({
                       !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                   }),
@@ -4978,6 +5352,13 @@ struct HighQualityJob: Sendable {
             message: message,
             resultDirectory: saved.directory
         )
+    }
+
+    private static func speakerEditError(
+        _ message: String,
+        in directory: URL
+    ) -> HighQualityJobError {
+        HighQualityJobError(stage: .export, message: message, resultDirectory: directory)
     }
 
     private static var decoder: JSONDecoder {
