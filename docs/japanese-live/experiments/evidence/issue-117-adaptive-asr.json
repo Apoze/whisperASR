@@ -133,7 +133,7 @@
   "verification": {
     "targeted": {
       "executed": 19,
-      "skipped": 6,
+      "skipped": 2,
       "failures": 0
     },
     "full": {
