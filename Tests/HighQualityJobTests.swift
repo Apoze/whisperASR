@@ -1384,7 +1384,7 @@ final class HighQualityJobTests: XCTestCase {
         try await gate.endWorkflow(live)
     }
 
-    func testLegacySpeakerResultStaysDisabledAfterLocateAndCancellation() async throws {
+    func testLegacySpeakerResultStaysDisabledWhenLocateCannotVerifySource() async throws {
         func reanalysisJob(_ calls: CallLog) -> HighQualityJob {
             HighQualityJob(services: .init(
                 loadSource: { _ in
@@ -1436,15 +1436,22 @@ final class HighQualityJobTests: XCTestCase {
         })
         XCTAssertNotNil(missing.sourceRelocationMessage)
 
-        let cancelled = try HighQualityJob.relocateSource(missing, to: nil)
-        XCTAssertEqual(cancelled.sourceURL, missing.sourceURL)
-        XCTAssertNotNil(cancelled.sourceRelocationMessage)
-
-        let relocated = try HighQualityJob.relocateSource(cancelled, to: relocatedSource)
-        XCTAssertNil(relocated.sourceRelocationMessage)
+        let calls = CallLog()
+        do {
+            _ = try await reanalysisJob(calls).relocateSource(missing, to: relocatedSource)
+            XCTFail("A legacy result cannot verify a relocated source.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .source)
+            XCTAssertTrue(error.message.contains("Recompute"))
+        }
+        let afterLocate = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first {
+            $0.id == legacy.id
+        })
+        XCTAssertEqual(afterLocate.sourceURL, missing.sourceURL)
+        XCTAssertNotNil(afterLocate.sourceRelocationMessage)
         state = HighQualitySpeakerReanalysisActionState(
-            result: try HighQualityJob.reopen(relocated),
-            saved: relocated,
+            result: try HighQualityJob.reopen(afterLocate),
+            saved: afterLocate,
             isRunning: false,
             includeLabels: true
         )
@@ -1452,11 +1459,10 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertFalse(state.isEnabled)
         XCTAssertTrue(state.explanation?.contains("Recompute") == true)
 
-        let relocatedFiles = try resultFiles(in: relocated.directory)
-        let calls = CallLog()
+        let files = try resultFiles(in: afterLocate.directory)
         do {
             _ = try await reanalysisJob(calls).rerunSpeakers(
-                relocated,
+                afterLocate,
                 configuration: .standard
             )
             XCTFail("A legacy result without an audio fingerprint must not run SpeakerKit.")
@@ -1466,11 +1472,74 @@ final class HighQualityJobTests: XCTestCase {
         }
         let recordedCalls = await calls.values
         XCTAssertTrue(recordedCalls.isEmpty)
-        XCTAssertEqual(try resultFiles(in: relocated.directory), relocatedFiles)
+        XCTAssertEqual(try resultFiles(in: afterLocate.directory), files)
         XCTAssertEqual(
-            try Data(contentsOf: relocated.directory.appendingPathComponent("raw-asr.json")),
+            try Data(contentsOf: afterLocate.directory.appendingPathComponent("raw-asr.json")),
             rawEvidence
         )
+    }
+
+    func testSpeakerSourceRelocationRejectsWrongMediaThenAcceptsValidAlternative() async throws {
+        let fixture = try await savedSpeakerFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let validSource = fixture.root.appendingPathComponent("valid-alternative.wav")
+        let wrongSource = fixture.root.appendingPathComponent("wrong.wav")
+        try FileManager.default.moveItem(at: fixture.source, to: validSource)
+        try Data("wrong-audio".utf8).write(to: wrongSource)
+        let missing = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first {
+            $0.id == fixture.saved.id
+        })
+        let result = try HighQualityJob.reopen(missing)
+        let files = try resultFiles(in: missing.directory)
+        let calls = CallLog()
+        let job = HighQualityJob(services: .init(
+            loadSource: { url in
+                await calls.append(url.lastPathComponent)
+                return Array(repeating: url == wrongSource ? 1 : 0, count: 160_000)
+            },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "unused" },
+            unloadASR: {}
+        ))
+
+        do {
+            _ = try await job.relocateSource(missing, to: wrongSource)
+            XCTFail("A different source must not be persisted.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .source)
+        }
+        let afterWrong = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first {
+            $0.id == fixture.saved.id
+        })
+        var state = HighQualitySpeakerReanalysisActionState(
+            result: result,
+            saved: afterWrong,
+            isRunning: false,
+            includeLabels: true
+        )
+        XCTAssertEqual(afterWrong.sourceURL, fixture.source)
+        XCTAssertNotNil(afterWrong.sourceRelocationMessage)
+        XCTAssertTrue(state.isVisible)
+        XCTAssertFalse(state.isEnabled)
+        XCTAssertEqual(try resultFiles(in: afterWrong.directory), files)
+
+        let relocated = try await job.relocateSource(afterWrong, to: validSource)
+        let afterValid = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first {
+            $0.id == fixture.saved.id
+        })
+        state = HighQualitySpeakerReanalysisActionState(
+            result: try HighQualityJob.reopen(afterValid),
+            saved: afterValid,
+            isRunning: false,
+            includeLabels: true
+        )
+        XCTAssertEqual(relocated.sourceURL, validSource)
+        XCTAssertEqual(afterValid.sourceURL, validSource)
+        XCTAssertNil(afterValid.sourceRelocationMessage)
+        XCTAssertTrue(state.isVisible)
+        XCTAssertTrue(state.isEnabled)
+        let recordedCalls = await calls.values
+        XCTAssertEqual(recordedCalls, ["wrong.wav", "valid-alternative.wav"])
     }
 
     func testCancelledSpeakerReanalysisUnloadsAndKeepsPreviousResult() async throws {
@@ -1642,7 +1711,7 @@ final class HighQualityJobTests: XCTestCase {
         }
         defaults.set(LiveCaptionMode.api.rawValue, forKey: LiveCaptionMode.storageKey)
         let calls = CallLog()
-        let completed = try await HighQualityJob(services: .init(
+        let job = HighQualityJob(services: .init(
             loadSource: { _ in
                 await calls.append("load")
                 return [0]
@@ -1653,7 +1722,8 @@ final class HighQualityJobTests: XCTestCase {
                 return "再開。"
             },
             unloadASR: { await calls.append("unload") }
-        )).run(.init(
+        ))
+        let completed = try await job.run(.init(
             sourceURL: source,
             deliverables: [.japaneseTranscript],
             backend: .qwenJA,
@@ -1674,7 +1744,7 @@ final class HighQualityJobTests: XCTestCase {
         })
         XCTAssertNotNil(selected.sourceRelocationMessage)
 
-        let relocated = try HighQualityJob.relocateSource(selected, to: relocatedSource)
+        let relocated = try await job.relocateSource(selected, to: relocatedSource)
         let selectedAfterSecondRelaunch = try XCTUnwrap(
             HighQualityJob.savedResults(in: root).first { $0.id == relocated.id }
         )
@@ -1688,7 +1758,7 @@ final class HighQualityJobTests: XCTestCase {
             rawEvidence
         )
         let callsAfterReopen = await calls.values
-        XCTAssertEqual(callsAfterReopen, callsAfterRun)
+        XCTAssertEqual(callsAfterReopen, callsAfterRun + ["load"])
         XCTAssertEqual(LiveCaptionMode.stored(), .api)
     }
 

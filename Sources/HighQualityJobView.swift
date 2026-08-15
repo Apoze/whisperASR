@@ -397,17 +397,18 @@ struct HighQualityJobView: View {
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.audio, .movie]
         panel.begin { response in
-            let url = response == .OK ? panel.url : nil
-            do {
-                let relocated = try HighQualityJob.relocateSource(saved, to: url)
-                guard url != nil else { return }
-                refreshSavedResults()
-                selectedSavedResultID = relocated.id
-                try showSavedResult(
-                    savedResults.first(where: { $0.id == relocated.id }) ?? relocated
-                )
-            } catch {
-                errorMessage = error.localizedDescription
+            guard response == .OK, let url = panel.url else { return }
+            Task {
+                do {
+                    let relocated = try await HighQualityJob().relocateSource(saved, to: url)
+                    refreshSavedResults()
+                    selectedSavedResultID = relocated.id
+                    try showSavedResult(
+                        savedResults.first(where: { $0.id == relocated.id }) ?? relocated
+                    )
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
             }
         }
     }

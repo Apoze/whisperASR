@@ -1134,9 +1134,11 @@ enum HighQualitySpeakerReanalysisAvailability: Equatable, Sendable {
     case requiresVerifiedSource
     case available
 
+    static let verifiedSourceExplanation = "This saved result has no verified source-audio fingerprint. Recompute the High-quality job before reanalyzing speakers."
+
     var explanation: String? {
         guard self == .requiresVerifiedSource else { return nil }
-        return "This saved result has no verified source-audio fingerprint. Recompute the High-quality job before reanalyzing speakers."
+        return Self.verifiedSourceExplanation
     }
 }
 
@@ -2041,26 +2043,59 @@ struct HighQualityJob: Sendable {
         return result
     }
 
-    static func relocateSource(
+    func relocateSource(
         _ saved: HighQualitySavedResult,
-        to sourceURL: URL?
-    ) throws -> HighQualitySavedResult {
-        guard let sourceURL else { return saved }
+        to sourceURL: URL
+    ) async throws -> HighQualitySavedResult {
         guard saved.manifest.source.youtube == nil,
               sourceURL.isFileURL,
               (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
                 == true else {
-            throw savedResultError("Choose an existing local media file.", saved)
+            throw Self.savedResultError(
+                "Choose an existing local media file.",
+                saved,
+                stage: .source
+            )
         }
-        _ = try reopen(saved)
-        let previous = try readTransformations(in: saved.directory)
+        let result = try Self.reopen(saved)
+        guard Self.isValidSHA256(result.evidence.sourceAudioSHA256) else {
+            throw Self.savedResultError(
+                HighQualitySpeakerReanalysisAvailability.verifiedSourceExplanation,
+                saved,
+                stage: .source
+            )
+        }
+        let selection = result.manifest.translationModel?.translator ?? .productDefault
+        let services = servicesForSelection(result.manifest.selectedBackend, selection)
+        let samples: [Float]
+        do {
+            samples = try await services.loadSource(sourceURL)
+        } catch {
+            throw Self.savedResultError(
+                "The selected media could not be verified: \(error.localizedDescription)",
+                saved,
+                stage: .source
+            )
+        }
+        guard Self.matchesSavedSource(
+            samples: samples,
+            sha256: Self.audioSHA256(samples),
+            result: result
+        ) else {
+            throw Self.savedResultError(
+                "The selected media does not match the saved source audio.",
+                saved,
+                stage: .source
+            )
+        }
+        let previous = try Self.readTransformations(in: saved.directory)
         let relocatedPath = sourceURL.standardizedFileURL.path
-        let transformations = try encoder.encode(HighQualityResultTransformations(
+        let transformations = try Self.encoder.encode(HighQualityResultTransformations(
             schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
             customSpeakerLabels: previous?.customSpeakerLabels ?? [:],
             relocatedSourcePath: relocatedPath
         ))
-        try transactionallyWrite(
+        try Self.transactionallyWrite(
             ["transformations.json": transformations],
             in: saved.directory
         )
@@ -5013,10 +5048,11 @@ struct HighQualityJob: Sendable {
 
     private static func savedResultError(
         _ message: String,
-        _ saved: HighQualitySavedResult
+        _ saved: HighQualitySavedResult,
+        stage: HighQualityJobFailureStage = .application
     ) -> HighQualityJobError {
         HighQualityJobError(
-            stage: .application,
+            stage: stage,
             message: message,
             resultDirectory: saved.directory
         )

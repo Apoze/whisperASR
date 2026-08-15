@@ -1051,7 +1051,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
             to: directory.appendingPathComponent("manifest.json"),
             options: .atomic
         )
-        let saved = HighQualitySavedResult(directory: directory, manifest: manifest)
+        let saved = try await HighQualityJob().relocateSource(
+            HighQualitySavedResult(directory: directory, manifest: manifest),
+            to: sourceURL
+        )
+        XCTAssertEqual(saved.sourceURL.standardizedFileURL, sourceURL.standardizedFileURL)
         let beforeRerun = try HighQualityJob.reopen(saved)
         XCTAssertEqual(beforeRerun.evidence.rawASR, baseline.rawASR)
         XCTAssertEqual(beforeRerun.evidence.alignment, baseline.alignment)
