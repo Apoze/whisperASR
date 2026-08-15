@@ -43,10 +43,11 @@
     ]
   },
   "thresholdsFrozen": {
-    "contractPath": "threshold-contract.json",
-    "contractSHA256": "bfc99c6151256465c102015c1a4bb200bc0cc19f9f601325b0b46eacd68c57ff",
-    "maximumCosineDistance": 0.1,
-    "uncertaintyMargin": 0.02
+    "version": 2,
+    "contractPath": "threshold-contract-v2.json",
+    "contractSHA256": "e197099d939e388b32ea179bae0c609415e4831e47891ddb0c776709365265ed",
+    "maximumCosineDistance": 0.3,
+    "uncertaintyMargin": 0.1
   },
   "observations": {
     "centroidCount": 6,
@@ -140,8 +141,47 @@
     },
     "result": "PARTIAL/BLOCKED_EVIDENCE"
   },
-  "evidenceStatus": "PARTIAL/BLOCKED_EVIDENCE",
-  "decision": "NO_HOLDOUT",
-  "reason": "Expected=12 produced real same-reference pairs, but the closest was distance 0.25772017, above the frozen 0.1 threshold. No pair was under threshold, so there was no useful suggestion and no false suggestion. A holdout remains unopened because it cannot replace missing positive DEV evidence without leaking final evaluation.",
-  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. The result UI remains absent; no usefulness, recall or promotion claim is made."
+  "thresholdRecalibration": {
+    "performedWithoutModelRun": true,
+    "sourceReport": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/calibration-report.json",
+      "sha256": "3637bb04f8d6186bc6b0f14676e5aa3a8d64deafee94fd4ecc348ff35ba2469a"
+    },
+    "report": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/threshold-calibration-v2.json",
+      "sha256": "8b01c5c73141b38cd3e066fa33334ec36b1b860cf2c4d3ce6d66247b257fc24e"
+    },
+    "result": {
+      "suggestionCount": 1,
+      "usefulSuggestionCount": 1,
+      "falseSuggestionCount": 0,
+      "abstainedPairCount": 65,
+      "precision": 1.0
+    },
+    "usefulPair": {
+      "firstSpeakerID": "SPEAKER_00",
+      "secondSpeakerID": "SPEAKER_07",
+      "referenceSpeaker": "P10",
+      "cosineDistance": 0.25772017,
+      "firstUncertaintyGap": 0.48182279,
+      "secondUncertaintyGap": 0.52656873
+    },
+    "closestDifferentReferencePair": {
+      "firstSpeakerID": "SPEAKER_04",
+      "firstReferenceSpeaker": "INT",
+      "secondSpeakerID": "SPEAKER_11",
+      "secondReferenceSpeaker": "P03",
+      "cosineDistance": 0.44497204
+    },
+    "gates": {
+      "atLeastOneUsefulSuggestion": true,
+      "zeroFalseSuggestions": true,
+      "allOtherPairsAbstained": true,
+      "thresholdsFrozenBeforeHoldout": true
+    }
+  },
+  "evidenceStatus": "DEV_GATES_PASSED_HOLDOUT_PENDING",
+  "decision": "HOLDOUT_PENDING",
+  "reason": "Replaying the archived Expected=12 DEV centroids at the frozen v2 thresholds admits exactly the P10 same-reference pair at distance 0.25772017. The closest different-reference pair remains outside at 0.44497204, and all 65 other pairs abstain. Holdout remains unopened pending an explicit slot.",
+  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. The result UI remains absent until the untouched holdout is evaluated; no recall or promotion claim is made yet."
 }

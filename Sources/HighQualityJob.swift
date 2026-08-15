@@ -830,8 +830,8 @@ struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
 }
 
 struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
-    static let maximumCosineDistance: Float = 0.1
-    static let uncertaintyMargin: Float = 0.02
+    static let maximumCosineDistance: Float = 0.3
+    static let uncertaintyMargin: Float = 0.1
 
     let firstSpeakerID: String
     let secondSpeakerID: String

@@ -1204,6 +1204,8 @@ final class HighQualityJobTests: XCTestCase {
             try JapaneseBenchmarkSupport.sha256(at: contractURL),
             thresholds["contractSHA256"] as? String
         )
+        XCTAssertEqual(contract["version"], thresholds["version"] as? NSNumber)
+        XCTAssertEqual(contract["version"]?.intValue, 2)
         XCTAssertEqual(
             contract["maximumCosineDistance"]?.floatValue,
             HighQualityDuplicateSpeakerSuggestion.maximumCosineDistance

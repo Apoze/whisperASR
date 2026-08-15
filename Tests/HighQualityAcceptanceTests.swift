@@ -319,8 +319,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
     }
 
-    func testDuplicateSpeakerDevelopmentCalibrationWhenOptedIn() async throws {
+    func testDuplicateSpeakerEvidenceWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
+        let holdoutOpened = environment[
+            "WHISPERASR_DUPLICATE_SPEAKER_ALLOW_HOLDOUT"
+        ] == "1"
         let expectedSpeakerCount: Int?
         if let rawExpectedCount = environment[
             "WHISPERASR_DUPLICATE_SPEAKER_EXPECTED_COUNT"
@@ -339,8 +342,20 @@ final class HighQualityAcceptanceTests: XCTestCase {
         } else {
             expectedSpeakerCount = nil
         }
-        let requiredSlot = expectedSpeakerCount == nil ? "114" : "114-CALIBRATION"
-        guard environment["WHISPERASR_RUN_DUPLICATE_SPEAKER_DEV"] == "1",
+        if holdoutOpened, expectedSpeakerCount != 12 {
+            throw NSError(
+                domain: "HighQualityAcceptanceTests",
+                code: 114,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Ticket #114 holdout requires frozen Expected=12.",
+                ]
+            )
+        }
+        let requiredSlot = holdoutOpened
+            ? "114-HOLDOUT"
+            : (expectedSpeakerCount == nil ? "114" : "114-CALIBRATION")
+        guard environment["WHISPERASR_RUN_DUPLICATE_SPEAKER_EVIDENCE"] == "1",
               environment["BENCHMARK_SLOT_GRANTED"] == requiredSlot,
               let manifestPath = environment["WHISPERASR_DUPLICATE_SPEAKER_MANIFEST"],
               let sourcePath = environment["WHISPERASR_DUPLICATE_SPEAKER_SOURCE"],
@@ -348,16 +363,21 @@ final class HighQualityAcceptanceTests: XCTestCase {
               let modelCachePath = environment["WHISPERASR_DUPLICATE_SPEAKER_MODEL_CACHE"],
               let rawJobID = environment["WHISPERASR_DUPLICATE_SPEAKER_JOB_ID"],
               let jobID = UUID(uuidString: rawJobID) else {
-            throw XCTSkip("Set the frozen #114 DEV inputs and an explicit benchmark slot.")
+            throw XCTSkip("Set the frozen #114 inputs and an explicit benchmark slot.")
         }
         let manifest = try JapaneseBenchmarkSupport.loadManifest(
             at: URL(fileURLWithPath: manifestPath)
         )
-        guard manifest.purpose == .development else {
+        let requiredPurpose: JapaneseBenchmarkSupport.Manifest.Purpose = holdoutOpened
+            ? .holdoutDialogue : .development
+        guard manifest.purpose == requiredPurpose else {
             throw NSError(
                 domain: "HighQualityAcceptanceTests",
                 code: 114,
-                userInfo: [NSLocalizedDescriptionKey: "Ticket #114 calibration is DEV-only."]
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Ticket #114 evidence manifest has the wrong frozen purpose.",
+                ]
             )
         }
         let sourceURL = URL(fileURLWithPath: sourcePath)
@@ -394,14 +414,15 @@ final class HighQualityAcceptanceTests: XCTestCase {
             duration: Double(samples.count) / Double(manifest.fixture.sampleRate),
             sourceJobID: jobID
         )
-        let report = try Self.duplicateSpeakerDevelopmentReport(
+        let report = try Self.duplicateSpeakerEvidenceReport(
             manifest: manifest,
             evidence: evidence,
             elapsedSeconds: elapsedSeconds,
             sourceSHA256: manifest.fixture.sha256,
             sourceJobID: jobID,
             benchmarkSlot: requiredSlot,
-            speakerCountPolicy: speakerCountPolicy
+            speakerCountPolicy: speakerCountPolicy,
+            holdoutOpened: holdoutOpened
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -415,7 +436,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
         XCTAssertGreaterThan(report.centroidCount, 1)
         XCTAssertFalse(report.comparisons.isEmpty)
         print(
-            "[#114][DEV] centroids=\(report.centroidCount) "
+            "[#114][\(holdoutOpened ? "HOLDOUT" : "DEV")] centroids=\(report.centroidCount) "
                 + "suggestions=\(report.suggestionCount) "
                 + "useful=\(report.usefulSuggestionCount) "
                 + "false=\(report.falseSuggestionCount) "
@@ -1182,7 +1203,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let unload: @Sendable () async -> Void
     }
 
-    private struct DuplicateSpeakerDevelopmentReport: Codable {
+    private struct DuplicateSpeakerEvidenceReport: Codable {
         let ticket: Int
         let corpusID: String
         let purpose: String
@@ -1229,15 +1250,16 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let suggested: Bool
     }
 
-    private static func duplicateSpeakerDevelopmentReport(
+    private static func duplicateSpeakerEvidenceReport(
         manifest: JapaneseBenchmarkSupport.Manifest,
         evidence: HighQualityDiarizationEvidence,
         elapsedSeconds: TimeInterval,
         sourceSHA256: String,
         sourceJobID: UUID,
         benchmarkSlot: String,
-        speakerCountPolicy: HighQualitySpeakerCountPolicy
-    ) throws -> DuplicateSpeakerDevelopmentReport {
+        speakerCountPolicy: HighQualitySpeakerCountPolicy,
+        holdoutOpened: Bool
+    ) throws -> DuplicateSpeakerEvidenceReport {
         let centroids = try XCTUnwrap(evidence.speakerCentroids)
         let mappings = referenceMappings(
             centroids: centroids,
@@ -1288,12 +1310,14 @@ final class HighQualityAcceptanceTests: XCTestCase {
             ticket: 114,
             corpusID: manifest.corpusID,
             purpose: manifest.purpose.rawValue,
-            holdoutOpened: false,
+            holdoutOpened: holdoutOpened,
             benchmarkSlot: benchmarkSlot,
             sourceJobID: sourceJobID,
             speakerCountPolicy: speakerCountPolicy,
-            calibrationRole: speakerCountPolicy.mode == .expected
-                ? "over-clustering-pair-generator" : "baseline",
+            calibrationRole: holdoutOpened
+                ? "frozen-holdout-evaluation"
+                : (speakerCountPolicy.mode == .expected
+                    ? "over-clustering-pair-generator" : "baseline"),
             sourceSHA256: sourceSHA256,
             modelID: first.modelID,
             modelRevision: first.modelRevision,
