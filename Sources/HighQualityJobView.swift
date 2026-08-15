@@ -41,6 +41,14 @@ struct HighQualitySpeakerReanalysisActionState: Equatable {
     }
 }
 
+struct HighQualitySpeakerLabelActionState: Equatable {
+    let isEnabled: Bool
+
+    init(result: HighQualityJobResult, isRunning: Bool) {
+        isEnabled = result.manifest.schemaVersion >= 3 && !isRunning
+    }
+}
+
 struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
@@ -530,6 +538,10 @@ struct HighQualityJobView: View {
         _ result: HighQualityJobResult,
         deliverables: Set<HighQualityDeliverable>
     ) -> some View {
+        let labelActionState = HighQualitySpeakerLabelActionState(
+            result: result,
+            isRunning: isRunning
+        )
         Text("Results").font(.headline)
         if let reanalysis = result.evidence.speakerReanalyses?.last {
             Text(
@@ -576,6 +588,10 @@ struct HighQualityJobView: View {
                     .textFieldStyle(.roundedBorder)
                 }
                 Button("Apply Labels") {
+                    guard HighQualitySpeakerLabelActionState(
+                        result: result,
+                        isRunning: isRunning
+                    ).isEnabled else { return }
                     do {
                         self.result = try HighQualityJob.renameSpeakers(
                             in: result,
@@ -585,7 +601,7 @@ struct HighQualityJobView: View {
                         errorMessage = error.localizedDescription
                     }
                 }
-                .disabled(result.manifest.schemaVersion < 3)
+                .disabled(!labelActionState.isEnabled)
             }
             if result.manifest.schemaVersion < 3 {
                 Text("Speaker label edits require a result saved with the current schema.")

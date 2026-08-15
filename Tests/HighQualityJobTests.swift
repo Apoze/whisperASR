@@ -1415,7 +1415,10 @@ final class HighQualityJobTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         let legacy = try schemaThreeSpeakerFixture(fixture.saved)
         let reopened = try HighQualityJob.reopen(legacy)
-        XCTAssertFalse(HighQualityJob.canRerunSpeakers(reopened))
+        XCTAssertEqual(
+            HighQualityJob.speakerReanalysisAvailability(reopened),
+            .requiresVerifiedSource
+        )
 
         var state = HighQualitySpeakerReanalysisActionState(
             result: reopened,
@@ -1477,6 +1480,21 @@ final class HighQualityJobTests: XCTestCase {
             try Data(contentsOf: afterLocate.directory.appendingPathComponent("raw-asr.json")),
             rawEvidence
         )
+    }
+
+    func testSpeakerLabelActionIsDisabledDuringSpeakerReanalysis() async throws {
+        let fixture = try await savedSpeakerFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let result = try HighQualityJob.reopen(fixture.saved)
+
+        XCTAssertTrue(HighQualitySpeakerLabelActionState(
+            result: result,
+            isRunning: false
+        ).isEnabled)
+        XCTAssertFalse(HighQualitySpeakerLabelActionState(
+            result: result,
+            isRunning: true
+        ).isEnabled)
     }
 
     func testSpeakerSourceRelocationRejectsWrongMediaThenAcceptsValidAlternative() async throws {

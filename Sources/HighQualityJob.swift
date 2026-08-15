@@ -2124,10 +2124,6 @@ struct HighQualityJob: Sendable {
             ? .available : .requiresVerifiedSource
     }
 
-    static func canRerunSpeakers(_ result: HighQualityJobResult) -> Bool {
-        speakerReanalysisAvailability(result) == .available
-    }
-
     func rerunSpeakers(
         _ saved: HighQualitySavedResult,
         configuration: HighQualitySpeakerConfiguration,
