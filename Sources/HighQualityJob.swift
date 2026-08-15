@@ -1166,8 +1166,8 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
 
 struct HighQualitySpeakerReanalysisEvidence: Codable, Equatable, Sendable {
     let startedAt: Date
-    let finishedAt: Date
-    let wallTime: TimeInterval
+    let payloadPreparedAt: Date
+    let preCommitWallTime: TimeInterval
     let configuration: HighQualitySpeakerConfiguration
     let modelEvents: [HighQualityModelEvent]
     let peakMemoryBytes: UInt64
@@ -1176,6 +1176,109 @@ struct HighQualitySpeakerReanalysisEvidence: Codable, Equatable, Sendable {
     let replacedSpeakerEdits: [HighQualitySpeakerEdit]?
     let diarization: HighQualityDiarizationEvidence
     let attachment: HighQualitySpeakerAttachmentEvidence
+
+    init(
+        startedAt: Date,
+        payloadPreparedAt: Date,
+        preCommitWallTime: TimeInterval,
+        configuration: HighQualitySpeakerConfiguration,
+        modelEvents: [HighQualityModelEvent],
+        peakMemoryBytes: UInt64,
+        replacedDiarization: HighQualityDiarizationEvidence,
+        replacedAttachment: HighQualitySpeakerAttachmentEvidence?,
+        replacedSpeakerEdits: [HighQualitySpeakerEdit]?,
+        diarization: HighQualityDiarizationEvidence,
+        attachment: HighQualitySpeakerAttachmentEvidence
+    ) {
+        self.startedAt = startedAt
+        self.payloadPreparedAt = payloadPreparedAt
+        self.preCommitWallTime = preCommitWallTime
+        self.configuration = configuration
+        self.modelEvents = modelEvents
+        self.peakMemoryBytes = peakMemoryBytes
+        self.replacedDiarization = replacedDiarization
+        self.replacedAttachment = replacedAttachment
+        self.replacedSpeakerEdits = replacedSpeakerEdits
+        self.diarization = diarization
+        self.attachment = attachment
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case startedAt, payloadPreparedAt, preCommitWallTime, configuration, modelEvents
+        case peakMemoryBytes, replacedDiarization, replacedAttachment, replacedSpeakerEdits
+        case diarization, attachment
+        case finishedAt, wallTime
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        startedAt = try values.decode(Date.self, forKey: .startedAt)
+        payloadPreparedAt = try values.decodeIfPresent(Date.self, forKey: .payloadPreparedAt)
+            ?? values.decode(Date.self, forKey: .finishedAt)
+        preCommitWallTime = try values.decodeIfPresent(
+            TimeInterval.self,
+            forKey: .preCommitWallTime
+        ) ?? values.decode(TimeInterval.self, forKey: .wallTime)
+        configuration = try values.decode(
+            HighQualitySpeakerConfiguration.self,
+            forKey: .configuration
+        )
+        modelEvents = try values.decode([HighQualityModelEvent].self, forKey: .modelEvents)
+        peakMemoryBytes = try values.decode(UInt64.self, forKey: .peakMemoryBytes)
+        replacedDiarization = try values.decode(
+            HighQualityDiarizationEvidence.self,
+            forKey: .replacedDiarization
+        )
+        replacedAttachment = try values.decodeIfPresent(
+            HighQualitySpeakerAttachmentEvidence.self,
+            forKey: .replacedAttachment
+        )
+        replacedSpeakerEdits = try values.decodeIfPresent(
+            [HighQualitySpeakerEdit].self,
+            forKey: .replacedSpeakerEdits
+        )
+        diarization = try values.decode(
+            HighQualityDiarizationEvidence.self,
+            forKey: .diarization
+        )
+        attachment = try values.decode(
+            HighQualitySpeakerAttachmentEvidence.self,
+            forKey: .attachment
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(startedAt, forKey: .startedAt)
+        try values.encode(payloadPreparedAt, forKey: .payloadPreparedAt)
+        try values.encode(preCommitWallTime, forKey: .preCommitWallTime)
+        try values.encode(configuration, forKey: .configuration)
+        try values.encode(modelEvents, forKey: .modelEvents)
+        try values.encode(peakMemoryBytes, forKey: .peakMemoryBytes)
+        try values.encode(replacedDiarization, forKey: .replacedDiarization)
+        try values.encodeIfPresent(replacedAttachment, forKey: .replacedAttachment)
+        try values.encodeIfPresent(replacedSpeakerEdits, forKey: .replacedSpeakerEdits)
+        try values.encode(diarization, forKey: .diarization)
+        try values.encode(attachment, forKey: .attachment)
+    }
+}
+
+struct HighQualitySpeakerReanalysisCompletion: Codable, Equatable, Sendable {
+    let reanalysisCount: Int
+    let rawEvidenceSHA256: String
+    let startedAt: Date
+    let payloadPreparedAt: Date
+    let finishedAt: Date
+    let wallTime: TimeInterval
+    let commitWallTime: TimeInterval
+    let auditError: String?
+}
+
+private struct HighQualitySpeakerReanalysisJournal: Codable {
+    static let currentSchemaVersion = 1
+
+    let schemaVersion: Int
+    var entries: [HighQualitySpeakerReanalysisCompletion]
 }
 
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
@@ -1213,6 +1316,27 @@ struct HighQualityJobResult: Sendable {
     let subtitleCues: [HighQualitySubtitleCue]
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
+    let speakerReanalysisCompletion: HighQualitySpeakerReanalysisCompletion?
+
+    init(
+        directory: URL,
+        japaneseTranscript: String,
+        englishTranscript: String?,
+        turns: [HighQualityTranscriptTurn],
+        subtitleCues: [HighQualitySubtitleCue],
+        manifest: HighQualityJobManifest,
+        evidence: HighQualityRawEvidence,
+        speakerReanalysisCompletion: HighQualitySpeakerReanalysisCompletion? = nil
+    ) {
+        self.directory = directory
+        self.japaneseTranscript = japaneseTranscript
+        self.englishTranscript = englishTranscript
+        self.turns = turns
+        self.subtitleCues = subtitleCues
+        self.manifest = manifest
+        self.evidence = evidence
+        self.speakerReanalysisCompletion = speakerReanalysisCompletion
+    }
 
     fileprivate var automaticSpeakerLabels: Set<String> {
         var labels = Set(evidence.resultTurns?.compactMap(\.speakerLabel) ?? [])
@@ -1246,7 +1370,34 @@ struct HighQualityJobResult: Sendable {
     }
 
     var canUndoLastSpeakerEdit: Bool {
-        !(manifest.speakerEdits ?? []).reversed().prefix { $0.kind != .reset }.isEmpty
+        !(manifest.speakerEdits ?? []).isEmpty
+    }
+
+    var hasArchivedSpeakerEdits: Bool {
+        evidence.speakerReanalyses?.last?.replacedSpeakerEdits?.isEmpty == false
+    }
+
+    var canRestorePreviousSpeakerEdits: Bool {
+        HighQualityJob.canRestorePreviousSpeakerEdits(in: self)
+    }
+
+    var shouldExplainIncompatibleArchivedSpeakerEdits: Bool {
+        hasArchivedSpeakerEdits && !canRestorePreviousSpeakerEdits
+    }
+
+    fileprivate func withSpeakerReanalysisCompletion(
+        _ completion: HighQualitySpeakerReanalysisCompletion?
+    ) -> Self {
+        .init(
+            directory: directory,
+            japaneseTranscript: japaneseTranscript,
+            englishTranscript: englishTranscript,
+            turns: turns,
+            subtitleCues: subtitleCues,
+            manifest: manifest,
+            evidence: evidence,
+            speakerReanalysisCompletion: completion
+        )
     }
 }
 
@@ -2191,7 +2342,9 @@ struct HighQualityJob: Sendable {
                 )
             }
         }
-        return result
+        return try result.withSpeakerReanalysisCompletion(
+            speakerReanalysisCompletion(for: manifest, in: saved.directory)
+        )
     }
 
     static func relocateSource(
@@ -2253,7 +2406,11 @@ struct HighQualityJob: Sendable {
         _ saved: HighQualitySavedResult,
         configuration: HighQualitySpeakerConfiguration,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in },
-        beforeCommit: () throws -> Void = {}
+        beforeCommit: () throws -> Void = {},
+        beforeCompletionAudit: () throws -> Void = {},
+        writeCompletionAudit: (Data, URL) throws -> Void = {
+            try $0.write(to: $1, options: .atomic)
+        }
     ) async throws -> HighQualityJobResult {
         guard configuration.isValid else {
             throw HighQualityJobError(
@@ -2309,7 +2466,8 @@ struct HighQualityJob: Sendable {
 
         let selection = previous.manifest.translationModel?.translator ?? .productDefault
         let services = servicesForSelection(previous.manifest.selectedBackend, selection)
-        let startedAt = now()
+        let rawStartedAt = now()
+        let startedAt = Self.persistedDate(rawStartedAt)
         var currentStage = HighQualityJobStage.normalizingSource
         var workflowLease: HeavyweightWorkflowLease?
 
@@ -2439,11 +2597,11 @@ struct HighQualityJob: Sendable {
                 ? Self.transcript(turns, text: \.english) : nil
             let peakMemoryBytes = analysis.peakMemoryBytes
             let previousReanalyses = previous.evidence.speakerReanalyses ?? []
-            func reanalysis(finishedAt: Date) -> HighQualitySpeakerReanalysisEvidence {
+            func reanalysis(payloadPreparedAt: Date) -> HighQualitySpeakerReanalysisEvidence {
                 HighQualitySpeakerReanalysisEvidence(
                     startedAt: startedAt,
-                    finishedAt: finishedAt,
-                    wallTime: finishedAt.timeIntervalSince(startedAt),
+                    payloadPreparedAt: payloadPreparedAt,
+                    preCommitWallTime: payloadPreparedAt.timeIntervalSince(startedAt),
                     configuration: configuration,
                     modelEvents: analysis.modelEvents,
                     peakMemoryBytes: peakMemoryBytes,
@@ -2462,7 +2620,7 @@ struct HighQualityJob: Sendable {
             manifest.speakerCountPolicy = configuration.countPolicy
             let diarizationBoundary = diarizationStartedAt ?? exportStartedAt
             manifest.stageDurations[.normalizingSource, default: 0] +=
-                sourceFinishedAt.timeIntervalSince(startedAt)
+                sourceFinishedAt.timeIntervalSince(rawStartedAt)
             manifest.stageDurations[.preparingDiarization, default: 0] +=
                 diarizationBoundary.timeIntervalSince(sourceFinishedAt)
             manifest.stageDurations[.diarizing, default: 0] +=
@@ -2492,19 +2650,21 @@ struct HighQualityJob: Sendable {
                 message: "Replacing speaker results atomically…"
             ))
             try Task.checkCancellation()
-            func payload(finishedAt: Date) throws -> (
+            func payload(
+                payloadPreparedAt: Date,
+                exportingDuration: TimeInterval
+            ) throws -> (
                 evidence: Data,
                 manifest: Data,
                 result: HighQualityJobResult
             ) {
                 var finalizedManifest = manifest
-                finalizedManifest.finishedAt = finishedAt
                 finalizedManifest.stageDurations[.exporting, default: 0] +=
-                    finishedAt.timeIntervalSince(exportStartedAt)
+                    exportingDuration
                 var finalizedEvidence = evidence
                 finalizedEvidence.stageDurations = finalizedManifest.stageDurations
                 finalizedEvidence.speakerReanalyses = previousReanalyses
-                    + [reanalysis(finishedAt: finishedAt)]
+                    + [reanalysis(payloadPreparedAt: payloadPreparedAt)]
                 let evidenceData = try Self.encoder.encode(finalizedEvidence)
                 finalizedManifest.rawEvidenceSHA256 = Self.sha256(evidenceData)
                 let manifestData = try Self.encoder.encode(finalizedManifest)
@@ -2528,8 +2688,27 @@ struct HighQualityJob: Sendable {
                     )
                 )
             }
-            let provisional = try payload(finishedAt: exportStartedAt)
+            let provisional = try payload(
+                payloadPreparedAt: Self.persistedDate(exportStartedAt),
+                exportingDuration: 0
+            )
             var committedResult = provisional.result
+            var payloadPreparedAt = exportStartedAt
+            func completion(
+                finishedAt: Date,
+                auditError: String? = nil
+            ) -> HighQualitySpeakerReanalysisCompletion {
+                .init(
+                    reanalysisCount: committedResult.manifest.speakerReanalysisCount ?? 0,
+                    rawEvidenceSHA256: committedResult.manifest.rawEvidenceSHA256 ?? "",
+                    startedAt: startedAt,
+                    payloadPreparedAt: payloadPreparedAt,
+                    finishedAt: finishedAt,
+                    wallTime: finishedAt.timeIntervalSince(startedAt),
+                    commitWallTime: finishedAt.timeIntervalSince(payloadPreparedAt),
+                    auditError: auditError
+                )
+            }
             var files = Self.deliverableFiles(
                 japaneseTranscript: deliverables.contains(.japaneseTranscript)
                     ? japaneseTranscript : nil,
@@ -2555,12 +2734,58 @@ struct HighQualityJob: Sendable {
                     try beforeCommit()
                 },
                 finalizeBeforeCommit: {
-                    let finalized = try payload(finishedAt: now())
+                    let rawPayloadPreparedAt = now()
+                    payloadPreparedAt = Self.persistedDate(rawPayloadPreparedAt)
+                    let finalized = try payload(
+                        payloadPreparedAt: payloadPreparedAt,
+                        exportingDuration: rawPayloadPreparedAt.timeIntervalSince(exportStartedAt)
+                    )
                     committedResult = finalized.result
                     return [
                         "raw-asr.json": finalized.evidence,
                         "manifest.json": finalized.manifest,
+                        "speaker-reanalysis-journal.json": try Self
+                            .speakerReanalysisJournalData(
+                                upserting: completion(
+                                    finishedAt: payloadPreparedAt,
+                                    auditError: "End-to-end completion audit is pending."
+                                ),
+                                in: saved.directory
+                            ),
                     ]
+                },
+                afterCommit: {
+                    var finishedAt: Date?
+                    do {
+                        try beforeCompletionAudit()
+                        let recordedAt = Self.persistedDate(now())
+                        finishedAt = recordedAt
+                        let recorded = completion(finishedAt: recordedAt)
+                        try Self.writeSpeakerReanalysisCompletion(
+                            recorded,
+                            in: saved.directory,
+                            write: writeCompletionAudit
+                        )
+                        committedResult = committedResult
+                            .withSpeakerReanalysisCompletion(recorded)
+                    } catch {
+                        let message = "End-to-end completion audit failed: "
+                            + error.localizedDescription
+                        let failure = completion(
+                            finishedAt: finishedAt ?? Self.persistedDate(now()),
+                            auditError: message
+                        )
+                        try? Self.writeSpeakerReanalysisCompletion(
+                            failure,
+                            in: saved.directory
+                        )
+                        throw HighQualityJobError(
+                            stage: .export,
+                            message: "Speaker results were committed, but the completion audit failed. "
+                                + error.localizedDescription,
+                            resultDirectory: saved.directory
+                        )
+                    }
                 },
                 validateActive: {
                     guard try Self.activeResultMatches(
@@ -3811,38 +4036,108 @@ struct HighQualityJob: Sendable {
         beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
         let transformations = try readTransformations(in: result.directory)
-        let effective = migratedSpeakerEdits(
+        let edits = migratedSpeakerEdits(
             transformations,
             manifest: result.manifest
-        ).reversed().prefix { $0.kind != .reset }.reversed()
-        guard !effective.isEmpty else {
+        )
+        guard !edits.isEmpty else {
             throw speakerEditError("There is no Speaker edit to undo.", in: result.directory)
         }
+        let previous = edits.dropLast()
+        let snapshotStart = previous.lastIndex(where: { $0.kind == .reset })
+            .map { previous.index(after: $0) } ?? previous.startIndex
+        let snapshot = previous[snapshotStart..<previous.endIndex]
         let at = Date()
-        let replayed = try effective.dropLast().map { storedEdit in
-            let edit = try normalizedSpeakerEdit(storedEdit, in: result.directory)
-            switch edit.kind {
-            case .rename:
-                return HighQualitySpeakerEdit.rename(
-                    edit.speakerLabel!, to: edit.displayName!, at: at
-                )
-            case .merge:
-                return HighQualitySpeakerEdit.merge(
-                    edit.speakerLabel!, into: edit.targetSpeakerLabel!, at: at
-                )
-            case .reassign:
-                return HighQualitySpeakerEdit.reassign(
-                    turnID: edit.turnID!, to: edit.targetSpeakerLabel!, at: at
-                )
-            case .reset:
-                preconditionFailure("The effective Speaker edit suffix cannot contain a reset.")
-            }
-        }
+        let replayed = try replayedSpeakerEdits(snapshot, at: at, in: result.directory)
         return try saveSpeakerEdits(
             [.reset(at: at)] + replayed,
             in: result,
             beforeCommit: beforeCommit
         )
+    }
+
+    static func restorePreviousSpeakerEdits(
+        in result: HighQualityJobResult,
+        beforeCommit: () throws -> Void = {}
+    ) throws -> HighQualityJobResult {
+        guard let edits = try restorablePreviousSpeakerEdits(in: result) else {
+            throw speakerEditError(
+                "The archived Speaker edits are not compatible with the current Speaker IDs and provenance.",
+                in: result.directory
+            )
+        }
+        let at = Date()
+        return try saveSpeakerEdits(
+            [.reset(at: at)] + replayedSpeakerEdits(edits, at: at, in: result.directory),
+            in: result,
+            beforeCommit: beforeCommit
+        )
+    }
+
+    fileprivate static func canRestorePreviousSpeakerEdits(
+        in result: HighQualityJobResult
+    ) -> Bool {
+        (try? restorablePreviousSpeakerEdits(in: result)) != nil
+    }
+
+    private static func restorablePreviousSpeakerEdits(
+        in result: HighQualityJobResult
+    ) throws -> [HighQualitySpeakerEdit]? {
+        guard result.manifest.speakerEdits?.isEmpty != false,
+              let reanalysis = result.evidence.speakerReanalyses?.last,
+              let edits = reanalysis.replacedSpeakerEdits,
+              !edits.isEmpty,
+              reanalysis.diarization == result.evidence.diarization,
+              reanalysis.attachment == result.evidence.speakerAttachment,
+              let replacedAttachment = reanalysis.replacedAttachment,
+              speakerIdentityMatches(replacedAttachment, reanalysis.attachment) else {
+            return nil
+        }
+        let replayed = try replayedSpeakerEdits(edits, at: Date(), in: result.directory)
+        _ = try speakerEditState([.reset()] + replayed, for: result)
+        return edits
+    }
+
+    private static func speakerIdentityMatches(
+        _ previous: HighQualitySpeakerAttachmentEvidence,
+        _ current: HighQualitySpeakerAttachmentEvidence
+    ) -> Bool {
+        let previousByID = Dictionary(
+            previous.semanticUnits.map { ($0.id, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        guard previousByID.count == previous.semanticUnits.count,
+              current.semanticUnits.count == previous.semanticUnits.count else { return false }
+        return current.semanticUnits.allSatisfy { unit in
+            guard let old = previousByID[unit.id] else { return false }
+            return old.japanese == unit.japanese
+                && old.sourceFragmentIndices == unit.sourceFragmentIndices
+                && old.sourceCueIDs == unit.sourceCueIDs
+                && old.start == unit.start
+                && old.end == unit.end
+                && old.decisions == unit.decisions
+                && old.speakerLabel == unit.speakerLabel
+        }
+    }
+
+    private static func replayedSpeakerEdits<S: Sequence>(
+        _ edits: S,
+        at: Date,
+        in directory: URL
+    ) throws -> [HighQualitySpeakerEdit] where S.Element == HighQualitySpeakerEdit {
+        try edits.map { storedEdit in
+            let edit = try normalizedSpeakerEdit(storedEdit, in: directory)
+            switch edit.kind {
+            case .rename:
+                return .rename(edit.speakerLabel!, to: edit.displayName!, at: at)
+            case .merge:
+                return .merge(edit.speakerLabel!, into: edit.targetSpeakerLabel!, at: at)
+            case .reassign:
+                return .reassign(turnID: edit.turnID!, to: edit.targetSpeakerLabel!, at: at)
+            case .reset:
+                return .reset(at: at)
+            }
+        }
     }
 
     private static func speakerRenameEdits(
@@ -3919,7 +4214,8 @@ struct HighQualityJob: Sendable {
             turns: result.turns,
             subtitleCues: result.subtitleCues,
             manifest: activeManifest,
-            evidence: result.evidence
+            evidence: result.evidence,
+            speakerReanalysisCompletion: result.speakerReanalysisCompletion
         )
         let edits = persistedEdits
             + (try newEdits.map { try normalizedSpeakerEdit($0, in: result.directory) })
@@ -3934,7 +4230,8 @@ struct HighQualityJob: Sendable {
             turns: edited.turns,
             subtitleCues: edited.subtitleCues,
             manifest: manifest,
-            evidence: edited.evidence
+            evidence: edited.evidence,
+            speakerReanalysisCompletion: result.speakerReanalysisCompletion
         )
         let transformations = try encoder.encode(HighQualityResultTransformations(
             speakerEdits: edits,
@@ -4217,7 +4514,8 @@ struct HighQualityJob: Sendable {
             turns: turns,
             subtitleCues: subtitleCues,
             manifest: result.manifest,
-            evidence: result.evidence
+            evidence: result.evidence,
+            speakerReanalysisCompletion: result.speakerReanalysisCompletion
         )
     }
 
@@ -5249,6 +5547,7 @@ struct HighQualityJob: Sendable {
         beforeCommit: () throws -> Void = {},
         afterStaging: () throws -> Void = {},
         finalizeBeforeCommit: () throws -> [String: Data] = { [:] },
+        afterCommit: () throws -> Void = {},
         validateActive: () throws -> Void = {}
     ) throws {
         let fileManager = FileManager.default
@@ -5309,6 +5608,7 @@ struct HighQualityJob: Sendable {
         guard status == 0 else {
             throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
         }
+        try afterCommit()
     }
 
     private static func hardLinkContents(of source: URL, to destination: URL) throws {
@@ -5590,6 +5890,86 @@ struct HighQualityJob: Sendable {
         return manifest
     }
 
+    private static func speakerReanalysisCompletion(
+        for manifest: HighQualityJobManifest,
+        in directory: URL
+    ) throws -> HighQualitySpeakerReanalysisCompletion? {
+        guard let count = manifest.speakerReanalysisCount,
+              let evidenceHash = manifest.rawEvidenceSHA256 else { return nil }
+        return try readSpeakerReanalysisJournal(in: directory)?.entries.last {
+            $0.reanalysisCount == count && $0.rawEvidenceSHA256 == evidenceHash
+        }
+    }
+
+    private static func writeSpeakerReanalysisCompletion(
+        _ completion: HighQualitySpeakerReanalysisCompletion,
+        in directory: URL,
+        write: (Data, URL) throws -> Void = {
+            try $0.write(to: $1, options: .atomic)
+        }
+    ) throws {
+        try write(
+            speakerReanalysisJournalData(upserting: completion, in: directory),
+            directory.appendingPathComponent("speaker-reanalysis-journal.json")
+        )
+    }
+
+    private static func speakerReanalysisJournalData(
+        upserting completion: HighQualitySpeakerReanalysisCompletion,
+        in directory: URL
+    ) throws -> Data {
+        var journal = try readSpeakerReanalysisJournal(in: directory)
+            ?? .init(
+                schemaVersion: HighQualitySpeakerReanalysisJournal.currentSchemaVersion,
+                entries: []
+            )
+        if let index = journal.entries.firstIndex(where: {
+            $0.reanalysisCount == completion.reanalysisCount
+        }) {
+            journal.entries[index] = completion
+        } else {
+            journal.entries.append(completion)
+        }
+        return try encoder.encode(journal)
+    }
+
+    private static func readSpeakerReanalysisJournal(
+        in directory: URL
+    ) throws -> HighQualitySpeakerReanalysisJournal? {
+        let url = directory.appendingPathComponent("speaker-reanalysis-journal.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        let journal = try decoder.decode(
+            HighQualitySpeakerReanalysisJournal.self,
+            from: Data(contentsOf: url)
+        )
+        let counts = Set(journal.entries.map(\.reanalysisCount))
+        guard journal.schemaVersion == HighQualitySpeakerReanalysisJournal.currentSchemaVersion,
+              counts.count == journal.entries.count,
+              journal.entries.allSatisfy({ entry in
+                  entry.reanalysisCount > 0
+                      && entry.rawEvidenceSHA256.count == 64
+                      && entry.rawEvidenceSHA256.allSatisfy(\.isHexDigit)
+                      && entry.startedAt.timeIntervalSince1970.isFinite
+                      && entry.payloadPreparedAt >= entry.startedAt
+                      && entry.finishedAt >= entry.payloadPreparedAt
+                      && abs(entry.wallTime
+                          - entry.finishedAt.timeIntervalSince(entry.startedAt)) < 0.000_001
+                      && abs(entry.commitWallTime
+                          - entry.finishedAt.timeIntervalSince(entry.payloadPreparedAt))
+                          < 0.000_001
+                      && entry.auditError?.trimmingCharacters(
+                          in: .whitespacesAndNewlines
+                      ).isEmpty != true
+              }) else {
+            throw HighQualityJobError(
+                stage: .export,
+                message: "The Speaker reanalysis completion audit is invalid.",
+                resultDirectory: directory
+            )
+        }
+        return journal
+    }
+
     private static func readTransformations(
         in directory: URL
     ) throws -> HighQualityResultTransformations? {
@@ -5678,6 +6058,10 @@ struct HighQualityJob: Sendable {
             nan: "NaN"
         )
         return decoder
+    }
+
+    private static func persistedDate(_ date: Date) -> Date {
+        Date(timeIntervalSince1970: floor(date.timeIntervalSince1970 * 1_000) / 1_000)
     }
 
     private static var encoder: JSONEncoder {

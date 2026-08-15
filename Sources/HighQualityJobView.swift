@@ -403,7 +403,7 @@ struct HighQualityJobView: View {
             translator = savedTranslator
         }
         result = reopened
-        errorMessage = nil
+        errorMessage = reopened.speakerReanalysisCompletion?.auditError
         progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
         customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
     }
@@ -507,9 +507,14 @@ struct HighQualityJobView: View {
         let speakerNames = result.editableSpeakerNames
         Text("Results").font(.headline)
         if let reanalysis = result.evidence.speakerReanalyses?.last {
+            let completion = result.speakerReanalysisCompletion
             Text(
-                "Last SpeakerKit reanalysis: "
-                    + String(format: "%.1f s", reanalysis.wallTime)
+                "Last SpeakerKit reanalysis "
+                    + (completion == nil ? "payload prepared" : "completed") + ": "
+                    + String(
+                        format: "%.1f s",
+                        completion?.wallTime ?? reanalysis.preCommitWallTime
+                    )
                     + " · peak " + memory(reanalysis.peakMemoryBytes)
             )
             .font(.caption)
@@ -635,6 +640,7 @@ struct HighQualityJobView: View {
                 .accessibilityIdentifier("high-quality-undo-speaker-edit")
                 .accessibilityHint("Restores the saved state before the last Speaker edit.")
                 .disabled(!result.canUndoLastSpeakerEdit)
+
             }
             .disabled(result.manifest.schemaVersion < 3)
             Text("Speaker edits only regenerate saved Deliverables; no model is loaded.")
@@ -645,6 +651,27 @@ struct HighQualityJobView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+        if result.canRestorePreviousSpeakerEdits {
+            Button("Restore Previous Speaker Edits") {
+                do {
+                    let updated = try HighQualityJob.restorePreviousSpeakerEdits(in: result)
+                    self.result = updated
+                    customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                    errorMessage = nil
+                    refreshSavedResults()
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            }
+            .accessibilityIdentifier("high-quality-restore-previous-speaker-edits")
+            .accessibilityHint("Restores edits archived by the latest compatible reanalysis.")
+            .disabled(result.manifest.schemaVersion < 3)
+        } else if result.shouldExplainIncompatibleArchivedSpeakerEdits {
+            Text("Previous Speaker edits remain archived but cannot be safely restored to the current Speaker state.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("high-quality-previous-speaker-edits-incompatible")
         }
     }
 

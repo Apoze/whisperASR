@@ -1004,8 +1004,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
         XCTAssertTrue(evidence.modelEvents.map(\.kind).contains(.unloadCompleted))
         XCTAssertTrue(evidence.modelEvents.map(\.kind).contains(.memoryReleaseChecked))
         XCTAssertEqual(try HighQualityJob.reopen(saved).evidence, rerun.evidence)
+        let completion = rerun.speakerReanalysisCompletion
         print(
-            "[speaker-reanalysis][result] wall=\(evidence.wallTime)s "
+            "[speaker-reanalysis][result] "
+                + (completion == nil ? "precommit-wall" : "wall")
+                + "=\(completion?.wallTime ?? evidence.preCommitWallTime)s "
                 + "peak=\(evidence.peakMemoryBytes) directory=\(rerun.directory.path)"
         )
     }
