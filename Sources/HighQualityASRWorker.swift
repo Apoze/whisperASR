@@ -10,17 +10,20 @@ struct HighQualityASRWorkerEvidence: Codable, Equatable, Sendable {
     let model: HighQualityModelEvidence
     let lifecycle: HighQualityWorkerEvidence
     let characters: [HighQualityASRCharacter]?
+    let result: HighQualityASRExchange?
 
     init(
         backend: HighQualityASRBackend,
         model: HighQualityModelEvidence,
         lifecycle: HighQualityWorkerEvidence,
-        characters: [HighQualityASRCharacter]? = nil
+        characters: [HighQualityASRCharacter]? = nil,
+        result: HighQualityASRExchange? = nil
     ) {
         self.backend = backend
         self.model = model
         self.lifecycle = lifecycle
         self.characters = characters
+        self.result = result
     }
 }
 
@@ -61,6 +64,7 @@ actor HighQualityASRWorkerClient {
     private var sequence = 0
     private var preparedModel: HighQualityModelEvidence?
     private var lastCharacters: [HighQualityASRCharacter]?
+    private var lastResult: HighQualityASRExchange?
 
     init(
         backend: HighQualityASRBackend,
@@ -114,7 +118,8 @@ actor HighQualityASRWorkerClient {
                 backend: backend,
                 model: preparedModel ?? backend.model,
                 lifecycle: lifecycle,
-                characters: lastCharacters
+                characters: lastCharacters,
+                result: lastResult
             )
         }
     }
@@ -163,9 +168,10 @@ actor HighQualityASRWorkerClient {
         anchored: Bool
     ) async throws -> HighQualityASRExchange {
         if backend == .funASRNanoInt8, anchored {
-            return try await HighQualityJob.Services.chunkedASR(samples) {
+            let exchange = try await HighQualityJob.Services.chunkedASR(samples) {
                 try await self.transcribe($0, anchored: false).rawTranscript
             }
+            return record(exchange)
         }
         if anchored && backend == .reazonSpeechK2V2 {
             let operation: @Sendable () async throws -> HighQualityASRExchange = {
@@ -184,8 +190,7 @@ actor HighQualityASRWorkerClient {
                     "invalid anchored transcription response"
                 )
             }
-            lastCharacters = exchange.characters
-            return exchange
+            return record(exchange)
         }
         guard !(await worker.isCritical) else {
             throw HighQualityASRWorkerError.criticalMemoryPressure
@@ -231,13 +236,20 @@ actor HighQualityASRWorkerClient {
               Self.isValid(exchange, sampleCount: samples.count, anchored: anchored) else {
             throw HighQualityASRWorkerError.protocolFailure("invalid transcription response")
         }
-        lastCharacters = exchange.characters
-        return exchange
+        return record(exchange)
     }
 
     func unload() async {
         let critical = await worker.isCritical
         await worker.stop(critical: critical)
+    }
+
+    private func record(_ exchange: HighQualityASRExchange) -> HighQualityASRExchange {
+        var result = exchange
+        result.model = preparedModel ?? backend.model
+        lastCharacters = result.characters
+        lastResult = result
+        return result
     }
 
     static func isValid(
@@ -246,6 +258,86 @@ actor HighQualityASRWorkerClient {
         anchored: Bool
     ) -> Bool {
         let duration = Double(sampleCount) / 16_000
+        let probabilityValid: (Double?) -> Bool = {
+            $0.map { $0.isFinite && (0...1).contains($0) } ?? true
+        }
+        let timingValid: (HighQualityASRTimingEvidence) -> Bool = {
+            $0.sourceStart.isFinite
+                && $0.sourceEnd.isFinite
+                && $0.sourceStart >= 0
+                && $0.sourceEnd >= $0.sourceStart
+                && $0.sourceEnd <= duration
+                && $0.tokenIDs.allSatisfy { $0 >= 0 }
+                && probabilityValid($0.confidence)
+        }
+        let timingsValid: ([HighQualityASRTimingEvidence]?) -> Bool = { timings in
+            timings.map {
+                $0.allSatisfy(timingValid)
+                    && zip($0, $0.dropFirst()).allSatisfy {
+                        $0.sourceStart <= $1.sourceStart
+                    }
+            } ?? true
+        }
+        let segmentsValid = exchange.segments.map { segments in
+            segments.allSatisfy {
+                $0.index >= 0
+                    && $0.sourceStart.isFinite
+                    && $0.sourceEnd.isFinite
+                    && $0.sourceStart >= 0
+                    && $0.sourceEnd >= $0.sourceStart
+                    && $0.sourceEnd <= duration
+                    && $0.tokenIDs.allSatisfy { $0 >= 0 }
+                    && ($0.averageLogProbability?.isFinite ?? true)
+                    && probabilityValid($0.noSpeechProbability)
+                    && ($0.compressionRatio.map { $0.isFinite && $0 >= 0 } ?? true)
+            }
+                && zip(segments, segments.dropFirst()).allSatisfy {
+                    $0.sourceStart <= $1.sourceStart
+                }
+        } ?? true
+        guard segmentsValid,
+              timingsValid(exchange.tokenTimings),
+              timingsValid(exchange.wordTimings),
+              probabilityValid(exchange.confidence),
+              exchange.averageLogProbability?.isFinite ?? true else {
+            return false
+        }
+        if let emptyOutput = exchange.diagnostics?.emptyOutput,
+           emptyOutput != exchange.rawTranscript.trimmingCharacters(
+               in: .whitespacesAndNewlines
+           ).isEmpty {
+            return false
+        }
+        let windowsValid = exchange.windows.map { windows in
+            anchored
+                && !windows.isEmpty
+                && windows.allSatisfy { window in
+                    window.sourceStart.isFinite
+                        && window.sourceEnd.isFinite
+                        && window.sourceStart >= 0
+                        && window.sourceEnd >= window.sourceStart
+                        && window.sourceEnd <= duration
+                        && window.result.model == nil
+                        && window.result.windows == nil
+                        && Self.isValid(
+                            window.result,
+                            sampleCount: Int(
+                                ((window.sourceEnd - window.sourceStart) * 16_000).rounded()
+                            ),
+                            anchored: false
+                        )
+                }
+                && zip(windows, windows.dropFirst()).allSatisfy {
+                    $0.sourceStart <= $1.sourceStart
+                }
+                && exchange.segments == nil
+                && exchange.tokenTimings == nil
+                && exchange.wordTimings == nil
+                && exchange.confidence == nil
+                && exchange.averageLogProbability == nil
+                && exchange.diagnostics == nil
+        } ?? true
+        guard windowsValid else { return false }
         let expectedCharacterText = anchored
             ? exchange.chunks.map(\.transcript).joined()
             : exchange.rawTranscript
@@ -457,35 +549,50 @@ private actor HighQualityASRWorkerRuntime {
     }
 
     func transcribe(_ samples: [Float], anchored: Bool) async throws -> HighQualityASRExchange {
-        if backend == .whisperKit, !anchored {
-            let result = try await whisperKit.transcribeWithEvidence(audio: samples)
-            return .init(
-                rawTranscript: result.text,
-                chunks: [],
-                averageLogProbability: result.averageLogProbability
-            )
-        }
-        let transcribe: @Sendable ([Float]) async throws -> String
+        let transcribe: @Sendable ([Float]) async throws -> HighQualityASRExchange
         switch backend {
         case .qwenJA:
             transcribe = {
-                try await self.qwen.transcribe(
+                let transcript = try await self.qwen.transcribe(
                     audio: $0,
                     language: "Japanese",
                     preserveRawOutput: true,
                     cancellable: true
                 )
+                return .init(
+                    rawTranscript: transcript,
+                    chunks: [],
+                    diagnostics: .init(
+                        emptyOutput: transcript.trimmingCharacters(
+                            in: .whitespacesAndNewlines
+                        ).isEmpty
+                    )
+                )
             }
         case .parakeetJA:
             transcribe = {
-                try await self.parakeet.transcribe(
+                try await self.parakeet.transcribeWithEvidence(
                     audio: $0,
                     preserveRawOutput: true,
                     cancellable: true
                 )
             }
         case .whisperKit:
-            transcribe = { try await self.whisperKit.transcribe(audio: $0) }
+            transcribe = {
+                let result = try await self.whisperKit.transcribeWithEvidence(audio: $0)
+                return .init(
+                    rawTranscript: result.text,
+                    chunks: [],
+                    segments: result.segments,
+                    wordTimings: result.wordTimings,
+                    averageLogProbability: result.averageLogProbability,
+                    diagnostics: .init(
+                        emptyOutput: result.text.trimmingCharacters(
+                            in: .whitespacesAndNewlines
+                        ).isEmpty
+                    )
+                )
+            }
         case .funASRNanoInt8:
             throw HighQualityASRWorkerError.protocolFailure(
                 "Fun-ASR Nano requires its pinned sherpa-onnx worker."
@@ -498,7 +605,7 @@ private actor HighQualityASRWorkerRuntime {
         if anchored {
             return try await HighQualityJob.Services.chunkedASR(samples, transcribe: transcribe)
         }
-        return try await .init(rawTranscript: transcribe(samples), chunks: [])
+        return try await transcribe(samples)
     }
 
     func unload() async {

@@ -1,3 +1,5 @@
+import CryptoKit
+import Darwin
 import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
@@ -301,22 +303,76 @@ struct HighQualityASRCharacter: Codable, Equatable, Sendable {
     let sourceEnd: TimeInterval
 }
 
+struct HighQualityASRTimingEvidence: Codable, Equatable, Sendable {
+    let text: String
+    let tokenIDs: [Int]
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let confidence: Double?
+}
+
+struct HighQualityASRSegmentEvidence: Codable, Equatable, Sendable {
+    let index: Int
+    let text: String
+    let tokenIDs: [Int]
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let averageLogProbability: Double?
+    let noSpeechProbability: Double?
+    let compressionRatio: Double?
+}
+
+struct HighQualityASRDiagnostics: Codable, Equatable, Sendable {
+    let emptyOutput: Bool?
+
+    init(emptyOutput: Bool? = nil) {
+        self.emptyOutput = emptyOutput
+    }
+}
+
+struct HighQualityASRWindowEvidence: Codable, Equatable, Sendable {
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let result: HighQualityASRExchange
+}
+
 struct HighQualityASRExchange: Codable, Equatable, Sendable {
     let rawTranscript: String
     let chunks: [HighQualityASRChunk]
     let characters: [HighQualityASRCharacter]?
+    var model: HighQualityModelEvidence?
+    let segments: [HighQualityASRSegmentEvidence]?
+    let tokenTimings: [HighQualityASRTimingEvidence]?
+    let wordTimings: [HighQualityASRTimingEvidence]?
+    let confidence: Double?
     let averageLogProbability: Double?
+    let diagnostics: HighQualityASRDiagnostics?
+    let windows: [HighQualityASRWindowEvidence]?
 
     init(
         rawTranscript: String,
         chunks: [HighQualityASRChunk],
         characters: [HighQualityASRCharacter]? = nil,
-        averageLogProbability: Double? = nil
+        model: HighQualityModelEvidence? = nil,
+        segments: [HighQualityASRSegmentEvidence]? = nil,
+        tokenTimings: [HighQualityASRTimingEvidence]? = nil,
+        wordTimings: [HighQualityASRTimingEvidence]? = nil,
+        confidence: Double? = nil,
+        averageLogProbability: Double? = nil,
+        diagnostics: HighQualityASRDiagnostics? = nil,
+        windows: [HighQualityASRWindowEvidence]? = nil
     ) {
         self.rawTranscript = rawTranscript
         self.chunks = chunks
         self.characters = characters
+        self.model = model
+        self.segments = segments
+        self.tokenTimings = tokenTimings
+        self.wordTimings = wordTimings
+        self.confidence = confidence
         self.averageLogProbability = averageLogProbability
+        self.diagnostics = diagnostics
+        self.windows = windows
     }
 }
 
@@ -915,7 +971,7 @@ struct HighQualitySubtitleCue: Codable, Equatable, Sendable {
     }
 }
 
-struct HighQualityTranscriptTurn: Equatable, Sendable {
+struct HighQualityTranscriptTurn: Codable, Equatable, Sendable {
     let id: String
     let japanese: String
     let english: String?
@@ -1041,6 +1097,8 @@ struct HighQualityGeneratedFile: Codable, Equatable, Sendable {
 }
 
 struct HighQualityJobManifest: Codable, Equatable, Sendable {
+    static let currentSchemaVersion = 4
+
     enum Status: String, Codable, Sendable {
         case completed
         case failed
@@ -1067,6 +1125,18 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var modelEvents: [HighQualityModelEvent]
     var failures: [HighQualityJobFailure]
     var generatedFiles: [HighQualityGeneratedFile]
+    var rawEvidenceSHA256: String? = nil
+
+    var usesLegacySavedResultFallback: Bool {
+        schemaVersion == 2
+            || (schemaVersion == 3
+                && rawEvidenceSHA256 == nil
+                && asrWorker?.result != nil)
+    }
+
+    var usesDurableSavedResultEvidence: Bool {
+        schemaVersion >= 4 || (schemaVersion == 3 && rawEvidenceSHA256 != nil)
+    }
 }
 
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
@@ -1087,6 +1157,10 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let modelEvents: [HighQualityModelEvent]
     let failures: [HighQualityJobFailure]
     let generatedFiles: [HighQualityGeneratedFile]
+    var resultTurns: [HighQualityTranscriptTurn]? = nil
+    var subtitleCues: [HighQualitySubtitleCue]? = nil
+    var japaneseTranscript: String? = nil
+    var englishTranscript: String? = nil
 }
 
 struct HighQualityJobResult: Sendable {
@@ -1097,6 +1171,42 @@ struct HighQualityJobResult: Sendable {
     let subtitleCues: [HighQualitySubtitleCue]
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
+}
+
+struct HighQualitySavedResult: Identifiable, Sendable {
+    let directory: URL
+    let manifest: HighQualityJobManifest
+    let relocatedSourcePath: String?
+
+    init(
+        directory: URL,
+        manifest: HighQualityJobManifest,
+        relocatedSourcePath: String? = nil
+    ) {
+        self.directory = directory
+        self.manifest = manifest
+        self.relocatedSourcePath = relocatedSourcePath
+    }
+
+    var id: UUID { manifest.jobID }
+    var sourceURL: URL {
+        URL(fileURLWithPath: relocatedSourcePath ?? manifest.source.path)
+    }
+    var sourceRelocationMessage: String? {
+        guard !FileManager.default.fileExists(atPath: sourceURL.path) else { return nil }
+        if manifest.source.youtube != nil {
+            return "The retained YouTube audio is missing. Reopen the recorded source evidence; WhisperASR will not download or transcribe it again."
+        }
+        return "The source file is missing or moved. Locate \(manifest.source.fileName) before using result actions."
+    }
+}
+
+private struct HighQualityResultTransformations: Codable {
+    static let currentSchemaVersion = 1
+
+    let schemaVersion: Int
+    let customSpeakerLabels: [String: String]
+    var relocatedSourcePath: String? = nil
 }
 
 struct HighQualityJobError: LocalizedError, Equatable, Sendable {
@@ -1379,6 +1489,8 @@ struct HighQualityJob: Sendable {
         ) async throws -> HighQualityASRExchange {
             var chunks: [HighQualityASRChunk] = []
             var characters: [HighQualityASRCharacter]? = nil
+            var model: HighQualityModelEvidence?
+            var backendWindows: [HighQualityASRWindowEvidence] = []
             var start = 0
             var alignmentAnchorStart = 0
             var previousBoundaryWasSilent = true
@@ -1395,6 +1507,14 @@ struct HighQualityJob: Sendable {
                 let windowEnd = boundary.isSilent
                     ? boundary.index : min(samples.count, boundary.index + overlap)
                 let rawExchange = try await transcribe(Array(samples[windowStart..<windowEnd]))
+                if model == nil { model = rawExchange.model }
+                var windowResult = rawExchange
+                windowResult.model = nil
+                backendWindows.append(.init(
+                    sourceStart: Double(windowStart) / 16_000,
+                    sourceEnd: Double(windowEnd) / 16_000,
+                    result: windowResult
+                ))
                 let raw = rawExchange.rawTranscript
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 let transcript = removingTranscriptOverlap(
@@ -1438,7 +1558,9 @@ struct HighQualityJob: Sendable {
             return .init(
                 rawTranscript: chunks.map(\.transcript).joined(separator: "\n"),
                 chunks: chunks,
-                characters: characters
+                characters: characters,
+                model: model,
+                windows: backendWindows.isEmpty ? nil : backendWindows
             )
         }
 
@@ -1504,12 +1626,228 @@ struct HighQualityJob: Sendable {
         servicesForSelection = { backend, _ in servicesForBackend(backend) }
     }
 
+    static func savedResults(
+        in root: URL = AppStoragePaths.highQualityJobs
+    ) -> [HighQualitySavedResult] {
+        guard let directories = try? FileManager.default.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey]
+        ) else { return [] }
+        return directories.compactMap { directory in
+            guard (try? directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true,
+                  let manifest = try? readManifest(in: directory),
+                  manifest.status == .completed,
+                  directory.lastPathComponent == manifest.jobID.uuidString else { return nil }
+            return HighQualitySavedResult(
+                directory: directory,
+                manifest: manifest,
+                relocatedSourcePath: (try? readTransformations(in: directory))?
+                    .relocatedSourcePath
+            )
+        }.sorted {
+            ($0.manifest.finishedAt ?? $0.manifest.startedAt)
+                > ($1.manifest.finishedAt ?? $1.manifest.startedAt)
+        }
+    }
+
+    static func reopen(_ saved: HighQualitySavedResult) throws -> HighQualityJobResult {
+        let manifest = try readManifest(in: saved.directory)
+        guard manifest.status == .completed,
+              saved.directory.lastPathComponent == manifest.jobID.uuidString else {
+            throw savedResultError("This High-quality job is not a completed saved result.", saved)
+        }
+        let evidenceURL = saved.directory.appendingPathComponent("raw-asr.json")
+        let evidence: HighQualityRawEvidence
+        let usesLegacyFallback = manifest.usesLegacySavedResultFallback
+        let usesDurableEvidence = manifest.usesDurableSavedResultEvidence
+        do {
+            let data = try Data(contentsOf: evidenceURL)
+            if let expected = manifest.rawEvidenceSHA256 {
+                guard sha256(data) == expected else {
+                    throw savedResultError("Raw evidence verification failed.", saved)
+                }
+            } else if !usesLegacyFallback {
+                throw savedResultError("Raw evidence verification data is missing.", saved)
+            }
+            evidence = try decoder.decode(HighQualityRawEvidence.self, from: data)
+        } catch let error as HighQualityJobError {
+            throw error
+        } catch {
+            throw savedResultError("The saved raw evidence is unreadable.", saved)
+        }
+        guard evidence.source == manifest.source,
+              evidence.model == manifest.model,
+              evidence.asrWorker == manifest.asrWorker,
+              evidence.generatedFiles == manifest.generatedFiles else {
+            throw savedResultError("The saved manifest and raw evidence do not match.", saved)
+        }
+        for file in manifest.generatedFiles
+            where usesLegacyFallback && file.kind == .deliverable {
+            guard FileManager.default.fileExists(
+                atPath: saved.directory.appendingPathComponent(file.path).path
+            ) else {
+                throw savedResultError("A saved Deliverable is missing: \(file.path).", saved)
+            }
+        }
+        guard let rawASR = evidence.rawASR,
+              !rawASR.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw savedResultError("The saved raw transcript is missing.", saved)
+        }
+        let transcript = rawASR.trimmingCharacters(in: .whitespacesAndNewlines)
+        if usesDurableEvidence,
+           evidence.resultTurns == nil
+            || evidence.subtitleCues == nil
+            || evidence.japaneseTranscript == nil {
+            throw savedResultError("The saved result evidence is incomplete.", saved)
+        }
+        let resultTurns: [HighQualityTranscriptTurn]
+        if let persistedTurns = evidence.resultTurns {
+            resultTurns = persistedTurns
+        } else {
+            let turns: [HighQualityTranslationTurn]
+            if let translation = evidence.translation {
+                turns = translation.request.turns
+            } else if let units = evidence.alignment?.semanticUnits, !units.isEmpty {
+                turns = units.map {
+                    HighQualityTranslationTurn(
+                        id: $0.id,
+                        japanese: $0.japanese,
+                        precedingJapanese: [],
+                        followingJapanese: [],
+                        speakerLabel: $0.speakerLabel,
+                        sourceStart: $0.start,
+                        sourceEnd: $0.end
+                    )
+                }
+            } else {
+                turns = translationTurns(
+                    from: transcript,
+                    asrChunks: [],
+                    speakerLabelsByCueID: [:]
+                )
+            }
+            let labelsByID = Dictionary(uniqueKeysWithValues:
+                (evidence.alignment?.semanticUnits ?? []).compactMap { unit in
+                    unit.speakerLabel.map { (unit.id, $0) }
+                }
+            )
+            let translationsByID: [String: String]
+            if let translation = evidence.translation, let response = translation.response {
+                translationsByID = try validatedTranslations(response, for: turns)
+            } else {
+                translationsByID = [:]
+            }
+            resultTurns = Self.resultTurns(
+                turns: turns,
+                speakerLabelsByID: labelsByID,
+                translationsByID: translationsByID
+            )
+        }
+        let deliverables = Set(manifest.deliverables)
+        let japaneseTranscript: String
+        if let persistedTranscript = evidence.japaneseTranscript {
+            japaneseTranscript = persistedTranscript
+        } else if deliverables.contains(.japaneseTranscript) {
+            japaneseTranscript = try storedText(
+                at: saved.directory.appendingPathComponent("japanese-transcript.txt")
+            )
+        } else {
+            japaneseTranscript = transcript
+        }
+        let englishTranscript: String?
+        if deliverables.contains(.englishTranslationTranscript) {
+            if let persistedTranscript = evidence.englishTranscript {
+                englishTranscript = persistedTranscript
+            } else if usesLegacyFallback {
+                englishTranscript = try storedText(at: saved.directory.appendingPathComponent(
+                    "english-translation-transcript.txt"
+                ))
+            } else {
+                throw savedResultError("The saved English transcript is missing.", saved)
+            }
+        } else {
+            englishTranscript = nil
+        }
+        let subtitleCues: [HighQualitySubtitleCue]
+        if let persistedCues = evidence.subtitleCues {
+            subtitleCues = persistedCues
+        } else if deliverables.contains(.englishSubtitles) {
+            subtitleCues = resultTurns.compactMap {
+                guard let start = $0.start, let end = $0.end, let english = $0.english else {
+                    return nil
+                }
+                return HighQualitySubtitleCue(
+                    id: $0.id,
+                    start: start,
+                    end: end,
+                    text: english,
+                    speakerLabel: $0.speakerLabel
+                )
+            }
+        } else {
+            subtitleCues = []
+        }
+        var result = HighQualityJobResult(
+            directory: saved.directory,
+            japaneseTranscript: japaneseTranscript,
+            englishTranscript: englishTranscript,
+            turns: resultTurns,
+            subtitleCues: subtitleCues,
+            manifest: manifest,
+            evidence: evidence
+        )
+        if let transformations = try readTransformations(in: saved.directory) {
+            result = applyingCustomSpeakerLabels(
+                transformations.customSpeakerLabels,
+                to: result
+            )
+        }
+        if usesDurableEvidence {
+            do {
+                try restoreDeliverablesIfNeeded(for: result)
+            } catch {
+                throw savedResultError(
+                    "Saved Deliverables could not be restored from verified evidence.",
+                    saved
+                )
+            }
+        }
+        return result
+    }
+
+    static func relocateSource(
+        _ saved: HighQualitySavedResult,
+        to sourceURL: URL
+    ) throws -> HighQualitySavedResult {
+        guard saved.manifest.source.youtube == nil,
+              sourceURL.isFileURL,
+              (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
+                == true else {
+            throw savedResultError("Choose an existing local media file.", saved)
+        }
+        _ = try reopen(saved)
+        let previous = try readTransformations(in: saved.directory)
+        let relocatedPath = sourceURL.standardizedFileURL.path
+        let transformations = try encoder.encode(HighQualityResultTransformations(
+            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+            customSpeakerLabels: previous?.customSpeakerLabels ?? [:],
+            relocatedSourcePath: relocatedPath
+        ))
+        try transactionallyWrite(
+            ["transformations.json": transformations],
+            in: saved.directory
+        )
+        return HighQualitySavedResult(
+            directory: saved.directory,
+            manifest: saved.manifest,
+            relocatedSourcePath: relocatedPath
+        )
+    }
+
     func run(
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
-        let services = servicesForSelection(request.backend, request.translator)
-        let translationModel = request.translator.model
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
         let needsTranslation = request.deliverables.contains(.englishTranslationTranscript)
@@ -1532,16 +1870,24 @@ struct HighQualityJob: Sendable {
         )
         do {
             try FileManager.default.createDirectory(
-                at: directory,
+                at: request.outputRoot,
                 withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: false
             )
         } catch {
             throw HighQualityJobError(
                 stage: .application,
-                message: "Could not create the job result directory: \(error.localizedDescription)",
-                resultDirectory: nil
+                message: FileManager.default.fileExists(atPath: directory.path)
+                    ? "A High-quality job destination already exists for this identifier."
+                    : "Could not reserve the job result directory: \(error.localizedDescription)",
+                resultDirectory: directory
             )
         }
+        let services = servicesForSelection(request.backend, request.translator)
+        let translationModel = request.translator.model
 
         let startedAt = Date()
         var currentStage = HighQualityJobStage.validating
@@ -1573,7 +1919,7 @@ struct HighQualityJob: Sendable {
         var memorySampler: Task<UInt64, Never>?
         var cleanupFailureMessage: String?
         var manifest = HighQualityJobManifest(
-            schemaVersion: 2,
+            schemaVersion: HighQualityJobManifest.currentSchemaVersion,
             jobID: request.id,
             status: .failed,
             source: Self.provenance(for: request.sourceURL),
@@ -2563,36 +2909,29 @@ struct HighQualityJob: Sendable {
                     ? Self.transcript(resultTurns, text: \.japanese)
                     : transcript)
                 : nil
-            try Self.writeDeliverables(
+            try Self.writeFiles(Self.deliverableFiles(
                 japaneseTranscript: japaneseOutput,
                 englishTranscript: englishTranscript,
-                subtitleCues: needsSubtitles ? subtitleCues : nil,
-                to: directory
-            )
+                subtitleCues: needsSubtitles ? subtitleCues : nil
+            ), to: directory)
             japaneseTranscriptWritten = japaneseOutput != nil
             englishTranscriptWritten = englishTranscript != nil
             subtitlesWritten = needsSubtitles
             manifest.status = .completed
-            var evidence = try Self.writeEvidenceAndManifest(
-                rawASR: rawTranscript,
-                glossary: glossary,
-                alignment: alignmentEvidence,
-                diarization: diarizationEvidence,
-                translation: translationEvidence,
-                sampleCount: sampleCount,
-                manifest: manifest,
-                to: directory
-            )
             manifest.stageDurations[.exporting, default: 0] += Date().timeIntervalSince(stageStartedAt)
             manifest.finishedAt = Date()
-            evidence = try Self.writeEvidenceAndManifest(
+            let evidence = try Self.writeEvidenceAndManifest(
                 rawASR: rawTranscript,
                 glossary: glossary,
                 alignment: alignmentEvidence,
                 diarization: diarizationEvidence,
                 translation: translationEvidence,
                 sampleCount: sampleCount,
-                manifest: manifest,
+                resultTurns: resultTurns,
+                subtitleCues: subtitleCues,
+                japaneseTranscript: japaneseOutput ?? transcript,
+                englishTranscript: englishTranscript,
+                manifest: &manifest,
                 to: directory
             )
             progress(.init(stage: .completed, fraction: 1, message: "Completed"))
@@ -2738,7 +3077,7 @@ struct HighQualityJob: Sendable {
                     diarization: diarizationEvidence,
                     translation: translationEvidence,
                     sampleCount: sampleCount,
-                    manifest: manifest,
+                    manifest: &manifest,
                     to: directory
                 )
             } catch let finalizationError {
@@ -2764,57 +3103,87 @@ struct HighQualityJob: Sendable {
 
     static func renameSpeakers(
         in result: HighQualityJobResult,
-        names: [String: String]
+        names: [String: String],
+        beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
-        let normalized = try Dictionary(uniqueKeysWithValues: names.map { label, name in
-            let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard result.manifest.usesDurableSavedResultEvidence else {
+            throw HighQualityJobError(
+                stage: .export,
+                message: "Speaker label edits require a result saved with the current schema.",
+                resultDirectory: result.directory
+            )
+        }
+        let normalizedLabels = try Dictionary(uniqueKeysWithValues: names.map { label, value in
+            let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !value.isEmpty else {
                 throw HighQualityJobError(
                     stage: .export,
-                    message: "Speaker names cannot be empty.",
+                    message: "Custom Speaker labels cannot be empty.",
                     resultDirectory: result.directory
                 )
             }
             return (label, value)
         })
-        let turns = result.turns.map { turn in
-            HighQualityTranscriptTurn(
+        let renamed = applyingCustomSpeakerLabels(normalizedLabels, to: result)
+        let deliverables = Set(result.manifest.deliverables)
+        let customLabels = renamed.turns.reduce(into: [String: String]()) { labels, turn in
+            if let label = turn.speakerLabel, let customLabel = turn.speakerName {
+                labels[label] = customLabel
+            }
+        }
+        let previous = try readTransformations(in: result.directory)
+        let transformations = try encoder.encode(HighQualityResultTransformations(
+            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+            customSpeakerLabels: customLabels,
+            relocatedSourcePath: previous?.relocatedSourcePath
+        ))
+        var files = deliverableFiles(
+            japaneseTranscript: deliverables.contains(.japaneseTranscript)
+                ? renamed.japaneseTranscript : nil,
+            englishTranscript: renamed.englishTranscript,
+            subtitleCues: deliverables.contains(.englishSubtitles) ? renamed.subtitleCues : nil
+        )
+        files["transformations.json"] = transformations
+        try transactionallyWrite(
+            files,
+            in: result.directory,
+            beforeCommit: beforeCommit
+        )
+        return renamed
+    }
+
+    private static func applyingCustomSpeakerLabels(
+        _ labels: [String: String],
+        to result: HighQualityJobResult
+    ) -> HighQualityJobResult {
+        let turns: [HighQualityTranscriptTurn] = result.turns.map { turn in
+            .init(
                 id: turn.id,
                 japanese: turn.japanese,
                 english: turn.english,
                 speakerLabel: turn.speakerLabel,
-                speakerName: turn.speakerLabel.flatMap { normalized[$0] } ?? turn.speakerName,
+                speakerName: turn.speakerLabel.flatMap { labels[$0] } ?? turn.speakerName,
                 start: turn.start,
                 end: turn.end
             )
         }
-        let subtitleCues = result.subtitleCues.map { cue in
-            HighQualitySubtitleCue(
+        let subtitleCues: [HighQualitySubtitleCue] = result.subtitleCues.map { cue in
+            .init(
                 id: cue.id,
                 start: cue.start,
                 end: cue.end,
                 text: cue.text,
                 speakerLabel: cue.speakerLabel,
-                speakerName: cue.speakerLabel.flatMap { normalized[$0] } ?? cue.speakerName
+                speakerName: cue.speakerLabel.flatMap { labels[$0] } ?? cue.speakerName
             )
         }
         let deliverables = Set(result.manifest.deliverables)
-        let japaneseTranscript = deliverables.contains(.japaneseTranscript)
-            ? transcript(turns, text: \.japanese)
-            : nil
-        let englishTranscript = deliverables.contains(.englishTranslationTranscript)
-            ? transcript(turns, text: \.english)
-            : nil
-        try writeDeliverables(
-            japaneseTranscript: japaneseTranscript,
-            englishTranscript: englishTranscript,
-            subtitleCues: deliverables.contains(.englishSubtitles) ? subtitleCues : nil,
-            to: result.directory
-        )
         return .init(
             directory: result.directory,
-            japaneseTranscript: japaneseTranscript ?? result.japaneseTranscript,
-            englishTranscript: englishTranscript,
+            japaneseTranscript: deliverables.contains(.japaneseTranscript)
+                ? transcript(turns, text: \.japanese) : result.japaneseTranscript,
+            englishTranscript: deliverables.contains(.englishTranslationTranscript)
+                ? transcript(turns, text: \.english) : nil,
             turns: turns,
             subtitleCues: subtitleCues,
             manifest: result.manifest,
@@ -3784,44 +4153,131 @@ struct HighQualityJob: Sendable {
         return merged
     }
 
-    private static func writeDeliverables(
+    private static func restoreDeliverablesIfNeeded(for result: HighQualityJobResult) throws {
+        let deliverables = Set(result.manifest.deliverables)
+        let files = deliverableFiles(
+            japaneseTranscript: deliverables.contains(.japaneseTranscript)
+                ? result.japaneseTranscript : nil,
+            englishTranscript: result.englishTranscript,
+            subtitleCues: deliverables.contains(.englishSubtitles) ? result.subtitleCues : nil
+        )
+        guard files.contains(where: { path, data in
+            (try? Data(contentsOf: result.directory.appendingPathComponent(path))) != data
+        }) else { return }
+        try transactionallyWrite(files, in: result.directory)
+    }
+
+    private static func deliverableFiles(
         japaneseTranscript: String?,
         englishTranscript: String?,
-        subtitleCues: [HighQualitySubtitleCue]?,
-        to directory: URL
-    ) throws {
+        subtitleCues: [HighQualitySubtitleCue]?
+    ) -> [String: Data] {
+        var files: [String: Data] = [:]
         if let japaneseTranscript {
-            try (japaneseTranscript + "\n").write(
-                to: directory.appendingPathComponent("japanese-transcript.txt"),
-                atomically: true,
-                encoding: .utf8
-            )
+            files["japanese-transcript.txt"] = Data((japaneseTranscript + "\n").utf8)
         }
         if let englishTranscript {
-            try (englishTranscript + "\n").write(
-                to: directory.appendingPathComponent("english-translation-transcript.txt"),
-                atomically: true,
-                encoding: .utf8
+            files["english-translation-transcript.txt"] = Data(
+                (englishTranscript + "\n").utf8
             )
         }
         if let subtitleCues {
-            let webVTTURL = directory.appendingPathComponent("english-subtitles.vtt")
-            do {
-                try webVTT(subtitleCues).write(
-                    to: webVTTURL,
-                    atomically: true,
-                    encoding: .utf8
+            files["english-subtitles.vtt"] = Data(webVTT(subtitleCues).utf8)
+            files["english-subtitles.srt"] = Data(srt(subtitleCues).utf8)
+        }
+        return files
+    }
+
+    private static func writeFiles(_ files: [String: Data], to directory: URL) throws {
+        for (path, data) in files.sorted(by: { $0.key < $1.key }) {
+            try data.write(
+                to: directory.appendingPathComponent(path),
+                options: .atomic
+            )
+        }
+    }
+
+    private static func transactionallyWrite(
+        _ files: [String: Data],
+        in directory: URL,
+        beforeCommit: () throws -> Void = {}
+    ) throws {
+        let fileManager = FileManager.default
+        let staging = directory.deletingLastPathComponent().appendingPathComponent(
+            ".\(directory.lastPathComponent).staging-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
+        defer { try? fileManager.removeItem(at: staging) }
+        try hardLinkContents(of: directory, to: staging)
+        try writeFiles(files, to: staging)
+        guard files.allSatisfy({ path, data in
+            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
+        }) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        try beforeCommit()
+        let status = staging.path.withCString { stagedPath in
+            directory.path.withCString { activePath in
+                renameatx_np(
+                    AT_FDCWD,
+                    stagedPath,
+                    AT_FDCWD,
+                    activePath,
+                    UInt32(RENAME_SWAP)
                 )
-                try srt(subtitleCues).write(
-                    to: directory.appendingPathComponent("english-subtitles.srt"),
-                    atomically: true,
-                    encoding: .utf8
-                )
-            } catch {
-                try? FileManager.default.removeItem(at: webVTTURL)
-                throw error
             }
         }
+        guard status == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+    }
+
+    private static func hardLinkContents(of source: URL, to destination: URL) throws {
+        let fileManager = FileManager.default
+        let canonicalSourcePath = source.resolvingSymlinksInPath().path
+        var traversalError: Error?
+        guard let enumerator = fileManager.enumerator(
+            at: source,
+            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+            errorHandler: { _, error in
+                traversalError = error
+                return false
+            }
+        ) else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        for case let item as URL in enumerator {
+            let sourcePath: String
+            let itemPath: String
+            if item.path.hasPrefix(source.path + "/") {
+                sourcePath = source.path
+                itemPath = item.path
+            } else {
+                sourcePath = canonicalSourcePath
+                itemPath = item.resolvingSymlinksInPath().path
+            }
+            guard itemPath.hasPrefix(sourcePath + "/") else {
+                throw CocoaError(.fileReadInvalidFileName)
+            }
+            let relativePath = String(itemPath.dropFirst(sourcePath.count + 1))
+            let target = destination.appendingPathComponent(relativePath)
+            let values = try item.resourceValues(forKeys: [
+                .isDirectoryKey,
+                .isSymbolicLinkKey,
+            ])
+            if values.isSymbolicLink == true {
+                try fileManager.createSymbolicLink(
+                    atPath: target.path,
+                    withDestinationPath: fileManager.destinationOfSymbolicLink(atPath: item.path)
+                )
+            } else if values.isDirectory == true {
+                try fileManager.createDirectory(at: target, withIntermediateDirectories: false)
+            } else {
+                try fileManager.linkItem(at: item, to: target)
+            }
+        }
+        if let traversalError { throw traversalError }
     }
 
     private static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
@@ -3916,6 +4372,10 @@ struct HighQualityJob: Sendable {
         diarization: HighQualityDiarizationEvidence?,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
+        resultTurns: [HighQualityTranscriptTurn]? = nil,
+        subtitleCues: [HighQualitySubtitleCue]? = nil,
+        japaneseTranscript: String? = nil,
+        englishTranscript: String? = nil,
         manifest: HighQualityJobManifest
     ) -> HighQualityRawEvidence {
         HighQualityRawEvidence(
@@ -3935,17 +4395,11 @@ struct HighQualityJob: Sendable {
             peakMemoryBytes: manifest.peakMemoryBytes,
             modelEvents: manifest.modelEvents,
             failures: manifest.failures,
-            generatedFiles: manifest.generatedFiles
-        )
-    }
-
-    private static func writeEvidence(
-        _ evidence: HighQualityRawEvidence,
-        to directory: URL
-    ) throws {
-        try encoder.encode(evidence).write(
-            to: directory.appendingPathComponent("raw-asr.json"),
-            options: .atomic
+            generatedFiles: manifest.generatedFiles,
+            resultTurns: resultTurns,
+            subtitleCues: subtitleCues,
+            japaneseTranscript: japaneseTranscript,
+            englishTranscript: englishTranscript
         )
     }
 
@@ -3957,7 +4411,11 @@ struct HighQualityJob: Sendable {
         diarization: HighQualityDiarizationEvidence?,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
-        manifest: HighQualityJobManifest,
+        resultTurns: [HighQualityTranscriptTurn]? = nil,
+        subtitleCues: [HighQualitySubtitleCue]? = nil,
+        japaneseTranscript: String? = nil,
+        englishTranscript: String? = nil,
+        manifest: inout HighQualityJobManifest,
         to directory: URL
     ) throws -> HighQualityRawEvidence {
         let evidence = evidence(
@@ -3967,11 +4425,24 @@ struct HighQualityJob: Sendable {
             diarization: diarization,
             translation: translation,
             sampleCount: sampleCount,
+            resultTurns: resultTurns,
+            subtitleCues: subtitleCues,
+            japaneseTranscript: japaneseTranscript,
+            englishTranscript: englishTranscript,
             manifest: manifest
         )
-        try writeEvidence(evidence, to: directory)
+        let data = try encoder.encode(evidence)
+        manifest.rawEvidenceSHA256 = sha256(data)
+        try data.write(
+            to: directory.appendingPathComponent("raw-asr.json"),
+            options: .atomic
+        )
         try writeManifest(manifest, to: directory)
         return evidence
+    }
+
+    private static func sha256(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     private static func writeManifest(
@@ -3982,6 +4453,85 @@ struct HighQualityJob: Sendable {
             to: directory.appendingPathComponent("manifest.json"),
             options: .atomic
         )
+    }
+
+    private static func readManifest(in directory: URL) throws -> HighQualityJobManifest {
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+        )
+        guard (2...HighQualityJobManifest.currentSchemaVersion).contains(
+            manifest.schemaVersion
+        ) else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "This saved High-quality job uses an unsupported schema version.",
+                resultDirectory: directory
+            )
+        }
+        return manifest
+    }
+
+    private static func readTransformations(
+        in directory: URL
+    ) throws -> HighQualityResultTransformations? {
+        let url = directory.appendingPathComponent("transformations.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        do {
+            let transformations = try decoder.decode(
+                HighQualityResultTransformations.self,
+                from: Data(contentsOf: url)
+            )
+            guard transformations.schemaVersion
+                    == HighQualityResultTransformations.currentSchemaVersion,
+                  transformations.customSpeakerLabels.values.allSatisfy({
+                      !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                  }),
+                  transformations.relocatedSourcePath?.hasPrefix("/") != false else {
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: "The saved transformations are unsupported.",
+                    resultDirectory: directory
+                )
+            }
+            return transformations
+        } catch let error as HighQualityJobError {
+            throw error
+        } catch {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "The saved transformations are unreadable.",
+                resultDirectory: directory
+            )
+        }
+    }
+
+    private static func storedText(at url: URL) throws -> String {
+        var text = try String(contentsOf: url, encoding: .utf8)
+        if text.last == "\n" { text.removeLast() }
+        return text
+    }
+
+    private static func savedResultError(
+        _ message: String,
+        _ saved: HighQualitySavedResult
+    ) -> HighQualityJobError {
+        HighQualityJobError(
+            stage: .application,
+            message: message,
+            resultDirectory: saved.directory
+        )
+    }
+
+    private static var decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        decoder.nonConformingFloatDecodingStrategy = .convertFromString(
+            positiveInfinity: "Infinity",
+            negativeInfinity: "-Infinity",
+            nan: "NaN"
+        )
+        return decoder
     }
 
     private static var encoder: JSONEncoder {

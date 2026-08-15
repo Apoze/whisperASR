@@ -1,0 +1,1256 @@
+{
+  "asrWorker" : {
+    "backend" : "parakeet-ja",
+    "lifecycle" : {
+      "availableMemorySamples" : [
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11795677184
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11795677184
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:36Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11819974656
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11157061632
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11155636224
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11150426112
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:37Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11112333312
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11024728064
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11015143424
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:38Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 11017273344
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10976231424
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967973888
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:39Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10967646208
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10850140160
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10751803392
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10739302400
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:40Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10719936512
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10437967872
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:41Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10436509696
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10281811968
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10279272448
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276339712
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:42Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10276257792
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10252664832
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10253238272
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:43Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10256285696
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:44Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10242670592
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:45Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10223058944
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10184032256
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10187096064
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:46Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10188046336
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10185834496
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10183229440
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:47Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10190389248
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 10099671040
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9912156160
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9790259200
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9939779584
+        },
+        {
+          "at" : "2026-08-15T11:54:48Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9839525888
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9803628544
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9802334208
+        },
+        {
+          "at" : "2026-08-15T11:54:49Z",
+          "availableMemoryBytes" : 9802334208
+        }
+      ],
+      "command" : [
+        "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/debug\/WhisperASR",
+        "--high-quality-asr-worker",
+        "parakeet-ja",
+        "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-parakeet-ja-5E4EF2FC-BC31-457B-BF6A-D34F066A3310"
+      ],
+      "elapsedSeconds" : 13.402642965316772,
+      "exitStatus" : 0,
+      "exitedAt" : "2026-08-15T11:54:49Z",
+      "forcedTermination" : false,
+      "peakPhysicalFootprintBytes" : 688260872,
+      "pressureTransitions" : [
+
+      ],
+      "processIdentifier" : 62021,
+      "rawLog" : "[13:54:37.008] [INFO] [FluidAudio.AsrModels] Downloading ASR models to: \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\n[13:54:37.012] [INFO] [FluidAudio.AsrModels] ASR models already present at: \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\n[13:54:37.012] [INFO] [FluidAudio.AsrModels] Loading ASR models from: \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\n[13:54:37.012] [INFO] [FluidAudio.DownloadUtils] Host environment: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:37.013] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:37.083] [INFO] [FluidAudio.DownloadUtils] Compiled model Preprocessor.mlmodelc in 69.64 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:37.083] [INFO] [FluidAudio.AsrModels] Loaded Preprocessor.mlmodelc with compute units: cpuOnly\n[13:54:37.083] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:48.904] [INFO] [FluidAudio.DownloadUtils] Compiled model Encoder.mlmodelc in 11821.50 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:48.905] [INFO] [FluidAudio.AsrModels] Loaded Encoder.mlmodelc with compute units: cpuAndNeuralEngine\n[13:54:48.905] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:48.916] [INFO] [FluidAudio.DownloadUtils] Compiled model Decoderv2.mlmodelc in 11.04 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:48.916] [INFO] [FluidAudio.DownloadUtils] Found parakeet-ja locally, no download needed\n[13:54:48.928] [INFO] [FluidAudio.DownloadUtils] Compiled model Jointerv2.mlmodelc in 11.83 ms :: macOS Version 26.5.2 (Build 25F84), arch=arm64, chip=Apple M5 Pro, cores=15\/15, mem=24 GB, rosetta=false\n[13:54:48.928] [INFO] [FluidAudio.AsrModels] Loaded Jointerv2.mlmodelc\n[13:54:48.929] [INFO] [FluidAudio.AsrModels] Loaded vocabulary with 3072 tokens from \/Users\/maz\/Library\/Application Support\/FluidAudio\/Models\/parakeet-ja\/vocab.json\n[13:54:48.930] [INFO] [FluidAudio.AsrModels] Successfully loaded all ASR models with optimized compute units\n[13:54:49.330] [DEBUG] [FluidAudio.ChunkProcessor] ChunkProcessor using worker pool of size 4\n[13:54:49.654] [INFO] [FluidAudio.ASR] AsrManager resources cleaned up\n",
+      "rawLogPath" : "\/var\/folders\/v8\/3ypw00f54l5ct6nnmdr67r8c0000gn\/T\/WhisperASR-ASR-parakeet-ja-5E4EF2FC-BC31-457B-BF6A-D34F066A3310\/worker.log",
+      "startedAt" : "2026-08-15T11:54:36Z",
+      "swapUsedAfterBytes" : 1703477248,
+      "swapUsedBeforeBytes" : 1703477248,
+      "terminationReason" : "exit"
+    },
+    "model" : {
+      "backend" : "parakeet-ja",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml",
+      "revision" : "2952296ff1da4a6d6a7aec545e226367db80c612",
+      "weightSHA256" : {
+        "Decoderv2.mlmodelc\/weights\/weight.bin" : "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+        "Encoder.mlmodelc\/weights\/weight.bin" : "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+        "Jointerv2.mlmodelc\/weights\/weight.bin" : "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+        "Preprocessor.mlmodelc\/weights\/weight.bin" : "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9",
+        "vocab.json" : "9db0aa7ab1f5d2714c20a7880cb452d753da91cb10de88cb289cda4fd473d50a"
+      }
+    },
+    "result" : {
+      "chunks" : [
+
+      ],
+      "confidence" : 0.919145405292511,
+      "diagnostics" : {
+        "emptyOutput" : false
+      },
+      "model" : {
+        "backend" : "parakeet-ja",
+        "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml",
+        "revision" : "2952296ff1da4a6d6a7aec545e226367db80c612",
+        "weightSHA256" : {
+          "Decoderv2.mlmodelc\/weights\/weight.bin" : "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+          "Encoder.mlmodelc\/weights\/weight.bin" : "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+          "Jointerv2.mlmodelc\/weights\/weight.bin" : "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+          "Preprocessor.mlmodelc\/weights\/weight.bin" : "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9",
+          "vocab.json" : "9db0aa7ab1f5d2714c20a7880cb452d753da91cb10de88cb289cda4fd473d50a"
+        }
+      },
+      "rawTranscript" : "続いての大将戦ですが天夢萌歌そして立川きました先ほどはね立川もプロとしての意地を見せました。 ぼこぼこにしてくれへん? 達川さんとさ都との出会い知ってる?",
+      "tokenTimings" : [
+        {
+          "confidence" : 0.98681640625,
+          "sourceEnd" : 0.32,
+          "sourceStart" : 0,
+          "text" : " ",
+          "tokenIDs" : [
+            2
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 0.72,
+          "sourceStart" : 0.48,
+          "text" : "続いて",
+          "tokenIDs" : [
+            408
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 0.88,
+          "sourceStart" : 0.72,
+          "text" : "の",
+          "tokenIDs" : [
+            3
+          ]
+        },
+        {
+          "confidence" : 0.99560546875,
+          "sourceEnd" : 1.04,
+          "sourceStart" : 0.88,
+          "text" : "大",
+          "tokenIDs" : [
+            57
+          ]
+        },
+        {
+          "confidence" : 0.9990234375,
+          "sourceEnd" : 1.2,
+          "sourceStart" : 1.04,
+          "text" : "将",
+          "tokenIDs" : [
+            1251
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 1.3599999999999999,
+          "sourceStart" : 1.2,
+          "text" : "戦",
+          "tokenIDs" : [
+            159
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 1.4400000000000002,
+          "sourceStart" : 1.36,
+          "text" : "です",
+          "tokenIDs" : [
+            24
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 1.5999999999999999,
+          "sourceStart" : 1.44,
+          "text" : "が",
+          "tokenIDs" : [
+            4
+          ]
+        },
+        {
+          "confidence" : 0.64306640625,
+          "sourceEnd" : 1.76,
+          "sourceStart" : 1.6,
+          "text" : "天",
+          "tokenIDs" : [
+            825
+          ]
+        },
+        {
+          "confidence" : 0.76318359375,
+          "sourceEnd" : 2,
+          "sourceStart" : 1.84,
+          "text" : "夢",
+          "tokenIDs" : [
+            1239
+          ]
+        },
+        {
+          "confidence" : 0.69970703125,
+          "sourceEnd" : 2.3200000000000003,
+          "sourceStart" : 2.16,
+          "text" : "萌",
+          "tokenIDs" : [
+            2436
+          ]
+        },
+        {
+          "confidence" : 0.73193359375,
+          "sourceEnd" : 2.48,
+          "sourceStart" : 2.32,
+          "text" : "歌",
+          "tokenIDs" : [
+            662
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 2.88,
+          "sourceStart" : 2.56,
+          "text" : "そして",
+          "tokenIDs" : [
+            711
+          ]
+        },
+        {
+          "confidence" : 0.88818359375,
+          "sourceEnd" : 3.04,
+          "sourceStart" : 2.88,
+          "text" : "立",
+          "tokenIDs" : [
+            310
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 3.52,
+          "sourceStart" : 3.2,
+          "text" : "川",
+          "tokenIDs" : [
+            330
+          ]
+        },
+        {
+          "confidence" : 0.888671875,
+          "sourceEnd" : 4.640000000000001,
+          "sourceStart" : 4.32,
+          "text" : "きました",
+          "tokenIDs" : [
+            323
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 8.8,
+          "sourceStart" : 8.48,
+          "text" : "先",
+          "tokenIDs" : [
+            229
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 8.96,
+          "sourceStart" : 8.8,
+          "text" : "ほど",
+          "tokenIDs" : [
+            558
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 9.120000000000001,
+          "sourceStart" : 8.96,
+          "text" : "は",
+          "tokenIDs" : [
+            7
+          ]
+        },
+        {
+          "confidence" : 0.99267578125,
+          "sourceEnd" : 9.360000000000001,
+          "sourceStart" : 9.120000000000001,
+          "text" : "ね",
+          "tokenIDs" : [
+            31
+          ]
+        },
+        {
+          "confidence" : 0.89306640625,
+          "sourceEnd" : 9.52,
+          "sourceStart" : 9.36,
+          "text" : "立",
+          "tokenIDs" : [
+            310
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 10.08,
+          "sourceStart" : 9.76,
+          "text" : "川",
+          "tokenIDs" : [
+            330
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 10.4,
+          "sourceStart" : 10.08,
+          "text" : "も",
+          "tokenIDs" : [
+            11
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 10.72,
+          "sourceStart" : 10.4,
+          "text" : "プロ",
+          "tokenIDs" : [
+            942
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 11.360000000000001,
+          "sourceStart" : 11.040000000000001,
+          "text" : "として",
+          "tokenIDs" : [
+            148
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 11.68,
+          "sourceStart" : 11.36,
+          "text" : "の",
+          "tokenIDs" : [
+            3
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.08,
+          "sourceStart" : 11.84,
+          "text" : "意",
+          "tokenIDs" : [
+            362
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.24,
+          "sourceStart" : 12.08,
+          "text" : "地",
+          "tokenIDs" : [
+            126
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.4,
+          "sourceStart" : 12.24,
+          "text" : "を",
+          "tokenIDs" : [
+            5
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.56,
+          "sourceStart" : 12.4,
+          "text" : "見",
+          "tokenIDs" : [
+            62
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 12.64,
+          "sourceStart" : 12.56,
+          "text" : "せ",
+          "tokenIDs" : [
+            82
+          ]
+        },
+        {
+          "confidence" : 0.5341796875,
+          "sourceEnd" : 12.8,
+          "sourceStart" : 12.64,
+          "text" : "ました",
+          "tokenIDs" : [
+            48
+          ]
+        },
+        {
+          "confidence" : 0.94921875,
+          "sourceEnd" : 13.280000000000001,
+          "sourceStart" : 12.96,
+          "text" : "。",
+          "tokenIDs" : [
+            1
+          ]
+        },
+        {
+          "confidence" : 0.93017578125,
+          "sourceEnd" : 16.16,
+          "sourceStart" : 15.92,
+          "text" : " ",
+          "tokenIDs" : [
+            2
+          ]
+        },
+        {
+          "confidence" : 0.54931640625,
+          "sourceEnd" : 16.32,
+          "sourceStart" : 16.16,
+          "text" : "ぼ",
+          "tokenIDs" : [
+            664
+          ]
+        },
+        {
+          "confidence" : 0.9990234375,
+          "sourceEnd" : 16.4,
+          "sourceStart" : 16.32,
+          "text" : "こ",
+          "tokenIDs" : [
+            105
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.56,
+          "sourceStart" : 16.4,
+          "text" : "ぼ",
+          "tokenIDs" : [
+            664
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 16.639999999999997,
+          "sourceStart" : 16.56,
+          "text" : "こ",
+          "tokenIDs" : [
+            105
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.8,
+          "sourceStart" : 16.64,
+          "text" : "に",
+          "tokenIDs" : [
+            6
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.88,
+          "sourceStart" : 16.8,
+          "text" : "して",
+          "tokenIDs" : [
+            30
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 16.959999999999997,
+          "sourceStart" : 16.88,
+          "text" : "く",
+          "tokenIDs" : [
+            26
+          ]
+        },
+        {
+          "confidence" : 0.9921875,
+          "sourceEnd" : 17.12,
+          "sourceStart" : 16.96,
+          "text" : "れ",
+          "tokenIDs" : [
+            74
+          ]
+        },
+        {
+          "confidence" : 0.58544921875,
+          "sourceEnd" : 17.2,
+          "sourceStart" : 17.12,
+          "text" : "へ",
+          "tokenIDs" : [
+            316
+          ]
+        },
+        {
+          "confidence" : 0.9990234375,
+          "sourceEnd" : 17.279999999999998,
+          "sourceStart" : 17.2,
+          "text" : "ん",
+          "tokenIDs" : [
+            33
+          ]
+        },
+        {
+          "confidence" : 0.5732421875,
+          "sourceEnd" : 17.6,
+          "sourceStart" : 17.28,
+          "text" : "?",
+          "tokenIDs" : [
+            25
+          ]
+        },
+        {
+          "confidence" : 0.99755859375,
+          "sourceEnd" : 27.44,
+          "sourceStart" : 27.28,
+          "text" : " ",
+          "tokenIDs" : [
+            2
+          ]
+        },
+        {
+          "confidence" : 0.51513671875,
+          "sourceEnd" : 27.68,
+          "sourceStart" : 27.44,
+          "text" : "達",
+          "tokenIDs" : [
+            783
+          ]
+        },
+        {
+          "confidence" : 0.99755859375,
+          "sourceEnd" : 27.919999999999998,
+          "sourceStart" : 27.68,
+          "text" : "川",
+          "tokenIDs" : [
+            330
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 28.080000000000002,
+          "sourceStart" : 27.92,
+          "text" : "さん",
+          "tokenIDs" : [
+            46
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 28.240000000000002,
+          "sourceStart" : 28.080000000000002,
+          "text" : "と",
+          "tokenIDs" : [
+            10
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 28.560000000000002,
+          "sourceStart" : 28.240000000000002,
+          "text" : "さ",
+          "tokenIDs" : [
+            45
+          ]
+        },
+        {
+          "confidence" : 0.3056640625,
+          "sourceEnd" : 28.8,
+          "sourceStart" : 28.560000000000002,
+          "text" : "都",
+          "tokenIDs" : [
+            419
+          ]
+        },
+        {
+          "confidence" : 0.955078125,
+          "sourceEnd" : 28.96,
+          "sourceStart" : 28.8,
+          "text" : "と",
+          "tokenIDs" : [
+            10
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 29.12,
+          "sourceStart" : 28.96,
+          "text" : "の",
+          "tokenIDs" : [
+            3
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.28,
+          "sourceStart" : 29.12,
+          "text" : "出",
+          "tokenIDs" : [
+            64
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.36,
+          "sourceStart" : 29.28,
+          "text" : "会",
+          "tokenIDs" : [
+            139
+          ]
+        },
+        {
+          "confidence" : 1,
+          "sourceEnd" : 29.52,
+          "sourceStart" : 29.36,
+          "text" : "い",
+          "tokenIDs" : [
+            12
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 29.68,
+          "sourceStart" : 29.52,
+          "text" : "知",
+          "tokenIDs" : [
+            266
+          ]
+        },
+        {
+          "confidence" : 0.99951171875,
+          "sourceEnd" : 29.759999999999998,
+          "sourceStart" : 29.68,
+          "text" : "って",
+          "tokenIDs" : [
+            17
+          ]
+        },
+        {
+          "confidence" : 0.845703125,
+          "sourceEnd" : 29.84,
+          "sourceStart" : 29.76,
+          "text" : "る",
+          "tokenIDs" : [
+            14
+          ]
+        },
+        {
+          "confidence" : 0.8603515625,
+          "sourceEnd" : 29.919999999999998,
+          "sourceStart" : 29.84,
+          "text" : "?",
+          "tokenIDs" : [
+            25
+          ]
+        }
+      ]
+    }
+  },
+  "deliverables" : [
+    "japanese-transcript"
+  ],
+  "dependencies" : [
+    "source-normalization",
+    "japanese-asr",
+    "export"
+  ],
+  "failures" : [
+
+  ],
+  "finishedAt" : "2026-08-15T11:54:49Z",
+  "generatedFiles" : [
+    {
+      "kind" : "deliverable",
+      "path" : "japanese-transcript.txt"
+    },
+    {
+      "kind" : "evidence",
+      "path" : "raw-asr.json"
+    },
+    {
+      "kind" : "manifest",
+      "path" : "manifest.json"
+    }
+  ],
+  "jobID" : "1B2FEFFE-1532-407C-8C15-283CDDFE3352",
+  "model" : {
+    "backend" : "parakeet-ja",
+    "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml",
+    "revision" : "2952296ff1da4a6d6a7aec545e226367db80c612",
+    "weightSHA256" : {
+      "Decoderv2.mlmodelc\/weights\/weight.bin" : "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+      "Encoder.mlmodelc\/weights\/weight.bin" : "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+      "Jointerv2.mlmodelc\/weights\/weight.bin" : "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+      "Preprocessor.mlmodelc\/weights\/weight.bin" : "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9",
+      "vocab.json" : "9db0aa7ab1f5d2714c20a7880cb452d753da91cb10de88cb289cda4fd473d50a"
+    }
+  },
+  "modelEvents" : [
+    {
+      "at" : "2026-08-15T11:54:36Z",
+      "backend" : "parakeet-ja",
+      "kind" : "memory-pressure-checked",
+      "message" : "policy=macos-memory-pressure peak=4294967296 reserve=0 total=25769803776 available=11795595264 baseline=26116984",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:36Z",
+      "backend" : "parakeet-ja",
+      "kind" : "load-started",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:49Z",
+      "backend" : "parakeet-ja",
+      "kind" : "load-completed",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:49Z",
+      "backend" : "parakeet-ja",
+      "kind" : "unload-completed",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    },
+    {
+      "at" : "2026-08-15T11:54:49Z",
+      "backend" : "parakeet-ja",
+      "kind" : "memory-release-checked",
+      "message" : "memory=27214712 runtimePeak=27083640 minimumAvailable=9790291968 maximum=25769803776 reserve=0",
+      "modelID" : "FluidInference\/parakeet-0.6b-ja-coreml"
+    }
+  ],
+  "peakMemoryBytes" : 688260872,
+  "schemaVersion" : 3,
+  "selectedBackend" : "parakeet-ja",
+  "source" : {
+    "byteCount" : 960078,
+    "fileName" : "dev-30s.wav",
+    "modifiedAt" : "2026-08-15T11:53:29Z",
+    "path" : "\/Users\/maz\/.codex\/worktrees\/50e4\/whisperASR\/.build\/benchmarks\/issue-116\/controls\/dev-30s.wav"
+  },
+  "speakerConfiguration" : {
+    "countPolicy" : {
+      "mode" : "automatic"
+    },
+    "enhancedPrecision" : false,
+    "sensitiveDetection" : false
+  },
+  "speakerCountPolicy" : {
+    "mode" : "automatic"
+  },
+  "speakerLabels" : false,
+  "stageDurations" : [
+    "transcribing",
+    0.4262399673461914,
+    "exporting",
+    0.003719925880432129,
+    "preparing-asr",
+    13.006732106208801,
+    "normalizing-source",
+    0.08290994167327881
+  ],
+  "startedAt" : "2026-08-15T11:54:36Z",
+  "status" : "completed"
+}
