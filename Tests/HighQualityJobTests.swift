@@ -1312,9 +1312,22 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(try HighQualityJob.reopen(saved).turns, fixture.previous.turns)
     }
 
-    func testDifferentSavedSourceWithSameSampleCountRejectsSpeakerReanalysis() async throws {
+    func testSameSizeAndModificationDateSourceSubstitutionRejectsSpeakerReanalysis() async throws {
         let fixture = try await savedSpeakerFixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let byteCount = try XCTUnwrap(fixture.previous.evidence.source.byteCount)
+        let modifiedAt = try XCTUnwrap(fixture.previous.evidence.source.modifiedAt)
+        try Data(repeating: 0x58, count: Int(byteCount)).write(to: fixture.source)
+        try FileManager.default.setAttributes(
+            [.modificationDate: modifiedAt],
+            ofItemAtPath: fixture.source.path
+        )
+        let attributes = try FileManager.default.attributesOfItem(atPath: fixture.source.path)
+        XCTAssertEqual((attributes[.size] as? NSNumber)?.uint64Value, byteCount)
+        XCTAssertEqual(
+            Int64(try XCTUnwrap(attributes[.modificationDate] as? Date).timeIntervalSince1970),
+            Int64(modifiedAt.timeIntervalSince1970)
+        )
         let calls = CallLog()
         let job = HighQualityJob(services: .init(
             loadSource: { _ in
@@ -1349,7 +1362,29 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertEqual(try resultFiles(in: fixture.saved.directory), fixture.files)
     }
 
-    func testSchemaThreeSpeakerReanalysisMigratesOnlyTheOriginalSource() async throws {
+    func testSavedSpeakerReanalysisReportsDiarizationWhenLiveOwnsGate() async throws {
+        let fixture = try await savedSpeakerFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let gate = HeavyweightModelGate()
+        let live = try await gate.beginWorkflow(.live)
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 160_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "unused" },
+            unloadASR: {},
+            heavyweightGate: gate
+        ))
+
+        do {
+            _ = try await job.rerunSpeakers(fixture.saved, configuration: .standard)
+            XCTFail("Live must keep the heavyweight-model gate.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .diarization)
+        }
+        try await gate.endWorkflow(live)
+    }
+
+    func testLegacySpeakerResultStaysDisabledAfterLocateAndCancellation() async throws {
         func reanalysisJob(_ calls: CallLog) -> HighQualityJob {
             HighQualityJob(services: .init(
                 loadSource: { _ in
@@ -1376,22 +1411,47 @@ final class HighQualityJobTests: XCTestCase {
             ))
         }
 
-        let original = try await savedSpeakerFixture()
-        defer { try? FileManager.default.removeItem(at: original.root) }
-        let legacy = try schemaThreeSpeakerFixture(original.saved)
-        let migrated = try await reanalysisJob(CallLog()).rerunSpeakers(
-            legacy,
-            configuration: .standard
-        )
-        XCTAssertNotNil(migrated.evidence.sourceAudioSHA256)
-        XCTAssertEqual(migrated.manifest.schemaVersion, HighQualityJobManifest.currentSchemaVersion)
+        let fixture = try await savedSpeakerFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let legacy = try schemaThreeSpeakerFixture(fixture.saved)
+        let reopened = try HighQualityJob.reopen(legacy)
+        XCTAssertFalse(HighQualityJob.canRerunSpeakers(reopened))
 
-        let moved = try await savedSpeakerFixture()
-        defer { try? FileManager.default.removeItem(at: moved.root) }
-        let movedLegacy = try schemaThreeSpeakerFixture(moved.saved)
-        let relocatedSource = moved.root.appendingPathComponent("relocated.wav")
-        try FileManager.default.copyItem(at: moved.source, to: relocatedSource)
-        let relocated = try HighQualityJob.relocateSource(movedLegacy, to: relocatedSource)
+        var state = HighQualitySpeakerReanalysisActionState(
+            result: reopened,
+            saved: legacy,
+            isRunning: false,
+            includeLabels: true
+        )
+        XCTAssertTrue(state.isVisible)
+        XCTAssertFalse(state.isEnabled)
+        XCTAssertTrue(state.explanation?.contains("Recompute") == true)
+
+        let rawEvidence = try Data(contentsOf: legacy.directory
+            .appendingPathComponent("raw-asr.json"))
+        let relocatedSource = fixture.root.appendingPathComponent("relocated.wav")
+        try FileManager.default.moveItem(at: fixture.source, to: relocatedSource)
+        let missing = try XCTUnwrap(HighQualityJob.savedResults(in: fixture.root).first {
+            $0.id == legacy.id
+        })
+        XCTAssertNotNil(missing.sourceRelocationMessage)
+
+        let cancelled = try HighQualityJob.relocateSource(missing, to: nil)
+        XCTAssertEqual(cancelled.sourceURL, missing.sourceURL)
+        XCTAssertNotNil(cancelled.sourceRelocationMessage)
+
+        let relocated = try HighQualityJob.relocateSource(cancelled, to: relocatedSource)
+        XCTAssertNil(relocated.sourceRelocationMessage)
+        state = HighQualitySpeakerReanalysisActionState(
+            result: try HighQualityJob.reopen(relocated),
+            saved: relocated,
+            isRunning: false,
+            includeLabels: true
+        )
+        XCTAssertTrue(state.isVisible)
+        XCTAssertFalse(state.isEnabled)
+        XCTAssertTrue(state.explanation?.contains("Recompute") == true)
+
         let relocatedFiles = try resultFiles(in: relocated.directory)
         let calls = CallLog()
         do {
@@ -1399,13 +1459,18 @@ final class HighQualityJobTests: XCTestCase {
                 relocated,
                 configuration: .standard
             )
-            XCTFail("A legacy result cannot authenticate a relocated source.")
+            XCTFail("A legacy result without an audio fingerprint must not run SpeakerKit.")
         } catch let error as HighQualityJobError {
             XCTAssertEqual(error.stage, .source)
+            XCTAssertTrue(error.message.contains("Recompute"))
         }
         let recordedCalls = await calls.values
-        XCTAssertEqual(recordedCalls, ["load"])
+        XCTAssertTrue(recordedCalls.isEmpty)
         XCTAssertEqual(try resultFiles(in: relocated.directory), relocatedFiles)
+        XCTAssertEqual(
+            try Data(contentsOf: relocated.directory.appendingPathComponent("raw-asr.json")),
+            rawEvidence
+        )
     }
 
     func testCancelledSpeakerReanalysisUnloadsAndKeepsPreviousResult() async throws {
@@ -2064,9 +2129,61 @@ final class HighQualityJobTests: XCTestCase {
                 countPolicy: .expected(2)
             ))
             XCTAssertEqual(evidence.speakerConfiguration, manifest.speakerConfiguration)
+            XCTAssertNotNil(manifest.stageDurations[.preparingDiarization])
+            XCTAssertNotNil(manifest.stageDurations[.diarizing])
+            XCTAssertEqual(evidence.stageDurations, manifest.stageDurations)
         }
         let recordedCalls = await calls.values
         XCTAssertEqual(recordedCalls, ["unload-speakerkit"])
+    }
+
+    func testSpeakerKitRuntimeFailurePersistsDiarizationDiagnostic() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = UUID()
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 16_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { samples, turns in
+                try await highQualityFixtureAlignment(samples, turns)
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _, _ in },
+            diarizeSpeakers: { _, _, _ in
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit runtime fixture failed.",
+                    resultDirectory: nil
+                )
+            },
+            unloadDiarization: {}
+        ))
+
+        await assertFailure(.diarization) {
+            try await job.run(.init(
+                id: id,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                speakerLabels: true,
+                outputRoot: root
+            ))
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: root.appendingPathComponent(id.uuidString)
+                .appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(
+            evidence.diarization?.validationDiagnostics,
+            ["SpeakerKit runtime fixture failed."]
+        )
     }
 
     func testChunkedASRMovesEligibleCutToSilenceAndKeepsWindowsBounded() async throws {

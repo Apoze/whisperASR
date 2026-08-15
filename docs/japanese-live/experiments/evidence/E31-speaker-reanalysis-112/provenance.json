@@ -1,0 +1,19 @@
+{
+  "executedCommit": "a80c9a9fe0222b0225100839c6770f98d6ebaf10",
+  "test": "HighQualityAcceptanceTests/testRealSavedSpeakerReanalysisWhenOptedIn",
+  "sourceHashes": {
+    "Package.resolved": "71d9161262d1962dd6775c3f9aacf0a9a677d8dfc042e2dfa8c49669e885e41f",
+    "Package.swift": "ab6236f33ff99c10d6caaa51da856735cd3a6f93d7b3e9fa28d939edf0719c36",
+    "Sources/HighQualityAlignmentSpeakerWorker.swift": "56c98872d0cdd6dc74f9bd8ffc40c2dfad89fd1d59100b2f38e23b302ea66fcb",
+    "Sources/HighQualityJob.swift": "1defcf21803b8479abdd9d4f1eb73e374d13f6095e240935c0c9bdcfff880d19",
+    "Sources/HighQualityJobView.swift": "269050ee1d3036f0e9c1f330901a972a387222d6949f6beb6fe482c9d22e7600",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "9ac5b0ed7a1147def3cd71045f16b862d4ffa14a81f53e67b106fe1028c6f84b",
+    "Tests/HighQualityAcceptanceTests.swift": "0c2e4df1fdefa369123d1961fb3b305f1e46bc9396240a351396f9d758f27768",
+    "Tests/HighQualityJobTests.swift": "1c92c0594c19d0d15ccb961c6adb78fd83244b789cb6f423207e30860e12bb33"
+  },
+  "candidateArtifacts": {
+    "rawEvidenceSHA256": "a45df60a14475bcfd429f19d48fbc52df51e4e9036b547447234af9ba79c9760",
+    "speakerKitResponseSHA256": "bb3daf80c2be3b2ff29097ef098557e9fa7d0253035977e6de3e2446d5fe49e8",
+    "rawCandidateRelabeled": false
+  }
+}

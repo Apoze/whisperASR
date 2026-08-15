@@ -1129,6 +1129,17 @@ struct HighQualityJobResult: Sendable {
     let evidence: HighQualityRawEvidence
 }
 
+enum HighQualitySpeakerReanalysisAvailability: Equatable, Sendable {
+    case unavailable
+    case requiresVerifiedSource
+    case available
+
+    var explanation: String? {
+        guard self == .requiresVerifiedSource else { return nil }
+        return "This saved result has no verified source-audio fingerprint. Recompute the High-quality job before reanalyzing speakers."
+    }
+}
+
 struct HighQualitySavedResult: Identifiable, Sendable {
     let directory: URL
     let manifest: HighQualityJobManifest
@@ -1184,9 +1195,12 @@ private struct HighQualitySpeakerAnalysis {
 private struct HighQualitySpeakerAnalysisFailure: LocalizedError {
     let message: String
     let cancelled: Bool
+    let stage: HighQualityJobStage
     let evidence: HighQualityDiarizationEvidence
     let modelEvents: [HighQualityModelEvent]
     let peakMemoryBytes: UInt64
+    let preparationDuration: TimeInterval
+    let diarizationDuration: TimeInterval
 
     var errorDescription: String? { message }
 }
@@ -1820,12 +1834,22 @@ struct HighQualityJob: Sendable {
             }
             let cancelled = originalError is CancellationError || Task.isCancelled
             let message = cancelled ? "Speaker analysis cancelled." : originalError.localizedDescription
+            if evidence.validationDiagnostics.isEmpty {
+                evidence.validationDiagnostics = [message]
+            }
+            let finishedAt = Date()
             throw HighQualitySpeakerAnalysisFailure(
                 message: cleanupMessage.map { message + " " + $0 } ?? message,
                 cancelled: cancelled,
+                stage: diarizationStartedAt == nil ? .preparingDiarization : .diarizing,
                 evidence: evidence,
                 modelEvents: modelEvents,
-                peakMemoryBytes: peakMemoryBytes
+                peakMemoryBytes: peakMemoryBytes,
+                preparationDuration: (diarizationStartedAt ?? finishedAt)
+                    .timeIntervalSince(preparationStartedAt),
+                diarizationDuration: diarizationStartedAt.map {
+                    finishedAt.timeIntervalSince($0)
+                } ?? 0
             )
         }
     }
@@ -2019,8 +2043,9 @@ struct HighQualityJob: Sendable {
 
     static func relocateSource(
         _ saved: HighQualitySavedResult,
-        to sourceURL: URL
+        to sourceURL: URL?
     ) throws -> HighQualitySavedResult {
+        guard let sourceURL else { return saved }
         guard saved.manifest.source.youtube == nil,
               sourceURL.isFileURL,
               (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
@@ -2046,16 +2071,26 @@ struct HighQualityJob: Sendable {
         )
     }
 
+    static func speakerReanalysisAvailability(
+        _ result: HighQualityJobResult
+    ) -> HighQualitySpeakerReanalysisAvailability {
+        guard result.manifest.schemaVersion >= 3,
+              result.manifest.status == .completed,
+              result.manifest.speakerLabels,
+              result.manifest.dependencies.contains(.speakerDiarization),
+              result.evidence.sampleRate == 16_000,
+              result.evidence.sampleCount > 0,
+              result.evidence.diarization != nil,
+              result.evidence.alignment?.semanticUnits?.isEmpty == false,
+              result.evidence.alignment?.semanticFragments != nil else {
+            return .unavailable
+        }
+        return isValidSHA256(result.evidence.sourceAudioSHA256)
+            ? .available : .requiresVerifiedSource
+    }
+
     static func canRerunSpeakers(_ result: HighQualityJobResult) -> Bool {
-        result.manifest.schemaVersion >= 3
-            && result.manifest.status == .completed
-            && result.manifest.speakerLabels
-            && result.manifest.dependencies.contains(.speakerDiarization)
-            && result.evidence.sampleRate == 16_000
-            && result.evidence.sampleCount > 0
-            && result.evidence.diarization != nil
-            && result.evidence.alignment?.semanticUnits?.isEmpty == false
-            && result.evidence.alignment?.semanticFragments != nil
+        speakerReanalysisAvailability(result) == .available
     }
 
     func rerunSpeakers(
@@ -2072,8 +2107,16 @@ struct HighQualityJob: Sendable {
             )
         }
         let previous = try Self.reopen(saved)
-        guard Self.canRerunSpeakers(previous),
-              let alignment = previous.evidence.alignment,
+        let availability = Self.speakerReanalysisAvailability(previous)
+        guard availability == .available else {
+            throw HighQualityJobError(
+                stage: availability == .requiresVerifiedSource ? .source : .application,
+                message: availability.explanation
+                    ?? "This saved result does not contain compatible alignment and SpeakerKit evidence.",
+                resultDirectory: saved.directory
+            )
+        }
+        guard let alignment = previous.evidence.alignment,
               let units = alignment.semanticUnits,
               let fragments = alignment.semanticFragments,
               let previousDiarization = previous.evidence.diarization else {
@@ -2110,7 +2153,6 @@ struct HighQualityJob: Sendable {
             let samples = try await services.loadSource(sourceURL)
             let sourceAudioSHA256 = Self.audioSHA256(samples)
             guard Self.matchesSavedSource(
-                sourceURL,
                 samples: samples,
                 sha256: sourceAudioSHA256,
                 result: previous
@@ -2123,10 +2165,10 @@ struct HighQualityJob: Sendable {
             }
             try Task.checkCancellation()
 
+            currentStage = .preparingDiarization
             if let gate = services.heavyweightGate {
                 workflowLease = try await gate.beginWorkflow(.offline(saved.id))
             }
-            currentStage = .preparingDiarization
             let exclusive = previousDiarization.useExclusiveReconciliation ?? false
             var alignedItems = alignment.chunks.flatMap(\.rawItems)
             if alignedItems.isEmpty {
@@ -2158,6 +2200,7 @@ struct HighQualityJob: Sendable {
                     ))
                 }
             } catch let failure as HighQualitySpeakerAnalysisFailure {
+                currentStage = failure.stage
                 if failure.cancelled { throw CancellationError() }
                 throw HighQualityJobError(
                     stage: .diarization,
@@ -2903,6 +2946,12 @@ struct HighQualityJob: Sendable {
                         manifest.peakMemoryBytes,
                         failure.peakMemoryBytes
                     )
+                    manifest.stageDurations[.preparingDiarization, default: 0] +=
+                        failure.preparationDuration
+                    manifest.stageDurations[.diarizing, default: 0] +=
+                        failure.diarizationDuration
+                    currentStage = failure.stage
+                    stageStartedAt = Date()
                     if failure.cancelled { throw CancellationError() }
                     throw HighQualityJobError(
                         stage: .diarization,
@@ -4877,29 +4926,22 @@ struct HighQualityJob: Sendable {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    private static func isValidSHA256(_ value: String?) -> Bool {
+        guard let value, value.utf8.count == 64 else { return false }
+        return value.utf8.allSatisfy {
+            (48...57).contains($0) || (65...70).contains($0) || (97...102).contains($0)
+        }
+    }
+
     private static func matchesSavedSource(
-        _ sourceURL: URL,
         samples: [Float],
         sha256: String,
         result: HighQualityJobResult
     ) -> Bool {
-        guard samples.count == result.evidence.sampleCount else { return false }
-        if let expected = result.evidence.sourceAudioSHA256 {
-            return sha256 == expected
-        }
-
-        // Schema 3 results predate normalized-audio hashes; verify their stored file
-        // provenance once, then persist the hash on the successful reanalysis.
-        let current = provenance(for: sourceURL)
-        guard let expectedBytes = result.evidence.source.byteCount,
-              current.byteCount == expectedBytes,
-              let expectedDate = result.evidence.source.modifiedAt,
-              let currentDate = current.modifiedAt else { return false }
-        let originalPath = URL(fileURLWithPath: result.evidence.source.path)
-            .standardizedFileURL.path
-        return sourceURL.standardizedFileURL.path == originalPath
-            && Int64(currentDate.timeIntervalSince1970)
-                == Int64(expectedDate.timeIntervalSince1970)
+        guard samples.count == result.evidence.sampleCount,
+              let expected = result.evidence.sourceAudioSHA256,
+              isValidSHA256(expected) else { return false }
+        return sha256 == expected.lowercased()
     }
 
     private static func writeManifest(

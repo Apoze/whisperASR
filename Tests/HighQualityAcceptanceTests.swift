@@ -1114,6 +1114,64 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
     }
 
+    func testArchivedE31SpeakerReanalysisDeliverablesMatchEvidence() throws {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let archive = repository.appendingPathComponent(
+            "docs/japanese-live/experiments/evidence/E31-speaker-reanalysis-112",
+            isDirectory: true
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: archive.appendingPathComponent("manifest.json"))
+        )
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let directory = root.appendingPathComponent(manifest.jobID.uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        let deliverables = [
+            "japanese-transcript.txt", "english-translation-transcript.txt",
+            "english-subtitles.vtt", "english-subtitles.srt",
+        ]
+        let archived = try Dictionary(uniqueKeysWithValues: deliverables.map { path in
+            (path, try Data(contentsOf: archive.appendingPathComponent(path)))
+        })
+        for (path, data) in archived {
+            try data.write(to: directory.appendingPathComponent(path))
+        }
+        try Data(contentsOf: archive.appendingPathComponent("manifest.json"))
+            .write(to: directory.appendingPathComponent("manifest.json"))
+
+        let rawEvidence = directory.appendingPathComponent("raw-asr.json")
+        XCTAssertTrue(FileManager.default.createFile(atPath: rawEvidence.path, contents: nil))
+        let output = try FileHandle(forWritingTo: rawEvidence)
+        let gzip = Process()
+        gzip.executableURL = URL(fileURLWithPath: "/usr/bin/gzip")
+        gzip.arguments = ["-dc", archive.appendingPathComponent("raw-asr.json.gz").path]
+        gzip.standardOutput = output
+        try gzip.run()
+        gzip.waitUntilExit()
+        try output.close()
+        XCTAssertEqual(gzip.terminationStatus, 0)
+
+        let result = try HighQualityJob.reopen(.init(directory: directory, manifest: manifest))
+        for (path, data) in archived {
+            XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent(path)), data)
+        }
+        let cues = Dictionary(uniqueKeysWithValues: result.subtitleCues.map { ($0.id, $0) })
+        XCTAssertEqual(cues.count, result.turns.count)
+        for turn in result.turns {
+            let cue = try XCTUnwrap(cues[turn.id])
+            XCTAssertEqual(cue.text, turn.english)
+            XCTAssertEqual(cue.speakerLabel, turn.speakerLabel)
+        }
+    }
+
     private static func frozenEvidence(at path: String) throws -> HighQualityRawEvidence {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601

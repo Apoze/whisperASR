@@ -22,6 +22,25 @@ struct HighQualitySpeakerBetaControls: Equatable {
     }
 }
 
+struct HighQualitySpeakerReanalysisActionState: Equatable {
+    let isVisible: Bool
+    let isEnabled: Bool
+    let explanation: String?
+
+    init(
+        result: HighQualityJobResult,
+        saved: HighQualitySavedResult,
+        isRunning: Bool,
+        includeLabels: Bool
+    ) {
+        let availability = HighQualityJob.speakerReanalysisAvailability(result)
+        isVisible = availability != .unavailable
+        isEnabled = availability == .available
+            && !isRunning && includeLabels && saved.sourceRelocationMessage == nil
+        explanation = availability.explanation
+    }
+}
+
 struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
@@ -174,21 +193,28 @@ struct HighQualityJobView: View {
 
                 if let result {
                     if let saved = selectedSavedResult,
-                       HighQualityJob.canRerunSpeakers(result) {
+                       let state = speakerReanalysisActionState,
+                       state.isVisible {
                         Button("Reanalyze Speakers") { rerunSpeakers(saved) }
-                            .disabled(
-                                isRunning || !speakerBeta.includeLabels
-                                    || saved.sourceRelocationMessage != nil
-                            )
+                            .disabled(!state.isEnabled)
                             .accessibilityIdentifier("high-quality-rerun-speakers")
                             .accessibilityHint(
-                                "Runs SpeakerKit only and keeps the previous result until completion."
+                                state.explanation
+                                    ?? "Runs SpeakerKit only and keeps the previous result until completion."
                             )
                     }
                     Button("Open Results Folder") {
                         NSWorkspace.shared.open(result.directory)
                     }
                 }
+            }
+
+            if let explanation = speakerReanalysisActionState?.explanation {
+                Text(explanation)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .textSelection(.enabled)
+                    .accessibilityIdentifier("high-quality-rerun-speakers-reason")
             }
 
             ProgressView(value: progress.fraction)
@@ -228,6 +254,16 @@ struct HighQualityJobView: View {
 
     private var selectedSavedResult: HighQualitySavedResult? {
         savedResults.first { $0.id == selectedSavedResultID }
+    }
+
+    private var speakerReanalysisActionState: HighQualitySpeakerReanalysisActionState? {
+        guard let result, let saved = selectedSavedResult else { return nil }
+        return .init(
+            result: result,
+            saved: saved,
+            isRunning: isRunning,
+            includeLabels: speakerBeta.includeLabels
+        )
     }
 
     private var sourcePicker: some View {
@@ -361,9 +397,10 @@ struct HighQualityJobView: View {
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.audio, .movie]
         panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
+            let url = response == .OK ? panel.url : nil
             do {
                 let relocated = try HighQualityJob.relocateSource(saved, to: url)
+                guard url != nil else { return }
                 refreshSavedResults()
                 selectedSavedResultID = relocated.id
                 try showSavedResult(
