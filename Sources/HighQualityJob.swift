@@ -832,6 +832,8 @@ struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
 struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
     static let maximumCosineDistance: Float = 0.3
     static let uncertaintyMargin: Float = 0.1
+    static let betaDescription = "Suggestions indicate uncertain acoustic similarity only; "
+        + "they do not establish identity or merge speakers automatically."
 
     let firstSpeakerID: String
     let secondSpeakerID: String

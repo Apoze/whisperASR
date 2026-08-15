@@ -1,7 +1,7 @@
 {
   "ticket": 114,
   "corpusID": "easy-japanese-1",
-  "holdoutOpened": false,
+  "holdoutOpened": true,
   "provenance": {
     "implementationCommitSHA": "af238727f0d526be360a155d5fb5eefdd6fbebf5",
     "manifest": {
@@ -180,8 +180,64 @@
       "thresholdsFrozenBeforeHoldout": true
     }
   },
-  "evidenceStatus": "DEV_GATES_PASSED_HOLDOUT_PENDING",
-  "decision": "HOLDOUT_PENDING",
-  "reason": "Replaying the archived Expected=12 DEV centroids at the frozen v2 thresholds admits exactly the P10 same-reference pair at distance 0.25772017. The closest different-reference pair remains outside at 0.44497204, and all 65 other pairs abstain. Holdout remains unopened pending an explicit slot.",
-  "scope": "Centroid retention and the advisory suggestion engine remain implemented with abstention and no automatic rename or merge. The result UI remains absent until the untouched holdout is evaluated; no recall or promotion claim is made yet."
+  "holdout": {
+    "retunedAfterInspection": false,
+    "benchmarkSlot": "114-HOLDOUT",
+    "plan": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/holdout-plan.json",
+      "sha256": "bbef51e14429eb90aca7717bf5603ffc8279fa47ca0b6479a0f9a3ee6444f17b"
+    },
+    "result": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/holdout-result.json",
+      "sha256": "a8df6aef038a8fb8a741f8bf434934dfd609a7bb4147d7df645aa354c50533bc"
+    },
+    "configuration": {
+      "corpusID": "md62mmdz0m",
+      "embeddingVariant": "W8A16",
+      "speakerCountPolicy": "Expected=12",
+      "maximumCosineDistance": 0.3,
+      "uncertaintyMargin": 0.1,
+      "asr": false,
+      "translation": false
+    },
+    "metrics": {
+      "modelElapsedSeconds": 10.1547189950943,
+      "commandWallClockSeconds": 23.14,
+      "observedPeakMemoryBytes": 802244144,
+      "externalMaximumResidentBytes": 914128896,
+      "centroidCount": 12,
+      "suggestionCount": 1,
+      "usefulSuggestionCount": 1,
+      "falseSuggestionCount": 0,
+      "abstainedPairCount": 65,
+      "precision": 1.0
+    },
+    "usefulSuggestion": {
+      "firstSpeakerID": "SPEAKER_01",
+      "secondSpeakerID": "SPEAKER_02",
+      "referenceSpeaker": "SHIRAYUKI_REID",
+      "cosineDistance": 0.17515594,
+      "firstUncertaintyGap": 0.38624766,
+      "secondUncertaintyGap": 0.42132496
+    },
+    "closestUnderThresholdFalsePair": {
+      "firstSpeakerID": "SPEAKER_09",
+      "firstReferenceSpeaker": "HIZUKI_YUI",
+      "secondSpeakerID": "SPEAKER_10",
+      "secondReferenceSpeaker": "AIZAWA_EMA",
+      "cosineDistance": 0.27354664,
+      "suggested": false,
+      "reason": "ambiguous-and-not-mutual-nearest"
+    },
+    "lifecycle": {
+      "runtimeUnloadAwaited": true,
+      "postRunProcessFound": false,
+      "boundsExceeded": false
+    },
+    "gatesPassed": true
+  },
+  "evidenceStatus": "COMPLETE/BETA_EXPOSED",
+  "decision": "EXPOSE_ADVISORY_BETA_DESCRIPTION",
+  "reason": "The frozen holdout produced exactly one useful suggestion and no false suggestion. Its endpoint uncertainty gaps were 0.386 and 0.421. The closest under-threshold different-reference pair at 0.274 abstained because it was ambiguous and not mutual-nearest. All evidence, memory and lifecycle gates passed without retuning.",
+  "scope": "Expose a concise Bêta description and within-job advisory suggestions only when retained compatible centroids exist. Suggestions remain uncertain acoustic similarity, never establish identity, and never rename or merge automatically. No recall, cross-video matching or Standard-promotion claim is made."
 }

@@ -1224,6 +1224,15 @@ final class HighQualityJobTests: XCTestCase {
         )
     }
 
+    func testDuplicateSpeakerBetaCopyExplainsSimilarityAndUncertainty() {
+        let description = HighQualityDuplicateSpeakerSuggestion.betaDescription
+
+        XCTAssertTrue(description.contains("acoustic similarity"))
+        XCTAssertTrue(description.contains("uncertain"))
+        XCTAssertTrue(description.contains("identity"))
+        XCTAssertTrue(description.contains("merge"))
+    }
+
     func testCompletedStandaloneJobReopensFromSavedManifestAndEvidence() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

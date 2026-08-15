@@ -1,0 +1,138 @@
+{
+  "ticket": 114,
+  "schemaVersion": 1,
+  "capturedAtUTC": "2026-08-15T15:19:20Z",
+  "purpose": "frozen-holdout-evaluation",
+  "retunedAfterHoldout": false,
+  "provenance": {
+    "thresholdImplementationCommitSHA": "f38b3b97d36e348df5134ac19c321fcb8bd4b8db",
+    "frozenPlanCommitSHA": "e839c2a31636d5c1434040c03e4e6f5b4e2e61a0",
+    "frozenPlan": {
+      "path": "holdout-plan.json",
+      "sha256": "bbef51e14429eb90aca7717bf5603ffc8279fa47ca0b6479a0f9a3ee6444f17b"
+    },
+    "thresholdContract": {
+      "version": 2,
+      "path": "threshold-contract-v2.json",
+      "sha256": "e197099d939e388b32ea179bae0c609415e4831e47891ddb0c776709365265ed",
+      "maximumCosineDistance": 0.3,
+      "uncertaintyMargin": 0.1
+    },
+    "manifest": {
+      "path": "docs/japanese-live/corpora/md62mmdz0m/manifest.json",
+      "sha256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc"
+    },
+    "source": {
+      "pathFromWorkspaceRoot": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/audio-16k-mono.wav",
+      "sha256": "bde49d4cc67020d01ae042f2945baa61364cc34959e2211a964943e5c2064830",
+      "sampleRate": 16000,
+      "channelCount": 1,
+      "sampleCount": 14177919
+    },
+    "rawReport": {
+      "locator": "urn:sha256:6556d44832cc305080b03764e52f58b466409f36b145f5a1fd4d6e3b96f8893b",
+      "localPath": "/tmp/whisperasr-114-holdout-report.json",
+      "sha256": "6556d44832cc305080b03764e52f58b466409f36b145f5a1fd4d6e3b96f8893b"
+    },
+    "versionedReport": {
+      "path": "holdout-report.json",
+      "sha256": "bf80af8459108e01484cfdcea4e254e924b26b35d58f36e6b75c79efa09c0bec",
+      "containsCentroidVectors": false,
+      "transformation": "The raw report contains no centroid vectors; the versioned copy adds one trailing LF."
+    },
+    "rawLog": {
+      "locator": "urn:sha256:5b615cb3fa119c6ef01daa8f52b1c487558b5e3c598a4843b3f8bc90d09635ef",
+      "localPath": "/tmp/whisperasr-114-holdout.log",
+      "sha256": "5b615cb3fa119c6ef01daa8f52b1c487558b5e3c598a4843b3f8bc90d09635ef"
+    },
+    "versionedLog": {
+      "path": "holdout.log",
+      "sha256": "2763e1803d1922962f23363dfd091bb3a91bbcf8505f9992bef6fabb3a840280",
+      "transformation": "Two worktree path occurrences are replaced with $REPO_ROOT."
+    },
+    "command": "Exactly the command frozen in holdout-plan.json under BENCHMARK_SLOT_GRANTED=114-HOLDOUT."
+  },
+  "configuration": {
+    "corpusID": "md62mmdz0m",
+    "holdoutOpened": true,
+    "benchmarkSlot": "114-HOLDOUT",
+    "sourceJobID": "00000114-0000-0000-0000-000000000003",
+    "modelID": "argmaxinc/speakerkit-coreml",
+    "modelRevision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+    "runtimeRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+    "embeddingVariant": "W8A16",
+    "vectorDimension": 256,
+    "speakerCountPolicy": "Expected=12",
+    "asr": false,
+    "translation": false
+  },
+  "metrics": {
+    "modelElapsedSeconds": 10.1547189950943,
+    "testElapsedSeconds": 10.399,
+    "commandWallClockSeconds": 23.14,
+    "observedPeakMemoryBytes": 802244144,
+    "externalMaximumResidentBytes": 914128896,
+    "declaredMaximumResidentBytes": 4294967296,
+    "centroidCount": 12,
+    "pairwiseComparisonCount": 66,
+    "underThresholdPairCount": 11,
+    "suggestionCount": 1,
+    "usefulSuggestionCount": 1,
+    "falseSuggestionCount": 0,
+    "abstainedPairCount": 65,
+    "precision": 1.0
+  },
+  "usefulSuggestion": {
+    "firstSpeakerID": "SPEAKER_01",
+    "secondSpeakerID": "SPEAKER_02",
+    "referenceSpeaker": "SHIRAYUKI_REID",
+    "firstReferenceShare": 0.7191091079585328,
+    "secondReferenceShare": 0.74434971632471,
+    "cosineDistance": 0.17515594,
+    "firstEndpointSecondNearestDistance": 0.5614036,
+    "firstEndpointUncertaintyGap": 0.38624766,
+    "secondEndpointSecondNearestDistance": 0.5964809,
+    "secondEndpointUncertaintyGap": 0.42132496
+  },
+  "abstentionExamples": [
+    {
+      "firstSpeakerID": "SPEAKER_04",
+      "secondSpeakerID": "SPEAKER_06",
+      "referenceSpeaker": "HIZUKI_YUI",
+      "cosineDistance": 0.13510454,
+      "firstEndpointUncertaintyGap": 0.06610667,
+      "secondEndpointUncertaintyGap": 0.05464386,
+      "reason": "same-reference pair rejected because both endpoint margins are below 0.1"
+    },
+    {
+      "firstSpeakerID": "SPEAKER_09",
+      "firstReferenceSpeaker": "HIZUKI_YUI",
+      "secondSpeakerID": "SPEAKER_10",
+      "secondReferenceSpeaker": "AIZAWA_EMA",
+      "cosineDistance": 0.27354664,
+      "firstEndpointUncertaintyGap": 0.0131523,
+      "reason": "different-reference pair rejected because the match is ambiguous and not mutual-nearest"
+    }
+  ],
+  "lifecycle": {
+    "runtimeUnloadAwaited": true,
+    "postRunProcessFound": false,
+    "memoryBoundExceeded": false,
+    "wallClockBoundExceeded": false,
+    "additionalHeavyModelObserved": false
+  },
+  "gates": {
+    "frozenCommandPassed": true,
+    "atLeastOneUsefulSuggestion": true,
+    "everySuggestionUseful": true,
+    "zeroFalseSuggestions": true,
+    "uncertainUsefulPairAbstained": true,
+    "closestUnderThresholdFalsePairAbstained": true,
+    "provenanceMatchesFrozenContract": true,
+    "runtimeAndMemoryWithinBounds": true,
+    "speakerKitUnloaded": true,
+    "allPassed": true
+  },
+  "decision": "EXPOSE_ADVISORY_BETA_DESCRIPTION",
+  "claimLimits": "This holdout supports exposing the within-job advisory Bêta description only. It does not establish identity, recall, cross-video matching, automatic merge, or Standard promotion."
+}

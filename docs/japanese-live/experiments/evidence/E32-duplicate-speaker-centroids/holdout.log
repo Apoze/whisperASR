@@ -1,0 +1,46 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    $REPO_ROOT/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    $REPO_ROOT/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (10.29s)
+Test Suite 'Selected tests' started at 2026-08-15 17:15:46.681.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 17:15:46.682.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-15 17:15:46.682.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testDuplicateSpeakerEvidenceWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testDuplicateSpeakerEvidenceWhenOptedIn]' passed (10.399 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-15 17:15:57.081.
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.399 (10.399) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 17:15:57.081.
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.399 (10.399) seconds
+Test Suite 'Selected tests' passed at 2026-08-15 17:15:57.081.
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.399 (10.400) seconds
+[#114][HOLDOUT] centroids=12 suggestions=1 useful=1 false=0 seconds=10.1547189950943 peakBytes=802244144
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+       23.14 real        38.01 user         4.45 sys
+           914128896  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              648917  page reclaims
+               16096  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                  10  messages sent
+                   8  messages received
+                   0  signals received
+                3301  voluntary context switches
+               70809  involuntary context switches
+         46026728274  instructions retired
+          8782480662  cycles elapsed
+            95454024  peak memory footprint
