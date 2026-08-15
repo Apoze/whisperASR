@@ -1,5 +1,4 @@
 import CryptoKit
-import Darwin
 import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
@@ -228,6 +227,7 @@ struct HighQualityJobRequest: Sendable {
     let speakerLabelsByCueID: [String: String]
     let translationContextPolicy: HighQualityConversationContextPolicy
     let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
+    let project: HighQualityProject?
     let outputRoot: URL
 
     init(
@@ -244,6 +244,7 @@ struct HighQualityJobRequest: Sendable {
         translationContextResetReasonsByCueID: [
             String: HighQualityConversationContextResetReason
         ] = [:],
+        project: HighQualityProject? = nil,
         outputRoot: URL = AppStoragePaths.highQualityJobs
     ) {
         self.id = id
@@ -257,7 +258,8 @@ struct HighQualityJobRequest: Sendable {
         self.speakerLabelsByCueID = speakerLabelsByCueID
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
-        self.outputRoot = outputRoot
+        self.project = project
+        self.outputRoot = project?.jobsDirectory ?? outputRoot
     }
 }
 
@@ -1043,7 +1045,7 @@ struct HighQualityGeneratedFile: Codable, Equatable, Sendable {
 }
 
 struct HighQualityJobManifest: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     enum Status: String, Codable, Sendable {
         case completed
@@ -1072,6 +1074,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var failures: [HighQualityJobFailure]
     var generatedFiles: [HighQualityGeneratedFile]
     var rawEvidenceSHA256: String? = nil
+    var projectID: UUID? = nil
 }
 
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
@@ -1096,6 +1099,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     var subtitleCues: [HighQualitySubtitleCue]? = nil
     var japaneseTranscript: String? = nil
     var englishTranscript: String? = nil
+    var projectID: UUID? = nil
 }
 
 struct HighQualityJobResult: Sendable {
@@ -1598,7 +1602,8 @@ struct HighQualityJob: Sendable {
         }
         guard evidence.source == manifest.source,
               evidence.model == manifest.model,
-              evidence.generatedFiles == manifest.generatedFiles else {
+              evidence.generatedFiles == manifest.generatedFiles,
+              evidence.projectID == manifest.projectID else {
             throw savedResultError("The saved manifest and raw evidence do not match.", saved)
         }
         for file in manifest.generatedFiles
@@ -1768,6 +1773,17 @@ struct HighQualityJob: Sendable {
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        if let project = request.project {
+            do {
+                try project.validateForJob()
+            } catch {
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: error.localizedDescription,
+                    resultDirectory: nil
+                )
+            }
+        }
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
         let needsTranslation = request.deliverables.contains(.englishTranslationTranscript)
@@ -1864,6 +1880,7 @@ struct HighQualityJob: Sendable {
             failures: [],
             generatedFiles: []
         )
+        manifest.projectID = request.project?.id
 
         func begin(_ stage: HighQualityJobStage, fraction: Double, message: String) {
             let now = Date()
@@ -4137,20 +4154,7 @@ struct HighQualityJob: Sendable {
             throw CocoaError(.fileWriteUnknown)
         }
         try beforeCommit()
-        let status = staging.path.withCString { stagedPath in
-            directory.path.withCString { activePath in
-                renameatx_np(
-                    AT_FDCWD,
-                    stagedPath,
-                    AT_FDCWD,
-                    activePath,
-                    UInt32(RENAME_SWAP)
-                )
-            }
-        }
-        guard status == 0 else {
-            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-        }
+        try AtomicDirectory.swap(staging, with: directory)
     }
 
     private static func hardLinkContents(of source: URL, to destination: URL) throws {
@@ -4319,7 +4323,8 @@ struct HighQualityJob: Sendable {
             resultTurns: resultTurns,
             subtitleCues: subtitleCues,
             japaneseTranscript: japaneseTranscript,
-            englishTranscript: englishTranscript
+            englishTranscript: englishTranscript,
+            projectID: manifest.projectID
         )
     }
 

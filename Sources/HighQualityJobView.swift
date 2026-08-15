@@ -22,6 +22,11 @@ struct HighQualitySpeakerBetaControls: Equatable {
     }
 }
 
+private enum HighQualityProjectDestructiveAction: Equatable {
+    case reset
+    case delete
+}
+
 struct HighQualityJobView: View {
     @State private var sourceURL: URL?
     @State private var youtubeURL = ""
@@ -43,6 +48,12 @@ struct HighQualityJobView: View {
     @State private var customSpeakerLabels: [String: String] = [:]
     @State private var savedResults: [HighQualitySavedResult] = []
     @State private var selectedSavedResultID: UUID?
+    @State private var projects: [HighQualityProject] = []
+    @State private var selectedProjectID: UUID?
+    @State private var projectName = ""
+    @State private var isRenamingProject = false
+    @State private var projectDestructiveAction: HighQualityProjectDestructiveAction?
+    @State private var showsProjectConfirmation = false
 
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
@@ -50,12 +61,70 @@ struct HighQualityJobView: View {
             && (includeJapaneseTranscript || includeEnglishTranscript || includeEnglishSubtitles)
             && backend != nil
             && !isRunning
+            && selectedProject?.folderRelocationMessage == nil
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("High-quality transcript")
                 .font(.title2.bold())
+
+            HStack {
+                Picker("Project", selection: $selectedProjectID) {
+                    Text("Standalone").tag(nil as UUID?)
+                    ForEach(projects) { project in
+                        Text(project.name).tag(Optional(project.id))
+                    }
+                }
+                .disabled(isRunning)
+                .accessibilityIdentifier("high-quality-project")
+                .onChange(of: selectedProjectID) { _, _ in selectProject() }
+
+                Button("New Project…", action: createProject)
+                    .disabled(isRunning)
+                    .accessibilityIdentifier("high-quality-new-project")
+
+                if let project = selectedProject {
+                    Button("Open Folder") { NSWorkspace.shared.open(project.folderURL) }
+                        .disabled(project.folderRelocationMessage != nil)
+                    Menu("Project Actions") {
+                        Button("Rename…") {
+                            projectName = project.name
+                            isRenamingProject = true
+                        }
+                        Button("Locate Folder…") { locateFolder(for: project) }
+                        Divider()
+                        Button("Reset Results…", role: .destructive) {
+                            confirmProjectAction(.reset)
+                        }
+                        Button("Delete Project…", role: .destructive) {
+                            confirmProjectAction(.delete)
+                        }
+                    }
+                    .disabled(isRunning)
+                    .accessibilityIdentifier("high-quality-project-actions")
+                }
+            }
+
+            if let project = selectedProject {
+                Text(project.folderURL.path)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text("Only files you explicitly choose are processed; source media stays in place.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if let message = project.folderRelocationMessage {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(message)
+                            .foregroundStyle(.orange)
+                            .textSelection(.enabled)
+                        Button("Locate Project Folder…") { locateFolder(for: project) }
+                            .accessibilityIdentifier("high-quality-locate-project-folder")
+                    }
+                }
+            }
 
             if !savedResults.isEmpty {
                 Picker("Saved result", selection: $selectedSavedResultID) {
@@ -210,8 +279,38 @@ struct HighQualityJobView: View {
         }
         .padding(20)
         .frame(minWidth: 560, minHeight: 460)
-        .onAppear { refreshSavedResults() }
+        .onAppear {
+            refreshProjects()
+            refreshSavedResults()
+        }
         .onDisappear { task?.cancel() }
+        .alert("Rename Project", isPresented: $isRenamingProject) {
+            TextField("Project name", text: $projectName)
+            Button("Cancel", role: .cancel) {}
+            Button("Rename", action: renameProject)
+        }
+        .confirmationDialog(
+            "Confirm Project Action",
+            isPresented: $showsProjectConfirmation,
+            titleVisibility: .visible,
+            presenting: projectDestructiveAction
+        ) { action in
+            switch action {
+            case .reset:
+                Button("Reset Project Results", role: .destructive, action: resetProject)
+            case .delete:
+                Button("Delete Project", role: .destructive, action: deleteProject)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { action in
+            Text(action == .reset
+                ? "This removes only this Project's saved results. Source media is not deleted."
+                : "This removes only this Project and its saved results. Source media is not deleted.")
+        }
+    }
+
+    private var selectedProject: HighQualityProject? {
+        projects.first { $0.id == selectedProjectID }
     }
 
     private var selectedSavedResult: HighQualitySavedResult? {
@@ -252,6 +351,7 @@ struct HighQualityJobView: View {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.audio, .movie]
+        panel.directoryURL = selectedProject?.folderURL
         panel.begin { response in
             guard response == .OK else { return }
             selectLocalSource(panel.url)
@@ -306,7 +406,8 @@ struct HighQualityJobView: View {
                     translator: translator,
                     speakerLabels: speakerBeta.includeLabels,
                     speakerConfiguration: speakerBeta.configuration,
-                    translationContextPolicy: .productDefault
+                    translationContextPolicy: .productDefault,
+                    project: selectedProject
                 )) { update in
                     Task { @MainActor in progress = update }
                 }
@@ -324,7 +425,115 @@ struct HighQualityJobView: View {
     }
 
     private func refreshSavedResults() {
-        savedResults = HighQualityJob.savedResults()
+        savedResults = selectedProject?.savedResults ?? HighQualityJob.savedResults()
+    }
+
+    private func refreshProjects() {
+        projects = HighQualityProject.all()
+        if let id = selectedProjectID, !projects.contains(where: { $0.id == id }) {
+            selectedProjectID = nil
+        }
+    }
+
+    private func selectProject() {
+        guard !isRunning else { return }
+        selectedSavedResultID = nil
+        sourceURL = nil
+        youtubeURL = ""
+        result = nil
+        errorMessage = nil
+        customSpeakerLabels = [:]
+        refreshSavedResults()
+    }
+
+    private func createProject() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.prompt = "Create Project"
+        panel.begin { response in
+            guard response == .OK, let folder = panel.url else { return }
+            do {
+                let project = try HighQualityProject.create(
+                    named: folder.lastPathComponent,
+                    folder: folder
+                )
+                refreshProjects()
+                selectedProjectID = project.id
+                selectProject()
+                progress = .init(
+                    stage: .validating,
+                    fraction: 0,
+                    message: "Project created. Choose a source explicitly."
+                )
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func renameProject() {
+        guard let project = selectedProject else { return }
+        do {
+            _ = try project.renamed(to: projectName)
+            refreshProjects()
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func locateFolder(for project: HighQualityProject) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.prompt = "Locate Project Folder"
+        panel.begin { response in
+            guard response == .OK, let folder = panel.url else { return }
+            do {
+                _ = try project.relocated(to: folder)
+                refreshProjects()
+                selectedProjectID = project.id
+                errorMessage = nil
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func confirmProjectAction(_ action: HighQualityProjectDestructiveAction) {
+        projectDestructiveAction = action
+        showsProjectConfirmation = true
+    }
+
+    private func resetProject() {
+        guard let project = selectedProject else { return }
+        do {
+            _ = try project.reset()
+            selectedSavedResultID = nil
+            result = nil
+            refreshSavedResults()
+            errorMessage = nil
+            progress = .init(stage: .validating, fraction: 0, message: "Project reset")
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        projectDestructiveAction = nil
+    }
+
+    private func deleteProject() {
+        guard let project = selectedProject else { return }
+        do {
+            try project.delete()
+            selectedProjectID = nil
+            refreshProjects()
+            selectProject()
+            progress = .init(stage: .validating, fraction: 0, message: "Project deleted")
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        projectDestructiveAction = nil
     }
 
     private func reopenSavedResult(_ id: UUID?) {
