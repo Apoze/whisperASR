@@ -1,7 +1,12 @@
 {
+  "schemaVersion": 2,
   "ticket": 120,
   "experiment": "readable-cues-v2",
+  "chronology": "prospective-revalidation-2026-08-15",
   "split": "development",
+  "freezeKind": "prospective-revalidation",
+  "createdAtUTC": "2026-08-15T15:46:15Z",
+  "implementationCommit": "6f74780974264d08ad4382ce5c94ab44a7ea85f1",
   "sourceCorpus": "qudu2fx3ncc",
   "sourceArtifact": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
   "sourceArtifactSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
@@ -20,5 +25,7 @@
   "textPolicy": "Collapse whitespace only; preserve every English word and its strict order.",
   "fallbackPolicy": "Replace a source cue only when a complete all-budget partition exists; otherwise keep it valid and audit every unresolved violation.",
   "developmentGate": "Measurable readable-cue gain with exact text, timing, gap and speaker integrity and no metric regression.",
-  "holdoutStatus": "closed"
+  "historicalHoldoutWasAlreadyKnown": true,
+  "chronologyClaim": "This freeze starts a new exact replay chronology. It does not claim that the historically opened holdout is blind or prove the earlier chronology retroactively.",
+  "holdoutReplayStatus": "not-run-in-this-chronology"
 }

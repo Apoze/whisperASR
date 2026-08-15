@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "ticket": 120,
+  "experiment": "readable-cues-v2",
+  "chronology": "prospective-revalidation-2026-08-15",
+  "evaluationKind": "development",
+  "executedAtUTC": "2026-08-15T15:46:09Z",
+  "executedCommit": "6f74780974264d08ad4382ce5c94ab44a7ea85f1",
+  "budgetPath": "docs/japanese-live/experiments/evidence/E32-readable-cues/budgets.json",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --disable-sandbox --skip-build --filter ReadableSubtitleReflowTests/testFrozenDevelopmentReplayImprovesReadabilityWithoutRegression",
+  "input": {
+    "corpus": "qudu2fx3ncc",
+    "path": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+    "sha256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a"
+  },
+  "implementationFilesSHA256": {
+    "Sources/HighQualityJob.swift": "92f509dc518c94d62139661732ce585c5f49e91499554f9dab047389e413f15b",
+    "Sources/HighQualityJobView.swift": "21f29ca98d5677f5b65d69acc7a673dd69c4eb4cd5dcc24bc47994d1c17448c8",
+    "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+    "Tests/HighQualityJobTests.swift": "421834d8daf0cb25b1c469675071aab7bcdf5bea74b79fcfcb6e8e25fb736fad"
+  },
+  "harnessFilesSHA256": {
+    "Tests/ReadableSubtitleReflowTests.swift": "1475ea1c337826f1d1320bce7e4d0556e5ba52be2b089492c4fa79e28174221d",
+    "Tests/ReadableSubtitleReplaySupport.swift": "60b30150e368c6a8c04d997c95b2beecdbf74585431fe2952fd253225314cfab"
+  },
+  "result": {
+    "exitCode": 0,
+    "executed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "testSeconds": 0.411,
+    "wallSeconds": 10.27
+  },
+  "metrics": {
+    "splitSourceCueCount": 11,
+    "unresolvedSourceCueCount": 177,
+    "baseline": {
+      "cueCount": 307,
+      "readableCueCount": 119,
+      "over84Characters": 37,
+      "over20CPS": 156,
+      "under1Second": 74,
+      "over7Seconds": 11,
+      "gapCount": 165,
+      "overlapCount": 0
+    },
+    "candidate": {
+      "cueCount": 318,
+      "readableCueCount": 141,
+      "over84Characters": 29,
+      "over20CPS": 156,
+      "under1Second": 74,
+      "over7Seconds": 3,
+      "gapCount": 165,
+      "overlapCount": 0
+    }
+  },
+  "gates": {
+    "readableGain": true,
+    "noMetricRegression": true,
+    "exactNormalizedEnglishIdentity": true,
+    "exactWordOrder": true,
+    "exactTimingCoverage": true,
+    "exactInterCueGaps": true,
+    "speakerMetadataPreserved": true,
+    "noNewOverlap": true,
+    "srtVttTimestampsIdentical": true
+  },
+  "modelsLoaded": []
+}
