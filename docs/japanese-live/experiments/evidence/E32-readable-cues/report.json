@@ -2,14 +2,33 @@
   "ticket": 120,
   "decision": "GO-beta",
   "baseCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
+  "budgetFreezePath": "docs/japanese-live/experiments/evidence/E32-readable-cues/budgets.json",
   "budgetFreezeSHA256": "0fb5d1d626b5780d7578a93513dd6901526122f510cb097f20ee4154ac749720",
   "holdoutOpenedAfterBudgetFreeze": true,
+  "implementation": {
+    "commit": "8e250fbf2d361d05bfb581ff6f99f49700cd8353",
+    "filesSHA256": {
+      "Sources/HighQualityJob.swift": "92f509dc518c94d62139661732ce585c5f49e91499554f9dab047389e413f15b",
+      "Sources/HighQualityJobView.swift": "bb907641b3d6e12c11260e8f0fd9cbe1c70ab939e50bd948b11e44b9fd1ae0d2",
+      "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+      "Tests/HighQualityJobTests.swift": "f812505408a639f0908c7fa26fb336fc63549eb65ab5a1a486f8348b9b3445dd",
+      "Tests/LiveCaptionTests.swift": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e",
+      "Tests/ReadableSubtitleReflowTests.swift": "7a062c6104c37173314f76bbdec7e5e8257ec806f876a0e616ff430ea1ad0324"
+    }
+  },
+  "verification": {
+    "contractTestPath": "Tests/ReadableSubtitleEvidenceContractTests.swift",
+    "contractTestSHA256": "04cc676c0622907772680d4cf0856de583e2ed070947020ecacdf919b0934759",
+    "liveGatePath": "docs/japanese-live/experiments/evidence/E32-readable-cues/live-gate.json",
+    "liveGateSHA256": "e5a5735f111cd1ba5b706af6c3bad6e68fb35c3b62cc8a885401ff85efe72c83"
+  },
   "modelsLoaded": [],
-  "replayCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --filter ReadableSubtitleReflowTests",
+  "replayCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-120-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-120-swift-cache /usr/bin/xcrun swift test --filter ReadableSubtitleReflowTests",
   "development": {
     "corpus": "qudu2fx3ncc",
+    "inputPath": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
     "inputSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
-    "replayAndExportSeconds": 0.387,
+    "replayAndExportSeconds": 0.404,
     "splitSourceCueCount": 11,
     "unresolvedSourceCueCount": 177,
     "baseline": {
@@ -35,8 +54,9 @@
   },
   "holdout": {
     "corpus": "md62mmdz0m",
+    "inputPath": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-md62mmdz0m/raw-asr.json.gz",
     "inputSHA256": "431ad2a2ca756f478e04b79fbd53e8529a45a9479b16e8bd28647af3fe33bb58",
-    "replayAndExportSeconds": 0.663,
+    "replayAndExportSeconds": 0.689,
     "splitSourceCueCount": 23,
     "unresolvedSourceCueCount": 140,
     "baseline": {
@@ -73,6 +93,7 @@
     "noMetricRegression": true,
     "srtVttTimestampsIdentical": true,
     "cancellationSafe": true,
+    "liveUnchanged": true,
     "defaultOff": true
   },
   "translatorContracts": {
