@@ -301,22 +301,78 @@ struct HighQualityASRCharacter: Codable, Equatable, Sendable {
     let sourceEnd: TimeInterval
 }
 
+struct HighQualityASRTimingEvidence: Codable, Equatable, Sendable {
+    let text: String
+    let tokenIDs: [Int]
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let confidence: Double?
+}
+
+struct HighQualityASRSegmentEvidence: Codable, Equatable, Sendable {
+    let index: Int
+    let text: String
+    let tokenIDs: [Int]
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let averageLogProbability: Double?
+    let noSpeechProbability: Double?
+    let compressionRatio: Double?
+}
+
+struct HighQualityASRDiagnostics: Codable, Equatable, Sendable {
+    let speechDetected: Bool?
+    let emptyOutput: Bool?
+
+    init(speechDetected: Bool? = nil, emptyOutput: Bool? = nil) {
+        self.speechDetected = speechDetected
+        self.emptyOutput = emptyOutput
+    }
+}
+
+struct HighQualityASRWindowEvidence: Codable, Equatable, Sendable {
+    let sourceStart: TimeInterval
+    let sourceEnd: TimeInterval
+    let result: HighQualityASRExchange
+}
+
 struct HighQualityASRExchange: Codable, Equatable, Sendable {
     let rawTranscript: String
     let chunks: [HighQualityASRChunk]
     let characters: [HighQualityASRCharacter]?
+    var model: HighQualityModelEvidence?
+    let segments: [HighQualityASRSegmentEvidence]?
+    let tokenTimings: [HighQualityASRTimingEvidence]?
+    let wordTimings: [HighQualityASRTimingEvidence]?
+    let confidence: Double?
     let averageLogProbability: Double?
+    let diagnostics: HighQualityASRDiagnostics?
+    let windows: [HighQualityASRWindowEvidence]?
 
     init(
         rawTranscript: String,
         chunks: [HighQualityASRChunk],
         characters: [HighQualityASRCharacter]? = nil,
-        averageLogProbability: Double? = nil
+        model: HighQualityModelEvidence? = nil,
+        segments: [HighQualityASRSegmentEvidence]? = nil,
+        tokenTimings: [HighQualityASRTimingEvidence]? = nil,
+        wordTimings: [HighQualityASRTimingEvidence]? = nil,
+        confidence: Double? = nil,
+        averageLogProbability: Double? = nil,
+        diagnostics: HighQualityASRDiagnostics? = nil,
+        windows: [HighQualityASRWindowEvidence]? = nil
     ) {
         self.rawTranscript = rawTranscript
         self.chunks = chunks
         self.characters = characters
+        self.model = model
+        self.segments = segments
+        self.tokenTimings = tokenTimings
+        self.wordTimings = wordTimings
+        self.confidence = confidence
         self.averageLogProbability = averageLogProbability
+        self.diagnostics = diagnostics
+        self.windows = windows
     }
 }
 
@@ -1379,6 +1435,8 @@ struct HighQualityJob: Sendable {
         ) async throws -> HighQualityASRExchange {
             var chunks: [HighQualityASRChunk] = []
             var characters: [HighQualityASRCharacter]? = nil
+            var model: HighQualityModelEvidence?
+            var backendWindows: [HighQualityASRWindowEvidence] = []
             var start = 0
             var alignmentAnchorStart = 0
             var previousBoundaryWasSilent = true
@@ -1395,6 +1453,12 @@ struct HighQualityJob: Sendable {
                 let windowEnd = boundary.isSilent
                     ? boundary.index : min(samples.count, boundary.index + overlap)
                 let rawExchange = try await transcribe(Array(samples[windowStart..<windowEnd]))
+                if model == nil { model = rawExchange.model }
+                backendWindows.append(.init(
+                    sourceStart: Double(windowStart) / 16_000,
+                    sourceEnd: Double(windowEnd) / 16_000,
+                    result: rawExchange
+                ))
                 let raw = rawExchange.rawTranscript
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 let transcript = removingTranscriptOverlap(
@@ -1435,10 +1499,28 @@ struct HighQualityJob: Sendable {
                 start = boundary.index
                 previousBoundaryWasSilent = boundary.isSilent
             }
+            let result = backendWindows.count == 1 ? backendWindows[0].result : nil
+            let hasWindowEvidence = backendWindows.contains {
+                $0.result.model != nil
+                    || $0.result.segments != nil
+                    || $0.result.tokenTimings != nil
+                    || $0.result.wordTimings != nil
+                    || $0.result.confidence != nil
+                    || $0.result.averageLogProbability != nil
+                    || $0.result.diagnostics != nil
+            }
             return .init(
                 rawTranscript: chunks.map(\.transcript).joined(separator: "\n"),
                 chunks: chunks,
-                characters: characters
+                characters: characters,
+                model: model,
+                segments: result?.segments,
+                tokenTimings: result?.tokenTimings,
+                wordTimings: result?.wordTimings,
+                confidence: result?.confidence,
+                averageLogProbability: result?.averageLogProbability,
+                diagnostics: result?.diagnostics,
+                windows: backendWindows.count > 1 && hasWindowEvidence ? backendWindows : nil
             )
         }
 
@@ -1573,7 +1655,7 @@ struct HighQualityJob: Sendable {
         var memorySampler: Task<UInt64, Never>?
         var cleanupFailureMessage: String?
         var manifest = HighQualityJobManifest(
-            schemaVersion: 2,
+            schemaVersion: 3,
             jobID: request.id,
             status: .failed,
             source: Self.provenance(for: request.sourceURL),

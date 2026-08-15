@@ -150,11 +150,49 @@ final class HighQualityASRWorkerTests: XCTestCase {
         XCTAssertFalse(worker.lifecycle.forcedTermination)
         XCTAssertGreaterThan(worker.lifecycle.peakPhysicalFootprintBytes, 0)
         XCTAssertNotEqual(kill(worker.lifecycle.processIdentifier, 0), 0)
+        let backendResult = try XCTUnwrap(worker.result)
+        XCTAssertEqual(backendResult.rawTranscript, result.evidence.rawASR)
+        XCTAssertEqual(backendResult.model, worker.model)
+        switch backend {
+        case .qwenJA:
+            XCTAssertNil(backendResult.confidence)
+            XCTAssertNil(backendResult.averageLogProbability)
+            XCTAssertNil(backendResult.segments)
+            XCTAssertNil(backendResult.tokenTimings)
+            XCTAssertNil(backendResult.wordTimings)
+        case .parakeetJA:
+            XCTAssertNotNil(backendResult.confidence)
+            let tokenTimings = try XCTUnwrap(backendResult.tokenTimings)
+            XCTAssertFalse(tokenTimings.isEmpty)
+            XCTAssertTrue(tokenTimings.contains { $0.confidence != nil })
+        case .whisperKit:
+            XCTAssertNotNil(backendResult.averageLogProbability)
+            let segments = try XCTUnwrap(backendResult.segments)
+            XCTAssertFalse(segments.isEmpty)
+            XCTAssertTrue(segments.contains { $0.noSpeechProbability != nil })
+            XCTAssertFalse(try XCTUnwrap(backendResult.wordTimings).isEmpty)
+        case .funASRNanoInt8, .reazonSpeechK2V2:
+            break
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let persistedManifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: result.directory.appendingPathComponent("manifest.json"))
+        )
+        let persistedEvidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: result.directory.appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(persistedManifest.asrWorker?.result, backendResult)
+        XCTAssertEqual(persistedEvidence.asrWorker?.result, backendResult)
         let transcriptSHA256 = try JapaneseBenchmarkSupport.sha256(
             at: result.directory.appendingPathComponent("japanese-transcript.txt")
         )
         if backend == .funASRNanoInt8 {
             print("[issue-88][smoke] transcriptSHA256=\(transcriptSHA256)")
+        } else if backend == .whisperKit {
+            XCTAssertTrue(result.japaneseTranscript.hasPrefix(frozenWhisperKitCommonPrefix))
         } else {
             XCTAssertEqual(transcriptSHA256, frozenTranscriptSHA256(for: backend))
         }
@@ -211,23 +249,82 @@ final class HighQualityASRWorkerTests: XCTestCase {
     func testEveryBackendRoundTripsOneTranscriptAndExits() async throws {
         for backend in HighQualityASRBackend.allCases {
             let expected = "\(backend.rawValue)-日本語"
+            let backendResult = switch backend {
+            case .qwenJA:
+                HighQualityASRExchange(
+                    rawTranscript: expected,
+                    chunks: [],
+                    diagnostics: .init(emptyOutput: false)
+                )
+            case .parakeetJA:
+                HighQualityASRExchange(
+                    rawTranscript: expected,
+                    chunks: [],
+                    tokenTimings: [.init(
+                        text: "日本語",
+                        tokenIDs: [42],
+                        sourceStart: 0.1,
+                        sourceEnd: 0.4,
+                        confidence: 0.87
+                    )],
+                    confidence: 0.81,
+                    diagnostics: .init(emptyOutput: false)
+                )
+            case .whisperKit:
+                HighQualityASRExchange(
+                    rawTranscript: expected,
+                    chunks: [],
+                    segments: [.init(
+                        index: 0,
+                        text: "日本語",
+                        tokenIDs: [10, 11],
+                        sourceStart: 0.1,
+                        sourceEnd: 0.4,
+                        averageLogProbability: -0.42,
+                        noSpeechProbability: 0.08,
+                        compressionRatio: 1.1
+                    )],
+                    wordTimings: [.init(
+                        text: "日本語",
+                        tokenIDs: [10, 11],
+                        sourceStart: 0.1,
+                        sourceEnd: 0.4,
+                        confidence: 0.76
+                    )],
+                    averageLogProbability: -0.42,
+                    diagnostics: .init(emptyOutput: false)
+                )
+            case .funASRNanoInt8, .reazonSpeechK2V2:
+                fatalError("Experimental backends must stay out of Standard.")
+            }
             let fixture = try ASRWorkerFixture(
                 backend: backend,
-                response: try responseJSON(.init(rawTranscript: expected, chunks: []))
+                response: try responseJSON(backendResult)
             )
             let worker = fixture.worker(backend: backend)
 
             try await worker.prepare(progress: { _, _ in })
             let activePID = await worker.processIdentifier
             let pid = try XCTUnwrap(activePID)
-            let exchange = try await worker.transcribe([0.25, -0.5], anchored: false)
+            let exchange = try await worker.transcribe(
+                Array(repeating: 0, count: 16_000),
+                anchored: false
+            )
             XCTAssertEqual(exchange.rawTranscript, expected)
             XCTAssertEqual(
                 try FileManager.default.attributesOfItem(
                     atPath: fixture.directory.appendingPathComponent("audio-1.f32").path
                 )[.size] as? Int,
-                2 * MemoryLayout<Float>.size
+                16_000 * MemoryLayout<Float>.size
             )
+            XCTAssertEqual(exchange.model?.backend, backend)
+            if backend == .qwenJA {
+                XCTAssertNil(exchange.confidence)
+                XCTAssertNil(exchange.averageLogProbability)
+                XCTAssertNil(exchange.segments)
+                XCTAssertNil(exchange.tokenTimings)
+                XCTAssertNil(exchange.wordTimings)
+            }
 
             await worker.unload()
             XCTAssertNotEqual(kill(pid, 0), 0)
@@ -235,8 +332,260 @@ final class HighQualityASRWorkerTests: XCTestCase {
             let evidence = try XCTUnwrap(recordedEvidence)
             XCTAssertEqual(evidence.backend, backend)
             XCTAssertEqual(evidence.model.backend, backend)
+            XCTAssertEqual(evidence.result, exchange)
             XCTAssertFalse(evidence.model.weightSHA256?.isEmpty ?? true)
             XCTAssertEqual(evidence.lifecycle.exitStatus, 0)
+        }
+    }
+
+    func testParakeetResultRetainsNativeConfidenceAndTokenTimings() throws {
+        let exchange = HighQualityASRExchange(
+            rawTranscript: "日本語",
+            chunks: [],
+            model: HighQualityASRBackend.parakeetJA.model,
+            tokenTimings: [
+                .init(
+                    text: "日本",
+                    tokenIDs: [42],
+                    sourceStart: 0.12,
+                    sourceEnd: 0.34,
+                    confidence: 0.87
+                ),
+            ],
+            confidence: 0.81,
+            diagnostics: .init(emptyOutput: false)
+        )
+
+        let decoded = try JSONDecoder().decode(
+            HighQualityASRExchange.self,
+            from: JSONEncoder().encode(exchange)
+        )
+
+        XCTAssertEqual(decoded, exchange)
+    }
+
+    func testWorkerEvidenceSurvivesExitWithStandardizedResult() async throws {
+        let exchange = HighQualityASRExchange(
+            rawTranscript: "日本語",
+            chunks: [],
+            tokenTimings: [
+                .init(
+                    text: "日本",
+                    tokenIDs: [42],
+                    sourceStart: 0.12,
+                    sourceEnd: 0.34,
+                    confidence: 0.87
+                ),
+            ],
+            confidence: 0.81,
+            diagnostics: .init(emptyOutput: false)
+        )
+        let fixture = try ASRWorkerFixture(
+            backend: .parakeetJA,
+            response: try responseJSON(exchange)
+        )
+        let worker = fixture.worker(backend: .parakeetJA)
+        try await worker.prepare(progress: { _, _ in })
+
+        let result = try await worker.transcribe(
+            Array(repeating: 0, count: 16_000),
+            anchored: false
+        )
+        await worker.unload()
+        let recordedEvidence = await worker.evidence
+        let evidence = try XCTUnwrap(recordedEvidence)
+
+        XCTAssertEqual(evidence.result, result)
+        XCTAssertEqual(result.model, evidence.model)
+    }
+
+    func testWhisperKitResultRetainsNativeLogProbabilityAndTimings() throws {
+        let exchange = HighQualityASRExchange(
+            rawTranscript: "日本語",
+            chunks: [],
+            model: HighQualityASRBackend.whisperKit.model,
+            segments: [
+                .init(
+                    index: 7,
+                    text: "日本語",
+                    tokenIDs: [10, 11],
+                    sourceStart: 0.2,
+                    sourceEnd: 0.9,
+                    averageLogProbability: -0.42,
+                    noSpeechProbability: 0.08,
+                    compressionRatio: 1.1
+                ),
+            ],
+            wordTimings: [
+                .init(
+                    text: "日本語",
+                    tokenIDs: [10, 11],
+                    sourceStart: 0.2,
+                    sourceEnd: 0.9,
+                    confidence: 0.76
+                ),
+            ],
+            averageLogProbability: -0.42,
+            diagnostics: .init(emptyOutput: false)
+        )
+
+        let decoded = try JSONDecoder().decode(
+            HighQualityASRExchange.self,
+            from: JSONEncoder().encode(exchange)
+        )
+
+        XCTAssertEqual(decoded, exchange)
+    }
+
+    func testAnchoredASRRetainsBackendEvidence() async throws {
+        let backendResult = HighQualityASRExchange(
+            rawTranscript: "日本語",
+            chunks: [],
+            model: HighQualityASRBackend.parakeetJA.model,
+            tokenTimings: [
+                .init(
+                    text: "日本",
+                    tokenIDs: [42],
+                    sourceStart: 0.12,
+                    sourceEnd: 0.34,
+                    confidence: 0.87
+                ),
+            ],
+            confidence: 0.81,
+            diagnostics: .init(emptyOutput: false)
+        )
+
+        let anchored = try await HighQualityJob.Services.chunkedASR(
+            Array(repeating: 0, count: 16_000),
+            transcribe: { _ in backendResult }
+        )
+
+        XCTAssertEqual(anchored.tokenTimings, backendResult.tokenTimings)
+        XCTAssertEqual(anchored.model, backendResult.model)
+        XCTAssertEqual(anchored.confidence, backendResult.confidence)
+        XCTAssertEqual(anchored.diagnostics, backendResult.diagnostics)
+    }
+
+    func testAnchoredASRRetainsWhisperKitSegmentAndWordEvidence() async throws {
+        let backendResult = HighQualityASRExchange(
+            rawTranscript: "日本語",
+            chunks: [],
+            model: HighQualityASRBackend.whisperKit.model,
+            segments: [
+                .init(
+                    index: 7,
+                    text: "日本語",
+                    tokenIDs: [10, 11],
+                    sourceStart: 0.2,
+                    sourceEnd: 0.9,
+                    averageLogProbability: -0.42,
+                    noSpeechProbability: 0.08,
+                    compressionRatio: 1.1
+                ),
+            ],
+            wordTimings: [
+                .init(
+                    text: "日本語",
+                    tokenIDs: [10, 11],
+                    sourceStart: 0.2,
+                    sourceEnd: 0.9,
+                    confidence: 0.76
+                ),
+            ],
+            averageLogProbability: -0.42,
+            diagnostics: .init(emptyOutput: false)
+        )
+
+        let anchored = try await HighQualityJob.Services.chunkedASR(
+            Array(repeating: 0, count: 16_000),
+            transcribe: { _ in backendResult }
+        )
+
+        XCTAssertEqual(anchored.segments, backendResult.segments)
+        XCTAssertEqual(anchored.wordTimings, backendResult.wordTimings)
+        XCTAssertEqual(anchored.averageLogProbability, backendResult.averageLogProbability)
+    }
+
+    func testLegacyASRExchangeDecodesWithNewEvidenceAbsent() throws {
+        let legacy = Data(#"{"rawTranscript":"旧","chunks":[]}"#.utf8)
+
+        let decoded = try JSONDecoder().decode(HighQualityASRExchange.self, from: legacy)
+
+        XCTAssertEqual(decoded.rawTranscript, "旧")
+        XCTAssertNil(decoded.model)
+        XCTAssertNil(decoded.segments)
+        XCTAssertNil(decoded.tokenTimings)
+        XCTAssertNil(decoded.wordTimings)
+        XCTAssertNil(decoded.confidence)
+        XCTAssertNil(decoded.averageLogProbability)
+        XCTAssertNil(decoded.diagnostics)
+        XCTAssertNil(decoded.windows)
+    }
+
+    func testAnchoredASRPreservesOverlappingWindowEvidenceWithoutFlattening() async throws {
+        let results = ASRExchangeSequence([
+            .init(
+                rawTranscript: "一",
+                chunks: [],
+                tokenTimings: [.init(
+                    text: "一",
+                    tokenIDs: [41],
+                    sourceStart: 19.5,
+                    sourceEnd: 19.6,
+                    confidence: 0.8
+                )],
+                confidence: 0.8,
+                diagnostics: .init(emptyOutput: false)
+            ),
+            .init(
+                rawTranscript: "二",
+                chunks: [],
+                tokenTimings: [.init(
+                    text: "二",
+                    tokenIDs: [42],
+                    sourceStart: 0.1,
+                    sourceEnd: 0.2,
+                    confidence: 0.7
+                )],
+                confidence: 0.7,
+                diagnostics: .init(emptyOutput: false)
+            ),
+        ])
+
+        let anchored = try await HighQualityJob.Services.chunkedASR(
+            Array(repeating: 0.1, count: 21 * 16_000),
+            transcribe: { _ in await results.next() }
+        )
+
+        XCTAssertNil(anchored.tokenTimings)
+        XCTAssertNil(anchored.confidence)
+        XCTAssertNil(anchored.diagnostics)
+        let windows = try XCTUnwrap(anchored.windows)
+        XCTAssertEqual(windows.map(\.sourceStart), [0, 18])
+        XCTAssertEqual(windows.map(\.sourceEnd), [20, 21])
+        XCTAssertEqual(windows.map { $0.result.tokenTimings?.first?.sourceStart }, [19.5, 0.1])
+        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+            anchored, sampleCount: 21 * 16_000, anchored: true
+        ))
+    }
+
+    func testUnavailableBackendEvidenceStaysAbsentInJSON() throws {
+        let qwen = HighQualityASRExchange(
+            rawTranscript: "日本語",
+            chunks: [],
+            diagnostics: .init(emptyOutput: false)
+        )
+
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(qwen))
+                as? [String: Any]
+        )
+
+        for key in [
+            "confidence", "averageLogProbability", "segments", "tokenTimings", "wordTimings",
+            "windows",
+        ] {
+            XCTAssertNil(object[key])
         }
     }
 
@@ -261,7 +610,9 @@ final class HighQualityASRWorkerTests: XCTestCase {
         )
         await worker.unload()
 
-        XCTAssertEqual(moved, frozen)
+        XCTAssertEqual(moved.rawTranscript, frozen.rawTranscript)
+        XCTAssertEqual(moved.chunks, frozen.chunks)
+        XCTAssertEqual(moved.model?.backend, .qwenJA)
     }
 
     func testAnchoredCharacterTimingFailsClosedWhenNotMonotonic() {
@@ -291,6 +642,153 @@ final class HighQualityASRWorkerTests: XCTestCase {
         XCTAssertFalse(HighQualityASRWorkerClient.isValid(
             regressing, sampleCount: 32_000, anchored: true
         ))
+    }
+
+    func testMalformedBackendEvidenceFailsClosedAtWorkerBoundary() async throws {
+        let timing = HighQualityASRTimingEvidence(
+            text: "日",
+            tokenIDs: [42],
+            sourceStart: 0.1,
+            sourceEnd: 0.2,
+            confidence: 0.8
+        )
+        let invalidResults = [
+            HighQualityASRExchange(
+                rawTranscript: "日",
+                chunks: [],
+                tokenTimings: [timing],
+                confidence: 1.1
+            ),
+            HighQualityASRExchange(
+                rawTranscript: "日",
+                chunks: [],
+                wordTimings: [.init(
+                    text: "日",
+                    tokenIDs: [42],
+                    sourceStart: -0.1,
+                    sourceEnd: 0.2,
+                    confidence: 0.8
+                )]
+            ),
+            HighQualityASRExchange(
+                rawTranscript: "日",
+                chunks: [],
+                segments: [.init(
+                    index: 0,
+                    text: "日",
+                    tokenIDs: [42],
+                    sourceStart: 0.1,
+                    sourceEnd: 0.2,
+                    averageLogProbability: -0.4,
+                    noSpeechProbability: 1.1,
+                    compressionRatio: 1
+                )]
+            ),
+            HighQualityASRExchange(
+                rawTranscript: "日",
+                chunks: [],
+                tokenTimings: [.init(
+                    text: "日",
+                    tokenIDs: [-1],
+                    sourceStart: 0.1,
+                    sourceEnd: 0.2,
+                    confidence: 0.8
+                )]
+            ),
+            HighQualityASRExchange(
+                rawTranscript: "日",
+                chunks: [],
+                diagnostics: .init(emptyOutput: true)
+            ),
+        ]
+
+        for invalid in invalidResults {
+            try await assertProtocolFailure(invalid, anchored: false, sampleCount: 16_000)
+        }
+    }
+
+    func testMalformedWindowEvidenceFailsClosedAtWorkerBoundary() async throws {
+        let first = HighQualityASRExchange(
+            rawTranscript: "一",
+            chunks: [],
+            tokenTimings: [.init(
+                text: "一",
+                tokenIDs: [41],
+                sourceStart: 0.1,
+                sourceEnd: 0.2,
+                confidence: 0.8
+            )],
+            diagnostics: .init(emptyOutput: false)
+        )
+        let second = HighQualityASRExchange(
+            rawTranscript: "二",
+            chunks: [],
+            tokenTimings: [.init(
+                text: "二",
+                tokenIDs: [42],
+                sourceStart: 0.1,
+                sourceEnd: 0.2,
+                confidence: 0.7
+            )],
+            diagnostics: .init(emptyOutput: false)
+        )
+        let chunks = [
+            HighQualityASRChunk(index: 0, sourceStart: 0, sourceEnd: 1, transcript: "一"),
+            HighQualityASRChunk(index: 1, sourceStart: 1, sourceEnd: 2, transcript: "二"),
+        ]
+        let windows = [
+            HighQualityASRWindowEvidence(sourceStart: 0, sourceEnd: 1, result: first),
+            HighQualityASRWindowEvidence(sourceStart: 1, sourceEnd: 2, result: second),
+        ]
+        let invalidResults = [
+            HighQualityASRExchange(
+                rawTranscript: "一",
+                chunks: [chunks[0]],
+                windows: [windows[0]]
+            ),
+            HighQualityASRExchange(
+                rawTranscript: "一\n二",
+                chunks: chunks,
+                tokenTimings: first.tokenTimings,
+                windows: windows
+            ),
+            HighQualityASRExchange(
+                rawTranscript: "一\n二",
+                chunks: chunks,
+                windows: [
+                    .init(
+                        sourceStart: 0,
+                        sourceEnd: 1,
+                        result: .init(
+                            rawTranscript: "一",
+                            chunks: [],
+                            model: HighQualityASRBackend.parakeetJA.model
+                        )
+                    ),
+                    windows[1],
+                ]
+            ),
+            HighQualityASRExchange(
+                rawTranscript: "一\n二",
+                chunks: chunks,
+                windows: [
+                    .init(
+                        sourceStart: 0,
+                        sourceEnd: 1,
+                        result: .init(
+                            rawTranscript: "一",
+                            chunks: [],
+                            windows: windows
+                        )
+                    ),
+                    windows[1],
+                ]
+            ),
+        ]
+
+        for invalid in invalidResults {
+            try await assertProtocolFailure(invalid, anchored: true, sampleCount: 32_000)
+        }
     }
 
     func testMalformedOutputFailsAndWorkerTerminates() async throws {
@@ -417,7 +915,13 @@ final class HighQualityASRWorkerTests: XCTestCase {
         let workerEvidence = HighQualityASRWorkerEvidence(
             backend: .qwenJA,
             model: model,
-            lifecycle: lifecycleEvidence(peak: 4_096)
+            lifecycle: lifecycleEvidence(peak: 4_096),
+            result: .init(
+                rawTranscript: "日本語",
+                chunks: [],
+                model: model,
+                diagnostics: .init(emptyOutput: false)
+            )
         )
         let job = HighQualityJob(services: .init(
             loadSource: { _ in [0] },
@@ -436,8 +940,47 @@ final class HighQualityASRWorkerTests: XCTestCase {
 
         XCTAssertEqual(result.manifest.asrWorker, workerEvidence)
         XCTAssertEqual(result.evidence.asrWorker, workerEvidence)
+        XCTAssertEqual(result.manifest.schemaVersion, 3)
         XCTAssertEqual(result.manifest.model.weightSHA256, model.weightSHA256)
         XCTAssertEqual(result.manifest.peakMemoryBytes, 4_096)
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: result.directory.appendingPathComponent("manifest.json"))
+        )
+        let evidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: Data(contentsOf: result.directory.appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(manifest.asrWorker?.result, workerEvidence.result)
+        XCTAssertEqual(evidence.asrWorker?.result, workerEvidence.result)
+
+        func legacyData(at url: URL, schemaVersion: Int? = nil) throws -> Data {
+            var object = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+            )
+            if let schemaVersion { object["schemaVersion"] = schemaVersion }
+            var worker = try XCTUnwrap(object["asrWorker"] as? [String: Any])
+            worker.removeValue(forKey: "result")
+            object["asrWorker"] = worker
+            return try JSONSerialization.data(withJSONObject: object)
+        }
+        let legacyManifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: legacyData(
+                at: result.directory.appendingPathComponent("manifest.json"),
+                schemaVersion: 2
+            )
+        )
+        let legacyEvidence = try decoder.decode(
+            HighQualityRawEvidence.self,
+            from: legacyData(at: result.directory.appendingPathComponent("raw-asr.json"))
+        )
+        XCTAssertEqual(legacyManifest.schemaVersion, 2)
+        XCTAssertNil(legacyManifest.asrWorker?.result)
+        XCTAssertNil(legacyEvidence.asrWorker?.result)
     }
 
     private func responseJSON(_ exchange: HighQualityASRExchange) throws -> String {
@@ -445,6 +988,31 @@ final class HighQualityASRWorkerTests: XCTestCase {
             let exchange: HighQualityASRExchange
         }
         return String(decoding: try JSONEncoder().encode(Response(exchange: exchange)), as: UTF8.self)
+    }
+
+    private func assertProtocolFailure(
+        _ exchange: HighQualityASRExchange,
+        anchored: Bool,
+        sampleCount: Int
+    ) async throws {
+        let fixture = try ASRWorkerFixture(
+            backend: .parakeetJA,
+            response: try responseJSON(exchange)
+        )
+        let worker = fixture.worker(backend: .parakeetJA)
+        try await worker.prepare(progress: { _, _ in })
+        do {
+            _ = try await worker.transcribe(
+                Array(repeating: 0, count: sampleCount),
+                anchored: anchored
+            )
+            XCTFail("Malformed backend evidence must fail at the worker boundary.")
+        } catch let error as HighQualityASRWorkerError {
+            guard case .protocolFailure = error else {
+                return XCTFail("Expected protocol failure, got \(error).")
+            }
+        }
+        await worker.unload()
     }
 
     private func frozenTranscriptSHA256(for backend: HighQualityASRBackend) -> String {
@@ -509,6 +1077,18 @@ final class HighQualityASRWorkerTests: XCTestCase {
         }
         let completed = await predicate()
         XCTAssertTrue(completed)
+    }
+}
+
+private actor ASRExchangeSequence {
+    private var results: [HighQualityASRExchange]
+
+    init(_ results: [HighQualityASRExchange]) {
+        self.results = results
+    }
+
+    func next() -> HighQualityASRExchange {
+        results.removeFirst()
     }
 }
 

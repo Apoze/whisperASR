@@ -332,7 +332,7 @@ final class HighQualityLocalTranslationTests: XCTestCase {
                 outputRoot: root
             ))
 
-            XCTAssertEqual(result.manifest.schemaVersion, 2)
+            XCTAssertEqual(result.manifest.schemaVersion, 3)
             XCTAssertEqual(result.manifest.translationModel, model)
             XCTAssertEqual(result.evidence.translation?.model, model.modelID)
             XCTAssertEqual(result.evidence.translation?.revision, model.revision)
