@@ -1159,6 +1159,7 @@ struct HighQualitySpeakerReanalysisEvidence: Codable, Equatable, Sendable {
     let peakMemoryBytes: UInt64
     let replacedDiarization: HighQualityDiarizationEvidence
     let replacedAttachment: HighQualitySpeakerAttachmentEvidence?
+    let replacedSpeakerEdits: [HighQualitySpeakerEdit]?
     let diarization: HighQualityDiarizationEvidence
     let attachment: HighQualitySpeakerAttachmentEvidence
 }
@@ -1738,6 +1739,7 @@ struct HighQualityJob: Sendable {
         duration: TimeInterval,
         useExclusiveReconciliation: Bool,
         configuration: HighQualitySpeakerConfiguration,
+        processingDiarization: () -> Void,
         progress: @escaping @Sendable (HighQualityJobStage, Double, String) -> Void
     ) async throws -> HighQualitySpeakerAnalysis {
         let preparationStartedAt = Date()
@@ -1863,6 +1865,7 @@ struct HighQualityJob: Sendable {
             try Task.checkCancellation()
 
             diarizationStartedAt = Date()
+            processingDiarization()
             progress(.diarizing, 0, "Detecting speakers…")
             let exchange = try await guarded(lease) {
                 try await services.diarizeSpeakers(
@@ -2252,6 +2255,10 @@ struct HighQualityJob: Sendable {
             )
         }
         let transformations = try Self.readTransformations(in: saved.directory)
+        let replacedSpeakerEdits = Self.migratedSpeakerEdits(
+            transformations,
+            manifest: previous.manifest
+        )
         guard try Self.activeResultMatches(
             previous.manifest,
             transformations: transformations,
@@ -2333,7 +2340,8 @@ struct HighQualityJob: Sendable {
                     alignedItems: alignedItems,
                     duration: alignment.sourceDuration,
                     useExclusiveReconciliation: exclusive,
-                    configuration: configuration
+                    configuration: configuration,
+                    processingDiarization: { currentStage = .diarizing }
                 ) { stage, fraction, message in
                     progress(.init(
                         stage: stage,
@@ -2350,7 +2358,6 @@ struct HighQualityJob: Sendable {
                     resultDirectory: saved.directory
                 )
             }
-            currentStage = .diarizing
             let diarization = analysis.evidence
             guard diarization.modelID == services.diarizationModelID,
                   diarization.revision == services.diarizationRevision,
@@ -2416,6 +2423,7 @@ struct HighQualityJob: Sendable {
                 replacedDiarization: previousDiarization,
                 replacedAttachment: previous.evidence.speakerAttachment
                     ?? .init(semanticUnits: units),
+                replacedSpeakerEdits: replacedSpeakerEdits,
                 diarization: diarization,
                 attachment: attachmentEvidence
             )
@@ -3085,7 +3093,14 @@ struct HighQualityJob: Sendable {
                         alignedItems: alignedItems,
                         duration: Double(samples.count) / 16_000,
                         useExclusiveReconciliation: request.useExclusiveReconciliation,
-                        configuration: request.speakerConfiguration
+                        configuration: request.speakerConfiguration,
+                        processingDiarization: {
+                            let startedAt = Date()
+                            manifest.stageDurations[currentStage, default: 0] +=
+                                startedAt.timeIntervalSince(stageStartedAt)
+                            currentStage = .diarizing
+                            stageStartedAt = startedAt
+                        }
                     ) { stage, fraction, message in
                         progress(.init(
                             stage: stage,
@@ -3114,12 +3129,6 @@ struct HighQualityJob: Sendable {
                     manifest.peakMemoryBytes,
                     analysis.peakMemoryBytes
                 )
-                manifest.stageDurations[.preparingDiarization, default: 0] +=
-                    analysis.preparationDuration
-                manifest.stageDurations[.diarizing, default: 0] +=
-                    analysis.diarizationDuration
-                currentStage = .diarizing
-                stageStartedAt = Date()
             }
             let speakerAttachment = Self.speakerAttachment(
                 units: alignmentEvidence?.semanticUnits ?? [],
@@ -3923,7 +3932,9 @@ struct HighQualityJob: Sendable {
                   edit.turnID == nil else {
                 throw speakerEditError("The Speaker rename operation is invalid.", in: directory)
             }
-            guard name.rangeOfCharacter(from: .controlCharacters) == nil else {
+            guard name.rangeOfCharacter(
+                from: CharacterSet.controlCharacters.union(.newlines)
+            ) == nil else {
                 throw speakerEditError(
                     "Custom Speaker names cannot contain control characters or line breaks.",
                     in: directory

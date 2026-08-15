@@ -1115,6 +1115,61 @@ final class HighQualityJobTests: XCTestCase {
         )
     }
 
+    func testSpeakerReanalysisArchivesReplacedRenameMergeAndReassignment() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let source = root.appendingPathComponent("source.wav")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data("audio-reference".utf8).write(to: source)
+        var edited = try await speakerEditorFixtureJob().run(.init(
+            sourceURL: source,
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+        let edits: [HighQualitySpeakerEdit] = [
+            .rename("SPEAKER_00", to: "Alice", at: Date(timeIntervalSince1970: 1)),
+            .merge(
+                "SPEAKER_01",
+                into: "SPEAKER_00",
+                at: Date(timeIntervalSince1970: 2)
+            ),
+            .reassign(
+                turnID: "unit-0003",
+                to: "SPEAKER_02",
+                at: Date(timeIntervalSince1970: 3)
+            ),
+        ]
+        for edit in edits {
+            edited = try HighQualityJob.editSpeakers(in: edited, edit: edit)
+        }
+
+        let calls = CallLog()
+        let rerun = try await speakerRerunJob(calls).rerunSpeakers(
+            try XCTUnwrap(HighQualityJob.savedResults(in: root).first),
+            configuration: .standard
+        )
+
+        XCTAssertEqual(rerun.manifest.speakerEdits, [])
+        XCTAssertEqual(
+            rerun.evidence.speakerReanalyses?.last?.replacedSpeakerEdits,
+            edits
+        )
+        let workerCalls = await calls.values
+        XCTAssertEqual(workerCalls, [
+            "load", "prepare-speakerkit", "diarize-speakerkit", "unload-speakerkit",
+        ])
+        let reopened = try HighQualityJob.reopen(try XCTUnwrap(
+            HighQualityJob.savedResults(in: root).first
+        ))
+        XCTAssertEqual(
+            reopened.evidence.speakerReanalyses?.last?.replacedSpeakerEdits,
+            edits
+        )
+    }
+
     func testConcurrentSpeakerReanalysisRejectsAStaleEditorCommit() async throws {
         let fixture = try await savedSpeakerFixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
@@ -1313,6 +1368,34 @@ final class HighQualityJobTests: XCTestCase {
             ))
             XCTAssertEqual(reopened.manifest.speakerEdits, edited.manifest.speakerEdits)
             XCTAssertEqual(reopened.editableSpeakerNames[namedLabel], "Alice")
+        }
+    }
+
+    func testSpeakerNamesRejectUnicodeLineSeparatorsWithoutChangingDeliverables() async throws {
+        for separator in ["\u{2028}", "\u{2029}"] {
+            let root = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let completed = try await speakerEditorFixtureJob().run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: Set(HighQualityDeliverable.allCases),
+                backend: .qwenJA,
+                speakerLabels: true,
+                outputRoot: root
+            ))
+            let deliverables = [
+                "japanese-transcript.txt", "english-subtitles.srt",
+                "english-subtitles.vtt",
+            ].map { completed.directory.appendingPathComponent($0) }
+            let before = try deliverables.map { try Data(contentsOf: $0) }
+
+            XCTAssertThrowsError(try HighQualityJob.editSpeakers(
+                in: completed,
+                edit: .rename("SPEAKER_00", to: "Alice\(separator)Mallory")
+            )) { error in
+                XCTAssertTrue(error.localizedDescription.contains("control"))
+            }
+            XCTAssertEqual(try deliverables.map { try Data(contentsOf: $0) }, before)
         }
     }
 
@@ -2569,10 +2652,80 @@ final class HighQualityJobTests: XCTestCase {
                 sensitiveDetection: true,
                 countPolicy: .expected(2)
             ))
+            XCTAssertGreaterThan(
+                manifest.stageDurations[.preparingDiarization] ?? 0,
+                0
+            )
+            XCTAssertGreaterThan(manifest.stageDurations[.diarizing] ?? 0, 0)
             XCTAssertEqual(evidence.speakerConfiguration, manifest.speakerConfiguration)
+            XCTAssertEqual(evidence.stageDurations, manifest.stageDurations)
         }
         let recordedCalls = await calls.values
         XCTAssertEqual(recordedCalls, ["unload-speakerkit"])
+    }
+
+    func testSpeakerKitFailureAuditsPreparationAndDiarizationDurations() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in Array(repeating: 0, count: 16_000) },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "一。" },
+            unloadASR: {},
+            prepareAlignment: { _ in },
+            alignJapanese: { _, _ in
+                .init(
+                    chunks: [.init(
+                        index: 0,
+                        sourceStart: 0,
+                        sourceEnd: 1,
+                        cues: [.init(id: "cue-0001", text: "一。", start: 0, end: 1)]
+                    )],
+                    modelID: "aligner",
+                    revision: "revision",
+                    peakMemoryBytes: 0
+                )
+            },
+            unloadAlignment: {},
+            prepareDiarization: { _, _ in
+                try await Task.sleep(for: .milliseconds(5))
+            },
+            diarizeSpeakers: { _, _, _ in
+                try await Task.sleep(for: .milliseconds(5))
+                throw CocoaError(.fileReadUnknown)
+            },
+            unloadDiarization: {}
+        ))
+
+        do {
+            _ = try await job.run(.init(
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                speakerLabels: true,
+                outputRoot: root
+            ))
+            XCTFail("SpeakerKit failure must fail the job.")
+        } catch let error as HighQualityJobError {
+            XCTAssertEqual(error.stage, .diarization)
+            let directory = try XCTUnwrap(error.resultDirectory)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let manifest = try decoder.decode(
+                HighQualityJobManifest.self,
+                from: Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+            )
+            let evidence = try decoder.decode(
+                HighQualityRawEvidence.self,
+                from: Data(contentsOf: directory.appendingPathComponent("raw-asr.json"))
+            )
+            XCTAssertEqual(manifest.status, .failed)
+            XCTAssertEqual(manifest.failures.last?.stage, .diarization)
+            XCTAssertGreaterThan(manifest.stageDurations[.preparingDiarization] ?? 0, 0)
+            XCTAssertGreaterThan(manifest.stageDurations[.diarizing] ?? 0, 0)
+            XCTAssertEqual(evidence.stageDurations, manifest.stageDurations)
+        }
     }
 
     func testChunkedASRMovesEligibleCutToSilenceAndKeepsWindowsBounded() async throws {
