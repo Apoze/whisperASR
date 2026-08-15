@@ -188,10 +188,27 @@ struct HighQualityProject: Identifiable, Sendable {
     func relocated(to folder: URL) throws -> Self {
         try Self.withMetadataLock {
             let current = try Self.load(from: directory)
-            return try current.updating(folder: Self.validatedFolder(
+            let folder = try Self.validatedFolder(
                 folder,
                 managedRoot: directory.deletingLastPathComponent()
-            ))
+            )
+            let updated = current.updated(folder: folder)
+            do {
+                try AtomicDirectory.update(current.directory) { staging in
+                    for reference in current.jobReferences
+                        where reference.sourceRelativePath != nil {
+                        try HighQualityJob.clearRelocatedSource(
+                            in: staging.appendingPathComponent(reference.resultPath)
+                        )
+                    }
+                    try Self.write(updated.manifest, to: staging)
+                }
+                return updated
+            } catch {
+                throw HighQualityProjectError(
+                    message: "Could not update the Project: \(error.localizedDescription)"
+                )
+            }
         }
     }
 
@@ -237,16 +254,12 @@ struct HighQualityProject: Identifiable, Sendable {
                 try Self.write(reset.manifest, to: staging)
                 try AtomicDirectory.swap(staging, with: directory)
             } catch {
-                try? FileManager.default.removeItem(at: staging)
+                AtomicDirectory.remove(staging)
                 throw HighQualityProjectError(
                     message: "Could not reset the Project: \(error.localizedDescription)"
                 )
             }
-            do {
-                try FileManager.default.removeItem(at: staging)
-            } catch {
-                Self.removeResetDirectory(staging)
-            }
+            AtomicDirectory.remove(staging)
             return reset
         }
     }
@@ -317,7 +330,29 @@ struct HighQualityProject: Identifiable, Sendable {
         jobReferences: [HighQualityProjectJobReference]? = nil,
         scope: HighQualityProjectScope? = nil
     ) throws -> Self {
-        let updated = Self(
+        let updated = updated(
+            name: name,
+            folder: folder,
+            jobReferences: jobReferences,
+            scope: scope
+        )
+        do {
+            try Self.write(updated.manifest, to: directory)
+            return updated
+        } catch {
+            throw HighQualityProjectError(
+                message: "Could not update the Project: \(error.localizedDescription)"
+            )
+        }
+    }
+
+    private func updated(
+        name: String? = nil,
+        folder: URL? = nil,
+        jobReferences: [HighQualityProjectJobReference]? = nil,
+        scope: HighQualityProjectScope? = nil
+    ) -> Self {
+        Self(
             directory: directory,
             manifest: .init(
                 schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
@@ -330,14 +365,6 @@ struct HighQualityProject: Identifiable, Sendable {
                 scope: scope ?? self.scope
             )
         )
-        do {
-            try Self.write(updated.manifest, to: directory)
-            return updated
-        } catch {
-            throw HighQualityProjectError(
-                message: "Could not update the Project: \(error.localizedDescription)"
-            )
-        }
     }
 
     private static func load(from directory: URL) throws -> Self {
@@ -352,17 +379,18 @@ struct HighQualityProject: Identifiable, Sendable {
                 from: Data(contentsOf: directory.appendingPathComponent("project.json"))
             )
             let scope = manifest.scope ?? .empty
+            let folder = try validatedFolder(
+                URL(fileURLWithPath: manifest.folderPath),
+                managedRoot: directory.deletingLastPathComponent(),
+                allowMissing: true
+            )
             guard (1...HighQualityProjectManifest.currentSchemaVersion).contains(
                     manifest.schemaVersion
                   ),
                   (manifest.schemaVersion == 1 || manifest.scope != nil),
                   directory.lastPathComponent == manifest.id.uuidString,
-                  manifest.folderPath.hasPrefix("/"),
+                  folder.path == manifest.folderPath,
                   !manifest.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  !isInsideManagedRoot(
-                    URL(fileURLWithPath: manifest.folderPath),
-                    root: directory.deletingLastPathComponent()
-                  ),
                   Set(manifest.jobReferences.map(\.id)).count == manifest.jobReferences.count,
                   manifest.jobReferences.allSatisfy(validReference),
                   validScope(scope, jobIDs: Set(manifest.jobReferences.map(\.id))) else {
@@ -386,10 +414,16 @@ struct HighQualityProject: Identifiable, Sendable {
         return name
     }
 
-    private static func validatedFolder(_ url: URL, managedRoot: URL) throws -> URL {
+    private static func validatedFolder(
+        _ url: URL,
+        managedRoot: URL,
+        allowMissing: Bool = false
+    ) throws -> URL {
         let folder = url.standardizedFileURL.resolvingSymlinksInPath()
         guard url.isFileURL,
-              isDirectory(folder),
+              (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil,
+              isDirectory(folder)
+                || (allowMissing && !FileManager.default.fileExists(atPath: folder.path)),
               !isInsideManagedRoot(folder, root: managedRoot),
               !isInsideManagedRoot(managedRoot, root: folder) else {
             throw HighQualityProjectError(
@@ -476,7 +510,7 @@ struct HighQualityProject: Identifiable, Sendable {
             includingPropertiesForKeys: [.isDirectoryKey]
         ) else { return }
         for directory in directories where isResetDirectory(directory) {
-            removeResetDirectory(directory)
+            AtomicDirectory.remove(directory)
         }
     }
 
@@ -485,27 +519,6 @@ struct HighQualityProject: Identifiable, Sendable {
         return directory.lastPathComponent.hasPrefix(".")
             && parts.count == 2
             && parts.allSatisfy { UUID(uuidString: $0) != nil }
-    }
-
-    private static func removeResetDirectory(_ directory: URL) {
-        if let enumerator = FileManager.default.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isSymbolicLinkKey]
-        ) {
-            for case let item as URL in enumerator
-                where (try? item.resourceValues(forKeys: [.isSymbolicLinkKey]))?
-                    .isSymbolicLink != true {
-                try? FileManager.default.setAttributes(
-                    [.immutable: false],
-                    ofItemAtPath: item.path
-                )
-            }
-        }
-        try? FileManager.default.setAttributes(
-            [.immutable: false],
-            ofItemAtPath: directory.path
-        )
-        try? FileManager.default.removeItem(at: directory)
     }
 
     private static func validIdentifier(_ value: String) -> Bool {

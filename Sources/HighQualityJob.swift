@@ -1769,6 +1769,20 @@ struct HighQualityJob: Sendable {
         )
     }
 
+    static func clearRelocatedSource(in directory: URL) throws {
+        guard let previous = try readTransformations(in: directory),
+              previous.relocatedSourcePath != nil else { return }
+        let transformations = try encoder.encode(HighQualityResultTransformations(
+            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+            customSpeakerLabels: previous.customSpeakerLabels,
+            relocatedSourcePath: nil
+        ))
+        try transactionallyWrite(
+            ["transformations.json": transformations],
+            in: directory
+        )
+    }
+
     func run(
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
@@ -4155,69 +4169,15 @@ struct HighQualityJob: Sendable {
         in directory: URL,
         beforeCommit: () throws -> Void = {}
     ) throws {
-        let fileManager = FileManager.default
-        let staging = directory.deletingLastPathComponent().appendingPathComponent(
-            ".\(directory.lastPathComponent).staging-\(UUID().uuidString)",
-            isDirectory: true
-        )
-        try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
-        defer { try? fileManager.removeItem(at: staging) }
-        try hardLinkContents(of: directory, to: staging)
-        try writeFiles(files, to: staging)
-        guard files.allSatisfy({ path, data in
-            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
-        }) else {
-            throw CocoaError(.fileWriteUnknown)
+        try AtomicDirectory.update(directory) { staging in
+            try writeFiles(files, to: staging)
+            guard files.allSatisfy({ path, data in
+                (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
+            }) else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            try beforeCommit()
         }
-        try beforeCommit()
-        try AtomicDirectory.swap(staging, with: directory)
-    }
-
-    private static func hardLinkContents(of source: URL, to destination: URL) throws {
-        let fileManager = FileManager.default
-        let canonicalSourcePath = source.resolvingSymlinksInPath().path
-        var traversalError: Error?
-        guard let enumerator = fileManager.enumerator(
-            at: source,
-            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
-            errorHandler: { _, error in
-                traversalError = error
-                return false
-            }
-        ) else {
-            throw CocoaError(.fileReadUnknown)
-        }
-        for case let item as URL in enumerator {
-            let sourcePath: String
-            let itemPath: String
-            if item.path.hasPrefix(source.path + "/") {
-                sourcePath = source.path
-                itemPath = item.path
-            } else {
-                sourcePath = canonicalSourcePath
-                itemPath = item.resolvingSymlinksInPath().path
-            }
-            guard itemPath.hasPrefix(sourcePath + "/") else {
-                throw CocoaError(.fileReadInvalidFileName)
-            }
-            let relativePath = String(itemPath.dropFirst(sourcePath.count + 1))
-            let target = destination.appendingPathComponent(relativePath)
-            let values = try item.resourceValues(forKeys: [
-                .isDirectoryKey,
-                .isSymbolicLinkKey,
-            ])
-            if values.isSymbolicLink == true {
-                try fileManager.createSymbolicLink(
-                    atPath: target.path,
-                    withDestinationPath: fileManager.destinationOfSymbolicLink(atPath: item.path)
-                )
-            } else if values.isDirectory == true {
-                try fileManager.createDirectory(at: target, withIntermediateDirectories: false)
-            } else {
-                try fileManager.linkItem(at: item, to: target)
-            }
-        }
-        if let traversalError { throw traversalError }
     }
 
     private static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {

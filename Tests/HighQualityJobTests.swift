@@ -75,6 +75,189 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertThrowsError(try project.validateForJob())
     }
 
+    func testProjectLoadRejectsAncestorAndRetargetedSymlinkFolderReferences() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
+        let ancestorFolder = root.appendingPathComponent("Ancestor media", isDirectory: true)
+        let symlinkFolder = root.appendingPathComponent("Symlink media", isDirectory: true)
+        let danglingFolder = root.appendingPathComponent("Dangling media", isDirectory: true)
+        let retargetedFolder = root.appendingPathComponent("Retargeted", isDirectory: true)
+        let missingTarget = root.appendingPathComponent("Missing target", isDirectory: true)
+        for folder in [ancestorFolder, symlinkFolder, danglingFolder, retargetedFolder] {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        }
+        defer { try? FileManager.default.removeItem(at: root) }
+        let ancestorProject = try HighQualityProject.create(
+            named: "Ancestor",
+            folder: ancestorFolder,
+            in: projectsRoot
+        )
+        let symlinkProject = try HighQualityProject.create(
+            named: "Symlink",
+            folder: symlinkFolder,
+            in: projectsRoot
+        )
+        let danglingProject = try HighQualityProject.create(
+            named: "Dangling",
+            folder: danglingFolder,
+            in: projectsRoot
+        )
+        let manifestURL = ancestorProject.directory.appendingPathComponent("project.json")
+        var document = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL))
+                as? [String: Any]
+        )
+        document["folderPath"] = root.path
+        try JSONSerialization.data(withJSONObject: document).write(
+            to: manifestURL,
+            options: .atomic
+        )
+        try FileManager.default.removeItem(at: symlinkFolder)
+        try FileManager.default.createSymbolicLink(
+            at: symlinkFolder,
+            withDestinationURL: retargetedFolder
+        )
+        try FileManager.default.removeItem(at: danglingFolder)
+        try FileManager.default.createSymbolicLink(
+            at: danglingFolder,
+            withDestinationURL: missingTarget
+        )
+
+        XCTAssertThrowsError(try HighQualityProject.open(ancestorProject.id, in: projectsRoot))
+        XCTAssertThrowsError(try HighQualityProject.open(symlinkProject.id, in: projectsRoot))
+        XCTAssertThrowsError(try HighQualityProject.open(danglingProject.id, in: projectsRoot))
+        XCTAssertTrue(HighQualityProject.all(in: projectsRoot).isEmpty)
+    }
+
+    func testProjectRelocationCommitsFolderAndLocatorsAtomically() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
+        let folder = root.appendingPathComponent("Original", isDirectory: true)
+        let relocatedFolder = root.appendingPathComponent("Relocated", isDirectory: true)
+        let locatorFolder = root.appendingPathComponent("Located", isDirectory: true)
+        for directory in [folder, relocatedFolder, locatorFolder] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        defer { try? FileManager.default.removeItem(at: root) }
+        let sources = ["first.wav", "second.wav"].map { folder.appendingPathComponent($0) }
+        let locators = ["first.wav", "second.wav"].map {
+            locatorFolder.appendingPathComponent($0)
+        }
+        for file in sources + locators {
+            try Data("audio".utf8).write(to: file)
+        }
+        let project = try HighQualityProject.create(
+            named: "Atomic",
+            folder: folder,
+            in: projectsRoot
+        )
+        let job = HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "結果。" },
+            unloadASR: {}
+        ))
+        var results: [HighQualityJobResult] = []
+        for source in sources {
+            results.append(try await job.run(.init(
+                sourceURL: source,
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                project: project
+            )))
+        }
+        var saved = HighQualityJob.savedResults(in: project.jobsDirectory)
+        for (result, locator) in zip(results, locators) {
+            _ = try HighQualityJob.relocateSource(
+                try XCTUnwrap(saved.first { $0.id == result.manifest.jobID }),
+                to: locator
+            )
+        }
+        try Data("{".utf8).write(
+            to: results[1].directory.appendingPathComponent("transformations.json"),
+            options: .atomic
+        )
+
+        XCTAssertThrowsError(try project.relocated(to: relocatedFolder))
+
+        XCTAssertEqual(
+            try HighQualityProject.open(project.id, in: projectsRoot).folderURL,
+            folder
+        )
+        saved = HighQualityJob.savedResults(in: project.jobsDirectory)
+        XCTAssertEqual(
+            saved.first { $0.id == results[0].manifest.jobID }?.relocatedSourcePath,
+            locators[0].path
+        )
+    }
+
+    func testProjectRelocationCleansOldStorageWithImmutableFile() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
+        let folder = root.appendingPathComponent("Original", isDirectory: true)
+        let relocatedFolder = root.appendingPathComponent("Relocated", isDirectory: true)
+        for directory in [folder, relocatedFolder] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+            try Data("audio".utf8).write(
+                to: directory.appendingPathComponent("episode.wav")
+            )
+        }
+        defer {
+            for path in (try? FileManager.default.subpathsOfDirectory(
+                atPath: root.path
+            )) ?? [] {
+                try? FileManager.default.setAttributes(
+                    [.immutable: false],
+                    ofItemAtPath: root.appendingPathComponent(path).path
+                )
+            }
+            try? FileManager.default.removeItem(at: root)
+        }
+        let project = try HighQualityProject.create(
+            named: "Immutable",
+            folder: folder,
+            in: projectsRoot
+        )
+        let result = try await HighQualityJob(services: .init(
+            loadSource: { _ in [0] },
+            prepareASR: { _ in },
+            transcribeJapanese: { _ in "結果。" },
+            unloadASR: {}
+        )).run(.init(
+            sourceURL: folder.appendingPathComponent("episode.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            project: project
+        ))
+        let protectedFile = result.directory.appendingPathComponent("manifest.json")
+        try FileManager.default.setAttributes(
+            [.immutable: true],
+            ofItemAtPath: protectedFile.path
+        )
+
+        let relocated = try project.relocated(to: relocatedFolder)
+
+        XCTAssertEqual(relocated.folderURL, relocatedFolder)
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: projectsRoot.path),
+            [project.id.uuidString]
+        )
+        XCTAssertEqual(
+            try FileManager.default.attributesOfItem(atPath: protectedFile.path)[.immutable]
+                as? Bool,
+            true
+        )
+    }
+
     func testVersionOneProjectScopeDefaultsEmptyAndMigratesOnUpdate() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -107,10 +290,22 @@ final class HighQualityJobTests: XCTestCase {
         let standaloneRoot = root.appendingPathComponent("Standalone", isDirectory: true)
         let folder = root.appendingPathComponent("Original", isDirectory: true)
         let movedFolder = root.appendingPathComponent("Moved", isDirectory: true)
+        let previouslyLocatedFolder = root.appendingPathComponent(
+            "Previously located",
+            isDirectory: true
+        )
         let source = folder.appendingPathComponent("episode.wav")
         let movedSource = movedFolder.appendingPathComponent(source.lastPathComponent)
+        let previouslyLocatedSource = previouslyLocatedFolder.appendingPathComponent(
+            source.lastPathComponent
+        )
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: previouslyLocatedFolder,
+            withIntermediateDirectories: true
+        )
         try Data("audio".utf8).write(to: source)
+        try Data("old locator".utf8).write(to: previouslyLocatedSource)
         defer { try? FileManager.default.removeItem(at: root) }
 
         var workspace = HighQualityProjectWorkspace(
@@ -175,11 +370,16 @@ final class HighQualityJobTests: XCTestCase {
             local.manifest.jobID,
             youtube.manifest.jobID,
         ])
+        _ = try HighQualityJob.relocateSource(
+            try XCTUnwrap(workspace.savedResults.first { $0.id == local.manifest.jobID }),
+            to: previouslyLocatedSource
+        )
+        workspace.refresh()
 
         try workspace.renameSelectedProject(to: "Renamed")
         XCTAssertEqual(workspace.selectedProject?.name, "Renamed")
         workspace.selectSavedResult(local.manifest.jobID)
-        XCTAssertEqual(workspace.sourceURL, source)
+        XCTAssertEqual(workspace.sourceURL, previouslyLocatedSource)
         let callsBeforeRelocation = await calls.values
         try FileManager.default.moveItem(at: folder, to: movedFolder)
         try workspace.relocateSelectedProject(to: movedFolder)
@@ -191,6 +391,10 @@ final class HighQualityJobTests: XCTestCase {
         })
         XCTAssertEqual(relocated.sourceURL, movedSource)
         XCTAssertNotEqual(relocated.sourceURL, source)
+        XCTAssertNotEqual(relocated.sourceURL, previouslyLocatedSource)
+        XCTAssertNil(HighQualityJob.savedResults(
+            in: try XCTUnwrap(workspace.selectedProject).jobsDirectory
+        ).first { $0.id == local.manifest.jobID }?.relocatedSourcePath)
         workspace.selectSavedResult(local.manifest.jobID)
         XCTAssertEqual(workspace.sourceURL, movedSource)
         XCTAssertEqual(try HighQualityJob.reopen(relocated).japaneseTranscript, "結果。")
