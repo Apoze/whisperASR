@@ -174,6 +174,20 @@ struct HighQualityJobProgress: Equatable, Sendable {
     let stage: HighQualityJobStage
     let fraction: Double
     let message: String
+
+    static func terminal(for error: Error) -> Self {
+        let cancelled = (error as? HighQualityJobError)?.stage == .cancelled
+            || error is CancellationError
+        return .init(
+            stage: cancelled ? .cancelled : .failed,
+            fraction: 1,
+            message: error.localizedDescription
+        )
+    }
+
+    static func accepts(_ operationID: UUID, while activeOperationID: UUID?) -> Bool {
+        operationID == activeOperationID
+    }
 }
 
 struct HighQualitySpeakerCountPolicy: Codable, Equatable, Hashable, Sendable {
@@ -1230,6 +1244,10 @@ struct HighQualityJobResult: Sendable {
             ($0, names[$0] ?? $0)
         })
     }
+
+    var canUndoLastSpeakerEdit: Bool {
+        !(manifest.speakerEdits ?? []).reversed().prefix { $0.kind != .reset }.isEmpty
+    }
 }
 
 fileprivate struct HighQualitySpeakerEditState {
@@ -1320,8 +1338,6 @@ private struct HighQualitySpeakerAnalysis {
     var evidence: HighQualityDiarizationEvidence
     let modelEvents: [HighQualityModelEvent]
     let peakMemoryBytes: UInt64
-    let preparationDuration: TimeInterval
-    let diarizationDuration: TimeInterval
 }
 
 private struct HighQualitySpeakerAnalysisFailure: LocalizedError {
@@ -1718,17 +1734,27 @@ struct HighQualityJob: Sendable {
         HighQualityASRBackend,
         HighQualityTranslator
     ) -> Services
+    private let now: @Sendable () -> Date
 
-    init() {
+    init(now: @escaping @Sendable () -> Date = { Date() }) {
         servicesForSelection = { Services.production(for: $0, translator: $1) }
+        self.now = now
     }
 
-    init(services: Services) {
+    init(
+        services: Services,
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
         servicesForSelection = { _, _ in services }
+        self.now = now
     }
 
-    init(servicesForBackend: @escaping @Sendable (HighQualityASRBackend) -> Services) {
+    init(
+        servicesForBackend: @escaping @Sendable (HighQualityASRBackend) -> Services,
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
         servicesForSelection = { backend, _ in servicesForBackend(backend) }
+        self.now = now
     }
 
     private func analyzeSpeakers(
@@ -1742,8 +1768,6 @@ struct HighQualityJob: Sendable {
         processingDiarization: () -> Void,
         progress: @escaping @Sendable (HighQualityJobStage, Double, String) -> Void
     ) async throws -> HighQualitySpeakerAnalysis {
-        let preparationStartedAt = Date()
-        var diarizationStartedAt: Date?
         var lease: HeavyweightModelLease?
         var loadStarted = false
         var unloaded = false
@@ -1864,7 +1888,6 @@ struct HighQualityJob: Sendable {
             ))
             try Task.checkCancellation()
 
-            diarizationStartedAt = Date()
             processingDiarization()
             progress(.diarizing, 0, "Detecting speakers…")
             let exchange = try await guarded(lease) {
@@ -1920,16 +1943,10 @@ struct HighQualityJob: Sendable {
                 )
             }
             try Task.checkCancellation()
-            let finishedAt = Date()
             return .init(
                 evidence: evidence,
                 modelEvents: modelEvents,
-                peakMemoryBytes: peakMemoryBytes,
-                preparationDuration: (diarizationStartedAt ?? finishedAt)
-                    .timeIntervalSince(preparationStartedAt),
-                diarizationDuration: diarizationStartedAt.map {
-                    finishedAt.timeIntervalSince($0)
-                } ?? 0
+                peakMemoryBytes: peakMemoryBytes
             )
         } catch {
             let originalError = error
@@ -1964,6 +1981,9 @@ struct HighQualityJob: Sendable {
                 ))
             }
             let cancelled = originalError is CancellationError || Task.isCancelled
+            if !cancelled, evidence.validationDiagnostics.isEmpty {
+                evidence.validationDiagnostics = [originalError.localizedDescription]
+            }
             let message = cancelled ? "Speaker analysis cancelled." : originalError.localizedDescription
             throw HighQualitySpeakerAnalysisFailure(
                 message: cleanupMessage.map { message + " " + $0 } ?? message,
@@ -2289,7 +2309,7 @@ struct HighQualityJob: Sendable {
 
         let selection = previous.manifest.translationModel?.translator ?? .productDefault
         let services = servicesForSelection(previous.manifest.selectedBackend, selection)
-        let startedAt = Date()
+        let startedAt = now()
         var currentStage = HighQualityJobStage.normalizingSource
         var workflowLease: HeavyweightWorkflowLease?
 
@@ -2314,6 +2334,7 @@ struct HighQualityJob: Sendable {
                 )
             }
             try Task.checkCancellation()
+            let sourceFinishedAt = now()
 
             if let gate = services.heavyweightGate {
                 workflowLease = try await gate.beginWorkflow(.offline(saved.id))
@@ -2332,6 +2353,7 @@ struct HighQualityJob: Sendable {
                 }
             }
             let analysis: HighQualitySpeakerAnalysis
+            var diarizationStartedAt: Date?
             do {
                 analysis = try await analyzeSpeakers(
                     services: services,
@@ -2341,7 +2363,10 @@ struct HighQualityJob: Sendable {
                     duration: alignment.sourceDuration,
                     useExclusiveReconciliation: exclusive,
                     configuration: configuration,
-                    processingDiarization: { currentStage = .diarizing }
+                    processingDiarization: {
+                        diarizationStartedAt = now()
+                        currentStage = .diarizing
+                    }
                 ) { stage, fraction, message in
                     progress(.init(
                         stage: stage,
@@ -2374,6 +2399,7 @@ struct HighQualityJob: Sendable {
             }
             workflowLease = nil
             try Task.checkCancellation()
+            let exportStartedAt = now()
 
             let attachment = Self.speakerAttachment(
                 units: units,
@@ -2411,36 +2437,39 @@ struct HighQualityJob: Sendable {
                 ? Self.transcript(turns, text: \.japanese) : previous.japaneseTranscript
             let englishTranscript = deliverables.contains(.englishTranslationTranscript)
                 ? Self.transcript(turns, text: \.english) : nil
-            let finishedAt = Date()
             let peakMemoryBytes = analysis.peakMemoryBytes
-            let reanalysis = HighQualitySpeakerReanalysisEvidence(
-                startedAt: startedAt,
-                finishedAt: finishedAt,
-                wallTime: finishedAt.timeIntervalSince(startedAt),
-                configuration: configuration,
-                modelEvents: analysis.modelEvents,
-                peakMemoryBytes: peakMemoryBytes,
-                replacedDiarization: previousDiarization,
-                replacedAttachment: previous.evidence.speakerAttachment
-                    ?? .init(semanticUnits: units),
-                replacedSpeakerEdits: replacedSpeakerEdits,
-                diarization: diarization,
-                attachment: attachmentEvidence
-            )
-            let reanalyses = (previous.evidence.speakerReanalyses ?? []) + [reanalysis]
+            let previousReanalyses = previous.evidence.speakerReanalyses ?? []
+            func reanalysis(finishedAt: Date) -> HighQualitySpeakerReanalysisEvidence {
+                HighQualitySpeakerReanalysisEvidence(
+                    startedAt: startedAt,
+                    finishedAt: finishedAt,
+                    wallTime: finishedAt.timeIntervalSince(startedAt),
+                    configuration: configuration,
+                    modelEvents: analysis.modelEvents,
+                    peakMemoryBytes: peakMemoryBytes,
+                    replacedDiarization: previousDiarization,
+                    replacedAttachment: previous.evidence.speakerAttachment
+                        ?? .init(semanticUnits: units),
+                    replacedSpeakerEdits: replacedSpeakerEdits,
+                    diarization: diarization,
+                    attachment: attachmentEvidence
+                )
+            }
 
             var manifest = previous.manifest
             manifest.schemaVersion = HighQualityJobManifest.currentSchemaVersion
             manifest.speakerConfiguration = configuration
             manifest.speakerCountPolicy = configuration.countPolicy
+            let diarizationBoundary = diarizationStartedAt ?? exportStartedAt
+            manifest.stageDurations[.normalizingSource, default: 0] +=
+                sourceFinishedAt.timeIntervalSince(startedAt)
             manifest.stageDurations[.preparingDiarization, default: 0] +=
-                analysis.preparationDuration
+                diarizationBoundary.timeIntervalSince(sourceFinishedAt)
             manifest.stageDurations[.diarizing, default: 0] +=
-                analysis.diarizationDuration
+                exportStartedAt.timeIntervalSince(diarizationBoundary)
             manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, peakMemoryBytes)
             manifest.modelEvents += analysis.modelEvents
-            manifest.finishedAt = finishedAt
-            manifest.speakerReanalysisCount = reanalyses.count
+            manifest.speakerReanalysisCount = previousReanalyses.count + 1
             manifest.speakerEdits = []
 
             var evidence = previous.evidence
@@ -2449,14 +2478,12 @@ struct HighQualityJob: Sendable {
             evidence.diarization = diarization
             evidence.speakerAttachment = attachmentEvidence
             evidence.sourceAudioSHA256 = sourceAudioSHA256
-            evidence.stageDurations = manifest.stageDurations
             evidence.peakMemoryBytes = manifest.peakMemoryBytes
             evidence.modelEvents = manifest.modelEvents
             evidence.resultTurns = turns
             evidence.subtitleCues = subtitleCues
             evidence.japaneseTranscript = japaneseTranscript
             evidence.englishTranscript = englishTranscript
-            evidence.speakerReanalyses = reanalyses
 
             currentStage = .exporting
             progress(.init(
@@ -2465,34 +2492,52 @@ struct HighQualityJob: Sendable {
                 message: "Replacing speaker results atomically…"
             ))
             try Task.checkCancellation()
-            let evidenceData = try Self.encoder.encode(evidence)
-            manifest.rawEvidenceSHA256 = Self.sha256(evidenceData)
-            let manifestData = try Self.encoder.encode(manifest)
-            let persistedEvidence = try Self.decoder.decode(
-                HighQualityRawEvidence.self,
-                from: evidenceData
-            )
-            let persistedManifest = try Self.decoder.decode(
-                HighQualityJobManifest.self,
-                from: manifestData
-            )
-            let result = HighQualityJobResult(
-                directory: saved.directory,
-                japaneseTranscript: japaneseTranscript,
-                englishTranscript: englishTranscript,
-                turns: turns,
-                subtitleCues: subtitleCues,
-                manifest: persistedManifest,
-                evidence: persistedEvidence
-            )
+            func payload(finishedAt: Date) throws -> (
+                evidence: Data,
+                manifest: Data,
+                result: HighQualityJobResult
+            ) {
+                var finalizedManifest = manifest
+                finalizedManifest.finishedAt = finishedAt
+                finalizedManifest.stageDurations[.exporting, default: 0] +=
+                    finishedAt.timeIntervalSince(exportStartedAt)
+                var finalizedEvidence = evidence
+                finalizedEvidence.stageDurations = finalizedManifest.stageDurations
+                finalizedEvidence.speakerReanalyses = previousReanalyses
+                    + [reanalysis(finishedAt: finishedAt)]
+                let evidenceData = try Self.encoder.encode(finalizedEvidence)
+                finalizedManifest.rawEvidenceSHA256 = Self.sha256(evidenceData)
+                let manifestData = try Self.encoder.encode(finalizedManifest)
+                return (
+                    evidenceData,
+                    manifestData,
+                    HighQualityJobResult(
+                        directory: saved.directory,
+                        japaneseTranscript: japaneseTranscript,
+                        englishTranscript: englishTranscript,
+                        turns: turns,
+                        subtitleCues: subtitleCues,
+                        manifest: try Self.decoder.decode(
+                            HighQualityJobManifest.self,
+                            from: manifestData
+                        ),
+                        evidence: try Self.decoder.decode(
+                            HighQualityRawEvidence.self,
+                            from: evidenceData
+                        )
+                    )
+                )
+            }
+            let provisional = try payload(finishedAt: exportStartedAt)
+            var committedResult = provisional.result
             var files = Self.deliverableFiles(
                 japaneseTranscript: deliverables.contains(.japaneseTranscript)
                     ? japaneseTranscript : nil,
                 englishTranscript: englishTranscript,
                 subtitleCues: deliverables.contains(.englishSubtitles) ? subtitleCues : nil
             )
-            files["raw-asr.json"] = evidenceData
-            files["manifest.json"] = manifestData
+            files["raw-asr.json"] = provisional.evidence
+            files["manifest.json"] = provisional.manifest
             if let transformations {
                 files["transformations.json"] = try Self.encoder.encode(
                     HighQualityResultTransformations(
@@ -2509,6 +2554,14 @@ struct HighQualityJob: Sendable {
                     try Task.checkCancellation()
                     try beforeCommit()
                 },
+                finalizeBeforeCommit: {
+                    let finalized = try payload(finishedAt: now())
+                    committedResult = finalized.result
+                    return [
+                        "raw-asr.json": finalized.evidence,
+                        "manifest.json": finalized.manifest,
+                    ]
+                },
                 validateActive: {
                     guard try Self.activeResultMatches(
                         previous.manifest,
@@ -2524,7 +2577,7 @@ struct HighQualityJob: Sendable {
                 }
             )
             progress(.init(stage: .completed, fraction: 1, message: "Speakers reanalyzed"))
-            return result
+            return committedResult
         } catch {
             var cleanupMessage: String?
             if let gate = services.heavyweightGate, let workflowLease {
@@ -3729,12 +3782,14 @@ struct HighQualityJob: Sendable {
     static func renameSpeakers(
         in result: HighQualityJobResult,
         names: [String: String],
-        beforeCommit: () throws -> Void = {}
+        beforeCommit: () throws -> Void = {},
+        afterStaging: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
         return try saveSpeakerEdits(
             try speakerRenameEdits(names, in: result),
             in: result,
-            beforeCommit: beforeCommit
+            beforeCommit: beforeCommit,
+            afterStaging: afterStaging
         )
     }
 
@@ -3746,6 +3801,45 @@ struct HighQualityJob: Sendable {
     ) throws -> HighQualityJobResult {
         try saveSpeakerEdits(
             try speakerRenameEdits(names, in: result) + [edit],
+            in: result,
+            beforeCommit: beforeCommit
+        )
+    }
+
+    static func undoLastSpeakerEdit(
+        in result: HighQualityJobResult,
+        beforeCommit: () throws -> Void = {}
+    ) throws -> HighQualityJobResult {
+        let transformations = try readTransformations(in: result.directory)
+        let effective = migratedSpeakerEdits(
+            transformations,
+            manifest: result.manifest
+        ).reversed().prefix { $0.kind != .reset }.reversed()
+        guard !effective.isEmpty else {
+            throw speakerEditError("There is no Speaker edit to undo.", in: result.directory)
+        }
+        let at = Date()
+        let replayed = try effective.dropLast().map { storedEdit in
+            let edit = try normalizedSpeakerEdit(storedEdit, in: result.directory)
+            switch edit.kind {
+            case .rename:
+                return HighQualitySpeakerEdit.rename(
+                    edit.speakerLabel!, to: edit.displayName!, at: at
+                )
+            case .merge:
+                return HighQualitySpeakerEdit.merge(
+                    edit.speakerLabel!, into: edit.targetSpeakerLabel!, at: at
+                )
+            case .reassign:
+                return HighQualitySpeakerEdit.reassign(
+                    turnID: edit.turnID!, to: edit.targetSpeakerLabel!, at: at
+                )
+            case .reset:
+                preconditionFailure("The effective Speaker edit suffix cannot contain a reset.")
+            }
+        }
+        return try saveSpeakerEdits(
+            [.reset(at: at)] + replayed,
             in: result,
             beforeCommit: beforeCommit
         )
@@ -3775,7 +3869,8 @@ struct HighQualityJob: Sendable {
     private static func saveSpeakerEdits(
         _ newEdits: [HighQualitySpeakerEdit],
         in result: HighQualityJobResult,
-        beforeCommit: () throws -> Void
+        beforeCommit: () throws -> Void,
+        afterStaging: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
         guard result.manifest.schemaVersion >= 3 else {
             throw speakerEditError(
@@ -3858,6 +3953,7 @@ struct HighQualityJob: Sendable {
             files,
             in: result.directory,
             beforeCommit: beforeCommit,
+            afterStaging: afterStaging,
             validateActive: {
                 guard try activeResultMatches(
                     activeManifest,
@@ -5151,6 +5247,8 @@ struct HighQualityJob: Sendable {
         _ files: [String: Data],
         in directory: URL,
         beforeCommit: () throws -> Void = {},
+        afterStaging: () throws -> Void = {},
+        finalizeBeforeCommit: () throws -> [String: Data] = { [:] },
         validateActive: () throws -> Void = {}
     ) throws {
         let fileManager = FileManager.default
@@ -5185,6 +5283,18 @@ struct HighQualityJob: Sendable {
         }) else {
             throw CocoaError(.fileWriteUnknown)
         }
+        try afterStaging()
+        // Stamp the commit only after a complete payload is staged and verified; the
+        // stamp itself must precede the single atomic swap that makes it durable.
+        let finalFiles = try finalizeBeforeCommit()
+        try writeFiles(finalFiles, to: staging)
+        let expectedFiles = files.merging(finalFiles) { _, final in final }
+        guard expectedFiles.allSatisfy({ path, data in
+            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
+        }) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        try Task.checkCancellation()
         let status = staging.path.withCString { stagedPath in
             directory.path.withCString { activePath in
                 renameatx_np(
@@ -5546,8 +5656,22 @@ struct HighQualityJob: Sendable {
     }
 
     private static var decoder: JSONDecoder {
+        let fractionalDates = ISO8601DateFormatter()
+        fractionalDates.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let legacyDates = ISO8601DateFormatter()
+        legacyDates.formatOptions = [.withInternetDateTime]
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+            guard let date = fractionalDates.date(from: value) ?? legacyDates.date(from: value) else {
+                throw DecodingError.dataCorruptedError(
+                    in: container,
+                    debugDescription: "Invalid ISO-8601 date: \(value)"
+                )
+            }
+            return date
+        }
         decoder.nonConformingFloatDecodingStrategy = .convertFromString(
             positiveInfinity: "Infinity",
             negativeInfinity: "-Infinity",
@@ -5557,8 +5681,13 @@ struct HighQualityJob: Sendable {
     }
 
     private static var encoder: JSONEncoder {
+        let dates = ISO8601DateFormatter()
+        dates.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(dates.string(from: date))
+        }
         encoder.nonConformingFloatEncodingStrategy = .convertToString(
             positiveInfinity: "Infinity",
             negativeInfinity: "-Infinity",

@@ -43,6 +43,7 @@ struct HighQualityJobView: View {
     @State private var customSpeakerLabels: [String: String] = [:]
     @State private var savedResults: [HighQualitySavedResult] = []
     @State private var selectedSavedResultID: UUID?
+    @State private var speakerReanalysisID: UUID?
 
     private var isRunning: Bool { task != nil }
     private var canStart: Bool {
@@ -415,6 +416,8 @@ struct HighQualityJobView: View {
             message: "Starting SpeakerKit reanalysis…"
         )
         let configuration = speakerBeta.configuration
+        let operationID = UUID()
+        speakerReanalysisID = operationID
         let job = HighQualityJob()
         task = Task {
             do {
@@ -422,15 +425,27 @@ struct HighQualityJobView: View {
                     saved,
                     configuration: configuration
                 ) { update in
-                    Task { @MainActor in progress = update }
+                    Task { @MainActor in
+                        guard HighQualityJobProgress.accepts(
+                            operationID,
+                            while: speakerReanalysisID
+                        ) else { return }
+                        progress = update
+                    }
                 }
+                speakerReanalysisID = nil
+                progress = .init(
+                    stage: .completed,
+                    fraction: 1,
+                    message: "Speakers reanalyzed"
+                )
                 result = updated
                 customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
                 refreshSavedResults()
                 selectedSavedResultID = updated.manifest.jobID
-            } catch let error as HighQualityJobError {
-                errorMessage = error.localizedDescription
             } catch {
+                speakerReanalysisID = nil
+                progress = .terminal(for: error)
                 errorMessage = error.localizedDescription
             }
             task = nil
@@ -605,6 +620,21 @@ struct HighQualityJobView: View {
                 }
                 .accessibilityIdentifier("high-quality-reset-speaker-edits")
                 .accessibilityHint("Restores the immutable automatic SpeakerKit assignments.")
+
+                Button("Undo Last Speaker Edit") {
+                    do {
+                        let updated = try HighQualityJob.undoLastSpeakerEdit(in: result)
+                        self.result = updated
+                        customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                        errorMessage = nil
+                        refreshSavedResults()
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                }
+                .accessibilityIdentifier("high-quality-undo-speaker-edit")
+                .accessibilityHint("Restores the saved state before the last Speaker edit.")
+                .disabled(!result.canUndoLastSpeakerEdit)
             }
             .disabled(result.manifest.schemaVersion < 3)
             Text("Speaker edits only regenerate saved Deliverables; no model is loaded.")
