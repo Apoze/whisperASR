@@ -1,5 +1,4 @@
 import CryptoKit
-import Darwin
 import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
@@ -229,6 +228,7 @@ struct HighQualityJobRequest: Sendable {
     let speakerLabelsByCueID: [String: String]
     let translationContextPolicy: HighQualityConversationContextPolicy
     let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
+    let project: HighQualityProject?
     let outputRoot: URL
 
     init(
@@ -246,6 +246,7 @@ struct HighQualityJobRequest: Sendable {
         translationContextResetReasonsByCueID: [
             String: HighQualityConversationContextResetReason
         ] = [:],
+        project: HighQualityProject? = nil,
         outputRoot: URL = AppStoragePaths.highQualityJobs
     ) {
         self.id = id
@@ -260,7 +261,8 @@ struct HighQualityJobRequest: Sendable {
         self.speakerLabelsByCueID = speakerLabelsByCueID
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
-        self.outputRoot = outputRoot
+        self.project = project
+        self.outputRoot = project?.jobsDirectory ?? outputRoot
     }
 }
 
@@ -1133,6 +1135,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var failures: [HighQualityJobFailure]
     var generatedFiles: [HighQualityGeneratedFile]
     var rawEvidenceSHA256: String? = nil
+    var projectID: UUID? = nil
 
     var usesLegacySavedResultFallback: Bool {
         schemaVersion == 2
@@ -1169,6 +1172,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     var japaneseTranscript: String? = nil
     var englishTranscript: String? = nil
     var readableSubtitles: HighQualityReadableSubtitleEvidence? = nil
+    var projectID: UUID? = nil
 }
 
 struct HighQualityJobResult: Sendable {
@@ -1687,7 +1691,8 @@ struct HighQualityJob: Sendable {
               evidence.model == manifest.model,
               evidence.asrWorker == manifest.asrWorker,
               (manifest.readableSubtitles == true) == (evidence.readableSubtitles != nil),
-              evidence.generatedFiles == manifest.generatedFiles else {
+              evidence.generatedFiles == manifest.generatedFiles,
+              evidence.projectID == manifest.projectID else {
             throw savedResultError("The saved manifest and raw evidence do not match.", saved)
         }
         for file in manifest.generatedFiles
@@ -1853,10 +1858,47 @@ struct HighQualityJob: Sendable {
         )
     }
 
+    static func clearRelocatedSource(in directory: URL) throws {
+        guard let previous = try readTransformations(in: directory),
+              previous.relocatedSourcePath != nil else { return }
+        let transformations = try encoder.encode(HighQualityResultTransformations(
+            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+            customSpeakerLabels: previous.customSpeakerLabels,
+            relocatedSourcePath: nil
+        ))
+        try transactionallyWrite(
+            ["transformations.json": transformations],
+            in: directory
+        )
+    }
+
     func run(
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        guard let project = request.project else {
+            return try await runUncoordinated(request, progress: progress)
+        }
+        return try await HighQualityProjectLifecycle.shared.run(projectID: project.id) {
+            try await runUncoordinated(request, progress: progress)
+        }
+    }
+
+    private func runUncoordinated(
+        _ request: HighQualityJobRequest,
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void
+    ) async throws -> HighQualityJobResult {
+        if let project = request.project {
+            do {
+                try project.validateForJob()
+            } catch {
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: error.localizedDescription,
+                    resultDirectory: nil
+                )
+            }
+        }
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
         let needsTranslation = request.deliverables.contains(.englishTranslationTranscript)
@@ -1901,6 +1943,22 @@ struct HighQualityJob: Sendable {
                     : "Could not reserve the job result directory: \(error.localizedDescription)",
                 resultDirectory: directory
             )
+        }
+        if let project = request.project {
+            do {
+                try project.indexJob(
+                    id: request.id,
+                    source: Self.provenance(for: request.sourceURL),
+                    resultDirectory: directory
+                )
+            } catch {
+                try? FileManager.default.removeItem(at: directory)
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: "Could not index the Project job: \(error.localizedDescription)",
+                    resultDirectory: nil
+                )
+            }
         }
         let services = servicesForSelection(request.backend, request.translator)
         let translationModel = request.translator.model
@@ -1962,6 +2020,7 @@ struct HighQualityJob: Sendable {
             failures: [],
             generatedFiles: []
         )
+        manifest.projectID = request.project?.id
 
         func begin(_ stage: HighQualityJobStage, fraction: Double, message: String) {
             let now = Date()
@@ -4232,82 +4291,15 @@ struct HighQualityJob: Sendable {
         in directory: URL,
         beforeCommit: () throws -> Void = {}
     ) throws {
-        let fileManager = FileManager.default
-        let staging = directory.deletingLastPathComponent().appendingPathComponent(
-            ".\(directory.lastPathComponent).staging-\(UUID().uuidString)",
-            isDirectory: true
-        )
-        try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
-        defer { try? fileManager.removeItem(at: staging) }
-        try hardLinkContents(of: directory, to: staging)
-        try writeFiles(files, to: staging)
-        guard files.allSatisfy({ path, data in
-            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
-        }) else {
-            throw CocoaError(.fileWriteUnknown)
-        }
-        try beforeCommit()
-        let status = staging.path.withCString { stagedPath in
-            directory.path.withCString { activePath in
-                renameatx_np(
-                    AT_FDCWD,
-                    stagedPath,
-                    AT_FDCWD,
-                    activePath,
-                    UInt32(RENAME_SWAP)
-                )
+        try AtomicDirectory.update(directory) { staging in
+            try writeFiles(files, to: staging)
+            guard files.allSatisfy({ path, data in
+                (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
+            }) else {
+                throw CocoaError(.fileWriteUnknown)
             }
+            try beforeCommit()
         }
-        guard status == 0 else {
-            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-        }
-    }
-
-    private static func hardLinkContents(of source: URL, to destination: URL) throws {
-        let fileManager = FileManager.default
-        let canonicalSourcePath = source.resolvingSymlinksInPath().path
-        var traversalError: Error?
-        guard let enumerator = fileManager.enumerator(
-            at: source,
-            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
-            errorHandler: { _, error in
-                traversalError = error
-                return false
-            }
-        ) else {
-            throw CocoaError(.fileReadUnknown)
-        }
-        for case let item as URL in enumerator {
-            let sourcePath: String
-            let itemPath: String
-            if item.path.hasPrefix(source.path + "/") {
-                sourcePath = source.path
-                itemPath = item.path
-            } else {
-                sourcePath = canonicalSourcePath
-                itemPath = item.resolvingSymlinksInPath().path
-            }
-            guard itemPath.hasPrefix(sourcePath + "/") else {
-                throw CocoaError(.fileReadInvalidFileName)
-            }
-            let relativePath = String(itemPath.dropFirst(sourcePath.count + 1))
-            let target = destination.appendingPathComponent(relativePath)
-            let values = try item.resourceValues(forKeys: [
-                .isDirectoryKey,
-                .isSymbolicLinkKey,
-            ])
-            if values.isSymbolicLink == true {
-                try fileManager.createSymbolicLink(
-                    atPath: target.path,
-                    withDestinationPath: fileManager.destinationOfSymbolicLink(atPath: item.path)
-                )
-            } else if values.isDirectory == true {
-                try fileManager.createDirectory(at: target, withIntermediateDirectories: false)
-            } else {
-                try fileManager.linkItem(at: item, to: target)
-            }
-        }
-        if let traversalError { throw traversalError }
     }
 
     static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
@@ -4436,7 +4428,8 @@ struct HighQualityJob: Sendable {
             subtitleCues: subtitleCues,
             japaneseTranscript: japaneseTranscript,
             englishTranscript: englishTranscript,
-            readableSubtitles: readableSubtitles
+            readableSubtitles: readableSubtitles,
+            projectID: manifest.projectID
         )
     }
 
