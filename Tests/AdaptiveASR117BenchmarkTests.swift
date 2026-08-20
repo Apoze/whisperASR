@@ -51,6 +51,40 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         let errors: [HighQualityAdaptiveASRErrorEvidence]
     }
 
+    private struct Window118: Codable {
+        let segment: HighQualityAdaptiveASRSegment
+        let qwen: HighQualityASRExchange
+        let qwenAssessment: HighQualityAdaptiveASRAssessment
+        let qwenDuration: TimeInterval
+        let parakeet: HighQualityASRExchange?
+        let parakeetAssessment: HighQualityAdaptiveASRAssessment?
+        let parakeetDuration: TimeInterval?
+        let parakeetVetoes: [HighQualityAdaptiveASRVeto]
+        let parakeetError: HighQualityAdaptiveASRErrorEvidence?
+        var whisperKit: HighQualityASRExchange?
+        var whisperKitAssessment: HighQualityAdaptiveASRAssessment?
+        var whisperKitDuration: TimeInterval?
+        let whisperKitLaunch: HighQualityAdaptiveASRWhisperKitLaunch?
+        var whisperKitVetoes: [HighQualityAdaptiveASRVeto]
+        var whisperKitError: HighQualityAdaptiveASRErrorEvidence?
+    }
+
+    private struct Run118: Codable {
+        let schemaVersion: Int
+        let ticket: Int
+        let status: String
+        let corpusID: String
+        let corpusRole: String
+        let sourceSHA256: String
+        let planSHA256: String
+        let baseRunSHA256: String
+        let parakeetCalibrationSHA256: String
+        let strictlySequential: Bool
+        let windows: [Window118]
+        let workers: [HighQualityASRWorkerEvidence]
+        let errors: [HighQualityAdaptiveASRErrorEvidence]
+    }
+
     func testIssue117RunnerProvenanceFailsClosed() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -76,6 +110,35 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         XCTAssertTrue(message.contains("provenance self-test: PASS"), message)
     }
 
+    func testIssue118RunnerProvenanceFailsClosed() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let process = Process()
+        let output = Pipe()
+        process.currentDirectoryURL = root
+        process.executableURL = URL(fileURLWithPath: "/bin/bash")
+        process.arguments = [
+            root.appendingPathComponent("Scripts/run_adaptive_asr_118.sh").path,
+            "self-test",
+        ]
+        process.standardOutput = output
+        process.standardError = output
+
+        try process.run()
+        process.waitUntilExit()
+        let message = String(
+            decoding: output.fileHandleForReading.readDataToEndOfFile(),
+            as: UTF8.self
+        )
+        XCTAssertEqual(process.terminationStatus, 0, message)
+        XCTAssertTrue(message.contains("issue-118 provenance self-test: PASS"), message)
+        XCTAssertTrue(
+            message.contains("issue-118 non-final control fail-closed self-test: PASS"),
+            message
+        )
+    }
+
     func testIssue117RawRunOnlyCompletesCandidateFailures() throws {
         XCTAssertThrowsError(try Self.candidateEvidence(
             for: HighQualityASRWorkerError.protocolFailure("bad response"),
@@ -83,11 +146,27 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
             segmentID: "segment-0001"
         ))
         let evidence = try Self.candidateEvidence(
-            for: HighQualityASRWorkerError.backendFailure("model rejected audio"),
+            for: HighQualityASRWorkerError.invalidCandidateEvidence(.invalidHypothesis),
             stage: "parakeet-transcription",
             segmentID: "segment-0001"
         )
         XCTAssertEqual(evidence.route, .candidate)
+        XCTAssertEqual(evidence.candidateReason, .invalidHypothesis)
+    }
+
+    func testIssue118InvalidWhisperKitTimingIsAnAuditedCandidateFailure() throws {
+        let evidence = try Self.candidateEvidence(
+            for: HighQualityASRWorkerError.invalidCandidateEvidence(.invalidTimestamps),
+            stage: "whisperkit-transcription",
+            segmentID: "segment-0001"
+        )
+        XCTAssertEqual(evidence.route, .candidate)
+        XCTAssertEqual(evidence.candidateReason, .invalidTimestamps)
+        XCTAssertThrowsError(try Self.candidateEvidence(
+            for: HighQualityASRWorkerError.protocolFailure("bad JSON"),
+            stage: "whisperkit-transcription",
+            segmentID: "segment-0001"
+        ))
     }
 
     func testIssue117CanonicalPythonPlanMatchesSwiftPlannerWhenOptedIn() async throws {
@@ -102,8 +181,12 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
 
     func testIssue117RawASRWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
+        let slot = environment["BENCHMARK_SLOT_GRANTED"]
+        let authorized = slot == "117" || (
+            slot == "118" && environment["WHISPERASR_ADAPTIVE_117_BASE_FOR_118"] == "1"
+        )
         guard environment["WHISPERASR_RUN_ADAPTIVE_117_ASR"] == "1",
-              environment["BENCHMARK_SLOT_GRANTED"] == "117",
+              authorized,
               let audioPath = environment["WHISPERASR_ADAPTIVE_117_AUDIO"],
               let planPath = environment["WHISPERASR_ADAPTIVE_117_PLAN"],
               let outputPath = environment["WHISPERASR_ADAPTIVE_117_RUN"],
@@ -251,6 +334,179 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         )
     }
 
+    func testIssue118TargetedWhisperKitWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_ADAPTIVE_118_WHISPERKIT"] == "1",
+              environment["BENCHMARK_SLOT_GRANTED"] == "118",
+              let audioPath = environment["WHISPERASR_ADAPTIVE_118_AUDIO"],
+              let planPath = environment["WHISPERASR_ADAPTIVE_118_PLAN"],
+              let baseRunPath = environment["WHISPERASR_ADAPTIVE_118_BASE_RUN"],
+              let parakeetCalibrationPath = environment[
+                "WHISPERASR_ADAPTIVE_118_PARAKEET_CALIBRATION"
+              ],
+              let outputPath = environment["WHISPERASR_ADAPTIVE_118_RUN"],
+              let workerPath = environment["WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"] else {
+            throw XCTSkip("Grant benchmark slot #118 and provide frozen WhisperKit inputs.")
+        }
+        let (plan, samples) = try await verifiedPlan(
+            audioPath: audioPath,
+            planPath: planPath
+        )
+        let decoder = Self.decoder()
+        let baseRunURL = URL(fileURLWithPath: baseRunPath)
+        let calibrationURL = URL(fileURLWithPath: parakeetCalibrationPath)
+        let base = try decoder.decode(Run.self, from: Data(contentsOf: baseRunURL))
+        let calibration = try decoder.decode(
+            HighQualityAdaptiveASRCalibration.self,
+            from: Data(contentsOf: calibrationURL)
+        )
+        XCTAssertEqual(base.ticket, 117)
+        XCTAssertEqual(base.status, "completed")
+        XCTAssertEqual(base.planSHA256, try JapaneseBenchmarkSupport.sha256(
+            at: URL(fileURLWithPath: planPath)
+        ))
+        XCTAssertTrue(calibration.isStable)
+        XCTAssertTrue(calibration.isWhisperKitStable)
+        var windows = base.windows.map { window in
+            let decision = HighQualityAdaptiveASR.decide(
+                segment: window.segment,
+                qwen: window.qwen,
+                qwenDuration: window.qwenDuration,
+                parakeet: window.parakeet,
+                parakeetDuration: window.parakeetDuration,
+                scopedTerms: [],
+                calibration: calibration,
+                alternateError: window.error
+            )
+            return Window118(
+                segment: window.segment,
+                qwen: window.qwen,
+                qwenAssessment: window.qwenAssessment,
+                qwenDuration: window.qwenDuration,
+                parakeet: window.parakeet,
+                parakeetAssessment: window.parakeetAssessment,
+                parakeetDuration: window.parakeetDuration,
+                parakeetVetoes: window.vetoes,
+                parakeetError: window.error,
+                whisperKit: nil,
+                whisperKitAssessment: nil,
+                whisperKitDuration: nil,
+                whisperKitLaunch: decision.whisperKitLaunch,
+                whisperKitVetoes: [],
+                whisperKitError: nil
+            )
+        }
+        let targets = windows.indices.filter { index in
+            windows[index].whisperKitLaunch?.shouldLaunch == true
+        }
+        XCTAssertFalse(targets.isEmpty)
+        XCTAssertLessThan(Double(targets.count) / Double(windows.count), 0.25)
+        XCTAssertTrue(targets.allSatisfy {
+            windows[$0].segment.endSample - windows[$0].segment.startSample <= 8 * 16_000
+        })
+
+        let whisperKit = HighQualityASRWorkerClient(
+            backend: .whisperKit,
+            executableURL: URL(fileURLWithPath: workerPath)
+        )
+        var infrastructureError: (any Error)?
+        do {
+            try await whisperKit.prepare { _, message in
+                print("[issue-118/whisperkit] \(message)")
+            }
+            for index in targets {
+                do {
+                    let started = Date()
+                    let segment = windows[index].segment
+                    let exchange = try await whisperKit.transcribe(
+                        Array(samples[segment.startSample..<segment.endSample]),
+                        anchored: false
+                    )
+                    windows[index].whisperKit = exchange
+                    windows[index].whisperKitDuration = Date().timeIntervalSince(started)
+                    windows[index].whisperKitAssessment = HighQualityAdaptiveASR.assess(
+                        qwen: exchange,
+                        segment: segment,
+                        scopedTerms: []
+                    )
+                    windows[index].whisperKitVetoes = HighQualityAdaptiveASR.vetoes(
+                        qwen: windows[index].qwen,
+                        parakeet: exchange,
+                        segment: segment,
+                        scopedTerms: []
+                    )
+                } catch is CancellationError {
+                    infrastructureError = CancellationError()
+                    break
+                } catch {
+                    do {
+                        windows[index].whisperKitError = try Self.candidateEvidence(
+                            for: error,
+                            stage: "whisperkit-transcription",
+                            segmentID: windows[index].segment.id
+                        )
+                    } catch {
+                        infrastructureError = error
+                        break
+                    }
+                }
+            }
+        } catch {
+            do {
+                let evidence = try Self.candidateEvidence(
+                    for: error,
+                    stage: "whisperkit-preparation",
+                    segmentID: nil
+                )
+                for index in targets where windows[index].whisperKit == nil {
+                    windows[index].whisperKitError = .init(
+                        route: evidence.route,
+                        stage: evidence.stage,
+                        segmentID: windows[index].segment.id,
+                        message: evidence.message,
+                        candidateReason: evidence.candidateReason
+                    )
+                }
+            } catch {
+                infrastructureError = error
+            }
+        }
+        await whisperKit.unload()
+        if let infrastructureError { throw infrastructureError }
+        let recordedWhisperKitEvidence = await whisperKit.evidence
+        let whisperKitEvidence = try XCTUnwrap(recordedWhisperKitEvidence)
+        var workers = base.workers
+        workers.append(whisperKitEvidence)
+        let strictlySequential = zip(workers, workers.dropFirst()).allSatisfy {
+            $0.lifecycle.exitedAt <= $1.lifecycle.startedAt
+        }
+        let errors = windows.flatMap {
+            [$0.parakeetError, $0.whisperKitError].compactMap { $0 }
+        }
+        try Self.write(Run118(
+            schemaVersion: 1,
+            ticket: 118,
+            status: "completed",
+            corpusID: plan.corpusID,
+            corpusRole: plan.corpusRole,
+            sourceSHA256: plan.audioSHA256,
+            planSHA256: try JapaneseBenchmarkSupport.sha256(
+                at: URL(fileURLWithPath: planPath)
+            ),
+            baseRunSHA256: try JapaneseBenchmarkSupport.sha256(at: baseRunURL),
+            parakeetCalibrationSHA256: try JapaneseBenchmarkSupport.sha256(at: calibrationURL),
+            strictlySequential: strictlySequential,
+            windows: windows,
+            workers: workers,
+            errors: errors
+        ), to: URL(fileURLWithPath: outputPath))
+        XCTAssertTrue(strictlySequential)
+        XCTAssertEqual(
+            windows.filter { $0.whisperKit != nil || $0.whisperKitError != nil }.count,
+            targets.count
+        )
+    }
+
     func testIssue117SelectedDownstreamWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_ADAPTIVE_117_DOWNSTREAM"] == "1",
@@ -265,7 +521,7 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
               let workerPath = environment["WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"] else {
             throw XCTSkip("Grant benchmark slot #117 and provide frozen downstream inputs.")
         }
-        let decoder = JSONDecoder()
+        let decoder = Self.decoder()
         let plan = try decoder.decode(
             Plan.self,
             from: Data(contentsOf: URL(fileURLWithPath: planPath))
@@ -361,6 +617,135 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         } == true)
     }
 
+    func testIssue118SelectedDownstreamWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_ADAPTIVE_118_DOWNSTREAM"] == "1",
+              environment["BENCHMARK_SLOT_GRANTED"] == "118",
+              let audioPath = environment["WHISPERASR_ADAPTIVE_118_AUDIO"],
+              let planPath = environment["WHISPERASR_ADAPTIVE_118_PLAN"],
+              let runPath = environment["WHISPERASR_ADAPTIVE_118_RUN"],
+              let calibrationPath = environment["WHISPERASR_ADAPTIVE_118_CALIBRATION"],
+              let outputRoot = environment["WHISPERASR_ADAPTIVE_118_OUTPUT"],
+              let rawJobID = environment["WHISPERASR_ADAPTIVE_118_JOB_ID"],
+              let jobID = UUID(uuidString: rawJobID),
+              let workerPath = environment["WHISPERASR_HIGH_QUALITY_WORKER_EXECUTABLE"] else {
+            throw XCTSkip("Grant benchmark slot #118 and provide frozen downstream inputs.")
+        }
+        let decoder = Self.decoder()
+        let plan = try decoder.decode(
+            Plan.self,
+            from: Data(contentsOf: URL(fileURLWithPath: planPath))
+        )
+        let run = try decoder.decode(
+            Run118.self,
+            from: Data(contentsOf: URL(fileURLWithPath: runPath))
+        )
+        let calibration = try decoder.decode(
+            HighQualityAdaptiveASRCalibration.self,
+            from: Data(contentsOf: URL(fileURLWithPath: calibrationPath))
+        )
+        XCTAssertEqual(run.ticket, 118)
+        XCTAssertEqual(run.status, "completed")
+        XCTAssertTrue(run.strictlySequential)
+        XCTAssertEqual(run.planSHA256, try JapaneseBenchmarkSupport.sha256(
+            at: URL(fileURLWithPath: planPath)
+        ))
+        XCTAssertTrue(calibration.isWhisperKitStable)
+        XCTAssertFalse(calibration.isStable)
+
+        let audioURL = URL(fileURLWithPath: audioPath)
+        let samples = try await AudioLoader.loadSamples(url: audioURL)
+        XCTAssertEqual(samples.count, plan.sampleCount)
+        let qwen = AdaptiveASR117Replay(
+            windows: run.windows.map { ($0.segment, .success($0.qwen)) }
+        )
+        let parakeet = AdaptiveASR117Replay(windows: run.windows.compactMap { window in
+            guard window.qwenAssessment.isSuspect else { return nil }
+            if let exchange = window.parakeet {
+                return (window.segment, .success(exchange))
+            }
+            return (
+                window.segment,
+                .failure(window.parakeetError?.message ?? "Parakeet evidence is missing.")
+            )
+        })
+        let whisperKit = AdaptiveASR117Replay(windows: run.windows.compactMap { window in
+            guard window.whisperKitLaunch?.shouldLaunch == true else { return nil }
+            if let exchange = window.whisperKit {
+                return (window.segment, .success(exchange))
+            }
+            return (
+                window.segment,
+                .failure(window.whisperKitError?.message ?? "WhisperKit evidence is missing.")
+            )
+        })
+        let executableURL = URL(fileURLWithPath: workerPath)
+        let aligner = HighQualityAlignmentSpeakerWorkerClient(
+            stage: .alignment,
+            executableURL: executableURL
+        )
+        let translator = HighQualityTranslationWorkerClient(
+            candidate: .translateGemma12B,
+            executableURL: executableURL
+        )
+        let translationCalls = AdaptiveASR117Counter()
+        let job = HighQualityJob(servicesForBackend: { backend in
+            let replay: AdaptiveASR117Replay
+            switch backend {
+            case .qwenJA: replay = qwen
+            case .parakeetJA: replay = parakeet
+            case .whisperKit: replay = whisperKit
+            case .funASRNanoInt8, .reazonSpeechK2V2: replay = qwen
+            }
+            return .init(
+                loadSource: { _ in samples },
+                prepareASR: { _ in },
+                transcribeJapanese: { _ in
+                    throw AdaptiveASR117ReplayError.unexpectedStringTranscript
+                },
+                transcribeJapaneseEvidence: { try await replay.next(samples: $0) },
+                unloadASR: {},
+                asrWorkerEvidence: { run.workers.first { $0.backend == backend } },
+                prepareAlignment: { try await aligner.prepare(progress: $0) },
+                alignJapanese: { try await aligner.align(samples: $0, turns: $1) },
+                unloadAlignment: { await aligner.unload() },
+                alignmentWorkerEvidence: { await aligner.evidence },
+                currentMemoryBytes: { LocalEnglishModelManager.measuredMemoryBytes() },
+                prepareTranslation: { try await translator.prepare(progress: $0) },
+                translateEnglish: {
+                    await translationCalls.increment()
+                    return try await translator.translate($0)
+                },
+                unloadTranslation: { await translator.unload() },
+                translationWorkerEvidence: { await translator.evidence },
+                heavyweightGate: .shared
+            )
+        })
+        let result = try await job.run(.init(
+            id: jobID,
+            sourceURL: audioURL,
+            deliverables: [.japaneseTranscript, .englishTranslationTranscript],
+            asrMode: .adaptiveQwenParakeet,
+            translator: .translateGemma12B,
+            adaptiveCalibration: calibration,
+            outputRoot: URL(fileURLWithPath: outputRoot)
+        ))
+        let translationCallCount = await translationCalls.value
+        let remainingQwen = await qwen.remaining
+        let remainingParakeet = await parakeet.remaining
+        let remainingWhisperKit = await whisperKit.remaining
+        XCTAssertEqual(translationCallCount, 1)
+        XCTAssertEqual(remainingQwen, 0)
+        XCTAssertEqual(remainingParakeet, 0)
+        XCTAssertEqual(remainingWhisperKit, 0)
+        XCTAssertEqual(result.manifest.selectedASRMode, .adaptiveQwenParakeet)
+        XCTAssertEqual(result.evidence.adaptiveASR?.calibration, calibration)
+        XCTAssertTrue(result.evidence.adaptiveASR?.decisions.allSatisfy {
+            $0.selectedText == $0.qwen.rawTranscript
+                || $0.selectedText == $0.whisperKit?.rawTranscript
+        } == true)
+    }
+
     private static func write<T: Encodable>(_ value: T, to url: URL) throws {
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
@@ -370,6 +755,12 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(value).write(to: url, options: .atomic)
+    }
+
+    private static func decoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
     }
 
     private static func candidateEvidence(
@@ -383,7 +774,8 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
             route: route,
             stage: stage,
             segmentID: segmentID,
-            message: error.localizedDescription
+            message: error.localizedDescription,
+            candidateReason: HighQualityAdaptiveASR.candidateReason(error)
         )
     }
 

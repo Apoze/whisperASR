@@ -73,6 +73,23 @@ struct HighQualityAdaptiveASRAssessment: Codable, Equatable, Sendable {
     var isSuspect: Bool { !signals.isEmpty }
 }
 
+enum HighQualityAdaptiveASRWhisperKitLaunchReason: String, Codable, Sendable {
+    case qwenNotSuspect = "qwen-not-suspect"
+    case missingParakeetEvidence = "missing-parakeet-evidence"
+    case parakeetIntegrityVeto = "parakeet-integrity-veto"
+    case disagreementBelowThreshold = "disagreement-below-threshold"
+    case unstableCalibration = "unstable-calibration"
+    case qwenParakeetDecisionResolved = "qwen-parakeet-decision-resolved"
+    case unresolvedMaterialDisagreement = "unresolved-material-disagreement"
+}
+
+struct HighQualityAdaptiveASRWhisperKitLaunch: Codable, Equatable, Sendable {
+    let reason: HighQualityAdaptiveASRWhisperKitLaunchReason
+    let normalizedDisagreement: Double?
+
+    var shouldLaunch: Bool { reason == .unresolvedMaterialDisagreement }
+}
+
 struct HighQualityAdaptiveASRBackendCalibration: Codable, Equatable, Sendable {
     let backend: HighQualityASRBackend
     let bestObservedDefect: Double
@@ -99,6 +116,7 @@ struct HighQualityAdaptiveASRCalibration: Codable, Equatable, Sendable {
     let version: String
     let qwen: HighQualityAdaptiveASRBackendCalibration
     let parakeet: HighQualityAdaptiveASRBackendCalibration
+    var whisperKit: HighQualityAdaptiveASRBackendCalibration? = nil
     let minimumMargin: Double
     let tieTolerance: Double
     let stableAcrossBlocks: Bool
@@ -130,6 +148,11 @@ struct HighQualityAdaptiveASRCalibration: Codable, Equatable, Sendable {
         stableAcrossBlocks && qwen.stable && parakeet.stable
             && qwen.backend == .qwenJA && parakeet.backend == .parakeetJA
     }
+
+    var isWhisperKitStable: Bool {
+        stableAcrossBlocks && qwen.stable && whisperKit?.stable == true
+            && qwen.backend == .qwenJA && whisperKit?.backend == .whisperKit
+    }
 }
 
 enum HighQualityAdaptiveASRFallbackReason: String, Codable, Sendable {
@@ -152,6 +175,14 @@ enum HighQualityAdaptiveASRVeto: String, Codable, CaseIterable, Hashable, Sendab
     case lostScopedTerm = "lost-scoped-term"
 }
 
+enum HighQualityAdaptiveASRWhisperKitDisposition: String, Codable, Sendable {
+    case notLaunched = "not-launched"
+    case override
+    case abstention
+    case veto
+    case failure
+}
+
 struct HighQualityAdaptiveASRDecision: Codable, Equatable, Sendable {
     let segment: HighQualityAdaptiveASRSegment
     let signals: [HighQualityAdaptiveASRSignal]
@@ -169,6 +200,14 @@ struct HighQualityAdaptiveASRDecision: Codable, Equatable, Sendable {
     let qwenDuration: TimeInterval
     let parakeetDuration: TimeInterval?
     let error: HighQualityAdaptiveASRErrorEvidence?
+    var whisperKit: HighQualityASRExchange? = nil
+    var whisperKitRawDefectScore: Double? = nil
+    var whisperKitCalibratedScore: Double? = nil
+    var whisperKitVetoes: [HighQualityAdaptiveASRVeto]? = nil
+    var whisperKitDuration: TimeInterval? = nil
+    var whisperKitLaunch: HighQualityAdaptiveASRWhisperKitLaunch? = nil
+    var whisperKitDisposition: HighQualityAdaptiveASRWhisperKitDisposition? = nil
+    var whisperKitError: HighQualityAdaptiveASRErrorEvidence? = nil
 }
 
 enum HighQualityAdaptiveASRErrorRoute: String, Codable, Sendable {
@@ -182,10 +221,11 @@ struct HighQualityAdaptiveASRErrorEvidence: Codable, Equatable, Sendable {
     let stage: String
     let segmentID: String?
     let message: String
+    var candidateReason: HighQualityASRCandidateEvidenceFailureReason? = nil
 }
 
 struct HighQualityAdaptiveASRAudit: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     let schemaVersion: Int
     let calibration: HighQualityAdaptiveASRCalibration
@@ -193,12 +233,14 @@ struct HighQualityAdaptiveASRAudit: Codable, Equatable, Sendable {
     let workers: [HighQualityASRWorkerEvidence]
     let qwenDuration: TimeInterval
     let parakeetDuration: TimeInterval
+    var whisperKitDuration: TimeInterval? = nil
     let peakMemoryBytes: UInt64
     let errors: [HighQualityAdaptiveASRErrorEvidence]
 }
 
 enum HighQualityAdaptiveASR {
     static let isExposed = false
+    static let whisperKitDisagreementMinimum = 0.15
     private static let sampleRate = 16_000
     private static let frameSamples = sampleRate / 50
     private static let minimumSamples = 3 * sampleRate
@@ -212,11 +254,20 @@ enum HighQualityAdaptiveASR {
         }
         if let error = error as? HighQualityASRWorkerError {
             switch error {
-            case .criticalMemoryPressure, .protocolFailure: return .infrastructure
-            case .backendFailure: return .candidate
+            case .invalidCandidateEvidence: return .candidate
+            case .criticalMemoryPressure, .backendFailure, .protocolFailure:
+                return .infrastructure
             }
         }
-        return .candidate
+        return .infrastructure
+    }
+
+    static func candidateReason(
+        _ error: any Error
+    ) -> HighQualityASRCandidateEvidenceFailureReason? {
+        guard case HighQualityASRWorkerError.invalidCandidateEvidence(let reason) = error
+        else { return nil }
+        return reason
     }
 
     static func plan(samples: [Float]) -> [HighQualityAdaptiveASRSegment] {
@@ -305,18 +356,76 @@ enum HighQualityAdaptiveASR {
         return .init(signals: signals, rawDefectScore: defect)
     }
 
+    static func whisperKitLaunch(
+        segment: HighQualityAdaptiveASRSegment,
+        qwen: HighQualityASRExchange,
+        parakeet: HighQualityASRExchange,
+        scopedTerms: Set<String>,
+        calibration: HighQualityAdaptiveASRCalibration,
+        qwenParakeetFallback: HighQualityAdaptiveASRFallbackReason?
+    ) -> HighQualityAdaptiveASRWhisperKitLaunch {
+        guard assess(qwen: qwen, segment: segment, scopedTerms: scopedTerms).isSuspect else {
+            return .init(reason: .qwenNotSuspect, normalizedDisagreement: nil)
+        }
+        guard !normalized(parakeet.rawTranscript).isEmpty,
+              parakeet.confidence != nil,
+              timingCoverage(parakeet) != nil else {
+            return .init(reason: .missingParakeetEvidence, normalizedDisagreement: nil)
+        }
+        guard vetoes(
+            qwen: qwen,
+            parakeet: parakeet,
+            segment: segment,
+            scopedTerms: scopedTerms
+        ).isEmpty else {
+            return .init(reason: .parakeetIntegrityVeto, normalizedDisagreement: nil)
+        }
+        let qwenText = Array(normalized(qwen.rawTranscript))
+        let parakeetText = Array(normalized(parakeet.rawTranscript))
+        let disagreement = Double(editDistance(qwenText, parakeetText))
+            / Double(max(1, qwenText.count, parakeetText.count))
+        guard disagreement >= whisperKitDisagreementMinimum else {
+            return .init(
+                reason: .disagreementBelowThreshold,
+                normalizedDisagreement: disagreement
+            )
+        }
+        guard calibration.isStable, calibration.isWhisperKitStable else {
+            return .init(reason: .unstableCalibration, normalizedDisagreement: disagreement)
+        }
+        guard qwenParakeetFallback == .tie
+                || qwenParakeetFallback == .insufficientMargin else {
+            return .init(
+                reason: .qwenParakeetDecisionResolved,
+                normalizedDisagreement: disagreement
+            )
+        }
+        return .init(
+            reason: .unresolvedMaterialDisagreement,
+            normalizedDisagreement: disagreement
+        )
+    }
+
     static func decide(
         segment: HighQualityAdaptiveASRSegment,
         qwen: HighQualityASRExchange,
         qwenDuration: TimeInterval,
         parakeet: HighQualityASRExchange?,
         parakeetDuration: TimeInterval?,
+        whisperKit: HighQualityASRExchange? = nil,
+        whisperKitDuration: TimeInterval? = nil,
         scopedTerms: Set<String>,
         calibration: HighQualityAdaptiveASRCalibration,
-        alternateError: HighQualityAdaptiveASRErrorEvidence? = nil
+        alternateError: HighQualityAdaptiveASRErrorEvidence? = nil,
+        whisperKitError: HighQualityAdaptiveASRErrorEvidence? = nil
     ) -> HighQualityAdaptiveASRDecision {
         let qwenAssessment = assess(qwen: qwen, segment: segment, scopedTerms: scopedTerms)
         guard let parakeet else {
+            let launch = HighQualityAdaptiveASRWhisperKitLaunch(
+                reason: qwenAssessment.isSuspect
+                    ? .missingParakeetEvidence : .qwenNotSuspect,
+                normalizedDisagreement: nil
+            )
             return decision(
                 segment: segment,
                 assessment: qwenAssessment,
@@ -327,7 +436,8 @@ enum HighQualityAdaptiveASR {
                     : .alternateFailure,
                 executedBackends: alternateError == nil
                     ? [.qwenJA] : [.qwenJA, .parakeetJA],
-                error: alternateError
+                error: alternateError,
+                whisperKitLaunch: launch
             )
         }
         let parakeetAssessment = assess(
@@ -366,10 +476,85 @@ enum HighQualityAdaptiveASR {
         } else {
             fallback = nil
         }
+        let launch = whisperKitLaunch(
+            segment: segment,
+            qwen: qwen,
+            parakeet: parakeet,
+            scopedTerms: scopedTerms,
+            calibration: calibration,
+            qwenParakeetFallback: fallback
+        )
+        if let whisperKit {
+            let assessment = assess(
+                qwen: whisperKit,
+                segment: segment,
+                scopedTerms: scopedTerms
+            )
+            let raw = whisperKit.averageLogProbability.map {
+                assessment.rawDefectScore - $0
+            }
+            let score = raw.flatMap {
+                calibration.whisperKit?.calibratedScore(for: $0)
+            }
+            let whisperKitVetoes = Self.vetoes(
+                qwen: qwen,
+                parakeet: whisperKit,
+                segment: segment,
+                scopedTerms: scopedTerms
+            )
+            let whisperKitFallback: HighQualityAdaptiveASRFallbackReason?
+            if !launch.shouldLaunch {
+                whisperKitFallback = fallback ?? .notSuspect
+            } else if !whisperKitVetoes.isEmpty {
+                whisperKitFallback = .integrityVeto
+            } else if timingCoverage(whisperKit) == nil || raw == nil {
+                whisperKitFallback = .missingEvidence
+            } else if !calibration.isWhisperKitStable {
+                whisperKitFallback = .unstableCalibration
+            } else if qwenScore == nil || score == nil {
+                whisperKitFallback = .missingEvidence
+            } else if abs(score! - qwenScore!) <= calibration.tieTolerance {
+                whisperKitFallback = .tie
+            } else if score! - qwenScore! <= calibration.minimumMargin {
+                whisperKitFallback = .insufficientMargin
+            } else {
+                whisperKitFallback = nil
+            }
+            return .init(
+                segment: segment,
+                signals: qwenAssessment.signals,
+                executedBackends: [.qwenJA, .parakeetJA, .whisperKit],
+                qwen: qwen,
+                parakeet: parakeet,
+                qwenRawDefectScore: qwenAssessment.rawDefectScore,
+                parakeetRawDefectScore: parakeetRaw,
+                qwenCalibratedScore: qwenScore,
+                parakeetCalibratedScore: parakeetScore,
+                vetoes: vetoes,
+                selectedBackend: whisperKitFallback == nil ? .whisperKit : .qwenJA,
+                selectedText: whisperKitFallback == nil
+                    ? whisperKit.rawTranscript : qwen.rawTranscript,
+                fallbackReason: whisperKitFallback,
+                qwenDuration: qwenDuration,
+                parakeetDuration: parakeetDuration,
+                error: alternateError,
+                whisperKit: whisperKit,
+                whisperKitRawDefectScore: raw,
+                whisperKitCalibratedScore: score,
+                whisperKitVetoes: whisperKitVetoes,
+                whisperKitDuration: whisperKitDuration,
+                whisperKitLaunch: launch,
+                whisperKitDisposition: whisperKitFallback == nil
+                    ? .override
+                    : (whisperKitFallback == .integrityVeto ? .veto : .abstention),
+                whisperKitError: whisperKitError
+            )
+        }
         return .init(
             segment: segment,
             signals: qwenAssessment.signals,
-            executedBackends: [.qwenJA, .parakeetJA],
+            executedBackends: whisperKitError == nil
+                ? [.qwenJA, .parakeetJA] : [.qwenJA, .parakeetJA, .whisperKit],
             qwen: qwen,
             parakeet: parakeet,
             qwenRawDefectScore: qwenAssessment.rawDefectScore,
@@ -382,7 +567,10 @@ enum HighQualityAdaptiveASR {
             fallbackReason: fallback,
             qwenDuration: qwenDuration,
             parakeetDuration: parakeetDuration,
-            error: alternateError
+            error: alternateError,
+            whisperKitLaunch: launch,
+            whisperKitDisposition: whisperKitError == nil ? .notLaunched : .failure,
+            whisperKitError: whisperKitError
         )
     }
 
@@ -399,11 +587,16 @@ enum HighQualityAdaptiveASR {
             )
         }
         let windows: [HighQualityASRWindowEvidence] = decisions.map { decision in
-            .init(
+            let result: HighQualityASRExchange
+            switch decision.selectedBackend {
+            case .parakeetJA: result = decision.parakeet ?? decision.qwen
+            case .whisperKit: result = decision.whisperKit ?? decision.qwen
+            default: result = decision.qwen
+            }
+            return .init(
                 sourceStart: Double(decision.segment.startSample) / Double(sampleRate),
                 sourceEnd: Double(decision.segment.endSample) / Double(sampleRate),
-                result: decision.selectedBackend == .parakeetJA
-                    ? decision.parakeet ?? decision.qwen : decision.qwen
+                result: result
             )
         }
         return .init(
@@ -426,6 +619,24 @@ enum HighQualityAdaptiveASR {
         .lowercased()
     }
 
+    private static func editDistance(_ left: [Character], _ right: [Character]) -> Int {
+        // ponytail: O(n×m) is bounded by 8-second segments; revisit only if profiling demands it.
+        var previous = Array(0...right.count)
+        for (leftIndex, leftCharacter) in left.enumerated() {
+            var current = [leftIndex + 1]
+            current.reserveCapacity(right.count + 1)
+            for (rightIndex, rightCharacter) in right.enumerated() {
+                current.append(min(
+                    current[rightIndex] + 1,
+                    previous[rightIndex + 1] + 1,
+                    previous[rightIndex] + (leftCharacter == rightCharacter ? 0 : 1)
+                ))
+            }
+            previous = current
+        }
+        return previous.last ?? left.count
+    }
+
     private static func repetitionRatio(_ text: String) -> Double {
         let characters = Array(text)
         guard characters.count >= 3 else { return 0 }
@@ -437,11 +648,24 @@ enum HighQualityAdaptiveASR {
 
     private static func timingCoverage(_ exchange: HighQualityASRExchange) -> Double? {
         let ranges: [(Double, Double)]
-        if let timings = exchange.wordTimings ?? exchange.tokenTimings {
+        let mappedText: String
+        if let timings = exchange.wordTimings, !timings.isEmpty {
             ranges = timings.map { ($0.sourceStart, $0.sourceEnd) }
-        } else if let segments = exchange.segments {
+            mappedText = timings.map(\.text).joined()
+        } else if let timings = exchange.tokenTimings, !timings.isEmpty {
+            ranges = timings.map { ($0.sourceStart, $0.sourceEnd) }
+            mappedText = timings.map(\.text).joined()
+        } else if let segments = exchange.segments, !segments.isEmpty {
             ranges = segments.map { ($0.sourceStart, $0.sourceEnd) }
+            mappedText = segments.map(\.text).joined()
         } else {
+            return nil
+        }
+        let transcript = normalized(exchange.rawTranscript)
+        let mapping = normalized(mappedText)
+        guard !transcript.isEmpty,
+              !mapping.isEmpty,
+              transcript.contains(mapping) || mapping.contains(transcript) else {
             return nil
         }
         var covered = 0.0
@@ -455,7 +679,7 @@ enum HighQualityAdaptiveASR {
             }
         }
         if let value = current { covered += value.1 - value.0 }
-        return covered
+        return covered.isFinite && covered > 0 ? covered : nil
     }
 
     static func vetoes(
@@ -533,7 +757,8 @@ enum HighQualityAdaptiveASR {
         qwenDuration: TimeInterval,
         fallback: HighQualityAdaptiveASRFallbackReason,
         executedBackends: [HighQualityASRBackend] = [.qwenJA],
-        error: HighQualityAdaptiveASRErrorEvidence? = nil
+        error: HighQualityAdaptiveASRErrorEvidence? = nil,
+        whisperKitLaunch: HighQualityAdaptiveASRWhisperKitLaunch? = nil
     ) -> HighQualityAdaptiveASRDecision {
         .init(
             segment: segment,
@@ -551,7 +776,9 @@ enum HighQualityAdaptiveASR {
             fallbackReason: fallback,
             qwenDuration: qwenDuration,
             parakeetDuration: nil,
-            error: error
+            error: error,
+            whisperKitLaunch: whisperKitLaunch,
+            whisperKitDisposition: .notLaunched
         )
     }
 }

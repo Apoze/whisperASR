@@ -3421,6 +3421,182 @@ struct HighQualityJob: Sendable {
             "memory=\(release.releasedMemoryBytes) runtimePeak=\(release.evidence.peakMemoryBytes) minimumAvailable=\(release.evidence.minimumAvailableMemoryBytes) maximum=\(release.evidence.maximumMemoryBytes) reserve=\(release.evidence.reserveBytes)"
         }
 
+        func runAdaptivePass(
+            backend: HighQualityASRBackend,
+            segments: [HighQualityAdaptiveASRSegment],
+            samples: [Float],
+            prepareFraction: Double,
+            transcribeFraction: Double
+        ) async -> (
+            results: [String: (HighQualityASRExchange, TimeInterval)],
+            errors: [String: HighQualityAdaptiveASRErrorEvidence],
+            fatalError: (any Error)?,
+            worker: HighQualityASRWorkerEvidence?
+        ) {
+            guard !segments.isEmpty else { return ([:], [:], nil, nil) }
+            let candidate = servicesForSelection(backend, request.translator)
+            let stage = backend.rawValue
+            var lease: HeavyweightModelLease?
+            var results: [String: (HighQualityASRExchange, TimeInterval)] = [:]
+            var errors: [String: HighQualityAdaptiveASRErrorEvidence] = [:]
+            var fatalError: (any Error)?
+            begin(
+                .preparingASR,
+                fraction: prepareFraction,
+                message: "Preparing \(backend.displayName) for targeted passages…"
+            )
+            do {
+                lease = try await acquireModel(
+                    backend.model.modelID,
+                    peak: backend.declaredPeakMemoryBytes
+                )
+                if let lease {
+                    manifest.modelEvents.append(.init(
+                        kind: .pressureChecked,
+                        backend: backend,
+                        at: Date(),
+                        message: "policy=macos-memory-pressure peak=\(lease.declaredPeakBytes) reserve=\(lease.reserveBytes) total=\(lease.totalMemoryBytes) available=\(lease.availableMemoryBytes) baseline=\(lease.baselineMemoryBytes)"
+                    ))
+                }
+                manifest.modelEvents.append(.init(
+                    kind: .loadStarted,
+                    backend: backend,
+                    at: Date()
+                ))
+                try await withMemoryGuard(lease) {
+                    try await candidate.prepareASR { fraction, message in
+                        progress(.init(
+                            stage: .preparingASR,
+                            fraction: prepareFraction + min(max(fraction, 0), 1) * 0.03,
+                            message: message
+                        ))
+                    }
+                }
+                try await markLoaded(lease)
+                manifest.modelEvents.append(.init(
+                    kind: .loadCompleted,
+                    backend: backend,
+                    at: Date()
+                ))
+                begin(
+                    .transcribing,
+                    fraction: transcribeFraction,
+                    message: "Checking targeted passages with \(backend.displayName)…"
+                )
+                for segment in segments {
+                    do {
+                        let result = try await transcribeAdaptiveSegment(
+                            segment,
+                            samples: samples,
+                            using: candidate,
+                            lease: lease
+                        )
+                        results[segment.id] = (result.exchange, result.duration)
+                    } catch is CancellationError {
+                        fatalError = CancellationError()
+                        break
+                    } catch {
+                        let route = HighQualityAdaptiveASR.route(error)
+                        errors[segment.id] = .init(
+                            route: route,
+                            stage: "\(stage)-transcription",
+                            segmentID: segment.id,
+                            message: error.localizedDescription,
+                            candidateReason: HighQualityAdaptiveASR.candidateReason(error)
+                        )
+                        if route == .infrastructure {
+                            fatalError = error
+                            break
+                        }
+                    }
+                }
+            } catch {
+                let route = HighQualityAdaptiveASR.route(error)
+                for segment in segments where results[segment.id] == nil {
+                    errors[segment.id] = .init(
+                        route: route,
+                        stage: "\(stage)-preparation",
+                        segmentID: segment.id,
+                        message: error.localizedDescription,
+                        candidateReason: HighQualityAdaptiveASR.candidateReason(error)
+                    )
+                }
+                if error is CancellationError || route == .infrastructure {
+                    fatalError = error
+                }
+            }
+            if let fatalError {
+                for segment in segments
+                where results[segment.id] == nil && errors[segment.id] == nil {
+                    errors[segment.id] = .init(
+                        route: .infrastructure,
+                        stage: "\(stage)-aborted",
+                        segmentID: segment.id,
+                        message: fatalError.localizedDescription
+                    )
+                }
+            }
+            do {
+                let release = try await releaseModel(lease, unload: candidate.unloadASR)
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    backend: backend,
+                    at: Date()
+                ))
+                if let release {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        release.evidence.peakMemoryBytes
+                    )
+                    manifest.modelEvents.append(.init(
+                        kind: .memoryReleaseChecked,
+                        backend: backend,
+                        at: Date(),
+                        message: releaseMessage(release)
+                    ))
+                }
+            } catch {
+                await candidate.unloadASR()
+                let evidence = HighQualityAdaptiveASRErrorEvidence(
+                    route: .infrastructure,
+                    stage: "\(stage)-unload",
+                    segmentID: nil,
+                    message: error.localizedDescription
+                )
+                for segment in segments where results[segment.id] == nil {
+                    errors[segment.id] = evidence
+                }
+                fatalError = error
+            }
+            let worker = await candidate.asrWorkerEvidence()
+            if let worker {
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    worker.lifecycle.peakPhysicalFootprintBytes
+                )
+            }
+            return (results, errors, fatalError, worker)
+        }
+
+        func recordAdaptiveAudit(
+            decisions: [HighQualityAdaptiveASRDecision],
+            workers: [HighQualityASRWorkerEvidence]
+        ) {
+            adaptiveASR = .init(
+                schemaVersion: HighQualityAdaptiveASRAudit.currentSchemaVersion,
+                calibration: request.adaptiveCalibration,
+                decisions: decisions,
+                workers: workers,
+                qwenDuration: decisions.reduce(0) { $0 + $1.qwenDuration },
+                parakeetDuration: decisions.compactMap(\.parakeetDuration).reduce(0, +),
+                whisperKitDuration: decisions.compactMap(\.whisperKitDuration).reduce(0, +),
+                peakMemoryBytes: manifest.peakMemoryBytes,
+                errors: decisions.flatMap {
+                    [$0.error, $0.whisperKitError].compactMap { $0 }
+                }
+            )
+        }
+
         func recordASRWorkerEvidence() async {
             guard let evidence = await services.asrWorkerEvidence() else { return }
             manifest.asrWorker = evidence
@@ -3645,8 +3821,8 @@ struct HighQualityJob: Sendable {
                 }
                 asrExchange = .init(rawTranscript: transcript, chunks: [])
             }
+            rawASR = asrExchange.rawTranscript
             if request.asrMode != .adaptiveQwenParakeet {
-                rawASR = asrExchange.rawTranscript
                 guard !asrExchange.rawTranscript.trimmingCharacters(
                     in: .whitespacesAndNewlines
                 ).isEmpty else { throw LocalPrototypeError.invalidResponse }
@@ -3683,154 +3859,16 @@ struct HighQualityJob: Sendable {
                         scopedTerms: request.adaptiveScopedTerms
                     ).isSuspect
                 }
-                var alternates: [String: (HighQualityASRExchange, TimeInterval)] = [:]
-                var alternateErrors: [String: HighQualityAdaptiveASRErrorEvidence] = [:]
-                var fatalAlternateError: (any Error)?
-                if !suspects.isEmpty {
-                    let parakeet = servicesForSelection(.parakeetJA, request.translator)
-                    var parakeetLease: HeavyweightModelLease?
-                    begin(
-                        .preparingASR,
-                        fraction: 0.53,
-                        message: "Preparing Parakeet for suspect passages…"
-                    )
-                    do {
-                        parakeetLease = try await acquireModel(
-                            HighQualityASRBackend.parakeetJA.model.modelID,
-                            peak: HighQualityASRBackend.parakeetJA.declaredPeakMemoryBytes
-                        )
-                        if let parakeetLease {
-                            manifest.modelEvents.append(.init(
-                                kind: .pressureChecked,
-                                backend: .parakeetJA,
-                                at: Date(),
-                                message: "policy=macos-memory-pressure peak=\(parakeetLease.declaredPeakBytes) reserve=\(parakeetLease.reserveBytes) total=\(parakeetLease.totalMemoryBytes) available=\(parakeetLease.availableMemoryBytes) baseline=\(parakeetLease.baselineMemoryBytes)"
-                            ))
-                        }
-                        manifest.modelEvents.append(.init(
-                            kind: .loadStarted,
-                            backend: .parakeetJA,
-                            at: Date()
-                        ))
-                        try await withMemoryGuard(parakeetLease) {
-                            try await parakeet.prepareASR { fraction, message in
-                                progress(.init(
-                                    stage: .preparingASR,
-                                    fraction: 0.53 + min(max(fraction, 0), 1) * 0.03,
-                                    message: message
-                                ))
-                            }
-                        }
-                        try await markLoaded(parakeetLease)
-                        manifest.modelEvents.append(.init(
-                            kind: .loadCompleted,
-                            backend: .parakeetJA,
-                            at: Date()
-                        ))
-                        begin(
-                            .transcribing,
-                            fraction: 0.56,
-                            message: "Checking suspect passages with Parakeet…"
-                        )
-                        for suspect in suspects {
-                            do {
-                                let result = try await transcribeAdaptiveSegment(
-                                    suspect.segment,
-                                    samples: samples,
-                                    using: parakeet,
-                                    lease: parakeetLease
-                                )
-                                alternates[suspect.segment.id] = (
-                                    result.exchange,
-                                    result.duration
-                                )
-                            } catch is CancellationError {
-                                throw CancellationError()
-                            } catch {
-                                let route = HighQualityAdaptiveASR.route(error)
-                                alternateErrors[suspect.segment.id] = .init(
-                                    route: route,
-                                    stage: "parakeet-transcription",
-                                    segmentID: suspect.segment.id,
-                                    message: error.localizedDescription
-                                )
-                                if route == .infrastructure {
-                                    fatalAlternateError = error
-                                    break
-                                }
-                            }
-                        }
-                    } catch {
-                        let route = HighQualityAdaptiveASR.route(error)
-                        for suspect in suspects where alternates[suspect.segment.id] == nil {
-                            alternateErrors[suspect.segment.id] = .init(
-                                route: route,
-                                stage: "parakeet-preparation",
-                                segmentID: suspect.segment.id,
-                                message: error.localizedDescription
-                            )
-                        }
-                        if error is CancellationError || route == .infrastructure {
-                            fatalAlternateError = error
-                        }
-                    }
-                    if let fatalAlternateError {
-                        for suspect in suspects
-                        where alternates[suspect.segment.id] == nil
-                            && alternateErrors[suspect.segment.id] == nil {
-                            alternateErrors[suspect.segment.id] = .init(
-                                route: .infrastructure,
-                                stage: "parakeet-aborted",
-                                segmentID: suspect.segment.id,
-                                message: fatalAlternateError.localizedDescription
-                            )
-                        }
-                    }
-                    do {
-                        let release = try await releaseModel(
-                            parakeetLease,
-                            unload: parakeet.unloadASR
-                        )
-                        manifest.modelEvents.append(.init(
-                            kind: .unloadCompleted,
-                            backend: .parakeetJA,
-                            at: Date()
-                        ))
-                        if let release {
-                            manifest.peakMemoryBytes = max(
-                                manifest.peakMemoryBytes,
-                                release.evidence.peakMemoryBytes
-                            )
-                            manifest.modelEvents.append(.init(
-                                kind: .memoryReleaseChecked,
-                                backend: .parakeetJA,
-                                at: Date(),
-                                message: releaseMessage(release)
-                            ))
-                        }
-                    } catch {
-                        await parakeet.unloadASR()
-                        let evidence = HighQualityAdaptiveASRErrorEvidence(
-                            route: .infrastructure,
-                            stage: "parakeet-unload",
-                            segmentID: nil,
-                            message: error.localizedDescription
-                        )
-                        for suspect in suspects where alternates[suspect.segment.id] == nil {
-                            alternateErrors[suspect.segment.id] = evidence
-                        }
-                        fatalAlternateError = error
-                    }
-                    if let worker = await parakeet.asrWorkerEvidence() {
-                        workers.append(worker)
-                        manifest.peakMemoryBytes = max(
-                            manifest.peakMemoryBytes,
-                            worker.lifecycle.peakPhysicalFootprintBytes
-                        )
-                    }
-                }
-                let decisions = adaptiveQwenResults.map { qwen in
-                    let alternate = alternates[qwen.segment.id]
+                let parakeetPass = await runAdaptivePass(
+                    backend: .parakeetJA,
+                    segments: suspects.map(\.segment),
+                    samples: samples,
+                    prepareFraction: 0.53,
+                    transcribeFraction: 0.56
+                )
+                if let worker = parakeetPass.worker { workers.append(worker) }
+                let provisionalDecisions = adaptiveQwenResults.map { qwen in
+                    let alternate = parakeetPass.results[qwen.segment.id]
                     return HighQualityAdaptiveASR.decide(
                         segment: qwen.segment,
                         qwen: qwen.exchange,
@@ -3839,9 +3877,52 @@ struct HighQualityJob: Sendable {
                         parakeetDuration: alternate?.1,
                         scopedTerms: request.adaptiveScopedTerms,
                         calibration: request.adaptiveCalibration,
-                        alternateError: alternateErrors[qwen.segment.id]
+                        alternateError: parakeetPass.errors[qwen.segment.id]
                     )
                 }
+                if let fatalError = parakeetPass.fatalError {
+                    recordAdaptiveAudit(decisions: provisionalDecisions, workers: workers)
+                    throw fatalError
+                }
+                let whisperKitIDs = Set(provisionalDecisions.compactMap { decision in
+                    decision.whisperKitLaunch?.shouldLaunch == true
+                        ? decision.segment.id : nil
+                })
+                let whisperKitSegments = adaptiveQwenResults.compactMap {
+                    whisperKitIDs.contains($0.segment.id) ? $0.segment : nil
+                }
+                let whisperKitPass: (
+                    results: [String: (HighQualityASRExchange, TimeInterval)],
+                    errors: [String: HighQualityAdaptiveASRErrorEvidence],
+                    fatalError: (any Error)?,
+                    worker: HighQualityASRWorkerEvidence?
+                ) = await runAdaptivePass(
+                    backend: .whisperKit,
+                    segments: whisperKitSegments,
+                    samples: samples,
+                    prepareFraction: 0.58,
+                    transcribeFraction: 0.61
+                )
+                if let worker = whisperKitPass.worker { workers.append(worker) }
+                let decisions = adaptiveQwenResults.map { qwen in
+                    let alternate = parakeetPass.results[qwen.segment.id]
+                    let whisperKit = whisperKitPass.results[qwen.segment.id]
+                    return HighQualityAdaptiveASR.decide(
+                        segment: qwen.segment,
+                        qwen: qwen.exchange,
+                        qwenDuration: qwen.duration,
+                        parakeet: alternate?.0,
+                        parakeetDuration: alternate?.1,
+                        whisperKit: whisperKit?.0,
+                        whisperKitDuration: whisperKit?.1,
+                        scopedTerms: request.adaptiveScopedTerms,
+                        calibration: request.adaptiveCalibration,
+                        alternateError: parakeetPass.errors[qwen.segment.id],
+                        whisperKitError: whisperKitPass.errors[qwen.segment.id]
+                    )
+                }
+                recordAdaptiveAudit(decisions: decisions, workers: workers)
+                if let fatalError = whisperKitPass.fatalError { throw fatalError }
                 asrExchange = HighQualityAdaptiveASR.compose(decisions)
                 memorySampler?.cancel()
                 if let memorySampler {
@@ -3851,17 +3932,6 @@ struct HighQualityJob: Sendable {
                     )
                 }
                 memorySampler = nil
-                adaptiveASR = .init(
-                    schemaVersion: HighQualityAdaptiveASRAudit.currentSchemaVersion,
-                    calibration: request.adaptiveCalibration,
-                    decisions: decisions,
-                    workers: workers,
-                    qwenDuration: decisions.reduce(0) { $0 + $1.qwenDuration },
-                    parakeetDuration: decisions.compactMap(\.parakeetDuration).reduce(0, +),
-                    peakMemoryBytes: manifest.peakMemoryBytes,
-                    errors: decisions.compactMap(\.error)
-                )
-                if let fatalAlternateError { throw fatalAlternateError }
             } else {
                 memorySampler?.cancel()
                 if let memorySampler {

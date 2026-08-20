@@ -710,6 +710,28 @@ final class HighQualityASRWorkerTests: XCTestCase {
         XCTAssertFalse(HighQualityASRWorkerClient.isValid(
             regressing, sampleCount: 32_000, anchored: true
         ))
+        XCTAssertEqual(
+            HighQualityASRWorkerClient.validationFailure(
+                regressing, sampleCount: 32_000, anchored: true
+            ),
+            .invalidCandidateEvidence(.invalidTimestamps)
+        )
+    }
+
+    func testAnchoredChunksKeepLegacyNonMonotonicStartContract() {
+        let exchange = HighQualityASRExchange(
+            rawTranscript: "後\n前",
+            chunks: [
+                .init(index: 0, sourceStart: 2, sourceEnd: 3, transcript: "後"),
+                .init(index: 1, sourceStart: 0, sourceEnd: 1, transcript: "前"),
+            ]
+        )
+
+        XCTAssertTrue(HighQualityASRWorkerClient.isValid(
+            exchange,
+            sampleCount: 4 * 16_000,
+            anchored: true
+        ))
     }
 
     func testMalformedBackendEvidenceFailsClosedAtWorkerBoundary() async throws {
@@ -726,17 +748,6 @@ final class HighQualityASRWorkerTests: XCTestCase {
                 chunks: [],
                 tokenTimings: [timing],
                 confidence: 1.1
-            ),
-            HighQualityASRExchange(
-                rawTranscript: "日",
-                chunks: [],
-                wordTimings: [.init(
-                    text: "日",
-                    tokenIDs: [42],
-                    sourceStart: -0.1,
-                    sourceEnd: 0.2,
-                    confidence: 0.8
-                )]
             ),
             HighQualityASRExchange(
                 rawTranscript: "日",
@@ -773,6 +784,54 @@ final class HighQualityASRWorkerTests: XCTestCase {
         for invalid in invalidResults {
             try await assertProtocolFailure(invalid, anchored: false, sampleCount: 16_000)
         }
+
+        let invalidTiming = HighQualityASRExchange(
+            rawTranscript: "日",
+            chunks: [],
+            wordTimings: [.init(
+                text: "日",
+                tokenIDs: [42],
+                sourceStart: -0.1,
+                sourceEnd: 0.2,
+                confidence: 0.8
+            )]
+        )
+        let fixture = try ASRWorkerFixture(
+            backend: .whisperKit,
+            response: try responseJSON(invalidTiming)
+        )
+        let worker = fixture.worker(backend: .whisperKit)
+        try await worker.prepare(progress: { _, _ in })
+        do {
+            _ = try await worker.transcribe(
+                Array(repeating: 0, count: 16_000), anchored: false
+            )
+            XCTFail("Invalid candidate timestamps must not cross the worker boundary.")
+        } catch let error as HighQualityASRWorkerError {
+            XCTAssertEqual(error, .invalidCandidateEvidence(.invalidTimestamps))
+        }
+        await worker.unload()
+    }
+
+    func testAudioDataWriteFailureRoutesAsInfrastructure() async throws {
+        let fixture = try ASRWorkerFixture(
+            backend: .whisperKit,
+            response: nil
+        )
+        let worker = fixture.worker(backend: .whisperKit)
+        try await worker.prepare(progress: { _, _ in })
+        try FileManager.default.removeItem(at: fixture.directory)
+
+        do {
+            _ = try await worker.transcribe(
+                Array(repeating: 0, count: 16_000),
+                anchored: false
+            )
+            XCTFail("An audio Data.write failure must abort as infrastructure.")
+        } catch {
+            XCTAssertEqual(HighQualityAdaptiveASR.route(error), .infrastructure)
+        }
+        await worker.unload()
     }
 
     func testMalformedWindowEvidenceFailsClosedAtWorkerBoundary() async throws {
@@ -875,7 +934,9 @@ final class HighQualityASRWorkerTests: XCTestCase {
         let pid = try XCTUnwrap(activePID)
 
         do {
-            _ = try await worker.transcribe([0], anchored: true)
+            _ = try await worker.transcribe(
+                Array(repeating: 0, count: 2 * 16_000), anchored: true
+            )
             XCTFail("Malformed worker output must fail.")
         } catch let error as HighQualityASRWorkerError {
             guard case .protocolFailure = error else {
