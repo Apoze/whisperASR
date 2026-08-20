@@ -3792,6 +3792,50 @@ final class HighQualityJobTests: XCTestCase {
         )
     }
 
+    func testRecurringVoiceEvidenceMatchesProductionThresholdsAndBetaGate() throws {
+        let evidenceDirectory = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("docs/japanese-live/experiments/evidence/issue-115")
+        let decision = try XCTUnwrap(
+            try JSONSerialization.jsonObject(
+                with: Data(contentsOf: evidenceDirectory.appendingPathComponent("decision.json"))
+            ) as? [String: Any]
+        )
+        let thresholds = try XCTUnwrap(decision["thresholds"] as? [String: Any])
+        let origin = try XCTUnwrap(thresholds["origin"] as? [String: Any])
+        let thresholdPath = try XCTUnwrap(origin["path"] as? String)
+        let thresholdURL = evidenceDirectory.appendingPathComponent(thresholdPath)
+        let holdout = try XCTUnwrap(
+            try JSONSerialization.jsonObject(
+                with: Data(
+                    contentsOf: evidenceDirectory.appendingPathComponent("holdout-report.json")
+                )
+            ) as? [String: Any]
+        )
+
+        XCTAssertEqual(decision["decision"] as? String, "GO_BETA_OPT_IN")
+        XCTAssertEqual(decision["defaultEnabled"] as? Bool, false)
+        XCTAssertEqual(decision["automaticAcceptance"] as? Bool, false)
+        XCTAssertEqual(
+            (thresholds["maximumCosineDistance"] as? NSNumber)?.floatValue,
+            HighQualityDuplicateSpeakerSuggestion.maximumCosineDistance
+        )
+        XCTAssertEqual(
+            (thresholds["uncertaintyMargin"] as? NSNumber)?.floatValue,
+            HighQualityDuplicateSpeakerSuggestion.uncertaintyMargin
+        )
+        XCTAssertEqual(
+            try JapaneseBenchmarkSupport.sha256(at: thresholdURL),
+            origin["sha256"] as? String
+        )
+        XCTAssertEqual(origin["e32HoldoutRetunedAfterInspection"] as? Bool, false)
+        XCTAssertEqual(holdout["usefulSuggestionCount"] as? NSNumber, 3)
+        XCTAssertEqual(holdout["falseSuggestionCount"] as? NSNumber, 0)
+        XCTAssertEqual(holdout["suggestionPrecision"] as? NSNumber, 1)
+        XCTAssertEqual(holdout["abstentionRate"] as? NSNumber, 0)
+    }
+
     func testDuplicateSpeakerBetaCopyExplainsSimilarityAndUncertainty() {
         let description = HighQualityDuplicateSpeakerSuggestion.betaDescription
 
@@ -3799,6 +3843,524 @@ final class HighQualityJobTests: XCTestCase {
         XCTAssertTrue(description.contains("uncertain"))
         XCTAssertTrue(description.contains("identity"))
         XCTAssertTrue(description.contains("merge"))
+    }
+
+    func testProjectVoiceMemoryDefaultsOffAndStaysIsolatedAfterReopenAndRename() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let projectsRoot = root.appendingPathComponent("Projects", isDirectory: true)
+        let folderA = root.appendingPathComponent("VTuber", isDirectory: true)
+        let folderB = root.appendingPathComponent("Anime", isDirectory: true)
+        try FileManager.default.createDirectory(at: folderA, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: folderB, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let projectA = try HighQualityProject.create(named: "VTuber", folder: folderA, in: projectsRoot)
+        let projectB = try HighQualityProject.create(named: "Anime", folder: folderB, in: projectsRoot)
+
+        XCTAssertFalse(projectA.scope.voiceMemoryEnabled)
+        XCTAssertFalse(projectB.scope.voiceMemoryEnabled)
+
+        _ = try projectA.settingVoiceMemory(enabled: true).renamed(to: "VTuber Archive")
+        let reopenedA = try HighQualityProject.open(projectA.id, in: projectsRoot)
+        let reopenedB = try HighQualityProject.open(projectB.id, in: projectsRoot)
+
+        XCTAssertTrue(reopenedA.scope.voiceMemoryEnabled)
+        XCTAssertFalse(reopenedB.scope.voiceMemoryEnabled)
+        XCTAssertEqual(reopenedA.name, "VTuber Archive")
+        XCTAssertTrue(reopenedB.scope.voiceProfiles.isEmpty)
+    }
+
+    func testConfirmedVoiceProfileSuggestsLaterVideoAndOnlyAcceptanceEnrichesIt() async throws {
+        let fixture = try makeVoiceProfileProject()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        var project = try fixture.project.settingVoiceMemory(enabled: true)
+        let first = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "first.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        project = first.project
+        XCTAssertEqual(project.recurringVoiceEvaluation(for: first.result).unknownSpeakerLabels, [
+            "SPEAKER_00",
+        ])
+
+        let named = try HighQualityJob.editSpeakers(
+            in: first.result,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        XCTAssertEqual(
+            project.recurringVoiceEvaluation(for: named).confirmableSpeakerLabels,
+            ["SPEAKER_00"]
+        )
+        project = try project.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+        let profile = try XCTUnwrap(project.scope.voiceProfiles.first)
+        XCTAssertEqual(profile.displayName, "Alice")
+        XCTAssertEqual(profile.centroids.count, 1)
+        XCTAssertEqual(
+            try HighQualityProject.open(
+                project.id,
+                in: project.directory.deletingLastPathComponent()
+            ).scope.voiceProfiles,
+            [profile]
+        )
+
+        let second = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "second.wav",
+            jobID: UUID(),
+            vector: [0.999, 0.001]
+        )
+        project = second.project
+        let suggestion = try XCTUnwrap(
+            project.recurringVoiceEvaluation(for: second.result).suggestions.first
+        )
+        XCTAssertEqual(suggestion.speakerLabel, "SPEAKER_00")
+        XCTAssertEqual(suggestion.profileID, profile.id)
+        XCTAssertEqual(suggestion.displayName, "Alice")
+
+        let deliverableURLs = second.result.manifest.generatedFiles
+            .filter { $0.kind == .deliverable }
+            .map { second.result.directory.appendingPathComponent($0.path) }
+        let before = try deliverableURLs.map { try Data(contentsOf: $0) }
+        project = try project.rejectRecurringVoice(suggestion, from: second.result)
+        project = try HighQualityProject.open(
+            project.id,
+            in: project.directory.deletingLastPathComponent()
+        )
+        XCTAssertEqual(project.scope.voiceProfiles.first?.centroids.count, 1)
+        XCTAssertTrue(
+            project.recurringVoiceEvaluation(for: second.result).suggestions.isEmpty
+        )
+        XCTAssertEqual(
+            project.recurringVoiceEvaluation(for: second.result).unknownSpeakerLabels,
+            ["SPEAKER_00"]
+        )
+        XCTAssertEqual(try deliverableURLs.map { try Data(contentsOf: $0) }, before)
+
+        let third = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "third.wav",
+            jobID: UUID(),
+            vector: [0.999, 0.001]
+        )
+        project = third.project
+        let independentSuggestion = try XCTUnwrap(
+            project.recurringVoiceEvaluation(for: third.result).suggestions.first
+        )
+        let thirdDeliverables = third.result.manifest.generatedFiles
+            .filter { $0.kind == .deliverable }
+            .map { third.result.directory.appendingPathComponent($0.path) }
+        let thirdBefore = try thirdDeliverables.map { try Data(contentsOf: $0) }
+        project = try project.acceptRecurringVoice(independentSuggestion, from: third.result)
+        XCTAssertEqual(project.scope.voiceProfiles.first?.centroids.count, 2)
+        XCTAssertNotEqual(try thirdDeliverables.map { try Data(contentsOf: $0) }, thirdBefore)
+        let reopened = try XCTUnwrap(project.savedResults.first { $0.id == third.result.manifest.jobID })
+        XCTAssertEqual(
+            try HighQualityJob.reopen(reopened).editableSpeakerNames["SPEAKER_00"],
+            "Alice"
+        )
+        XCTAssertEqual(
+            project.scope.history.suffix(2).map(\.action),
+            ["recurring-voice-rejected", "recurring-voice-accepted"]
+        )
+    }
+
+    func testRecurringVoiceMatchingAbstainsWhenWeakAmbiguousOrIncompatible() async throws {
+        let fixture = try makeVoiceProfileProject()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        var project = try fixture.project.settingVoiceMemory(enabled: true)
+        for (name, source, vector) in [
+            ("Alice", "alice.wav", [Float(1), 0]),
+            ("Bob", "bob.wav", [Float(0.999), 0.001]),
+        ] {
+            let completed = try await runVoiceProfileJob(
+                project: project,
+                sourceName: source,
+                jobID: UUID(),
+                vector: vector
+            )
+            project = completed.project
+            let named = try HighQualityJob.editSpeakers(
+                in: completed.result,
+                edit: .rename("SPEAKER_00", to: name)
+            )
+            project = try project.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+        }
+
+        let ambiguous = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "ambiguous.wav",
+            jobID: UUID(),
+            vector: [0.9995, 0.0005]
+        )
+        project = ambiguous.project
+        let ambiguousEvaluation = project.recurringVoiceEvaluation(for: ambiguous.result)
+        XCTAssertTrue(ambiguousEvaluation.suggestions.isEmpty)
+        XCTAssertEqual(ambiguousEvaluation.unknownSpeakerLabels, ["SPEAKER_00"])
+
+        let weak = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "weak.wav",
+            jobID: UUID(),
+            vector: [0, 1]
+        )
+        project = weak.project
+        XCTAssertTrue(project.recurringVoiceEvaluation(for: weak.result).suggestions.isEmpty)
+
+        let incompatible = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "incompatible.wav",
+            jobID: UUID(),
+            vector: [1, 0],
+            configuration: [
+                "runtimeRevision": "runtime-revision-v2",
+                "embedderVariant": "W8A16",
+            ]
+        )
+        project = incompatible.project
+        let incompatibleEvaluation = project.recurringVoiceEvaluation(for: incompatible.result)
+        XCTAssertTrue(incompatibleEvaluation.suggestions.isEmpty)
+        XCTAssertEqual(
+            Set(incompatibleEvaluation.profileIncompatibilities.map(\.profileID)),
+            Set(project.scope.voiceProfiles.map(\.id))
+        )
+        XCTAssertEqual(
+            Set(incompatibleEvaluation.profileIncompatibilities.map(\.displayName)),
+            ["Alice", "Bob"]
+        )
+        XCTAssertTrue(incompatibleEvaluation.profileIncompatibilities.allSatisfy {
+            $0.causes == [.modelOrRevision]
+                && !$0.sourceJobIDs.isEmpty
+        })
+        XCTAssertEqual(incompatibleEvaluation.unknownSpeakerLabels, ["SPEAKER_00"])
+
+        let incompatibleVariant = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "incompatible-variant.wav",
+            jobID: UUID(),
+            vector: [1, 0],
+            configuration: [
+                "runtimeRevision": "runtime-revision",
+                "embedderVariant": "W16A16",
+            ]
+        )
+        project = incompatibleVariant.project
+        XCTAssertTrue(
+            project.recurringVoiceEvaluation(for: incompatibleVariant.result)
+                .profileIncompatibilities.allSatisfy { $0.causes == [.embeddingVariant] }
+        )
+
+        let incompatibleDimension = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "incompatible-dimension.wav",
+            jobID: UUID(),
+            vector: [1, 0, 0]
+        )
+        project = incompatibleDimension.project
+        XCTAssertTrue(
+            project.recurringVoiceEvaluation(for: incompatibleDimension.result)
+                .profileIncompatibilities.allSatisfy { $0.causes == [.dimension] }
+        )
+    }
+
+    func testVoiceProfilesCanMergeForgetResetAndNeverCrossProjects() async throws {
+        let fixtureA = try makeVoiceProfileProject(named: "VTuber")
+        let fixtureB = try makeVoiceProfileProject(named: "Anime")
+        defer {
+            try? FileManager.default.removeItem(at: fixtureA.root)
+            try? FileManager.default.removeItem(at: fixtureB.root)
+        }
+        var projectA = try fixtureA.project.settingVoiceMemory(enabled: true)
+        var profileIDs: [UUID] = []
+        for (name, source, vector) in [
+            ("Alice", "alice.wav", [Float(1), 0]),
+            ("Alice duplicate", "alice-duplicate.wav", [Float(0.999), 0.001]),
+        ] {
+            let completed = try await runVoiceProfileJob(
+                project: projectA,
+                sourceName: source,
+                jobID: UUID(),
+                vector: vector
+            )
+            projectA = completed.project
+            let named = try HighQualityJob.editSpeakers(
+                in: completed.result,
+                edit: .rename("SPEAKER_00", to: name)
+            )
+            projectA = try projectA.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+            profileIDs.append(try XCTUnwrap(projectA.scope.voiceProfiles.last?.id))
+        }
+
+        projectA = try projectA.mergeVoiceProfile(profileIDs[1], into: profileIDs[0])
+        XCTAssertEqual(projectA.scope.voiceProfiles.count, 1)
+        XCTAssertEqual(projectA.scope.voiceProfiles[0].centroids.count, 2)
+        projectA = try projectA.forgetVoiceProfile(profileIDs[0])
+        XCTAssertTrue(projectA.scope.voiceProfiles.isEmpty)
+
+        let otherJob = try await runVoiceProfileJob(
+            project: try fixtureB.project.settingVoiceMemory(enabled: true),
+            sourceName: "other.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        XCTAssertThrowsError(
+            try projectA.confirmVoiceProfile(from: otherJob.result, speakerLabel: "SPEAKER_00")
+        )
+        XCTAssertTrue(projectA.scope.voiceProfiles.isEmpty)
+
+        let ownJob = try await runVoiceProfileJob(
+            project: projectA,
+            sourceName: "new.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        projectA = ownJob.project
+        let named = try HighQualityJob.editSpeakers(
+            in: ownJob.result,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        projectA = try projectA.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+        projectA = try projectA.resetVoiceProfiles()
+        XCTAssertTrue(projectA.scope.voiceProfiles.isEmpty)
+        XCTAssertEqual(projectA.scope.history.last?.action, "voice-profiles-reset")
+    }
+
+    func testVoiceMemoryBetaCopyStatesScopePrivacyAndUncertainty() {
+        let description = HighQualityRecurringVoiceSuggestion.betaDescription
+
+        XCTAssertTrue(description.contains("Project"))
+        XCTAssertTrue(description.contains("local"))
+        XCTAssertTrue(description.contains("acoustic similarity"))
+        XCTAssertTrue(description.contains("Unknown"))
+        XCTAssertTrue(description.contains("not proof"))
+    }
+
+    func testVoiceProfileWriteFailurePreservesPreviousProjectAndDeliverables() async throws {
+        let fixture = try makeVoiceProfileProject()
+        defer {
+            for path in (try? FileManager.default.subpathsOfDirectory(
+                atPath: fixture.root.path
+            )) ?? [] {
+                try? FileManager.default.setAttributes(
+                    [.immutable: false],
+                    ofItemAtPath: fixture.root.appendingPathComponent(path).path
+                )
+            }
+            try? FileManager.default.removeItem(at: fixture.root)
+        }
+        var project = try fixture.project.settingVoiceMemory(enabled: true)
+        let completed = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "failure.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        project = completed.project
+        let named = try HighQualityJob.editSpeakers(
+            in: completed.result,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        let deliverableURLs = named.manifest.generatedFiles
+            .filter { $0.kind == .deliverable }
+            .map { named.directory.appendingPathComponent($0.path) }
+        let deliverablesBefore = try deliverableURLs.map { try Data(contentsOf: $0) }
+        let manifestURL = project.directory.appendingPathComponent("project.json")
+        let manifestBefore = try Data(contentsOf: manifestURL)
+        try FileManager.default.setAttributes(
+            [.immutable: true],
+            ofItemAtPath: manifestURL.path
+        )
+
+        XCTAssertThrowsError(
+            try project.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+        )
+        XCTAssertEqual(try Data(contentsOf: manifestURL), manifestBefore)
+        XCTAssertEqual(try deliverableURLs.map { try Data(contentsOf: $0) }, deliverablesBefore)
+    }
+
+    func testRecurringVoiceAcceptanceRollsBackProfileWhenResultCommitFails() async throws {
+        let fixture = try makeVoiceProfileProject()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        var project = try fixture.project.settingVoiceMemory(enabled: true)
+        let enrollment = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "enrollment.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        project = enrollment.project
+        let named = try HighQualityJob.editSpeakers(
+            in: enrollment.result,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        project = try project.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+        let probe = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "probe.wav",
+            jobID: UUID(),
+            vector: [0.999, 0.001]
+        )
+        project = probe.project
+        let suggestion = try XCTUnwrap(
+            project.recurringVoiceEvaluation(for: probe.result).suggestions.first
+        )
+        let projectBefore = try Data(
+            contentsOf: project.directory.appendingPathComponent("project.json")
+        )
+        let filesBefore = try resultFiles(in: probe.result.directory)
+
+        XCTAssertThrowsError(try project.acceptRecurringVoice(
+            suggestion,
+            from: probe.result,
+            beforeResultCommit: { throw CocoaError(.fileWriteUnknown) }
+        ))
+
+        XCTAssertEqual(
+            try Data(contentsOf: project.directory.appendingPathComponent("project.json")),
+            projectBefore
+        )
+        XCTAssertEqual(try resultFiles(in: probe.result.directory), filesBefore)
+        XCTAssertEqual(
+            try HighQualityProject.open(
+                project.id,
+                in: project.directory.deletingLastPathComponent()
+            ).scope.voiceProfiles.first?.centroids.count,
+            1
+        )
+    }
+
+    func testProjectVoiceOperationsRejectStaleManifestAndEvidence() async throws {
+        let fixture = try makeVoiceProfileProject()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        var project = try fixture.project.settingVoiceMemory(enabled: true)
+        let completed = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "stale.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        project = completed.project
+        let named = try HighQualityJob.editSpeakers(
+            in: completed.result,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        project = try project.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+
+        let evidenceEncoder = JSONEncoder()
+        evidenceEncoder.dateEncodingStrategy = .iso8601
+        var staleEvidenceObject = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: evidenceEncoder.encode(named.evidence))
+                as? [String: Any]
+        )
+        staleEvidenceObject["sampleCount"] = named.evidence.sampleCount + 1
+        let evidenceDecoder = JSONDecoder()
+        evidenceDecoder.dateDecodingStrategy = .iso8601
+        let staleEvidence = try evidenceDecoder.decode(
+            HighQualityRawEvidence.self,
+            from: JSONSerialization.data(withJSONObject: staleEvidenceObject)
+        )
+        let forged = HighQualityJobResult(
+            directory: named.directory,
+            japaneseTranscript: named.japaneseTranscript,
+            englishTranscript: named.englishTranscript,
+            turns: named.turns,
+            subtitleCues: named.subtitleCues,
+            manifest: named.manifest,
+            evidence: staleEvidence,
+            speakerReanalysisCompletion: named.speakerReanalysisCompletion
+        )
+        XCTAssertTrue(project.recurringVoiceEvaluation(for: forged).suggestions.isEmpty)
+        XCTAssertThrowsError(
+            try project.confirmVoiceProfile(from: forged, speakerLabel: "SPEAKER_00")
+        )
+
+        _ = try HighQualityJob.editSpeakers(
+            in: named,
+            edit: .rename("SPEAKER_00", to: "Alice Updated")
+        )
+        XCTAssertTrue(project.recurringVoiceEvaluation(for: named).suggestions.isEmpty)
+        XCTAssertThrowsError(
+            try project.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+        )
+    }
+
+    func testProjectVoiceMemoryEndToEndUsesOnlyPublicProjectResultSeams() async throws {
+        let fixtureA = try makeVoiceProfileProject(named: "VTuber")
+        let fixtureB = try makeVoiceProfileProject(named: "Anime")
+        defer {
+            try? FileManager.default.removeItem(at: fixtureA.root)
+            try? FileManager.default.removeItem(at: fixtureB.root)
+        }
+        var projectA = try fixtureA.project.settingVoiceMemory(enabled: true)
+        var projectB = try fixtureB.project.settingVoiceMemory(enabled: true)
+        let first = try await runVoiceProfileJob(
+            project: projectA,
+            sourceName: "first.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        projectA = first.project
+        XCTAssertEqual(
+            projectA.recurringVoiceEvaluation(for: first.result).unknownSpeakerLabels,
+            ["SPEAKER_00"]
+        )
+        let named = try HighQualityJob.editSpeakers(
+            in: first.result,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        projectA = try projectA.confirmVoiceProfile(from: named, speakerLabel: "SPEAKER_00")
+        let second = try await runVoiceProfileJob(
+            project: projectA,
+            sourceName: "second.wav",
+            jobID: UUID(),
+            vector: [0.999, 0.001]
+        )
+        projectA = second.project
+        let suggestion = try XCTUnwrap(
+            projectA.recurringVoiceEvaluation(for: second.result).suggestions.first
+        )
+        XCTAssertEqual(suggestion.displayName, "Alice")
+        XCTAssertTrue(projectB.scope.voiceMemoryEnabled)
+        XCTAssertTrue(projectB.scope.voiceProfiles.isEmpty)
+        XCTAssertTrue(
+            projectB.recurringVoiceEvaluation(for: second.result).suggestions.isEmpty
+        )
+
+        let firstB = try await runVoiceProfileJob(
+            project: projectB,
+            sourceName: "first-b.wav",
+            jobID: UUID(),
+            vector: [1, 0]
+        )
+        projectB = firstB.project
+        let namedB = try HighQualityJob.editSpeakers(
+            in: firstB.result,
+            edit: .rename("SPEAKER_00", to: "Bob")
+        )
+        projectB = try projectB.confirmVoiceProfile(from: namedB, speakerLabel: "SPEAKER_00")
+        let secondB = try await runVoiceProfileJob(
+            project: projectB,
+            sourceName: "second-b.wav",
+            jobID: UUID(),
+            vector: [0.999, 0.001]
+        )
+        projectB = secondB.project
+        XCTAssertEqual(
+            projectB.recurringVoiceEvaluation(for: secondB.result).suggestions.first?.displayName,
+            "Bob"
+        )
+        XCTAssertTrue(
+            projectB.recurringVoiceEvaluation(for: second.result).suggestions.isEmpty,
+            "Project B must reject Project A evidence even when B has a matching local profile."
+        )
+        XCTAssertTrue(
+            projectA.recurringVoiceEvaluation(for: secondB.result).suggestions.isEmpty,
+            "Project A must reject Project B evidence even when A has a matching local profile."
+        )
+        projectA = try projectA.resetVoiceProfiles()
+        XCTAssertTrue(projectA.scope.voiceProfiles.isEmpty)
+        XCTAssertTrue(projectA.recurringVoiceEvaluation(for: second.result).suggestions.isEmpty)
     }
 
 
@@ -6034,6 +6596,55 @@ final class HighQualityJobTests: XCTestCase {
                 )
             }
         ))
+    }
+
+    private func makeVoiceProfileProject(
+        named name: String = "VTuber"
+    ) throws -> (root: URL, project: HighQualityProject) {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let folder = root.appendingPathComponent(name, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return (
+            root,
+            try HighQualityProject.create(
+                named: name,
+                folder: folder,
+                in: root.appendingPathComponent("Projects", isDirectory: true)
+            )
+        )
+    }
+
+    private func runVoiceProfileJob(
+        project: HighQualityProject,
+        sourceName: String,
+        jobID: UUID,
+        vector: [Float],
+        configuration: [String: String] = [
+            "runtimeRevision": "runtime-revision",
+            "embedderVariant": "W8A16",
+        ]
+    ) async throws -> (project: HighQualityProject, result: HighQualityJobResult) {
+        let source = project.folderURL.appendingPathComponent(sourceName)
+        try Data("audio-reference".utf8).write(to: source, options: .atomic)
+        let result = try await speakerSubtitleFixtureJob(
+            speakerCentroids: [0: vector],
+            speakerCentroidConfiguration: configuration
+        ).run(.init(
+            id: jobID,
+            sourceURL: source,
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            project: project
+        ))
+        return (
+            try HighQualityProject.open(
+                project.id,
+                in: project.directory.deletingLastPathComponent()
+            ),
+            result
+        )
     }
 
     private func savedSpeakerFixture(

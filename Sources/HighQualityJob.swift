@@ -919,6 +919,54 @@ struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
     }
 }
 
+enum HighQualitySpeakerCentroidIncompatibilityCause: String, Equatable, Sendable {
+    case modelOrRevision
+    case embeddingVariant
+    case dimension
+
+    var displayName: String {
+        switch self {
+        case .modelOrRevision: "model or revision"
+        case .embeddingVariant: "embedding variant"
+        case .dimension: "vector dimension"
+        }
+    }
+}
+
+struct HighQualitySpeakerCentroidSignature: Equatable, Sendable {
+    let modelID: String
+    let modelRevision: String
+    let runtimeRevision: String
+    let embeddingVariant: String
+    let vectorDimension: Int
+
+    func incompatibilityCauses(
+        comparedWith other: Self
+    ) -> [HighQualitySpeakerCentroidIncompatibilityCause] {
+        var causes: [HighQualitySpeakerCentroidIncompatibilityCause] = []
+        if modelID != other.modelID
+            || modelRevision != other.modelRevision
+            || runtimeRevision != other.runtimeRevision {
+            causes.append(.modelOrRevision)
+        }
+        if embeddingVariant != other.embeddingVariant { causes.append(.embeddingVariant) }
+        if vectorDimension != other.vectorDimension { causes.append(.dimension) }
+        return causes
+    }
+}
+
+extension HighQualitySpeakerCentroidEvidence {
+    var compatibilitySignature: HighQualitySpeakerCentroidSignature {
+        .init(
+            modelID: modelID,
+            modelRevision: modelRevision,
+            runtimeRevision: runtimeRevision,
+            embeddingVariant: embeddingVariant,
+            vectorDimension: vectorDimension
+        )
+    }
+}
+
 struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
     static let maximumCosineDistance: Float = 0.3
     static let uncertaintyMargin: Float = 0.1
@@ -1540,7 +1588,7 @@ extension HighQualityJobResult {
         compatibleSpeakerCentroids.map(HighQualityJob.duplicateSpeakerSuggestions) ?? []
     }
 
-    private var compatibleSpeakerCentroids: [HighQualitySpeakerCentroidEvidence]? {
+    fileprivate var compatibleSpeakerCentroids: [HighQualitySpeakerCentroidEvidence]? {
         guard let diarization = evidence.diarization else { return nil }
         let speakerCount = Set(diarization.rawSpans.map(\.speakerID)).count
         let expectedSpeakerLabels = Set((0..<speakerCount).map {
@@ -1552,13 +1600,18 @@ extension HighQualityJobResult {
               let runtimeRevision = diarization.configuration?["runtimeRevision"],
               let embeddingVariant = diarization.configuration?["embedderVariant"],
               HighQualityJob.hasValidCompatibleSpeakerCentroids(centroids),
-              centroids.allSatisfy({
-                  $0.sourceJobID == manifest.jobID
-                      && $0.modelID == diarization.modelID
-                      && $0.modelRevision == diarization.revision
-                      && $0.runtimeRevision == runtimeRevision
-                      && $0.embeddingVariant == embeddingVariant
-              }) else { return nil }
+              let first = centroids.first else { return nil }
+        let expectedSignature = HighQualitySpeakerCentroidSignature(
+            modelID: diarization.modelID,
+            modelRevision: diarization.revision,
+            runtimeRevision: runtimeRevision,
+            embeddingVariant: embeddingVariant,
+            vectorDimension: first.vectorDimension
+        )
+        guard centroids.allSatisfy({
+            $0.sourceJobID == manifest.jobID
+                && $0.compatibilitySignature == expectedSignature
+        }) else { return nil }
         return centroids
     }
 }
@@ -5397,6 +5450,69 @@ struct HighQualityJob: Sendable {
         )
     }
 
+    static func projectVoiceCentroids(
+        in result: HighQualityJobResult
+    ) -> [String: [HighQualitySpeakerCentroidEvidence]]? {
+        guard let centroids = result.compatibleSpeakerCentroids,
+              (try? speakerEditState(result.manifest.speakerEdits ?? [], for: result)) != nil else {
+            return nil
+        }
+        let initial: [String: String] = Dictionary(uniqueKeysWithValues: centroids.map {
+            ($0.speakerLabel, $0.speakerLabel)
+        })
+        var activeLabelByRawLabel = initial
+        for edit in result.manifest.speakerEdits ?? [] {
+            switch edit.kind {
+            case .merge:
+                guard let source = edit.speakerLabel,
+                      let target = edit.targetSpeakerLabel else { return nil }
+                activeLabelByRawLabel = activeLabelByRawLabel.mapValues {
+                    $0 == source ? target : $0
+                }
+            case .reset:
+                activeLabelByRawLabel = initial
+            case .rename, .reassign:
+                break
+            }
+        }
+        return Dictionary(grouping: centroids) {
+            activeLabelByRawLabel[$0.speakerLabel] ?? $0.speakerLabel
+        }
+    }
+
+    static func persistedResultMatchingVoiceProvenance(
+        _ result: HighQualityJobResult
+    ) -> HighQualityJobResult? {
+        guard let manifest = try? readManifest(in: result.directory),
+              let evidenceData = try? Data(
+                contentsOf: result.directory.appendingPathComponent("raw-asr.json")
+              ),
+              let suppliedEvidenceData = try? encoder.encode(result.evidence) else {
+            return nil
+        }
+        let manifestMatches = manifest.jobID == result.manifest.jobID
+            && manifest.projectID == result.manifest.projectID
+            && manifest.schemaVersion == result.manifest.schemaVersion
+            && manifest.status == result.manifest.status
+            && manifest.rawEvidenceSHA256 == result.manifest.rawEvidenceSHA256
+            && manifest.selectedBackend == result.manifest.selectedBackend
+            && manifest.speakerLabels == result.manifest.speakerLabels
+            && manifest.speakerConfiguration == result.manifest.speakerConfiguration
+            && manifest.speakerCountPolicy == result.manifest.speakerCountPolicy
+            && manifest.speakerEdits == result.manifest.speakerEdits
+            && manifest.dependencies == result.manifest.dependencies
+            && manifest.generatedFiles == result.manifest.generatedFiles
+        let matches = manifestMatches
+            && manifest.rawEvidenceSHA256 == sha256(evidenceData)
+            && manifest.rawEvidenceSHA256 == sha256(suppliedEvidenceData)
+        guard matches else { return nil }
+        return try? reopen(HighQualitySavedResult(
+            directory: result.directory,
+            manifest: manifest,
+            relocatedSourcePath: nil
+        ))
+    }
+
     static func duplicateSpeakerSuggestions(
         from centroids: [HighQualitySpeakerCentroidEvidence]
     ) -> [HighQualityDuplicateSpeakerSuggestion] {
@@ -5454,11 +5570,7 @@ struct HighQualityJob: Sendable {
               centroids.allSatisfy(isValidSpeakerCentroid) else { return false }
         return centroids.dropFirst().allSatisfy {
             $0.sourceJobID == first.sourceJobID
-                && $0.modelID == first.modelID
-                && $0.modelRevision == first.modelRevision
-                && $0.runtimeRevision == first.runtimeRevision
-                && $0.embeddingVariant == first.embeddingVariant
-                && $0.vectorDimension == first.vectorDimension
+                && $0.compatibilitySignature == first.compatibilitySignature
         }
     }
 

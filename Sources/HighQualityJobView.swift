@@ -71,6 +71,11 @@ struct HighQualitySpeakerLabelActionState: Equatable {
     }
 }
 
+private enum HighQualityVoiceProfileDestructiveAction: Equatable {
+    case forget(UUID, String)
+    case reset
+}
+
 struct HighQualityJobView: View {
     @State private var workspace = HighQualityProjectWorkspace()
     @State private var includeJapaneseTranscript = true
@@ -93,6 +98,8 @@ struct HighQualityJobView: View {
     @State private var projectName = ""
     @State private var isRenamingProject = false
     @State private var showsProjectConfirmation = false
+    @State private var pendingVoiceProfileAction: HighQualityVoiceProfileDestructiveAction?
+    @State private var showsVoiceProfileConfirmation = false
     @State private var speakerReanalysisID: UUID?
 
     private var isRunning: Bool { task != nil }
@@ -175,6 +182,54 @@ struct HighQualityJobView: View {
                                 .accessibilityIdentifier("high-quality-locate-project-folder")
                         }
                     }
+                }
+                Toggle(
+                    "Voice memory (Bêta)",
+                    isOn: Binding(
+                        get: { project.scope.voiceMemoryEnabled },
+                        set: setVoiceMemory
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .disabled(isRunning)
+                .accessibilityIdentifier("high-quality-voice-memory-beta")
+                Text(HighQualityRecurringVoiceSuggestion.betaDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if !project.scope.voiceProfiles.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Saved Voice profiles").font(.caption.bold())
+                        ForEach(project.scope.voiceProfiles) { profile in
+                            HStack {
+                                Text(profile.displayName)
+                                Spacer()
+                                if project.scope.voiceProfiles.count > 1 {
+                                    Menu("Merge into…") {
+                                        ForEach(
+                                            project.scope.voiceProfiles.filter {
+                                                $0.id != profile.id
+                                            }
+                                        ) { target in
+                                            Button(target.displayName) {
+                                                mergeVoiceProfile(profile.id, into: target.id)
+                                            }
+                                        }
+                                    }
+                                }
+                                Button("Forget", role: .destructive) {
+                                    requestVoiceProfileAction(.forget(
+                                        profile.id,
+                                        profile.displayName
+                                    ))
+                                }
+                            }
+                        }
+                        Button("Reset Voice Profiles", role: .destructive) {
+                            requestVoiceProfileAction(.reset)
+                        }
+                        .accessibilityIdentifier("high-quality-reset-voice-profiles")
+                    }
+                    .disabled(isRunning)
                 }
             }
 
@@ -403,6 +458,31 @@ struct HighQualityJobView: View {
                     + "and history. Its folder and source media stay in place."
                 : "This removes only this Project and its saved data. Source media is not deleted.")
         }
+        .confirmationDialog(
+            "Confirm Voice Profile Action",
+            isPresented: $showsVoiceProfileConfirmation,
+            titleVisibility: .visible,
+            presenting: pendingVoiceProfileAction
+        ) { action in
+            switch action {
+            case .forget(_, let name):
+                Button("Forget \(name)", role: .destructive) {
+                    performVoiceProfileAction(action)
+                }
+            case .reset:
+                Button("Reset Voice Profiles", role: .destructive) {
+                    performVoiceProfileAction(action)
+                }
+            }
+            Button("Cancel", role: .cancel) { pendingVoiceProfileAction = nil }
+        } message: { action in
+            switch action {
+            case .forget(_, let name):
+                Text("Forget the local acoustic profile for \(name) in this Project?")
+            case .reset:
+                Text("Forget every local acoustic profile in this Project?")
+            }
+        }
     }
 
     private var sourceURL: URL? { workspace.sourceURL }
@@ -575,6 +655,96 @@ struct HighQualityJobView: View {
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func setVoiceMemory(_ enabled: Bool) {
+        _ = mutateSelectedProject { try $0.settingVoiceMemory(enabled: enabled) }
+    }
+
+    private func mergeVoiceProfile(_ sourceID: UUID, into targetID: UUID) {
+        _ = mutateSelectedProject { try $0.mergeVoiceProfile(sourceID, into: targetID) }
+    }
+
+    private func forgetVoiceProfile(_ profileID: UUID) {
+        _ = mutateSelectedProject { try $0.forgetVoiceProfile(profileID) }
+    }
+
+    private func resetVoiceProfiles() {
+        _ = mutateSelectedProject { try $0.resetVoiceProfiles() }
+    }
+
+    private func requestVoiceProfileAction(
+        _ action: HighQualityVoiceProfileDestructiveAction
+    ) {
+        pendingVoiceProfileAction = action
+        showsVoiceProfileConfirmation = true
+    }
+
+    private func performVoiceProfileAction(
+        _ action: HighQualityVoiceProfileDestructiveAction
+    ) {
+        switch action {
+        case .forget(let profileID, _):
+            forgetVoiceProfile(profileID)
+        case .reset:
+            resetVoiceProfiles()
+        }
+        pendingVoiceProfileAction = nil
+    }
+
+    private func confirmVoiceProfile(
+        from result: HighQualityJobResult,
+        speakerLabel: String
+    ) {
+        _ = mutateSelectedProject {
+            try $0.confirmVoiceProfile(from: result, speakerLabel: speakerLabel)
+        }
+    }
+
+    private func respond(
+        to suggestion: HighQualityRecurringVoiceSuggestion,
+        in result: HighQualityJobResult,
+        accepted: Bool
+    ) {
+        guard let updatedProject = mutateSelectedProject({ project in
+            if accepted {
+                return try project.acceptRecurringVoice(suggestion, from: result)
+            }
+            return try project.rejectRecurringVoice(suggestion, from: result)
+        }) else { return }
+        guard accepted else { return }
+        do {
+            guard let saved = updatedProject.savedResults.first(where: {
+                $0.id == result.manifest.jobID
+            }) else {
+                throw HighQualityProjectError(
+                    message: "The accepted Speaker result could not be reopened."
+                )
+            }
+            let updated = try HighQualityJob.reopen(saved)
+            resultPresentation.publish(updated)
+            customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+            workspace.refresh()
+            workspace.selectSavedResult(updated.manifest.jobID)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    @discardableResult
+    private func mutateSelectedProject(
+        _ operation: (HighQualityProject) throws -> HighQualityProject
+    ) -> HighQualityProject? {
+        guard let project = selectedProject else { return nil }
+        do {
+            let updated = try operation(project)
+            workspace.refresh()
+            errorMessage = nil
+            return updated
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
         }
     }
 
@@ -1001,6 +1171,76 @@ struct HighQualityJobView: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("duplicate-speaker-beta")
+        }
+        if let project = selectedProject, project.scope.voiceMemoryEnabled {
+            let evaluation = project.recurringVoiceEvaluation(for: result)
+            let savedResultsByID = Dictionary(uniqueKeysWithValues: project.savedResults.map {
+                ($0.id, $0)
+            })
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Recurring Voices (Bêta)").font(.headline)
+                Text(HighQualityRecurringVoiceSuggestion.betaDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(evaluation.suggestions) { suggestion in
+                    HStack {
+                        Text(
+                            "\(suggestion.speakerLabel) may be \(suggestion.displayName)."
+                        )
+                        Button("Accept") {
+                            respond(to: suggestion, in: result, accepted: true)
+                        }
+                        Button("Reject") {
+                            respond(to: suggestion, in: result, accepted: false)
+                        }
+                    }
+                }
+                if !evaluation.unknownSpeakerLabels.isEmpty {
+                    Text(
+                        "Unknown: " + evaluation.unknownSpeakerLabels.joined(separator: ", ")
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+                ForEach(evaluation.profileIncompatibilities) { incompatibility in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(
+                            "\(incompatibility.displayName) "
+                                + "(\(incompatibility.profileID.uuidString)): "
+                                + incompatibility.causes.map(\.displayName)
+                                    .joined(separator: ", ")
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        if let sourceID = incompatibility.sourceJobIDs.first(where: {
+                            savedResultsByID[$0] != nil
+                        }), let saved = savedResultsByID[sourceID] {
+                            Button("Recalculate Voice Profile") {
+                                rerunSpeakers(saved)
+                            }
+                            .accessibilityHint(
+                                "Reanalyzes the original saved result; confirm the Speaker again afterward."
+                            )
+                        } else {
+                            Text("Original saved result unavailable; create this profile again.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityIdentifier(
+                        "voice-profile-recomputation-\(incompatibility.profileID.uuidString)"
+                    )
+                }
+                ForEach(evaluation.confirmableSpeakerLabels, id: \.self) { speakerLabel in
+                    Button(
+                        "Remember \(speakerNames[speakerLabel] ?? speakerLabel)"
+                    ) {
+                        confirmVoiceProfile(from: result, speakerLabel: speakerLabel)
+                    }
+                }
+            }
+            .disabled(!actionState.isEnabled)
+            .accessibilityIdentifier("recurring-voice-beta")
         }
     }
 

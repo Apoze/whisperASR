@@ -1,0 +1,50 @@
+{
+  "benchmarkSlot": "115-HOLDOUT",
+  "confirmationReferenceShare": 0.6,
+  "corpusID": "md62mmdz0m",
+  "elapsedSeconds": 5.968261003494263,
+  "embeddingVariant": "W8A16",
+  "enrollmentMappings": [
+    {"referenceOverlapSeconds": 89.66285408496846, "referenceShare": 0.7253028565348549, "referenceSpeaker": "HIZUKI_YUI", "speakerID": "SPEAKER_00"},
+    {"referenceOverlapSeconds": 80.7989745521547, "referenceShare": 0.710343642625122, "referenceSpeaker": "SHIRAYUKI_REID", "speakerID": "SPEAKER_01"},
+    {"referenceOverlapSeconds": 80.87792861938482, "referenceShare": 0.6425715961433751, "referenceSpeaker": "AIZAWA_EMA", "speakerID": "SPEAKER_02"}
+  ],
+  "enrollmentSpeakerCount": 3,
+  "falseSuggestionCount": 0,
+  "maximumCosineDistance": 0.3,
+  "modelID": "argmaxinc/speakerkit-coreml",
+  "modelRevision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+  "observedPeakMemoryBytes": 760333776,
+  "probeMappings": [
+    {"referenceOverlapSeconds": 56.486190998077426, "referenceShare": 0.5353936082554013, "referenceSpeaker": "AIZAWA_EMA", "speakerID": "SPEAKER_00"},
+    {"referenceOverlapSeconds": 48.301305390357975, "referenceShare": 0.7147680865793017, "referenceSpeaker": "SHIRAYUKI_REID", "speakerID": "SPEAKER_01"},
+    {"referenceOverlapSeconds": 81.33017575073248, "referenceShare": 0.7211293159537286, "referenceSpeaker": "HIZUKI_YUI", "speakerID": "SPEAKER_02"}
+  ],
+  "probeSpeakerCount": 3,
+  "profiles": [
+    {"centroidCount": 1, "displayName": "AIZAWA_EMA", "enrollmentSpeakerIDs": ["SPEAKER_02"]},
+    {"centroidCount": 1, "displayName": "HIZUKI_YUI", "enrollmentSpeakerIDs": ["SPEAKER_00"]},
+    {"centroidCount": 1, "displayName": "SHIRAYUKI_REID", "enrollmentSpeakerIDs": ["SPEAKER_01"]}
+  ],
+  "profilesRequiringRecomputation": 0,
+  "purpose": "holdout-dialogue",
+  "recurringReferenceSpeakerCount": 3,
+  "runtimeRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+  "sourceSHA256": "bde49d4cc67020d01ae042f2945baa61364cc34959e2211a964943e5c2064830",
+  "splitSample": 7088959,
+  "suggestionCount": 3,
+  "suggestions": [
+    {"cosineDistance": 0.067171454, "probeSpeakerID": "SPEAKER_02", "referenceShare": 0.7211293159537286, "referenceSpeaker": "HIZUKI_YUI", "suggestedProfile": "HIZUKI_YUI", "useful": true},
+    {"cosineDistance": 0.09012276, "probeSpeakerID": "SPEAKER_01", "referenceShare": 0.7147680865793017, "referenceSpeaker": "SHIRAYUKI_REID", "suggestedProfile": "SHIRAYUKI_REID", "useful": true},
+    {"cosineDistance": 0.13799757, "probeSpeakerID": "SPEAKER_00", "referenceShare": 0.5353936082554013, "referenceSpeaker": "AIZAWA_EMA", "suggestedProfile": "AIZAWA_EMA", "useful": true}
+  ],
+  "ticket": 115,
+  "uncertaintyMargin": 0.1,
+  "unknownSpeakerCount": 0,
+  "suggestionPrecision": 1.0,
+  "abstentionRate": 0.0,
+  "recurringReferenceRecall": 1.0,
+  "unknownSpeakerIDs": [],
+  "usefulSuggestionCount": 3,
+  "vectorDimension": 256
+}
