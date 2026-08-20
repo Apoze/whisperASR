@@ -89,6 +89,7 @@ struct HighQualityJobView: View {
     @State private var projectName = ""
     @State private var isRenamingProject = false
     @State private var showsProjectConfirmation = false
+    @State private var speakerReanalysisID: UUID?
 
     private var isRunning: Bool { task != nil }
     private var result: HighQualityJobResult? { resultPresentation.visibleResult }
@@ -323,8 +324,7 @@ struct HighQualityJobView: View {
                             .disabled(!state.isEnabled)
                             .accessibilityIdentifier("high-quality-rerun-speakers")
                             .accessibilityHint(
-                                state.explanation
-                                    ?? "Runs SpeakerKit only and keeps the previous result until completion."
+                                "Runs SpeakerKit only and keeps the previous result until completion."
                             )
                     }
                     Button("Open Results Folder") {
@@ -683,7 +683,7 @@ struct HighQualityJobView: View {
             translator = savedTranslator
         }
         resultPresentation.publish(reopened)
-        errorMessage = nil
+        errorMessage = reopened.speakerReanalysisCompletion?.auditError
         progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
         customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
     }
@@ -696,6 +696,8 @@ struct HighQualityJobView: View {
             message: "Starting SpeakerKit reanalysis…"
         )
         let configuration = speakerBeta.configuration
+        let operationID = UUID()
+        speakerReanalysisID = operationID
         let job = HighQualityJob()
         task = Task {
             do {
@@ -703,15 +705,27 @@ struct HighQualityJobView: View {
                     saved,
                     configuration: configuration
                 ) { update in
-                    Task { @MainActor in progress = update }
+                    Task { @MainActor in
+                        guard HighQualityJobProgress.accepts(
+                            operationID,
+                            while: speakerReanalysisID
+                        ) else { return }
+                        progress = update
+                    }
                 }
+                speakerReanalysisID = nil
+                progress = .init(
+                    stage: .completed,
+                    fraction: 1,
+                    message: "Speakers reanalyzed"
+                )
                 resultPresentation.publish(updated)
                 customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
                 workspace.refresh()
                 workspace.selectSavedResult(updated.manifest.jobID)
-            } catch let error as HighQualityJobError {
-                errorMessage = error.localizedDescription
             } catch {
+                speakerReanalysisID = nil
+                progress = .terminal(for: error)
                 errorMessage = error.localizedDescription
             }
             task = nil
@@ -721,11 +735,7 @@ struct HighQualityJobView: View {
     private func initialCustomSpeakerLabels(
         for result: HighQualityJobResult
     ) -> [String: String] {
-        result.turns.reduce(into: [:]) { names, turn in
-            if let label = turn.speakerLabel {
-                names[label] = turn.speakerName ?? label
-            }
-        }
+        result.editableSpeakerNames
     }
 
     @ViewBuilder
@@ -773,15 +783,18 @@ struct HighQualityJobView: View {
         _ result: HighQualityJobResult,
         deliverables: Set<HighQualityDeliverable>
     ) -> some View {
-        let labelActionState = HighQualitySpeakerLabelActionState(
-            result: result,
-            isRunning: isRunning
-        )
+        let speakerLabels = result.editableSpeakerLabels
+        let speakerNames = result.editableSpeakerNames
         Text("Results").font(.headline)
         if let reanalysis = result.evidence.speakerReanalyses?.last {
+            let completion = result.speakerReanalysisCompletion
             Text(
-                "Last SpeakerKit reanalysis: "
-                    + String(format: "%.1f s", reanalysis.wallTime)
+                "Last SpeakerKit reanalysis "
+                    + (completion == nil ? "payload prepared" : "completed") + ": "
+                    + String(
+                        format: "%.1f s",
+                        completion?.wallTime ?? reanalysis.preCommitWallTime
+                    )
                     + " · peak " + memory(reanalysis.peakMemoryBytes)
             )
             .font(.caption)
@@ -802,7 +815,34 @@ struct HighQualityJobView: View {
                 ForEach(result.turns, id: \.id) { turn in
                     GridRow(alignment: .top) {
                         Text(time(turn.start, turn.end))
-                        Text(turn.speakerName ?? turn.speakerLabel ?? "—")
+                        if result.manifest.schemaVersion >= 3,
+                           !speakerLabels.isEmpty,
+                           turn.speakerLabel == nil || speakerLabels.count > 1 {
+                            Picker(
+                                "Speaker for \(turn.id)",
+                                selection: Binding<String?>(
+                                    get: { turn.speakerLabel },
+                                    set: { label in
+                                        guard let label else { return }
+                                        applySpeakerEdit(
+                                            .reassign(turnID: turn.id, to: label),
+                                            to: result
+                                        )
+                                    }
+                                )
+                            ) {
+                                if turn.speakerLabel == nil {
+                                    Text("Unassigned").tag(String?.none)
+                                }
+                                ForEach(speakerLabels, id: \.self) { label in
+                                    Text(speakerNames[label] ?? label).tag(String?.some(label))
+                                }
+                            }
+                            .labelsHidden()
+                            .accessibilityLabel("Speaker for transcript turn \(turn.id)")
+                        } else {
+                            Text(turn.speakerName ?? turn.speakerLabel ?? "—")
+                        }
                         Text(turn.japanese)
                         if deliverables.contains(.englishTranslationTranscript)
                             || deliverables.contains(.englishSubtitles) {
@@ -821,31 +861,120 @@ struct HighQualityJobView: View {
                         set: { customSpeakerLabels[label] = $0 }
                     ))
                     .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel("Name for \(label)")
                 }
-                Button("Apply Labels") {
-                    guard HighQualitySpeakerLabelActionState(
-                        result: result,
-                        isRunning: isRunning
-                    ).isEnabled else { return }
+                Button("Regenerate Deliverables") {
                     do {
                         resultPresentation.publish(try HighQualityJob.renameSpeakers(
                             in: result,
                             names: customSpeakerLabels
                         ))
+                        if let updated = self.result {
+                            customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                        }
+                        errorMessage = nil
+                        workspace.refresh()
+                        workspace.selectSavedResult(result.manifest.jobID)
                     } catch {
                         errorMessage = error.localizedDescription
                     }
                 }
-                .disabled(
-                    !result.manifest.usesDurableSavedResultEvidence
-                        || !labelActionState.isEnabled
-                )
+                .accessibilityIdentifier("high-quality-regenerate-deliverables")
+                .disabled(result.manifest.schemaVersion < 3)
             }
-            if !result.manifest.usesDurableSavedResultEvidence {
+            HStack {
+                if speakerLabels.count > 1 {
+                    Menu("Merge Speakers…") {
+                        ForEach(speakerLabels, id: \.self) { source in
+                            Menu(speakerNames[source] ?? source) {
+                                ForEach(speakerLabels.filter { $0 != source }, id: \.self) { target in
+                                    Button("Into \(speakerNames[target] ?? target)") {
+                                        applySpeakerEdit(
+                                            .merge(source, into: target),
+                                            to: result
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("high-quality-merge-speakers")
+                }
+
+                Button("Reset Speaker Edits", role: .destructive) {
+                    applySpeakerEdit(.reset(), to: result)
+                }
+                .accessibilityIdentifier("high-quality-reset-speaker-edits")
+                .accessibilityHint("Restores the immutable automatic SpeakerKit assignments.")
+
+                Button("Undo Last Speaker Edit") {
+                    do {
+                        let updated = try HighQualityJob.undoLastSpeakerEdit(in: result)
+                        resultPresentation.publish(updated)
+                        customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                        errorMessage = nil
+                        workspace.refresh()
+                        workspace.selectSavedResult(updated.manifest.jobID)
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                }
+                .accessibilityIdentifier("high-quality-undo-speaker-edit")
+                .accessibilityHint("Restores the saved state before the last Speaker edit.")
+                .disabled(!result.canUndoLastSpeakerEdit)
+
+            }
+            .disabled(result.manifest.schemaVersion < 3)
+            Text("Speaker edits only regenerate saved Deliverables; no model is loaded.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if result.manifest.schemaVersion < 3 {
                 Text("Speaker label edits require a result saved with the current schema.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+        if result.canRestorePreviousSpeakerEdits {
+            Button("Restore Previous Speaker Edits") {
+                do {
+                    let updated = try HighQualityJob.restorePreviousSpeakerEdits(in: result)
+                    resultPresentation.publish(updated)
+                    customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                    errorMessage = nil
+                    workspace.refresh()
+                    workspace.selectSavedResult(updated.manifest.jobID)
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            }
+            .accessibilityIdentifier("high-quality-restore-previous-speaker-edits")
+            .accessibilityHint("Restores edits archived by the latest compatible reanalysis.")
+            .disabled(result.manifest.schemaVersion < 3)
+        } else if result.shouldExplainIncompatibleArchivedSpeakerEdits {
+            Text("Previous Speaker edits remain archived but cannot be safely restored to the current Speaker state.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("high-quality-previous-speaker-edits-incompatible")
+        }
+    }
+
+    private func applySpeakerEdit(
+        _ edit: HighQualitySpeakerEdit,
+        to result: HighQualityJobResult
+    ) {
+        do {
+            let updated = try HighQualityJob.editSpeakers(
+                in: result,
+                names: edit.kind == .reset ? [:] : customSpeakerLabels,
+                edit: edit
+            )
+            resultPresentation.publish(updated)
+            customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+            errorMessage = nil
+            workspace.refresh()
+            workspace.selectSavedResult(updated.manifest.jobID)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
