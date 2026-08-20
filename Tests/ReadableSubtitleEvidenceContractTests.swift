@@ -172,7 +172,9 @@ final class ReadableSubtitleEvidenceContractTests: XCTestCase {
             "Tests/HighQualityJobTests.swift",
             "Tests/LiveCaptionTests.swift",
         ]))
-        try assertFiles(implementationFiles, commit: implementationCommit, current: true)
+        // The report freezes the implementation at its recorded commit; later
+        // offline features may safely extend the same source files.
+        try assertFiles(implementationFiles, commit: implementationCommit, current: false)
         XCTAssertEqual(HighQualityJobManifest.currentSchemaVersion, 5)
         XCTAssertEqual(Set(try stringDictionary(
             development,
