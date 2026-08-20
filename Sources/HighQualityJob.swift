@@ -1,5 +1,4 @@
 import CryptoKit
-import Darwin
 import Foundation
 
 enum HighQualityDeliverable: String, Codable, CaseIterable, Hashable, Sendable {
@@ -174,6 +173,20 @@ struct HighQualityJobProgress: Equatable, Sendable {
     let stage: HighQualityJobStage
     let fraction: Double
     let message: String
+
+    static func terminal(for error: Error) -> Self {
+        let cancelled = (error as? HighQualityJobError)?.stage == .cancelled
+            || error is CancellationError
+        return .init(
+            stage: cancelled ? .cancelled : .failed,
+            fraction: 1,
+            message: error.localizedDescription
+        )
+    }
+
+    static func accepts(_ operationID: UUID, while activeOperationID: UUID?) -> Bool {
+        operationID == activeOperationID
+    }
 }
 
 struct HighQualitySpeakerCountPolicy: Codable, Equatable, Hashable, Sendable {
@@ -229,6 +242,7 @@ struct HighQualityJobRequest: Sendable {
     let speakerLabelsByCueID: [String: String]
     let translationContextPolicy: HighQualityConversationContextPolicy
     let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
+    let project: HighQualityProject?
     let outputRoot: URL
 
     init(
@@ -246,6 +260,7 @@ struct HighQualityJobRequest: Sendable {
         translationContextResetReasonsByCueID: [
             String: HighQualityConversationContextResetReason
         ] = [:],
+        project: HighQualityProject? = nil,
         outputRoot: URL = AppStoragePaths.highQualityJobs
     ) {
         self.id = id
@@ -260,7 +275,8 @@ struct HighQualityJobRequest: Sendable {
         self.speakerLabelsByCueID = speakerLabelsByCueID
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
-        self.outputRoot = outputRoot
+        self.project = project
+        self.outputRoot = project?.jobsDirectory ?? outputRoot
     }
 }
 
@@ -797,6 +813,10 @@ struct HighQualitySemanticUnitEvidence: Codable, Equatable, Sendable {
     var speakerMappingIndices: [Int]
 }
 
+struct HighQualitySpeakerAttachmentEvidence: Codable, Equatable, Sendable {
+    let semanticUnits: [HighQualitySemanticUnitEvidence]
+}
+
 struct HighQualityAlignmentExchange: Codable, Equatable, Sendable {
     let chunks: [HighQualityAlignmentChunk]
     let modelID: String
@@ -844,6 +864,13 @@ struct HighQualityDiarizationSpan: Codable, Equatable, Sendable {
     let end: TimeInterval
 }
 
+private func highQualitySpeakerLabelsByID(
+    _ spans: [HighQualityDiarizationSpan]
+) -> [Int: String] {
+    Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
+        .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
+}
+
 struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
     let spans: [HighQualityDiarizationSpan]
     let modelID: String
@@ -852,6 +879,7 @@ struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
     let useExclusiveReconciliation: Bool
     let speakerCountPolicy: HighQualitySpeakerCountPolicy
     let configuration: [String: String]?
+    let speakerCentroids: [Int: [Float]]?
 
     init(
         spans: [HighQualityDiarizationSpan],
@@ -860,7 +888,8 @@ struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
         peakMemoryBytes: UInt64,
         useExclusiveReconciliation: Bool = false,
         speakerCountPolicy: HighQualitySpeakerCountPolicy = .automatic,
-        configuration: [String: String]? = nil
+        configuration: [String: String]? = nil,
+        speakerCentroids: [Int: [Float]]? = nil
     ) {
         self.spans = spans
         self.modelID = modelID
@@ -869,7 +898,36 @@ struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
         self.useExclusiveReconciliation = useExclusiveReconciliation
         self.speakerCountPolicy = speakerCountPolicy
         self.configuration = configuration
+        self.speakerCentroids = speakerCentroids
     }
+}
+
+struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
+    let speakerLabel: String
+    let modelID: String
+    let modelRevision: String
+    let runtimeRevision: String
+    let embeddingVariant: String
+    let vectorDimension: Int
+    let sourceJobID: UUID
+    let vector: [Float]
+
+    private enum CodingKeys: String, CodingKey {
+        case speakerLabel = "speakerID"
+        case modelID, modelRevision, runtimeRevision, embeddingVariant
+        case vectorDimension, sourceJobID, vector
+    }
+}
+
+struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
+    static let maximumCosineDistance: Float = 0.3
+    static let uncertaintyMargin: Float = 0.1
+    static let betaDescription = "Suggestions indicate uncertain acoustic similarity only; "
+        + "they do not establish identity or merge speakers automatically."
+
+    let firstSpeakerLabel: String
+    let secondSpeakerLabel: String
+    let cosineDistance: Float
 }
 
 struct HighQualitySpeakerMapping: Codable, Equatable, Sendable {
@@ -921,6 +979,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
     let configuration: [String: String]?
     var validationDiagnostics: [String]
     var worker: HighQualityWorkerEvidence?
+    var speakerCentroids: [HighQualitySpeakerCentroidEvidence]?
 
     init(
         modelID: String,
@@ -933,7 +992,8 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         speakerCountPolicy: HighQualitySpeakerCountPolicy? = nil,
         configuration: [String: String]? = nil,
         validationDiagnostics: [String],
-        worker: HighQualityWorkerEvidence? = nil
+        worker: HighQualityWorkerEvidence? = nil,
+        speakerCentroids: [HighQualitySpeakerCentroidEvidence]? = nil
     ) {
         self.modelID = modelID
         self.revision = revision
@@ -946,6 +1006,7 @@ struct HighQualityDiarizationEvidence: Codable, Equatable, Sendable {
         self.configuration = configuration
         self.validationDiagnostics = validationDiagnostics
         self.worker = worker
+        self.speakerCentroids = speakerCentroids
     }
 }
 
@@ -1002,6 +1063,69 @@ struct HighQualityTranscriptTurn: Codable, Equatable, Sendable {
         self.speakerName = speakerName
         self.start = start
         self.end = end
+    }
+}
+
+struct HighQualitySpeakerEdit: Codable, Equatable, Sendable {
+    enum Kind: String, Codable, Sendable {
+        case rename
+        case merge
+        case reassign
+        case reset
+    }
+
+    let kind: Kind
+    let speakerLabel: String?
+    let targetSpeakerLabel: String?
+    let turnID: String?
+    let displayName: String?
+    let at: Date
+
+    private init(
+        kind: Kind,
+        speakerLabel: String? = nil,
+        targetSpeakerLabel: String? = nil,
+        turnID: String? = nil,
+        displayName: String? = nil,
+        at: Date
+    ) {
+        self.kind = kind
+        self.speakerLabel = speakerLabel
+        self.targetSpeakerLabel = targetSpeakerLabel
+        self.turnID = turnID
+        self.displayName = displayName
+        self.at = at
+    }
+
+    static func rename(_ speakerLabel: String, to displayName: String, at: Date = Date()) -> Self {
+        .init(
+            kind: .rename,
+            speakerLabel: speakerLabel,
+            displayName: displayName,
+            at: at
+        )
+    }
+
+    static func merge(_ speakerLabel: String, into target: String, at: Date = Date()) -> Self {
+        .init(
+            kind: .merge,
+            speakerLabel: speakerLabel,
+            targetSpeakerLabel: target,
+            at: at
+        )
+    }
+
+    static func reassign(turnID: String, to speakerLabel: String, at: Date = Date()) -> Self {
+        .init(
+            kind: .reassign,
+            targetSpeakerLabel: speakerLabel,
+            turnID: turnID,
+            at: at
+        )
+    }
+
+    static func reset(at: Date = Date()) -> Self {
+        .init(kind: .reset, at: at)
     }
 }
 
@@ -1111,7 +1235,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
         case cancelled
     }
 
-    let schemaVersion: Int
+    var schemaVersion: Int
     let jobID: UUID
     var status: Status
     var source: HighQualitySourceProvenance
@@ -1120,8 +1244,8 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     let translationModel: HighQualityTranslationModelEvidence?
     let speakerLabels: Bool
     let readableSubtitles: Bool?
-    let speakerConfiguration: HighQualitySpeakerConfiguration?
-    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
+    var speakerConfiguration: HighQualitySpeakerConfiguration?
+    var speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let dependencies: [HighQualityJobDependency]
     var model: HighQualityModelEvidence
     var asrWorker: HighQualityASRWorkerEvidence? = nil
@@ -1133,6 +1257,9 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var failures: [HighQualityJobFailure]
     var generatedFiles: [HighQualityGeneratedFile]
     var rawEvidenceSHA256: String? = nil
+    var projectID: UUID? = nil
+    var speakerReanalysisCount: Int? = nil
+    var speakerEdits: [HighQualitySpeakerEdit]? = nil
 
     var usesLegacySavedResultFallback: Bool {
         schemaVersion == 2
@@ -1146,22 +1273,141 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     }
 }
 
+struct HighQualitySpeakerReanalysisEvidence: Codable, Equatable, Sendable {
+    let startedAt: Date
+    let payloadPreparedAt: Date
+    let preCommitWallTime: TimeInterval
+    let configuration: HighQualitySpeakerConfiguration
+    let modelEvents: [HighQualityModelEvent]
+    let peakMemoryBytes: UInt64
+    let replacedDiarization: HighQualityDiarizationEvidence
+    let replacedAttachment: HighQualitySpeakerAttachmentEvidence?
+    let replacedSpeakerEdits: [HighQualitySpeakerEdit]?
+    let diarization: HighQualityDiarizationEvidence
+    let attachment: HighQualitySpeakerAttachmentEvidence
+
+    init(
+        startedAt: Date,
+        payloadPreparedAt: Date,
+        preCommitWallTime: TimeInterval,
+        configuration: HighQualitySpeakerConfiguration,
+        modelEvents: [HighQualityModelEvent],
+        peakMemoryBytes: UInt64,
+        replacedDiarization: HighQualityDiarizationEvidence,
+        replacedAttachment: HighQualitySpeakerAttachmentEvidence?,
+        replacedSpeakerEdits: [HighQualitySpeakerEdit]?,
+        diarization: HighQualityDiarizationEvidence,
+        attachment: HighQualitySpeakerAttachmentEvidence
+    ) {
+        self.startedAt = startedAt
+        self.payloadPreparedAt = payloadPreparedAt
+        self.preCommitWallTime = preCommitWallTime
+        self.configuration = configuration
+        self.modelEvents = modelEvents
+        self.peakMemoryBytes = peakMemoryBytes
+        self.replacedDiarization = replacedDiarization
+        self.replacedAttachment = replacedAttachment
+        self.replacedSpeakerEdits = replacedSpeakerEdits
+        self.diarization = diarization
+        self.attachment = attachment
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case startedAt, payloadPreparedAt, preCommitWallTime, configuration, modelEvents
+        case peakMemoryBytes, replacedDiarization, replacedAttachment, replacedSpeakerEdits
+        case diarization, attachment
+        case finishedAt, wallTime
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        startedAt = try values.decode(Date.self, forKey: .startedAt)
+        payloadPreparedAt = try values.decodeIfPresent(Date.self, forKey: .payloadPreparedAt)
+            ?? values.decode(Date.self, forKey: .finishedAt)
+        preCommitWallTime = try values.decodeIfPresent(
+            TimeInterval.self,
+            forKey: .preCommitWallTime
+        ) ?? values.decode(TimeInterval.self, forKey: .wallTime)
+        configuration = try values.decode(
+            HighQualitySpeakerConfiguration.self,
+            forKey: .configuration
+        )
+        modelEvents = try values.decode([HighQualityModelEvent].self, forKey: .modelEvents)
+        peakMemoryBytes = try values.decode(UInt64.self, forKey: .peakMemoryBytes)
+        replacedDiarization = try values.decode(
+            HighQualityDiarizationEvidence.self,
+            forKey: .replacedDiarization
+        )
+        replacedAttachment = try values.decodeIfPresent(
+            HighQualitySpeakerAttachmentEvidence.self,
+            forKey: .replacedAttachment
+        )
+        replacedSpeakerEdits = try values.decodeIfPresent(
+            [HighQualitySpeakerEdit].self,
+            forKey: .replacedSpeakerEdits
+        )
+        diarization = try values.decode(
+            HighQualityDiarizationEvidence.self,
+            forKey: .diarization
+        )
+        attachment = try values.decode(
+            HighQualitySpeakerAttachmentEvidence.self,
+            forKey: .attachment
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(startedAt, forKey: .startedAt)
+        try values.encode(payloadPreparedAt, forKey: .payloadPreparedAt)
+        try values.encode(preCommitWallTime, forKey: .preCommitWallTime)
+        try values.encode(configuration, forKey: .configuration)
+        try values.encode(modelEvents, forKey: .modelEvents)
+        try values.encode(peakMemoryBytes, forKey: .peakMemoryBytes)
+        try values.encode(replacedDiarization, forKey: .replacedDiarization)
+        try values.encodeIfPresent(replacedAttachment, forKey: .replacedAttachment)
+        try values.encodeIfPresent(replacedSpeakerEdits, forKey: .replacedSpeakerEdits)
+        try values.encode(diarization, forKey: .diarization)
+        try values.encode(attachment, forKey: .attachment)
+    }
+}
+
+struct HighQualitySpeakerReanalysisCompletion: Codable, Equatable, Sendable {
+    let reanalysisCount: Int
+    let rawEvidenceSHA256: String
+    let startedAt: Date
+    let payloadPreparedAt: Date
+    let finishedAt: Date
+    let wallTime: TimeInterval
+    let commitWallTime: TimeInterval
+    let auditError: String?
+}
+
+private struct HighQualitySpeakerReanalysisJournal: Codable {
+    static let currentSchemaVersion = 1
+
+    let schemaVersion: Int
+    var entries: [HighQualitySpeakerReanalysisCompletion]
+}
+
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
     let asrWorker: HighQualityASRWorkerEvidence?
-    let speakerConfiguration: HighQualitySpeakerConfiguration?
-    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
+    var speakerConfiguration: HighQualitySpeakerConfiguration?
+    var speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let rawASR: String?
     let glossary: HighQualityGlossarySelection
-    let alignment: HighQualityAlignmentEvidence?
-    let diarization: HighQualityDiarizationEvidence?
+    var alignment: HighQualityAlignmentEvidence?
+    var diarization: HighQualityDiarizationEvidence?
+    var speakerAttachment: HighQualitySpeakerAttachmentEvidence? = nil
     let translation: HighQualityTranslationEvidence?
     let sampleRate: Int
     let sampleCount: Int
-    let stageDurations: [HighQualityJobStage: TimeInterval]
-    let peakMemoryBytes: UInt64
-    let modelEvents: [HighQualityModelEvent]
+    var sourceAudioSHA256: String? = nil
+    var stageDurations: [HighQualityJobStage: TimeInterval]
+    var peakMemoryBytes: UInt64
+    var modelEvents: [HighQualityModelEvent]
     let failures: [HighQualityJobFailure]
     let generatedFiles: [HighQualityGeneratedFile]
     var resultTurns: [HighQualityTranscriptTurn]? = nil
@@ -1169,6 +1415,8 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     var japaneseTranscript: String? = nil
     var englishTranscript: String? = nil
     var readableSubtitles: HighQualityReadableSubtitleEvidence? = nil
+    var projectID: UUID? = nil
+    var speakerReanalyses: [HighQualitySpeakerReanalysisEvidence]? = nil
 }
 
 struct HighQualityJobResult: Sendable {
@@ -1179,6 +1427,140 @@ struct HighQualityJobResult: Sendable {
     let subtitleCues: [HighQualitySubtitleCue]
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
+    let speakerReanalysisCompletion: HighQualitySpeakerReanalysisCompletion?
+
+    init(
+        directory: URL,
+        japaneseTranscript: String,
+        englishTranscript: String?,
+        turns: [HighQualityTranscriptTurn],
+        subtitleCues: [HighQualitySubtitleCue],
+        manifest: HighQualityJobManifest,
+        evidence: HighQualityRawEvidence,
+        speakerReanalysisCompletion: HighQualitySpeakerReanalysisCompletion? = nil
+    ) {
+        self.directory = directory
+        self.japaneseTranscript = japaneseTranscript
+        self.englishTranscript = englishTranscript
+        self.turns = turns
+        self.subtitleCues = subtitleCues
+        self.manifest = manifest
+        self.evidence = evidence
+        self.speakerReanalysisCompletion = speakerReanalysisCompletion
+    }
+
+    fileprivate var automaticSpeakerLabels: Set<String> {
+        var labels = Set(evidence.resultTurns?.compactMap(\.speakerLabel) ?? [])
+        if let spans = evidence.diarization?.rawSpans {
+            labels.formUnion(highQualitySpeakerLabelsByID(spans).values)
+        }
+        return labels
+    }
+
+    var editableSpeakerLabels: [String] {
+        (try? HighQualityJob.speakerEditState(
+            manifest.speakerEdits ?? [],
+            for: self
+        ).activeLabels.sorted()) ?? automaticSpeakerLabels.sorted()
+    }
+
+    var editableSpeakerNames: [String: String] {
+        guard let state = try? HighQualityJob.speakerEditState(
+            manifest.speakerEdits ?? [],
+            for: self
+        ) else { return [:] }
+        var names = state.names
+        for turn in turns {
+            if let label = turn.speakerLabel, let name = turn.speakerName {
+                names[label] = name
+            }
+        }
+        return Dictionary(uniqueKeysWithValues: state.activeLabels.map {
+            ($0, names[$0] ?? $0)
+        })
+    }
+
+    var canUndoLastSpeakerEdit: Bool {
+        !(manifest.speakerEdits ?? []).isEmpty
+    }
+
+    var hasArchivedSpeakerEdits: Bool {
+        evidence.speakerReanalyses?.last?.replacedSpeakerEdits?.isEmpty == false
+    }
+
+    var canRestorePreviousSpeakerEdits: Bool {
+        HighQualityJob.canRestorePreviousSpeakerEdits(in: self)
+    }
+
+    var shouldExplainIncompatibleArchivedSpeakerEdits: Bool {
+        hasArchivedSpeakerEdits && !canRestorePreviousSpeakerEdits
+    }
+
+    fileprivate func withSpeakerReanalysisCompletion(
+        _ completion: HighQualitySpeakerReanalysisCompletion?
+    ) -> Self {
+        .init(
+            directory: directory,
+            japaneseTranscript: japaneseTranscript,
+            englishTranscript: englishTranscript,
+            turns: turns,
+            subtitleCues: subtitleCues,
+            manifest: manifest,
+            evidence: evidence,
+            speakerReanalysisCompletion: completion
+        )
+    }
+}
+
+fileprivate struct HighQualitySpeakerEditState {
+    var assignments: [String: String]
+    var names: [String: String]
+    var activeLabels: Set<String>
+}
+
+enum HighQualitySpeakerReanalysisAvailability: Equatable, Sendable {
+    case unavailable
+    case requiresVerifiedSource
+    case available
+
+    static let verifiedSourceExplanation = "This saved result has no verified source-audio fingerprint. Recompute the High-quality job before reanalyzing speakers."
+
+    var explanation: String? {
+        guard self == .requiresVerifiedSource else { return nil }
+        return Self.verifiedSourceExplanation
+    }
+}
+
+extension HighQualityJobResult {
+    var hasDuplicateSpeakerBetaEvidence: Bool {
+        compatibleSpeakerCentroids != nil
+    }
+
+    var duplicateSpeakerSuggestions: [HighQualityDuplicateSpeakerSuggestion] {
+        compatibleSpeakerCentroids.map(HighQualityJob.duplicateSpeakerSuggestions) ?? []
+    }
+
+    private var compatibleSpeakerCentroids: [HighQualitySpeakerCentroidEvidence]? {
+        guard let diarization = evidence.diarization else { return nil }
+        let speakerCount = Set(diarization.rawSpans.map(\.speakerID)).count
+        let expectedSpeakerLabels = Set((0..<speakerCount).map {
+            String(format: "SPEAKER_%02d", $0)
+        })
+        guard diarization.validationDiagnostics.isEmpty,
+              let centroids = diarization.speakerCentroids,
+              Set(centroids.map(\.speakerLabel)) == expectedSpeakerLabels,
+              let runtimeRevision = diarization.configuration?["runtimeRevision"],
+              let embeddingVariant = diarization.configuration?["embedderVariant"],
+              HighQualityJob.hasValidCompatibleSpeakerCentroids(centroids),
+              centroids.allSatisfy({
+                  $0.sourceJobID == manifest.jobID
+                      && $0.modelID == diarization.modelID
+                      && $0.modelRevision == diarization.revision
+                      && $0.runtimeRevision == runtimeRevision
+                      && $0.embeddingVariant == embeddingVariant
+              }) else { return nil }
+        return centroids
+    }
 }
 
 struct HighQualitySavedResult: Identifiable, Sendable {
@@ -1209,18 +1591,68 @@ struct HighQualitySavedResult: Identifiable, Sendable {
     }
 }
 
-private struct HighQualityResultTransformations: Codable {
-    static let currentSchemaVersion = 1
+private struct HighQualityResultTransformations: Codable, Equatable {
+    static let currentSchemaVersion = 2
 
     let schemaVersion: Int
     let customSpeakerLabels: [String: String]
+    let speakerEdits: [HighQualitySpeakerEdit]
     var relocatedSourcePath: String? = nil
+
+    init(
+        schemaVersion: Int = currentSchemaVersion,
+        customSpeakerLabels: [String: String] = [:],
+        speakerEdits: [HighQualitySpeakerEdit] = [],
+        relocatedSourcePath: String? = nil
+    ) {
+        self.schemaVersion = schemaVersion
+        self.customSpeakerLabels = customSpeakerLabels
+        self.speakerEdits = speakerEdits
+        self.relocatedSourcePath = relocatedSourcePath
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, customSpeakerLabels, speakerEdits, relocatedSourcePath
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try values.decode(Int.self, forKey: .schemaVersion)
+        customSpeakerLabels = try values.decodeIfPresent(
+            [String: String].self,
+            forKey: .customSpeakerLabels
+        ) ?? [:]
+        speakerEdits = try values.decodeIfPresent(
+            [HighQualitySpeakerEdit].self,
+            forKey: .speakerEdits
+        ) ?? []
+        relocatedSourcePath = try values.decodeIfPresent(
+            String.self,
+            forKey: .relocatedSourcePath
+        )
+    }
 }
 
 struct HighQualityJobError: LocalizedError, Equatable, Sendable {
     let stage: HighQualityJobFailureStage
     let message: String
     let resultDirectory: URL?
+
+    var errorDescription: String? { message }
+}
+
+private struct HighQualitySpeakerAnalysis {
+    var evidence: HighQualityDiarizationEvidence
+    let modelEvents: [HighQualityModelEvent]
+    let peakMemoryBytes: UInt64
+}
+
+private struct HighQualitySpeakerAnalysisFailure: LocalizedError {
+    let message: String
+    let cancelled: Bool
+    let evidence: HighQualityDiarizationEvidence
+    let modelEvents: [HighQualityModelEvent]
+    let peakMemoryBytes: UInt64
 
     var errorDescription: String? { message }
 }
@@ -1621,17 +2053,267 @@ struct HighQualityJob: Sendable {
         HighQualityASRBackend,
         HighQualityTranslator
     ) -> Services
+    private let now: @Sendable () -> Date
 
-    init() {
+    init(now: @escaping @Sendable () -> Date = { Date() }) {
         servicesForSelection = { Services.production(for: $0, translator: $1) }
+        self.now = now
     }
 
-    init(services: Services) {
+    init(
+        services: Services,
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
         servicesForSelection = { _, _ in services }
+        self.now = now
     }
 
-    init(servicesForBackend: @escaping @Sendable (HighQualityASRBackend) -> Services) {
+    init(
+        servicesForBackend: @escaping @Sendable (HighQualityASRBackend) -> Services,
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
         servicesForSelection = { backend, _ in servicesForBackend(backend) }
+        self.now = now
+    }
+
+    private func analyzeSpeakers(
+        services: Services,
+        workflowLease: HeavyweightWorkflowLease?,
+        samples: [Float],
+        alignedItems: [HighQualityAlignmentItem],
+        duration: TimeInterval,
+        useExclusiveReconciliation: Bool,
+        configuration: HighQualitySpeakerConfiguration,
+        sourceJobID: UUID,
+        processingDiarization: () -> Void,
+        progress: @escaping @Sendable (HighQualityJobStage, Double, String) -> Void
+    ) async throws -> HighQualitySpeakerAnalysis {
+        var lease: HeavyweightModelLease?
+        var loadStarted = false
+        var unloaded = false
+        var modelEvents: [HighQualityModelEvent] = []
+        var evidence = HighQualityDiarizationEvidence(
+            modelID: services.diarizationModelID,
+            revision: services.diarizationRevision,
+            rawSpans: [],
+            mappings: [],
+            overlapRanges: [],
+            peakMemoryBytes: 0,
+            useExclusiveReconciliation: useExclusiveReconciliation,
+            speakerCountPolicy: configuration.countPolicy,
+            validationDiagnostics: []
+        )
+        var peakMemoryBytes: UInt64 = 0
+
+        @Sendable func guarded<T: Sendable>(
+            _ lease: HeavyweightModelLease?,
+            _ operation: @escaping @Sendable () async throws -> T
+        ) async throws -> T {
+            guard let gate = services.heavyweightGate, let lease else {
+                return try await operation()
+            }
+            return try await gate.withMemoryGuard(lease, operation: operation)
+        }
+
+        func appendReleaseEvidence(
+            _ memory: HeavyweightModelMemoryEvidence,
+            releasedMemoryBytes: UInt64
+        ) {
+            peakMemoryBytes = max(peakMemoryBytes, memory.peakMemoryBytes)
+            modelEvents.append(.init(
+                kind: .memoryReleaseChecked,
+                modelID: services.diarizationModelID,
+                at: Date(),
+                message: "memory=\(releasedMemoryBytes) runtimePeak=\(memory.peakMemoryBytes) minimumAvailable=\(memory.minimumAvailableMemoryBytes) maximum=\(memory.maximumMemoryBytes) reserve=\(memory.reserveBytes)"
+            ))
+        }
+
+        func unload() async throws {
+            guard !unloaded else { return }
+            if let gate = services.heavyweightGate, let lease {
+                let memory: HeavyweightModelMemoryEvidence
+                do {
+                    memory = try await gate.memoryEvidence(lease)
+                } catch {
+                    unloaded = true
+                    await services.unloadDiarization()
+                    throw error
+                }
+                unloaded = true
+                do {
+                    let released = try await gate.releaseModel(
+                        lease,
+                        unload: services.unloadDiarization
+                    )
+                    modelEvents.append(.init(
+                        kind: .unloadCompleted,
+                        modelID: services.diarizationModelID,
+                        at: Date()
+                    ))
+                    appendReleaseEvidence(memory, releasedMemoryBytes: released)
+                } catch {
+                    modelEvents.append(.init(
+                        kind: .unloadCompleted,
+                        modelID: services.diarizationModelID,
+                        at: Date()
+                    ))
+                    throw error
+                }
+            } else {
+                unloaded = true
+                await services.unloadDiarization()
+                modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    modelID: services.diarizationModelID,
+                    at: Date()
+                ))
+            }
+        }
+
+        do {
+            if let gate = services.heavyweightGate, let workflowLease {
+                lease = try await gate.acquireModel(
+                    workflow: workflowLease,
+                    modelID: services.diarizationModelID,
+                    declaredPeakBytes: services.diarizationDeclaredPeakMemoryBytes
+                )
+            }
+            if let lease {
+                modelEvents.append(.init(
+                    kind: .pressureChecked,
+                    modelID: services.diarizationModelID,
+                    at: Date(),
+                    message: "policy=macos-memory-pressure peak=\(lease.declaredPeakBytes) reserve=\(lease.reserveBytes) total=\(lease.totalMemoryBytes) available=\(lease.availableMemoryBytes) baseline=\(lease.baselineMemoryBytes)"
+                ))
+            }
+            loadStarted = true
+            modelEvents.append(.init(
+                kind: .loadStarted,
+                modelID: services.diarizationModelID,
+                at: Date()
+            ))
+            progress(.preparingDiarization, 0, "Preparing SpeakerKit…")
+            try await guarded(lease) {
+                try await services.prepareDiarization(configuration) { fraction, message in
+                    progress(.preparingDiarization, min(max(fraction, 0), 1), message)
+                }
+            }
+            if let gate = services.heavyweightGate, let lease {
+                try await gate.markLoaded(lease)
+            }
+            modelEvents.append(.init(
+                kind: .loadCompleted,
+                modelID: services.diarizationModelID,
+                at: Date()
+            ))
+            try Task.checkCancellation()
+
+            processingDiarization()
+            progress(.diarizing, 0, "Detecting speakers…")
+            let exchange = try await guarded(lease) {
+                try await services.diarizeSpeakers(
+                    samples,
+                    useExclusiveReconciliation,
+                    configuration
+                )
+            }
+            guard exchange.speakerCountPolicy == configuration.countPolicy else {
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit did not preserve the requested Speaker-count policy.",
+                    resultDirectory: nil
+                )
+            }
+            evidence = .init(
+                modelID: exchange.modelID,
+                revision: exchange.revision,
+                rawSpans: exchange.spans,
+                mappings: [],
+                overlapRanges: [],
+                peakMemoryBytes: exchange.peakMemoryBytes,
+                useExclusiveReconciliation: exchange.useExclusiveReconciliation,
+                speakerCountPolicy: exchange.speakerCountPolicy,
+                configuration: exchange.configuration,
+                validationDiagnostics: []
+            )
+            do {
+                evidence = try Self.diarizationEvidence(
+                    exchange,
+                    items: alignedItems,
+                    duration: duration,
+                    completeAttribution: services.completeDiarizationAttribution,
+                    sourceJobID: sourceJobID
+                )
+            } catch {
+                evidence.validationDiagnostics = [error.localizedDescription]
+                throw error
+            }
+            peakMemoryBytes = max(peakMemoryBytes, exchange.peakMemoryBytes)
+            try await unload()
+            lease = nil
+            evidence.worker = await services.diarizationWorkerEvidence()
+            peakMemoryBytes = max(
+                peakMemoryBytes,
+                evidence.worker?.peakPhysicalFootprintBytes ?? 0
+            )
+            guard evidence.worker?.pressureTransitions.contains(where: {
+                $0.level == .critical
+            }) != true else {
+                throw HighQualityAlignmentSpeakerWorkerError.criticalMemoryPressure(
+                    stage: "SpeakerKit"
+                )
+            }
+            try Task.checkCancellation()
+            return .init(
+                evidence: evidence,
+                modelEvents: modelEvents,
+                peakMemoryBytes: peakMemoryBytes
+            )
+        } catch {
+            let originalError = error
+            var cleanupMessage: String?
+            if loadStarted, !unloaded {
+                do {
+                    try await unload()
+                    lease = nil
+                } catch {
+                    cleanupMessage = error.localizedDescription
+                }
+            }
+            evidence.worker = await services.diarizationWorkerEvidence()
+            peakMemoryBytes = max(
+                max(peakMemoryBytes, evidence.peakMemoryBytes),
+                evidence.worker?.peakPhysicalFootprintBytes ?? 0
+            )
+            if let gateError = originalError as? HeavyweightModelGateError {
+                modelEvents.append(.init(
+                    kind: .guardFailed,
+                    modelID: services.diarizationModelID,
+                    at: Date(),
+                    message: gateError.localizedDescription
+                ))
+            }
+            if let cleanupMessage {
+                modelEvents.append(.init(
+                    kind: .guardFailed,
+                    modelID: services.diarizationModelID,
+                    at: Date(),
+                    message: cleanupMessage
+                ))
+            }
+            let cancelled = originalError is CancellationError || Task.isCancelled
+            if !cancelled, evidence.validationDiagnostics.isEmpty {
+                evidence.validationDiagnostics = [originalError.localizedDescription]
+            }
+            let message = cancelled ? "Speaker analysis cancelled." : originalError.localizedDescription
+            throw HighQualitySpeakerAnalysisFailure(
+                message: cleanupMessage.map { message + " " + $0 } ?? message,
+                cancelled: cancelled,
+                evidence: evidence,
+                modelEvents: modelEvents,
+                peakMemoryBytes: peakMemoryBytes
+            )
+        }
     }
 
     static func savedResults(
@@ -1687,7 +2369,8 @@ struct HighQualityJob: Sendable {
               evidence.model == manifest.model,
               evidence.asrWorker == manifest.asrWorker,
               (manifest.readableSubtitles == true) == (evidence.readableSubtitles != nil),
-              evidence.generatedFiles == manifest.generatedFiles else {
+              evidence.generatedFiles == manifest.generatedFiles,
+              evidence.projectID == manifest.projectID else {
             throw savedResultError("The saved manifest and raw evidence do not match.", saved)
         }
         for file in manifest.generatedFiles
@@ -1736,7 +2419,8 @@ struct HighQualityJob: Sendable {
                 )
             }
             let labelsByID = Dictionary(uniqueKeysWithValues:
-                (evidence.alignment?.semanticUnits ?? []).compactMap { unit in
+                (evidence.speakerAttachment?.semanticUnits
+                    ?? evidence.alignment?.semanticUnits ?? []).compactMap { unit in
                     unit.speakerLabel.map { (unit.id, $0) }
                 }
             )
@@ -1806,10 +2490,22 @@ struct HighQualityJob: Sendable {
             evidence: evidence
         )
         if let transformations = try readTransformations(in: saved.directory) {
-            result = applyingCustomSpeakerLabels(
-                transformations.customSpeakerLabels,
-                to: result
-            )
+            let edits = migratedSpeakerEdits(transformations, manifest: manifest)
+            guard speakerEditAuditMatchesManifest(
+                transformations,
+                edits: edits,
+                manifest: manifest
+            ) else {
+                throw savedResultError(
+                    "The saved Speaker edit manifest and audit do not match.",
+                    saved
+                )
+            }
+            if !edits.isEmpty {
+                result = try applyingSpeakerEdits(edits, to: result)
+            }
+        } else if manifest.speakerEdits?.isEmpty == false {
+            throw savedResultError("The saved Speaker edit audit is missing.", saved)
         }
         if usesDurableEvidence {
             do {
@@ -1821,42 +2517,604 @@ struct HighQualityJob: Sendable {
                 )
             }
         }
-        return result
+        return try result.withSpeakerReanalysisCompletion(
+            speakerReanalysisCompletion(for: manifest, in: saved.directory)
+        )
     }
 
-    static func relocateSource(
+    func relocateSource(
         _ saved: HighQualitySavedResult,
         to sourceURL: URL
-    ) throws -> HighQualitySavedResult {
+    ) async throws -> HighQualitySavedResult {
         guard saved.manifest.source.youtube == nil,
               sourceURL.isFileURL,
               (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
                 == true else {
-            throw savedResultError("Choose an existing local media file.", saved)
+            throw Self.savedResultError(
+                "Choose an existing local media file.",
+                saved,
+                stage: .source
+            )
         }
-        _ = try reopen(saved)
-        let previous = try readTransformations(in: saved.directory)
+        let reopened = try Self.reopen(saved)
+        guard Self.isValidSHA256(reopened.evidence.sourceAudioSHA256) else {
+            throw Self.savedResultError(
+                HighQualitySpeakerReanalysisAvailability.verifiedSourceExplanation,
+                saved,
+                stage: .source
+            )
+        }
+        let selection = reopened.manifest.translationModel?.translator ?? .productDefault
+        let services = servicesForSelection(reopened.manifest.selectedBackend, selection)
+        let samples: [Float]
+        do {
+            samples = try await services.loadSource(sourceURL)
+        } catch {
+            throw Self.savedResultError(
+                "The selected media could not be verified: \(error.localizedDescription)",
+                saved,
+                stage: .source
+            )
+        }
+        guard Self.matchesSavedSource(
+            sourceURL,
+            samples: samples,
+            sha256: Self.audioSHA256(samples),
+            result: reopened
+        ) else {
+            throw Self.savedResultError(
+                "The selected media does not match the saved source audio.",
+                saved,
+                stage: .source
+            )
+        }
+        let previous = try Self.readTransformations(in: saved.directory)
         let relocatedPath = sourceURL.standardizedFileURL.path
-        let transformations = try encoder.encode(HighQualityResultTransformations(
-            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+        let transformations = try Self.encoder.encode(HighQualityResultTransformations(
+            schemaVersion: previous?.schemaVersion
+                ?? HighQualityResultTransformations.currentSchemaVersion,
             customSpeakerLabels: previous?.customSpeakerLabels ?? [:],
+            speakerEdits: previous?.speakerEdits ?? [],
             relocatedSourcePath: relocatedPath
         ))
-        try transactionallyWrite(
+        try Self.transactionallyWrite(
             ["transformations.json": transformations],
-            in: saved.directory
+            in: saved.directory,
+            validateActive: {
+                guard try Self.activeResultMatches(
+                    reopened.manifest,
+                    transformations: previous,
+                    in: saved.directory
+                ) else {
+                    throw Self.savedResultError(
+                        "The saved result changed during source relocation. Reopen it and try again.",
+                        saved
+                    )
+                }
+            }
         )
         return HighQualitySavedResult(
             directory: saved.directory,
-            manifest: saved.manifest,
+            manifest: reopened.manifest,
             relocatedSourcePath: relocatedPath
         )
+    }
+
+    static func clearRelocatedSource(in directory: URL) throws {
+        guard let previous = try readTransformations(in: directory),
+              previous.relocatedSourcePath != nil else { return }
+        let transformations = try encoder.encode(HighQualityResultTransformations(
+            schemaVersion: previous.schemaVersion,
+            customSpeakerLabels: previous.customSpeakerLabels,
+            speakerEdits: previous.speakerEdits,
+            relocatedSourcePath: nil
+        ))
+        try transactionallyWrite(
+            ["transformations.json": transformations],
+            in: directory
+        )
+    }
+
+    static func speakerReanalysisAvailability(
+        _ result: HighQualityJobResult
+    ) -> HighQualitySpeakerReanalysisAvailability {
+        guard result.manifest.schemaVersion >= 3,
+              result.manifest.status == .completed,
+              result.manifest.speakerLabels,
+              result.manifest.dependencies.contains(.speakerDiarization),
+              result.evidence.sampleRate == 16_000,
+              result.evidence.sampleCount > 0,
+              result.evidence.diarization != nil,
+              result.evidence.alignment?.semanticUnits?.isEmpty == false,
+              result.evidence.alignment?.semanticFragments != nil else {
+            return .unavailable
+        }
+        return isValidSHA256(result.evidence.sourceAudioSHA256)
+            ? .available : .requiresVerifiedSource
+    }
+
+    static func canRerunSpeakers(_ result: HighQualityJobResult) -> Bool {
+        result.manifest.schemaVersion >= 3
+            && result.manifest.status == .completed
+            && result.manifest.speakerLabels
+            && result.manifest.dependencies.contains(.speakerDiarization)
+            && result.evidence.sampleRate == 16_000
+            && result.evidence.sampleCount > 0
+            && result.evidence.diarization != nil
+            && result.evidence.alignment?.semanticUnits?.isEmpty == false
+            && result.evidence.alignment?.semanticFragments != nil
+    }
+
+    func rerunSpeakers(
+        _ saved: HighQualitySavedResult,
+        configuration: HighQualitySpeakerConfiguration,
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in },
+        beforeCommit: () throws -> Void = {},
+        beforeCompletionAudit: () throws -> Void = {},
+        writeCompletionAudit: (Data, URL) throws -> Void = {
+            try $0.write(to: $1, options: .atomic)
+        }
+    ) async throws -> HighQualityJobResult {
+        guard configuration.isValid else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "Expected speaker count must be an integer from 1 through 20.",
+                resultDirectory: saved.directory
+            )
+        }
+        let previous = try Self.reopen(saved)
+        let availability = Self.speakerReanalysisAvailability(previous)
+        guard availability == .available else {
+            throw HighQualityJobError(
+                stage: availability == .requiresVerifiedSource ? .source : .application,
+                message: availability.explanation
+                    ?? "This saved result does not contain compatible alignment and SpeakerKit evidence.",
+                resultDirectory: saved.directory
+            )
+        }
+        guard Self.canRerunSpeakers(previous),
+              let alignment = previous.evidence.alignment,
+              let units = alignment.semanticUnits,
+              let fragments = alignment.semanticFragments,
+              let previousDiarization = previous.evidence.diarization else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "This saved result does not contain compatible alignment and SpeakerKit evidence.",
+                resultDirectory: saved.directory
+            )
+        }
+        let transformations = try Self.readTransformations(in: saved.directory)
+        let replacedSpeakerEdits = Self.migratedSpeakerEdits(
+            transformations,
+            manifest: previous.manifest
+        )
+        guard try Self.activeResultMatches(
+            previous.manifest,
+            transformations: transformations,
+            in: saved.directory
+        ) else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "The saved Speaker result changed before reanalysis. Reopen it and try again.",
+                resultDirectory: saved.directory
+            )
+        }
+        let activeSaved = HighQualitySavedResult(
+            directory: saved.directory,
+            manifest: previous.manifest,
+            relocatedSourcePath: transformations?.relocatedSourcePath
+        )
+        let sourceURL = activeSaved.sourceURL
+        guard sourceURL.isFileURL,
+              (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
+                == true else {
+            throw HighQualityJobError(
+                stage: .source,
+                message: activeSaved.sourceRelocationMessage
+                    ?? "The saved source audio is unavailable. Locate it before reanalysis.",
+                resultDirectory: saved.directory
+            )
+        }
+
+        let selection = previous.manifest.translationModel?.translator ?? .productDefault
+        let services = servicesForSelection(previous.manifest.selectedBackend, selection)
+        let rawStartedAt = now()
+        let startedAt = Self.persistedDate(rawStartedAt)
+        var currentStage = HighQualityJobStage.normalizingSource
+        var workflowLease: HeavyweightWorkflowLease?
+
+        do {
+            progress(.init(
+                stage: .normalizingSource,
+                fraction: 0.05,
+                message: "Loading saved source audio…"
+            ))
+            let samples = try await services.loadSource(sourceURL)
+            let sourceAudioSHA256 = Self.audioSHA256(samples)
+            guard Self.matchesSavedSource(
+                sourceURL,
+                samples: samples,
+                sha256: sourceAudioSHA256,
+                result: previous
+            ) else {
+                throw HighQualityJobError(
+                    stage: .source,
+                    message: "The selected source no longer matches the saved result.",
+                    resultDirectory: saved.directory
+                )
+            }
+            try Task.checkCancellation()
+            let sourceFinishedAt = now()
+
+            currentStage = .preparingDiarization
+            if let gate = services.heavyweightGate {
+                workflowLease = try await gate.beginWorkflow(.offline(saved.id))
+            }
+            let exclusive = previousDiarization.useExclusiveReconciliation ?? false
+            var alignedItems = alignment.chunks.flatMap(\.rawItems)
+            if alignedItems.isEmpty {
+                alignedItems = alignment.mergedCues.map {
+                    HighQualityAlignmentItem(
+                        cueID: $0.id,
+                        text: $0.text,
+                        start: $0.start,
+                        end: $0.end
+                    )
+                }
+            }
+            let analysis: HighQualitySpeakerAnalysis
+            var diarizationStartedAt: Date?
+            do {
+                analysis = try await analyzeSpeakers(
+                    services: services,
+                    workflowLease: workflowLease,
+                    samples: samples,
+                    alignedItems: alignedItems,
+                    duration: alignment.sourceDuration,
+                    useExclusiveReconciliation: exclusive,
+                    configuration: configuration,
+                    sourceJobID: saved.id,
+                    processingDiarization: {
+                        diarizationStartedAt = now()
+                        currentStage = .diarizing
+                    }
+                ) { stage, fraction, message in
+                    progress(.init(
+                        stage: stage,
+                        fraction: stage == .preparingDiarization
+                            ? 0.2 + fraction * 0.2 : 0.45,
+                        message: stage == .diarizing ? "Reanalyzing speakers…" : message
+                    ))
+                }
+            } catch let failure as HighQualitySpeakerAnalysisFailure {
+                if failure.cancelled { throw CancellationError() }
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: failure.message,
+                    resultDirectory: saved.directory
+                )
+            }
+            let diarization = analysis.evidence
+            guard diarization.modelID == services.diarizationModelID,
+                  diarization.revision == services.diarizationRevision,
+                  diarization.useExclusiveReconciliation == exclusive,
+                  diarization.speakerCountPolicy == configuration.countPolicy else {
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit did not preserve the requested configuration.",
+                    resultDirectory: saved.directory
+                )
+            }
+            if let gate = services.heavyweightGate, let workflowLease {
+                try await gate.endWorkflow(workflowLease)
+            }
+            workflowLease = nil
+            try Task.checkCancellation()
+            let exportStartedAt = now()
+
+            let attachment = Self.speakerAttachment(
+                units: units,
+                fragments: fragments,
+                mappings: diarization.mappings,
+                explicitLabelsByCueID: [:]
+            )
+            let attachmentEvidence = HighQualitySpeakerAttachmentEvidence(
+                semanticUnits: attachment.units
+            )
+            let turns = previous.turns.map { turn in
+                HighQualityTranscriptTurn(
+                    id: turn.id,
+                    japanese: turn.japanese,
+                    english: turn.english,
+                    speakerLabel: attachment.labelsByUnitID[turn.id],
+                    start: turn.start,
+                    end: turn.end
+                )
+            }
+            let labelsByID = Dictionary(uniqueKeysWithValues: turns.compactMap { turn in
+                turn.speakerLabel.map { (turn.id, $0) }
+            })
+            let subtitleCues = previous.subtitleCues.map { cue in
+                HighQualitySubtitleCue(
+                    id: cue.id,
+                    start: cue.start,
+                    end: cue.end,
+                    text: cue.text,
+                    speakerLabel: labelsByID[cue.id],
+                    renderedLines: cue.renderedLines
+                )
+            }
+            let deliverables = Set(previous.manifest.deliverables)
+            let japaneseTranscript = deliverables.contains(.japaneseTranscript)
+                ? Self.transcript(turns, text: \.japanese) : previous.japaneseTranscript
+            let englishTranscript = deliverables.contains(.englishTranslationTranscript)
+                ? Self.transcript(turns, text: \.english) : nil
+            let peakMemoryBytes = analysis.peakMemoryBytes
+            let previousReanalyses = previous.evidence.speakerReanalyses ?? []
+            func reanalysis(payloadPreparedAt: Date) -> HighQualitySpeakerReanalysisEvidence {
+                HighQualitySpeakerReanalysisEvidence(
+                    startedAt: startedAt,
+                    payloadPreparedAt: payloadPreparedAt,
+                    preCommitWallTime: payloadPreparedAt.timeIntervalSince(startedAt),
+                    configuration: configuration,
+                    modelEvents: analysis.modelEvents,
+                    peakMemoryBytes: peakMemoryBytes,
+                    replacedDiarization: previousDiarization,
+                    replacedAttachment: previous.evidence.speakerAttachment
+                        ?? .init(semanticUnits: units),
+                    replacedSpeakerEdits: replacedSpeakerEdits,
+                    diarization: diarization,
+                    attachment: attachmentEvidence
+                )
+            }
+
+            var manifest = previous.manifest
+            manifest.schemaVersion = HighQualityJobManifest.currentSchemaVersion
+            manifest.speakerConfiguration = configuration
+            manifest.speakerCountPolicy = configuration.countPolicy
+            let diarizationBoundary = diarizationStartedAt ?? exportStartedAt
+            manifest.stageDurations[.normalizingSource, default: 0] +=
+                sourceFinishedAt.timeIntervalSince(rawStartedAt)
+            manifest.stageDurations[.preparingDiarization, default: 0] +=
+                diarizationBoundary.timeIntervalSince(sourceFinishedAt)
+            manifest.stageDurations[.diarizing, default: 0] +=
+                exportStartedAt.timeIntervalSince(diarizationBoundary)
+            manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, peakMemoryBytes)
+            manifest.modelEvents += analysis.modelEvents
+            manifest.speakerReanalysisCount = previousReanalyses.count + 1
+            manifest.speakerEdits = []
+
+            var evidence = previous.evidence
+            evidence.speakerConfiguration = configuration
+            evidence.speakerCountPolicy = configuration.countPolicy
+            evidence.diarization = diarization
+            evidence.speakerAttachment = attachmentEvidence
+            evidence.sourceAudioSHA256 = sourceAudioSHA256
+            evidence.peakMemoryBytes = manifest.peakMemoryBytes
+            evidence.modelEvents = manifest.modelEvents
+            evidence.resultTurns = turns
+            evidence.subtitleCues = subtitleCues
+            evidence.japaneseTranscript = japaneseTranscript
+            evidence.englishTranscript = englishTranscript
+
+            currentStage = .exporting
+            progress(.init(
+                stage: .exporting,
+                fraction: 0.9,
+                message: "Replacing speaker results atomically…"
+            ))
+            try Task.checkCancellation()
+            func payload(
+                payloadPreparedAt: Date,
+                exportingDuration: TimeInterval
+            ) throws -> (
+                evidence: Data,
+                manifest: Data,
+                result: HighQualityJobResult
+            ) {
+                var finalizedManifest = manifest
+                finalizedManifest.stageDurations[.exporting, default: 0] +=
+                    exportingDuration
+                var finalizedEvidence = evidence
+                finalizedEvidence.stageDurations = finalizedManifest.stageDurations
+                finalizedEvidence.speakerReanalyses = previousReanalyses
+                    + [reanalysis(payloadPreparedAt: payloadPreparedAt)]
+                let evidenceData = try Self.encoder.encode(finalizedEvidence)
+                finalizedManifest.rawEvidenceSHA256 = Self.sha256(evidenceData)
+                let manifestData = try Self.encoder.encode(finalizedManifest)
+                return (
+                    evidenceData,
+                    manifestData,
+                    HighQualityJobResult(
+                        directory: saved.directory,
+                        japaneseTranscript: japaneseTranscript,
+                        englishTranscript: englishTranscript,
+                        turns: turns,
+                        subtitleCues: subtitleCues,
+                        manifest: try Self.decoder.decode(
+                            HighQualityJobManifest.self,
+                            from: manifestData
+                        ),
+                        evidence: try Self.decoder.decode(
+                            HighQualityRawEvidence.self,
+                            from: evidenceData
+                        )
+                    )
+                )
+            }
+            let provisional = try payload(
+                payloadPreparedAt: Self.persistedDate(exportStartedAt),
+                exportingDuration: 0
+            )
+            var committedResult = provisional.result
+            var payloadPreparedAt = exportStartedAt
+            func completion(
+                finishedAt: Date,
+                auditError: String? = nil
+            ) -> HighQualitySpeakerReanalysisCompletion {
+                .init(
+                    reanalysisCount: committedResult.manifest.speakerReanalysisCount ?? 0,
+                    rawEvidenceSHA256: committedResult.manifest.rawEvidenceSHA256 ?? "",
+                    startedAt: startedAt,
+                    payloadPreparedAt: payloadPreparedAt,
+                    finishedAt: finishedAt,
+                    wallTime: finishedAt.timeIntervalSince(startedAt),
+                    commitWallTime: finishedAt.timeIntervalSince(payloadPreparedAt),
+                    auditError: auditError
+                )
+            }
+            var files = Self.deliverableFiles(
+                japaneseTranscript: deliverables.contains(.japaneseTranscript)
+                    ? japaneseTranscript : nil,
+                englishTranscript: englishTranscript,
+                subtitleCues: deliverables.contains(.englishSubtitles) ? subtitleCues : nil
+            )
+            files["raw-asr.json"] = provisional.evidence
+            files["manifest.json"] = provisional.manifest
+            if let transformations {
+                files["transformations.json"] = try Self.encoder.encode(
+                    HighQualityResultTransformations(
+                        schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+                        customSpeakerLabels: [:],
+                        relocatedSourcePath: transformations.relocatedSourcePath
+                    )
+                )
+            }
+            try Self.transactionallyWrite(
+                files,
+                in: saved.directory,
+                beforeCommit: {
+                    try Task.checkCancellation()
+                    try beforeCommit()
+                },
+                finalizeBeforeCommit: {
+                    let rawPayloadPreparedAt = now()
+                    payloadPreparedAt = Self.persistedDate(rawPayloadPreparedAt)
+                    let finalized = try payload(
+                        payloadPreparedAt: payloadPreparedAt,
+                        exportingDuration: rawPayloadPreparedAt.timeIntervalSince(exportStartedAt)
+                    )
+                    committedResult = finalized.result
+                    return [
+                        "raw-asr.json": finalized.evidence,
+                        "manifest.json": finalized.manifest,
+                        "speaker-reanalysis-journal.json": try Self
+                            .speakerReanalysisJournalData(
+                                upserting: completion(
+                                    finishedAt: payloadPreparedAt,
+                                    auditError: "End-to-end completion audit is pending."
+                                ),
+                                in: saved.directory
+                            ),
+                    ]
+                },
+                afterCommit: {
+                    var finishedAt: Date?
+                    do {
+                        try beforeCompletionAudit()
+                        let recordedAt = Self.persistedDate(now())
+                        finishedAt = recordedAt
+                        let recorded = completion(finishedAt: recordedAt)
+                        try Self.writeSpeakerReanalysisCompletion(
+                            recorded,
+                            in: saved.directory,
+                            write: writeCompletionAudit
+                        )
+                        committedResult = committedResult
+                            .withSpeakerReanalysisCompletion(recorded)
+                    } catch {
+                        let message = "End-to-end completion audit failed: "
+                            + error.localizedDescription
+                        let failure = completion(
+                            finishedAt: finishedAt ?? Self.persistedDate(now()),
+                            auditError: message
+                        )
+                        try? Self.writeSpeakerReanalysisCompletion(
+                            failure,
+                            in: saved.directory
+                        )
+                        throw HighQualityJobError(
+                            stage: .export,
+                            message: "Speaker results were committed, but the completion audit failed. "
+                                + error.localizedDescription,
+                            resultDirectory: saved.directory
+                        )
+                    }
+                },
+                validateActive: {
+                    guard try Self.activeResultMatches(
+                        previous.manifest,
+                        transformations: transformations,
+                        in: saved.directory
+                    ) else {
+                        throw HighQualityJobError(
+                            stage: .export,
+                            message: "The saved Speaker result changed during reanalysis. Reopen it and try again.",
+                            resultDirectory: saved.directory
+                        )
+                    }
+                }
+            )
+            progress(.init(stage: .completed, fraction: 1, message: "Speakers reanalyzed"))
+            return committedResult
+        } catch {
+            var cleanupMessage: String?
+            if let gate = services.heavyweightGate, let workflowLease {
+                do {
+                    try await gate.endWorkflow(workflowLease)
+                } catch {
+                    cleanupMessage = cleanupMessage ?? error.localizedDescription
+                }
+            }
+            let stage: HighQualityJobFailureStage
+            if error is CancellationError || Task.isCancelled {
+                stage = .cancelled
+            } else {
+                switch currentStage {
+                case .normalizingSource: stage = .source
+                case .preparingDiarization, .diarizing: stage = .diarization
+                case .exporting: stage = .export
+                default: stage = .application
+                }
+            }
+            let message = error is CancellationError || Task.isCancelled
+                ? "Speaker reanalysis cancelled."
+                : error.localizedDescription
+            throw HighQualityJobError(
+                stage: stage,
+                message: cleanupMessage.map { message + " " + $0 } ?? message,
+                resultDirectory: saved.directory
+            )
+        }
     }
 
     func run(
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        guard let project = request.project else {
+            return try await runUncoordinated(request, progress: progress)
+        }
+        return try await HighQualityProjectLifecycle.shared.run(projectID: project.id) {
+            try await runUncoordinated(request, progress: progress)
+        }
+    }
+
+    private func runUncoordinated(
+        _ request: HighQualityJobRequest,
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void
+    ) async throws -> HighQualityJobResult {
+        if let project = request.project {
+            do {
+                try project.validateForJob()
+            } catch {
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: error.localizedDescription,
+                    resultDirectory: nil
+                )
+            }
+        }
         let isYouTubeSource = !request.sourceURL.isFileURL
         let needsSubtitles = request.deliverables.contains(.englishSubtitles)
         let needsTranslation = request.deliverables.contains(.englishTranslationTranscript)
@@ -1902,6 +3160,22 @@ struct HighQualityJob: Sendable {
                 resultDirectory: directory
             )
         }
+        if let project = request.project {
+            do {
+                try project.indexJob(
+                    id: request.id,
+                    source: Self.provenance(for: request.sourceURL),
+                    resultDirectory: directory
+                )
+            } catch {
+                try? FileManager.default.removeItem(at: directory)
+                throw HighQualityJobError(
+                    stage: .application,
+                    message: "Could not index the Project job: \(error.localizedDescription)",
+                    resultDirectory: nil
+                )
+            }
+        }
         let services = servicesForSelection(request.backend, request.translator)
         let translationModel = request.translator.model
 
@@ -1909,6 +3183,7 @@ struct HighQualityJob: Sendable {
         var currentStage = HighQualityJobStage.validating
         var stageStartedAt = startedAt
         var sampleCount = 0
+        var sourceAudioSHA256: String?
         var rawASR: String?
         var glossary = HighQualityGlossarySelection.empty
         var japaneseTranscriptWritten = false
@@ -1916,6 +3191,7 @@ struct HighQualityJob: Sendable {
         var subtitlesWritten = false
         var alignmentEvidence: HighQualityAlignmentEvidence?
         var diarizationEvidence: HighQualityDiarizationEvidence?
+        var speakerAttachmentEvidence: HighQualitySpeakerAttachmentEvidence?
         var alignedItems: [HighQualityAlignmentItem] = []
         var translationEvidence: HighQualityTranslationEvidence?
         var readableSubtitleEvidence: HighQualityReadableSubtitleEvidence?
@@ -1924,14 +3200,11 @@ struct HighQualityJob: Sendable {
         var asrUnloaded = false
         var alignmentLoadStarted = false
         var alignmentUnloaded = false
-        var diarizationLoadStarted = false
-        var diarizationUnloaded = false
         var translationLoadStarted = false
         var translationUnloaded = false
         var workflowLease: HeavyweightWorkflowLease?
         var asrLease: HeavyweightModelLease?
         var alignmentLease: HeavyweightModelLease?
-        var diarizationLease: HeavyweightModelLease?
         var translationLease: HeavyweightModelLease?
         var memorySampler: Task<UInt64, Never>?
         var cleanupFailureMessage: String?
@@ -1962,6 +3235,7 @@ struct HighQualityJob: Sendable {
             failures: [],
             generatedFiles: []
         )
+        manifest.projectID = request.project?.id
 
         func begin(_ stage: HighQualityJobStage, fraction: Double, message: String) {
             let now = Date()
@@ -2150,6 +3424,7 @@ struct HighQualityJob: Sendable {
             begin(.normalizingSource, fraction: 0.05, message: "Normalizing source audio…")
             let samples = try await services.loadSource(normalizedSourceURL)
             sampleCount = samples.count
+            sourceAudioSHA256 = Self.audioSHA256(samples)
             try Task.checkCancellation()
 
             begin(
@@ -2390,124 +3665,52 @@ struct HighQualityJob: Sendable {
             }
             if request.speakerLabels {
                 begin(.preparingDiarization, fraction: 0.74, message: "Preparing SpeakerKit…")
-                diarizationLoadStarted = true
-                diarizationEvidence = .init(
-                    modelID: services.diarizationModelID,
-                    revision: services.diarizationRevision,
-                    rawSpans: [],
-                    mappings: [],
-                    overlapRanges: [],
-                    peakMemoryBytes: 0,
-                    useExclusiveReconciliation: request.useExclusiveReconciliation,
-                    speakerCountPolicy: request.speakerCountPolicy,
-                    validationDiagnostics: []
-                )
-                diarizationLease = try await acquireModel(
-                    services.diarizationModelID,
-                    peak: services.diarizationDeclaredPeakMemoryBytes
-                )
-                if let diarizationLease {
-                    manifest.modelEvents.append(.init(
-                        kind: .pressureChecked,
-                        modelID: services.diarizationModelID,
-                        at: Date(),
-                        message: "policy=macos-memory-pressure peak=\(diarizationLease.declaredPeakBytes) reserve=\(diarizationLease.reserveBytes) total=\(diarizationLease.totalMemoryBytes) available=\(diarizationLease.availableMemoryBytes) baseline=\(diarizationLease.baselineMemoryBytes)"
-                    ))
-                }
-                manifest.modelEvents.append(.init(
-                    kind: .loadStarted,
-                    modelID: services.diarizationModelID,
-                    at: Date()
-                ))
-                try await withMemoryGuard(diarizationLease) {
-                    try await services.prepareDiarization(request.speakerConfiguration) {
-                        fraction, message in
+                let analysis: HighQualitySpeakerAnalysis
+                do {
+                    analysis = try await analyzeSpeakers(
+                        services: services,
+                        workflowLease: workflowLease,
+                        samples: samples,
+                        alignedItems: alignedItems,
+                        duration: Double(samples.count) / 16_000,
+                        useExclusiveReconciliation: request.useExclusiveReconciliation,
+                        configuration: request.speakerConfiguration,
+                        sourceJobID: request.id,
+                        processingDiarization: {
+                            let startedAt = Date()
+                            manifest.stageDurations[currentStage, default: 0] +=
+                                startedAt.timeIntervalSince(stageStartedAt)
+                            currentStage = .diarizing
+                            stageStartedAt = startedAt
+                        }
+                    ) { stage, fraction, message in
                         progress(.init(
-                            stage: .preparingDiarization,
-                            fraction: 0.74 + min(max(fraction, 0), 1) * 0.04,
+                            stage: stage,
+                            fraction: stage == .preparingDiarization
+                                ? 0.74 + fraction * 0.04 : 0.78,
                             message: message
                         ))
                     }
-                }
-                try await markLoaded(diarizationLease)
-                manifest.modelEvents.append(.init(
-                    kind: .loadCompleted,
-                    modelID: services.diarizationModelID,
-                    at: Date()
-                ))
-                try Task.checkCancellation()
-                begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
-                let exchange = try await withMemoryGuard(diarizationLease) {
-                    try await services.diarizeSpeakers(
-                        samples,
-                        request.useExclusiveReconciliation,
-                        request.speakerConfiguration
+                } catch let failure as HighQualitySpeakerAnalysisFailure {
+                    diarizationEvidence = failure.evidence
+                    manifest.modelEvents += failure.modelEvents
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        failure.peakMemoryBytes
                     )
-                }
-                guard exchange.speakerCountPolicy == request.speakerCountPolicy else {
+                    if failure.cancelled { throw CancellationError() }
                     throw HighQualityJobError(
                         stage: .diarization,
-                        message: "SpeakerKit did not preserve the requested Speaker-count policy.",
+                        message: failure.message,
                         resultDirectory: directory
                     )
                 }
-                diarizationEvidence = .init(
-                    modelID: exchange.modelID,
-                    revision: exchange.revision,
-                    rawSpans: exchange.spans,
-                    mappings: [],
-                    overlapRanges: [],
-                    peakMemoryBytes: exchange.peakMemoryBytes,
-                    useExclusiveReconciliation: exchange.useExclusiveReconciliation,
-                    speakerCountPolicy: exchange.speakerCountPolicy,
-                    configuration: exchange.configuration,
-                    validationDiagnostics: []
-                )
-                do {
-                    diarizationEvidence = try Self.diarizationEvidence(
-                        exchange,
-                        items: alignedItems,
-                        duration: Double(samples.count) / 16_000,
-                        completeAttribution: services.completeDiarizationAttribution
-                    )
-                } catch {
-                    diarizationEvidence?.validationDiagnostics = [error.localizedDescription]
-                    throw error
-                }
-                manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, exchange.peakMemoryBytes)
-                diarizationUnloaded = true
-                let release = try await releaseModel(
-                    diarizationLease,
-                    unload: services.unloadDiarization
-                )
-                diarizationLease = nil
-                manifest.modelEvents.append(.init(
-                    kind: .unloadCompleted,
-                    modelID: services.diarizationModelID,
-                    at: Date()
-                ))
-                if let release {
-                    manifest.peakMemoryBytes = max(
-                        manifest.peakMemoryBytes,
-                        release.evidence.peakMemoryBytes
-                    )
-                    manifest.modelEvents.append(.init(
-                        kind: .memoryReleaseChecked,
-                        modelID: services.diarizationModelID,
-                        at: Date(),
-                        message: releaseMessage(release)
-                    ))
-                }
-                diarizationEvidence?.worker = await services.diarizationWorkerEvidence()
+                diarizationEvidence = analysis.evidence
+                manifest.modelEvents += analysis.modelEvents
                 manifest.peakMemoryBytes = max(
                     manifest.peakMemoryBytes,
-                    diarizationEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
+                    analysis.peakMemoryBytes
                 )
-                try rejectTerminalCriticalPressure(
-                    diarizationEvidence?.worker,
-                    stage: "SpeakerKit"
-                )
-                try Task.checkCancellation()
             }
             let speakerAttachment = Self.speakerAttachment(
                 units: alignmentEvidence?.semanticUnits ?? [],
@@ -2515,7 +3718,7 @@ struct HighQualityJob: Sendable {
                 mappings: diarizationEvidence?.mappings ?? [],
                 explicitLabelsByCueID: request.speakerLabelsByCueID
             )
-            alignmentEvidence?.semanticUnits = speakerAttachment.units
+            speakerAttachmentEvidence = .init(semanticUnits: speakerAttachment.units)
             glossary = HighQualityGlossarySelector.select(
                 source: manifest.source,
                 turns: turns
@@ -2953,8 +4156,10 @@ struct HighQualityJob: Sendable {
                 glossary: glossary,
                 alignment: alignmentEvidence,
                 diarization: diarizationEvidence,
+                speakerAttachment: speakerAttachmentEvidence,
                 translation: translationEvidence,
                 sampleCount: sampleCount,
+                sourceAudioSHA256: sourceAudioSHA256,
                 resultTurns: resultTurns,
                 subtitleCues: subtitleCues,
                 japaneseTranscript: japaneseOutput ?? transcript,
@@ -2979,7 +4184,8 @@ struct HighQualityJob: Sendable {
                     kind: .guardFailed,
                     modelID: asrLease?.modelID
                         ?? alignmentLease?.modelID
-                        ?? diarizationLease?.modelID
+                        ?? ([.preparingDiarization, .diarizing].contains(currentStage)
+                            ? services.diarizationModelID : nil)
                         ?? translationLease?.modelID
                         ?? "heavyweight-workflow",
                     at: Date(),
@@ -3022,25 +4228,6 @@ struct HighQualityJob: Sendable {
                 manifest.peakMemoryBytes = max(
                     manifest.peakMemoryBytes,
                     alignmentEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
-                )
-            }
-            if diarizationLoadStarted, !diarizationUnloaded {
-                diarizationUnloaded = true
-                await cleanupModel(
-                    diarizationLease,
-                    modelID: services.diarizationModelID,
-                    unload: services.unloadDiarization
-                )
-            }
-            if diarizationLoadStarted {
-                if [.preparingDiarization, .diarizing].contains(currentStage),
-                   diarizationEvidence?.validationDiagnostics.isEmpty == true {
-                    diarizationEvidence?.validationDiagnostics = [error.localizedDescription]
-                }
-                diarizationEvidence?.worker = await services.diarizationWorkerEvidence()
-                manifest.peakMemoryBytes = max(
-                    manifest.peakMemoryBytes,
-                    diarizationEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
                 )
             }
             if translationLoadStarted, !translationUnloaded {
@@ -3104,8 +4291,10 @@ struct HighQualityJob: Sendable {
                     glossary: glossary,
                     alignment: alignmentEvidence,
                     diarization: diarizationEvidence,
+                    speakerAttachment: speakerAttachmentEvidence,
                     translation: translationEvidence,
                     sampleCount: sampleCount,
+                    sourceAudioSHA256: sourceAudioSHA256,
                     manifest: &manifest,
                     to: directory
                 )
@@ -3133,16 +4322,145 @@ struct HighQualityJob: Sendable {
     static func renameSpeakers(
         in result: HighQualityJobResult,
         names: [String: String],
+        beforeCommit: () throws -> Void = {},
+        afterStaging: () throws -> Void = {}
+    ) throws -> HighQualityJobResult {
+        return try saveSpeakerEdits(
+            try speakerRenameEdits(names, in: result),
+            in: result,
+            beforeCommit: beforeCommit,
+            afterStaging: afterStaging
+        )
+    }
+
+    static func editSpeakers(
+        in result: HighQualityJobResult,
+        names: [String: String] = [:],
+        edit: HighQualitySpeakerEdit,
         beforeCommit: () throws -> Void = {}
     ) throws -> HighQualityJobResult {
-        guard result.manifest.usesDurableSavedResultEvidence else {
-            throw HighQualityJobError(
-                stage: .export,
-                message: "Speaker label edits require a result saved with the current schema.",
-                resultDirectory: result.directory
+        try saveSpeakerEdits(
+            try speakerRenameEdits(names, in: result) + [edit],
+            in: result,
+            beforeCommit: beforeCommit
+        )
+    }
+
+    static func undoLastSpeakerEdit(
+        in result: HighQualityJobResult,
+        beforeCommit: () throws -> Void = {}
+    ) throws -> HighQualityJobResult {
+        let transformations = try readTransformations(in: result.directory)
+        let edits = migratedSpeakerEdits(
+            transformations,
+            manifest: result.manifest
+        )
+        guard !edits.isEmpty else {
+            throw speakerEditError("There is no Speaker edit to undo.", in: result.directory)
+        }
+        let previous = edits.dropLast()
+        let snapshotStart = previous.lastIndex(where: { $0.kind == .reset })
+            .map { previous.index(after: $0) } ?? previous.startIndex
+        let snapshot = previous[snapshotStart..<previous.endIndex]
+        let at = Date()
+        let replayed = try replayedSpeakerEdits(snapshot, at: at, in: result.directory)
+        return try saveSpeakerEdits(
+            [.reset(at: at)] + replayed,
+            in: result,
+            beforeCommit: beforeCommit
+        )
+    }
+
+    static func restorePreviousSpeakerEdits(
+        in result: HighQualityJobResult,
+        beforeCommit: () throws -> Void = {}
+    ) throws -> HighQualityJobResult {
+        guard let edits = try restorablePreviousSpeakerEdits(in: result) else {
+            throw speakerEditError(
+                "The archived Speaker edits are not compatible with the current Speaker IDs and provenance.",
+                in: result.directory
             )
         }
-        let normalizedLabels = try Dictionary(uniqueKeysWithValues: names.map { label, value in
+        let at = Date()
+        return try saveSpeakerEdits(
+            [.reset(at: at)] + replayedSpeakerEdits(edits, at: at, in: result.directory),
+            in: result,
+            beforeCommit: beforeCommit
+        )
+    }
+
+    fileprivate static func canRestorePreviousSpeakerEdits(
+        in result: HighQualityJobResult
+    ) -> Bool {
+        (try? restorablePreviousSpeakerEdits(in: result)) != nil
+    }
+
+    private static func restorablePreviousSpeakerEdits(
+        in result: HighQualityJobResult
+    ) throws -> [HighQualitySpeakerEdit]? {
+        guard result.manifest.speakerEdits?.isEmpty != false,
+              let reanalysis = result.evidence.speakerReanalyses?.last,
+              let edits = reanalysis.replacedSpeakerEdits,
+              !edits.isEmpty,
+              reanalysis.diarization == result.evidence.diarization,
+              reanalysis.attachment == result.evidence.speakerAttachment,
+              let replacedAttachment = reanalysis.replacedAttachment,
+              speakerIdentityMatches(replacedAttachment, reanalysis.attachment) else {
+            return nil
+        }
+        let replayed = try replayedSpeakerEdits(edits, at: Date(), in: result.directory)
+        _ = try speakerEditState([.reset()] + replayed, for: result)
+        return edits
+    }
+
+    private static func speakerIdentityMatches(
+        _ previous: HighQualitySpeakerAttachmentEvidence,
+        _ current: HighQualitySpeakerAttachmentEvidence
+    ) -> Bool {
+        let previousByID = Dictionary(
+            previous.semanticUnits.map { ($0.id, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        guard previousByID.count == previous.semanticUnits.count,
+              current.semanticUnits.count == previous.semanticUnits.count else { return false }
+        return current.semanticUnits.allSatisfy { unit in
+            guard let old = previousByID[unit.id] else { return false }
+            return old.japanese == unit.japanese
+                && old.sourceFragmentIndices == unit.sourceFragmentIndices
+                && old.sourceCueIDs == unit.sourceCueIDs
+                && old.start == unit.start
+                && old.end == unit.end
+                && old.decisions == unit.decisions
+                && old.speakerLabel == unit.speakerLabel
+        }
+    }
+
+    private static func replayedSpeakerEdits<S: Sequence>(
+        _ edits: S,
+        at: Date,
+        in directory: URL
+    ) throws -> [HighQualitySpeakerEdit] where S.Element == HighQualitySpeakerEdit {
+        try edits.map { storedEdit in
+            let edit = try normalizedSpeakerEdit(storedEdit, in: directory)
+            switch edit.kind {
+            case .rename:
+                return .rename(edit.speakerLabel!, to: edit.displayName!, at: at)
+            case .merge:
+                return .merge(edit.speakerLabel!, into: edit.targetSpeakerLabel!, at: at)
+            case .reassign:
+                return .reassign(turnID: edit.turnID!, to: edit.targetSpeakerLabel!, at: at)
+            case .reset:
+                return .reset(at: at)
+            }
+        }
+    }
+
+    private static func speakerRenameEdits(
+        _ names: [String: String],
+        in result: HighQualityJobResult
+    ) throws -> [HighQualitySpeakerEdit] {
+        let currentNames = result.editableSpeakerNames
+        return try names.sorted(by: { $0.key < $1.key }).compactMap { label, value in
             let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !value.isEmpty else {
                 throw HighQualityJobError(
@@ -3151,59 +4469,354 @@ struct HighQualityJob: Sendable {
                     resultDirectory: result.directory
                 )
             }
-            return (label, value)
-        })
-        let renamed = applyingCustomSpeakerLabels(normalizedLabels, to: result)
-        let deliverables = Set(result.manifest.deliverables)
-        let customLabels = renamed.turns.reduce(into: [String: String]()) { labels, turn in
-            if let label = turn.speakerLabel, let customLabel = turn.speakerName {
-                labels[label] = customLabel
+            guard let currentName = currentNames[label], currentName != value else {
+                return nil
             }
+            return HighQualitySpeakerEdit.rename(label, to: value)
+        }
+    }
+
+    private static func saveSpeakerEdits(
+        _ newEdits: [HighQualitySpeakerEdit],
+        in result: HighQualityJobResult,
+        beforeCommit: () throws -> Void,
+        afterStaging: () throws -> Void = {}
+    ) throws -> HighQualityJobResult {
+        guard result.manifest.schemaVersion >= 3 else {
+            throw speakerEditError(
+                "Speaker label edits require a result saved with the current schema.",
+                in: result.directory
+            )
+        }
+        guard result.manifest.speakerLabels else {
+            throw speakerEditError(
+                "This saved result has no Speaker assignments to edit.",
+                in: result.directory
+            )
+        }
+        let activeManifest = try readManifest(in: result.directory)
+        guard activeManifest.status == .completed,
+              activeManifest.jobID == result.manifest.jobID,
+              activeManifest.rawEvidenceSHA256 == result.manifest.rawEvidenceSHA256,
+              activeManifest.speakerEdits == result.manifest.speakerEdits else {
+            throw speakerEditError(
+                "Speaker edits changed since this result was opened. Reopen it and try again.",
+                in: result.directory
+            )
         }
         let previous = try readTransformations(in: result.directory)
+        guard previous != nil || activeManifest.speakerEdits?.isEmpty != false else {
+            throw speakerEditError(
+                "The saved Speaker edit audit is missing.",
+                in: result.directory
+            )
+        }
+        let persistedEdits = migratedSpeakerEdits(previous, manifest: activeManifest)
+        guard speakerEditAuditMatchesManifest(
+            previous,
+            edits: persistedEdits,
+            manifest: activeManifest
+        ) else {
+            throw speakerEditError(
+                "The saved Speaker edit manifest and audit do not match.",
+                in: result.directory
+            )
+        }
+        let current = HighQualityJobResult(
+            directory: result.directory,
+            japaneseTranscript: result.japaneseTranscript,
+            englishTranscript: result.englishTranscript,
+            turns: result.turns,
+            subtitleCues: result.subtitleCues,
+            manifest: activeManifest,
+            evidence: result.evidence,
+            speakerReanalysisCompletion: result.speakerReanalysisCompletion
+        )
+        let edits = persistedEdits
+            + (try newEdits.map { try normalizedSpeakerEdit($0, in: result.directory) })
+        let edited = try applyingSpeakerEdits(edits, to: current)
+        var manifest = current.manifest
+        manifest.schemaVersion = HighQualityJobManifest.currentSchemaVersion
+        manifest.speakerEdits = edits
+        let saved = HighQualityJobResult(
+            directory: edited.directory,
+            japaneseTranscript: edited.japaneseTranscript,
+            englishTranscript: edited.englishTranscript,
+            turns: edited.turns,
+            subtitleCues: edited.subtitleCues,
+            manifest: manifest,
+            evidence: edited.evidence,
+            speakerReanalysisCompletion: result.speakerReanalysisCompletion
+        )
         let transformations = try encoder.encode(HighQualityResultTransformations(
-            schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
-            customSpeakerLabels: customLabels,
+            speakerEdits: edits,
             relocatedSourcePath: previous?.relocatedSourcePath
         ))
+        let deliverables = Set(manifest.deliverables)
         var files = deliverableFiles(
             japaneseTranscript: deliverables.contains(.japaneseTranscript)
-                ? renamed.japaneseTranscript : nil,
-            englishTranscript: renamed.englishTranscript,
-            subtitleCues: deliverables.contains(.englishSubtitles) ? renamed.subtitleCues : nil
+                ? saved.japaneseTranscript : nil,
+            englishTranscript: saved.englishTranscript,
+            subtitleCues: deliverables.contains(.englishSubtitles) ? saved.subtitleCues : nil
         )
         files["transformations.json"] = transformations
+        files["manifest.json"] = try encoder.encode(manifest)
         try transactionallyWrite(
             files,
             in: result.directory,
-            beforeCommit: beforeCommit
+            beforeCommit: beforeCommit,
+            afterStaging: afterStaging,
+            validateActive: {
+                guard try activeResultMatches(
+                    activeManifest,
+                    transformations: previous,
+                    in: result.directory
+                ) else {
+                    throw speakerEditError(
+                        "Speaker result changed since this edit was prepared. Reopen it and try again.",
+                        in: result.directory
+                    )
+                }
+            }
         )
-        return renamed
+        return saved
     }
 
-    private static func applyingCustomSpeakerLabels(
-        _ labels: [String: String],
+    private static func migratedSpeakerEdits(
+        _ transformations: HighQualityResultTransformations?,
+        manifest: HighQualityJobManifest
+    ) -> [HighQualitySpeakerEdit] {
+        guard let transformations else { return [] }
+        let migrationDate = manifest.finishedAt ?? manifest.startedAt
+        let legacy = transformations.customSpeakerLabels.sorted(by: { $0.key < $1.key }).map {
+            HighQualitySpeakerEdit.rename($0.key, to: $0.value, at: migrationDate)
+        }
+        return legacy + transformations.speakerEdits
+    }
+
+    private static func speakerEditAuditMatchesManifest(
+        _ transformations: HighQualityResultTransformations?,
+        edits: [HighQualitySpeakerEdit],
+        manifest: HighQualityJobManifest
+    ) -> Bool {
+        guard let transformations else {
+            return manifest.speakerEdits?.isEmpty != false
+        }
+        if transformations.schemaVersion == 1 {
+            return manifest.schemaVersion < HighQualityJobManifest.currentSchemaVersion
+                && manifest.speakerEdits?.isEmpty != false
+        }
+        return (manifest.speakerEdits ?? []) == edits
+    }
+
+    private static func activeResultMatches(
+        _ expected: HighQualityJobManifest,
+        transformations: HighQualityResultTransformations?,
+        in directory: URL
+    ) throws -> Bool {
+        try readManifest(in: directory) == expected
+            && readTransformations(in: directory) == transformations
+    }
+
+    private static func normalizedSpeakerEdit(
+        _ edit: HighQualitySpeakerEdit,
+        in directory: URL
+    ) throws -> HighQualitySpeakerEdit {
+        let seconds = edit.at.timeIntervalSince1970
+        guard seconds.isFinite else {
+            throw speakerEditError("The Speaker edit timestamp is invalid.", in: directory)
+        }
+        let at = Date(timeIntervalSince1970: seconds.rounded(.down))
+        let nonempty: (String?) -> String? = { value in
+            guard let value else { return nil }
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        switch edit.kind {
+        case .rename:
+            guard let label = nonempty(edit.speakerLabel),
+                  let name = nonempty(edit.displayName),
+                  edit.targetSpeakerLabel == nil,
+                  edit.turnID == nil else {
+                throw speakerEditError("The Speaker rename operation is invalid.", in: directory)
+            }
+            guard name.rangeOfCharacter(
+                from: CharacterSet.controlCharacters.union(.newlines)
+            ) == nil else {
+                throw speakerEditError(
+                    "Custom Speaker names cannot contain control characters or line breaks.",
+                    in: directory
+                )
+            }
+            return .rename(label, to: name, at: at)
+        case .merge:
+            guard let label = nonempty(edit.speakerLabel),
+                  let target = nonempty(edit.targetSpeakerLabel),
+                  edit.displayName == nil,
+                  edit.turnID == nil else {
+                throw speakerEditError("The Speaker merge operation is invalid.", in: directory)
+            }
+            return .merge(label, into: target, at: at)
+        case .reassign:
+            guard let turnID = nonempty(edit.turnID),
+                  let target = nonempty(edit.targetSpeakerLabel),
+                  edit.speakerLabel == nil,
+                  edit.displayName == nil else {
+                throw speakerEditError(
+                    "The Speaker reassignment operation is invalid.",
+                    in: directory
+                )
+            }
+            return .reassign(turnID: turnID, to: target, at: at)
+        case .reset:
+            guard edit.speakerLabel == nil,
+                  edit.targetSpeakerLabel == nil,
+                  edit.turnID == nil,
+                  edit.displayName == nil else {
+                throw speakerEditError("The Speaker reset operation is invalid.", in: directory)
+            }
+            return .reset(at: at)
+        }
+    }
+
+    fileprivate static func speakerEditState(
+        _ edits: [HighQualitySpeakerEdit],
+        for result: HighQualityJobResult
+    ) throws -> HighQualitySpeakerEditState {
+        guard let rawTurns = result.evidence.resultTurns else {
+            throw speakerEditError(
+                "The immutable Speaker result evidence is incomplete.",
+                in: result.directory
+            )
+        }
+        let turnIDs = Set(rawTurns.map(\.id))
+        guard turnIDs.count == rawTurns.count else {
+            throw speakerEditError(
+                "The immutable Speaker result contains duplicate turn identifiers.",
+                in: result.directory
+            )
+        }
+        let rawAssignments = rawTurns.reduce(into: [String: String]()) { labels, turn in
+            if let label = turn.speakerLabel { labels[turn.id] = label }
+        }
+        let rawNames = rawTurns.reduce(into: [String: String]()) { names, turn in
+            if let label = turn.speakerLabel, let name = turn.speakerName {
+                names[label] = name
+            }
+        }
+        let rawLabels = result.automaticSpeakerLabels
+        var assignments = rawAssignments
+        var names = rawNames
+        var activeLabels = rawLabels
+
+        for storedEdit in edits {
+            let edit = try normalizedSpeakerEdit(storedEdit, in: result.directory)
+            switch edit.kind {
+            case .rename:
+                let label = edit.speakerLabel!
+                guard activeLabels.contains(label) else {
+                    throw speakerEditError(
+                        "Cannot rename unknown or merged Speaker label \(label).",
+                        in: result.directory
+                    )
+                }
+                let name = edit.displayName!
+                if name == label { names.removeValue(forKey: label) }
+                else { names[label] = name }
+            case .merge:
+                let label = edit.speakerLabel!
+                let target = edit.targetSpeakerLabel!
+                guard label != target else {
+                    throw speakerEditError(
+                        "A Speaker label cannot be merged into itself.",
+                        in: result.directory
+                    )
+                }
+                guard activeLabels.contains(label), activeLabels.contains(target) else {
+                    throw speakerEditError(
+                        "Cannot merge unknown or already merged Speaker labels.",
+                        in: result.directory
+                    )
+                }
+                if let sourceName = names[label],
+                   let targetName = names[target],
+                   sourceName != targetName {
+                    throw speakerEditError(
+                        "Cannot merge Speaker labels with conflicting confirmed names.",
+                        in: result.directory
+                    )
+                }
+                if names[target] == nil { names[target] = names[label] }
+                names.removeValue(forKey: label)
+                assignments = assignments.mapValues { $0 == label ? target : $0 }
+                activeLabels.remove(label)
+            case .reassign:
+                let turnID = edit.turnID!
+                let target = edit.targetSpeakerLabel!
+                guard turnIDs.contains(turnID) else {
+                    throw speakerEditError(
+                        "Cannot reassign unknown transcript turn \(turnID).",
+                        in: result.directory
+                    )
+                }
+                guard activeLabels.contains(target) else {
+                    throw speakerEditError(
+                        "Cannot reassign a turn to unknown or merged Speaker label \(target).",
+                        in: result.directory
+                    )
+                }
+                assignments[turnID] = target
+            case .reset:
+                assignments = rawAssignments
+                names = rawNames
+                activeLabels = rawLabels
+            }
+        }
+
+        return .init(
+            assignments: assignments,
+            names: names,
+            activeLabels: activeLabels
+        )
+    }
+
+    private static func applyingSpeakerEdits(
+        _ edits: [HighQualitySpeakerEdit],
         to result: HighQualityJobResult
-    ) -> HighQualityJobResult {
-        let turns: [HighQualityTranscriptTurn] = result.turns.map { turn in
-            .init(
+    ) throws -> HighQualityJobResult {
+        guard let rawTurns = result.evidence.resultTurns,
+              let rawCues = result.evidence.subtitleCues else {
+            throw speakerEditError(
+                "The immutable Speaker result evidence is incomplete.",
+                in: result.directory
+            )
+        }
+        let turnIDs = Set(rawTurns.map(\.id))
+        let state = try speakerEditState(edits, for: result)
+        let assignments = state.assignments
+        let names = state.names
+
+        let turns: [HighQualityTranscriptTurn] = rawTurns.map { turn in
+            let label = assignments[turn.id]
+            return .init(
                 id: turn.id,
                 japanese: turn.japanese,
                 english: turn.english,
-                speakerLabel: turn.speakerLabel,
-                speakerName: turn.speakerLabel.flatMap { labels[$0] } ?? turn.speakerName,
+                speakerLabel: label,
+                speakerName: label.flatMap { names[$0] },
                 start: turn.start,
                 end: turn.end
             )
         }
-        let subtitleCues: [HighQualitySubtitleCue] = result.subtitleCues.map { cue in
-            .init(
+        let subtitleCues: [HighQualitySubtitleCue] = rawCues.map { cue in
+            let label = turnIDs.contains(cue.id) ? assignments[cue.id] : cue.speakerLabel
+            return .init(
                 id: cue.id,
                 start: cue.start,
                 end: cue.end,
                 text: cue.text,
-                speakerLabel: cue.speakerLabel,
-                speakerName: cue.speakerLabel.flatMap { labels[$0] } ?? cue.speakerName,
+                speakerLabel: label,
+                speakerName: label.flatMap { names[$0] },
                 renderedLines: cue.renderedLines
             )
         }
@@ -3217,7 +4830,8 @@ struct HighQualityJob: Sendable {
             turns: turns,
             subtitleCues: subtitleCues,
             manifest: result.manifest,
-            evidence: result.evidence
+            evidence: result.evidence,
+            speakerReanalysisCompletion: result.speakerReanalysisCompletion
         )
     }
 
@@ -3595,7 +5209,8 @@ struct HighQualityJob: Sendable {
         _ exchange: HighQualityDiarizationExchange,
         items: [HighQualityAlignmentItem],
         duration: TimeInterval,
-        completeAttribution: Bool = false
+        completeAttribution: Bool = false,
+        sourceJobID: UUID? = nil
     ) throws -> HighQualityDiarizationEvidence {
         let spans = exchange.spans.sorted {
             ($0.start, $0.end, $0.speakerID) < ($1.start, $1.end, $1.speakerID)
@@ -3610,8 +5225,89 @@ struct HighQualityJob: Sendable {
                 resultDirectory: nil
             )
         }
-        let labels = Dictionary(uniqueKeysWithValues: Set(spans.map(\.speakerID)).sorted()
-            .enumerated().map { ($0.element, String(format: "SPEAKER_%02d", $0.offset)) })
+        let labels = highQualitySpeakerLabelsByID(spans)
+        var centroidDiagnostics: [String] = []
+        let speakerCentroids: [HighQualitySpeakerCentroidEvidence]?
+        if let vectors = exchange.speakerCentroids {
+            if vectors.isEmpty {
+                speakerCentroids = []
+                if !spans.isEmpty {
+                    centroidDiagnostics.append(
+                        "Abstained from duplicate speaker suggestions: SpeakerKit returned no centroid vectors."
+                    )
+                }
+            } else if let sourceJobID,
+                      sourceJobID.uuidString != "00000000-0000-0000-0000-000000000000",
+                      isTrimmedAndNonempty(exchange.modelID),
+                      isTrimmedAndNonempty(exchange.revision),
+                      let runtimeRevision = exchange.configuration?["runtimeRevision"],
+                      isTrimmedAndNonempty(runtimeRevision),
+                      let embeddingVariant = exchange.configuration?["embedderVariant"],
+                      isTrimmedAndNonempty(embeddingVariant) {
+                var retained: [HighQualitySpeakerCentroidEvidence] = []
+                for speakerID in vectors.keys.sorted() {
+                    guard let label = labels[speakerID] else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(speakerID): speaker has no diarization span."
+                        )
+                        continue
+                    }
+                    guard let vector = vectors[speakerID], !vector.isEmpty else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector is empty."
+                        )
+                        continue
+                    }
+                    guard vector.allSatisfy(\.isFinite) else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector contains non-finite values."
+                        )
+                        continue
+                    }
+                    guard vector.contains(where: { $0 != 0 }) else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector has zero norm."
+                        )
+                        continue
+                    }
+                    guard hasSafeSpeakerCentroidNorm(vector) else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector norm cannot be represented safely."
+                        )
+                        continue
+                    }
+                    retained.append(.init(
+                        speakerLabel: label,
+                        modelID: exchange.modelID,
+                        modelRevision: exchange.revision,
+                        runtimeRevision: runtimeRevision,
+                        embeddingVariant: embeddingVariant,
+                        vectorDimension: vector.count,
+                        sourceJobID: sourceJobID,
+                        vector: vector
+                    ))
+                }
+                for (speakerID, label) in labels.sorted(by: { $0.key < $1.key })
+                    where vectors[speakerID] == nil {
+                    centroidDiagnostics.append(
+                        "Abstained from duplicate speaker suggestions: \(label) has no centroid vector."
+                    )
+                }
+                if Set(retained.map(\.vectorDimension)).count > 1 {
+                    centroidDiagnostics.append(
+                        "Abstained from duplicate speaker suggestions: centroid dimensions are incompatible."
+                    )
+                }
+                speakerCentroids = retained
+            } else {
+                speakerCentroids = []
+                centroidDiagnostics.append(
+                    "Discarded \(vectors.count) SpeakerKit centroid(s): provenance is incomplete."
+                )
+            }
+        } else {
+            speakerCentroids = nil
+        }
         var mappings: [HighQualitySpeakerMapping] = []
         for (itemIndex, item) in items.enumerated() {
             let candidates = spans.enumerated().compactMap { spanIndex, span -> HighQualitySpeakerMapping? in
@@ -3696,8 +5392,122 @@ struct HighQualityJob: Sendable {
             useExclusiveReconciliation: exchange.useExclusiveReconciliation,
             speakerCountPolicy: exchange.speakerCountPolicy,
             configuration: exchange.configuration,
-            validationDiagnostics: []
+            validationDiagnostics: centroidDiagnostics,
+            speakerCentroids: speakerCentroids
         )
+    }
+
+    static func duplicateSpeakerSuggestions(
+        from centroids: [HighQualitySpeakerCentroidEvidence]
+    ) -> [HighQualityDuplicateSpeakerSuggestion] {
+        guard centroids.count > 1,
+              hasValidCompatibleSpeakerCentroids(centroids) else { return [] }
+        var comparisons: [(left: Int, right: Int, distance: Float)] = []
+        for leftIndex in centroids.indices {
+            for rightIndex in centroids.indices where rightIndex > leftIndex {
+                let left = centroids[leftIndex]
+                let right = centroids[rightIndex]
+                guard let distance = cosineDistance(left.vector, right.vector) else { return [] }
+                comparisons.append((leftIndex, rightIndex, distance))
+            }
+        }
+        func isUnambiguous(
+            _ comparison: (left: Int, right: Int, distance: Float),
+            for centroidIndex: Int
+        ) -> Bool {
+            let ranked = comparisons.filter {
+                $0.left == centroidIndex || $0.right == centroidIndex
+            }.sorted {
+                ($0.distance, centroids[$0.left == centroidIndex ? $0.right : $0.left].speakerLabel)
+                    < ($1.distance, centroids[$1.left == centroidIndex ? $1.right : $1.left].speakerLabel)
+            }
+            guard let nearest = ranked.first,
+                  nearest.left == comparison.left,
+                  nearest.right == comparison.right else { return false }
+            return ranked.count == 1
+                || ranked[1].distance - comparison.distance
+                    >= HighQualityDuplicateSpeakerSuggestion.uncertaintyMargin
+        }
+        return comparisons.compactMap { comparison in
+            guard comparison.distance
+                    <= HighQualityDuplicateSpeakerSuggestion.maximumCosineDistance,
+                  isUnambiguous(comparison, for: comparison.left),
+                  isUnambiguous(comparison, for: comparison.right) else { return nil }
+            let left = centroids[comparison.left]
+            let right = centroids[comparison.right]
+            return HighQualityDuplicateSpeakerSuggestion(
+                firstSpeakerLabel: min(left.speakerLabel, right.speakerLabel),
+                secondSpeakerLabel: max(left.speakerLabel, right.speakerLabel),
+                cosineDistance: comparison.distance
+            )
+        }.sorted {
+            ($0.cosineDistance, $0.firstSpeakerLabel, $0.secondSpeakerLabel)
+                < ($1.cosineDistance, $1.firstSpeakerLabel, $1.secondSpeakerLabel)
+        }
+    }
+
+    static func hasValidCompatibleSpeakerCentroids(
+        _ centroids: [HighQualitySpeakerCentroidEvidence]
+    ) -> Bool {
+        guard let first = centroids.first,
+              Set(centroids.map(\.speakerLabel)).count == centroids.count,
+              centroids.allSatisfy(isValidSpeakerCentroid) else { return false }
+        return centroids.dropFirst().allSatisfy {
+            $0.sourceJobID == first.sourceJobID
+                && $0.modelID == first.modelID
+                && $0.modelRevision == first.modelRevision
+                && $0.runtimeRevision == first.runtimeRevision
+                && $0.embeddingVariant == first.embeddingVariant
+                && $0.vectorDimension == first.vectorDimension
+        }
+    }
+
+    private static func isValidSpeakerCentroid(
+        _ centroid: HighQualitySpeakerCentroidEvidence
+    ) -> Bool {
+        guard [
+            centroid.speakerLabel,
+            centroid.modelID,
+            centroid.modelRevision,
+            centroid.runtimeRevision,
+            centroid.embeddingVariant,
+        ].allSatisfy(isTrimmedAndNonempty),
+            centroid.sourceJobID.uuidString != "00000000-0000-0000-0000-000000000000",
+            centroid.vectorDimension > 0,
+            centroid.vectorDimension == centroid.vector.count,
+            centroid.vector.allSatisfy(\.isFinite) else { return false }
+        return hasSafeSpeakerCentroidNorm(centroid.vector)
+    }
+
+    private static func hasSafeSpeakerCentroidNorm(_ vector: [Float]) -> Bool {
+        let squaredNorm = vector.reduce(Float.zero) { $0 + $1 * $1 }
+        let minimum = Float.leastNormalMagnitude.squareRoot()
+        let maximum = Float.greatestFiniteMagnitude.squareRoot()
+        return (minimum...maximum).contains(squaredNorm)
+    }
+
+    private static func isTrimmedAndNonempty(_ value: String) -> Bool {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmed.isEmpty && trimmed == value
+    }
+
+    static func cosineDistance(_ left: [Float], _ right: [Float]) -> Float? {
+        guard !left.isEmpty,
+              left.count == right.count,
+              hasSafeSpeakerCentroidNorm(left),
+              hasSafeSpeakerCentroidNorm(right) else { return nil }
+        var dot: Float = 0
+        var leftMagnitude: Float = 0
+        var rightMagnitude: Float = 0
+        for index in left.indices {
+            dot += left[index] * right[index]
+            leftMagnitude += left[index] * left[index]
+            rightMagnitude += right[index] * right[index]
+        }
+        guard leftMagnitude > 0, rightMagnitude > 0 else { return nil }
+        let distance = 1 - dot / sqrt(leftMagnitude * rightMagnitude)
+        guard distance.isFinite else { return nil }
+        return max(0, min(2, distance))
     }
 
     private static func distance(
@@ -4194,7 +6004,24 @@ struct HighQualityJob: Sendable {
         guard files.contains(where: { path, data in
             (try? Data(contentsOf: result.directory.appendingPathComponent(path))) != data
         }) else { return }
-        try transactionallyWrite(files, in: result.directory)
+        let transformations = try readTransformations(in: result.directory)
+        try transactionallyWrite(
+            files,
+            in: result.directory,
+            validateActive: {
+                guard try activeResultMatches(
+                    result.manifest,
+                    transformations: transformations,
+                    in: result.directory
+                ) else {
+                    throw HighQualityJobError(
+                        stage: .export,
+                        message: "The saved result changed while restoring Deliverables.",
+                        resultDirectory: result.directory
+                    )
+                }
+            }
+        )
     }
 
     private static func deliverableFiles(
@@ -4230,84 +6057,58 @@ struct HighQualityJob: Sendable {
     private static func transactionallyWrite(
         _ files: [String: Data],
         in directory: URL,
-        beforeCommit: () throws -> Void = {}
+        beforeCommit: () throws -> Void = {},
+        afterStaging: () throws -> Void = {},
+        finalizeBeforeCommit: () throws -> [String: Data] = { [:] },
+        afterCommit: () throws -> Void = {},
+        validateActive: () throws -> Void = {}
     ) throws {
         let fileManager = FileManager.default
+        try beforeCommit()
+        let lockURL = directory.deletingLastPathComponent().appendingPathComponent(
+            ".\(directory.lastPathComponent).update.lock"
+        )
+        let descriptor = open(
+            lockURL.path,
+            O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW,
+            S_IRUSR | S_IWUSR
+        )
+        guard descriptor >= 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        defer { _ = close(descriptor) }
+        guard flock(descriptor, LOCK_EX) == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        defer { _ = flock(descriptor, LOCK_UN) }
+        try validateActive()
         let staging = directory.deletingLastPathComponent().appendingPathComponent(
             ".\(directory.lastPathComponent).staging-\(UUID().uuidString)",
             isDirectory: true
         )
         try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
-        defer { try? fileManager.removeItem(at: staging) }
-        try hardLinkContents(of: directory, to: staging)
+        defer { try? AtomicDirectory.remove(staging) }
+        try AtomicDirectory.cloneContents(of: directory, to: staging)
         try writeFiles(files, to: staging)
         guard files.allSatisfy({ path, data in
             (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
         }) else {
             throw CocoaError(.fileWriteUnknown)
         }
-        try beforeCommit()
-        let status = staging.path.withCString { stagedPath in
-            directory.path.withCString { activePath in
-                renameatx_np(
-                    AT_FDCWD,
-                    stagedPath,
-                    AT_FDCWD,
-                    activePath,
-                    UInt32(RENAME_SWAP)
-                )
-            }
+        try afterStaging()
+        // Stamp the commit only after a complete payload is staged and verified; the
+        // stamp itself must precede the single atomic swap that makes it durable.
+        let finalFiles = try finalizeBeforeCommit()
+        try writeFiles(finalFiles, to: staging)
+        let expectedFiles = files.merging(finalFiles) { _, final in final }
+        guard expectedFiles.allSatisfy({ path, data in
+            (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
+        }) else {
+            throw CocoaError(.fileWriteUnknown)
         }
-        guard status == 0 else {
-            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-        }
-    }
-
-    private static func hardLinkContents(of source: URL, to destination: URL) throws {
-        let fileManager = FileManager.default
-        let canonicalSourcePath = source.resolvingSymlinksInPath().path
-        var traversalError: Error?
-        guard let enumerator = fileManager.enumerator(
-            at: source,
-            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
-            errorHandler: { _, error in
-                traversalError = error
-                return false
-            }
-        ) else {
-            throw CocoaError(.fileReadUnknown)
-        }
-        for case let item as URL in enumerator {
-            let sourcePath: String
-            let itemPath: String
-            if item.path.hasPrefix(source.path + "/") {
-                sourcePath = source.path
-                itemPath = item.path
-            } else {
-                sourcePath = canonicalSourcePath
-                itemPath = item.resolvingSymlinksInPath().path
-            }
-            guard itemPath.hasPrefix(sourcePath + "/") else {
-                throw CocoaError(.fileReadInvalidFileName)
-            }
-            let relativePath = String(itemPath.dropFirst(sourcePath.count + 1))
-            let target = destination.appendingPathComponent(relativePath)
-            let values = try item.resourceValues(forKeys: [
-                .isDirectoryKey,
-                .isSymbolicLinkKey,
-            ])
-            if values.isSymbolicLink == true {
-                try fileManager.createSymbolicLink(
-                    atPath: target.path,
-                    withDestinationPath: fileManager.destinationOfSymbolicLink(atPath: item.path)
-                )
-            } else if values.isDirectory == true {
-                try fileManager.createDirectory(at: target, withIntermediateDirectories: false)
-            } else {
-                try fileManager.linkItem(at: item, to: target)
-            }
-        }
-        if let traversalError { throw traversalError }
+        try Task.checkCancellation()
+        try AtomicDirectory.swap(staging, with: directory)
+        try afterCommit()
     }
 
     static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
@@ -4341,6 +6142,7 @@ struct HighQualityJob: Sendable {
 
     private static func webVTTSpeaker(_ value: String) -> String {
         value.replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
     }
 
@@ -4405,8 +6207,10 @@ struct HighQualityJob: Sendable {
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
         diarization: HighQualityDiarizationEvidence?,
+        speakerAttachment: HighQualitySpeakerAttachmentEvidence? = nil,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
+        sourceAudioSHA256: String? = nil,
         resultTurns: [HighQualityTranscriptTurn]? = nil,
         subtitleCues: [HighQualitySubtitleCue]? = nil,
         japaneseTranscript: String? = nil,
@@ -4424,9 +6228,11 @@ struct HighQualityJob: Sendable {
             glossary: glossary,
             alignment: alignment,
             diarization: diarization,
+            speakerAttachment: speakerAttachment,
             translation: translation,
             sampleRate: 16_000,
             sampleCount: sampleCount,
+            sourceAudioSHA256: sourceAudioSHA256,
             stageDurations: manifest.stageDurations,
             peakMemoryBytes: manifest.peakMemoryBytes,
             modelEvents: manifest.modelEvents,
@@ -4436,7 +6242,8 @@ struct HighQualityJob: Sendable {
             subtitleCues: subtitleCues,
             japaneseTranscript: japaneseTranscript,
             englishTranscript: englishTranscript,
-            readableSubtitles: readableSubtitles
+            readableSubtitles: readableSubtitles,
+            projectID: manifest.projectID
         )
     }
 
@@ -4446,8 +6253,10 @@ struct HighQualityJob: Sendable {
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
         diarization: HighQualityDiarizationEvidence?,
+        speakerAttachment: HighQualitySpeakerAttachmentEvidence? = nil,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
+        sourceAudioSHA256: String? = nil,
         resultTurns: [HighQualityTranscriptTurn]? = nil,
         subtitleCues: [HighQualitySubtitleCue]? = nil,
         japaneseTranscript: String? = nil,
@@ -4461,8 +6270,10 @@ struct HighQualityJob: Sendable {
             glossary: glossary,
             alignment: alignment,
             diarization: diarization,
+            speakerAttachment: speakerAttachment,
             translation: translation,
             sampleCount: sampleCount,
+            sourceAudioSHA256: sourceAudioSHA256,
             resultTurns: resultTurns,
             subtitleCues: subtitleCues,
             japaneseTranscript: japaneseTranscript,
@@ -4482,6 +6293,44 @@ struct HighQualityJob: Sendable {
 
     private static func sha256(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func audioSHA256(_ samples: [Float]) -> String {
+        var hasher = SHA256()
+        samples.withUnsafeBytes { hasher.update(bufferPointer: $0) }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func isValidSHA256(_ value: String?) -> Bool {
+        guard let value, value.utf8.count == 64 else { return false }
+        return value.utf8.allSatisfy {
+            (48...57).contains($0) || (65...70).contains($0) || (97...102).contains($0)
+        }
+    }
+
+    private static func matchesSavedSource(
+        _ sourceURL: URL,
+        samples: [Float],
+        sha256: String,
+        result: HighQualityJobResult
+    ) -> Bool {
+        guard samples.count == result.evidence.sampleCount else { return false }
+        if let expected = result.evidence.sourceAudioSHA256 {
+            return isValidSHA256(expected) && sha256 == expected.lowercased()
+        }
+
+        // Schema 3 results predate normalized-audio hashes; verify their stored file
+        // provenance once, then persist the hash on the successful reanalysis.
+        let current = provenance(for: sourceURL)
+        guard let expectedBytes = result.evidence.source.byteCount,
+              current.byteCount == expectedBytes,
+              let expectedDate = result.evidence.source.modifiedAt,
+              let currentDate = current.modifiedAt else { return false }
+        let originalPath = URL(fileURLWithPath: result.evidence.source.path)
+            .standardizedFileURL.path
+        return sourceURL.standardizedFileURL.path == originalPath
+            && Int64(currentDate.timeIntervalSince1970)
+                == Int64(expectedDate.timeIntervalSince1970)
     }
 
     private static func writeManifest(
@@ -4511,6 +6360,86 @@ struct HighQualityJob: Sendable {
         return manifest
     }
 
+    private static func speakerReanalysisCompletion(
+        for manifest: HighQualityJobManifest,
+        in directory: URL
+    ) throws -> HighQualitySpeakerReanalysisCompletion? {
+        guard let count = manifest.speakerReanalysisCount,
+              let evidenceHash = manifest.rawEvidenceSHA256 else { return nil }
+        return try readSpeakerReanalysisJournal(in: directory)?.entries.last {
+            $0.reanalysisCount == count && $0.rawEvidenceSHA256 == evidenceHash
+        }
+    }
+
+    private static func writeSpeakerReanalysisCompletion(
+        _ completion: HighQualitySpeakerReanalysisCompletion,
+        in directory: URL,
+        write: (Data, URL) throws -> Void = {
+            try $0.write(to: $1, options: .atomic)
+        }
+    ) throws {
+        try write(
+            speakerReanalysisJournalData(upserting: completion, in: directory),
+            directory.appendingPathComponent("speaker-reanalysis-journal.json")
+        )
+    }
+
+    private static func speakerReanalysisJournalData(
+        upserting completion: HighQualitySpeakerReanalysisCompletion,
+        in directory: URL
+    ) throws -> Data {
+        var journal = try readSpeakerReanalysisJournal(in: directory)
+            ?? .init(
+                schemaVersion: HighQualitySpeakerReanalysisJournal.currentSchemaVersion,
+                entries: []
+            )
+        if let index = journal.entries.firstIndex(where: {
+            $0.reanalysisCount == completion.reanalysisCount
+        }) {
+            journal.entries[index] = completion
+        } else {
+            journal.entries.append(completion)
+        }
+        return try encoder.encode(journal)
+    }
+
+    private static func readSpeakerReanalysisJournal(
+        in directory: URL
+    ) throws -> HighQualitySpeakerReanalysisJournal? {
+        let url = directory.appendingPathComponent("speaker-reanalysis-journal.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        let journal = try decoder.decode(
+            HighQualitySpeakerReanalysisJournal.self,
+            from: Data(contentsOf: url)
+        )
+        let counts = Set(journal.entries.map(\.reanalysisCount))
+        guard journal.schemaVersion == HighQualitySpeakerReanalysisJournal.currentSchemaVersion,
+              counts.count == journal.entries.count,
+              journal.entries.allSatisfy({ entry in
+                  entry.reanalysisCount > 0
+                      && entry.rawEvidenceSHA256.count == 64
+                      && entry.rawEvidenceSHA256.allSatisfy(\.isHexDigit)
+                      && entry.startedAt.timeIntervalSince1970.isFinite
+                      && entry.payloadPreparedAt >= entry.startedAt
+                      && entry.finishedAt >= entry.payloadPreparedAt
+                      && abs(entry.wallTime
+                          - entry.finishedAt.timeIntervalSince(entry.startedAt)) < 0.000_001
+                      && abs(entry.commitWallTime
+                          - entry.finishedAt.timeIntervalSince(entry.payloadPreparedAt))
+                          < 0.000_001
+                      && entry.auditError?.trimmingCharacters(
+                          in: .whitespacesAndNewlines
+                      ).isEmpty != true
+              }) else {
+            throw HighQualityJobError(
+                stage: .export,
+                message: "The Speaker reanalysis completion audit is invalid.",
+                resultDirectory: directory
+            )
+        }
+        return journal
+    }
+
     private static func readTransformations(
         in directory: URL
     ) throws -> HighQualityResultTransformations? {
@@ -4521,8 +6450,15 @@ struct HighQualityJob: Sendable {
                 HighQualityResultTransformations.self,
                 from: Data(contentsOf: url)
             )
-            guard transformations.schemaVersion
-                    == HighQualityResultTransformations.currentSchemaVersion,
+            let normalizedEdits = try transformations.speakerEdits.map {
+                try normalizedSpeakerEdit($0, in: directory)
+            }
+            guard (1...HighQualityResultTransformations.currentSchemaVersion)
+                    .contains(transformations.schemaVersion),
+                  transformations.schemaVersion != 1 || transformations.speakerEdits.isEmpty,
+                  transformations.schemaVersion == 1
+                    || transformations.customSpeakerLabels.isEmpty,
+                  normalizedEdits == transformations.speakerEdits,
                   transformations.customSpeakerLabels.values.allSatisfy({
                       !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                   }),
@@ -4553,18 +6489,40 @@ struct HighQualityJob: Sendable {
 
     private static func savedResultError(
         _ message: String,
-        _ saved: HighQualitySavedResult
+        _ saved: HighQualitySavedResult,
+        stage: HighQualityJobFailureStage = .application
     ) -> HighQualityJobError {
         HighQualityJobError(
-            stage: .application,
+            stage: stage,
             message: message,
             resultDirectory: saved.directory
         )
     }
 
+    private static func speakerEditError(
+        _ message: String,
+        in directory: URL
+    ) -> HighQualityJobError {
+        HighQualityJobError(stage: .export, message: message, resultDirectory: directory)
+    }
+
     private static var decoder: JSONDecoder {
+        let fractionalDates = ISO8601DateFormatter()
+        fractionalDates.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let legacyDates = ISO8601DateFormatter()
+        legacyDates.formatOptions = [.withInternetDateTime]
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+            guard let date = fractionalDates.date(from: value) ?? legacyDates.date(from: value) else {
+                throw DecodingError.dataCorruptedError(
+                    in: container,
+                    debugDescription: "Invalid ISO-8601 date: \(value)"
+                )
+            }
+            return date
+        }
         decoder.nonConformingFloatDecodingStrategy = .convertFromString(
             positiveInfinity: "Infinity",
             negativeInfinity: "-Infinity",
@@ -4573,9 +6531,18 @@ struct HighQualityJob: Sendable {
         return decoder
     }
 
+    private static func persistedDate(_ date: Date) -> Date {
+        Date(timeIntervalSince1970: floor(date.timeIntervalSince1970 * 1_000) / 1_000)
+    }
+
     private static var encoder: JSONEncoder {
+        let dates = ISO8601DateFormatter()
+        dates.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(dates.string(from: date))
+        }
         encoder.nonConformingFloatEncodingStrategy = .convertToString(
             positiveInfinity: "Infinity",
             negativeInfinity: "-Infinity",

@@ -1,0 +1,9 @@
+ticket: Apoze/whisperASR#113
+date: 2026-08-15
+command: env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --disable-sandbox --filter HighQualityJobTests/testVersionedE31SpeakerEditorRenameMergeReassignAndUndo
+scope: versioned E31 evidence replay only; no SpeakerKit or model worker invoked
+fixture-manifest-sha256: f5a4b187a6208196d35202ea169fdfb020dea6834cbb6cfbd8c8e85ba580c362
+fixture-raw-asr-json-gz-sha256: 431ad2a2ca756f478e04b79fbd53e8529a45a9479b16e8bd28647af3fe33bb58
+E31_SPEAKER_EDITOR_PROOF turns=260 cues=260 audit=3->6
+Test Case testVersionedE31SpeakerEditorRenameMergeReassignAndUndo passed (0.417 seconds)
+Executed 1 test, with 0 failures

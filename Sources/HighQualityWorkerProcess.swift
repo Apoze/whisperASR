@@ -135,7 +135,10 @@ actor HighQualityWorkerProcess {
         return child.processIdentifier
     }
 
-    func waitForJSON<Value: Decodable>(at url: URL) async throws -> Value {
+    func waitForJSON<Value: Decodable>(
+        at url: URL,
+        allowNonConformingFloats: Bool = false
+    ) async throws -> Value {
         let clock = ContinuousClock()
         var invalidData: Data?
         var invalidSince: ContinuousClock.Instant?
@@ -144,7 +147,15 @@ actor HighQualityWorkerProcess {
             if FileManager.default.fileExists(atPath: url.path) {
                 let data = try Data(contentsOf: url)
                 do {
-                    return try JSONDecoder().decode(Value.self, from: data)
+                    let decoder = JSONDecoder()
+                    if allowNonConformingFloats {
+                        decoder.nonConformingFloatDecodingStrategy = .convertFromString(
+                            positiveInfinity: "Infinity",
+                            negativeInfinity: "-Infinity",
+                            nan: "NaN"
+                        )
+                    }
+                    return try decoder.decode(Value.self, from: data)
                 } catch {
                     if termination?.isFinished == true || (process == nil && evidence != nil) {
                         if let child = process {

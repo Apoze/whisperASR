@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "maximumCosineDistance": 0.3,
+  "uncertaintyMargin": 0.1
+}

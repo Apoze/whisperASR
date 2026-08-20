@@ -1,0 +1,114 @@
+{
+  "ticket": 114,
+  "schemaVersion": 1,
+  "purpose": "development-threshold-calibration",
+  "holdoutOpened": false,
+  "modelRunPerformed": false,
+  "implementation": {
+    "parentCommitSHA": "ca0a4a2e538d9f128b85c3483ad8cbf82339227d",
+    "sourcePath": "Sources/HighQualityJob.swift",
+    "sourceSHA256": "36f4bae9f08862f3ad964ac04d41cf3b3018a96a6d66f487e4ffc0952cf51a6e"
+  },
+  "source": {
+    "path": "calibration-report.json",
+    "sha256": "3637bb04f8d6186bc6b0f14676e5aa3a8d64deafee94fd4ecc348ff35ba2469a",
+    "centroidCount": 12,
+    "pairwiseCosineDistanceCount": 66,
+    "containsCentroidVectors": false
+  },
+  "initialAttempt": {
+    "reportPath": "calibration-report.json",
+    "reportSHA256": "3637bb04f8d6186bc6b0f14676e5aa3a8d64deafee94fd4ecc348ff35ba2469a",
+    "contractPath": "threshold-contract.json",
+    "contractSHA256": "bfc99c6151256465c102015c1a4bb200bc0cc19f9f601325b0b46eacd68c57ff",
+    "maximumCosineDistance": 0.1,
+    "uncertaintyMargin": 0.02,
+    "suggestionCount": 0,
+    "usefulSuggestionCount": 0,
+    "falseSuggestionCount": 0
+  },
+  "selectedContract": {
+    "version": 2,
+    "path": "threshold-contract-v2.json",
+    "sha256": "e197099d939e388b32ea179bae0c609415e4831e47891ddb0c776709365265ed",
+    "maximumCosineDistance": 0.3,
+    "uncertaintyMargin": 0.1,
+    "selectionRule": "Precision first: admit the closest same-reference mutual-nearest pair while staying below the first different-reference pair."
+  },
+  "algorithm": {
+    "compatibilityRequired": [
+      "modelID",
+      "modelRevision",
+      "runtimeRevision",
+      "embeddingVariant",
+      "vectorDimension"
+    ],
+    "pairRule": "distance <= maximumCosineDistance; mutual nearest; each endpoint second-nearest gap >= uncertaintyMargin",
+    "changed": false
+  },
+  "result": {
+    "underThresholdPairCount": 1,
+    "suggestionCount": 1,
+    "usefulSuggestionCount": 1,
+    "falseSuggestionCount": 0,
+    "abstainedPairCount": 65,
+    "precision": 1.0,
+    "recallClaimed": false
+  },
+  "usefulSuggestion": {
+    "firstSpeakerID": "SPEAKER_00",
+    "secondSpeakerID": "SPEAKER_07",
+    "referenceSpeaker": "P10",
+    "firstReferenceShare": 0.8108966891318315,
+    "secondReferenceShare": 1.0,
+    "cosineDistance": 0.25772017,
+    "firstEndpointSecondNearestDistance": 0.73954296,
+    "firstEndpointUncertaintyGap": 0.48182279,
+    "secondEndpointSecondNearestDistance": 0.7842889,
+    "secondEndpointUncertaintyGap": 0.52656873,
+    "suggested": true
+  },
+  "abstentionExamples": [
+    {
+      "firstSpeakerID": "SPEAKER_02",
+      "secondSpeakerID": "SPEAKER_04",
+      "referenceSpeaker": "INT",
+      "cosineDistance": 0.37128484,
+      "reason": "above-maximum-cosine-distance"
+    },
+    {
+      "firstSpeakerID": "SPEAKER_04",
+      "secondSpeakerID": "SPEAKER_11",
+      "firstReferenceSpeaker": "INT",
+      "secondReferenceSpeaker": "P03",
+      "cosineDistance": 0.44497204,
+      "reason": "above-maximum-cosine-distance"
+    },
+    {
+      "firstSpeakerID": "SPEAKER_04",
+      "secondSpeakerID": "SPEAKER_06",
+      "referenceSpeaker": "INT",
+      "cosineDistance": 0.3945846,
+      "reason": "above-maximum-cosine-distance-and-not-mutual-nearest"
+    }
+  ],
+  "gates": {
+    "oneUsefulSuggestion": true,
+    "zeroFalseSuggestions": true,
+    "otherPairsAbstain": true,
+    "thresholdsFrozenBeforeHoldout": true,
+    "devPassed": true
+  },
+  "verification": {
+    "command": "jq '[.comparisons[] | select(.cosineDistance <= 0.3)] | map({firstSpeakerID,secondSpeakerID,cosineDistance,sameReferenceSpeaker})' calibration-report.json",
+    "expected": [
+      {
+        "firstSpeakerID": "SPEAKER_00",
+        "secondSpeakerID": "SPEAKER_07",
+        "cosineDistance": 0.25772017,
+        "sameReferenceSpeaker": true
+      }
+    ]
+  },
+  "decision": "DEV_GATES_PASSED_HOLDOUT_PENDING"
+}

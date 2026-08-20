@@ -1,0 +1,58 @@
+[0/3] Write swift-version--58304C5D6DBC2206.txt
+warning: 'fluidaudio': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/f46b/whisperASR/.build/checkouts/FluidAudio/Sources/FluidAudio/ASR/Parakeet/Unified/benchmark.md
+warning: 'mlx-audio-swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/maz/.codex/worktrees/f46b/whisperASR/.build/checkouts/mlx-audio-swift/Sources/MLXAudioVAD/Models/SileroVAD/README.md
+[0/1] Planning build
+[1/1] Compiling plugin GenerateManual
+[2/2] Compiling plugin GenerateDoccReference
+[3/3] Compiling plugin CudaBuild
+Building for debugging...
+[3/7] Write swift-version--58304C5D6DBC2206.txt
+Build complete! (16.96s)
+Test Suite 'Selected tests' started at 2026-08-15 17:58:13.466.
+Test Suite 'WhisperASRPackageTests.xctest' started at 2026-08-15 17:58:13.468.
+Test Suite 'HighQualityAcceptanceTests' started at 2026-08-15 17:58:13.468.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testRealSavedSpeakerReanalysisWhenOptedIn]' started.
+Test Case '-[WhisperASRTests.HighQualityAcceptanceTests testRealSavedSpeakerReanalysisWhenOptedIn]' passed (31.744 seconds).
+Test Suite 'HighQualityAcceptanceTests' passed at 2026-08-15 17:58:45.212.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.744 (31.744) seconds
+Test Suite 'WhisperASRPackageTests.xctest' passed at 2026-08-15 17:58:45.212.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.744 (31.744) seconds
+Test Suite 'Selected tests' passed at 2026-08-15 17:58:45.212.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.744 (31.745) seconds
+[speaker-reanalysis] normalizing-source: Loading saved source audio…
+[speaker-reanalysis] preparing-diarization: Preparing SpeakerKit…
+[speaker-reanalysis] preparing-diarization: SpeakerKit worker 7329 starting…
+[speaker-reanalysis] preparing-diarization: SpeakerKit worker 7329 ready
+[speaker-reanalysis] diarizing: Reanalyzing speakers…
+[speaker-reanalysis] exporting: Replacing speaker results atomically…
+[speaker-reanalysis] completed: Speakers reanalyzed
+[speaker-reanalysis][runtime] seed=E31-saved-evidence rerun=SpeakerKit-only
+[speaker-reanalysis][upstream] asr=f4995cd584b541d5be819fa976e1620cdda1195826728589613a0417e88bffb0 alignment=78c91972154879250199b02b601e69024fecf3a83c838a50b8c0f98c387814cb translation=4fe9006afe8ab3f6b72b54da7d91b8eb383e5ecc96088d73c28f1125dcdba930 unchanged=true
+[speaker-reanalysis][lifecycle] memory-pressure-checked,load-started,load-completed,unload-completed,memory-release-checked
+[speaker-reanalysis][result] wall=25.954408049583435s peak=750093752 directory=/Users/maz/.codex/worktrees/f46b/whisperASR/docs/japanese-live/experiments/evidence/E31-speaker-reanalysis-112/final-replay/jobs/11211211-1121-4112-8112-112112112112
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+real 51.23
+user 67.01
+sys 11.03
+           828391424  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              734733  page reclaims
+               26105  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   8  messages sent
+                   6  messages received
+                   0  signals received
+              147085  voluntary context switches
+              730024  involuntary context switches
+         46586688494  instructions retired
+          9578239793  cycles elapsed
+           103465824  peak memory footprint

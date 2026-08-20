@@ -91,7 +91,7 @@
     "Tests/LiveCaptionTests.swift": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
   },
   "verificationFilesSHA256": {
-    "Tests/ReadableSubtitleEvidenceContractTests.swift": "d30ce190951a729a550449b275d97f3843abc41a7c49f7d094bcd8fc1aed2b7f",
+    "Tests/ReadableSubtitleEvidenceContractTests.swift": "947c33d40feaa2c76b3be364ff325df3d85bf8a8b6ae83731249bfe5b95a69fd",
     "Tests/ReadableSubtitleReflowTests.swift": "ceded1d9816a2d5b50790f76b0ba8da81199995faffa584c7cef4e88762c0c2f",
     "Tests/ReadableSubtitleReplaySupport.swift": "60b30150e368c6a8c04d997c95b2beecdbf74585431fe2952fd253225314cfab"
   },

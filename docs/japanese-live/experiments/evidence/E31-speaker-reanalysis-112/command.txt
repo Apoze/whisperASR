@@ -1,0 +1,1 @@
+BENCHMARK_SLOT_GRANTED=112-FINAL WHISPERASR_SPEAKER_REANALYSIS_ARCHIVE="$PWD/docs/japanese-live/experiments/evidence/E31-speaker-reanalysis-112/final-replay" docs/japanese-live/experiments/evidence/E31-speaker-reanalysis-112/run-speaker-reanalysis.sh /Users/maz/Documents/videos/jap/1/Video1.webm
