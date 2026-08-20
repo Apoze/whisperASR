@@ -40,6 +40,33 @@ struct HighQualityJobResultPresentation {
     }
 }
 
+struct HighQualitySpeakerReanalysisActionState: Equatable {
+    let isVisible: Bool
+    let isEnabled: Bool
+    let explanation: String?
+
+    init(
+        result: HighQualityJobResult,
+        saved: HighQualitySavedResult,
+        isRunning: Bool,
+        includeLabels: Bool
+    ) {
+        let availability = HighQualityJob.speakerReanalysisAvailability(result)
+        isVisible = availability != .unavailable
+        isEnabled = availability == .available
+            && !isRunning && includeLabels && saved.sourceRelocationMessage == nil
+        explanation = availability.explanation
+    }
+}
+
+struct HighQualitySpeakerLabelActionState: Equatable {
+    let isEnabled: Bool
+
+    init(result: HighQualityJobResult, isRunning: Bool) {
+        isEnabled = result.manifest.schemaVersion >= 3 && !isRunning
+    }
+}
+
 struct HighQualityJobView: View {
     @State private var workspace = HighQualityProjectWorkspace()
     @State private var includeJapaneseTranscript = true
@@ -211,7 +238,7 @@ struct HighQualityJobView: View {
             }
             Toggle("Speaker labels", isOn: $speakerBeta.includeLabels)
                 .toggleStyle(.checkbox)
-                .disabled(isRunning)
+                .disabled(isRunning || workspace.selectedSavedResultID != nil)
 
             if includeEnglishTranscript || includeEnglishSubtitles {
                 Picker("Local translator", selection: $translator) {
@@ -289,10 +316,29 @@ struct HighQualityJobView: View {
                 }
 
                 if let result {
+                    if let saved = selectedSavedResult,
+                       let state = speakerReanalysisActionState,
+                       state.isVisible {
+                        Button("Reanalyze Speakers") { rerunSpeakers(saved) }
+                            .disabled(!state.isEnabled)
+                            .accessibilityIdentifier("high-quality-rerun-speakers")
+                            .accessibilityHint(
+                                state.explanation
+                                    ?? "Runs SpeakerKit only and keeps the previous result until completion."
+                            )
+                    }
                     Button("Open Results Folder") {
                         NSWorkspace.shared.open(result.directory)
                     }
                 }
+            }
+
+            if let explanation = speakerReanalysisActionState?.explanation {
+                Text(explanation)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .textSelection(.enabled)
+                    .accessibilityIdentifier("high-quality-rerun-speakers-reason")
             }
 
             ProgressView(value: progress.fraction)
@@ -369,6 +415,16 @@ struct HighQualityJobView: View {
         workspace.selectedSavedResult
     }
 
+    private var speakerReanalysisActionState: HighQualitySpeakerReanalysisActionState? {
+        guard let result, let saved = selectedSavedResult else { return nil }
+        return .init(
+            result: result,
+            saved: saved,
+            isRunning: isRunning,
+            includeLabels: speakerBeta.includeLabels
+        )
+    }
+
     private var sourcePicker: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -427,14 +483,12 @@ struct HighQualityJobView: View {
 
     private func selectLocalSource(_ url: URL?) {
         workspace.selectLocalSource(url)
-        result = nil
         errorMessage = nil
     }
 
     private func selectYouTube(_ value: String) {
         workspace.selectYouTube(value)
         guard !value.isEmpty else { return }
-        result = nil
         errorMessage = nil
     }
 
@@ -447,7 +501,6 @@ struct HighQualityJobView: View {
             errorMessage = "Select a source and at least one Deliverable."
             return
         }
-        result = nil
         errorMessage = nil
         progress = .init(stage: .validating, fraction: 0, message: "Starting…")
         task = Task {
@@ -479,7 +532,6 @@ struct HighQualityJobView: View {
     private func selectProject(_ id: UUID?) {
         guard !isRunning else { return }
         workspace.selectProject(id)
-        result = nil
         errorMessage = nil
         customSpeakerLabels = [:]
     }
@@ -497,7 +549,6 @@ struct HighQualityJobView: View {
                     named: folder.lastPathComponent,
                     folder: folder
                 )
-                result = nil
                 customSpeakerLabels = [:]
                 progress = .init(
                     stage: .validating,
@@ -531,7 +582,6 @@ struct HighQualityJobView: View {
             guard response == .OK, let folder = panel.url else { return }
             do {
                 _ = try workspace.relocateSelectedProject(to: folder)
-                result = nil
                 customSpeakerLabels = [:]
                 errorMessage = nil
                 progress = .init(
@@ -556,7 +606,6 @@ struct HighQualityJobView: View {
                 var updatedWorkspace = workspace
                 let action = try await updatedWorkspace.confirmProjectAction()
                 workspace = updatedWorkspace
-                result = nil
                 customSpeakerLabels = [:]
                 errorMessage = nil
                 progress = .init(
@@ -592,15 +641,17 @@ struct HighQualityJobView: View {
         panel.allowedContentTypes = [.audio, .movie]
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            do {
-                let relocated = try HighQualityJob.relocateSource(saved, to: url)
-                workspace.refresh()
-                workspace.selectSavedResult(relocated.id)
-                try showSavedResult(
-                    workspace.selectedSavedResult ?? relocated
-                )
-            } catch {
-                errorMessage = error.localizedDescription
+            Task {
+                do {
+                    let relocated = try await HighQualityJob().relocateSource(saved, to: url)
+                    workspace.refresh()
+                    workspace.selectSavedResult(relocated.id)
+                    try showSavedResult(
+                        workspace.selectedSavedResult ?? relocated
+                    )
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
             }
         }
     }
@@ -614,6 +665,19 @@ struct HighQualityJobView: View {
         includeEnglishSubtitles = deliverables.contains(.englishSubtitles)
         readableSubtitleBeta.enabled = reopened.manifest.readableSubtitles == true
         speakerBeta.includeLabels = reopened.manifest.speakerLabels
+        let configuration = reopened.manifest.speakerConfiguration ?? .standard
+        speakerBeta.enhancedPrecision = configuration.enhancedPrecision
+        speakerBeta.sensitiveDetection = configuration.sensitiveDetection
+        switch configuration.countPolicy.mode {
+        case .automatic:
+            speakerBeta.knowsSpeakerCount = false
+        case .expected:
+            speakerBeta.knowsSpeakerCount = true
+            if let count = configuration.countPolicy.expectedCount,
+               HighQualitySpeakerCountPolicy.validExpectedCounts.contains(count) {
+                speakerBeta.expectedSpeakerCount = count
+            }
+        }
         backend = reopened.manifest.selectedBackend
         if let savedTranslator = reopened.manifest.translationModel?.translator {
             translator = savedTranslator
@@ -622,6 +686,36 @@ struct HighQualityJobView: View {
         errorMessage = nil
         progress = .init(stage: .completed, fraction: 1, message: "Saved result reopened")
         customSpeakerLabels = initialCustomSpeakerLabels(for: reopened)
+    }
+
+    private func rerunSpeakers(_ saved: HighQualitySavedResult) {
+        errorMessage = nil
+        progress = .init(
+            stage: .validating,
+            fraction: 0,
+            message: "Starting SpeakerKit reanalysis…"
+        )
+        let configuration = speakerBeta.configuration
+        let job = HighQualityJob()
+        task = Task {
+            do {
+                let updated = try await job.rerunSpeakers(
+                    saved,
+                    configuration: configuration
+                ) { update in
+                    Task { @MainActor in progress = update }
+                }
+                resultPresentation.publish(updated)
+                customSpeakerLabels = initialCustomSpeakerLabels(for: updated)
+                workspace.refresh()
+                workspace.selectSavedResult(updated.manifest.jobID)
+            } catch let error as HighQualityJobError {
+                errorMessage = error.localizedDescription
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            task = nil
+        }
     }
 
     private func initialCustomSpeakerLabels(
@@ -679,7 +773,21 @@ struct HighQualityJobView: View {
         _ result: HighQualityJobResult,
         deliverables: Set<HighQualityDeliverable>
     ) -> some View {
+        let labelActionState = HighQualitySpeakerLabelActionState(
+            result: result,
+            isRunning: isRunning
+        )
         Text("Results").font(.headline)
+        if let reanalysis = result.evidence.speakerReanalyses?.last {
+            Text(
+                "Last SpeakerKit reanalysis: "
+                    + String(format: "%.1f s", reanalysis.wallTime)
+                    + " · peak " + memory(reanalysis.peakMemoryBytes)
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .accessibilityIdentifier("high-quality-speaker-reanalysis-evidence")
+        }
         ScrollView {
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
                 GridRow {
@@ -715,6 +823,10 @@ struct HighQualityJobView: View {
                     .textFieldStyle(.roundedBorder)
                 }
                 Button("Apply Labels") {
+                    guard HighQualitySpeakerLabelActionState(
+                        result: result,
+                        isRunning: isRunning
+                    ).isEnabled else { return }
                     do {
                         resultPresentation.publish(try HighQualityJob.renameSpeakers(
                             in: result,
@@ -724,7 +836,10 @@ struct HighQualityJobView: View {
                         errorMessage = error.localizedDescription
                     }
                 }
-                .disabled(!result.manifest.usesDurableSavedResultEvidence)
+                .disabled(
+                    !result.manifest.usesDurableSavedResultEvidence
+                        || !labelActionState.isEnabled
+                )
             }
             if !result.manifest.usesDurableSavedResultEvidence {
                 Text("Speaker label edits require a result saved with the current schema.")
@@ -737,5 +852,12 @@ struct HighQualityJobView: View {
     private func time(_ start: TimeInterval?, _ end: TimeInterval?) -> String {
         guard let start, let end else { return "—" }
         return "\(SubtitleTimecode.webVTT(start))–\(SubtitleTimecode.webVTT(end))"
+    }
+
+    private func memory(_ bytes: UInt64) -> String {
+        ByteCountFormatter.string(
+            fromByteCount: Int64(min(bytes, UInt64(Int64.max))),
+            countStyle: .memory
+        )
     }
 }

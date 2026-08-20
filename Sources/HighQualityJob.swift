@@ -799,6 +799,10 @@ struct HighQualitySemanticUnitEvidence: Codable, Equatable, Sendable {
     var speakerMappingIndices: [Int]
 }
 
+struct HighQualitySpeakerAttachmentEvidence: Codable, Equatable, Sendable {
+    let semanticUnits: [HighQualitySemanticUnitEvidence]
+}
+
 struct HighQualityAlignmentExchange: Codable, Equatable, Sendable {
     let chunks: [HighQualityAlignmentChunk]
     let modelID: String
@@ -1113,7 +1117,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
         case cancelled
     }
 
-    let schemaVersion: Int
+    var schemaVersion: Int
     let jobID: UUID
     var status: Status
     var source: HighQualitySourceProvenance
@@ -1122,8 +1126,8 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     let translationModel: HighQualityTranslationModelEvidence?
     let speakerLabels: Bool
     let readableSubtitles: Bool?
-    let speakerConfiguration: HighQualitySpeakerConfiguration?
-    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
+    var speakerConfiguration: HighQualitySpeakerConfiguration?
+    var speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let dependencies: [HighQualityJobDependency]
     var model: HighQualityModelEvidence
     var asrWorker: HighQualityASRWorkerEvidence? = nil
@@ -1136,6 +1140,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var generatedFiles: [HighQualityGeneratedFile]
     var rawEvidenceSHA256: String? = nil
     var projectID: UUID? = nil
+    var speakerReanalysisCount: Int? = nil
 
     var usesLegacySavedResultFallback: Bool {
         schemaVersion == 2
@@ -1149,22 +1154,37 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     }
 }
 
+struct HighQualitySpeakerReanalysisEvidence: Codable, Equatable, Sendable {
+    let startedAt: Date
+    let finishedAt: Date
+    let wallTime: TimeInterval
+    let configuration: HighQualitySpeakerConfiguration
+    let modelEvents: [HighQualityModelEvent]
+    let peakMemoryBytes: UInt64
+    let replacedDiarization: HighQualityDiarizationEvidence
+    let replacedAttachment: HighQualitySpeakerAttachmentEvidence?
+    let diarization: HighQualityDiarizationEvidence
+    let attachment: HighQualitySpeakerAttachmentEvidence
+}
+
 struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
     let asrWorker: HighQualityASRWorkerEvidence?
-    let speakerConfiguration: HighQualitySpeakerConfiguration?
-    let speakerCountPolicy: HighQualitySpeakerCountPolicy?
+    var speakerConfiguration: HighQualitySpeakerConfiguration?
+    var speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let rawASR: String?
     let glossary: HighQualityGlossarySelection
-    let alignment: HighQualityAlignmentEvidence?
-    let diarization: HighQualityDiarizationEvidence?
+    var alignment: HighQualityAlignmentEvidence?
+    var diarization: HighQualityDiarizationEvidence?
+    var speakerAttachment: HighQualitySpeakerAttachmentEvidence? = nil
     let translation: HighQualityTranslationEvidence?
     let sampleRate: Int
     let sampleCount: Int
-    let stageDurations: [HighQualityJobStage: TimeInterval]
-    let peakMemoryBytes: UInt64
-    let modelEvents: [HighQualityModelEvent]
+    var sourceAudioSHA256: String? = nil
+    var stageDurations: [HighQualityJobStage: TimeInterval]
+    var peakMemoryBytes: UInt64
+    var modelEvents: [HighQualityModelEvent]
     let failures: [HighQualityJobFailure]
     let generatedFiles: [HighQualityGeneratedFile]
     var resultTurns: [HighQualityTranscriptTurn]? = nil
@@ -1173,6 +1193,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     var englishTranscript: String? = nil
     var readableSubtitles: HighQualityReadableSubtitleEvidence? = nil
     var projectID: UUID? = nil
+    var speakerReanalyses: [HighQualitySpeakerReanalysisEvidence]? = nil
 }
 
 struct HighQualityJobResult: Sendable {
@@ -1183,6 +1204,19 @@ struct HighQualityJobResult: Sendable {
     let subtitleCues: [HighQualitySubtitleCue]
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
+}
+
+enum HighQualitySpeakerReanalysisAvailability: Equatable, Sendable {
+    case unavailable
+    case requiresVerifiedSource
+    case available
+
+    static let verifiedSourceExplanation = "This saved result has no verified source-audio fingerprint. Recompute the High-quality job before reanalyzing speakers."
+
+    var explanation: String? {
+        guard self == .requiresVerifiedSource else { return nil }
+        return Self.verifiedSourceExplanation
+    }
 }
 
 struct HighQualitySavedResult: Identifiable, Sendable {
@@ -1225,6 +1259,27 @@ struct HighQualityJobError: LocalizedError, Equatable, Sendable {
     let stage: HighQualityJobFailureStage
     let message: String
     let resultDirectory: URL?
+
+    var errorDescription: String? { message }
+}
+
+private struct HighQualitySpeakerAnalysis {
+    var evidence: HighQualityDiarizationEvidence
+    let modelEvents: [HighQualityModelEvent]
+    let peakMemoryBytes: UInt64
+    let preparationDuration: TimeInterval
+    let diarizationDuration: TimeInterval
+}
+
+private struct HighQualitySpeakerAnalysisFailure: LocalizedError {
+    let message: String
+    let cancelled: Bool
+    let stage: HighQualityJobStage
+    let evidence: HighQualityDiarizationEvidence
+    let modelEvents: [HighQualityModelEvent]
+    let peakMemoryBytes: UInt64
+    let preparationDuration: TimeInterval
+    let diarizationDuration: TimeInterval
 
     var errorDescription: String? { message }
 }
@@ -1638,6 +1693,258 @@ struct HighQualityJob: Sendable {
         servicesForSelection = { backend, _ in servicesForBackend(backend) }
     }
 
+    private func analyzeSpeakers(
+        services: Services,
+        workflowLease: HeavyweightWorkflowLease?,
+        samples: [Float],
+        alignedItems: [HighQualityAlignmentItem],
+        duration: TimeInterval,
+        useExclusiveReconciliation: Bool,
+        configuration: HighQualitySpeakerConfiguration,
+        progress: @escaping @Sendable (HighQualityJobStage, Double, String) -> Void
+    ) async throws -> HighQualitySpeakerAnalysis {
+        let preparationStartedAt = Date()
+        var diarizationStartedAt: Date?
+        var lease: HeavyweightModelLease?
+        var loadStarted = false
+        var unloaded = false
+        var modelEvents: [HighQualityModelEvent] = []
+        var evidence = HighQualityDiarizationEvidence(
+            modelID: services.diarizationModelID,
+            revision: services.diarizationRevision,
+            rawSpans: [],
+            mappings: [],
+            overlapRanges: [],
+            peakMemoryBytes: 0,
+            useExclusiveReconciliation: useExclusiveReconciliation,
+            speakerCountPolicy: configuration.countPolicy,
+            validationDiagnostics: []
+        )
+        var peakMemoryBytes: UInt64 = 0
+
+        @Sendable func guarded<T: Sendable>(
+            _ lease: HeavyweightModelLease?,
+            _ operation: @escaping @Sendable () async throws -> T
+        ) async throws -> T {
+            guard let gate = services.heavyweightGate, let lease else {
+                return try await operation()
+            }
+            return try await gate.withMemoryGuard(lease, operation: operation)
+        }
+
+        func appendReleaseEvidence(
+            _ memory: HeavyweightModelMemoryEvidence,
+            releasedMemoryBytes: UInt64
+        ) {
+            peakMemoryBytes = max(peakMemoryBytes, memory.peakMemoryBytes)
+            modelEvents.append(.init(
+                kind: .memoryReleaseChecked,
+                modelID: services.diarizationModelID,
+                at: Date(),
+                message: "memory=\(releasedMemoryBytes) runtimePeak=\(memory.peakMemoryBytes) minimumAvailable=\(memory.minimumAvailableMemoryBytes) maximum=\(memory.maximumMemoryBytes) reserve=\(memory.reserveBytes)"
+            ))
+        }
+
+        func unload() async throws {
+            guard !unloaded else { return }
+            if let gate = services.heavyweightGate, let lease {
+                let memory: HeavyweightModelMemoryEvidence
+                do {
+                    memory = try await gate.memoryEvidence(lease)
+                } catch {
+                    unloaded = true
+                    await services.unloadDiarization()
+                    throw error
+                }
+                unloaded = true
+                do {
+                    let released = try await gate.releaseModel(
+                        lease,
+                        unload: services.unloadDiarization
+                    )
+                    modelEvents.append(.init(
+                        kind: .unloadCompleted,
+                        modelID: services.diarizationModelID,
+                        at: Date()
+                    ))
+                    appendReleaseEvidence(memory, releasedMemoryBytes: released)
+                } catch {
+                    modelEvents.append(.init(
+                        kind: .unloadCompleted,
+                        modelID: services.diarizationModelID,
+                        at: Date()
+                    ))
+                    throw error
+                }
+            } else {
+                unloaded = true
+                await services.unloadDiarization()
+                modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    modelID: services.diarizationModelID,
+                    at: Date()
+                ))
+            }
+        }
+
+        do {
+            if let gate = services.heavyweightGate, let workflowLease {
+                lease = try await gate.acquireModel(
+                    workflow: workflowLease,
+                    modelID: services.diarizationModelID,
+                    declaredPeakBytes: services.diarizationDeclaredPeakMemoryBytes
+                )
+            }
+            if let lease {
+                modelEvents.append(.init(
+                    kind: .pressureChecked,
+                    modelID: services.diarizationModelID,
+                    at: Date(),
+                    message: "policy=macos-memory-pressure peak=\(lease.declaredPeakBytes) reserve=\(lease.reserveBytes) total=\(lease.totalMemoryBytes) available=\(lease.availableMemoryBytes) baseline=\(lease.baselineMemoryBytes)"
+                ))
+            }
+            loadStarted = true
+            modelEvents.append(.init(
+                kind: .loadStarted,
+                modelID: services.diarizationModelID,
+                at: Date()
+            ))
+            progress(.preparingDiarization, 0, "Preparing SpeakerKit…")
+            try await guarded(lease) {
+                try await services.prepareDiarization(configuration) { fraction, message in
+                    progress(.preparingDiarization, min(max(fraction, 0), 1), message)
+                }
+            }
+            if let gate = services.heavyweightGate, let lease {
+                try await gate.markLoaded(lease)
+            }
+            modelEvents.append(.init(
+                kind: .loadCompleted,
+                modelID: services.diarizationModelID,
+                at: Date()
+            ))
+            try Task.checkCancellation()
+
+            diarizationStartedAt = Date()
+            progress(.diarizing, 0, "Detecting speakers…")
+            let exchange = try await guarded(lease) {
+                try await services.diarizeSpeakers(
+                    samples,
+                    useExclusiveReconciliation,
+                    configuration
+                )
+            }
+            guard exchange.speakerCountPolicy == configuration.countPolicy else {
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit did not preserve the requested Speaker-count policy.",
+                    resultDirectory: nil
+                )
+            }
+            evidence = .init(
+                modelID: exchange.modelID,
+                revision: exchange.revision,
+                rawSpans: exchange.spans,
+                mappings: [],
+                overlapRanges: [],
+                peakMemoryBytes: exchange.peakMemoryBytes,
+                useExclusiveReconciliation: exchange.useExclusiveReconciliation,
+                speakerCountPolicy: exchange.speakerCountPolicy,
+                configuration: exchange.configuration,
+                validationDiagnostics: []
+            )
+            do {
+                evidence = try Self.diarizationEvidence(
+                    exchange,
+                    items: alignedItems,
+                    duration: duration,
+                    completeAttribution: services.completeDiarizationAttribution
+                )
+            } catch {
+                evidence.validationDiagnostics = [error.localizedDescription]
+                throw error
+            }
+            peakMemoryBytes = max(peakMemoryBytes, exchange.peakMemoryBytes)
+            try await unload()
+            lease = nil
+            evidence.worker = await services.diarizationWorkerEvidence()
+            peakMemoryBytes = max(
+                peakMemoryBytes,
+                evidence.worker?.peakPhysicalFootprintBytes ?? 0
+            )
+            guard evidence.worker?.pressureTransitions.contains(where: {
+                $0.level == .critical
+            }) != true else {
+                throw HighQualityAlignmentSpeakerWorkerError.criticalMemoryPressure(
+                    stage: "SpeakerKit"
+                )
+            }
+            try Task.checkCancellation()
+            let finishedAt = Date()
+            return .init(
+                evidence: evidence,
+                modelEvents: modelEvents,
+                peakMemoryBytes: peakMemoryBytes,
+                preparationDuration: (diarizationStartedAt ?? finishedAt)
+                    .timeIntervalSince(preparationStartedAt),
+                diarizationDuration: diarizationStartedAt.map {
+                    finishedAt.timeIntervalSince($0)
+                } ?? 0
+            )
+        } catch {
+            let originalError = error
+            var cleanupMessage: String?
+            if loadStarted, !unloaded {
+                do {
+                    try await unload()
+                    lease = nil
+                } catch {
+                    cleanupMessage = error.localizedDescription
+                }
+            }
+            evidence.worker = await services.diarizationWorkerEvidence()
+            peakMemoryBytes = max(
+                max(peakMemoryBytes, evidence.peakMemoryBytes),
+                evidence.worker?.peakPhysicalFootprintBytes ?? 0
+            )
+            if let gateError = originalError as? HeavyweightModelGateError {
+                modelEvents.append(.init(
+                    kind: .guardFailed,
+                    modelID: services.diarizationModelID,
+                    at: Date(),
+                    message: gateError.localizedDescription
+                ))
+            }
+            if let cleanupMessage {
+                modelEvents.append(.init(
+                    kind: .guardFailed,
+                    modelID: services.diarizationModelID,
+                    at: Date(),
+                    message: cleanupMessage
+                ))
+            }
+            let cancelled = originalError is CancellationError || Task.isCancelled
+            let message = cancelled ? "Speaker analysis cancelled." : originalError.localizedDescription
+            if evidence.validationDiagnostics.isEmpty {
+                evidence.validationDiagnostics = [message]
+            }
+            let finishedAt = Date()
+            throw HighQualitySpeakerAnalysisFailure(
+                message: cleanupMessage.map { message + " " + $0 } ?? message,
+                cancelled: cancelled,
+                stage: diarizationStartedAt == nil ? .preparingDiarization : .diarizing,
+                evidence: evidence,
+                modelEvents: modelEvents,
+                peakMemoryBytes: peakMemoryBytes,
+                preparationDuration: (diarizationStartedAt ?? finishedAt)
+                    .timeIntervalSince(preparationStartedAt),
+                diarizationDuration: diarizationStartedAt.map {
+                    finishedAt.timeIntervalSince($0)
+                } ?? 0
+            )
+        }
+    }
+
     static func savedResults(
         in root: URL = AppStoragePaths.highQualityJobs
     ) -> [HighQualitySavedResult] {
@@ -1741,7 +2048,8 @@ struct HighQualityJob: Sendable {
                 )
             }
             let labelsByID = Dictionary(uniqueKeysWithValues:
-                (evidence.alignment?.semanticUnits ?? []).compactMap { unit in
+                (evidence.speakerAttachment?.semanticUnits
+                    ?? evidence.alignment?.semanticUnits ?? []).compactMap { unit in
                     unit.speakerLabel.map { (unit.id, $0) }
                 }
             )
@@ -1829,25 +2137,59 @@ struct HighQualityJob: Sendable {
         return result
     }
 
-    static func relocateSource(
+    func relocateSource(
         _ saved: HighQualitySavedResult,
         to sourceURL: URL
-    ) throws -> HighQualitySavedResult {
+    ) async throws -> HighQualitySavedResult {
         guard saved.manifest.source.youtube == nil,
               sourceURL.isFileURL,
               (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
                 == true else {
-            throw savedResultError("Choose an existing local media file.", saved)
+            throw Self.savedResultError(
+                "Choose an existing local media file.",
+                saved,
+                stage: .source
+            )
         }
-        _ = try reopen(saved)
-        let previous = try readTransformations(in: saved.directory)
+        let result = try Self.reopen(saved)
+        guard Self.isValidSHA256(result.evidence.sourceAudioSHA256) else {
+            throw Self.savedResultError(
+                HighQualitySpeakerReanalysisAvailability.verifiedSourceExplanation,
+                saved,
+                stage: .source
+            )
+        }
+        let selection = result.manifest.translationModel?.translator ?? .productDefault
+        let services = servicesForSelection(result.manifest.selectedBackend, selection)
+        let samples: [Float]
+        do {
+            samples = try await services.loadSource(sourceURL)
+        } catch {
+            throw Self.savedResultError(
+                "The selected media could not be verified: \(error.localizedDescription)",
+                saved,
+                stage: .source
+            )
+        }
+        guard Self.matchesSavedSource(
+            samples: samples,
+            sha256: Self.audioSHA256(samples),
+            result: result
+        ) else {
+            throw Self.savedResultError(
+                "The selected media does not match the saved source audio.",
+                saved,
+                stage: .source
+            )
+        }
+        let previous = try Self.readTransformations(in: saved.directory)
         let relocatedPath = sourceURL.standardizedFileURL.path
-        let transformations = try encoder.encode(HighQualityResultTransformations(
+        let transformations = try Self.encoder.encode(HighQualityResultTransformations(
             schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
             customSpeakerLabels: previous?.customSpeakerLabels ?? [:],
             relocatedSourcePath: relocatedPath
         ))
-        try transactionallyWrite(
+        try Self.transactionallyWrite(
             ["transformations.json": transformations],
             in: saved.directory
         )
@@ -1870,6 +2212,324 @@ struct HighQualityJob: Sendable {
             ["transformations.json": transformations],
             in: directory
         )
+    }
+
+    static func speakerReanalysisAvailability(
+        _ result: HighQualityJobResult
+    ) -> HighQualitySpeakerReanalysisAvailability {
+        guard result.manifest.schemaVersion >= 3,
+              result.manifest.status == .completed,
+              result.manifest.speakerLabels,
+              result.manifest.dependencies.contains(.speakerDiarization),
+              result.evidence.sampleRate == 16_000,
+              result.evidence.sampleCount > 0,
+              result.evidence.diarization != nil,
+              result.evidence.alignment?.semanticUnits?.isEmpty == false,
+              result.evidence.alignment?.semanticFragments != nil else {
+            return .unavailable
+        }
+        return isValidSHA256(result.evidence.sourceAudioSHA256)
+            ? .available : .requiresVerifiedSource
+    }
+
+    func rerunSpeakers(
+        _ saved: HighQualitySavedResult,
+        configuration: HighQualitySpeakerConfiguration,
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in },
+        beforeCommit: () throws -> Void = {}
+    ) async throws -> HighQualityJobResult {
+        guard configuration.isValid else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "Expected speaker count must be an integer from 1 through 20.",
+                resultDirectory: saved.directory
+            )
+        }
+        let previous = try Self.reopen(saved)
+        let availability = Self.speakerReanalysisAvailability(previous)
+        guard availability == .available else {
+            throw HighQualityJobError(
+                stage: availability == .requiresVerifiedSource ? .source : .application,
+                message: availability.explanation
+                    ?? "This saved result does not contain compatible alignment and SpeakerKit evidence.",
+                resultDirectory: saved.directory
+            )
+        }
+        guard let alignment = previous.evidence.alignment,
+              let units = alignment.semanticUnits,
+              let fragments = alignment.semanticFragments,
+              let previousDiarization = previous.evidence.diarization else {
+            throw HighQualityJobError(
+                stage: .application,
+                message: "This saved result does not contain compatible alignment and SpeakerKit evidence.",
+                resultDirectory: saved.directory
+            )
+        }
+        let sourceURL = saved.sourceURL
+        guard sourceURL.isFileURL,
+              (try? sourceURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile)
+                == true else {
+            throw HighQualityJobError(
+                stage: .source,
+                message: saved.sourceRelocationMessage
+                    ?? "The saved source audio is unavailable. Locate it before reanalysis.",
+                resultDirectory: saved.directory
+            )
+        }
+
+        let selection = previous.manifest.translationModel?.translator ?? .productDefault
+        let services = servicesForSelection(previous.manifest.selectedBackend, selection)
+        let startedAt = Date()
+        var currentStage = HighQualityJobStage.normalizingSource
+        var workflowLease: HeavyweightWorkflowLease?
+
+        do {
+            progress(.init(
+                stage: .normalizingSource,
+                fraction: 0.05,
+                message: "Loading saved source audio…"
+            ))
+            let samples = try await services.loadSource(sourceURL)
+            let sourceAudioSHA256 = Self.audioSHA256(samples)
+            guard Self.matchesSavedSource(
+                samples: samples,
+                sha256: sourceAudioSHA256,
+                result: previous
+            ) else {
+                throw HighQualityJobError(
+                    stage: .source,
+                    message: "The selected source no longer matches the saved result.",
+                    resultDirectory: saved.directory
+                )
+            }
+            try Task.checkCancellation()
+
+            currentStage = .preparingDiarization
+            if let gate = services.heavyweightGate {
+                workflowLease = try await gate.beginWorkflow(.offline(saved.id))
+            }
+            let exclusive = previousDiarization.useExclusiveReconciliation ?? false
+            var alignedItems = alignment.chunks.flatMap(\.rawItems)
+            if alignedItems.isEmpty {
+                alignedItems = alignment.mergedCues.map {
+                    HighQualityAlignmentItem(
+                        cueID: $0.id,
+                        text: $0.text,
+                        start: $0.start,
+                        end: $0.end
+                    )
+                }
+            }
+            let analysis: HighQualitySpeakerAnalysis
+            do {
+                analysis = try await analyzeSpeakers(
+                    services: services,
+                    workflowLease: workflowLease,
+                    samples: samples,
+                    alignedItems: alignedItems,
+                    duration: alignment.sourceDuration,
+                    useExclusiveReconciliation: exclusive,
+                    configuration: configuration
+                ) { stage, fraction, message in
+                    progress(.init(
+                        stage: stage,
+                        fraction: stage == .preparingDiarization
+                            ? 0.2 + fraction * 0.2 : 0.45,
+                        message: stage == .diarizing ? "Reanalyzing speakers…" : message
+                    ))
+                }
+            } catch let failure as HighQualitySpeakerAnalysisFailure {
+                currentStage = failure.stage
+                if failure.cancelled { throw CancellationError() }
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: failure.message,
+                    resultDirectory: saved.directory
+                )
+            }
+            currentStage = .diarizing
+            let diarization = analysis.evidence
+            guard diarization.modelID == services.diarizationModelID,
+                  diarization.revision == services.diarizationRevision,
+                  diarization.useExclusiveReconciliation == exclusive,
+                  diarization.speakerCountPolicy == configuration.countPolicy else {
+                throw HighQualityJobError(
+                    stage: .diarization,
+                    message: "SpeakerKit did not preserve the requested configuration.",
+                    resultDirectory: saved.directory
+                )
+            }
+            if let gate = services.heavyweightGate, let workflowLease {
+                try await gate.endWorkflow(workflowLease)
+            }
+            workflowLease = nil
+            try Task.checkCancellation()
+
+            let attachment = Self.speakerAttachment(
+                units: units,
+                fragments: fragments,
+                mappings: diarization.mappings,
+                explicitLabelsByCueID: [:]
+            )
+            let attachmentEvidence = HighQualitySpeakerAttachmentEvidence(
+                semanticUnits: attachment.units
+            )
+            let turns = previous.turns.map { turn in
+                HighQualityTranscriptTurn(
+                    id: turn.id,
+                    japanese: turn.japanese,
+                    english: turn.english,
+                    speakerLabel: attachment.labelsByUnitID[turn.id],
+                    start: turn.start,
+                    end: turn.end
+                )
+            }
+            let labelsByID = Dictionary(uniqueKeysWithValues: turns.compactMap { turn in
+                turn.speakerLabel.map { (turn.id, $0) }
+            })
+            let subtitleCues = previous.subtitleCues.map { cue in
+                HighQualitySubtitleCue(
+                    id: cue.id,
+                    start: cue.start,
+                    end: cue.end,
+                    text: cue.text,
+                    speakerLabel: labelsByID[cue.id]
+                )
+            }
+            let deliverables = Set(previous.manifest.deliverables)
+            let japaneseTranscript = deliverables.contains(.japaneseTranscript)
+                ? Self.transcript(turns, text: \.japanese) : previous.japaneseTranscript
+            let englishTranscript = deliverables.contains(.englishTranslationTranscript)
+                ? Self.transcript(turns, text: \.english) : nil
+            let finishedAt = Date()
+            let peakMemoryBytes = analysis.peakMemoryBytes
+            let reanalysis = HighQualitySpeakerReanalysisEvidence(
+                startedAt: startedAt,
+                finishedAt: finishedAt,
+                wallTime: finishedAt.timeIntervalSince(startedAt),
+                configuration: configuration,
+                modelEvents: analysis.modelEvents,
+                peakMemoryBytes: peakMemoryBytes,
+                replacedDiarization: previousDiarization,
+                replacedAttachment: previous.evidence.speakerAttachment
+                    ?? .init(semanticUnits: units),
+                diarization: diarization,
+                attachment: attachmentEvidence
+            )
+            let reanalyses = (previous.evidence.speakerReanalyses ?? []) + [reanalysis]
+
+            var manifest = previous.manifest
+            manifest.schemaVersion = HighQualityJobManifest.currentSchemaVersion
+            manifest.speakerConfiguration = configuration
+            manifest.speakerCountPolicy = configuration.countPolicy
+            manifest.stageDurations[.preparingDiarization, default: 0] +=
+                analysis.preparationDuration
+            manifest.stageDurations[.diarizing, default: 0] +=
+                analysis.diarizationDuration
+            manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, peakMemoryBytes)
+            manifest.modelEvents += analysis.modelEvents
+            manifest.finishedAt = finishedAt
+            manifest.speakerReanalysisCount = reanalyses.count
+
+            var evidence = previous.evidence
+            evidence.speakerConfiguration = configuration
+            evidence.speakerCountPolicy = configuration.countPolicy
+            evidence.diarization = diarization
+            evidence.speakerAttachment = attachmentEvidence
+            evidence.sourceAudioSHA256 = sourceAudioSHA256
+            evidence.stageDurations = manifest.stageDurations
+            evidence.peakMemoryBytes = manifest.peakMemoryBytes
+            evidence.modelEvents = manifest.modelEvents
+            evidence.resultTurns = turns
+            evidence.subtitleCues = subtitleCues
+            evidence.japaneseTranscript = japaneseTranscript
+            evidence.englishTranscript = englishTranscript
+            evidence.speakerReanalyses = reanalyses
+
+            currentStage = .exporting
+            progress(.init(
+                stage: .exporting,
+                fraction: 0.9,
+                message: "Replacing speaker results atomically…"
+            ))
+            try Task.checkCancellation()
+            let evidenceData = try Self.encoder.encode(evidence)
+            manifest.rawEvidenceSHA256 = Self.sha256(evidenceData)
+            let manifestData = try Self.encoder.encode(manifest)
+            let persistedEvidence = try Self.decoder.decode(
+                HighQualityRawEvidence.self,
+                from: evidenceData
+            )
+            let persistedManifest = try Self.decoder.decode(
+                HighQualityJobManifest.self,
+                from: manifestData
+            )
+            let result = HighQualityJobResult(
+                directory: saved.directory,
+                japaneseTranscript: japaneseTranscript,
+                englishTranscript: englishTranscript,
+                turns: turns,
+                subtitleCues: subtitleCues,
+                manifest: persistedManifest,
+                evidence: persistedEvidence
+            )
+            var files = Self.deliverableFiles(
+                japaneseTranscript: deliverables.contains(.japaneseTranscript)
+                    ? japaneseTranscript : nil,
+                englishTranscript: englishTranscript,
+                subtitleCues: deliverables.contains(.englishSubtitles) ? subtitleCues : nil
+            )
+            files["raw-asr.json"] = evidenceData
+            files["manifest.json"] = manifestData
+            let transformations = try Self.readTransformations(in: saved.directory)
+            if let transformations {
+                files["transformations.json"] = try Self.encoder.encode(
+                    HighQualityResultTransformations(
+                        schemaVersion: HighQualityResultTransformations.currentSchemaVersion,
+                        customSpeakerLabels: [:],
+                        relocatedSourcePath: transformations.relocatedSourcePath
+                    )
+                )
+            }
+            try Self.transactionallyWrite(
+                files,
+                in: saved.directory,
+                beforeCommit: {
+                    try Task.checkCancellation()
+                    try beforeCommit()
+                }
+            )
+            progress(.init(stage: .completed, fraction: 1, message: "Speakers reanalyzed"))
+            return result
+        } catch {
+            var cleanupMessage: String?
+            if let gate = services.heavyweightGate, let workflowLease {
+                do {
+                    try await gate.endWorkflow(workflowLease)
+                } catch {
+                    cleanupMessage = cleanupMessage ?? error.localizedDescription
+                }
+            }
+            let stage: HighQualityJobFailureStage
+            if error is CancellationError || Task.isCancelled {
+                stage = .cancelled
+            } else {
+                switch currentStage {
+                case .normalizingSource: stage = .source
+                case .preparingDiarization, .diarizing: stage = .diarization
+                case .exporting: stage = .export
+                default: stage = .application
+                }
+            }
+            let message = error is CancellationError || Task.isCancelled
+                ? "Speaker reanalysis cancelled."
+                : error.localizedDescription
+            throw HighQualityJobError(
+                stage: stage,
+                message: cleanupMessage.map { message + " " + $0 } ?? message,
+                resultDirectory: saved.directory
+            )
+        }
     }
 
     func run(
@@ -1967,6 +2627,7 @@ struct HighQualityJob: Sendable {
         var currentStage = HighQualityJobStage.validating
         var stageStartedAt = startedAt
         var sampleCount = 0
+        var sourceAudioSHA256: String?
         var rawASR: String?
         var glossary = HighQualityGlossarySelection.empty
         var japaneseTranscriptWritten = false
@@ -1974,6 +2635,7 @@ struct HighQualityJob: Sendable {
         var subtitlesWritten = false
         var alignmentEvidence: HighQualityAlignmentEvidence?
         var diarizationEvidence: HighQualityDiarizationEvidence?
+        var speakerAttachmentEvidence: HighQualitySpeakerAttachmentEvidence?
         var alignedItems: [HighQualityAlignmentItem] = []
         var translationEvidence: HighQualityTranslationEvidence?
         var readableSubtitleEvidence: HighQualityReadableSubtitleEvidence?
@@ -1982,14 +2644,11 @@ struct HighQualityJob: Sendable {
         var asrUnloaded = false
         var alignmentLoadStarted = false
         var alignmentUnloaded = false
-        var diarizationLoadStarted = false
-        var diarizationUnloaded = false
         var translationLoadStarted = false
         var translationUnloaded = false
         var workflowLease: HeavyweightWorkflowLease?
         var asrLease: HeavyweightModelLease?
         var alignmentLease: HeavyweightModelLease?
-        var diarizationLease: HeavyweightModelLease?
         var translationLease: HeavyweightModelLease?
         var memorySampler: Task<UInt64, Never>?
         var cleanupFailureMessage: String?
@@ -2209,6 +2868,7 @@ struct HighQualityJob: Sendable {
             begin(.normalizingSource, fraction: 0.05, message: "Normalizing source audio…")
             let samples = try await services.loadSource(normalizedSourceURL)
             sampleCount = samples.count
+            sourceAudioSHA256 = Self.audioSHA256(samples)
             try Task.checkCancellation()
 
             begin(
@@ -2449,124 +3109,56 @@ struct HighQualityJob: Sendable {
             }
             if request.speakerLabels {
                 begin(.preparingDiarization, fraction: 0.74, message: "Preparing SpeakerKit…")
-                diarizationLoadStarted = true
-                diarizationEvidence = .init(
-                    modelID: services.diarizationModelID,
-                    revision: services.diarizationRevision,
-                    rawSpans: [],
-                    mappings: [],
-                    overlapRanges: [],
-                    peakMemoryBytes: 0,
-                    useExclusiveReconciliation: request.useExclusiveReconciliation,
-                    speakerCountPolicy: request.speakerCountPolicy,
-                    validationDiagnostics: []
-                )
-                diarizationLease = try await acquireModel(
-                    services.diarizationModelID,
-                    peak: services.diarizationDeclaredPeakMemoryBytes
-                )
-                if let diarizationLease {
-                    manifest.modelEvents.append(.init(
-                        kind: .pressureChecked,
-                        modelID: services.diarizationModelID,
-                        at: Date(),
-                        message: "policy=macos-memory-pressure peak=\(diarizationLease.declaredPeakBytes) reserve=\(diarizationLease.reserveBytes) total=\(diarizationLease.totalMemoryBytes) available=\(diarizationLease.availableMemoryBytes) baseline=\(diarizationLease.baselineMemoryBytes)"
-                    ))
-                }
-                manifest.modelEvents.append(.init(
-                    kind: .loadStarted,
-                    modelID: services.diarizationModelID,
-                    at: Date()
-                ))
-                try await withMemoryGuard(diarizationLease) {
-                    try await services.prepareDiarization(request.speakerConfiguration) {
-                        fraction, message in
+                let analysis: HighQualitySpeakerAnalysis
+                do {
+                    analysis = try await analyzeSpeakers(
+                        services: services,
+                        workflowLease: workflowLease,
+                        samples: samples,
+                        alignedItems: alignedItems,
+                        duration: Double(samples.count) / 16_000,
+                        useExclusiveReconciliation: request.useExclusiveReconciliation,
+                        configuration: request.speakerConfiguration
+                    ) { stage, fraction, message in
                         progress(.init(
-                            stage: .preparingDiarization,
-                            fraction: 0.74 + min(max(fraction, 0), 1) * 0.04,
+                            stage: stage,
+                            fraction: stage == .preparingDiarization
+                                ? 0.74 + fraction * 0.04 : 0.78,
                             message: message
                         ))
                     }
-                }
-                try await markLoaded(diarizationLease)
-                manifest.modelEvents.append(.init(
-                    kind: .loadCompleted,
-                    modelID: services.diarizationModelID,
-                    at: Date()
-                ))
-                try Task.checkCancellation()
-                begin(.diarizing, fraction: 0.78, message: "Detecting speakers…")
-                let exchange = try await withMemoryGuard(diarizationLease) {
-                    try await services.diarizeSpeakers(
-                        samples,
-                        request.useExclusiveReconciliation,
-                        request.speakerConfiguration
+                } catch let failure as HighQualitySpeakerAnalysisFailure {
+                    diarizationEvidence = failure.evidence
+                    manifest.modelEvents += failure.modelEvents
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        failure.peakMemoryBytes
                     )
-                }
-                guard exchange.speakerCountPolicy == request.speakerCountPolicy else {
+                    manifest.stageDurations[.preparingDiarization, default: 0] +=
+                        failure.preparationDuration
+                    manifest.stageDurations[.diarizing, default: 0] +=
+                        failure.diarizationDuration
+                    currentStage = failure.stage
+                    stageStartedAt = Date()
+                    if failure.cancelled { throw CancellationError() }
                     throw HighQualityJobError(
                         stage: .diarization,
-                        message: "SpeakerKit did not preserve the requested Speaker-count policy.",
+                        message: failure.message,
                         resultDirectory: directory
                     )
                 }
-                diarizationEvidence = .init(
-                    modelID: exchange.modelID,
-                    revision: exchange.revision,
-                    rawSpans: exchange.spans,
-                    mappings: [],
-                    overlapRanges: [],
-                    peakMemoryBytes: exchange.peakMemoryBytes,
-                    useExclusiveReconciliation: exchange.useExclusiveReconciliation,
-                    speakerCountPolicy: exchange.speakerCountPolicy,
-                    configuration: exchange.configuration,
-                    validationDiagnostics: []
-                )
-                do {
-                    diarizationEvidence = try Self.diarizationEvidence(
-                        exchange,
-                        items: alignedItems,
-                        duration: Double(samples.count) / 16_000,
-                        completeAttribution: services.completeDiarizationAttribution
-                    )
-                } catch {
-                    diarizationEvidence?.validationDiagnostics = [error.localizedDescription]
-                    throw error
-                }
-                manifest.peakMemoryBytes = max(manifest.peakMemoryBytes, exchange.peakMemoryBytes)
-                diarizationUnloaded = true
-                let release = try await releaseModel(
-                    diarizationLease,
-                    unload: services.unloadDiarization
-                )
-                diarizationLease = nil
-                manifest.modelEvents.append(.init(
-                    kind: .unloadCompleted,
-                    modelID: services.diarizationModelID,
-                    at: Date()
-                ))
-                if let release {
-                    manifest.peakMemoryBytes = max(
-                        manifest.peakMemoryBytes,
-                        release.evidence.peakMemoryBytes
-                    )
-                    manifest.modelEvents.append(.init(
-                        kind: .memoryReleaseChecked,
-                        modelID: services.diarizationModelID,
-                        at: Date(),
-                        message: releaseMessage(release)
-                    ))
-                }
-                diarizationEvidence?.worker = await services.diarizationWorkerEvidence()
+                diarizationEvidence = analysis.evidence
+                manifest.modelEvents += analysis.modelEvents
                 manifest.peakMemoryBytes = max(
                     manifest.peakMemoryBytes,
-                    diarizationEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
+                    analysis.peakMemoryBytes
                 )
-                try rejectTerminalCriticalPressure(
-                    diarizationEvidence?.worker,
-                    stage: "SpeakerKit"
-                )
-                try Task.checkCancellation()
+                manifest.stageDurations[.preparingDiarization, default: 0] +=
+                    analysis.preparationDuration
+                manifest.stageDurations[.diarizing, default: 0] +=
+                    analysis.diarizationDuration
+                currentStage = .diarizing
+                stageStartedAt = Date()
             }
             let speakerAttachment = Self.speakerAttachment(
                 units: alignmentEvidence?.semanticUnits ?? [],
@@ -2574,7 +3166,7 @@ struct HighQualityJob: Sendable {
                 mappings: diarizationEvidence?.mappings ?? [],
                 explicitLabelsByCueID: request.speakerLabelsByCueID
             )
-            alignmentEvidence?.semanticUnits = speakerAttachment.units
+            speakerAttachmentEvidence = .init(semanticUnits: speakerAttachment.units)
             glossary = HighQualityGlossarySelector.select(
                 source: manifest.source,
                 turns: turns
@@ -3012,8 +3604,10 @@ struct HighQualityJob: Sendable {
                 glossary: glossary,
                 alignment: alignmentEvidence,
                 diarization: diarizationEvidence,
+                speakerAttachment: speakerAttachmentEvidence,
                 translation: translationEvidence,
                 sampleCount: sampleCount,
+                sourceAudioSHA256: sourceAudioSHA256,
                 resultTurns: resultTurns,
                 subtitleCues: subtitleCues,
                 japaneseTranscript: japaneseOutput ?? transcript,
@@ -3038,7 +3632,8 @@ struct HighQualityJob: Sendable {
                     kind: .guardFailed,
                     modelID: asrLease?.modelID
                         ?? alignmentLease?.modelID
-                        ?? diarizationLease?.modelID
+                        ?? ([.preparingDiarization, .diarizing].contains(currentStage)
+                            ? services.diarizationModelID : nil)
                         ?? translationLease?.modelID
                         ?? "heavyweight-workflow",
                     at: Date(),
@@ -3081,25 +3676,6 @@ struct HighQualityJob: Sendable {
                 manifest.peakMemoryBytes = max(
                     manifest.peakMemoryBytes,
                     alignmentEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
-                )
-            }
-            if diarizationLoadStarted, !diarizationUnloaded {
-                diarizationUnloaded = true
-                await cleanupModel(
-                    diarizationLease,
-                    modelID: services.diarizationModelID,
-                    unload: services.unloadDiarization
-                )
-            }
-            if diarizationLoadStarted {
-                if [.preparingDiarization, .diarizing].contains(currentStage),
-                   diarizationEvidence?.validationDiagnostics.isEmpty == true {
-                    diarizationEvidence?.validationDiagnostics = [error.localizedDescription]
-                }
-                diarizationEvidence?.worker = await services.diarizationWorkerEvidence()
-                manifest.peakMemoryBytes = max(
-                    manifest.peakMemoryBytes,
-                    diarizationEvidence?.worker?.peakPhysicalFootprintBytes ?? 0
                 )
             }
             if translationLoadStarted, !translationUnloaded {
@@ -3163,8 +3739,10 @@ struct HighQualityJob: Sendable {
                     glossary: glossary,
                     alignment: alignmentEvidence,
                     diarization: diarizationEvidence,
+                    speakerAttachment: speakerAttachmentEvidence,
                     translation: translationEvidence,
                     sampleCount: sampleCount,
+                    sourceAudioSHA256: sourceAudioSHA256,
                     manifest: &manifest,
                     to: directory
                 )
@@ -4397,8 +4975,10 @@ struct HighQualityJob: Sendable {
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
         diarization: HighQualityDiarizationEvidence?,
+        speakerAttachment: HighQualitySpeakerAttachmentEvidence? = nil,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
+        sourceAudioSHA256: String? = nil,
         resultTurns: [HighQualityTranscriptTurn]? = nil,
         subtitleCues: [HighQualitySubtitleCue]? = nil,
         japaneseTranscript: String? = nil,
@@ -4416,9 +4996,11 @@ struct HighQualityJob: Sendable {
             glossary: glossary,
             alignment: alignment,
             diarization: diarization,
+            speakerAttachment: speakerAttachment,
             translation: translation,
             sampleRate: 16_000,
             sampleCount: sampleCount,
+            sourceAudioSHA256: sourceAudioSHA256,
             stageDurations: manifest.stageDurations,
             peakMemoryBytes: manifest.peakMemoryBytes,
             modelEvents: manifest.modelEvents,
@@ -4439,8 +5021,10 @@ struct HighQualityJob: Sendable {
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
         diarization: HighQualityDiarizationEvidence?,
+        speakerAttachment: HighQualitySpeakerAttachmentEvidence? = nil,
         translation: HighQualityTranslationEvidence?,
         sampleCount: Int,
+        sourceAudioSHA256: String? = nil,
         resultTurns: [HighQualityTranscriptTurn]? = nil,
         subtitleCues: [HighQualitySubtitleCue]? = nil,
         japaneseTranscript: String? = nil,
@@ -4454,8 +5038,10 @@ struct HighQualityJob: Sendable {
             glossary: glossary,
             alignment: alignment,
             diarization: diarization,
+            speakerAttachment: speakerAttachment,
             translation: translation,
             sampleCount: sampleCount,
+            sourceAudioSHA256: sourceAudioSHA256,
             resultTurns: resultTurns,
             subtitleCues: subtitleCues,
             japaneseTranscript: japaneseTranscript,
@@ -4475,6 +5061,30 @@ struct HighQualityJob: Sendable {
 
     private static func sha256(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func audioSHA256(_ samples: [Float]) -> String {
+        var hasher = SHA256()
+        samples.withUnsafeBytes { hasher.update(bufferPointer: $0) }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func isValidSHA256(_ value: String?) -> Bool {
+        guard let value, value.utf8.count == 64 else { return false }
+        return value.utf8.allSatisfy {
+            (48...57).contains($0) || (65...70).contains($0) || (97...102).contains($0)
+        }
+    }
+
+    private static func matchesSavedSource(
+        samples: [Float],
+        sha256: String,
+        result: HighQualityJobResult
+    ) -> Bool {
+        guard samples.count == result.evidence.sampleCount,
+              let expected = result.evidence.sourceAudioSHA256,
+              isValidSHA256(expected) else { return false }
+        return sha256 == expected.lowercased()
     }
 
     private static func writeManifest(
@@ -4546,10 +5156,11 @@ struct HighQualityJob: Sendable {
 
     private static func savedResultError(
         _ message: String,
-        _ saved: HighQualitySavedResult
+        _ saved: HighQualitySavedResult,
+        stage: HighQualityJobFailureStage = .application
     ) -> HighQualityJobError {
         HighQualityJobError(
-            stage: .application,
+            stage: stage,
             message: message,
             resultDirectory: saved.directory
         )

@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import XCTest
 @testable import WhisperASRApp
@@ -930,6 +931,249 @@ final class HighQualityAcceptanceTests: XCTestCase {
             try FileManager.default.contentsOfDirectory(atPath: result.directory.path).sorted(),
             expectedFiles
         )
+    }
+
+    func testRealSavedSpeakerReanalysisWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_SPEAKER_REANALYSIS"] == "1",
+              let evidencePath = environment["WHISPERASR_SPEAKER_REANALYSIS_EVIDENCE"],
+              let sourcePath = environment["WHISPERASR_SPEAKER_REANALYSIS_SOURCE"],
+              let outputPath = environment["WHISPERASR_SPEAKER_REANALYSIS_OUTPUT"],
+              let rawJobID = environment["WHISPERASR_SPEAKER_REANALYSIS_JOB_ID"],
+              let jobID = UUID(uuidString: rawJobID) else {
+            throw XCTSkip("Set the saved evidence, local video, output and job ID for ticket #112.")
+        }
+        let baseline = try Self.frozenEvidence(at: evidencePath)
+        let alignment = try XCTUnwrap(baseline.alignment)
+        let translation = try XCTUnwrap(baseline.translation)
+        let translations = try HighQualityJob.validatedTranslations(
+            try XCTUnwrap(translation.response),
+            for: translation.request.turns
+        )
+        let speakerLabels = Dictionary(uniqueKeysWithValues:
+            (alignment.semanticUnits ?? []).compactMap { unit in
+                unit.speakerLabel.map { (unit.id, $0) }
+            }
+        )
+        let resultTurns = translation.request.turns.map { turn in
+            HighQualityTranscriptTurn(
+                id: turn.id,
+                japanese: turn.japanese,
+                english: translations[turn.id],
+                speakerLabel: speakerLabels[turn.id] ?? turn.speakerLabel,
+                start: turn.sourceStart,
+                end: turn.sourceEnd
+            )
+        }
+        let subtitleCues: [HighQualitySubtitleCue] = resultTurns.compactMap { turn in
+            guard let start = turn.start, let end = turn.end, let english = turn.english else {
+                return nil
+            }
+            return HighQualitySubtitleCue(
+                id: turn.id,
+                start: start,
+                end: end,
+                text: english,
+                speakerLabel: turn.speakerLabel
+            )
+        }
+        func transcript(_ text: (HighQualityTranscriptTurn) -> String?) -> String {
+            resultTurns.compactMap { turn in
+                text(turn).map { value in
+                    turn.speakerLabel.map { "\($0): \(value)" } ?? value
+                }
+            }.joined(separator: "\n")
+        }
+        let sourceURL = URL(fileURLWithPath: sourcePath)
+        let samples = try await AudioLoader.loadSamples(url: sourceURL)
+        XCTAssertEqual(samples.count, baseline.sampleCount)
+        var audioHasher = SHA256()
+        samples.withUnsafeBytes { audioHasher.update(bufferPointer: $0) }
+        let audioSHA256 = audioHasher.finalize().map { String(format: "%02x", $0) }.joined()
+
+        var savedEvidence = baseline
+        savedEvidence.speakerAttachment = baseline.speakerAttachment
+            ?? .init(semanticUnits: alignment.semanticUnits ?? [])
+        savedEvidence.sourceAudioSHA256 = audioSHA256
+        savedEvidence.resultTurns = resultTurns
+        savedEvidence.subtitleCues = subtitleCues
+        savedEvidence.japaneseTranscript = transcript(\.japanese)
+        savedEvidence.englishTranscript = transcript(\.english)
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.nonConformingFloatEncodingStrategy = .convertToString(
+            positiveInfinity: "Infinity",
+            negativeInfinity: "-Infinity",
+            nan: "NaN"
+        )
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        func digest(_ data: Data) -> String {
+            SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        }
+        let evidenceData = try encoder.encode(savedEvidence)
+        let eventDates = baseline.modelEvents.map(\.at)
+        var manifest = HighQualityJobManifest(
+            schemaVersion: HighQualityJobManifest.currentSchemaVersion,
+            jobID: jobID,
+            status: .completed,
+            source: baseline.source,
+            deliverables: HighQualityDeliverable.allCases,
+            selectedBackend: baseline.model.backend,
+            translationModel: HighQualityTranslator.translateGemma12B.model,
+            speakerLabels: true,
+            speakerConfiguration: baseline.speakerConfiguration ?? .standard,
+            speakerCountPolicy: baseline.speakerCountPolicy ?? .automatic,
+            dependencies: [
+                .sourceNormalization, .japaneseASR, .forcedAlignment,
+                .speakerDiarization, .llmTranslation, .export,
+            ],
+            model: baseline.model,
+            asrWorker: baseline.asrWorker,
+            startedAt: eventDates.min() ?? Date(timeIntervalSince1970: 0),
+            finishedAt: eventDates.max(),
+            stageDurations: baseline.stageDurations,
+            peakMemoryBytes: baseline.peakMemoryBytes,
+            modelEvents: baseline.modelEvents,
+            failures: baseline.failures,
+            generatedFiles: baseline.generatedFiles
+        )
+        manifest.rawEvidenceSHA256 = digest(evidenceData)
+        manifest.speakerReanalysisCount = 0
+        let outputRoot = URL(fileURLWithPath: outputPath, isDirectory: true)
+        let directory = outputRoot.appendingPathComponent(jobID.uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        try evidenceData.write(to: directory.appendingPathComponent("raw-asr.json"), options: .atomic)
+        try encoder.encode(manifest).write(
+            to: directory.appendingPathComponent("manifest.json"),
+            options: .atomic
+        )
+        let saved = try await HighQualityJob().relocateSource(
+            HighQualitySavedResult(directory: directory, manifest: manifest),
+            to: sourceURL
+        )
+        XCTAssertEqual(saved.sourceURL.standardizedFileURL, sourceURL.standardizedFileURL)
+        let beforeRerun = try HighQualityJob.reopen(saved)
+        XCTAssertEqual(beforeRerun.evidence.rawASR, baseline.rawASR)
+        XCTAssertEqual(beforeRerun.evidence.alignment, baseline.alignment)
+        XCTAssertEqual(beforeRerun.evidence.translation, baseline.translation)
+        let beforeHashes = (
+            asr: digest(Data((beforeRerun.evidence.rawASR ?? "").utf8)),
+            alignment: digest(try encoder.encode(beforeRerun.evidence.alignment)),
+            translation: digest(try encoder.encode(beforeRerun.evidence.translation))
+        )
+
+        let rerun = try await HighQualityJob().rerunSpeakers(
+            saved,
+            configuration: .standard
+        ) { progress in
+            print("[speaker-reanalysis] \(progress.stage.rawValue): \(progress.message)")
+        }
+
+        let rawASRUnchanged = rerun.evidence.rawASR == beforeRerun.evidence.rawASR
+        let alignmentUnchanged = rerun.evidence.alignment == beforeRerun.evidence.alignment
+        let translationUnchanged = rerun.evidence.translation == beforeRerun.evidence.translation
+        let afterHashes = (
+            asr: digest(Data((rerun.evidence.rawASR ?? "").utf8)),
+            alignment: digest(try encoder.encode(rerun.evidence.alignment)),
+            translation: digest(try encoder.encode(rerun.evidence.translation))
+        )
+        XCTAssertTrue(rawASRUnchanged)
+        XCTAssertTrue(alignmentUnchanged)
+        XCTAssertTrue(translationUnchanged)
+        XCTAssertEqual(beforeHashes.asr, afterHashes.asr)
+        XCTAssertEqual(beforeHashes.alignment, afterHashes.alignment)
+        XCTAssertEqual(beforeHashes.translation, afterHashes.translation)
+        XCTAssertEqual(
+            rerun.evidence.speakerAttachment?.semanticUnits.map(\.speakerLabel),
+            rerun.turns.map(\.speakerLabel)
+        )
+        XCTAssertEqual(rerun.manifest.asrWorker, beforeRerun.manifest.asrWorker)
+        XCTAssertEqual(rerun.evidence.alignment?.worker, beforeRerun.evidence.alignment?.worker)
+        XCTAssertEqual(rerun.evidence.translation?.worker, beforeRerun.evidence.translation?.worker)
+        XCTAssertEqual(rerun.manifest.speakerReanalysisCount, 1)
+        let evidence = try XCTUnwrap(rerun.evidence.speakerReanalyses?.last)
+        XCTAssertEqual(evidence.configuration, .standard)
+        XCTAssertFalse(evidence.diarization.rawSpans.isEmpty)
+        XCTAssertTrue(evidence.modelEvents.map(\.kind).contains(.unloadCompleted))
+        XCTAssertTrue(evidence.modelEvents.map(\.kind).contains(.memoryReleaseChecked))
+        XCTAssertTrue(try HighQualityJob.reopen(saved).evidence == rerun.evidence)
+        print("[speaker-reanalysis][runtime] seed=E31-saved-evidence rerun=SpeakerKit-only")
+        print(
+            "[speaker-reanalysis][upstream] "
+                + "asr=\(afterHashes.asr) alignment=\(afterHashes.alignment) "
+                + "translation=\(afterHashes.translation) unchanged="
+                + "\(rawASRUnchanged && alignmentUnchanged && translationUnchanged)"
+        )
+        print(
+            "[speaker-reanalysis][lifecycle] "
+                + evidence.modelEvents.map(\.kind.rawValue).joined(separator: ",")
+        )
+        print(
+            "[speaker-reanalysis][result] wall=\(evidence.wallTime)s "
+                + "peak=\(evidence.peakMemoryBytes) directory=\(rerun.directory.path)"
+        )
+    }
+
+    func testArchivedE31SpeakerReanalysisDeliverablesMatchEvidence() throws {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let archive = repository.appendingPathComponent(
+            "docs/japanese-live/experiments/evidence/E31-speaker-reanalysis-112",
+            isDirectory: true
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let manifest = try decoder.decode(
+            HighQualityJobManifest.self,
+            from: Data(contentsOf: archive.appendingPathComponent("manifest.json"))
+        )
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let directory = root.appendingPathComponent(manifest.jobID.uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        let deliverables = [
+            "japanese-transcript.txt", "english-translation-transcript.txt",
+            "english-subtitles.vtt", "english-subtitles.srt",
+        ]
+        let archived = try Dictionary(uniqueKeysWithValues: deliverables.map { path in
+            (path, try Data(contentsOf: archive.appendingPathComponent(path)))
+        })
+        for (path, data) in archived {
+            try data.write(to: directory.appendingPathComponent(path))
+        }
+        try Data(contentsOf: archive.appendingPathComponent("manifest.json"))
+            .write(to: directory.appendingPathComponent("manifest.json"))
+
+        let rawEvidence = directory.appendingPathComponent("raw-asr.json")
+        XCTAssertTrue(FileManager.default.createFile(atPath: rawEvidence.path, contents: nil))
+        let output = try FileHandle(forWritingTo: rawEvidence)
+        let gzip = Process()
+        gzip.executableURL = URL(fileURLWithPath: "/usr/bin/gzip")
+        gzip.arguments = ["-dc", archive.appendingPathComponent("raw-asr.json.gz").path]
+        gzip.standardOutput = output
+        try gzip.run()
+        gzip.waitUntilExit()
+        try output.close()
+        XCTAssertEqual(gzip.terminationStatus, 0)
+
+        let result = try HighQualityJob.reopen(.init(directory: directory, manifest: manifest))
+        for (path, data) in archived {
+            XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent(path)), data)
+        }
+        let cues = Dictionary(uniqueKeysWithValues: result.subtitleCues.map { ($0.id, $0) })
+        XCTAssertEqual(cues.count, result.turns.count)
+        for turn in result.turns {
+            let cue = try XCTUnwrap(cues[turn.id])
+            XCTAssertEqual(cue.text, turn.english)
+            XCTAssertEqual(cue.speakerLabel, turn.speakerLabel)
+        }
     }
 
     private static func frozenEvidence(at path: String) throws -> HighQualityRawEvidence {
