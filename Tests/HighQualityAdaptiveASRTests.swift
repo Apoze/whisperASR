@@ -39,7 +39,7 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
             activeFrameRatio: 0.8
         )
         let empty = HighQualityAdaptiveASR.assess(
-            qwen: .init(
+            exchange: .init(
                 rawTranscript: "",
                 chunks: [],
                 diagnostics: .init(emptyOutput: true)
@@ -53,7 +53,7 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
         )
 
         let protected = HighQualityAdaptiveASR.assess(
-            qwen: .init(
+            exchange: .init(
                 rawTranscript: "立川は42回成功しました",
                 chunks: [],
                 wordTimings: [.init(
@@ -73,7 +73,7 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
         )
 
         let repeated = HighQualityAdaptiveASR.assess(
-            qwen: .init(rawTranscript: String(repeating: "はい", count: 15), chunks: []),
+            exchange: .init(rawTranscript: String(repeating: "はい", count: 15), chunks: []),
             segment: segment,
             scopedTerms: []
         )
@@ -81,7 +81,7 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
         XCTAssertTrue(empty.isSuspect && protected.isSuspect && repeated.isSuspect)
 
         let silence = HighQualityAdaptiveASR.assess(
-            qwen: .init(rawTranscript: "", chunks: []),
+            exchange: .init(rawTranscript: "", chunks: []),
             segment: .init(
                 id: "segment-0002",
                 startSample: 0,
@@ -197,14 +197,14 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
             )]
         )
         XCTAssertTrue(HighQualityAdaptiveASR.vetoes(
-            qwen: qwen,
-            parakeet: .init(rawTranscript: "", chunks: []),
+            baseline: qwen,
+            candidate: .init(rawTranscript: "", chunks: []),
             segment: segment,
             scopedTerms: []
         ).contains(.newEmptySpeech))
         XCTAssertTrue(HighQualityAdaptiveASR.vetoes(
-            qwen: qwen,
-            parakeet: .init(
+            baseline: qwen,
+            candidate: .init(
                 rawTranscript: "こちらも正常な文章です",
                 chunks: [],
                 wordTimings: [.init(
@@ -219,8 +219,8 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
             scopedTerms: []
         ).contains(.lostCoverage))
         XCTAssertTrue(HighQualityAdaptiveASR.vetoes(
-            qwen: qwen,
-            parakeet: .init(
+            baseline: qwen,
+            candidate: .init(
                 rawTranscript: String(repeating: "はい", count: 15),
                 chunks: []
             ),
@@ -228,8 +228,8 @@ final class HighQualityAdaptiveASRTests: XCTestCase {
             scopedTerms: []
         ).contains(.degenerateRepetition))
         XCTAssertTrue(HighQualityAdaptiveASR.vetoes(
-            qwen: qwen,
-            parakeet: .init(rawTranscript: "正常です正常です", chunks: []),
+            baseline: qwen,
+            candidate: .init(rawTranscript: "正常です正常です", chunks: []),
             segment: segment,
             scopedTerms: []
         ).contains(.duplicatedText))

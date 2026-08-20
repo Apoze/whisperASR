@@ -316,11 +316,11 @@ enum HighQualityAdaptiveASR {
     }
 
     static func assess(
-        qwen: HighQualityASRExchange,
+        exchange: HighQualityASRExchange,
         segment: HighQualityAdaptiveASRSegment,
         scopedTerms: Set<String>
     ) -> HighQualityAdaptiveASRAssessment {
-        let text = normalized(qwen.rawTranscript)
+        let text = normalized(exchange.rawTranscript)
         let duration = Double(segment.endSample - segment.startSample) / Double(sampleRate)
         let characterRate = Double(text.count) / max(duration, 0.02)
         let repetition = repetitionRatio(text)
@@ -330,7 +330,7 @@ enum HighQualityAdaptiveASR {
             signals.append(.speechWithEmptyText)
             defect += 4
         }
-        if let coverage = timingCoverage(qwen), !text.isEmpty, coverage < duration * 0.5 {
+        if let coverage = timingCoverage(exchange), !text.isEmpty, coverage < duration * 0.5 {
             signals.append(.incompleteTimingCoverage)
             defect += 1 - coverage / max(duration, 0.02)
         }
@@ -342,7 +342,7 @@ enum HighQualityAdaptiveASR {
             signals.append(.abnormalTextAudioCompression)
             defect += characterRate < 1 ? 1 - characterRate : (characterRate - 12) / 6
         }
-        if qwen.rawTranscript.unicodeScalars.contains(where: CharacterSet.decimalDigits.contains) {
+        if exchange.rawTranscript.unicodeScalars.contains(where: CharacterSet.decimalDigits.contains) {
             signals.append(.questionableNumber)
             defect += 0.25
         }
@@ -364,7 +364,7 @@ enum HighQualityAdaptiveASR {
         calibration: HighQualityAdaptiveASRCalibration,
         qwenParakeetFallback: HighQualityAdaptiveASRFallbackReason?
     ) -> HighQualityAdaptiveASRWhisperKitLaunch {
-        guard assess(qwen: qwen, segment: segment, scopedTerms: scopedTerms).isSuspect else {
+        guard assess(exchange: qwen, segment: segment, scopedTerms: scopedTerms).isSuspect else {
             return .init(reason: .qwenNotSuspect, normalizedDisagreement: nil)
         }
         guard !normalized(parakeet.rawTranscript).isEmpty,
@@ -373,8 +373,8 @@ enum HighQualityAdaptiveASR {
             return .init(reason: .missingParakeetEvidence, normalizedDisagreement: nil)
         }
         guard vetoes(
-            qwen: qwen,
-            parakeet: parakeet,
+            baseline: qwen,
+            candidate: parakeet,
             segment: segment,
             scopedTerms: scopedTerms
         ).isEmpty else {
@@ -419,7 +419,7 @@ enum HighQualityAdaptiveASR {
         alternateError: HighQualityAdaptiveASRErrorEvidence? = nil,
         whisperKitError: HighQualityAdaptiveASRErrorEvidence? = nil
     ) -> HighQualityAdaptiveASRDecision {
-        let qwenAssessment = assess(qwen: qwen, segment: segment, scopedTerms: scopedTerms)
+        let qwenAssessment = assess(exchange: qwen, segment: segment, scopedTerms: scopedTerms)
         guard let parakeet else {
             let launch = HighQualityAdaptiveASRWhisperKitLaunch(
                 reason: qwenAssessment.isSuspect
@@ -441,7 +441,7 @@ enum HighQualityAdaptiveASR {
             )
         }
         let parakeetAssessment = assess(
-            qwen: parakeet,
+            exchange: parakeet,
             segment: segment,
             scopedTerms: scopedTerms
         )
@@ -455,8 +455,8 @@ enum HighQualityAdaptiveASR {
             calibration.parakeet.calibratedScore(for: $0)
         }
         let vetoes = vetoes(
-            qwen: qwen,
-            parakeet: parakeet,
+            baseline: qwen,
+            candidate: parakeet,
             segment: segment,
             scopedTerms: scopedTerms
         )
@@ -486,7 +486,7 @@ enum HighQualityAdaptiveASR {
         )
         if let whisperKit {
             let assessment = assess(
-                qwen: whisperKit,
+                exchange: whisperKit,
                 segment: segment,
                 scopedTerms: scopedTerms
             )
@@ -497,8 +497,8 @@ enum HighQualityAdaptiveASR {
                 calibration.whisperKit?.calibratedScore(for: $0)
             }
             let whisperKitVetoes = Self.vetoes(
-                qwen: qwen,
-                parakeet: whisperKit,
+                baseline: qwen,
+                candidate: whisperKit,
                 segment: segment,
                 scopedTerms: scopedTerms
             )
@@ -683,13 +683,13 @@ enum HighQualityAdaptiveASR {
     }
 
     static func vetoes(
-        qwen: HighQualityASRExchange,
-        parakeet: HighQualityASRExchange,
+        baseline: HighQualityASRExchange,
+        candidate: HighQualityASRExchange,
         segment: HighQualityAdaptiveASRSegment,
         scopedTerms: Set<String>
     ) -> [HighQualityAdaptiveASRVeto] {
-        let qwenText = normalized(qwen.rawTranscript)
-        let parakeetText = normalized(parakeet.rawTranscript)
+        let qwenText = normalized(baseline.rawTranscript)
+        let parakeetText = normalized(candidate.rawTranscript)
         var vetoes = Set<HighQualityAdaptiveASRVeto>()
         if !qwenText.isEmpty, parakeetText.isEmpty, segment.activeFrameRatio >= 0.2 {
             vetoes.insert(.newEmptySpeech)
@@ -698,8 +698,8 @@ enum HighQualityAdaptiveASR {
            repetitionRatio(qwenText) <= 0.25,
            parakeetText.count * 2 < qwenText.count {
             vetoes.insert(.lostCoverage)
-        } else if let qwenCoverage = timingCoverage(qwen),
-                  let parakeetCoverage = timingCoverage(parakeet),
+        } else if let qwenCoverage = timingCoverage(baseline),
+                  let parakeetCoverage = timingCoverage(candidate),
                   parakeetCoverage * 2 < qwenCoverage {
             vetoes.insert(.lostCoverage)
         }
@@ -707,9 +707,9 @@ enum HighQualityAdaptiveASR {
            repetitionRatio(qwenText) <= 0.25 {
             vetoes.insert(.degenerateRepetition)
         }
-        if isDuplicated(parakeet) { vetoes.insert(.duplicatedText) }
-        if !numbers(in: qwen.rawTranscript).isSubset(
-            of: numbers(in: parakeet.rawTranscript)
+        if isDuplicated(candidate) { vetoes.insert(.duplicatedText) }
+        if !numbers(in: baseline.rawTranscript).isSubset(
+            of: numbers(in: candidate.rawTranscript)
         ) {
             vetoes.insert(.lostNumber)
         }

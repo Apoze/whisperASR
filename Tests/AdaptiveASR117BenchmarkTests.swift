@@ -218,7 +218,7 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
                     segment: segment,
                     qwen: exchange,
                     qwenAssessment: HighQualityAdaptiveASR.assess(
-                        qwen: exchange,
+                        exchange: exchange,
                         segment: segment,
                         scopedTerms: []
                     ),
@@ -260,13 +260,13 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
                         windows[index].parakeet = exchange
                         windows[index].parakeetDuration = Date().timeIntervalSince(started)
                         windows[index].parakeetAssessment = HighQualityAdaptiveASR.assess(
-                            qwen: exchange,
+                            exchange: exchange,
                             segment: windows[index].segment,
                             scopedTerms: []
                         )
                         windows[index].vetoes = HighQualityAdaptiveASR.vetoes(
-                            qwen: windows[index].qwen,
-                            parakeet: exchange,
+                            baseline: windows[index].qwen,
+                            candidate: exchange,
                             segment: windows[index].segment,
                             scopedTerms: []
                         )
@@ -425,13 +425,13 @@ final class AdaptiveASR117BenchmarkTests: XCTestCase {
                     windows[index].whisperKit = exchange
                     windows[index].whisperKitDuration = Date().timeIntervalSince(started)
                     windows[index].whisperKitAssessment = HighQualityAdaptiveASR.assess(
-                        qwen: exchange,
+                        exchange: exchange,
                         segment: segment,
                         scopedTerms: []
                     )
                     windows[index].whisperKitVetoes = HighQualityAdaptiveASR.vetoes(
-                        qwen: windows[index].qwen,
-                        parakeet: exchange,
+                        baseline: windows[index].qwen,
+                        candidate: exchange,
                         segment: segment,
                         scopedTerms: []
                     )

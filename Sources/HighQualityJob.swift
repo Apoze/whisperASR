@@ -3854,7 +3854,7 @@ struct HighQualityJob: Sendable {
                 var workers = manifest.asrWorker.map { [$0] } ?? []
                 let suspects = adaptiveQwenResults.filter {
                     HighQualityAdaptiveASR.assess(
-                        qwen: $0.exchange,
+                        exchange: $0.exchange,
                         segment: $0.segment,
                         scopedTerms: request.adaptiveScopedTerms
                     ).isSuspect
