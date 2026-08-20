@@ -164,7 +164,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
         directory="$2"
         printf '{"ready":true}' > "$directory/ready.json"
         while [ ! -f "$directory/request.json" ]; do sleep 0.01; done
-        printf '{"diarization":{"spans":[{"speakerID":3,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":34,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"automatic"},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"quantized","segmenterVariant":"W8A16","embedderVariant":"W8A16","speakerCount":"automatic","clusterDistanceThreshold":"library-default","overlap":"non-exclusive","attribution":"principal"}}}' > "$directory/response.tmp"
+        printf '{"diarization":{"spans":[{"speakerID":3,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":34,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"automatic"},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"quantized","segmenterVariant":"W8A16","embedderVariant":"W8A16","speakerCount":"automatic","clusterDistanceThreshold":"library-default","overlap":"non-exclusive","attribution":"principal"},"speakerCentroids":{"3":[0.25,0.75]}}}' > "$directory/response.tmp"
         mv "$directory/response.tmp" "$directory/response.json"
         while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
         """)
@@ -251,6 +251,7 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
             configuration: .standard
         )
         XCTAssertEqual(diarization.spans, [.init(speakerID: 3, start: 0, end: 1)])
+        XCTAssertEqual(diarization.speakerCentroids, [3: [0.25, 0.75]])
         XCTAssertEqual(diarization.speakerCountPolicy, .automatic)
         XCTAssertEqual(diarization.configuration?["precision"], "quantized")
         XCTAssertEqual(diarization.configuration?["overlap"], "non-exclusive")
@@ -272,6 +273,84 @@ final class HighQualityAlignmentSpeakerWorkerTests: XCTestCase {
         XCTAssertEqual(diarizationEvidence?.exitStatus, 0)
         XCTAssertTrue(alignmentEvidence?.command.contains("--high-quality-alignment-worker") == true)
         XCTAssertTrue(diarizationEvidence?.command.contains("--high-quality-diarization-worker") == true)
+    }
+
+    func testNonFiniteCentroidCrossesWorkerBoundaryForNonBlockingValidation() async throws {
+        let fixture = try AuxiliaryWorkerFixture(script: """
+        #!/bin/sh
+        directory="$2"
+        printf '{"ready":true}' > "$directory/ready.json"
+        while [ ! -f "$directory/request.json" ]; do sleep 0.01; done
+        printf '{"diarization":{"spans":[{"speakerID":3,"start":0,"end":1}],"modelID":"\(HighQualitySpeakerKitRuntime.modelID)","revision":"\(HighQualitySpeakerKitRuntime.revision)","peakMemoryBytes":34,"useExclusiveReconciliation":false,"speakerCountPolicy":{"mode":"automatic"},"configuration":{"runtimeRevision":"\(HighQualitySpeakerKitRuntime.runtimeRevision)","precision":"quantized","segmenterVariant":"W8A16","embedderVariant":"W8A16","speakerCount":"automatic","clusterDistanceThreshold":"library-default","overlap":"non-exclusive","attribution":"principal"},"speakerCentroids":{"3":["NaN",0.75]}}}' > "$directory/response.json"
+        while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
+        """)
+        let worker = HighQualityAlignmentSpeakerWorkerClient(
+            stage: .diarization,
+            executableURL: fixture.executable,
+            workingDirectory: fixture.directory,
+            pressure: MacMemoryPressureMonitor(native: false),
+            pollInterval: .milliseconds(2),
+            shutdownTimeout: .milliseconds(50)
+        )
+        try await worker.prepare(progress: { _, _ in })
+        let exchange = try await worker.diarize(
+            samples: [0],
+            useExclusiveReconciliation: false,
+            configuration: .standard
+        )
+        await worker.unload()
+
+        let evidence = try HighQualityJob.diarizationEvidence(
+            exchange,
+            items: [.init(cueID: "cue-0001", text: "一。", start: 0, end: 1)],
+            duration: 1,
+            sourceJobID: UUID()
+        )
+        XCTAssertEqual(evidence.rawSpans.map(\.speakerID), [3])
+        XCTAssertEqual(evidence.mappings.map(\.speakerLabel), ["SPEAKER_00"])
+        XCTAssertEqual(evidence.speakerCentroids, [])
+        XCTAssertEqual(evidence.validationDiagnostics, [
+            "Discarded SpeakerKit centroid SPEAKER_00: vector contains non-finite values.",
+        ])
+    }
+
+    func testNonFiniteAlignmentDoesNotCrossWorkerBoundary() async throws {
+        let fixture = try AuxiliaryWorkerFixture(script: """
+        #!/bin/sh
+        directory="$2"
+        printf '{"ready":true}' > "$directory/ready.json"
+        while [ ! -f "$directory/request.json" ]; do sleep 0.01; done
+        printf '{"alignment":{"chunks":[{"index":0,"sourceStart":0,"sourceEnd":1,"cues":[{"id":"cue-0001","text":"一。","start":"NaN","end":0.9}],"rawItems":[{"cueID":"cue-0001","text":"一。","start":0.1,"end":0.9}]}],"modelID":"\(HighQualityForcedAlignerRuntime.modelID)","revision":"\(HighQualityForcedAlignerRuntime.revision)","peakMemoryBytes":12,"configuration":{"language":"Japanese","sampleRate":"16000"}}}' > "$directory/response.json"
+        while [ ! -f "$directory/shutdown" ]; do sleep 0.01; done
+        """)
+        let worker = HighQualityAlignmentSpeakerWorkerClient(
+            stage: .alignment,
+            executableURL: fixture.executable,
+            workingDirectory: fixture.directory,
+            pressure: MacMemoryPressureMonitor(native: false),
+            pollInterval: .milliseconds(2),
+            shutdownTimeout: .milliseconds(50)
+        )
+        try await worker.prepare(progress: { _, _ in })
+
+        do {
+            _ = try await worker.align(samples: [0], turns: [.init(
+                id: "cue-0001",
+                japanese: "一。",
+                precedingJapanese: [],
+                followingJapanese: [],
+                speakerLabel: nil,
+                sourceStart: 0,
+                sourceEnd: 1
+            )])
+            XCTFail("Alignment must reject non-finite numeric strings.")
+        } catch let error as HighQualityAlignmentSpeakerWorkerError {
+            guard case .protocolFailure(let stage, _) = error else {
+                return XCTFail("Expected protocolFailure, got \(error).")
+            }
+            XCTAssertEqual(stage, "Forced alignment")
+        }
+        await worker.unload()
     }
 
     func testMalformedWorkerEvidenceFailsClosed() async throws {

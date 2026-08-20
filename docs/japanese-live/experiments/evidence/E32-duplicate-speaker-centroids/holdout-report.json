@@ -1,0 +1,718 @@
+{
+  "benchmarkSlot" : "114-HOLDOUT",
+  "calibrationRole" : "frozen-holdout-evaluation",
+  "centroidCount" : 12,
+  "closestFalseCandidate" : {
+    "cosineDistance" : 0.27354664,
+    "firstReferenceSpeaker" : "HIZUKI_YUI",
+    "firstSpeakerID" : "SPEAKER_09",
+    "sameReferenceSpeaker" : false,
+    "secondReferenceSpeaker" : "AIZAWA_EMA",
+    "secondSpeakerID" : "SPEAKER_10",
+    "suggested" : false
+  },
+  "closestUsefulCandidate" : {
+    "cosineDistance" : 0.13510454,
+    "firstReferenceSpeaker" : "HIZUKI_YUI",
+    "firstSpeakerID" : "SPEAKER_04",
+    "sameReferenceSpeaker" : true,
+    "secondReferenceSpeaker" : "HIZUKI_YUI",
+    "secondSpeakerID" : "SPEAKER_06",
+    "suggested" : false
+  },
+  "comparisons" : [
+    {
+      "cosineDistance" : 0.13510454,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.15121257,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.15127248,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_08",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.17515594,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_02",
+      "suggested" : true
+    },
+    {
+      "cosineDistance" : 0.1897484,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.20121121,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.22428238,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.24897552,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.27354664,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_09",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.28669894,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_09",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.28817415,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_08",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.31907094,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.3212852,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.34139025,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.42504984,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.4269616,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.43084913,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.43445325,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.43840146,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.484505,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.49066013,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_07",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5083047,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.51863205,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5451158,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5614036,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5646006,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.568959,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_08",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.57270825,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_06",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5731617,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_10",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5883403,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.5964809,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6385901,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6859285,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.6959239,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.71174526,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7134532,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7449931,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7495942,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7517991,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7520787,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.75284255,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7529725,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.760643,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.766878,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7715323,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.77867734,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_01",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.77986383,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.7859614,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.78719914,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8080773,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.80810654,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_10",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.82372856,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.83349395,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8427029,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_02",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8489102,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_09",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.85583204,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_03",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.87958306,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_01",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8817005,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_07",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.8822654,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_02",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.887592,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : true,
+      "secondReferenceSpeaker" : "AIZAWA_EMA",
+      "secondSpeakerID" : "SPEAKER_08",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.89388216,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_03",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.90174437,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9330507,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_11",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9544261,
+      "firstReferenceSpeaker" : "AIZAWA_EMA",
+      "firstSpeakerID" : "SPEAKER_00",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_04",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.9623556,
+      "firstReferenceSpeaker" : "SHIRAYUKI_REID",
+      "firstSpeakerID" : "SPEAKER_05",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "HIZUKI_YUI",
+      "secondSpeakerID" : "SPEAKER_06",
+      "suggested" : false
+    },
+    {
+      "cosineDistance" : 0.97123367,
+      "firstReferenceSpeaker" : "HIZUKI_YUI",
+      "firstSpeakerID" : "SPEAKER_04",
+      "sameReferenceSpeaker" : false,
+      "secondReferenceSpeaker" : "SHIRAYUKI_REID",
+      "secondSpeakerID" : "SPEAKER_05",
+      "suggested" : false
+    }
+  ],
+  "corpusID" : "md62mmdz0m",
+  "declaredPeakMemoryBytes" : 4294967296,
+  "elapsedSeconds" : 10.1547189950943,
+  "embeddingVariant" : "W8A16",
+  "falseSuggestionCount" : 0,
+  "holdoutOpened" : true,
+  "mappings" : [
+    {
+      "referenceOverlapSeconds" : 10.623323364257857,
+      "referenceShare" : 0.45241508554809706,
+      "referenceSpeaker" : "AIZAWA_EMA",
+      "speakerID" : "SPEAKER_00"
+    },
+    {
+      "referenceOverlapSeconds" : 28.97711418151856,
+      "referenceShare" : 0.7191091079585328,
+      "referenceSpeaker" : "SHIRAYUKI_REID",
+      "speakerID" : "SPEAKER_01"
+    },
+    {
+      "referenceOverlapSeconds" : 88.71062099456799,
+      "referenceShare" : 0.74434971632471,
+      "referenceSpeaker" : "SHIRAYUKI_REID",
+      "speakerID" : "SPEAKER_02"
+    },
+    {
+      "referenceOverlapSeconds" : 43.3445104980467,
+      "referenceShare" : 0.6687777494567271,
+      "referenceSpeaker" : "HIZUKI_YUI",
+      "speakerID" : "SPEAKER_03"
+    },
+    {
+      "referenceOverlapSeconds" : 23.096895751953213,
+      "referenceShare" : 0.7926545579294892,
+      "referenceSpeaker" : "HIZUKI_YUI",
+      "speakerID" : "SPEAKER_04"
+    },
+    {
+      "referenceOverlapSeconds" : 6.511970214843814,
+      "referenceShare" : 0.8429258053577622,
+      "referenceSpeaker" : "SHIRAYUKI_REID",
+      "speakerID" : "SPEAKER_05"
+    },
+    {
+      "referenceOverlapSeconds" : 61.171368713378655,
+      "referenceShare" : 0.7718638384615257,
+      "referenceSpeaker" : "HIZUKI_YUI",
+      "speakerID" : "SPEAKER_06"
+    },
+    {
+      "referenceOverlapSeconds" : 20.832238769531244,
+      "referenceShare" : 0.7987952286858334,
+      "referenceSpeaker" : "AIZAWA_EMA",
+      "speakerID" : "SPEAKER_07"
+    },
+    {
+      "referenceOverlapSeconds" : 69.24807327270507,
+      "referenceShare" : 0.7614669177789719,
+      "referenceSpeaker" : "AIZAWA_EMA",
+      "speakerID" : "SPEAKER_08"
+    },
+    {
+      "referenceOverlapSeconds" : 18.078688964843757,
+      "referenceShare" : 0.39452292325424276,
+      "referenceSpeaker" : "HIZUKI_YUI",
+      "speakerID" : "SPEAKER_09"
+    },
+    {
+      "referenceOverlapSeconds" : 27.242805175781257,
+      "referenceShare" : 0.6159094711320783,
+      "referenceSpeaker" : "AIZAWA_EMA",
+      "speakerID" : "SPEAKER_10"
+    },
+    {
+      "referenceOverlapSeconds" : 42.36081375598906,
+      "referenceShare" : 0.7246213020025821,
+      "referenceSpeaker" : "HIZUKI_YUI",
+      "speakerID" : "SPEAKER_11"
+    }
+  ],
+  "maximumCosineDistance" : 0.3,
+  "modelID" : "argmaxinc\/speakerkit-coreml",
+  "modelRevision" : "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+  "observedPeakMemoryBytes" : 802244144,
+  "purpose" : "holdout-dialogue",
+  "runtimeRevision" : "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+  "sourceJobID" : "00000114-0000-0000-0000-000000000003",
+  "sourceSHA256" : "bde49d4cc67020d01ae042f2945baa61364cc34959e2211a964943e5c2064830",
+  "speakerCountPolicy" : {
+    "expectedCount" : 12,
+    "mode" : "expected"
+  },
+  "suggestionCount" : 1,
+  "ticket" : 114,
+  "uncertaintyMargin" : 0.1,
+  "usefulSuggestionCount" : 1,
+  "vectorDimensions" : [
+    256
+  ]
+}

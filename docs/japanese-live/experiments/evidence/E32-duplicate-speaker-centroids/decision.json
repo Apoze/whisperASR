@@ -1,0 +1,243 @@
+{
+  "ticket": 114,
+  "corpusID": "easy-japanese-1",
+  "holdoutOpened": true,
+  "provenance": {
+    "implementationCommitSHA": "af238727f0d526be360a155d5fb5eefdd6fbebf5",
+    "manifest": {
+      "path": "docs/japanese-live/corpora/easy-japanese-1/manifest.json",
+      "sha256": "362c207395071b463fecd0f6fdba6ad13c9c27a857cb2df869261897dc18e21c"
+    },
+    "source": {
+      "pathFromCorpusRoot": "easy-japanese-1/audio-16k-mono.wav",
+      "sha256": "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c"
+    },
+    "capturedRawArtifact": {
+      "locator": "urn:sha256:1e7c28c830cffaf2cbb6b5f96ce62bdce05d963cd2e1d8fb12da0dc51e8fc203",
+      "localPath": "/tmp/whisperasr-114-dev-report.json",
+      "sha256": "1e7c28c830cffaf2cbb6b5f96ce62bdce05d963cd2e1d8fb12da0dc51e8fc203"
+    },
+    "sanitizedVersionedArtifact": {
+      "containsCentroidVectors": false,
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/development-report.json",
+      "sha256": "6ff365618798421fae4abf5f80007ea31d84021beeb1cf7d7ce5d865e0c2899d",
+      "transformation": "The report already omits centroid vectors; the versioned copy adds one trailing LF."
+    }
+  },
+  "reproductionProtocol": {
+    "scope": "One quantized SpeakerKit DEV run; no ASR, translation or holdout.",
+    "maximumWallClockSeconds": 60,
+    "maximumResidentBytes": 4294967296,
+    "preconditions": [
+      "Checkout implementationCommitSHA.",
+      "Set WHISPERASR_CORPUS_ROOT and SPEAKERKIT_MODEL_CACHE to local read-only roots.",
+      "Verify the manifest and source SHA-256 values above before loading SpeakerKit.",
+      "Obtain the explicit BENCHMARK_SLOT_GRANTED=114 authorization."
+    ],
+    "command": "env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-swiftpm-cache BENCHMARK_SLOT_GRANTED=114 WHISPERASR_RUN_DUPLICATE_SPEAKER_DEV=1 WHISPERASR_DUPLICATE_SPEAKER_MANIFEST=$PWD/docs/japanese-live/corpora/easy-japanese-1/manifest.json WHISPERASR_DUPLICATE_SPEAKER_SOURCE=$WHISPERASR_CORPUS_ROOT/easy-japanese-1/audio-16k-mono.wav WHISPERASR_DUPLICATE_SPEAKER_REPORT=/tmp/whisperasr-114-dev-report.json WHISPERASR_DUPLICATE_SPEAKER_MODEL_CACHE=$SPEAKERKIT_MODEL_CACHE WHISPERASR_DUPLICATE_SPEAKER_JOB_ID=00000114-0000-0000-0000-000000000001 /usr/bin/xcrun swift test --filter HighQualityAcceptanceTests/testDuplicateSpeakerDevelopmentCalibrationWhenOptedIn",
+    "verification": [
+      "Confirm exactly one selected test ran and passed.",
+      "Confirm SpeakerKit unloaded and no WhisperASRPackageTests process remains.",
+      "Verify the raw report against capturedRawArtifact.sha256.",
+      "Confirm holdoutOpened is false and the report contains no centroid vector field."
+    ]
+  },
+  "thresholdsFrozen": {
+    "version": 2,
+    "contractPath": "threshold-contract-v2.json",
+    "contractSHA256": "e197099d939e388b32ea179bae0c609415e4831e47891ddb0c776709365265ed",
+    "maximumCosineDistance": 0.3,
+    "uncertaintyMargin": 0.1
+  },
+  "observations": {
+    "centroidCount": 6,
+    "suggestionCount": 0,
+    "usefulSuggestionCount": 0,
+    "falseSuggestionCount": 0,
+    "closestDifferentReferencePair": {
+      "firstSpeakerID": "SPEAKER_02",
+      "firstReferenceSpeaker": "P04",
+      "secondSpeakerID": "SPEAKER_03",
+      "secondReferenceSpeaker": "P09",
+      "cosineDistance": 0.5882647
+    },
+    "closestSameReferencePair": null,
+    "elapsedSeconds": 21.283066987991333,
+    "observedPeakMemoryBytes": 517539184
+  },
+  "calibration": {
+    "implementationCommitSHA": "127da3e3f127d8aafb0a1417c74f37281027b05d",
+    "benchmarkSlot": "114-CALIBRATION",
+    "purpose": "over-clustering-pair-generator",
+    "scope": "One quantized SpeakerKit W8A16 DEV run with Expected=12; no ASR, translation or holdout.",
+    "model": {
+      "modelID": "argmaxinc/speakerkit-coreml",
+      "modelRevision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+      "runtimeRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+      "embeddingVariant": "W8A16",
+      "vectorDimension": 256
+    },
+    "inputs": {
+      "manifestPath": "docs/japanese-live/corpora/easy-japanese-1/manifest.json",
+      "manifestSHA256": "362c207395071b463fecd0f6fdba6ad13c9c27a857cb2df869261897dc18e21c",
+      "sourcePathFromCorpusRoot": "easy-japanese-1/audio-16k-mono.wav",
+      "sourceSHA256": "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c"
+    },
+    "artifacts": {
+      "capturedRawReport": {
+        "locator": "urn:sha256:4ff7cd397621ef5ff2e4c526aae2f32f8e049700a3ac6bf7e1fb5830809b8c30",
+        "localPath": "/tmp/whisperasr-114-calibration-report.json",
+        "sha256": "4ff7cd397621ef5ff2e4c526aae2f32f8e049700a3ac6bf7e1fb5830809b8c30"
+      },
+      "sanitizedVersionedReport": {
+        "containsCentroidVectors": false,
+        "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/calibration-report.json",
+        "sha256": "3637bb04f8d6186bc6b0f14676e5aa3a8d64deafee94fd4ecc348ff35ba2469a",
+        "transformation": "The report already omits centroid vectors; the versioned copy adds one trailing LF."
+      },
+      "sanitizedLog": {
+        "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/calibration.log",
+        "sha256": "5b6a13df70c82dafb3a6311c72555fa4aab65f9d1e7f257811a5270709aaee7f"
+      }
+    },
+    "thresholdContractSHA256": "bfc99c6151256465c102015c1a4bb200bc0cc19f9f601325b0b46eacd68c57ff",
+    "metrics": {
+      "elapsedSeconds": 1.792944073677063,
+      "testSeconds": 2.056,
+      "peakPhysicalFootprintBytes": 578602352,
+      "declaredPeakMemoryBytes": 4294967296,
+      "centroidCount": 12,
+      "suggestionCount": 0,
+      "usefulSuggestionCount": 0,
+      "falseSuggestionCount": 0,
+      "underFrozenThresholdPairCount": 0
+    },
+    "concreteExamples": {
+      "closestSameReferencePair": {
+        "firstSpeakerID": "SPEAKER_00",
+        "secondSpeakerID": "SPEAKER_07",
+        "referenceSpeaker": "P10",
+        "firstReferenceShare": 0.8108966891318315,
+        "secondReferenceShare": 1.0,
+        "cosineDistance": 0.25772017,
+        "suggested": false
+      },
+      "closestDifferentReferencePair": {
+        "firstSpeakerID": "SPEAKER_04",
+        "firstReferenceSpeaker": "INT",
+        "firstReferenceShare": 0.6039746287074377,
+        "secondSpeakerID": "SPEAKER_11",
+        "secondReferenceSpeaker": "P03",
+        "secondReferenceShare": 0.5828693311361359,
+        "cosineDistance": 0.44497204,
+        "suggested": false
+      }
+    },
+    "lifecycle": {
+      "runtimeUnloadAwaited": true,
+      "postRunProcessFound": false,
+      "externalPeakRSSAvailable": false,
+      "memoryEvidence": "task_vm_info.phys_footprint sampled every 100 ms; the test ended before the first matching external ps sample."
+    },
+    "result": "PARTIAL/BLOCKED_EVIDENCE"
+  },
+  "thresholdRecalibration": {
+    "performedWithoutModelRun": true,
+    "sourceReport": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/calibration-report.json",
+      "sha256": "3637bb04f8d6186bc6b0f14676e5aa3a8d64deafee94fd4ecc348ff35ba2469a"
+    },
+    "report": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/threshold-calibration-v2.json",
+      "sha256": "8b01c5c73141b38cd3e066fa33334ec36b1b860cf2c4d3ce6d66247b257fc24e"
+    },
+    "result": {
+      "suggestionCount": 1,
+      "usefulSuggestionCount": 1,
+      "falseSuggestionCount": 0,
+      "abstainedPairCount": 65,
+      "precision": 1.0
+    },
+    "usefulPair": {
+      "firstSpeakerID": "SPEAKER_00",
+      "secondSpeakerID": "SPEAKER_07",
+      "referenceSpeaker": "P10",
+      "cosineDistance": 0.25772017,
+      "firstUncertaintyGap": 0.48182279,
+      "secondUncertaintyGap": 0.52656873
+    },
+    "closestDifferentReferencePair": {
+      "firstSpeakerID": "SPEAKER_04",
+      "firstReferenceSpeaker": "INT",
+      "secondSpeakerID": "SPEAKER_11",
+      "secondReferenceSpeaker": "P03",
+      "cosineDistance": 0.44497204
+    },
+    "gates": {
+      "atLeastOneUsefulSuggestion": true,
+      "zeroFalseSuggestions": true,
+      "allOtherPairsAbstained": true,
+      "thresholdsFrozenBeforeHoldout": true
+    }
+  },
+  "holdout": {
+    "retunedAfterInspection": false,
+    "benchmarkSlot": "114-HOLDOUT",
+    "plan": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/holdout-plan.json",
+      "sha256": "bbef51e14429eb90aca7717bf5603ffc8279fa47ca0b6479a0f9a3ee6444f17b"
+    },
+    "result": {
+      "path": "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids/holdout-result.json",
+      "sha256": "a8df6aef038a8fb8a741f8bf434934dfd609a7bb4147d7df645aa354c50533bc"
+    },
+    "configuration": {
+      "corpusID": "md62mmdz0m",
+      "embeddingVariant": "W8A16",
+      "speakerCountPolicy": "Expected=12",
+      "maximumCosineDistance": 0.3,
+      "uncertaintyMargin": 0.1,
+      "asr": false,
+      "translation": false
+    },
+    "metrics": {
+      "modelElapsedSeconds": 10.1547189950943,
+      "commandWallClockSeconds": 23.14,
+      "observedPeakMemoryBytes": 802244144,
+      "externalMaximumResidentBytes": 914128896,
+      "centroidCount": 12,
+      "suggestionCount": 1,
+      "usefulSuggestionCount": 1,
+      "falseSuggestionCount": 0,
+      "abstainedPairCount": 65,
+      "precision": 1.0
+    },
+    "usefulSuggestion": {
+      "firstSpeakerID": "SPEAKER_01",
+      "secondSpeakerID": "SPEAKER_02",
+      "referenceSpeaker": "SHIRAYUKI_REID",
+      "cosineDistance": 0.17515594,
+      "firstUncertaintyGap": 0.38624766,
+      "secondUncertaintyGap": 0.42132496
+    },
+    "closestUnderThresholdFalsePair": {
+      "firstSpeakerID": "SPEAKER_09",
+      "firstReferenceSpeaker": "HIZUKI_YUI",
+      "secondSpeakerID": "SPEAKER_10",
+      "secondReferenceSpeaker": "AIZAWA_EMA",
+      "cosineDistance": 0.27354664,
+      "suggested": false,
+      "reason": "ambiguous-and-not-mutual-nearest"
+    },
+    "lifecycle": {
+      "runtimeUnloadAwaited": true,
+      "postRunProcessFound": false,
+      "boundsExceeded": false
+    },
+    "gatesPassed": true
+  },
+  "evidenceStatus": "COMPLETE/BETA_EXPOSED",
+  "decision": "EXPOSE_ADVISORY_BETA_DESCRIPTION",
+  "reason": "The frozen holdout produced exactly one useful suggestion and no false suggestion. Its endpoint uncertainty gaps were 0.386 and 0.421. The closest under-threshold different-reference pair at 0.274 abstained because it was ambiguous and not mutual-nearest. All evidence, memory and lifecycle gates passed without retuning.",
+  "scope": "Expose a concise Bêta description and within-job advisory suggestions only when retained compatible centroids exist. Suggestions remain uncertain acoustic similarity, never establish identity, and never rename or merge automatically. No recall, cross-video matching or Standard-promotion claim is made."
+}

@@ -195,7 +195,8 @@ actor HighQualityAlignmentSpeakerWorkerClient {
         )
         do {
             let response: HighQualityAlignmentSpeakerWorkerResponse = try await worker.waitForJSON(
-                at: worker.workingDirectory.appendingPathComponent("response.json")
+                at: worker.workingDirectory.appendingPathComponent("response.json"),
+                allowNonConformingFloats: stage == .diarization
             )
             try await validate(response)
             return response
@@ -394,13 +395,17 @@ enum HighQualityAlignmentSpeakerWorkerCommand {
                 clusterDistanceThreshold: configuration.sensitiveDetection
                     ? HighQualitySpeakerConfiguration.sensitiveClusteringThreshold : nil
             )
-            try write(.init(
-                ready: nil,
-                alignment: nil,
-                diarization: exchange,
-                errorMessage: nil,
-                criticalMemoryPressure: nil
-            ), to: directory.appendingPathComponent("response.json"))
+            try write(
+                .init(
+                    ready: nil,
+                    alignment: nil,
+                    diarization: exchange,
+                    errorMessage: nil,
+                    criticalMemoryPressure: nil
+                ),
+                to: directory.appendingPathComponent("response.json"),
+                allowNonConformingFloats: true
+            )
             try await waitForShutdown(in: directory)
             await runtime.unload()
         } catch {
@@ -460,8 +465,17 @@ enum HighQualityAlignmentSpeakerWorkerCommand {
 
     private static func write(
         _ response: HighQualityAlignmentSpeakerWorkerResponse,
-        to url: URL
+        to url: URL,
+        allowNonConformingFloats: Bool = false
     ) throws {
-        try JSONEncoder().encode(response).write(to: url, options: .atomic)
+        let encoder = JSONEncoder()
+        if allowNonConformingFloats {
+            encoder.nonConformingFloatEncodingStrategy = .convertToString(
+                positiveInfinity: "Infinity",
+                negativeInfinity: "-Infinity",
+                nan: "NaN"
+            )
+        }
+        try encoder.encode(response).write(to: url, options: .atomic)
     }
 }

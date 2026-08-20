@@ -956,6 +956,29 @@ struct HighQualityJobView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("high-quality-previous-speaker-edits-incompatible")
         }
+        if result.hasDuplicateSpeakerBetaEvidence {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Similar Voices (Bêta)").font(.headline)
+                Text(HighQualityDuplicateSpeakerSuggestion.betaDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if result.duplicateSpeakerSuggestions.isEmpty {
+                    Text("No reliable suggestion; weak or ambiguous matches remain Unknown.")
+                } else {
+                    ForEach(
+                        Array(result.duplicateSpeakerSuggestions.enumerated()),
+                        id: \.offset
+                    ) { _, suggestion in
+                        Text(
+                            "\(suggestion.firstSpeakerLabel) and "
+                                + "\(suggestion.secondSpeakerLabel) may be duplicate labels."
+                        )
+                    }
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("duplicate-speaker-beta")
+        }
     }
 
     private func applySpeakerEdit(

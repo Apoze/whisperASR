@@ -1,0 +1,60 @@
+{
+  "ticket": 114,
+  "schemaVersion": 1,
+  "frozenAtUTC": "2026-08-15T14:50:53Z",
+  "holdoutOpened": false,
+  "selection": {
+    "corpusID": "md62mmdz0m",
+    "role": "repository-standard-untouched-final-holdout",
+    "rule": "Use the repository's predeclared channel-separated holdout; do not select from ticket #114 outcomes.",
+    "manifestPath": "docs/japanese-live/corpora/md62mmdz0m/manifest.json",
+    "manifestSHA256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc",
+    "sourcePathFromWorkspaceRoot": ".build/benchmarks/japanese-live/corpora/md62mmdz0m/audio-16k-mono.wav",
+    "sourceSHA256": "bde49d4cc67020d01ae042f2945baa61364cc34959e2211a964943e5c2064830",
+    "sampleCount": 14177919
+  },
+  "implementation": {
+    "commitSHA": "f38b3b97d36e348df5134ac19c321fcb8bd4b8db",
+    "thresholdContractPath": "threshold-contract-v2.json",
+    "thresholdContractSHA256": "e197099d939e388b32ea179bae0c609415e4831e47891ddb0c776709365265ed",
+    "thresholdContractVersion": 2,
+    "maximumCosineDistance": 0.3,
+    "uncertaintyMargin": 0.1
+  },
+  "configuration": {
+    "runtime": "SpeakerKit",
+    "precision": "quantized",
+    "segmenterVariant": "W8A16",
+    "embedderVariant": "W8A16",
+    "speakerCountPolicy": {
+      "mode": "expected",
+      "count": 12
+    },
+    "asr": false,
+    "translation": false,
+    "additionalCorpora": false
+  },
+  "bounds": {
+    "maximumWallClockSeconds": 120,
+    "maximumResidentBytes": 4294967296,
+    "failurePolicy": "Stop the single test process and reject the evidence if either bound is exceeded, the input preflight fails, SpeakerKit does not unload, or another heavy model starts."
+  },
+  "command": "/bin/zsh -o pipefail -c 'env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer CLANG_MODULE_CACHE_PATH=/tmp/whisperasr-114-clang-cache SWIFTPM_MODULECACHE_OVERRIDE=/tmp/whisperasr-114-swiftpm-cache BENCHMARK_SLOT_GRANTED=114-HOLDOUT WHISPERASR_RUN_DUPLICATE_SPEAKER_EVIDENCE=1 WHISPERASR_DUPLICATE_SPEAKER_ALLOW_HOLDOUT=1 WHISPERASR_DUPLICATE_SPEAKER_EXPECTED_COUNT=12 WHISPERASR_DUPLICATE_SPEAKER_MANIFEST=/Users/maz/.codex/worktrees/0c9d/whisperASR/docs/japanese-live/corpora/md62mmdz0m/manifest.json WHISPERASR_DUPLICATE_SPEAKER_SOURCE=/Users/maz/Documents/projets/whisperASR/.build/benchmarks/japanese-live/corpora/md62mmdz0m/audio-16k-mono.wav WHISPERASR_DUPLICATE_SPEAKER_REPORT=/tmp/whisperasr-114-holdout-report.json WHISPERASR_DUPLICATE_SPEAKER_MODEL_CACHE=/Users/maz/Documents/huggingface WHISPERASR_DUPLICATE_SPEAKER_JOB_ID=00000114-0000-0000-0000-000000000003 /usr/bin/time -l /usr/bin/xcrun swift test --disable-sandbox --filter HighQualityAcceptanceTests/testDuplicateSpeakerEvidenceWhenOptedIn 2>&1 | /usr/bin/tee /tmp/whisperasr-114-holdout.log'",
+  "preflightAfterSlot": [
+    "Verify Sources and Tests at HEAD match implementation.commitSHA and the worktree is clean.",
+    "Verify manifest and source SHA-256 plus source sample count before SpeakerKit loads.",
+    "Verify the local model cache contains only the declared SpeakerKit runtime assets needed by W8A16.",
+    "Stop this worktree's app process so no second model is resident."
+  ],
+  "decisionGates": {
+    "exposeBetaDescription": [
+      "The test passes under the frozen command and bounds.",
+      "At least one suggestion is useful against the reference.",
+      "suggestionCount equals usefulSuggestionCount and falseSuggestionCount is zero.",
+      "Model provenance and thresholds exactly match the frozen contract.",
+      "SpeakerKit unload completes and no test process remains."
+    ],
+    "otherwise": "Keep the UI absent and report the holdout result without changing thresholds or algorithm."
+  },
+  "claimLimits": "Precision is prioritized. The holdout decides only whether to expose the advisory Bêta description; it does not support a recall or Standard-promotion claim."
+}
