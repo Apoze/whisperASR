@@ -643,6 +643,8 @@ struct HighQualityJobView: View {
         do {
             try showSavedResult(saved)
         } catch {
+            resultPresentation.clear()
+            customSpeakerLabels = [:]
             errorMessage = error.localizedDescription
         }
     }
@@ -663,6 +665,8 @@ struct HighQualityJobView: View {
                         workspace.selectedSavedResult ?? relocated
                     )
                 } catch {
+                    resultPresentation.clear()
+                    customSpeakerLabels = [:]
                     errorMessage = error.localizedDescription
                 }
                 task = nil
