@@ -50,6 +50,7 @@ struct HighQualityJobView: View {
             && (includeJapaneseTranscript || includeEnglishTranscript || includeEnglishSubtitles)
             && backend != nil
             && !isRunning
+            && (workspace.selectedProjectID == nil || selectedProject != nil)
             && selectedProject?.folderRelocationMessage == nil
     }
 
@@ -64,8 +65,11 @@ struct HighQualityJobView: View {
                     set: selectProject
                 )) {
                     Text("Standalone").tag(nil as UUID?)
-                    ForEach(projects) { project in
-                        Text(project.name).tag(Optional(project.id))
+                    ForEach(projectEntries) { entry in
+                        Text(entry.errorMessage == nil
+                            ? entry.name
+                            : "\(entry.name) — \(entry.canLocateFolder ? "Locate Folder" : "Invalid")")
+                            .tag(Optional(entry.id))
                     }
                 }
                 .disabled(isRunning)
@@ -83,7 +87,9 @@ struct HighQualityJobView: View {
                             projectName = project.name
                             isRenamingProject = true
                         }
-                        Button("Locate Folder…") { locateFolder(for: project) }
+                        if let entry = selectedProjectEntry {
+                            Button("Locate Folder…") { locateFolder(for: entry) }
+                        }
                         Divider()
                         Button("Reset Project…", role: .destructive) {
                             requestProjectAction(.reset)
@@ -112,10 +118,28 @@ struct HighQualityJobView: View {
                         Text(message)
                             .foregroundStyle(.orange)
                             .textSelection(.enabled)
-                        Button("Locate Project Folder…") { locateFolder(for: project) }
-                            .accessibilityIdentifier("high-quality-locate-project-folder")
+                        if let entry = selectedProjectEntry {
+                            Button("Locate Project Folder…") { locateFolder(for: entry) }
+                                .accessibilityIdentifier("high-quality-locate-project-folder")
+                        }
                     }
                 }
+            }
+
+            if let entry = selectedProjectEntry, let message = entry.errorMessage {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(message)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                    if entry.canLocateFolder {
+                        Button("Locate Project Folder…") { locateFolder(for: entry) }
+                            .accessibilityIdentifier("high-quality-locate-invalid-project-folder")
+                    }
+                }
+            } else if let message = workspace.projectStorageError {
+                Text(message)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
             }
 
             if !savedResults.isEmpty {
@@ -268,7 +292,6 @@ struct HighQualityJobView: View {
         .padding(20)
         .frame(minWidth: 560, minHeight: 460)
         .onAppear { workspace.refresh() }
-        .onDisappear { task?.cancel() }
         .alert("Rename Project", isPresented: $isRenamingProject) {
             TextField("Project name", text: $projectName)
             Button("Cancel", role: .cancel) {}
@@ -297,10 +320,14 @@ struct HighQualityJobView: View {
 
     private var sourceURL: URL? { workspace.sourceURL }
     private var youtubeURL: String { workspace.youtubeURL }
-    private var projects: [HighQualityProject] { workspace.projects }
+    private var projectEntries: [HighQualityProjectEntry] { workspace.projectEntries }
     private var savedResults: [HighQualitySavedResult] { workspace.savedResults }
     private var selectedProject: HighQualityProject? {
         workspace.selectedProject
+    }
+
+    private var selectedProjectEntry: HighQualityProjectEntry? {
+        workspace.selectedProjectEntry
     }
 
     private var selectedSavedResult: HighQualitySavedResult? {
@@ -456,12 +483,12 @@ struct HighQualityJobView: View {
         }
     }
 
-    private func locateFolder(for project: HighQualityProject) {
+    private func locateFolder(for entry: HighQualityProjectEntry) {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.prompt = "Locate Project Folder"
-        if project.folderRelocationMessage == nil {
+        if let project = entry.project, project.folderRelocationMessage == nil {
             panel.directoryURL = project.folderURL
         }
         panel.begin { response in
@@ -488,18 +515,23 @@ struct HighQualityJobView: View {
     }
 
     private func performProjectAction() {
-        do {
-            let action = try workspace.confirmProjectAction()
-            result = nil
-            customSpeakerLabels = [:]
-            errorMessage = nil
-            progress = .init(
-                stage: .validating,
-                fraction: 0,
-                message: action == .reset ? "Project reset" : "Project deleted"
-            )
-        } catch {
-            errorMessage = error.localizedDescription
+        task = Task {
+            do {
+                var updatedWorkspace = workspace
+                let action = try await updatedWorkspace.confirmProjectAction()
+                workspace = updatedWorkspace
+                result = nil
+                customSpeakerLabels = [:]
+                errorMessage = nil
+                progress = .init(
+                    stage: .validating,
+                    fraction: 0,
+                    message: action == .reset ? "Project reset" : "Project deleted"
+                )
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            task = nil
         }
     }
 

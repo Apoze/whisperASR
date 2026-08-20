@@ -1787,6 +1787,18 @@ struct HighQualityJob: Sendable {
         _ request: HighQualityJobRequest,
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        guard let project = request.project else {
+            return try await runUncoordinated(request, progress: progress)
+        }
+        return try await HighQualityProjectLifecycle.shared.run(projectID: project.id) {
+            try await runUncoordinated(request, progress: progress)
+        }
+    }
+
+    private func runUncoordinated(
+        _ request: HighQualityJobRequest,
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void
+    ) async throws -> HighQualityJobResult {
         if let project = request.project {
             do {
                 try project.validateForJob()

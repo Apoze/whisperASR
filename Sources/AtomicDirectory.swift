@@ -2,17 +2,48 @@ import Darwin
 import Foundation
 
 enum AtomicDirectory {
+    // ponytail: one process-wide lock; use per-directory locks only if contention appears.
+    private static let storageLock = NSRecursiveLock()
+
+    static func coordinated<T>(_ operation: () throws -> T) rethrows -> T {
+        storageLock.lock()
+        defer { storageLock.unlock() }
+        return try operation()
+    }
+
     static func update(_ active: URL, prepare: (URL) throws -> Void) throws {
+        try coordinated {
+            try updateUncoordinated(active, prepare: prepare)
+        }
+    }
+
+    private static func updateUncoordinated(
+        _ active: URL,
+        prepare: (URL) throws -> Void
+    ) throws {
         let fileManager = FileManager.default
         let staged = active.deletingLastPathComponent().appendingPathComponent(
             ".\(active.lastPathComponent).staging-\(UUID().uuidString)",
             isDirectory: true
         )
         try fileManager.createDirectory(at: staged, withIntermediateDirectories: false)
-        defer { remove(staged) }
-        try hardLinkContents(of: active, to: staged)
-        try prepare(staged)
-        try swap(staged, with: active)
+        do {
+            try hardLinkContents(of: active, to: staged)
+            try prepare(staged)
+            try swap(staged, with: active)
+        } catch {
+            do {
+                try remove(staged)
+            } catch let cleanupError {
+                throw cleanupFailure(cleanupError, after: error, committed: false)
+            }
+            throw error
+        }
+        do {
+            try remove(staged)
+        } catch {
+            throw cleanupFailure(error, after: nil, committed: true)
+        }
     }
 
     static func swap(_ staged: URL, with active: URL) throws {
@@ -82,24 +113,73 @@ enum AtomicDirectory {
         if let traversalError { throw traversalError }
     }
 
-    static func remove(_ directory: URL) {
-        if let enumerator = FileManager.default.enumerator(
+    static func remove(_ directory: URL) throws {
+        try coordinated {
+            try removeUncoordinated(directory)
+        }
+    }
+
+    private static func removeUncoordinated(_ directory: URL) throws {
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: directory.path) else { return }
+        let rootValues = try directory.resourceValues(forKeys: [
+            .isDirectoryKey,
+            .isSymbolicLinkKey,
+        ])
+        guard rootValues.isDirectory == true, rootValues.isSymbolicLink != true else {
+            throw CocoaError(.fileWriteInvalidFileName)
+        }
+        var traversalError: Error?
+        if let enumerator = fileManager.enumerator(
             at: directory,
-            includingPropertiesForKeys: [.isSymbolicLinkKey]
+            includingPropertiesForKeys: [.isSymbolicLinkKey],
+            errorHandler: { _, error in
+                traversalError = error
+                return false
+            }
         ) {
-            for case let item as URL in enumerator
-                where (try? item.resourceValues(forKeys: [.isSymbolicLinkKey]))?
-                    .isSymbolicLink != true {
-                try? FileManager.default.setAttributes(
-                    [.immutable: false],
-                    ofItemAtPath: item.path
-                )
+            for case let item as URL in enumerator {
+                let values = try item.resourceValues(forKeys: [.isSymbolicLinkKey])
+                guard values.isSymbolicLink != true else { continue }
+                if try fileManager.attributesOfItem(atPath: item.path)[.immutable]
+                    as? Bool == true {
+                    try fileManager.setAttributes([.immutable: false], ofItemAtPath: item.path)
+                }
             }
         }
-        try? FileManager.default.setAttributes(
-            [.immutable: false],
-            ofItemAtPath: directory.path
+        if let traversalError { throw traversalError }
+        if try fileManager.attributesOfItem(atPath: directory.path)[.immutable]
+            as? Bool == true {
+            try fileManager.setAttributes([.immutable: false], ofItemAtPath: directory.path)
+        }
+        try fileManager.removeItem(at: directory)
+    }
+
+    static func isStagingDirectory(_ directory: URL) -> Bool {
+        let name = directory.lastPathComponent
+        let parts = name.dropFirst().components(separatedBy: ".staging-")
+        return name.hasPrefix(".")
+            && parts.count == 2
+            && !parts[0].isEmpty
+            && UUID(uuidString: parts[1]) != nil
+    }
+
+    private static func cleanupFailure(
+        _ cleanupError: Error,
+        after operationError: Error?,
+        committed: Bool
+    ) -> Error {
+        let prefix = committed
+            ? "The directory update committed, but old data cleanup failed"
+            : "The directory update failed and staging cleanup also failed"
+        let operation = operationError.map { ": \($0.localizedDescription)" } ?? ""
+        return NSError(
+            domain: "WhisperASR.AtomicDirectory",
+            code: committed ? 2 : 1,
+            userInfo: [
+                NSLocalizedDescriptionKey: "\(prefix)\(operation). "
+                    + cleanupError.localizedDescription,
+            ]
         )
-        try? FileManager.default.removeItem(at: directory)
     }
 }

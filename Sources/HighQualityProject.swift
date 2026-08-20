@@ -63,6 +63,16 @@ struct HighQualityProjectError: LocalizedError, Equatable, Sendable {
     var errorDescription: String? { message }
 }
 
+struct HighQualityProjectEntry: Identifiable, Sendable {
+    let id: UUID
+    let name: String
+    let folderURL: URL?
+    let project: HighQualityProject?
+    let errorMessage: String?
+    let canLocateFolder: Bool
+    fileprivate let createdAt: Date
+}
+
 struct HighQualityProjectJobReference: Codable, Equatable, Identifiable, Sendable {
     let jobID: UUID
     let source: HighQualitySourceProvenance
@@ -72,10 +82,52 @@ struct HighQualityProjectJobReference: Codable, Equatable, Identifiable, Sendabl
     var id: UUID { jobID }
 }
 
-struct HighQualityProject: Identifiable, Sendable {
-    // ponytail: process-wide lock; use per-Project locks only if metadata contention appears.
-    private static let metadataLock = NSLock()
+actor HighQualityProjectLifecycle {
+    static let shared = HighQualityProjectLifecycle()
 
+    private var jobs: [UUID: [UUID: Task<HighQualityJobResult, Error>]] = [:]
+    private var mutations: Set<UUID> = []
+
+    func run(
+        projectID: UUID,
+        operation: @escaping @Sendable () async throws -> HighQualityJobResult
+    ) async throws -> HighQualityJobResult {
+        guard !mutations.contains(projectID) else {
+            throw HighQualityProjectError(message: "This Project is being reset or deleted.")
+        }
+        let token = UUID()
+        let task = Task { try await operation() }
+        jobs[projectID, default: [:]][token] = task
+        defer {
+            jobs[projectID]?[token] = nil
+            if jobs[projectID]?.isEmpty == true { jobs[projectID] = nil }
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    func mutate<T: Sendable>(
+        projectID: UUID,
+        operation: @escaping @Sendable () throws -> T
+    ) async throws -> T {
+        guard mutations.insert(projectID).inserted else {
+            throw HighQualityProjectError(message: "This Project is already being changed.")
+        }
+        defer { mutations.remove(projectID) }
+        let running = jobs[projectID].map { Array($0.values) } ?? []
+        running.forEach { $0.cancel() }
+        for task in running { _ = try? await task.value }
+        return try operation()
+    }
+}
+
+struct HighQualityProject: Identifiable, Sendable {
+    private static let storageAnchorName = ".storage-root"
+
+    private let requestedRoot: URL
     let directory: URL
     let manifest: HighQualityProjectManifest
 
@@ -115,55 +167,83 @@ struct HighQualityProject: Identifiable, Sendable {
         folder: URL,
         in root: URL = AppStoragePaths.highQualityProjects
     ) throws -> Self {
-        let name = try validatedName(name)
-        let folder = try validatedFolder(folder, managedRoot: root)
-        let id = UUID()
-        let directory = root.appendingPathComponent(id.uuidString, isDirectory: true)
-        let now = Date()
-        let project = Self(
-            directory: directory,
-            manifest: .init(
-                schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
-                id: id,
-                name: name,
-                folderPath: folder.path,
-                createdAt: now,
-                updatedAt: now,
-                jobReferences: [],
-                scope: .empty
+        try withMetadataLock {
+            let name = try validatedName(name)
+            let requestedRoot = root.standardized
+            let root = try validatedProjectsRoot(requestedRoot, createIfMissing: true)
+            let folder = try validatedFolder(folder, managedRoot: root)
+            let id = UUID()
+            let directory = root.appendingPathComponent(id.uuidString, isDirectory: true)
+            let now = Date()
+            let project = Self(
+                requestedRoot: requestedRoot,
+                directory: directory,
+                manifest: .init(
+                    schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
+                    id: id,
+                    name: name,
+                    folderPath: folder.path,
+                    createdAt: now,
+                    updatedAt: now,
+                    jobReferences: [],
+                    scope: .empty
+                )
             )
-        )
-        do {
-            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(
-                at: directory,
-                withIntermediateDirectories: false
-            )
-            try FileManager.default.createDirectory(
-                at: project.jobsDirectory,
-                withIntermediateDirectories: false
-            )
-            try write(project.manifest, to: directory)
-            return project
-        } catch {
-            try? FileManager.default.removeItem(at: directory)
-            throw HighQualityProjectError(
-                message: "Could not create the Project: \(error.localizedDescription)"
-            )
+            do {
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: false
+                )
+                try FileManager.default.createDirectory(
+                    at: project.jobsDirectory,
+                    withIntermediateDirectories: false
+                )
+                try write(project.manifest, to: directory)
+                return project
+            } catch {
+                try? FileManager.default.removeItem(at: directory)
+                throw HighQualityProjectError(
+                    message: "Could not create the Project: \(error.localizedDescription)"
+                )
+            }
         }
     }
 
     static func all(
         in root: URL = AppStoragePaths.highQualityProjects
-    ) -> [Self] {
-        withMetadataLock {
-            cleanupResetDirectories(in: root)
-            guard let directories = try? FileManager.default.contentsOfDirectory(
+    ) throws -> [Self] {
+        try entries(in: root).compactMap(\.project)
+    }
+
+    static func entries(
+        in root: URL = AppStoragePaths.highQualityProjects
+    ) throws -> [HighQualityProjectEntry] {
+        try withMetadataLock {
+            let requestedRoot = root.standardized
+            guard let root = try existingProjectsRoot(requestedRoot) else { return [] }
+            try cleanupInterruptedDirectories(in: root)
+            let directories = try FileManager.default.contentsOfDirectory(
                 at: root,
                 includingPropertiesForKeys: [.isDirectoryKey]
-            ) else { return [] }
-            return directories.compactMap { try? load(from: $0) }.sorted {
-                $0.manifest.createdAt < $1.manifest.createdAt
+            )
+            return directories.compactMap { directory in
+                guard let id = UUID(uuidString: directory.lastPathComponent) else { return nil }
+                do {
+                    let project = try load(from: directory, requestedRoot: requestedRoot)
+                    return HighQualityProjectEntry(
+                        id: project.id,
+                        name: project.name,
+                        folderURL: project.folderURL,
+                        project: project,
+                        errorMessage: nil,
+                        canLocateFolder: true,
+                        createdAt: project.manifest.createdAt
+                    )
+                } catch {
+                    return invalidEntry(id: id, from: directory, root: root, error: error)
+                }
+            }.sorted {
+                $0.createdAt < $1.createdAt
             }
         }
     }
@@ -173,48 +253,71 @@ struct HighQualityProject: Identifiable, Sendable {
         in root: URL = AppStoragePaths.highQualityProjects
     ) throws -> Self {
         try withMetadataLock {
-            cleanupResetDirectories(in: root)
-            return try load(from: root.appendingPathComponent(id.uuidString, isDirectory: true))
+            let requestedRoot = root.standardized
+            let root = try validatedProjectsRoot(requestedRoot)
+            return try load(
+                from: root.appendingPathComponent(id.uuidString, isDirectory: true),
+                requestedRoot: requestedRoot
+            )
         }
     }
 
     func renamed(to name: String) throws -> Self {
         try Self.withMetadataLock {
-            let current = try Self.load(from: directory)
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
             return try current.updating(name: Self.validatedName(name))
         }
     }
 
     func relocated(to folder: URL) throws -> Self {
         try Self.withMetadataLock {
-            let current = try Self.load(from: directory)
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
             let folder = try Self.validatedFolder(
                 folder,
-                managedRoot: directory.deletingLastPathComponent()
+                managedRoot: current.directory.deletingLastPathComponent()
             )
-            let updated = current.updated(folder: folder)
-            do {
-                try AtomicDirectory.update(current.directory) { staging in
-                    for reference in current.jobReferences
-                        where reference.sourceRelativePath != nil {
-                        try HighQualityJob.clearRelocatedSource(
-                            in: staging.appendingPathComponent(reference.resultPath)
-                        )
-                    }
-                    try Self.write(updated.manifest, to: staging)
-                }
-                return updated
-            } catch {
-                throw HighQualityProjectError(
-                    message: "Could not update the Project: \(error.localizedDescription)"
-                )
+            return try Self.persistRelocation(current, to: folder)
+        }
+    }
+
+    static func recoverFolder(
+        for id: UUID,
+        to folder: URL,
+        in root: URL = AppStoragePaths.highQualityProjects
+    ) throws -> Self {
+        try withMetadataLock {
+            let requestedRoot = root.standardized
+            let root = try validatedProjectsRoot(requestedRoot)
+            let directory = root.appendingPathComponent(id.uuidString, isDirectory: true)
+            guard isManagedProjectDirectory(directory, in: root) else {
+                throw HighQualityProjectError(message: "This Project storage is unsafe.")
             }
+            let manifest = try decoder.decode(
+                HighQualityProjectManifest.self,
+                from: Data(contentsOf: directory.appendingPathComponent("project.json"))
+            )
+            guard validMetadata(manifest, in: directory) else {
+                throw HighQualityProjectError(message: "This Project metadata is unsupported.")
+            }
+            let folder = try validatedFolder(folder, managedRoot: root)
+            try cleanupInterruptedDirectories(in: root)
+            try cleanupInterruptedDirectories(
+                in: directory.appendingPathComponent("Jobs", isDirectory: true)
+            )
+            return try persistRelocation(
+                Self(
+                    requestedRoot: requestedRoot,
+                    directory: directory,
+                    manifest: manifest
+                ),
+                to: folder
+            )
         }
     }
 
     func updatingScope(_ scope: HighQualityProjectScope) throws -> Self {
         try Self.withMetadataLock {
-            let current = try Self.load(from: directory)
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
             guard Self.validScope(scope, jobIDs: Set(current.jobReferences.map(\.id))) else {
                 throw HighQualityProjectError(message: "This Project scope is invalid.")
             }
@@ -222,65 +325,88 @@ struct HighQualityProject: Identifiable, Sendable {
         }
     }
 
-    func reset() throws -> Self {
-        try Self.withMetadataLock {
-            let current = try Self.load(from: directory)
-            let staging = directory.deletingLastPathComponent().appendingPathComponent(
-                ".\(id.uuidString).reset-\(UUID().uuidString)",
-                isDirectory: true
-            )
-            let reset = Self(
-                directory: directory,
-                manifest: .init(
-                    schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
-                    id: current.id,
-                    name: current.name,
-                    folderPath: current.folderURL.path,
-                    createdAt: current.manifest.createdAt,
-                    updatedAt: Date(),
-                    jobReferences: [],
-                    scope: .empty
+    func reset() async throws -> Self {
+        try await HighQualityProjectLifecycle.shared.mutate(projectID: id) {
+            try Self.withMetadataLock {
+                let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+                let directory = current.directory
+                let staging = directory.deletingLastPathComponent().appendingPathComponent(
+                    ".\(id.uuidString).reset-\(UUID().uuidString)",
+                    isDirectory: true
                 )
-            )
-            do {
-                try FileManager.default.createDirectory(
-                    at: staging,
-                    withIntermediateDirectories: false
+                let reset = Self(
+                    requestedRoot: current.requestedRoot,
+                    directory: directory,
+                    manifest: .init(
+                        schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
+                        id: current.id,
+                        name: current.name,
+                        folderPath: current.folderURL.path,
+                        createdAt: current.manifest.createdAt,
+                        updatedAt: Date(),
+                        jobReferences: [],
+                        scope: .empty
+                    )
                 )
-                try FileManager.default.createDirectory(
-                    at: staging.appendingPathComponent("Jobs", isDirectory: true),
-                    withIntermediateDirectories: false
-                )
-                try Self.write(reset.manifest, to: staging)
-                try AtomicDirectory.swap(staging, with: directory)
-            } catch {
-                AtomicDirectory.remove(staging)
-                throw HighQualityProjectError(
-                    message: "Could not reset the Project: \(error.localizedDescription)"
-                )
+                do {
+                    try FileManager.default.createDirectory(
+                        at: staging,
+                        withIntermediateDirectories: false
+                    )
+                    try FileManager.default.createDirectory(
+                        at: staging.appendingPathComponent("Jobs", isDirectory: true),
+                        withIntermediateDirectories: false
+                    )
+                    try Self.write(reset.manifest, to: staging)
+                    try AtomicDirectory.swap(staging, with: directory)
+                } catch {
+                    do {
+                        try AtomicDirectory.remove(staging)
+                    } catch let cleanupError {
+                        throw HighQualityProjectError(
+                            message: "Could not reset the Project: \(error.localizedDescription). "
+                                + "Staging cleanup also failed: "
+                                + cleanupError.localizedDescription
+                        )
+                    }
+                    throw HighQualityProjectError(
+                        message: "Could not reset the Project: \(error.localizedDescription)"
+                    )
+                }
+                do {
+                    try AtomicDirectory.remove(staging)
+                } catch {
+                    throw HighQualityProjectError(
+                        message: "The Project reset committed, but old data cleanup failed: "
+                            + error.localizedDescription
+                    )
+                }
+                return reset
             }
-            AtomicDirectory.remove(staging)
-            return reset
         }
     }
 
-    func delete() throws {
-        try Self.withMetadataLock {
-            _ = try Self.load(from: directory)
-            do {
-                try FileManager.default.removeItem(at: directory)
-            } catch {
-                throw HighQualityProjectError(
-                    message: "Could not delete the Project: \(error.localizedDescription)"
-                )
+    func delete() async throws {
+        try await HighQualityProjectLifecycle.shared.mutate(projectID: id) {
+            try Self.withMetadataLock {
+                let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+                do {
+                    try AtomicDirectory.remove(current.directory)
+                } catch {
+                    throw HighQualityProjectError(
+                        message: "Could not delete the Project: \(error.localizedDescription)"
+                    )
+                }
             }
         }
     }
 
     func validateForJob() throws {
-        let current = try Self.load(from: directory)
-        if let message = current.folderRelocationMessage {
-            throw HighQualityProjectError(message: message)
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            if let message = current.folderRelocationMessage {
+                throw HighQualityProjectError(message: message)
+            }
         }
     }
 
@@ -291,7 +417,7 @@ struct HighQualityProject: Identifiable, Sendable {
         resultDirectory: URL
     ) throws -> Self {
         try Self.withMetadataLock {
-            let current = try Self.load(from: directory)
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
             if let message = current.folderRelocationMessage {
                 throw HighQualityProjectError(message: message)
             }
@@ -353,6 +479,7 @@ struct HighQualityProject: Identifiable, Sendable {
         scope: HighQualityProjectScope? = nil
     ) -> Self {
         Self(
+            requestedRoot: requestedRoot,
             directory: directory,
             manifest: .init(
                 schemaVersion: HighQualityProjectManifest.currentSchemaVersion,
@@ -367,36 +494,57 @@ struct HighQualityProject: Identifiable, Sendable {
         )
     }
 
-    private static func load(from directory: URL) throws -> Self {
+    private static func persistRelocation(_ current: Self, to folder: URL) throws -> Self {
+        let updated = current.updated(folder: folder)
         do {
-            guard isManagedDirectory(directory),
-                  isManagedDirectory(directory.appendingPathComponent("Jobs"), allowMissing: true)
-            else {
+            try AtomicDirectory.update(current.directory) { staging in
+                for reference in current.jobReferences where reference.sourceRelativePath != nil {
+                    try HighQualityJob.clearRelocatedSource(
+                        in: staging.appendingPathComponent(reference.resultPath)
+                    )
+                }
+                try write(updated.manifest, to: staging)
+            }
+            return updated
+        } catch {
+            throw HighQualityProjectError(
+                message: "Could not update the Project: \(error.localizedDescription)"
+            )
+        }
+    }
+
+    private static func load(from directory: URL, requestedRoot: URL) throws -> Self {
+        do {
+            let root = try validatedProjectsRoot(requestedRoot)
+            guard isManagedProjectDirectory(directory, in: root) else {
                 throw HighQualityProjectError(message: "This Project storage is unsafe.")
             }
+            let directory = root.appendingPathComponent(
+                directory.lastPathComponent,
+                isDirectory: true
+            )
             let manifest = try decoder.decode(
                 HighQualityProjectManifest.self,
                 from: Data(contentsOf: directory.appendingPathComponent("project.json"))
             )
-            let scope = manifest.scope ?? .empty
             let folder = try validatedFolder(
                 URL(fileURLWithPath: manifest.folderPath),
-                managedRoot: directory.deletingLastPathComponent(),
+                managedRoot: root,
                 allowMissing: true
             )
-            guard (1...HighQualityProjectManifest.currentSchemaVersion).contains(
-                    manifest.schemaVersion
-                  ),
-                  (manifest.schemaVersion == 1 || manifest.scope != nil),
-                  directory.lastPathComponent == manifest.id.uuidString,
-                  folder.path == manifest.folderPath,
-                  !manifest.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  Set(manifest.jobReferences.map(\.id)).count == manifest.jobReferences.count,
-                  manifest.jobReferences.allSatisfy(validReference),
-                  validScope(scope, jobIDs: Set(manifest.jobReferences.map(\.id))) else {
+            guard validMetadata(manifest, in: directory),
+                  folder.path == manifest.folderPath else {
                 throw HighQualityProjectError(message: "This Project metadata is unsupported.")
             }
-            return Self(directory: directory, manifest: manifest)
+            try cleanupInterruptedDirectories(in: root)
+            try cleanupInterruptedDirectories(
+                in: directory.appendingPathComponent("Jobs", isDirectory: true)
+            )
+            return Self(
+                requestedRoot: requestedRoot.standardized,
+                directory: directory,
+                manifest: manifest
+            )
         } catch let error as HighQualityProjectError {
             throw error
         } catch {
@@ -404,6 +552,89 @@ struct HighQualityProject: Identifiable, Sendable {
                 message: "The Project metadata is missing or unreadable."
             )
         }
+    }
+
+    private static func invalidEntry(
+        id: UUID,
+        from directory: URL,
+        root: URL,
+        error: Error
+    ) -> HighQualityProjectEntry {
+        guard isManagedProjectDirectory(directory, in: root) else {
+            return .init(
+                id: id,
+                name: "Invalid Project",
+                folderURL: nil,
+                project: nil,
+                errorMessage: error.localizedDescription,
+                canLocateFolder: false,
+                createdAt: .distantPast
+            )
+        }
+        let manifest: HighQualityProjectManifest
+        do {
+            manifest = try decoder.decode(
+                HighQualityProjectManifest.self,
+                from: Data(contentsOf: directory.appendingPathComponent("project.json"))
+            )
+        } catch {
+            return .init(
+                id: id,
+                name: "Invalid Project",
+                folderURL: nil,
+                project: nil,
+                errorMessage: "The Project metadata is missing or unreadable.",
+                canLocateFolder: false,
+                createdAt: .distantPast
+            )
+        }
+        var folderIsInvalid = false
+        do {
+            let folder = try validatedFolder(
+                URL(fileURLWithPath: manifest.folderPath),
+                managedRoot: root,
+                allowMissing: true
+            )
+            folderIsInvalid = folder.path != manifest.folderPath
+        } catch {
+            folderIsInvalid = true
+        }
+        return .init(
+            id: id,
+            name: manifest.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? "Invalid Project" : manifest.name,
+            folderURL: URL(fileURLWithPath: manifest.folderPath),
+            project: nil,
+            errorMessage: error.localizedDescription,
+            canLocateFolder: folderIsInvalid && validMetadata(manifest, in: directory),
+            createdAt: manifest.createdAt
+        )
+    }
+
+    private static func validMetadata(
+        _ manifest: HighQualityProjectManifest,
+        in directory: URL
+    ) -> Bool {
+        let scope = manifest.scope ?? .empty
+        return (1...HighQualityProjectManifest.currentSchemaVersion).contains(
+            manifest.schemaVersion
+        )
+            && (manifest.schemaVersion == 1 || manifest.scope != nil)
+            && directory.lastPathComponent == manifest.id.uuidString
+            && !manifest.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && Set(manifest.jobReferences.map(\.id)).count == manifest.jobReferences.count
+            && manifest.jobReferences.allSatisfy(validReference)
+            && validScope(scope, jobIDs: Set(manifest.jobReferences.map(\.id)))
+    }
+
+    private static func isManagedProjectDirectory(_ directory: URL, in root: URL) -> Bool {
+        isManagedDirectory(directory)
+            && isManagedDirectory(
+                directory.appendingPathComponent("Jobs", isDirectory: true),
+                allowMissing: true
+            )
+            && directory.resolvingSymlinksInPath().deletingLastPathComponent()
+                == root.resolvingSymlinksInPath()
     }
 
     private static func validatedName(_ value: String) throws -> String {
@@ -431,6 +662,121 @@ struct HighQualityProject: Identifiable, Sendable {
             )
         }
         return folder
+    }
+
+    private static func validatedProjectsRoot(
+        _ url: URL,
+        createIfMissing: Bool = false
+    ) throws -> URL {
+        let resolved = try resolvedProjectsRoot(url)
+        var root = resolved.root
+        if !resolved.exists {
+            guard createIfMissing else {
+                throw HighQualityProjectError(message: "This Project storage is missing.")
+            }
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            let created = try resolvedProjectsRoot(root)
+            guard created.exists, created.root.path == root.path else {
+                throw HighQualityProjectError(message: "This Project storage is unsafe.")
+            }
+            root = created.root
+        }
+        return try anchoredProjectsRoot(root, createAnchor: createIfMissing)
+    }
+
+    private static func existingProjectsRoot(_ url: URL) throws -> URL? {
+        let resolved = try resolvedProjectsRoot(url)
+        guard resolved.exists else { return nil }
+        return try anchoredProjectsRoot(resolved.root, createAnchor: false)
+    }
+
+    private static func resolvedProjectsRoot(_ url: URL) throws -> (root: URL, exists: Bool) {
+        let requested = url.standardized
+        guard requested.isFileURL, requested.path != "/" else {
+            throw HighQualityProjectError(message: "This Project storage is unsafe.")
+        }
+        let components = Array(requested.pathComponents.dropFirst())
+        var root = URL(fileURLWithPath: "/", isDirectory: true)
+        var exists = true
+        for (offset, component) in components.enumerated() {
+            let candidate = root.appendingPathComponent(component, isDirectory: true)
+            guard exists else {
+                root = candidate
+                continue
+            }
+            switch try fileType(at: candidate) {
+            case .typeDirectory:
+                root = candidate
+            case .typeSymbolicLink where offset < components.count - 1:
+                root = try canonicalDirectoryTarget(of: candidate)
+            case nil:
+                root = candidate
+                exists = false
+            default:
+                throw HighQualityProjectError(message: "This Project storage is unsafe.")
+            }
+        }
+        return (root.standardized, exists)
+    }
+
+    private static func canonicalDirectoryTarget(
+        of symlink: URL,
+        depth: Int = 0
+    ) throws -> URL {
+        guard depth < 32 else {
+            throw HighQualityProjectError(message: "This Project storage is unsafe.")
+        }
+        let destination = try FileManager.default.destinationOfSymbolicLink(atPath: symlink.path)
+        let target = URL(
+            fileURLWithPath: destination,
+            relativeTo: symlink.deletingLastPathComponent()
+        ).absoluteURL.standardized
+        var directory = URL(fileURLWithPath: "/", isDirectory: true)
+        for component in target.pathComponents.dropFirst() {
+            let candidate = directory.appendingPathComponent(component, isDirectory: true)
+            switch try fileType(at: candidate) {
+            case .typeDirectory:
+                directory = candidate
+            case .typeSymbolicLink:
+                directory = try canonicalDirectoryTarget(of: candidate, depth: depth + 1)
+            default:
+                throw HighQualityProjectError(message: "This Project storage is unsafe.")
+            }
+        }
+        return directory
+    }
+
+    private static func anchoredProjectsRoot(
+        _ root: URL,
+        createAnchor: Bool
+    ) throws -> URL {
+        guard try fileType(at: root) == .typeDirectory else {
+            throw HighQualityProjectError(message: "This Project storage is unsafe.")
+        }
+        let anchor = root.appendingPathComponent(storageAnchorName)
+        if let anchorType = try fileType(at: anchor) {
+            guard anchorType == .typeRegular,
+                  String(decoding: try Data(contentsOf: anchor), as: UTF8.self) == root.path else {
+                throw HighQualityProjectError(message: "This Project storage moved or changed.")
+            }
+        } else {
+            guard createAnchor else {
+                throw HighQualityProjectError(message: "This Project storage is not anchored.")
+            }
+            try Data(root.path.utf8).write(to: anchor, options: .atomic)
+        }
+        return root
+    }
+
+    private static func fileType(at url: URL) throws -> FileAttributeType? {
+        do {
+            return try FileManager.default.attributesOfItem(atPath: url.path)[.type]
+                as? FileAttributeType
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
+            return nil
+        } catch {
+            throw HighQualityProjectError(message: "This Project storage is unsafe.")
+        }
     }
 
     private static func isInsideManagedRoot(_ url: URL, root: URL) -> Bool {
@@ -504,13 +850,15 @@ struct HighQualityProject: Identifiable, Sendable {
             && centroid.embeddingVariant == reference.embeddingVariant
     }
 
-    private static func cleanupResetDirectories(in root: URL) {
-        guard let directories = try? FileManager.default.contentsOfDirectory(
+    private static func cleanupInterruptedDirectories(in root: URL) throws {
+        guard FileManager.default.fileExists(atPath: root.path) else { return }
+        let directories = try FileManager.default.contentsOfDirectory(
             at: root,
             includingPropertiesForKeys: [.isDirectoryKey]
-        ) else { return }
-        for directory in directories where isResetDirectory(directory) {
-            AtomicDirectory.remove(directory)
+        )
+        for directory in directories
+            where isResetDirectory(directory) || AtomicDirectory.isStagingDirectory(directory) {
+            try AtomicDirectory.remove(directory)
         }
     }
 
@@ -526,9 +874,7 @@ struct HighQualityProject: Identifiable, Sendable {
     }
 
     private static func withMetadataLock<T>(_ operation: () throws -> T) rethrows -> T {
-        metadataLock.lock()
-        defer { metadataLock.unlock() }
-        return try operation()
+        try AtomicDirectory.coordinated(operation)
     }
 
     private static func isDirectory(_ url: URL) -> Bool {
@@ -536,13 +882,12 @@ struct HighQualityProject: Identifiable, Sendable {
     }
 
     private static func isManagedDirectory(_ url: URL, allowMissing: Bool = false) -> Bool {
-        guard let values = try? url.resourceValues(forKeys: [
-            .isDirectoryKey,
-            .isSymbolicLinkKey,
-        ]) else {
-            return allowMissing && !FileManager.default.fileExists(atPath: url.path)
+        do {
+            guard let type = try fileType(at: url) else { return allowMissing }
+            return type == .typeDirectory
+        } catch {
+            return false
         }
-        return values.isDirectory == true && values.isSymbolicLink != true
     }
 
     private static func write(
@@ -572,7 +917,8 @@ struct HighQualityProject: Identifiable, Sendable {
 struct HighQualityProjectWorkspace {
     let projectsRoot: URL
     let standaloneJobsRoot: URL
-    private(set) var projects: [HighQualityProject]
+    private(set) var projectEntries: [HighQualityProjectEntry]
+    private(set) var projectStorageError: String?
     private(set) var selectedProjectID: UUID?
     private(set) var savedResults: [HighQualitySavedResult]
     private(set) var selectedSavedResultID: UUID?
@@ -586,7 +932,13 @@ struct HighQualityProjectWorkspace {
     ) {
         self.projectsRoot = projectsRoot
         self.standaloneJobsRoot = standaloneJobsRoot
-        projects = HighQualityProject.all(in: projectsRoot)
+        do {
+            projectEntries = try HighQualityProject.entries(in: projectsRoot)
+            projectStorageError = nil
+        } catch {
+            projectEntries = []
+            projectStorageError = error.localizedDescription
+        }
         selectedProjectID = nil
         savedResults = HighQualityJob.savedResults(in: standaloneJobsRoot)
         selectedSavedResultID = nil
@@ -595,8 +947,16 @@ struct HighQualityProjectWorkspace {
         pendingProjectAction = nil
     }
 
+    var projects: [HighQualityProject] {
+        projectEntries.compactMap(\.project)
+    }
+
+    var selectedProjectEntry: HighQualityProjectEntry? {
+        projectEntries.first { $0.id == selectedProjectID }
+    }
+
     var selectedProject: HighQualityProject? {
-        projects.first { $0.id == selectedProjectID }
+        selectedProjectEntry?.project
     }
 
     var selectedSavedResult: HighQualitySavedResult? {
@@ -618,6 +978,12 @@ struct HighQualityProjectWorkspace {
         using job: HighQualityJob = HighQualityJob(),
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        if selectedProjectID != nil, selectedProject == nil {
+            throw HighQualityProjectError(
+                message: selectedProjectEntry?.errorMessage
+                    ?? "Locate and validate this Project folder before starting a job."
+            )
+        }
         guard let sourceURL = selectedSourceURL else {
             throw HighQualityProjectError(message: "Select a source first.")
         }
@@ -635,8 +1001,14 @@ struct HighQualityProjectWorkspace {
     }
 
     mutating func refresh() {
-        projects = HighQualityProject.all(in: projectsRoot)
-        if let id = selectedProjectID, !projects.contains(where: { $0.id == id }) {
+        do {
+            projectEntries = try HighQualityProject.entries(in: projectsRoot)
+            projectStorageError = nil
+        } catch {
+            projectEntries = []
+            projectStorageError = error.localizedDescription
+        }
+        if let id = selectedProjectID, !projectEntries.contains(where: { $0.id == id }) {
             selectedProjectID = nil
             clearInput()
         }
@@ -645,7 +1017,7 @@ struct HighQualityProjectWorkspace {
 
     mutating func selectProject(_ id: UUID?) {
         selectedProjectID = id.flatMap { candidate in
-            projects.contains(where: { $0.id == candidate }) ? candidate : nil
+            projectEntries.contains(where: { $0.id == candidate }) ? candidate : nil
         }
         pendingProjectAction = nil
         clearInput()
@@ -692,7 +1064,20 @@ struct HighQualityProjectWorkspace {
 
     @discardableResult
     mutating func relocateSelectedProject(to folder: URL) throws -> HighQualityProject {
-        let project = try requiredSelectedProject().relocated(to: folder)
+        let project: HighQualityProject
+        if let selectedProject {
+            project = try selectedProject.relocated(to: folder)
+        } else if let entry = selectedProjectEntry, entry.canLocateFolder {
+            project = try HighQualityProject.recoverFolder(
+                for: entry.id,
+                to: folder,
+                in: projectsRoot
+            )
+        } else {
+            throw HighQualityProjectError(
+                message: "This Project cannot be recovered by locating a folder."
+            )
+        }
         clearInput()
         refresh()
         return selectedProject ?? project
@@ -708,37 +1093,38 @@ struct HighQualityProjectWorkspace {
     }
 
     @discardableResult
-    mutating func confirmProjectAction() throws -> HighQualityProjectDestructiveAction {
+    mutating func confirmProjectAction() async throws -> HighQualityProjectDestructiveAction {
         guard let action = pendingProjectAction else {
             throw HighQualityProjectError(message: "Choose a Project action first.")
         }
         defer { pendingProjectAction = nil }
         switch action {
         case .reset:
-            _ = try resetSelectedProject()
+            _ = try await resetSelectedProject()
         case .delete:
-            try deleteSelectedProject()
+            try await deleteSelectedProject()
         }
         return action
     }
 
-    private mutating func resetSelectedProject() throws -> HighQualityProject {
-        let project = try requiredSelectedProject().reset()
+    private mutating func resetSelectedProject() async throws -> HighQualityProject {
+        let project = try await requiredSelectedProject().reset()
         clearInput()
         refresh()
         return selectedProject ?? project
     }
 
-    private mutating func deleteSelectedProject() throws {
-        try requiredSelectedProject().delete()
+    private mutating func deleteSelectedProject() async throws {
+        try await requiredSelectedProject().delete()
         selectedProjectID = nil
         clearInput()
         refresh()
     }
 
     private mutating func refreshSavedResults() {
-        savedResults = selectedProject?.savedResults
-            ?? HighQualityJob.savedResults(in: standaloneJobsRoot)
+        savedResults = selectedProjectID == nil
+            ? HighQualityJob.savedResults(in: standaloneJobsRoot)
+            : selectedProject?.savedResults ?? []
         if let id = selectedSavedResultID,
            !savedResults.contains(where: { $0.id == id }) {
             clearInput()
