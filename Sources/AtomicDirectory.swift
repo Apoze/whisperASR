@@ -28,7 +28,7 @@ enum AtomicDirectory {
         )
         try fileManager.createDirectory(at: staged, withIntermediateDirectories: false)
         do {
-            try hardLinkContents(of: active, to: staged)
+            try cloneContents(of: active, to: staged)
             try prepare(staged)
             try swap(staged, with: active)
         } catch {
@@ -63,7 +63,7 @@ enum AtomicDirectory {
         }
     }
 
-    private static func hardLinkContents(of source: URL, to destination: URL) throws {
+    static func cloneContents(of source: URL, to destination: URL) throws {
         let fileManager = FileManager.default
         let canonicalSourcePath = source.resolvingSymlinksInPath().path
         var traversalError: Error?

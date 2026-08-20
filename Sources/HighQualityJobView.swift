@@ -38,6 +38,10 @@ struct HighQualityJobResultPresentation {
     mutating func publish(_ completed: HighQualityJobResult?) {
         if let completed { visibleResult = completed }
     }
+
+    mutating func clear() {
+        visibleResult = nil
+    }
 }
 
 struct HighQualitySpeakerReanalysisActionState: Equatable {
@@ -361,6 +365,7 @@ struct HighQualityJobView: View {
                     if saved.manifest.source.youtube == nil {
                         Button("Locate Source…") { locateSource(for: saved) }
                             .accessibilityIdentifier("high-quality-locate-source")
+                            .disabled(isRunning)
                     }
                 }
             }
@@ -373,6 +378,7 @@ struct HighQualityJobView: View {
         .padding(20)
         .frame(minWidth: 560, minHeight: 460)
         .onAppear { workspace.refresh() }
+        .onDisappear { task?.cancel() }
         .alert("Rename Project", isPresented: $isRenamingProject) {
             TextField("Project name", text: $projectName)
             Button("Cancel", role: .cancel) {}
@@ -532,6 +538,7 @@ struct HighQualityJobView: View {
     private func selectProject(_ id: UUID?) {
         guard !isRunning else { return }
         workspace.selectProject(id)
+        resultPresentation.clear()
         errorMessage = nil
         customSpeakerLabels = [:]
     }
@@ -549,6 +556,7 @@ struct HighQualityJobView: View {
                     named: folder.lastPathComponent,
                     folder: folder
                 )
+                resultPresentation.clear()
                 customSpeakerLabels = [:]
                 progress = .init(
                     stage: .validating,
@@ -582,6 +590,7 @@ struct HighQualityJobView: View {
             guard response == .OK, let folder = panel.url else { return }
             do {
                 _ = try workspace.relocateSelectedProject(to: folder)
+                resultPresentation.clear()
                 customSpeakerLabels = [:]
                 errorMessage = nil
                 progress = .init(
@@ -606,6 +615,7 @@ struct HighQualityJobView: View {
                 var updatedWorkspace = workspace
                 let action = try await updatedWorkspace.confirmProjectAction()
                 workspace = updatedWorkspace
+                resultPresentation.clear()
                 customSpeakerLabels = [:]
                 errorMessage = nil
                 progress = .init(
@@ -624,7 +634,9 @@ struct HighQualityJobView: View {
         workspace.selectSavedResult(id)
         guard let id else {
             guard !isRunning else { return }
+            resultPresentation.clear()
             errorMessage = nil
+            customSpeakerLabels = [:]
             return
         }
         guard let saved = workspace.selectedSavedResult, saved.id == id else { return }
@@ -641,7 +653,8 @@ struct HighQualityJobView: View {
         panel.allowedContentTypes = [.audio, .movie]
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            Task {
+            guard task == nil else { return }
+            task = Task {
                 do {
                     let relocated = try await HighQualityJob().relocateSource(saved, to: url)
                     workspace.refresh()
@@ -652,6 +665,7 @@ struct HighQualityJobView: View {
                 } catch {
                     errorMessage = error.localizedDescription
                 }
+                task = nil
             }
         }
     }
@@ -785,6 +799,10 @@ struct HighQualityJobView: View {
     ) -> some View {
         let speakerLabels = result.editableSpeakerLabels
         let speakerNames = result.editableSpeakerNames
+        let actionState = HighQualitySpeakerLabelActionState(
+            result: result,
+            isRunning: isRunning
+        )
         Text("Results").font(.headline)
         if let reanalysis = result.evidence.speakerReanalyses?.last {
             let completion = result.speakerReanalysisCompletion
@@ -839,6 +857,7 @@ struct HighQualityJobView: View {
                                 }
                             }
                             .labelsHidden()
+                            .disabled(!actionState.isEnabled)
                             .accessibilityLabel("Speaker for transcript turn \(turn.id)")
                         } else {
                             Text(turn.speakerName ?? turn.speakerLabel ?? "—")
@@ -880,7 +899,7 @@ struct HighQualityJobView: View {
                     }
                 }
                 .accessibilityIdentifier("high-quality-regenerate-deliverables")
-                .disabled(result.manifest.schemaVersion < 3)
+                .disabled(!actionState.isEnabled)
             }
             HStack {
                 if speakerLabels.count > 1 {
@@ -924,7 +943,7 @@ struct HighQualityJobView: View {
                 .disabled(!result.canUndoLastSpeakerEdit)
 
             }
-            .disabled(result.manifest.schemaVersion < 3)
+            .disabled(!actionState.isEnabled)
             Text("Speaker edits only regenerate saved Deliverables; no model is loaded.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -949,7 +968,7 @@ struct HighQualityJobView: View {
             }
             .accessibilityIdentifier("high-quality-restore-previous-speaker-edits")
             .accessibilityHint("Restores edits archived by the latest compatible reanalysis.")
-            .disabled(result.manifest.schemaVersion < 3)
+            .disabled(!actionState.isEnabled)
         } else if result.shouldExplainIncompatibleArchivedSpeakerEdits {
             Text("Previous Speaker edits remain archived but cannot be safely restored to the current Speaker state.")
                 .font(.caption)

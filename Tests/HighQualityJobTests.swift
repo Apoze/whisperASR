@@ -1355,6 +1355,9 @@ final class HighQualityJobTests: XCTestCase {
         presentation.publish(nil) // Candidate failed.
         XCTAssertEqual(presentation.visibleResult?.manifest.jobID, previous.manifest.jobID)
 
+        presentation.clear() // The user changed project context.
+        XCTAssertNil(presentation.visibleResult)
+
         presentation.publish(replacement)
         XCTAssertEqual(presentation.visibleResult?.manifest.jobID, replacement.manifest.jobID)
     }
@@ -4015,6 +4018,10 @@ final class HighQualityJobTests: XCTestCase {
             rerun.turns.map(\.speakerLabel)
         )
         XCTAssertEqual(rerun.subtitleCues.map(\.speakerLabel), ["SPEAKER_01"])
+        XCTAssertEqual(
+            rerun.subtitleCues.map(\.renderedLines),
+            previous.subtitleCues.map(\.renderedLines)
+        )
         let reanalysis = try XCTUnwrap(rerun.evidence.speakerReanalyses?.last)
         XCTAssertEqual(reanalysis.configuration, configuration)
         XCTAssertEqual(reanalysis.replacedDiarization, previous.evidence.diarization)
@@ -6048,6 +6055,7 @@ final class HighQualityJobTests: XCTestCase {
             deliverables: Set(HighQualityDeliverable.allCases),
             backend: .qwenJA,
             speakerLabels: true,
+            readableSubtitles: true,
             useExclusiveReconciliation: useExclusiveReconciliation,
             outputRoot: root
         ))

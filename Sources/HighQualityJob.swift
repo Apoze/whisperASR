@@ -2840,7 +2840,8 @@ struct HighQualityJob: Sendable {
                     start: cue.start,
                     end: cue.end,
                     text: cue.text,
-                    speakerLabel: labelsByID[cue.id]
+                    speakerLabel: labelsByID[cue.id],
+                    renderedLines: cue.renderedLines
                 )
             }
             let deliverables = Set(previous.manifest.deliverables)
@@ -6086,8 +6087,8 @@ struct HighQualityJob: Sendable {
             isDirectory: true
         )
         try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
-        defer { try? fileManager.removeItem(at: staging) }
-        try hardLinkContents(of: directory, to: staging)
+        defer { try? AtomicDirectory.remove(staging) }
+        try AtomicDirectory.cloneContents(of: directory, to: staging)
         try writeFiles(files, to: staging)
         guard files.allSatisfy({ path, data in
             (try? Data(contentsOf: staging.appendingPathComponent(path))) == data
@@ -6106,68 +6107,8 @@ struct HighQualityJob: Sendable {
             throw CocoaError(.fileWriteUnknown)
         }
         try Task.checkCancellation()
-        let status = staging.path.withCString { stagedPath in
-            directory.path.withCString { activePath in
-                renameatx_np(
-                    AT_FDCWD,
-                    stagedPath,
-                    AT_FDCWD,
-                    activePath,
-                    UInt32(RENAME_SWAP)
-                )
-            }
-        }
-        guard status == 0 else {
-            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-        }
+        try AtomicDirectory.swap(staging, with: directory)
         try afterCommit()
-    }
-
-    private static func hardLinkContents(of source: URL, to destination: URL) throws {
-        let fileManager = FileManager.default
-        let canonicalSourcePath = source.resolvingSymlinksInPath().path
-        var traversalError: Error?
-        guard let enumerator = fileManager.enumerator(
-            at: source,
-            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
-            errorHandler: { _, error in
-                traversalError = error
-                return false
-            }
-        ) else {
-            throw CocoaError(.fileReadUnknown)
-        }
-        for case let item as URL in enumerator {
-            let sourcePath: String
-            let itemPath: String
-            if item.path.hasPrefix(source.path + "/") {
-                sourcePath = source.path
-                itemPath = item.path
-            } else {
-                sourcePath = canonicalSourcePath
-                itemPath = item.resolvingSymlinksInPath().path
-            }
-            guard itemPath.hasPrefix(sourcePath + "/") else {
-                throw CocoaError(.fileReadInvalidFileName)
-            }
-            let relativePath = String(itemPath.dropFirst(sourcePath.count + 1))
-            let target = destination.appendingPathComponent(relativePath)
-            let values = try item.resourceValues(forKeys: [
-                .isDirectoryKey,
-                .isSymbolicLinkKey,
-            ])
-            if values.isSymbolicLink == true {
-                try fileManager.createSymbolicLink(
-                    atPath: target.path,
-                    withDestinationPath: fileManager.destinationOfSymbolicLink(atPath: item.path)
-                )
-            } else if values.isDirectory == true {
-                try fileManager.createDirectory(at: target, withIntermediateDirectories: false)
-            } else {
-                try fileManager.linkItem(at: item, to: target)
-            }
-        }
-        if let traversalError { throw traversalError }
     }
 
     static func webVTT(_ cues: [HighQualitySubtitleCue]) -> String {
