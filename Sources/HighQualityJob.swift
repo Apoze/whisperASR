@@ -819,7 +819,7 @@ struct HighQualityDiarizationExchange: Codable, Equatable, Sendable {
 }
 
 struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
-    let speakerID: String
+    let speakerLabel: String
     let modelID: String
     let modelRevision: String
     let runtimeRevision: String
@@ -827,6 +827,12 @@ struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
     let vectorDimension: Int
     let sourceJobID: UUID
     let vector: [Float]
+
+    private enum CodingKeys: String, CodingKey {
+        case speakerLabel = "speakerID"
+        case modelID, modelRevision, runtimeRevision, embeddingVariant
+        case vectorDimension, sourceJobID, vector
+    }
 }
 
 struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
@@ -835,8 +841,8 @@ struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
     static let betaDescription = "Suggestions indicate uncertain acoustic similarity only; "
         + "they do not establish identity or merge speakers automatically."
 
-    let firstSpeakerID: String
-    let secondSpeakerID: String
+    let firstSpeakerLabel: String
+    let secondSpeakerLabel: String
     let cosineDistance: Float
 }
 
@@ -1135,10 +1141,34 @@ struct HighQualityJobResult: Sendable {
     let manifest: HighQualityJobManifest
     let evidence: HighQualityRawEvidence
 
+    var hasDuplicateSpeakerBetaEvidence: Bool {
+        compatibleSpeakerCentroids != nil
+    }
+
     var duplicateSpeakerSuggestions: [HighQualityDuplicateSpeakerSuggestion] {
-        HighQualityJob.duplicateSpeakerSuggestions(
-            from: evidence.diarization?.speakerCentroids ?? []
-        )
+        compatibleSpeakerCentroids.map(HighQualityJob.duplicateSpeakerSuggestions) ?? []
+    }
+
+    private var compatibleSpeakerCentroids: [HighQualitySpeakerCentroidEvidence]? {
+        guard let diarization = evidence.diarization else { return nil }
+        let speakerCount = Set(diarization.rawSpans.map(\.speakerID)).count
+        let expectedSpeakerLabels = Set((0..<speakerCount).map {
+            String(format: "SPEAKER_%02d", $0)
+        })
+        guard diarization.validationDiagnostics.isEmpty,
+              let centroids = diarization.speakerCentroids,
+              Set(centroids.map(\.speakerLabel)) == expectedSpeakerLabels,
+              let runtimeRevision = diarization.configuration?["runtimeRevision"],
+              let embeddingVariant = diarization.configuration?["embedderVariant"],
+              HighQualityJob.hasValidCompatibleSpeakerCentroids(centroids),
+              centroids.allSatisfy({
+                  $0.sourceJobID == manifest.jobID
+                      && $0.modelID == diarization.modelID
+                      && $0.modelRevision == diarization.revision
+                      && $0.runtimeRevision == runtimeRevision
+                      && $0.embeddingVariant == embeddingVariant
+              }) else { return nil }
+        return centroids
     }
 }
 
@@ -3543,13 +3573,19 @@ struct HighQualityJob: Sendable {
         if let vectors = exchange.speakerCentroids {
             if vectors.isEmpty {
                 speakerCentroids = []
+                if !spans.isEmpty {
+                    centroidDiagnostics.append(
+                        "Abstained from duplicate speaker suggestions: SpeakerKit returned no centroid vectors."
+                    )
+                }
             } else if let sourceJobID,
-                      !exchange.modelID.isEmpty,
-                      !exchange.revision.isEmpty,
+                      sourceJobID.uuidString != "00000000-0000-0000-0000-000000000000",
+                      isTrimmedAndNonempty(exchange.modelID),
+                      isTrimmedAndNonempty(exchange.revision),
                       let runtimeRevision = exchange.configuration?["runtimeRevision"],
-                      !runtimeRevision.isEmpty,
+                      isTrimmedAndNonempty(runtimeRevision),
                       let embeddingVariant = exchange.configuration?["embedderVariant"],
-                      !embeddingVariant.isEmpty {
+                      isTrimmedAndNonempty(embeddingVariant) {
                 var retained: [HighQualitySpeakerCentroidEvidence] = []
                 for speakerID in vectors.keys.sorted() {
                     guard let label = labels[speakerID] else {
@@ -3576,8 +3612,14 @@ struct HighQualityJob: Sendable {
                         )
                         continue
                     }
+                    guard hasSafeSpeakerCentroidNorm(vector) else {
+                        centroidDiagnostics.append(
+                            "Discarded SpeakerKit centroid \(label): vector norm cannot be represented safely."
+                        )
+                        continue
+                    }
                     retained.append(.init(
-                        speakerID: label,
+                        speakerLabel: label,
                         modelID: exchange.modelID,
                         modelRevision: exchange.revision,
                         runtimeRevision: runtimeRevision,
@@ -3586,6 +3628,17 @@ struct HighQualityJob: Sendable {
                         sourceJobID: sourceJobID,
                         vector: vector
                     ))
+                }
+                for (speakerID, label) in labels.sorted(by: { $0.key < $1.key })
+                    where vectors[speakerID] == nil {
+                    centroidDiagnostics.append(
+                        "Abstained from duplicate speaker suggestions: \(label) has no centroid vector."
+                    )
+                }
+                if Set(retained.map(\.vectorDimension)).count > 1 {
+                    centroidDiagnostics.append(
+                        "Abstained from duplicate speaker suggestions: centroid dimensions are incompatible."
+                    )
                 }
                 speakerCentroids = retained
             } else {
@@ -3689,17 +3742,14 @@ struct HighQualityJob: Sendable {
     static func duplicateSpeakerSuggestions(
         from centroids: [HighQualitySpeakerCentroidEvidence]
     ) -> [HighQualityDuplicateSpeakerSuggestion] {
+        guard centroids.count > 1,
+              hasValidCompatibleSpeakerCentroids(centroids) else { return [] }
         var comparisons: [(left: Int, right: Int, distance: Float)] = []
         for leftIndex in centroids.indices {
             for rightIndex in centroids.indices where rightIndex > leftIndex {
                 let left = centroids[leftIndex]
                 let right = centroids[rightIndex]
-                guard left.modelID == right.modelID,
-                      left.modelRevision == right.modelRevision,
-                      left.runtimeRevision == right.runtimeRevision,
-                      left.embeddingVariant == right.embeddingVariant,
-                      left.vectorDimension == right.vectorDimension,
-                      let distance = cosineDistance(left.vector, right.vector) else { continue }
+                guard let distance = cosineDistance(left.vector, right.vector) else { return [] }
                 comparisons.append((leftIndex, rightIndex, distance))
             }
         }
@@ -3710,8 +3760,8 @@ struct HighQualityJob: Sendable {
             let ranked = comparisons.filter {
                 $0.left == centroidIndex || $0.right == centroidIndex
             }.sorted {
-                ($0.distance, centroids[$0.left == centroidIndex ? $0.right : $0.left].speakerID)
-                    < ($1.distance, centroids[$1.left == centroidIndex ? $1.right : $1.left].speakerID)
+                ($0.distance, centroids[$0.left == centroidIndex ? $0.right : $0.left].speakerLabel)
+                    < ($1.distance, centroids[$1.left == centroidIndex ? $1.right : $1.left].speakerLabel)
             }
             guard let nearest = ranked.first,
                   nearest.left == comparison.left,
@@ -3728,18 +3778,66 @@ struct HighQualityJob: Sendable {
             let left = centroids[comparison.left]
             let right = centroids[comparison.right]
             return HighQualityDuplicateSpeakerSuggestion(
-                firstSpeakerID: min(left.speakerID, right.speakerID),
-                secondSpeakerID: max(left.speakerID, right.speakerID),
+                firstSpeakerLabel: min(left.speakerLabel, right.speakerLabel),
+                secondSpeakerLabel: max(left.speakerLabel, right.speakerLabel),
                 cosineDistance: comparison.distance
             )
         }.sorted {
-            ($0.cosineDistance, $0.firstSpeakerID, $0.secondSpeakerID)
-                < ($1.cosineDistance, $1.firstSpeakerID, $1.secondSpeakerID)
+            ($0.cosineDistance, $0.firstSpeakerLabel, $0.secondSpeakerLabel)
+                < ($1.cosineDistance, $1.firstSpeakerLabel, $1.secondSpeakerLabel)
         }
     }
 
+    static func hasValidCompatibleSpeakerCentroids(
+        _ centroids: [HighQualitySpeakerCentroidEvidence]
+    ) -> Bool {
+        guard let first = centroids.first,
+              Set(centroids.map(\.speakerLabel)).count == centroids.count,
+              centroids.allSatisfy(isValidSpeakerCentroid) else { return false }
+        return centroids.dropFirst().allSatisfy {
+            $0.sourceJobID == first.sourceJobID
+                && $0.modelID == first.modelID
+                && $0.modelRevision == first.modelRevision
+                && $0.runtimeRevision == first.runtimeRevision
+                && $0.embeddingVariant == first.embeddingVariant
+                && $0.vectorDimension == first.vectorDimension
+        }
+    }
+
+    private static func isValidSpeakerCentroid(
+        _ centroid: HighQualitySpeakerCentroidEvidence
+    ) -> Bool {
+        guard [
+            centroid.speakerLabel,
+            centroid.modelID,
+            centroid.modelRevision,
+            centroid.runtimeRevision,
+            centroid.embeddingVariant,
+        ].allSatisfy(isTrimmedAndNonempty),
+            centroid.sourceJobID.uuidString != "00000000-0000-0000-0000-000000000000",
+            centroid.vectorDimension > 0,
+            centroid.vectorDimension == centroid.vector.count,
+            centroid.vector.allSatisfy(\.isFinite) else { return false }
+        return hasSafeSpeakerCentroidNorm(centroid.vector)
+    }
+
+    private static func hasSafeSpeakerCentroidNorm(_ vector: [Float]) -> Bool {
+        let squaredNorm = vector.reduce(Float.zero) { $0 + $1 * $1 }
+        let minimum = Float.leastNormalMagnitude.squareRoot()
+        let maximum = Float.greatestFiniteMagnitude.squareRoot()
+        return (minimum...maximum).contains(squaredNorm)
+    }
+
+    private static func isTrimmedAndNonempty(_ value: String) -> Bool {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmed.isEmpty && trimmed == value
+    }
+
     static func cosineDistance(_ left: [Float], _ right: [Float]) -> Float? {
-        guard !left.isEmpty, left.count == right.count else { return nil }
+        guard !left.isEmpty,
+              left.count == right.count,
+              hasSafeSpeakerCentroidNorm(left),
+              hasSafeSpeakerCentroidNorm(right) else { return nil }
         var dot: Float = 0
         var leftMagnitude: Float = 0
         var rightMagnitude: Float = 0

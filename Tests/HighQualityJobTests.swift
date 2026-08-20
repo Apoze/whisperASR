@@ -1018,7 +1018,7 @@ final class HighQualityJobTests: XCTestCase {
         ))
 
         let centroids = try XCTUnwrap(completed.evidence.diarization?.speakerCentroids)
-        XCTAssertEqual(centroids.map(\.speakerID), ["SPEAKER_00", "SPEAKER_01"])
+        XCTAssertEqual(centroids.map(\.speakerLabel), ["SPEAKER_00", "SPEAKER_01"])
         XCTAssertTrue(centroids.allSatisfy {
             $0.modelID == "speakerkit"
                 && $0.modelRevision == "revision"
@@ -1029,7 +1029,7 @@ final class HighQualityJobTests: XCTestCase {
         })
         XCTAssertEqual(
             completed.duplicateSpeakerSuggestions.map {
-                [$0.firstSpeakerID, $0.secondSpeakerID]
+                [$0.firstSpeakerLabel, $0.secondSpeakerLabel]
             },
             [["SPEAKER_00", "SPEAKER_01"]]
         )
@@ -1069,35 +1069,242 @@ final class HighQualityJobTests: XCTestCase {
 
     func testDuplicateSpeakerSuggestionRejectsIncompatibleModelID() {
         assertDuplicateSpeakerSuggestionAbstains(
-            second: speakerCentroid(speakerID: "SPEAKER_01", modelID: "other-model")
+            second: speakerCentroid(speakerLabel: "SPEAKER_01", modelID: "other-model")
         )
     }
 
     func testDuplicateSpeakerSuggestionRejectsIncompatibleModelRevision() {
         assertDuplicateSpeakerSuggestionAbstains(
-            second: speakerCentroid(speakerID: "SPEAKER_01", modelRevision: "other-revision")
+            second: speakerCentroid(speakerLabel: "SPEAKER_01", modelRevision: "other-revision")
         )
     }
 
     func testDuplicateSpeakerSuggestionRejectsIncompatibleRuntimeRevision() {
         assertDuplicateSpeakerSuggestionAbstains(
-            second: speakerCentroid(speakerID: "SPEAKER_01", runtimeRevision: "other-runtime")
+            second: speakerCentroid(speakerLabel: "SPEAKER_01", runtimeRevision: "other-runtime")
         )
     }
 
     func testDuplicateSpeakerSuggestionRejectsIncompatibleEmbeddingVariant() {
         assertDuplicateSpeakerSuggestionAbstains(
-            second: speakerCentroid(speakerID: "SPEAKER_01", embeddingVariant: "W16A16")
+            second: speakerCentroid(speakerLabel: "SPEAKER_01", embeddingVariant: "W16A16")
         )
     }
 
     func testDuplicateSpeakerSuggestionRejectsIncompatibleVectorDimension() {
         assertDuplicateSpeakerSuggestionAbstains(
             second: speakerCentroid(
-                speakerID: "SPEAKER_01",
+                speakerLabel: "SPEAKER_01",
                 vectorDimension: 3,
                 vector: [0.999, 0.001, 0]
             )
+        )
+    }
+
+    func testDuplicateSpeakerSuggestionRejectsInvalidCentroidFields() {
+        let sourceJobID = UUID(uuidString: "00000114-0000-0000-0000-000000000001")!
+        let otherJobID = UUID(uuidString: "00000114-0000-0000-0000-000000000002")!
+        let emptyJobID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+        let cases: [(String, [HighQualitySpeakerCentroidEvidence])] = [
+            ("speakerLabel", [
+                speakerCentroid(speakerLabel: "", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", vector: [0.999, 0.001]),
+            ]),
+            ("speakerLabel duplicate", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_00"),
+            ]),
+            ("modelID", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", modelID: "", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", modelID: ""),
+            ]),
+            ("modelID whitespace", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", modelID: " speakerkit", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", modelID: " speakerkit"),
+            ]),
+            ("modelRevision", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", modelRevision: "", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", modelRevision: ""),
+            ]),
+            ("runtimeRevision", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", runtimeRevision: "", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", runtimeRevision: ""),
+            ]),
+            ("embeddingVariant", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", embeddingVariant: "", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", embeddingVariant: ""),
+            ]),
+            ("sourceJobID empty", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", sourceJobID: emptyJobID, vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", sourceJobID: emptyJobID),
+            ]),
+            ("sourceJobID mismatch", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", sourceJobID: sourceJobID, vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", sourceJobID: otherJobID),
+            ]),
+            ("vectorDimension zero", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vectorDimension: 0, vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", vectorDimension: 0),
+            ]),
+            ("vectorDimension count", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vectorDimension: 3, vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", vectorDimension: 3),
+            ]),
+            ("vectorDimension mismatch", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vector: [1, 0]),
+                speakerCentroid(
+                    speakerLabel: "SPEAKER_01",
+                    vectorDimension: 3,
+                    vector: [0.999, 0.001, 0]
+                ),
+            ]),
+            ("vector empty", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vectorDimension: 0, vector: []),
+                speakerCentroid(speakerLabel: "SPEAKER_01", vectorDimension: 0, vector: []),
+            ]),
+            ("vector NaN", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vector: [.nan, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", vector: [.nan, 0]),
+            ]),
+            ("vector infinity", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vector: [.infinity, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", vector: [.infinity, 0]),
+            ]),
+            ("vector zero norm", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vector: [0, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_01", vector: [0, 0]),
+            ]),
+            ("vector arithmetic overflow", [
+                speakerCentroid(speakerLabel: "SPEAKER_00", vector: [1, 0]),
+                speakerCentroid(
+                    speakerLabel: "SPEAKER_01",
+                    vector: [.greatestFiniteMagnitude, 0]
+                ),
+                speakerCentroid(speakerLabel: "SPEAKER_02", vector: [0.8, 0.6]),
+            ]),
+        ]
+
+        for (field, centroids) in cases {
+            XCTAssertTrue(
+                HighQualityJob.duplicateSpeakerSuggestions(from: centroids).isEmpty,
+                field
+            )
+        }
+    }
+
+    func testDuplicateSpeakerBetaRequiresNonemptyCompatibleCentroids() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let request: (UUID, [Int: [Float]]) async throws -> HighQualityJobResult = { id, centroids in
+            try await self.speakerSubtitleFixtureJob(speakerCentroids: centroids).run(.init(
+                id: id,
+                sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+                deliverables: [.japaneseTranscript],
+                backend: .qwenJA,
+                speakerLabels: true,
+                outputRoot: root
+            ))
+        }
+
+        let valid = try await request(UUID(), [0: [1, 0], 1: [0.999, 0.001]])
+        let empty = try await request(UUID(), [:])
+        XCTAssertTrue(valid.hasDuplicateSpeakerBetaEvidence)
+        XCTAssertFalse(empty.hasDuplicateSpeakerBetaEvidence)
+    }
+
+    func testCompletedJobAuditsEmptyCentroidsWithoutBreakingStandardResult() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let result = try await speakerSubtitleFixtureJob(
+            speakerCentroids: [:],
+            diarizationSpeakerIDs: [0, 1]
+        ).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.evidence.diarization?.rawSpans.map(\.speakerID), [0, 1])
+        XCTAssertEqual(result.evidence.diarization?.speakerCentroids, [])
+        XCTAssertEqual(result.evidence.diarization?.validationDiagnostics, [
+            "Abstained from duplicate speaker suggestions: SpeakerKit returned no centroid vectors.",
+        ])
+        XCTAssertFalse(result.hasDuplicateSpeakerBetaEvidence)
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
+    }
+
+    func testResultRejectsCentroidProvenanceThatDoesNotMatchItsJob() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let completed = try await speakerSubtitleFixtureJob(speakerCentroids: [
+            0: [1, 0],
+            1: [0.999, 0.001],
+        ]).run(.init(
+            id: UUID(),
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+        let cases: [(String, String)] = [
+            ("sourceJobID", "00000114-0000-0000-0000-000000000099"),
+            ("modelID", "other-model"),
+            ("modelRevision", "other-model-revision"),
+            ("runtimeRevision", "other-runtime-revision"),
+            ("embeddingVariant", "other-embedding-variant"),
+        ]
+
+        for (field, value) in cases {
+            var raw = try XCTUnwrap(
+                try JSONSerialization.jsonObject(with: JSONEncoder().encode(completed.evidence))
+                    as? [String: Any]
+            )
+            var diarization = try XCTUnwrap(raw["diarization"] as? [String: Any])
+            var centroids = try XCTUnwrap(
+                diarization["speakerCentroids"] as? [[String: Any]]
+            )
+            for index in centroids.indices { centroids[index][field] = value }
+            diarization["speakerCentroids"] = centroids
+            raw["diarization"] = diarization
+            let evidence = try JSONDecoder().decode(
+                HighQualityRawEvidence.self,
+                from: JSONSerialization.data(withJSONObject: raw)
+            )
+            let result = HighQualityJobResult(
+                directory: completed.directory,
+                japaneseTranscript: completed.japaneseTranscript,
+                englishTranscript: completed.englishTranscript,
+                turns: completed.turns,
+                subtitleCues: completed.subtitleCues,
+                manifest: completed.manifest,
+                evidence: evidence
+            )
+
+            XCTAssertFalse(result.hasDuplicateSpeakerBetaEvidence, field)
+            XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty, field)
+        }
+    }
+
+    func testSpeakerCentroidLabelKeepsVersionedSpeakerIDJSONKey() throws {
+        let centroid = speakerCentroid(speakerLabel: "SPEAKER_00")
+        let encoded = try JSONEncoder().encode(centroid)
+        let object = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+
+        XCTAssertEqual(object["speakerID"] as? String, "SPEAKER_00")
+        XCTAssertNil(object["speakerLabel"])
+        XCTAssertEqual(
+            try JSONDecoder().decode(HighQualitySpeakerCentroidEvidence.self, from: encoded),
+            centroid
         )
     }
 
@@ -1126,8 +1333,10 @@ final class HighQualityJobTests: XCTestCase {
 
         let result = try await speakerSubtitleFixtureJob(speakerCentroids: [
             0: [1, 0],
-            1: [0, 0],
-            2: [.nan, 0],
+            1: [0.999, 0.001],
+            2: [0, 0],
+            3: [.nan, 0],
+            4: [.greatestFiniteMagnitude, 0],
         ]).run(.init(
             sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
             deliverables: [.japaneseTranscript],
@@ -1138,19 +1347,81 @@ final class HighQualityJobTests: XCTestCase {
 
         let evidence = try XCTUnwrap(result.evidence.diarization)
         XCTAssertEqual(result.manifest.status, .completed)
-        XCTAssertEqual(evidence.rawSpans.map(\.speakerID), [0, 1, 2])
+        XCTAssertEqual(evidence.rawSpans.map(\.speakerID), [0, 1, 2, 3, 4])
         XCTAssertEqual(evidence.mappings.map(\.speakerLabel), ["SPEAKER_00"])
-        XCTAssertEqual(evidence.speakerCentroids?.map(\.speakerID), ["SPEAKER_00"])
+        XCTAssertEqual(
+            evidence.speakerCentroids?.map(\.speakerLabel),
+            ["SPEAKER_00", "SPEAKER_01"]
+        )
         XCTAssertEqual(evidence.validationDiagnostics, [
-            "Discarded SpeakerKit centroid SPEAKER_01: vector has zero norm.",
-            "Discarded SpeakerKit centroid SPEAKER_02: vector contains non-finite values.",
+            "Discarded SpeakerKit centroid SPEAKER_02: vector has zero norm.",
+            "Discarded SpeakerKit centroid SPEAKER_03: vector contains non-finite values.",
+            "Discarded SpeakerKit centroid SPEAKER_04: vector norm cannot be represented safely.",
         ])
+        XCTAssertFalse(result.hasDuplicateSpeakerBetaEvidence)
         XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
         XCTAssertEqual(
             try HighQualityJob.reopen(XCTUnwrap(HighQualityJob.savedResults(in: root).first))
                 .evidence.diarization,
             evidence
         )
+    }
+
+    func testCompletedJobAuditsIncompatibleCentroidDimensions() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let result = try await speakerSubtitleFixtureJob(speakerCentroids: [
+            0: [1, 0],
+            1: [1, 0, 0],
+        ]).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        let evidence = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(evidence.rawSpans.map(\.speakerID), [0, 1])
+        XCTAssertEqual(evidence.speakerCentroids?.count, 2)
+        XCTAssertEqual(evidence.validationDiagnostics, [
+            "Abstained from duplicate speaker suggestions: centroid dimensions are incompatible.",
+        ])
+        XCTAssertFalse(result.hasDuplicateSpeakerBetaEvidence)
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
+    }
+
+    func testCompletedJobAuditsMissingSpeakerCentroid() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let result = try await speakerSubtitleFixtureJob(
+            speakerCentroids: [0: [1, 0], 1: [0.999, 0.001]],
+            diarizationSpeakerIDs: [0, 1, 2]
+        ).run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: [.japaneseTranscript],
+            backend: .qwenJA,
+            speakerLabels: true,
+            outputRoot: root
+        ))
+
+        let evidence = try XCTUnwrap(result.evidence.diarization)
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(evidence.rawSpans.map(\.speakerID), [0, 1, 2])
+        XCTAssertEqual(
+            evidence.speakerCentroids?.map(\.speakerLabel),
+            ["SPEAKER_00", "SPEAKER_01"]
+        )
+        XCTAssertEqual(evidence.validationDiagnostics, [
+            "Abstained from duplicate speaker suggestions: SPEAKER_02 has no centroid vector.",
+        ])
+        XCTAssertFalse(result.hasDuplicateSpeakerBetaEvidence)
+        XCTAssertTrue(result.duplicateSpeakerSuggestions.isEmpty)
     }
 
     func testCompletedJobDiscardsCentroidsWithoutProvenance() async throws {
@@ -2273,22 +2544,25 @@ final class HighQualityJobTests: XCTestCase {
     }
 
     private func speakerCentroid(
-        speakerID: String,
+        speakerLabel: String,
         modelID: String = "speakerkit",
         modelRevision: String = "revision",
         runtimeRevision: String = "runtime-revision",
         embeddingVariant: String = "W8A16",
         vectorDimension: Int = 2,
+        sourceJobID: UUID = UUID(
+            uuidString: "00000114-0000-0000-0000-000000000001"
+        )!,
         vector: [Float] = [0.999, 0.001]
     ) -> HighQualitySpeakerCentroidEvidence {
         .init(
-            speakerID: speakerID,
+            speakerLabel: speakerLabel,
             modelID: modelID,
             modelRevision: modelRevision,
             runtimeRevision: runtimeRevision,
             embeddingVariant: embeddingVariant,
             vectorDimension: vectorDimension,
-            sourceJobID: UUID(uuidString: "00000114-0000-0000-0000-000000000001")!,
+            sourceJobID: sourceJobID,
             vector: vector
         )
     }
@@ -2300,7 +2574,7 @@ final class HighQualityJobTests: XCTestCase {
     ) {
         XCTAssertTrue(
             HighQualityJob.duplicateSpeakerSuggestions(from: [
-                speakerCentroid(speakerID: "SPEAKER_00", vector: [1, 0]),
+                speakerCentroid(speakerLabel: "SPEAKER_00", vector: [1, 0]),
                 second,
             ]).isEmpty,
             file: file,
@@ -2313,7 +2587,8 @@ final class HighQualityJobTests: XCTestCase {
         speakerCentroidConfiguration: [String: String]? = [
             "runtimeRevision": "runtime-revision",
             "embedderVariant": "W8A16",
-        ]
+        ],
+        diarizationSpeakerIDs: [Int]? = nil
     ) -> HighQualityJob {
         HighQualityJob(services: .init(
             loadSource: { _ in Array(repeating: 0, count: 160_000) },
@@ -2343,7 +2618,9 @@ final class HighQualityJobTests: XCTestCase {
             unloadAlignment: {},
             prepareDiarization: { _, _ in },
             diarizeSpeakers: { _, useExclusiveReconciliation, _ in
-                let speakerIDs = speakerCentroids?.keys.sorted() ?? [0, 1]
+                let speakerIDs = diarizationSpeakerIDs
+                    ?? speakerCentroids?.keys.sorted()
+                    ?? [0, 1]
                 return .init(
                     spans: speakerIDs.enumerated().map { index, speakerID in
                         .init(

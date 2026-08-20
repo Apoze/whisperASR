@@ -435,6 +435,70 @@ final class HighQualityAcceptanceTests: XCTestCase {
 
         XCTAssertGreaterThan(report.centroidCount, 1)
         XCTAssertFalse(report.comparisons.isEmpty)
+        if holdoutOpened {
+            let evidenceDirectory = URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .appendingPathComponent(
+                    "docs/japanese-live/experiments/evidence/E32-duplicate-speaker-centroids"
+                )
+            XCTAssertEqual(report.maximumCosineDistance, 0.3)
+            XCTAssertEqual(report.uncertaintyMargin, 0.1)
+            XCTAssertEqual(report.centroidCount, 12)
+            XCTAssertEqual(report.comparisons.count, 66)
+            XCTAssertEqual(report.suggestionCount, 1)
+            XCTAssertEqual(report.usefulSuggestionCount, 1)
+            XCTAssertEqual(report.falseSuggestionCount, 0)
+            XCTAssertEqual(report.comparisons.filter { !$0.suggested }.count, 65)
+            XCTAssertEqual(report.corpusID, "md62mmdz0m")
+            XCTAssertEqual(report.purpose, "holdout-dialogue")
+            XCTAssertEqual(report.benchmarkSlot, "114-HOLDOUT")
+            XCTAssertEqual(
+                report.sourceJobID,
+                UUID(uuidString: "00000114-0000-0000-0000-000000000003")
+            )
+            XCTAssertEqual(report.speakerCountPolicy, .expected(12))
+            XCTAssertEqual(report.calibrationRole, "frozen-holdout-evaluation")
+            XCTAssertEqual(
+                report.sourceSHA256,
+                "bde49d4cc67020d01ae042f2945baa61364cc34959e2211a964943e5c2064830"
+            )
+            XCTAssertEqual(report.modelID, "argmaxinc/speakerkit-coreml")
+            XCTAssertEqual(
+                report.modelRevision,
+                "86ec9c929b52208b6656eb6a6361ed0d822a1f78"
+            )
+            XCTAssertEqual(
+                report.runtimeRevision,
+                "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d"
+            )
+            XCTAssertEqual(report.embeddingVariant, "W8A16")
+            XCTAssertEqual(report.vectorDimensions, [256])
+            XCTAssertEqual(
+                try JapaneseBenchmarkSupport.sha256(
+                    at: URL(fileURLWithPath: manifestPath)
+                ),
+                "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc"
+            )
+            XCTAssertEqual(
+                try JapaneseBenchmarkSupport.sha256(
+                    at: evidenceDirectory.appendingPathComponent("holdout-plan.json")
+                ),
+                "bbef51e14429eb90aca7717bf5603ffc8279fa47ca0b6479a0f9a3ee6444f17b"
+            )
+            XCTAssertEqual(
+                try JapaneseBenchmarkSupport.sha256(
+                    at: evidenceDirectory.appendingPathComponent("threshold-contract-v2.json")
+                ),
+                "e197099d939e388b32ea179bae0c609415e4831e47891ddb0c776709365265ed"
+            )
+            let suggestion = try XCTUnwrap(report.comparisons.first(where: \.suggested))
+            XCTAssertEqual(suggestion.firstSpeakerLabel, "SPEAKER_01")
+            XCTAssertEqual(suggestion.secondSpeakerLabel, "SPEAKER_02")
+            XCTAssertEqual(suggestion.firstReferenceSpeaker, "SHIRAYUKI_REID")
+            XCTAssertEqual(suggestion.secondReferenceSpeaker, "SHIRAYUKI_REID")
+            XCTAssertEqual(suggestion.cosineDistance, 0.17515594, accuracy: 0.00000001)
+        }
         print(
             "[#114][\(holdoutOpened ? "HOLDOUT" : "DEV")] centroids=\(report.centroidCount) "
                 + "suggestions=\(report.suggestionCount) "
@@ -442,6 +506,78 @@ final class HighQualityAcceptanceTests: XCTestCase {
                 + "false=\(report.falseSuggestionCount) "
                 + "seconds=\(elapsedSeconds) peakBytes=\(report.observedPeakMemoryBytes)"
         )
+    }
+
+    func testDuplicateSpeakerReportsRejectDiarizationValidationDiagnostics() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let sourceJobID = UUID(uuidString: "00000114-0000-0000-0000-000000000004")!
+        let centroids = [
+            HighQualitySpeakerCentroidEvidence(
+                speakerLabel: "SPEAKER_00",
+                modelID: "speakerkit",
+                modelRevision: "revision",
+                runtimeRevision: "runtime-revision",
+                embeddingVariant: "W8A16",
+                vectorDimension: 2,
+                sourceJobID: sourceJobID,
+                vector: [1, 0]
+            ),
+            HighQualitySpeakerCentroidEvidence(
+                speakerLabel: "SPEAKER_01",
+                modelID: "speakerkit",
+                modelRevision: "revision",
+                runtimeRevision: "runtime-revision",
+                embeddingVariant: "W8A16",
+                vectorDimension: 2,
+                sourceJobID: sourceJobID,
+                vector: [0.999, 0.001]
+            ),
+        ]
+        let evidence = HighQualityDiarizationEvidence(
+            modelID: "speakerkit",
+            revision: "revision",
+            rawSpans: [
+                .init(speakerID: 0, start: 0, end: 1),
+                .init(speakerID: 1, start: 1, end: 2),
+            ],
+            mappings: [],
+            overlapRanges: [],
+            peakMemoryBytes: 0,
+            useExclusiveReconciliation: false,
+            speakerCountPolicy: .expected(12),
+            configuration: [
+                "runtimeRevision": "runtime-revision",
+                "embedderVariant": "W8A16",
+            ],
+            validationDiagnostics: ["centroid coverage is incomplete"],
+            speakerCentroids: centroids
+        )
+        let cases = [
+            ("easy-japanese-1", false, "114-CALIBRATION"),
+            ("md62mmdz0m", true, "114-HOLDOUT"),
+        ]
+
+        for (corpus, holdoutOpened, slot) in cases {
+            let manifest = try JapaneseBenchmarkSupport.loadManifest(
+                at: repositoryRoot.appendingPathComponent(
+                    "docs/japanese-live/corpora/\(corpus)/manifest.json"
+                )
+            )
+            XCTAssertThrowsError(try Self.duplicateSpeakerEvidenceReport(
+                manifest: manifest,
+                evidence: evidence,
+                elapsedSeconds: 0,
+                sourceSHA256: manifest.fixture.sha256,
+                sourceJobID: sourceJobID,
+                benchmarkSlot: slot,
+                speakerCountPolicy: .expected(12),
+                holdoutOpened: holdoutOpened
+            )) { error in
+                XCTAssertTrue(error.localizedDescription.contains("centroid coverage is incomplete"))
+            }
+        }
     }
 
     func testFrozenExclusiveSpeakerReconciliationWhenOptedIn() async throws {
@@ -1234,20 +1370,32 @@ final class HighQualityAcceptanceTests: XCTestCase {
     }
 
     private struct DuplicateSpeakerReferenceMapping: Codable {
-        let speakerID: String
+        let speakerLabel: String
         let referenceSpeaker: String?
         let referenceOverlapSeconds: TimeInterval
         let referenceShare: Double?
+
+        private enum CodingKeys: String, CodingKey {
+            case speakerLabel = "speakerID"
+            case referenceSpeaker, referenceOverlapSeconds, referenceShare
+        }
     }
 
     private struct DuplicateSpeakerComparison: Codable {
-        let firstSpeakerID: String
-        let secondSpeakerID: String
+        let firstSpeakerLabel: String
+        let secondSpeakerLabel: String
         let cosineDistance: Float
         let firstReferenceSpeaker: String?
         let secondReferenceSpeaker: String?
         let sameReferenceSpeaker: Bool?
         let suggested: Bool
+
+        private enum CodingKeys: String, CodingKey {
+            case firstSpeakerLabel = "firstSpeakerID"
+            case secondSpeakerLabel = "secondSpeakerID"
+            case cosineDistance, firstReferenceSpeaker, secondReferenceSpeaker
+            case sameReferenceSpeaker, suggested
+        }
     }
 
     private static func duplicateSpeakerEvidenceReport(
@@ -1260,6 +1408,16 @@ final class HighQualityAcceptanceTests: XCTestCase {
         speakerCountPolicy: HighQualitySpeakerCountPolicy,
         holdoutOpened: Bool
     ) throws -> DuplicateSpeakerEvidenceReport {
+        guard evidence.validationDiagnostics.isEmpty else {
+            throw NSError(
+                domain: "HighQualityAcceptanceTests",
+                code: 114,
+                userInfo: [
+                    NSLocalizedDescriptionKey: "Duplicate-speaker evidence is invalid: "
+                        + evidence.validationDiagnostics.joined(separator: " "),
+                ]
+            )
+        }
         let centroids = try XCTUnwrap(evidence.speakerCentroids)
         let mappings = referenceMappings(
             centroids: centroids,
@@ -1267,11 +1425,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
             manifest: manifest
         )
         let references = Dictionary(uniqueKeysWithValues: mappings.map {
-            ($0.speakerID, $0.referenceSpeaker)
+            ($0.speakerLabel, $0.referenceSpeaker)
         })
         let suggestions = HighQualityJob.duplicateSpeakerSuggestions(from: centroids)
         let suggestionKeys = Set(suggestions.map {
-            pairKey($0.firstSpeakerID, $0.secondSpeakerID)
+            pairKey($0.firstSpeakerLabel, $0.secondSpeakerLabel)
         })
         var comparisons: [DuplicateSpeakerComparison] = []
         for leftIndex in centroids.indices {
@@ -1282,11 +1440,11 @@ final class HighQualityAcceptanceTests: XCTestCase {
                     left.vector,
                     right.vector
                 ) else { continue }
-                let firstReference = references[left.speakerID] ?? nil
-                let secondReference = references[right.speakerID] ?? nil
+                let firstReference = references[left.speakerLabel] ?? nil
+                let secondReference = references[right.speakerLabel] ?? nil
                 comparisons.append(.init(
-                    firstSpeakerID: left.speakerID,
-                    secondSpeakerID: right.speakerID,
+                    firstSpeakerLabel: left.speakerLabel,
+                    secondSpeakerLabel: right.speakerLabel,
                     cosineDistance: distance,
                     firstReferenceSpeaker: firstReference,
                     secondReferenceSpeaker: secondReference,
@@ -1294,15 +1452,15 @@ final class HighQualityAcceptanceTests: XCTestCase {
                         secondReference.map { first == $0 }
                     },
                     suggested: suggestionKeys.contains(pairKey(
-                        left.speakerID,
-                        right.speakerID
+                        left.speakerLabel,
+                        right.speakerLabel
                     ))
                 ))
             }
         }
         comparisons.sort {
-            ($0.cosineDistance, $0.firstSpeakerID, $0.secondSpeakerID)
-                < ($1.cosineDistance, $1.firstSpeakerID, $1.secondSpeakerID)
+            ($0.cosineDistance, $0.firstSpeakerLabel, $0.secondSpeakerLabel)
+                < ($1.cosineDistance, $1.firstSpeakerLabel, $1.secondSpeakerLabel)
         }
         let selected = comparisons.filter(\.suggested)
         let first = try XCTUnwrap(centroids.first)
@@ -1352,7 +1510,7 @@ final class HighQualityAcceptanceTests: XCTestCase {
         })
         return centroids.map { centroid in
             var overlaps: [String: TimeInterval] = [:]
-            if let rawID = rawIDByLabel[centroid.speakerID] {
+            if let rawID = rawIDByLabel[centroid.speakerLabel] {
                 for span in spans where span.speakerID == rawID {
                     for turn in manifest.annotations.turns {
                         let start = Double(turn.startSample) / Double(manifest.fixture.sampleRate)
@@ -1367,12 +1525,12 @@ final class HighQualityAcceptanceTests: XCTestCase {
             }
             let total = overlaps.values.reduce(0, +)
             return .init(
-                speakerID: centroid.speakerID,
+                speakerLabel: centroid.speakerLabel,
                 referenceSpeaker: ranked.first?.key,
                 referenceOverlapSeconds: ranked.first?.value ?? 0,
                 referenceShare: total > 0 ? (ranked.first?.value ?? 0) / total : nil
             )
-        }.sorted { $0.speakerID < $1.speakerID }
+        }.sorted { $0.speakerLabel < $1.speakerLabel }
     }
 
     private static func pairKey(_ first: String, _ second: String) -> String {

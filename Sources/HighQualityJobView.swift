@@ -490,7 +490,7 @@ struct HighQualityJobView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        if result.evidence.diarization?.speakerCentroids != nil {
+        if result.hasDuplicateSpeakerBetaEvidence {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Similar Voices (Bêta)").font(.headline)
                 Text(HighQualityDuplicateSpeakerSuggestion.betaDescription)
@@ -504,8 +504,8 @@ struct HighQualityJobView: View {
                         id: \.offset
                     ) { _, suggestion in
                         Text(
-                            "\(suggestion.firstSpeakerID) and "
-                                + "\(suggestion.secondSpeakerID) may be duplicate labels."
+                            "\(suggestion.firstSpeakerLabel) and "
+                                + "\(suggestion.secondSpeakerLabel) may be duplicate labels."
                         )
                     }
                 }
