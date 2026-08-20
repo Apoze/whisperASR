@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "ticket": 118,
+  "result": "RETAIN_HIDDEN_DEV_NO_GO",
+  "route": "candidate",
+  "baseCommit": "98f4ccd8bf6dcd1cb98e10554f9153074357debf",
+  "command": "BENCHMARK_SLOT_GRANTED=118 bash Scripts/run_adaptive_asr_118.sh full",
+  "execution": {
+    "evidenceStatus": "EXPLORATORY_RUN_PRODUCT_PREDICATE_MISMATCH",
+    "developmentFirst": true,
+    "holdoutOpened": false,
+    "downstreamStarted": false,
+    "translations": 0,
+    "strictlySequentialWorkers": true,
+    "qwenSegments": 169,
+    "whisperKitTargets": 13,
+    "whisperKitValidHypotheses": 10,
+    "whisperKitSelections": 0,
+    "whisperKitCandidateFailures": 3,
+    "controlReusedAfterHashVerification": true
+  },
+  "corpus": {
+    "id": "qudu2fx3ncc",
+    "role": "development",
+    "audioSHA256": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+    "characterAlignmentSHA256": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7",
+    "sampleRate": 16000,
+    "segments": 169,
+    "minimumSeconds": 3,
+    "maximumSeconds": 8,
+    "detectorUsesReference": false
+  },
+  "candidateFailures": [
+    {
+      "segmentID": "segment-0116",
+      "startSample": 10492160,
+      "endSample": 10577600,
+      "durationSeconds": 5.34,
+      "stage": "whisperkit-transcription",
+      "reason": "candidate response rejected by the timing/mapping validator",
+      "recordedError": "Japanese ASR worker failed: invalid transcription response",
+      "route": "candidate",
+      "fallback": "preserve the unresolved Qwen/Parakeet result",
+      "evidenceStatus": "AUDIT_ONLY_RAW_RESPONSE_UNAVAILABLE",
+      "limitation": "the raw response no longer exists, so the exact invalid field is not independently restorable"
+    },
+    {
+      "segmentID": "segment-0167",
+      "startSample": 15076480,
+      "endSample": 15161600,
+      "durationSeconds": 5.32,
+      "stage": "whisperkit-transcription",
+      "reason": "timestamps outside the requested audio window",
+      "recordedError": "Japanese ASR worker failed: invalid transcription response",
+      "route": "candidate",
+      "fallback": "preserve the unresolved Qwen/Parakeet result",
+      "evidenceStatus": "RAW_RESPONSE_RETAINED",
+      "rawResponse": {
+        "path": "docs/japanese-live/experiments/evidence/issue-118-invalid-responses/segment-0167-response.json",
+        "SHA256": "b98e7cae2d729ae8089392d6910c2b9a713f0d10f9ec35235beb5c34dc462fc6",
+        "sourceArtifactSHA256": "ef30cf4d0544e2e169b12797fe65efa6da75e8658f33f37e327e9287cb317b02",
+        "requestedSamples": 85120,
+        "requestedDurationSeconds": 5.32,
+        "observedSourceStart": 29.31999969482422,
+        "observedSourceEnd": 29.6200008392334
+      }
+    },
+    {
+      "segmentID": "segment-0168",
+      "startSample": 15161600,
+      "endSample": 15209920,
+      "durationSeconds": 3.02,
+      "stage": "whisperkit-transcription",
+      "reason": "candidate response rejected by the timing/mapping validator",
+      "recordedError": "Japanese ASR worker failed: invalid transcription response",
+      "route": "candidate",
+      "fallback": "preserve the unresolved Qwen/Parakeet result",
+      "evidenceStatus": "AUDIT_ONLY_RAW_RESPONSE_UNAVAILABLE",
+      "limitation": "the raw response no longer exists, so the exact invalid field is not independently restorable"
+    }
+  ],
+  "calibration": {
+    "version": "adaptive-qwen-parakeet-whisperkit-118-dev-v1",
+    "validationBlocks": 5,
+    "minimumMargin": 0.2,
+    "tieTolerance": 0.01,
+    "qwenStable": false,
+    "parakeetStable": false,
+    "whisperKitStable": false,
+    "stableAcrossBlocks": false,
+    "whisperKitDevelopmentSamples": 10
+  },
+  "quality": {
+    "qwenParakeetControlEdits": 2985,
+    "withWhisperKitEdits": 2985,
+    "incrementalGainPercent": 0.0,
+    "bestObservedProjection": {
+      "replacements": 5,
+      "good": 2,
+      "bad": 3,
+      "netEditGain": -7
+    },
+    "english": {
+      "status": "NOT_RUN",
+      "reason": "DEV ASR gates failed before the single downstream translation"
+    }
+  },
+  "runtime": {
+    "workerSeconds": {
+      "qwen-ja": 139.43512403964996,
+      "parakeet-ja": 19.140624046325684,
+      "whisperkit": 79.83201098442078
+    },
+    "whisperKitWallSeconds": 85.68051770795137,
+    "peakPhysicalFootprintBytes": {
+      "qwen-ja": 7122539680,
+      "parakeet-ja": 686442152,
+      "whisperkit": 3117239248
+    },
+    "forcedTerminations": 0
+  },
+  "whisperKitModel": {
+    "modelID": "argmaxinc/whisperkit-coreml/openai_whisper-large-v3",
+    "revision": "97a5bf9bbc74c7d9c12c755d04dea59e672e3808",
+    "runtimeVersion": "1.1.0",
+    "weightSHA256": {
+      "AudioEncoder.mlmodelc/weights/weight.bin": "eb07bab32dcd62ce653b5b288bd6c27bdc5a538be309f242e33ed05e1cb53457",
+      "MelSpectrogram.mlmodelc/weights/weight.bin": "97a66b915cd3fc97dcba6806d92381e1a56024b8f68c1a1cd370d4c92505fe87",
+      "TextDecoder.mlmodelc/weights/weight.bin": "680f398925225a313c62da0221aa0a58c9f1bffac5c36f20c449a70a7c9b1e55"
+    }
+  },
+  "failedGates": [
+    "historicalRunnerMatchedProductLaunchPredicate",
+    "incrementalGainAtLeast1Percent",
+    "usefulIncrementalRecovery",
+    "separateStableCalibration",
+    "oneFrozenMargin"
+  ],
+  "rawArtifacts": {
+    ".build/benchmarks/issue-118/READY_FOR_HEAVY_BENCHMARK.json": "3523a01f8b02e5571b963c1d89745b90056f0083c9e19ef973df28048129c392",
+    ".build/benchmarks/issue-118/producer.json": "52144c5ad457a89ed775296707db1262344273ba16b4595d4e3ceffc2db3843d",
+    ".build/benchmarks/issue-118/development/plan.json": "ce5933cda5bf6496983b7d2805855a4a290f22f481a095d085835c7930175660",
+    ".build/benchmarks/issue-118/development/base-run.json": "b5ad7af5db17f8595edd78dcdd4668ec4ab2c2bdc0c5a82889798323d28ee577",
+    ".build/benchmarks/issue-118/development/base-run-provenance.json": "51b93440db999471aec2f821ef5a7bd6416d23546546ddb105cdd63c3cb5d934",
+    ".build/benchmarks/issue-118/development/parakeet-calibration.json": "20ebc2698195c4664d81a96eae875f1aa54389d1f2449f2a80f0f86f66dd1b15",
+    ".build/benchmarks/issue-118/development/run.json": "530a8d95a76bc0ca495169b22e7b93b3f95d60f0f974e8af6bbd35eca441bed6",
+    ".build/benchmarks/issue-118/development/run-provenance.json": "b94c47d316ac78cfd2bb063ce6396a0b54ff10720e4e1463a377da4d2cb89d6f",
+    ".build/benchmarks/issue-118/development/whisperkit.log": "c6fb7eb21664cf273ce6394a35db00dccc36f6d61d17010354261d9cbe2f8d3d",
+    ".build/benchmarks/issue-118/development/whisperkit-runtime.json": "ba5a2f546eca2170db1f85537c72af4d794303ef1a52b28bd405b295123cae79",
+    ".build/benchmarks/issue-118/development/calibration.json": "3fcfffe02bd6a2d4db71197a9fbbffa67805df2d83b8f26a21c275ce7e072454",
+    ".build/benchmarks/issue-118/development/calibration-report.json": "fa61bb711fb54da9914a7d268ce8694dbdf72b9b8c59c7368de7cac2a64fd8bd",
+    ".build/benchmarks/issue-118/final-report.json": "fa8aef10650e6a5b5a208fc02671bf93653afebc58ff5539d7a0b86d054a8160",
+    ".build/benchmarks/issue-118/attempt-1/SHA256SUMS": "914f67eec8ee1becfed325f26c2ddc07c82df6da63e713f88220b75e39109b8b",
+    ".build/benchmarks/issue-118/attempt-1/failure.json": "d2d6cf58660e7ced76dbe1e487ba9bc1be27c1167d9665cc8d54e9f6365d1124",
+    ".build/benchmarks/issue-118/verification/targeted.log": "548e95430c4da2131f194c893a2ed020df6431c22be8b45cdb916845fbf06ab2",
+    ".build/benchmarks/issue-118/verification/full.log": "2c25c2bfc87e9a3617c8b673475a5359f33ec7f6388b4958a5404da9f8d58679",
+    ".build/benchmarks/issue-118/verification/live.log": "7adfc621475c773207a136a1aabf712f7ea14f94f309ed24d1ca534ba43c59c0"
+  },
+  "durableCandidateArtifacts": {
+    "docs/japanese-live/experiments/evidence/issue-118-invalid-responses/segment-0167-response.json": "b98e7cae2d729ae8089392d6910c2b9a713f0d10f9ec35235beb5c34dc462fc6"
+  },
+  "currentImplementationSHA256": {
+    "Sources/HighQualityASRWorker.swift": "a08f70cbb9f01a709043115cabe4d37a65f8f58062cb62ace28dbc4e8f53c6be",
+    "Sources/HighQualityAdaptiveASR.swift": "2af17ad55423f810f23c73af5f2358e82ab1e6bf1fc48fbd558c9bc2239ad36b",
+    "Sources/HighQualityJob.swift": "bfac61a180cd1a4d53414d579fde53533d8d803940db35b17ceec563e3ba9bde",
+    "Tests/HighQualityASRWorkerTests.swift": "c727b48ae2d709e653103207dc49f18f5f60540542dfab5759291e5a4c3bf3cb",
+    "Tests/HighQualityAdaptiveASRTests.swift": "781c49c82587c990f8dc20e5bb777e2907c1a8719c71ffcfea2c44627d7047db",
+    "Tests/AdaptiveASR117BenchmarkTests.swift": "8c2fee8368792cb69e6a6d0869e69f38b1939dbea5dc2870b22f60c80ec4a57c",
+    "Scripts/adaptive_asr_117.py": "a423deac2051718495f11a581d282f641b53f417ffe1428a3f5b21404ec18067",
+    "Scripts/adaptive_asr_118.py": "877f2bba08c1d80d1874f49ab13bf86b14ae4c37cc9d9602f5f8493b4f7fdc5a",
+    "Scripts/run_adaptive_asr_118.sh": "53333b88cddb9c83743174ef14fe87dfcd8da336c0e796c315503037cdc9faf3"
+  },
+  "readyPolicy": {
+    "historicalReadyPreservedForRawProvenance": true,
+    "futureReadyIncludesCurrentImplementationSHA256": true
+  },
+  "rereviewArtifacts": {
+    ".build/benchmarks/issue-118/verification/rereview-targeted.log": "6d23b76ec959c76a37546d0a973e570dc0ee2aae145f541181ac5009e5608c48",
+    ".build/benchmarks/issue-118/verification/rereview-full.log": "6f745978957b69b0a79f2807d62ebca580f900ae71a7252a347b69fc37741d51",
+    ".build/benchmarks/issue-118/verification/rereview-live.log": "46d3f651dfef405e69cd883f75bb6c1c889168b0b89747c1e5dcf8fbcf2329e0",
+    ".build/benchmarks/issue-118/verification/rereview-runner-selftest.log": "dcc3990aebabc5c33325f88145e73978d0f77b811348a009a6941bdafc282d62",
+    ".build/benchmarks/issue-118/verification/rereview-python-selftest.log": "d435d1061c18de91614c71d4a5687d351392989cff09fb193e122a5ded350773",
+    ".build/benchmarks/issue-118/verification/rereview-runner-targeted.log": "274955e6e9695f8fb83c79d34138906c438c5c12564f60f2ae888f6197927b43"
+  },
+  "verification": {
+    "targeted": {
+      "executed": 53,
+      "skipped": 8,
+      "failures": 0
+    },
+    "full": {
+      "executed": 497,
+      "skipped": 66,
+      "failures": 0
+    },
+    "runnerSelfTests": {
+      "provenance": "PASS",
+      "nonFinalControlFailClosed": "PASS",
+      "pythonHarness": "PASS",
+      "workerSourceAndTestsCoveredByImplementationHashes": true,
+      "workerImplementationMutationRejected": true,
+      "hashAndRealpathFailuresRejectedBeforeJQ": true,
+      "emptyHashAndRealpathOutputsRejectedBeforeJQ": true,
+      "invalidStateRecordedAsUnknownProvenance": true,
+      "doubleEmptyHashComparisonRejected": true,
+      "runnerTargetedTestExecuted": 1,
+      "runnerTargetedTestFailures": 0
+    },
+    "partialInfrastructureAuditPersistence": {
+      "parakeet": "PASS",
+      "whisperKit": "PASS",
+      "failedStatusPreserved": true,
+      "rawQwenEvidencePreserved": true,
+      "translationAndExportBlocked": true
+    },
+    "routingAndRangeRegressions": {
+      "unknownErrorsAbortAsInfrastructure": true,
+      "dataWriteIOAbortsAsInfrastructure": true,
+      "onlyStructuredCandidateReasonsFallback": true,
+      "chunkBoundsRemainRequired": true,
+      "legacyNonMonotonicChunkStartsRemainAccepted": true
+    },
+    "live": {
+      "executed": 46,
+      "skipped": 0,
+      "failures": 0
+    },
+    "xcodeRoute": "/Applications/Xcode.app/Contents/Developer",
+    "metallibPresentForTestsAndWorker": true,
+    "appLaunchedAfterChecks": true
+  },
+  "scope": {
+    "adaptiveExposed": false,
+    "standardDefaultPreserved": true,
+    "liveChanged": false
+  }
+}

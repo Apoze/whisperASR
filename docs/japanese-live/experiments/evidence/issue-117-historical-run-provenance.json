@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "ticket": 117,
+  "status": "LEGACY_PROVENANCE_INCOMPLETE",
+  "claim": "Metadata reconstructed from retained artifacts; the execution did not record the XCTest executable or required-resource hashes, so none are inferred here.",
+  "scientificVerdict": "RETAIN_HIDDEN_DEV_NO_GO",
+  "missingExecutionProof": [
+    "canonical XCTest executable path",
+    "XCTest executable SHA256 before and after execution",
+    "XCTest bundle mlx.metallib SHA256 before and after execution",
+    "worker mlx.metallib SHA256 before and after execution"
+  ],
+  "raw": {
+    "path": ".build/benchmarks/issue-117/development/run.json",
+    "SHA256": "432644bc55fb1180c47aa096c0a5cbb25dbb5fff6d51491a27f12a1a7637dcd7"
+  },
+  "plan": {
+    "path": ".build/benchmarks/issue-117/development/plan.json",
+    "SHA256": "ce5933cda5bf6496983b7d2805855a4a290f22f481a095d085835c7930175660"
+  },
+  "ready": {
+    "path": ".build/benchmarks/issue-117/READY_FOR_HEAVY_BENCHMARK.json",
+    "SHA256": "d91b0c51e9b9875191e3d036e99b445d70e70e30a5ee63a1553e2a383111a355"
+  },
+  "rawProducer": {
+    "workingCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
+    "workerSHA256": "5a76ee9d34ffd7154fad7bafe1d875dac3f0932420b99f82317e0addebe1a217",
+    "implementationSHA256": {
+      "Sources/HighQualityAdaptiveASR.swift": "abf2a2aef3a95c3738ac3d3a44723074dc2329441524a1ea0935e8446ff55737",
+      "Sources/HighQualityJob.swift": "a0a77d493067f50617d684a4984aa69bb247b24de1d2fbf979228b790673f414",
+      "Tests/HighQualityAdaptiveASRTests.swift": "b2f96efdfa51e7cfd5256b6fb66ad88b2e8fa2e6c1460e35d3bd43edf827cc75",
+      "Tests/AdaptiveASR117BenchmarkTests.swift": "47d5202f80278429a1f456634e97404f3876c7efe2bac769c3dd5acecc33acf4",
+      "Scripts/adaptive_asr_117.py": "fc17091ea11fac9b593b891e556ec6701b00ce38615b597f15c659a62495c24e",
+      "Scripts/run_adaptive_asr_117.sh": "bc52071bf0799c06b810fb022d00e70d4b6a8b5e7064b50d88efa5f42d18da02"
+    }
+  },
+  "postRunScoringRepair": {
+    "path": ".build/benchmarks/issue-117/harness-repair.json",
+    "SHA256": "e86ce6aea327ac3ea981c243e62fa6477ab9b792a01e7cef61e75c7f0035fef5",
+    "rawASRReused": true,
+    "holdoutOpened": false,
+    "scorerSHA256": "3b86daae673ac0e5fede1ad4f2755ee94a99af0a4efa240f4f428efbc1b97c8e",
+    "runnerSHA256": "f6b16b31d7d86d46932127a31ff93832b5473482a8068980529559c3a901afe0"
+  },
+  "reusePolicy": {
+    "exactProducerHashesRequired": true,
+    "newPreflightMayReplaceReadyWhileRawExists": false,
+    "currentReuseAllowed": false,
+    "reason": "The retained run predates XCTest executable provenance and is permanently non-reusable; current implementation hashes also differ from its producer.",
+    "verification": {
+      "command": "bash Scripts/run_adaptive_asr_117.sh preflight",
+      "exitStatus": 1,
+      "route": "harness",
+      "phase": "preflight-existing-raw",
+      "readySHA256Before": "d91b0c51e9b9875191e3d036e99b445d70e70e30a5ee63a1553e2a383111a355",
+      "readySHA256After": "d91b0c51e9b9875191e3d036e99b445d70e70e30a5ee63a1553e2a383111a355"
+    }
+  }
+}

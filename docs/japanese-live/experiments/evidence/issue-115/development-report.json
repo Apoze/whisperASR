@@ -1,0 +1,54 @@
+{
+  "benchmarkSlot": "115-DEV",
+  "confirmationReferenceShare": 0.6,
+  "corpusID": "easy-japanese-1",
+  "elapsedSeconds": 20.457475066184998,
+  "embeddingVariant": "W8A16",
+  "enrollmentMappings": [
+    {"referenceOverlapSeconds": 10.194674865722654, "referenceShare": 0.8740415200922027, "referenceSpeaker": "P01", "speakerID": "SPEAKER_00"},
+    {"referenceOverlapSeconds": 46.417146369934095, "referenceShare": 0.6265219490977644, "referenceSpeaker": "INT", "speakerID": "SPEAKER_01"},
+    {"referenceOverlapSeconds": 8.57941583251953, "referenceShare": 0.9392707086703617, "referenceSpeaker": "P04", "speakerID": "SPEAKER_02"},
+    {"referenceOverlapSeconds": 16.26506048583984, "referenceShare": 0.9097928829492409, "referenceSpeaker": "P09", "speakerID": "SPEAKER_03"},
+    {"referenceOverlapSeconds": 7.1646728515625, "referenceShare": 0.6063210960276777, "referenceSpeaker": "P10", "speakerID": "SPEAKER_04"}
+  ],
+  "enrollmentSpeakerCount": 5,
+  "falseSuggestionCount": 0,
+  "maximumCosineDistance": 0.3,
+  "modelID": "argmaxinc/speakerkit-coreml",
+  "modelRevision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+  "observedPeakMemoryBytes": 453166400,
+  "probeMappings": [
+    {"referenceOverlapSeconds": 7.406504699707035, "referenceShare": 0.4741775338770284, "referenceSpeaker": "P03", "speakerID": "SPEAKER_00"},
+    {"referenceOverlapSeconds": 7.743733673095704, "referenceShare": 0.6265189255954247, "referenceSpeaker": "P12", "speakerID": "SPEAKER_01"},
+    {"referenceOverlapSeconds": 16.743258544921886, "referenceShare": 0.47230738847217396, "referenceSpeaker": "INT", "speakerID": "SPEAKER_02"},
+    {"referenceOverlapSeconds": 5.474463073730476, "referenceShare": 0.5666897728735582, "referenceSpeaker": "P06", "speakerID": "SPEAKER_03"},
+    {"referenceOverlapSeconds": 34.92359638214111, "referenceShare": 0.8970779033791453, "referenceSpeaker": "P10", "speakerID": "SPEAKER_04"}
+  ],
+  "probeSpeakerCount": 5,
+  "profiles": [
+    {"centroidCount": 1, "displayName": "INT", "enrollmentSpeakerIDs": ["SPEAKER_01"]},
+    {"centroidCount": 1, "displayName": "P01", "enrollmentSpeakerIDs": ["SPEAKER_00"]},
+    {"centroidCount": 1, "displayName": "P04", "enrollmentSpeakerIDs": ["SPEAKER_02"]},
+    {"centroidCount": 1, "displayName": "P09", "enrollmentSpeakerIDs": ["SPEAKER_03"]},
+    {"centroidCount": 1, "displayName": "P10", "enrollmentSpeakerIDs": ["SPEAKER_04"]}
+  ],
+  "profilesRequiringRecomputation": 0,
+  "purpose": "development",
+  "recurringReferenceSpeakerCount": 2,
+  "runtimeRevision": "1e2a163736dfa5a198e637ae44c114e1c6d5cc2d",
+  "sourceSHA256": "64ee5d98f5db01497d6b13354a17d4d0ba43776ae31699d7c73bb8b0c019c07c",
+  "splitSample": 2261806,
+  "suggestionCount": 1,
+  "suggestions": [
+    {"cosineDistance": 0.10886526, "probeSpeakerID": "SPEAKER_02", "referenceShare": 0.47230738847217396, "referenceSpeaker": "INT", "suggestedProfile": "INT", "useful": true}
+  ],
+  "ticket": 115,
+  "uncertaintyMargin": 0.1,
+  "unknownSpeakerCount": 4,
+  "suggestionPrecision": 1.0,
+  "abstentionRate": 0.8,
+  "recurringReferenceRecall": 0.5,
+  "unknownSpeakerIDs": ["SPEAKER_00", "SPEAKER_01", "SPEAKER_03", "SPEAKER_04"],
+  "usefulSuggestionCount": 1,
+  "vectorDimension": 256
+}

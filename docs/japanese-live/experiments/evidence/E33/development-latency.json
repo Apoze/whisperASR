@@ -1,0 +1,29 @@
+{
+  "buildConfiguration" : "debug",
+  "changeCounts" : [
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "corpus" : "qudu2fx3ncc",
+  "measuredIterations" : 5,
+  "medianMilliseconds" : 960.616291,
+  "method" : "ContinuousClock wall time around apply only; one warm-up then five serial measured iterations",
+  "operation" : "HighQualityLexicalCorrection.apply",
+  "p95Milliseconds" : 1149.282708,
+  "samplesMilliseconds" : [
+    955.496916,
+    960.282292,
+    960.616291,
+    966.121125,
+    1149.282708
+  ],
+  "schemaVersion" : 1,
+  "status" : "measured",
+  "ticket" : 119,
+  "turnCount" : 307,
+  "unionTermCount" : 10,
+  "warmupIterations" : 1
+}

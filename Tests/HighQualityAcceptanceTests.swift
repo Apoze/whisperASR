@@ -581,6 +581,125 @@ final class HighQualityAcceptanceTests: XCTestCase {
         }
     }
 
+    func testRecurringVoiceProfilesWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_RECURRING_VOICE_EVIDENCE"] == "1",
+              let lane = environment["WHISPERASR_RECURRING_VOICE_LANE"],
+              ["DEV", "HOLDOUT"].contains(lane),
+              let manifestPath = environment["WHISPERASR_RECURRING_VOICE_MANIFEST"],
+              let sourcePath = environment["WHISPERASR_RECURRING_VOICE_SOURCE"],
+              let reportPath = environment["WHISPERASR_RECURRING_VOICE_REPORT"],
+              let modelCachePath = environment["WHISPERASR_RECURRING_VOICE_MODEL_CACHE"] else {
+            throw XCTSkip("Set the frozen #115 corpus, output, model cache and DEV/HOLDOUT lane.")
+        }
+        let requiredSlot = "115-\(lane)"
+        guard environment["BENCHMARK_SLOT_GRANTED"] == requiredSlot else {
+            throw XCTSkip("Ticket #115 requires benchmark slot \(requiredSlot).")
+        }
+        let manifest = try JapaneseBenchmarkSupport.loadManifest(
+            at: URL(fileURLWithPath: manifestPath)
+        )
+        let expectedPurpose: JapaneseBenchmarkSupport.Manifest.Purpose = lane == "DEV"
+            ? .development
+            : .holdoutDialogue
+        guard manifest.purpose == expectedPurpose else {
+            throw NSError(
+                domain: "HighQualityAcceptanceTests",
+                code: 115,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Ticket #115 \(lane) evidence has the wrong frozen purpose.",
+                ]
+            )
+        }
+        let sourceURL = URL(fileURLWithPath: sourcePath)
+        XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: sourceURL), manifest.fixture.sha256)
+        let samples = try await AudioLoader.loadSamples(url: sourceURL)
+        XCTAssertEqual(samples.count, manifest.fixture.sampleCount)
+        let splitSample = samples.count / 2
+        let enrollmentJobID = UUID(
+            uuidString: lane == "DEV"
+                ? "00000115-0000-0000-0000-000000000001"
+                : "00000115-0000-0000-0000-000000000003"
+        )!
+        let probeJobID = UUID(
+            uuidString: lane == "DEV"
+                ? "00000115-0000-0000-0000-000000000002"
+                : "00000115-0000-0000-0000-000000000004"
+        )!
+        let runtime = HighQualitySpeakerKitRuntime(
+            precision: .quantized,
+            downloadBase: modelCachePath
+        )
+        let startedAt = Date()
+        let enrollmentExchange: HighQualityDiarizationExchange
+        let probeExchange: HighQualityDiarizationExchange
+        do {
+            try await runtime.prepare(progress: { _, _ in })
+            enrollmentExchange = try await runtime.diarize(
+                samples: Array(samples[..<splitSample]),
+                speakerCountPolicy: .automatic
+            )
+            probeExchange = try await runtime.diarize(
+                samples: Array(samples[splitSample...]),
+                speakerCountPolicy: .automatic
+            )
+        } catch {
+            await runtime.unload()
+            throw error
+        }
+        await runtime.unload()
+        let sampleRate = manifest.fixture.sampleRate
+        let enrollmentEvidence = try HighQualityJob.diarizationEvidence(
+            enrollmentExchange,
+            items: [],
+            duration: Double(splitSample) / Double(sampleRate),
+            sourceJobID: enrollmentJobID
+        )
+        let probeEvidence = try HighQualityJob.diarizationEvidence(
+            probeExchange,
+            items: [],
+            duration: Double(samples.count - splitSample) / Double(sampleRate),
+            sourceJobID: probeJobID
+        )
+        let report = try Self.recurringVoiceEvidenceReport(
+            manifest: manifest,
+            enrollmentEvidence: enrollmentEvidence,
+            probeEvidence: probeEvidence,
+            splitSample: splitSample,
+            elapsedSeconds: Date().timeIntervalSince(startedAt),
+            benchmarkSlot: requiredSlot
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let reportURL = URL(fileURLWithPath: reportPath)
+        try FileManager.default.createDirectory(
+            at: reportURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try encoder.encode(report).write(to: reportURL, options: .atomic)
+
+        XCTAssertEqual(report.maximumCosineDistance, 0.3)
+        XCTAssertEqual(report.uncertaintyMargin, 0.1)
+        XCTAssertEqual(report.confirmationReferenceShare, 0.6)
+        XCTAssertEqual(report.modelID, HighQualitySpeakerKitRuntime.modelID)
+        XCTAssertEqual(report.modelRevision, HighQualitySpeakerKitRuntime.revision)
+        XCTAssertEqual(report.embeddingVariant, "W8A16")
+        XCTAssertFalse(report.profiles.isEmpty)
+        XCTAssertGreaterThan(report.probeSpeakerCount, 0)
+        XCTAssertEqual(
+            report.suggestionCount + report.unknownSpeakerCount,
+            report.probeSpeakerCount
+        )
+        XCTAssertEqual(report.falseSuggestionCount, 0)
+        print(
+            "[#115][\(lane)] profiles=\(report.profiles.count) "
+                + "suggestions=\(report.suggestionCount) useful=\(report.usefulSuggestionCount) "
+                + "false=\(report.falseSuggestionCount) unknown=\(report.unknownSpeakerCount) "
+                + "seconds=\(report.elapsedSeconds) peakBytes=\(report.observedPeakMemoryBytes)"
+        )
+    }
+
     func testFrozenExclusiveSpeakerReconciliationWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_EXCLUSIVE_RECONCILIATION_EXPERIMENT"] == "1",
@@ -1478,6 +1597,203 @@ final class HighQualityAcceptanceTests: XCTestCase {
         let unload: @Sendable () async -> Void
     }
 
+    private struct RecurringVoiceEvidenceReport: Codable {
+        let ticket: Int
+        let corpusID: String
+        let purpose: String
+        let benchmarkSlot: String
+        let sourceSHA256: String
+        let splitSample: Int
+        let modelID: String
+        let modelRevision: String
+        let runtimeRevision: String
+        let embeddingVariant: String
+        let vectorDimension: Int
+        let maximumCosineDistance: Float
+        let uncertaintyMargin: Float
+        let confirmationReferenceShare: Double
+        let elapsedSeconds: TimeInterval
+        let observedPeakMemoryBytes: UInt64
+        let enrollmentSpeakerCount: Int
+        let probeSpeakerCount: Int
+        let recurringReferenceSpeakerCount: Int
+        let suggestionCount: Int
+        let usefulSuggestionCount: Int
+        let falseSuggestionCount: Int
+        let unknownSpeakerCount: Int
+        let suggestionPrecision: Double?
+        let abstentionRate: Double
+        let recurringReferenceRecall: Double?
+        let profilesRequiringRecomputation: Int
+        let profiles: [RecurringVoiceProfileReport]
+        let suggestions: [RecurringVoiceSuggestionReport]
+        let unknownSpeakerIDs: [String]
+        let enrollmentMappings: [DuplicateSpeakerReferenceMapping]
+        let probeMappings: [DuplicateSpeakerReferenceMapping]
+    }
+
+    private struct RecurringVoiceProfileReport: Codable {
+        let displayName: String
+        let enrollmentSpeakerIDs: [String]
+        let centroidCount: Int
+    }
+
+    private struct RecurringVoiceSuggestionReport: Codable {
+        let probeSpeakerID: String
+        let suggestedProfile: String
+        let referenceSpeaker: String?
+        let referenceShare: Double?
+        let cosineDistance: Float
+        let useful: Bool?
+    }
+
+    private static func recurringVoiceEvidenceReport(
+        manifest: JapaneseBenchmarkSupport.Manifest,
+        enrollmentEvidence: HighQualityDiarizationEvidence,
+        probeEvidence: HighQualityDiarizationEvidence,
+        splitSample: Int,
+        elapsedSeconds: TimeInterval,
+        benchmarkSlot: String
+    ) throws -> RecurringVoiceEvidenceReport {
+        let diagnostics = enrollmentEvidence.validationDiagnostics
+            + probeEvidence.validationDiagnostics
+        guard diagnostics.isEmpty else {
+            throw NSError(
+                domain: "HighQualityAcceptanceTests",
+                code: 115,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Recurring-Voice evidence is invalid: "
+                            + diagnostics.joined(separator: " "),
+                ]
+            )
+        }
+        let enrollmentCentroids = try XCTUnwrap(enrollmentEvidence.speakerCentroids)
+        let probeCentroids = try XCTUnwrap(probeEvidence.speakerCentroids)
+        let enrollmentMappings = referenceMappings(
+            centroids: enrollmentCentroids,
+            spans: enrollmentEvidence.rawSpans,
+            manifest: manifest,
+            sampleOffset: 0
+        )
+        let probeMappings = referenceMappings(
+            centroids: probeCentroids,
+            spans: probeEvidence.rawSpans,
+            manifest: manifest,
+            sampleOffset: splitSample
+        )
+        let confirmationReferenceShare = 0.6
+        let acceptedEnrollmentMappings = enrollmentMappings.filter {
+            ($0.referenceShare ?? 0) >= confirmationReferenceShare
+                && $0.referenceSpeaker != nil
+        }
+        let enrollmentByLabel = Dictionary(uniqueKeysWithValues: enrollmentCentroids.map {
+            ($0.speakerLabel, $0)
+        })
+        let profiles = Dictionary(grouping: acceptedEnrollmentMappings) {
+            $0.referenceSpeaker!
+        }.keys.sorted().map { referenceSpeaker in
+            let mappings = acceptedEnrollmentMappings.filter {
+                $0.referenceSpeaker == referenceSpeaker
+            }
+            return HighQualityProjectVoiceProfile(
+                id: UUID(),
+                displayName: referenceSpeaker,
+                centroids: mappings.compactMap { mapping in
+                    enrollmentByLabel[mapping.speakerLabel].map { centroid in
+                        HighQualityProjectVoiceCentroid(
+                            anonymousSpeakerID: centroid.speakerLabel,
+                            vectorDimension: centroid.vectorDimension,
+                            values: centroid.vector,
+                            modelID: centroid.modelID,
+                            modelRevision: centroid.modelRevision,
+                            runtimeRevision: centroid.runtimeRevision,
+                            embeddingVariant: centroid.embeddingVariant,
+                            sourceJobID: centroid.sourceJobID
+                        )
+                    }
+                }
+            )
+        }
+        let probeBySpeaker = Dictionary(uniqueKeysWithValues: probeCentroids.map {
+            ($0.speakerLabel, [$0])
+        })
+        let evaluation = HighQualityProject.recurringVoiceEvaluation(
+            centroidsBySpeaker: probeBySpeaker,
+            anonymousSpeakerLabels: Set(probeBySpeaker.keys),
+            profiles: profiles
+        )
+        let probeReferenceByLabel = Dictionary(uniqueKeysWithValues: probeMappings.map {
+            ($0.speakerLabel, $0)
+        })
+        let suggestionReports = evaluation.suggestions.map { suggestion in
+            let mapping = probeReferenceByLabel[suggestion.speakerLabel]
+            return RecurringVoiceSuggestionReport(
+                probeSpeakerID: suggestion.speakerLabel,
+                suggestedProfile: suggestion.displayName,
+                referenceSpeaker: mapping?.referenceSpeaker,
+                referenceShare: mapping?.referenceShare,
+                cosineDistance: suggestion.cosineDistance,
+                useful: mapping?.referenceSpeaker.map { $0 == suggestion.displayName }
+            )
+        }
+        let enrollmentReferences = Set(acceptedEnrollmentMappings.compactMap(\.referenceSpeaker))
+        let probeReferences = Set(probeMappings.compactMap(\.referenceSpeaker))
+        let first = try XCTUnwrap((enrollmentCentroids + probeCentroids).first)
+        let profileReports = profiles.map { profile in
+            RecurringVoiceProfileReport(
+                displayName: profile.displayName,
+                enrollmentSpeakerIDs: profile.centroids.map(\.anonymousSpeakerID).sorted(),
+                centroidCount: profile.centroids.count
+            )
+        }.sorted { $0.displayName < $1.displayName }
+        return .init(
+            ticket: 115,
+            corpusID: manifest.corpusID,
+            purpose: manifest.purpose.rawValue,
+            benchmarkSlot: benchmarkSlot,
+            sourceSHA256: manifest.fixture.sha256,
+            splitSample: splitSample,
+            modelID: first.modelID,
+            modelRevision: first.modelRevision,
+            runtimeRevision: first.runtimeRevision,
+            embeddingVariant: first.embeddingVariant,
+            vectorDimension: first.vectorDimension,
+            maximumCosineDistance: HighQualityDuplicateSpeakerSuggestion.maximumCosineDistance,
+            uncertaintyMargin: HighQualityDuplicateSpeakerSuggestion.uncertaintyMargin,
+            confirmationReferenceShare: confirmationReferenceShare,
+            elapsedSeconds: elapsedSeconds,
+            observedPeakMemoryBytes: max(
+                enrollmentEvidence.peakMemoryBytes,
+                probeEvidence.peakMemoryBytes
+            ),
+            enrollmentSpeakerCount: enrollmentCentroids.count,
+            probeSpeakerCount: probeCentroids.count,
+            recurringReferenceSpeakerCount: enrollmentReferences.intersection(
+                probeReferences
+            ).count,
+            suggestionCount: suggestionReports.count,
+            usefulSuggestionCount: suggestionReports.filter { $0.useful == true }.count,
+            falseSuggestionCount: suggestionReports.filter { $0.useful == false }.count,
+            unknownSpeakerCount: evaluation.unknownSpeakerLabels.count,
+            suggestionPrecision: suggestionReports.isEmpty ? nil : Double(
+                suggestionReports.filter { $0.useful == true }.count
+            ) / Double(suggestionReports.count),
+            abstentionRate: probeCentroids.isEmpty ? 0 : Double(
+                evaluation.unknownSpeakerLabels.count
+            ) / Double(probeCentroids.count),
+            recurringReferenceRecall: enrollmentReferences.intersection(probeReferences).isEmpty
+                ? nil : Double(suggestionReports.filter { $0.useful == true }.count)
+                    / Double(enrollmentReferences.intersection(probeReferences).count),
+            profilesRequiringRecomputation: evaluation.profileIncompatibilities.count,
+            profiles: profileReports,
+            suggestions: suggestionReports,
+            unknownSpeakerIDs: evaluation.unknownSpeakerLabels,
+            enrollmentMappings: enrollmentMappings,
+            probeMappings: probeMappings
+        )
+    }
+
     private struct DuplicateSpeakerEvidenceReport: Codable {
         let ticket: Int
         let corpusID: String
@@ -1641,7 +1957,8 @@ final class HighQualityAcceptanceTests: XCTestCase {
     private static func referenceMappings(
         centroids: [HighQualitySpeakerCentroidEvidence],
         spans: [HighQualityDiarizationSpan],
-        manifest: JapaneseBenchmarkSupport.Manifest
+        manifest: JapaneseBenchmarkSupport.Manifest,
+        sampleOffset: Int = 0
     ) -> [DuplicateSpeakerReferenceMapping] {
         let rawIDs = Set(spans.map(\.speakerID)).sorted()
         let rawIDByLabel = Dictionary(uniqueKeysWithValues: rawIDs.enumerated().map {
@@ -1652,8 +1969,10 @@ final class HighQualityAcceptanceTests: XCTestCase {
             if let rawID = rawIDByLabel[centroid.speakerLabel] {
                 for span in spans where span.speakerID == rawID {
                     for turn in manifest.annotations.turns {
-                        let start = Double(turn.startSample) / Double(manifest.fixture.sampleRate)
-                        let end = Double(turn.endSample) / Double(manifest.fixture.sampleRate)
+                        let start = Double(turn.startSample - sampleOffset)
+                            / Double(manifest.fixture.sampleRate)
+                        let end = Double(turn.endSample - sampleOffset)
+                            / Double(manifest.fixture.sampleRate)
                         let overlap = max(0, min(span.end, end) - max(span.start, start))
                         overlaps[turn.speaker, default: 0] += overlap
                     }

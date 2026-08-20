@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 struct HighQualityProjectVoiceCentroid: Codable, Equatable, Sendable {
@@ -9,6 +10,18 @@ struct HighQualityProjectVoiceCentroid: Codable, Equatable, Sendable {
     let runtimeRevision: String
     let embeddingVariant: String
     let sourceJobID: UUID
+
+    fileprivate var sourceKey: String { "\(sourceJobID.uuidString)/\(anonymousSpeakerID)" }
+
+    var compatibilitySignature: HighQualitySpeakerCentroidSignature {
+        .init(
+            modelID: modelID,
+            modelRevision: modelRevision,
+            runtimeRevision: runtimeRevision,
+            embeddingVariant: embeddingVariant,
+            vectorDimension: vectorDimension
+        )
+    }
 }
 
 enum HighQualityProjectDestructiveAction: Equatable {
@@ -22,6 +35,41 @@ struct HighQualityProjectVoiceProfile: Codable, Equatable, Identifiable, Sendabl
     let centroids: [HighQualityProjectVoiceCentroid]
 }
 
+struct HighQualityRecurringVoiceSuggestion: Equatable, Identifiable, Sendable {
+    static let betaDescription = "Project-local acoustic similarity only; uncertain voices stay "
+        + "Unknown. A suggestion is not proof of a person, actor or character."
+
+    let speakerLabel: String
+    let profileID: UUID
+    let displayName: String
+    let cosineDistance: Float
+
+    var id: String { "\(speakerLabel)/\(profileID.uuidString)" }
+}
+
+struct HighQualityRecurringVoiceEvaluation: Equatable, Sendable {
+    let suggestions: [HighQualityRecurringVoiceSuggestion]
+    let unknownSpeakerLabels: [String]
+    let confirmableSpeakerLabels: [String]
+    let profileIncompatibilities: [HighQualityVoiceProfileIncompatibility]
+
+    static let empty = Self(
+        suggestions: [],
+        unknownSpeakerLabels: [],
+        confirmableSpeakerLabels: [],
+        profileIncompatibilities: []
+    )
+}
+
+struct HighQualityVoiceProfileIncompatibility: Equatable, Identifiable, Sendable {
+    let profileID: UUID
+    let displayName: String
+    let causes: [HighQualitySpeakerCentroidIncompatibilityCause]
+    let sourceJobIDs: [UUID]
+
+    var id: UUID { profileID }
+}
+
 struct HighQualityProjectHistoryEntry: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let action: String
@@ -33,15 +81,64 @@ struct HighQualityProjectHistoryEntry: Codable, Equatable, Identifiable, Sendabl
 struct HighQualityProjectScope: Codable, Equatable, Sendable {
     let metadata: [String: String]
     let glossarySelection: [String]
+    let voiceMemoryEnabled: Bool
     let voiceProfiles: [HighQualityProjectVoiceProfile]
     let history: [HighQualityProjectHistoryEntry]
+
+    init(
+        metadata: [String: String],
+        glossarySelection: [String],
+        voiceMemoryEnabled: Bool = false,
+        voiceProfiles: [HighQualityProjectVoiceProfile],
+        history: [HighQualityProjectHistoryEntry]
+    ) {
+        self.metadata = metadata
+        self.glossarySelection = glossarySelection
+        self.voiceMemoryEnabled = voiceMemoryEnabled
+        self.voiceProfiles = voiceProfiles
+        self.history = history
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case metadata, glossarySelection, voiceMemoryEnabled, voiceProfiles, history
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        metadata = try values.decode([String: String].self, forKey: .metadata)
+        glossarySelection = try values.decode([String].self, forKey: .glossarySelection)
+        voiceMemoryEnabled = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .voiceMemoryEnabled
+        ) ?? false
+        voiceProfiles = try values.decode(
+            [HighQualityProjectVoiceProfile].self,
+            forKey: .voiceProfiles
+        )
+        history = try values.decode([HighQualityProjectHistoryEntry].self, forKey: .history)
+    }
 
     static let empty = Self(
         metadata: [:],
         glossarySelection: [],
+        voiceMemoryEnabled: false,
         voiceProfiles: [],
         history: []
     )
+
+    fileprivate func replacing(
+        voiceMemoryEnabled: Bool? = nil,
+        voiceProfiles: [HighQualityProjectVoiceProfile]? = nil,
+        history: [HighQualityProjectHistoryEntry]? = nil
+    ) -> Self {
+        .init(
+            metadata: metadata,
+            glossarySelection: glossarySelection,
+            voiceMemoryEnabled: voiceMemoryEnabled ?? self.voiceMemoryEnabled,
+            voiceProfiles: voiceProfiles ?? self.voiceProfiles,
+            history: history ?? self.history
+        )
+    }
 }
 
 struct HighQualityProjectManifest: Codable, Equatable, Sendable {
@@ -323,6 +420,496 @@ struct HighQualityProject: Identifiable, Sendable {
             }
             return try current.updating(scope: scope)
         }
+    }
+
+    func settingVoiceMemory(enabled: Bool) throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            return try current.updating(scope: current.scope.replacing(
+                voiceMemoryEnabled: enabled
+            ))
+        }
+    }
+
+    func recurringVoiceEvaluation(
+        for result: HighQualityJobResult
+    ) -> HighQualityRecurringVoiceEvaluation {
+        guard scope.voiceMemoryEnabled,
+              owns(result),
+              let centroidsBySpeaker = HighQualityJob.projectVoiceCentroids(in: result),
+              !centroidsBySpeaker.isEmpty else { return .empty }
+        let anonymousLabels = Set(centroidsBySpeaker.keys.filter { label in
+            result.editableSpeakerNames[label] == label
+        })
+        let evaluation = Self.recurringVoiceEvaluation(
+            centroidsBySpeaker: centroidsBySpeaker,
+            anonymousSpeakerLabels: anonymousLabels,
+            profiles: scope.voiceProfiles
+        )
+        let retained = evaluation.suggestions.filter { suggestion in
+            guard let centroids = centroidsBySpeaker[suggestion.speakerLabel] else {
+                return false
+            }
+            return !scope.history.contains { entry in
+                entry.action == "recurring-voice-rejected"
+                    && entry.jobID == result.manifest.jobID
+                    && entry.details["profileID"] == suggestion.profileID.uuidString
+                    && entry.details["speakerLabel"] == suggestion.speakerLabel
+                    && entry.details["evidenceFingerprint"]
+                        == Self.voiceEvidenceFingerprint(centroids)
+            }
+        }
+        let rejectedLabels = Set(evaluation.suggestions.map(\.speakerLabel))
+            .subtracting(retained.map(\.speakerLabel))
+        let existing = Set(scope.voiceProfiles.flatMap(\.centroids).map(\.sourceKey))
+        let confirmable = centroidsBySpeaker.keys.filter { label in
+            guard result.editableSpeakerNames[label] != label,
+                  let centroids = centroidsBySpeaker[label] else { return false }
+            return centroids.map(Self.projectCentroid).allSatisfy {
+                !existing.contains($0.sourceKey)
+            }
+        }.sorted()
+        return .init(
+            suggestions: retained,
+            unknownSpeakerLabels: Set(evaluation.unknownSpeakerLabels)
+                .union(rejectedLabels).sorted(),
+            confirmableSpeakerLabels: confirmable,
+            profileIncompatibilities: evaluation.profileIncompatibilities
+        )
+    }
+
+    static func recurringVoiceEvaluation(
+        centroidsBySpeaker: [String: [HighQualitySpeakerCentroidEvidence]],
+        anonymousSpeakerLabels: Set<String>,
+        profiles: [HighQualityProjectVoiceProfile]
+    ) -> HighQualityRecurringVoiceEvaluation {
+        let currentSignatures = centroidsBySpeaker.values.joined().map(\.compatibilitySignature)
+        let incompatibilities: [HighQualityVoiceProfileIncompatibility] = profiles.compactMap {
+            profile in
+            guard let profileSignature = profile.centroids.first?.compatibilitySignature,
+                  !currentSignatures.isEmpty,
+                  !currentSignatures.contains(profileSignature) else { return nil }
+            let causes = currentSignatures.flatMap {
+                profileSignature.incompatibilityCauses(comparedWith: $0)
+            }.reduce(into: [HighQualitySpeakerCentroidIncompatibilityCause]()) {
+                if !$0.contains($1) { $0.append($1) }
+            }
+            return HighQualityVoiceProfileIncompatibility(
+                profileID: profile.id,
+                displayName: profile.displayName,
+                causes: causes,
+                sourceJobIDs: Array(Set(profile.centroids.map(\.sourceJobID))).sorted {
+                    $0.uuidString < $1.uuidString
+                }
+            )
+        }.sorted { $0.profileID.uuidString < $1.profileID.uuidString }
+        let anonymous = centroidsBySpeaker.filter {
+            anonymousSpeakerLabels.contains($0.key)
+        }
+
+        struct Comparison {
+            let speakerLabel: String
+            let profile: HighQualityProjectVoiceProfile
+            let distance: Float
+        }
+        var comparisons: [Comparison] = []
+        for (speakerLabel, speakerCentroids) in anonymous {
+            for profile in profiles {
+                guard let first = profile.centroids.first,
+                      speakerCentroids.allSatisfy({
+                          $0.compatibilitySignature == first.compatibilitySignature
+                      }), let currentVector = Self.average(
+                        speakerCentroids.map(\.vector)
+                      ), let profileVector = Self.average(profile.centroids.map(\.values)),
+                      let distance = HighQualityJob.cosineDistance(
+                        currentVector,
+                        profileVector
+                      ) else { continue }
+                comparisons.append(.init(
+                    speakerLabel: speakerLabel,
+                    profile: profile,
+                    distance: distance
+                ))
+            }
+        }
+        func isUnambiguous(_ comparison: Comparison, key: (Comparison) -> String) -> Bool {
+            let ranked = comparisons.filter {
+                key($0) == key(comparison)
+            }.sorted {
+                ($0.distance, $0.speakerLabel, $0.profile.id.uuidString)
+                    < ($1.distance, $1.speakerLabel, $1.profile.id.uuidString)
+            }
+            guard let nearest = ranked.first,
+                  nearest.speakerLabel == comparison.speakerLabel,
+                  nearest.profile.id == comparison.profile.id else { return false }
+            return ranked.count == 1
+                || ranked[1].distance - comparison.distance
+                    >= HighQualityDuplicateSpeakerSuggestion.uncertaintyMargin
+        }
+        let suggestions: [HighQualityRecurringVoiceSuggestion] = comparisons.compactMap {
+            comparison in
+            guard comparison.distance
+                    <= HighQualityDuplicateSpeakerSuggestion.maximumCosineDistance,
+                  isUnambiguous(comparison, key: { $0.speakerLabel }),
+                  isUnambiguous(comparison, key: { $0.profile.id.uuidString }) else { return nil }
+            return HighQualityRecurringVoiceSuggestion(
+                speakerLabel: comparison.speakerLabel,
+                profileID: comparison.profile.id,
+                displayName: comparison.profile.displayName,
+                cosineDistance: comparison.distance
+            )
+        }.sorted {
+            ($0.cosineDistance, $0.speakerLabel, $0.profileID.uuidString)
+                < ($1.cosineDistance, $1.speakerLabel, $1.profileID.uuidString)
+        }
+        let suggestedLabels = Set(suggestions.map(\.speakerLabel))
+        return .init(
+            suggestions: suggestions,
+            unknownSpeakerLabels: anonymous.keys.filter {
+                !suggestedLabels.contains($0)
+            }.sorted(),
+            confirmableSpeakerLabels: [],
+            profileIncompatibilities: incompatibilities
+        )
+    }
+
+    func confirmVoiceProfile(
+        from result: HighQualityJobResult,
+        speakerLabel: String
+    ) throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            let centroids = try current.validatedVoiceCentroids(
+                from: result,
+                speakerLabel: speakerLabel
+            )
+            guard let displayName = result.editableSpeakerNames[speakerLabel],
+                  displayName != speakerLabel else {
+                throw HighQualityProjectError(
+                    message: "Name this Speaker before creating a Voice profile."
+                )
+            }
+            let stored = centroids.map(Self.projectCentroid)
+            let keys = Set(current.scope.voiceProfiles.flatMap(\.centroids).map(\.sourceKey))
+            guard stored.allSatisfy({ !keys.contains($0.sourceKey) }) else {
+                throw HighQualityProjectError(
+                    message: "This confirmed Speaker is already stored in a Voice profile."
+                )
+            }
+            let profile = HighQualityProjectVoiceProfile(
+                id: UUID(),
+                displayName: displayName,
+                centroids: stored
+            )
+            return try current.persistVoiceScope(
+                profiles: current.scope.voiceProfiles + [profile],
+                history: current.scope.history + [Self.history(
+                    "voice-profile-created",
+                    jobID: result.manifest.jobID,
+                    details: [
+                        "profileID": profile.id.uuidString,
+                        "speakerLabel": speakerLabel,
+                    ]
+                )]
+            )
+        }
+    }
+
+    func acceptRecurringVoice(
+        _ suggestion: HighQualityRecurringVoiceSuggestion,
+        from result: HighQualityJobResult,
+        beforeResultCommit: () throws -> Void = {}
+    ) throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            let fresh = try current.validatedRecurringSuggestion(suggestion, from: result)
+            guard let persistedResult = HighQualityJob.persistedResultMatchingVoiceProvenance(
+                result
+            ) else {
+                throw HighQualityProjectError(
+                    message: "This Speaker result changed. Reopen it and try again."
+                )
+            }
+            let centroids = try current.validatedVoiceCentroids(
+                from: result,
+                speakerLabel: fresh.speakerLabel
+            )
+            var profiles = current.scope.voiceProfiles
+            guard let index = profiles.firstIndex(where: { $0.id == fresh.profileID }),
+                  let first = profiles[index].centroids.first else {
+                throw HighQualityProjectError(
+                    message: "This Voice profile requires recomputation."
+                )
+            }
+            let stored = centroids.map(Self.projectCentroid)
+            guard stored.allSatisfy({
+                $0.compatibilitySignature == first.compatibilitySignature
+            }) else {
+                throw HighQualityProjectError(
+                    message: "This Voice profile requires recomputation."
+                )
+            }
+            let existing = Set(profiles[index].centroids.map(\.sourceKey))
+            profiles[index] = .init(
+                id: profiles[index].id,
+                displayName: profiles[index].displayName,
+                centroids: profiles[index].centroids + stored.filter {
+                    !existing.contains($0.sourceKey)
+                }
+            )
+            let history = current.scope.history + [Self.history(
+                "recurring-voice-accepted",
+                jobID: result.manifest.jobID,
+                details: [
+                    "profileID": fresh.profileID.uuidString,
+                    "speakerLabel": fresh.speakerLabel,
+                    "evidenceFingerprint": Self.voiceEvidenceFingerprint(centroids),
+                ]
+            )]
+            let updated = current.updated(scope: current.scope.replacing(
+                voiceProfiles: profiles,
+                history: history
+            ))
+            guard Self.validScope(
+                updated.scope,
+                jobIDs: Set(updated.jobReferences.map(\.id))
+            ) else {
+                throw HighQualityProjectError(message: "This Voice profile is invalid.")
+            }
+            try AtomicDirectory.update(current.directory) { staging in
+                try Self.write(updated.manifest, to: staging)
+                try beforeResultCommit()
+                let stagedDirectory = staging.appendingPathComponent(
+                    "Jobs/\(result.manifest.jobID.uuidString)",
+                    isDirectory: true
+                )
+                let stagedResult = Self.result(persistedResult, relocatedTo: stagedDirectory)
+                _ = try HighQualityJob.editSpeakers(
+                    in: stagedResult,
+                    edit: .rename(fresh.speakerLabel, to: fresh.displayName)
+                )
+            }
+            return updated
+        }
+    }
+
+    func rejectRecurringVoice(
+        _ suggestion: HighQualityRecurringVoiceSuggestion,
+        from result: HighQualityJobResult
+    ) throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            let fresh = try current.validatedRecurringSuggestion(suggestion, from: result)
+            let centroids = try current.validatedVoiceCentroids(
+                from: result,
+                speakerLabel: fresh.speakerLabel
+            )
+            return try current.persistVoiceScope(
+                profiles: current.scope.voiceProfiles,
+                history: current.scope.history + [Self.history(
+                    "recurring-voice-rejected",
+                    jobID: result.manifest.jobID,
+                    details: [
+                        "profileID": fresh.profileID.uuidString,
+                        "speakerLabel": fresh.speakerLabel,
+                        "evidenceFingerprint": Self.voiceEvidenceFingerprint(centroids),
+                    ]
+                )]
+            )
+        }
+    }
+
+    func mergeVoiceProfile(_ sourceID: UUID, into targetID: UUID) throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            guard sourceID != targetID,
+                  let source = current.scope.voiceProfiles.first(where: { $0.id == sourceID }),
+                  let targetIndex = current.scope.voiceProfiles.firstIndex(
+                    where: { $0.id == targetID }
+                  ), let targetFirst = current.scope.voiceProfiles[targetIndex].centroids.first,
+                  source.centroids.allSatisfy({
+                      $0.compatibilitySignature == targetFirst.compatibilitySignature
+                  }) else {
+                throw HighQualityProjectError(
+                    message: "These Voice profiles are missing or require recomputation before merging."
+                )
+            }
+            var profiles = current.scope.voiceProfiles
+            var target = profiles[targetIndex]
+            let existing = Set(target.centroids.map(\.sourceKey))
+            target = .init(
+                id: target.id,
+                displayName: target.displayName,
+                centroids: target.centroids + source.centroids.filter {
+                    !existing.contains($0.sourceKey)
+                }
+            )
+            profiles[targetIndex] = target
+            profiles.removeAll { $0.id == sourceID }
+            return try current.persistVoiceScope(
+                profiles: profiles,
+                history: current.scope.history + [Self.history(
+                    "voice-profiles-merged",
+                    details: [
+                        "sourceProfileID": sourceID.uuidString,
+                        "targetProfileID": targetID.uuidString,
+                    ]
+                )]
+            )
+        }
+    }
+
+    func forgetVoiceProfile(_ profileID: UUID) throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            guard current.scope.voiceProfiles.contains(where: { $0.id == profileID }) else {
+                throw HighQualityProjectError(message: "This Voice profile no longer exists.")
+            }
+            return try current.persistVoiceScope(
+                profiles: current.scope.voiceProfiles.filter { $0.id != profileID },
+                history: current.scope.history + [Self.history(
+                    "voice-profile-forgotten",
+                    details: ["profileID": profileID.uuidString]
+                )]
+            )
+        }
+    }
+
+    func resetVoiceProfiles() throws -> Self {
+        try Self.withMetadataLock {
+            let current = try Self.load(from: directory, requestedRoot: requestedRoot)
+            return try current.persistVoiceScope(
+                profiles: [],
+                history: current.scope.history + [Self.history("voice-profiles-reset")]
+            )
+        }
+    }
+
+    private func validatedRecurringSuggestion(
+        _ suggestion: HighQualityRecurringVoiceSuggestion,
+        from result: HighQualityJobResult
+    ) throws -> HighQualityRecurringVoiceSuggestion {
+        guard let fresh = recurringVoiceEvaluation(for: result).suggestions.first(
+            where: {
+                $0.speakerLabel == suggestion.speakerLabel
+                    && $0.profileID == suggestion.profileID
+            }
+        ) else {
+            throw HighQualityProjectError(
+                message: "This recurring Voice suggestion is no longer valid."
+            )
+        }
+        return fresh
+    }
+
+    private func validatedVoiceCentroids(
+        from result: HighQualityJobResult,
+        speakerLabel: String
+    ) throws -> [HighQualitySpeakerCentroidEvidence] {
+        guard scope.voiceMemoryEnabled else {
+            throw HighQualityProjectError(message: "Enable Project Voice memory first.")
+        }
+        guard owns(result) else {
+            throw HighQualityProjectError(
+                message: "This Speaker result does not belong to this Project."
+            )
+        }
+        guard let centroids = HighQualityJob.projectVoiceCentroids(in: result)?[speakerLabel],
+              !centroids.isEmpty else {
+            throw HighQualityProjectError(
+                message: "This Speaker has no compatible centroid to remember."
+            )
+        }
+        return centroids
+    }
+
+    private func owns(_ result: HighQualityJobResult) -> Bool {
+        guard result.manifest.projectID == id,
+              let reference = jobReferences.first(where: {
+                  $0.jobID == result.manifest.jobID
+              }), result.directory.standardizedFileURL
+                == directory.appendingPathComponent(reference.resultPath).standardizedFileURL else {
+            return false
+        }
+        return HighQualityJob.persistedResultMatchingVoiceProvenance(result) != nil
+    }
+
+    private func persistVoiceScope(
+        profiles: [HighQualityProjectVoiceProfile],
+        history: [HighQualityProjectHistoryEntry]
+    ) throws -> Self {
+        try updating(scope: scope.replacing(voiceProfiles: profiles, history: history))
+    }
+
+    private static func projectCentroid(
+        _ centroid: HighQualitySpeakerCentroidEvidence
+    ) -> HighQualityProjectVoiceCentroid {
+        .init(
+            anonymousSpeakerID: centroid.speakerLabel,
+            vectorDimension: centroid.vectorDimension,
+            values: centroid.vector,
+            modelID: centroid.modelID,
+            modelRevision: centroid.modelRevision,
+            runtimeRevision: centroid.runtimeRevision,
+            embeddingVariant: centroid.embeddingVariant,
+            sourceJobID: centroid.sourceJobID
+        )
+    }
+
+    private static func average(_ vectors: [[Float]]) -> [Float]? {
+        guard let first = vectors.first,
+              !first.isEmpty,
+              vectors.allSatisfy({ $0.count == first.count }) else { return nil }
+        var average = Array(repeating: Float.zero, count: first.count)
+        for vector in vectors {
+            for index in vector.indices {
+                average[index] += vector[index] / Float(vectors.count)
+            }
+        }
+        return average.allSatisfy(\.isFinite) ? average : nil
+    }
+
+    private static func voiceEvidenceFingerprint(
+        _ centroids: [HighQualitySpeakerCentroidEvidence]
+    ) -> String {
+        let payload = centroids.sorted { $0.speakerLabel < $1.speakerLabel }.map { centroid in
+            [
+                centroid.sourceJobID.uuidString,
+                centroid.speakerLabel,
+                centroid.modelID,
+                centroid.modelRevision,
+                centroid.runtimeRevision,
+                centroid.embeddingVariant,
+                String(centroid.vectorDimension),
+                centroid.vector.map { String($0.bitPattern, radix: 16) }.joined(separator: ","),
+            ].joined(separator: "|")
+        }.joined(separator: "\n")
+        return SHA256.hash(data: Data(payload.utf8))
+            .map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func result(
+        _ result: HighQualityJobResult,
+        relocatedTo directory: URL
+    ) -> HighQualityJobResult {
+        HighQualityJobResult(
+            directory: directory,
+            japaneseTranscript: result.japaneseTranscript,
+            englishTranscript: result.englishTranscript,
+            turns: result.turns,
+            subtitleCues: result.subtitleCues,
+            manifest: result.manifest,
+            evidence: result.evidence,
+            speakerReanalysisCompletion: result.speakerReanalysisCompletion
+        )
+    }
+
+    private static func history(
+        _ action: String,
+        jobID: UUID? = nil,
+        details: [String: String] = [:]
+    ) -> HighQualityProjectHistoryEntry {
+        .init(id: UUID(), action: action, createdAt: Date(), jobID: jobID, details: details)
     }
 
     func reset() async throws -> Self {
@@ -822,7 +1409,7 @@ struct HighQualityProject: Identifiable, Sendable {
                         && centroid.vectorDimension > 0
                         && centroid.values.allSatisfy(\.isFinite)
                         && jobIDs.contains(centroid.sourceJobID)
-                        && compatible(centroid, with: first)
+                        && centroid.compatibilitySignature == first.compatibilitySignature
                         && [
                             centroid.modelID,
                             centroid.modelRevision,
@@ -837,17 +1424,6 @@ struct HighQualityProject: Identifiable, Sendable {
                     && $0.details.keys.allSatisfy(validIdentifier)
                     && $0.jobID.map(jobIDs.contains) != false
             }
-    }
-
-    private static func compatible(
-        _ centroid: HighQualityProjectVoiceCentroid,
-        with reference: HighQualityProjectVoiceCentroid
-    ) -> Bool {
-        centroid.vectorDimension == reference.vectorDimension
-            && centroid.modelID == reference.modelID
-            && centroid.modelRevision == reference.modelRevision
-            && centroid.runtimeRevision == reference.runtimeRevision
-            && centroid.embeddingVariant == reference.embeddingVariant
     }
 
     private static func cleanupInterruptedDirectories(in root: URL) throws {
@@ -979,6 +1555,30 @@ struct HighQualityProjectWorkspace {
         using job: HighQualityJob = HighQualityJob(),
         progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
     ) async throws -> HighQualityJobResult {
+        try await runSelectedJob(
+            deliverables: deliverables,
+            asrMode: .backend(backend),
+            translator: translator,
+            speakerLabels: speakerLabels,
+            readableSubtitles: readableSubtitles,
+            speakerConfiguration: speakerConfiguration,
+            translationContextPolicy: translationContextPolicy,
+            using: job,
+            progress: progress
+        )
+    }
+
+    func runSelectedJob(
+        deliverables: Set<HighQualityDeliverable>,
+        asrMode: HighQualityASRMode,
+        translator: HighQualityTranslator = .productDefault,
+        speakerLabels: Bool = false,
+        readableSubtitles: Bool = false,
+        speakerConfiguration: HighQualitySpeakerConfiguration = .standard,
+        translationContextPolicy: HighQualityConversationContextPolicy = .productDefault,
+        using job: HighQualityJob = HighQualityJob(),
+        progress: @escaping @Sendable (HighQualityJobProgress) -> Void = { _ in }
+    ) async throws -> HighQualityJobResult {
         if selectedProjectID != nil, selectedProject == nil {
             throw HighQualityProjectError(
                 message: selectedProjectEntry?.errorMessage
@@ -991,7 +1591,7 @@ struct HighQualityProjectWorkspace {
         return try await job.run(.init(
             sourceURL: sourceURL,
             deliverables: deliverables,
-            backend: backend,
+            asrMode: asrMode,
             translator: translator,
             speakerLabels: speakerLabels,
             readableSubtitles: readableSubtitles,

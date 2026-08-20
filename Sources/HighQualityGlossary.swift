@@ -153,6 +153,7 @@ struct HighQualityGlossarySignal: Codable, Equatable, Sendable {
         case title
         case channel
         case description
+        case projectMetadata = "project-metadata"
         case recognizedJapanese = "recognized-japanese"
 
         var weight: Int {
@@ -160,6 +161,7 @@ struct HighQualityGlossarySignal: Codable, Equatable, Sendable {
             case .title: 8
             case .channel: 6
             case .description: 4
+            case .projectMetadata: 6
             case .recognizedJapanese: 16
             }
         }
@@ -408,13 +410,18 @@ enum HighQualityGlossarySelector {
     static func select(
         source: HighQualitySourceProvenance,
         turns: [HighQualityTranslationTurn],
+        projectMetadata: [String: String] = [:],
+        preferredTermIDs: Set<String> = [],
         budget: HighQualityGlossaryBudget = .standard
     ) -> HighQualityGlossarySelection {
-        let metadata: [(HighQualityGlossarySignal.Source, String)] = [
+        let sourceMetadata: [(HighQualityGlossarySignal.Source, String)] = [
             (.title, source.youtube?.title ?? source.fileName),
             (.channel, source.youtube?.channel ?? ""),
             (.description, source.youtube?.description ?? ""),
         ]
+        let metadata = sourceMetadata + projectMetadata.sorted { $0.key < $1.key }.map {
+            (HighQualityGlossarySignal.Source.projectMetadata, $0.value)
+        }
         let recognizedJapanese = turns.map(\.japanese).joined(separator: "\n")
         let cueOrder = Dictionary(uniqueKeysWithValues: turns.enumerated().map {
             ($0.element.id, $0.offset)
@@ -422,7 +429,7 @@ enum HighQualityGlossarySelector {
         var operations = 0
         var decisions: [String: HighQualityGlossaryDecision] = [:]
         let terms = HighQualityGlossaryCatalog.terms + sourceTerms(
-            metadata: metadata,
+            metadata: sourceMetadata,
             provenance: source.sourceURL ?? source.path,
             limit: min(8, budget.maxEntries)
         )
@@ -445,6 +452,13 @@ enum HighQualityGlossarySelector {
                         weight: source.weight
                     ))
                 }
+            }
+            if preferredTermIDs.contains(term.id) {
+                metadataSignals.append(.init(
+                    source: .projectMetadata,
+                    matchedForm: term.id,
+                    weight: HighQualityGlossarySignal.Source.projectMetadata.weight
+                ))
             }
             var recognizedSignals: [HighQualityGlossarySignal] = []
             if firstMatch(

@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "ticket": 117,
+  "result": "RETAIN_HIDDEN_DEV_NO_GO",
+  "route": "candidate",
+  "baseCommit": "75619a715d0cb6bfecc991e4855b7b229654d908",
+  "command": "BENCHMARK_SLOT_GRANTED=117 bash Scripts/run_adaptive_asr_117.sh full",
+  "execution": {
+    "heavyRunsLaunched": 1,
+    "developmentFirst": true,
+    "holdoutOpened": false,
+    "downstreamStarted": false,
+    "translations": 0,
+    "strictlySequentialWorkers": true,
+    "qwenSegments": 169,
+    "parakeetEscalations": 26,
+    "parakeetSelections": 0,
+    "qwenFallbacks": 169,
+    "vetoedSegments": 9
+  },
+  "corpus": {
+    "id": "qudu2fx3ncc",
+    "role": "development",
+    "audioSHA256": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+    "characterAlignmentSHA256": "abfbd3f23d0f654a5b424b24e56890dfd23cae6805d804f4063e51852593f4a7",
+    "sampleRate": 16000,
+    "sampleCount": 15315325,
+    "segments": 169,
+    "detector": {
+      "usesReference": false,
+      "frameMilliseconds": 20,
+      "minimumSeconds": 3,
+      "maximumSeconds": 8,
+      "boundary": "lowest-energy-frame-latest-tie"
+    }
+  },
+  "calibration": {
+    "version": "adaptive-qwen-parakeet-117-dev-v1",
+    "validationBlocks": 5,
+    "minimumMargin": 0.2,
+    "qwenStable": false,
+    "parakeetStable": false,
+    "stableAcrossBlocks": false
+  },
+  "quality": {
+    "japanese": {
+      "standardQwenEdits": 3278,
+      "adaptiveEdits": 2985,
+      "relativeGainPercent": 8.938377059182429,
+      "criticalMeaningLost": [
+        "1000",
+        "前に行かない"
+      ],
+      "criticalNumbersLost": [
+        "1000"
+      ],
+      "criticalTermsLost": []
+    },
+    "english": {
+      "status": "NOT_RUN",
+      "reason": "DEV ASR gates failed before the single downstream alignment and translation"
+    }
+  },
+  "runtime": {
+    "standardQwenASRSeconds": 125.9823739528656,
+    "workerSeconds": {
+      "qwen-ja": 141.54386401176453,
+      "parakeet-ja": 18.32472801208496
+    },
+    "incrementalSeconds": {
+      "qwenSegmentedVsStandard": 15.561490058898926,
+      "parakeet": 18.32472801208496,
+      "total": 33.88621807098389
+    },
+    "peakPhysicalFootprintBytes": {
+      "qwen-ja": 7314019080,
+      "parakeet-ja": 689489600
+    },
+    "swapDeltaBytes": 0,
+    "forcedTerminations": 0
+  },
+  "models": [
+    {
+      "backend": "qwen-ja",
+      "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+      "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+      "primaryWeightSHA256": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+    },
+    {
+      "backend": "parakeet-ja",
+      "modelID": "FluidInference/parakeet-0.6b-ja-coreml",
+      "revision": "2952296ff1da4a6d6a7aec545e226367db80c612",
+      "weightSHA256": {
+        "Encoder": "257685d3fdb578c5d6d7f0a5460c778f6104bcf2f264e4ae704b885c69ad6dda",
+        "Decoder": "a56d792edf3b88e30466c0b992bb7e316fa743c90f8809c2be9d2ecb8ffbd48e",
+        "Jointer": "d6f24519c7c6959e8ec6fb078e8c05d912d292fcb57720c63fdc9291b1db122d",
+        "Preprocessor": "6512ba5d1acc3ffe6f322089c0ece5466f93c7ac77c267dd851a1fb517c637f9"
+      }
+    }
+  ],
+  "failedGates": [
+    "noCriticalLoss",
+    "separateStableCalibration",
+    "singleFrozenVariable",
+    "usefulRecoveries"
+  ],
+  "routing": {
+    "initialFailure": {
+      "route": "harness",
+      "phase": "development-calibration",
+      "SHA256": "db245b786930ae30f6f4f3d1e4670923a35e4303b0f6e28b14f9eb8fa40ea3d6"
+    },
+    "repair": {
+      "rawASRReused": true,
+      "holdoutOpened": false,
+      "SHA256": "e86ce6aea327ac3ea981c243e62fa6477ab9b792a01e7cef61e75c7f0035fef5",
+      "provenance": "issue-117-historical-run-provenance.json",
+      "provenanceStatus": "LEGACY_PROVENANCE_INCOMPLETE",
+      "reusableByCurrentCode": false
+    }
+  },
+  "rawArtifacts": {
+    ".build/benchmarks/issue-117/READY_FOR_HEAVY_BENCHMARK.json": "d91b0c51e9b9875191e3d036e99b445d70e70e30a5ee63a1553e2a383111a355",
+    ".build/benchmarks/issue-117/development/plan.json": "ce5933cda5bf6496983b7d2805855a4a290f22f481a095d085835c7930175660",
+    ".build/benchmarks/issue-117/development/run.json": "432644bc55fb1180c47aa096c0a5cbb25dbb5fff6d51491a27f12a1a7637dcd7",
+    ".build/benchmarks/issue-117/development/asr.log": "8d88a9f4392b63d20db178ef0e8aa9deec1836e42a61929b346b236efb165b22",
+    ".build/benchmarks/issue-117/development/asr-runtime.json": "e4baffc81387977599f3709982a8d20b0887ad6e5e0536466bff4023a0ab98e8",
+    ".build/benchmarks/issue-117/development/calibration.json": "20ebc2698195c4664d81a96eae875f1aa54389d1f2449f2a80f0f86f66dd1b15",
+    ".build/benchmarks/issue-117/development/calibration-report.json": "e779ae952a7cc5a339861227b0ae05acd137e18c78bc149b630ae7440de77b27",
+    ".build/benchmarks/issue-117/final-report.json": "750a627bd2cab4054b702b4538d6ab96c5493210ad6388fb3b3afc3167bfc6eb",
+    ".build/benchmarks/issue-117/harness-repair.json": "e86ce6aea327ac3ea981c243e62fa6477ab9b792a01e7cef61e75c7f0035fef5"
+  },
+  "verification": {
+    "targeted": {
+      "executed": 19,
+      "skipped": 2,
+      "failures": 0
+    },
+    "full": {
+      "executed": 483,
+      "skipped": 64,
+      "failures": 0
+    },
+    "live": {
+      "executed": 46,
+      "skipped": 0,
+      "failures": 0
+    },
+    "pythonSelfTest": "PASS",
+    "runnerProvenanceSelfTest": "PASS",
+    "xctestSubstitutionAfterReady": "PASS_INFRASTRUCTURE",
+    "xctestSubstitutionAfterRun": "PASS_INFRASTRUCTURE",
+    "xctestExecutableSubstitutionOnReuse": "PASS_INFRASTRUCTURE",
+    "xctestResourceSubstitutionOnReuse": "PASS_INFRASTRUCTURE",
+    "workerResourceSubstitutionOnReuse": "PASS_INFRASTRUCTURE",
+    "shellSyntax": "PASS"
+  },
+  "scope": {
+    "adaptiveExposed": false,
+    "standardDefaultPreserved": true,
+    "liveChanged": false
+  }
+}

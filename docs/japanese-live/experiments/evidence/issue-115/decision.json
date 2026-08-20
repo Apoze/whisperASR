@@ -1,0 +1,50 @@
+{
+  "ticket": 115,
+  "decision": "GO_BETA_OPT_IN",
+  "defaultEnabled": false,
+  "automaticAcceptance": false,
+  "testedVariable": "project-scoped recurring-voice matching",
+  "thresholds": {
+    "maximumCosineDistance": 0.3,
+    "uncertaintyMargin": 0.1,
+    "enrollmentReferenceShare": 0.6,
+    "origin": {
+      "scope": "Inherited unchanged from the pre-existing E32 duplicate-speaker contract; not recalibrated on #115 DEV or holdout.",
+      "path": "../E32-duplicate-speaker-centroids/threshold-contract-v2.json",
+      "sha256": "e197099d939e388b32ea179bae0c609415e4831e47891ddb0c776709365265ed",
+      "e32DecisionPath": "../E32-duplicate-speaker-centroids/decision.json",
+      "e32HoldoutRetunedAfterInspection": false
+    }
+  },
+  "development": {
+    "suggestions": 1,
+    "usefulDominantReference": 1,
+    "false": 0,
+    "unknown": 4,
+    "precision": 1.0,
+    "abstentionRate": 0.8,
+    "recurringReferenceRecall": 0.5,
+    "limitation": "The useful DEV probe cluster has only 47.2% dominant-reference share, so its label is weak evidence despite the correct dominant reference. P10 recurs but is conservatively missed."
+  },
+  "holdout": {
+    "suggestions": 3,
+    "usefulDominantReference": 3,
+    "false": 0,
+    "unknown": 0,
+    "precision": 1.0,
+    "abstentionRate": 0.0,
+    "recurringReferenceRecall": 1.0,
+    "referenceShares": [0.7211293159537286, 0.7147680865793017, 0.5353936082554013]
+  },
+  "lifecycle": {
+    "modelLoadsPerLane": 1,
+    "runsSequential": true,
+    "unloadAwaited": true,
+    "asrLoaded": false,
+    "translationLoaded": false,
+    "declaredPeakMemoryBytes": 4294967296,
+    "maximumObservedPeakMemoryBytes": 760333776
+  },
+  "privacy": "Centroid vectors remain in local Project storage and are intentionally absent from committed evidence and Deliverables.",
+  "promotionRule": "Keep Bêta opt-in. Never force identity; incompatible, weak or ambiguous voices remain Unknown."
+}

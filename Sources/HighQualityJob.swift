@@ -232,7 +232,7 @@ struct HighQualityJobRequest: Sendable {
     let id: UUID
     let sourceURL: URL
     let deliverables: Set<HighQualityDeliverable>
-    let backend: HighQualityASRBackend
+    let asrMode: HighQualityASRMode
     let translator: HighQualityTranslator
     let speakerLabels: Bool
     let readableSubtitles: Bool
@@ -243,7 +243,11 @@ struct HighQualityJobRequest: Sendable {
     let translationContextPolicy: HighQualityConversationContextPolicy
     let translationContextResetReasonsByCueID: [String: HighQualityConversationContextResetReason]
     let project: HighQualityProject?
+    let adaptiveScopedTerms: Set<String>
+    let adaptiveCalibration: HighQualityAdaptiveASRCalibration
     let outputRoot: URL
+
+    var backend: HighQualityASRBackend { asrMode.primaryBackend }
 
     init(
         id: UUID = UUID(),
@@ -263,10 +267,48 @@ struct HighQualityJobRequest: Sendable {
         project: HighQualityProject? = nil,
         outputRoot: URL = AppStoragePaths.highQualityJobs
     ) {
+        self.init(
+            id: id,
+            sourceURL: sourceURL,
+            deliverables: deliverables,
+            asrMode: .backend(backend),
+            translator: translator,
+            speakerLabels: speakerLabels,
+            readableSubtitles: readableSubtitles,
+            useExclusiveReconciliation: useExclusiveReconciliation,
+            speakerConfiguration: speakerConfiguration,
+            speakerLabelsByCueID: speakerLabelsByCueID,
+            translationContextPolicy: translationContextPolicy,
+            translationContextResetReasonsByCueID: translationContextResetReasonsByCueID,
+            project: project,
+            outputRoot: outputRoot
+        )
+    }
+
+    init(
+        id: UUID = UUID(),
+        sourceURL: URL,
+        deliverables: Set<HighQualityDeliverable>,
+        asrMode: HighQualityASRMode,
+        translator: HighQualityTranslator = .productDefault,
+        speakerLabels: Bool = false,
+        readableSubtitles: Bool = false,
+        useExclusiveReconciliation: Bool = false,
+        speakerConfiguration: HighQualitySpeakerConfiguration = .standard,
+        speakerLabelsByCueID: [String: String] = [:],
+        translationContextPolicy: HighQualityConversationContextPolicy = .none,
+        translationContextResetReasonsByCueID: [
+            String: HighQualityConversationContextResetReason
+        ] = [:],
+        adaptiveScopedTerms: Set<String> = [],
+        adaptiveCalibration: HighQualityAdaptiveASRCalibration = .developmentV1,
+        project: HighQualityProject? = nil,
+        outputRoot: URL = AppStoragePaths.highQualityJobs
+    ) {
         self.id = id
         self.sourceURL = sourceURL
         self.deliverables = deliverables
-        self.backend = backend
+        self.asrMode = asrMode
         self.translator = translator
         self.speakerLabels = speakerLabels
         self.readableSubtitles = readableSubtitles
@@ -276,6 +318,8 @@ struct HighQualityJobRequest: Sendable {
         self.translationContextPolicy = translationContextPolicy
         self.translationContextResetReasonsByCueID = translationContextResetReasonsByCueID
         self.project = project
+        self.adaptiveScopedTerms = adaptiveScopedTerms
+        self.adaptiveCalibration = adaptiveCalibration
         self.outputRoot = project?.jobsDirectory ?? outputRoot
     }
 }
@@ -919,6 +963,54 @@ struct HighQualitySpeakerCentroidEvidence: Codable, Equatable, Sendable {
     }
 }
 
+enum HighQualitySpeakerCentroidIncompatibilityCause: String, Equatable, Sendable {
+    case modelOrRevision
+    case embeddingVariant
+    case dimension
+
+    var displayName: String {
+        switch self {
+        case .modelOrRevision: "model or revision"
+        case .embeddingVariant: "embedding variant"
+        case .dimension: "vector dimension"
+        }
+    }
+}
+
+struct HighQualitySpeakerCentroidSignature: Equatable, Sendable {
+    let modelID: String
+    let modelRevision: String
+    let runtimeRevision: String
+    let embeddingVariant: String
+    let vectorDimension: Int
+
+    func incompatibilityCauses(
+        comparedWith other: Self
+    ) -> [HighQualitySpeakerCentroidIncompatibilityCause] {
+        var causes: [HighQualitySpeakerCentroidIncompatibilityCause] = []
+        if modelID != other.modelID
+            || modelRevision != other.modelRevision
+            || runtimeRevision != other.runtimeRevision {
+            causes.append(.modelOrRevision)
+        }
+        if embeddingVariant != other.embeddingVariant { causes.append(.embeddingVariant) }
+        if vectorDimension != other.vectorDimension { causes.append(.dimension) }
+        return causes
+    }
+}
+
+extension HighQualitySpeakerCentroidEvidence {
+    var compatibilitySignature: HighQualitySpeakerCentroidSignature {
+        .init(
+            modelID: modelID,
+            modelRevision: modelRevision,
+            runtimeRevision: runtimeRevision,
+            embeddingVariant: embeddingVariant,
+            vectorDimension: vectorDimension
+        )
+    }
+}
+
 struct HighQualityDuplicateSpeakerSuggestion: Equatable, Sendable {
     static let maximumCosineDistance: Float = 0.3
     static let uncertaintyMargin: Float = 0.1
@@ -1241,6 +1333,7 @@ struct HighQualityJobManifest: Codable, Equatable, Sendable {
     var source: HighQualitySourceProvenance
     let deliverables: [HighQualityDeliverable]
     let selectedBackend: HighQualityASRBackend
+    var selectedASRMode: HighQualityASRMode? = nil
     let translationModel: HighQualityTranslationModelEvidence?
     let speakerLabels: Bool
     let readableSubtitles: Bool?
@@ -1394,6 +1487,7 @@ struct HighQualityRawEvidence: Codable, Equatable, Sendable {
     let source: HighQualitySourceProvenance
     let model: HighQualityModelEvidence
     let asrWorker: HighQualityASRWorkerEvidence?
+    var adaptiveASR: HighQualityAdaptiveASRAudit? = nil
     var speakerConfiguration: HighQualitySpeakerConfiguration?
     var speakerCountPolicy: HighQualitySpeakerCountPolicy?
     let rawASR: String?
@@ -1540,7 +1634,7 @@ extension HighQualityJobResult {
         compatibleSpeakerCentroids.map(HighQualityJob.duplicateSpeakerSuggestions) ?? []
     }
 
-    private var compatibleSpeakerCentroids: [HighQualitySpeakerCentroidEvidence]? {
+    fileprivate var compatibleSpeakerCentroids: [HighQualitySpeakerCentroidEvidence]? {
         guard let diarization = evidence.diarization else { return nil }
         let speakerCount = Set(diarization.rawSpans.map(\.speakerID)).count
         let expectedSpeakerLabels = Set((0..<speakerCount).map {
@@ -1552,13 +1646,18 @@ extension HighQualityJobResult {
               let runtimeRevision = diarization.configuration?["runtimeRevision"],
               let embeddingVariant = diarization.configuration?["embedderVariant"],
               HighQualityJob.hasValidCompatibleSpeakerCentroids(centroids),
-              centroids.allSatisfy({
-                  $0.sourceJobID == manifest.jobID
-                      && $0.modelID == diarization.modelID
-                      && $0.modelRevision == diarization.revision
-                      && $0.runtimeRevision == runtimeRevision
-                      && $0.embeddingVariant == embeddingVariant
-              }) else { return nil }
+              let first = centroids.first else { return nil }
+        let expectedSignature = HighQualitySpeakerCentroidSignature(
+            modelID: diarization.modelID,
+            modelRevision: diarization.revision,
+            runtimeRevision: runtimeRevision,
+            embeddingVariant: embeddingVariant,
+            vectorDimension: first.vectorDimension
+        )
+        guard centroids.allSatisfy({
+            $0.sourceJobID == manifest.jobID
+                && $0.compatibilitySignature == expectedSignature
+        }) else { return nil }
         return centroids
     }
 }
@@ -1665,6 +1764,8 @@ struct HighQualityJob: Sendable {
             @escaping @Sendable (Double, String) -> Void
         ) async throws -> Void
         let transcribeJapanese: @Sendable ([Float]) async throws -> String
+        let transcribeJapaneseEvidence: @Sendable ([Float]) async throws
+            -> HighQualityASRExchange
         let transcribeJapaneseAnchored: @Sendable ([Float]) async throws -> HighQualityASRExchange
         let unloadASR: @Sendable () async -> Void
         let asrWorkerEvidence: @Sendable () async -> HighQualityASRWorkerEvidence?
@@ -1723,6 +1824,8 @@ struct HighQualityJob: Sendable {
                 @escaping @Sendable (Double, String) -> Void
             ) async throws -> Void,
             transcribeJapanese: @escaping @Sendable ([Float]) async throws -> String,
+            transcribeJapaneseEvidence: (@Sendable ([Float]) async throws
+                -> HighQualityASRExchange)? = nil,
             transcribeJapaneseAnchored: (@Sendable ([Float]) async throws -> HighQualityASRExchange)? = nil,
             unloadASR: @escaping @Sendable () async -> Void,
             asrWorkerEvidence: @escaping @Sendable () async
@@ -1804,6 +1907,10 @@ struct HighQualityJob: Sendable {
             self.acquireYouTube = acquireYouTube
             self.prepareASR = prepareASR
             self.transcribeJapanese = transcribeJapanese
+            self.transcribeJapaneseEvidence = transcribeJapaneseEvidence ?? { samples in
+                let transcript = try await transcribeJapanese(samples)
+                return .init(rawTranscript: transcript, chunks: [])
+            }
             self.transcribeJapaneseAnchored = transcribeJapaneseAnchored ?? { samples in
                 let transcript = try await transcribeJapanese(samples)
                 return .init(
@@ -1889,6 +1996,9 @@ struct HighQualityJob: Sendable {
                 prepareASR: { try await asr.prepare(progress: $0) },
                 transcribeJapanese: {
                     try await asr.transcribe($0, anchored: false).rawTranscript
+                },
+                transcribeJapaneseEvidence: {
+                    try await asr.transcribe($0, anchored: false)
                 },
                 transcribeJapaneseAnchored: {
                     try await asr.transcribe($0, anchored: true)
@@ -3185,6 +3295,7 @@ struct HighQualityJob: Sendable {
         var sampleCount = 0
         var sourceAudioSHA256: String?
         var rawASR: String?
+        var adaptiveASR: HighQualityAdaptiveASRAudit?
         var glossary = HighQualityGlossarySelection.empty
         var japaneseTranscriptWritten = false
         var englishTranscriptWritten = false
@@ -3215,6 +3326,7 @@ struct HighQualityJob: Sendable {
             source: Self.provenance(for: request.sourceURL),
             deliverables: request.deliverables.sorted { $0.rawValue < $1.rawValue },
             selectedBackend: request.backend,
+            selectedASRMode: request.asrMode,
             translationModel: needsTranslation ? translationModel : nil,
             speakerLabels: request.speakerLabels || !request.speakerLabelsByCueID.isEmpty,
             readableSubtitles: request.readableSubtitles ? true : nil,
@@ -3271,6 +3383,22 @@ struct HighQualityJob: Sendable {
             return try await gate.withMemoryGuard(lease, operation: operation)
         }
 
+        func transcribeAdaptiveSegment(
+            _ segment: HighQualityAdaptiveASRSegment,
+            samples: [Float],
+            using segmentServices: Services,
+            lease: HeavyweightModelLease?
+        ) async throws -> (exchange: HighQualityASRExchange, duration: TimeInterval) {
+            try Task.checkCancellation()
+            let started = Date()
+            let exchange = try await withMemoryGuard(lease) {
+                try await segmentServices.transcribeJapaneseEvidence(
+                    Array(samples[segment.startSample..<segment.endSample])
+                )
+            }
+            return (exchange, Date().timeIntervalSince(started))
+        }
+
         func releaseModel(
             _ lease: HeavyweightModelLease?,
             unload: @escaping @Sendable () async -> Void
@@ -3291,6 +3419,182 @@ struct HighQualityJob: Sendable {
             _ release: (releasedMemoryBytes: UInt64, evidence: HeavyweightModelMemoryEvidence)
         ) -> String {
             "memory=\(release.releasedMemoryBytes) runtimePeak=\(release.evidence.peakMemoryBytes) minimumAvailable=\(release.evidence.minimumAvailableMemoryBytes) maximum=\(release.evidence.maximumMemoryBytes) reserve=\(release.evidence.reserveBytes)"
+        }
+
+        func runAdaptivePass(
+            backend: HighQualityASRBackend,
+            segments: [HighQualityAdaptiveASRSegment],
+            samples: [Float],
+            prepareFraction: Double,
+            transcribeFraction: Double
+        ) async -> (
+            results: [String: (HighQualityASRExchange, TimeInterval)],
+            errors: [String: HighQualityAdaptiveASRErrorEvidence],
+            fatalError: (any Error)?,
+            worker: HighQualityASRWorkerEvidence?
+        ) {
+            guard !segments.isEmpty else { return ([:], [:], nil, nil) }
+            let candidate = servicesForSelection(backend, request.translator)
+            let stage = backend.rawValue
+            var lease: HeavyweightModelLease?
+            var results: [String: (HighQualityASRExchange, TimeInterval)] = [:]
+            var errors: [String: HighQualityAdaptiveASRErrorEvidence] = [:]
+            var fatalError: (any Error)?
+            begin(
+                .preparingASR,
+                fraction: prepareFraction,
+                message: "Preparing \(backend.displayName) for targeted passages…"
+            )
+            do {
+                lease = try await acquireModel(
+                    backend.model.modelID,
+                    peak: backend.declaredPeakMemoryBytes
+                )
+                if let lease {
+                    manifest.modelEvents.append(.init(
+                        kind: .pressureChecked,
+                        backend: backend,
+                        at: Date(),
+                        message: "policy=macos-memory-pressure peak=\(lease.declaredPeakBytes) reserve=\(lease.reserveBytes) total=\(lease.totalMemoryBytes) available=\(lease.availableMemoryBytes) baseline=\(lease.baselineMemoryBytes)"
+                    ))
+                }
+                manifest.modelEvents.append(.init(
+                    kind: .loadStarted,
+                    backend: backend,
+                    at: Date()
+                ))
+                try await withMemoryGuard(lease) {
+                    try await candidate.prepareASR { fraction, message in
+                        progress(.init(
+                            stage: .preparingASR,
+                            fraction: prepareFraction + min(max(fraction, 0), 1) * 0.03,
+                            message: message
+                        ))
+                    }
+                }
+                try await markLoaded(lease)
+                manifest.modelEvents.append(.init(
+                    kind: .loadCompleted,
+                    backend: backend,
+                    at: Date()
+                ))
+                begin(
+                    .transcribing,
+                    fraction: transcribeFraction,
+                    message: "Checking targeted passages with \(backend.displayName)…"
+                )
+                for segment in segments {
+                    do {
+                        let result = try await transcribeAdaptiveSegment(
+                            segment,
+                            samples: samples,
+                            using: candidate,
+                            lease: lease
+                        )
+                        results[segment.id] = (result.exchange, result.duration)
+                    } catch is CancellationError {
+                        fatalError = CancellationError()
+                        break
+                    } catch {
+                        let route = HighQualityAdaptiveASR.route(error)
+                        errors[segment.id] = .init(
+                            route: route,
+                            stage: "\(stage)-transcription",
+                            segmentID: segment.id,
+                            message: error.localizedDescription,
+                            candidateReason: HighQualityAdaptiveASR.candidateReason(error)
+                        )
+                        if route == .infrastructure {
+                            fatalError = error
+                            break
+                        }
+                    }
+                }
+            } catch {
+                let route = HighQualityAdaptiveASR.route(error)
+                for segment in segments where results[segment.id] == nil {
+                    errors[segment.id] = .init(
+                        route: route,
+                        stage: "\(stage)-preparation",
+                        segmentID: segment.id,
+                        message: error.localizedDescription,
+                        candidateReason: HighQualityAdaptiveASR.candidateReason(error)
+                    )
+                }
+                if error is CancellationError || route == .infrastructure {
+                    fatalError = error
+                }
+            }
+            if let fatalError {
+                for segment in segments
+                where results[segment.id] == nil && errors[segment.id] == nil {
+                    errors[segment.id] = .init(
+                        route: .infrastructure,
+                        stage: "\(stage)-aborted",
+                        segmentID: segment.id,
+                        message: fatalError.localizedDescription
+                    )
+                }
+            }
+            do {
+                let release = try await releaseModel(lease, unload: candidate.unloadASR)
+                manifest.modelEvents.append(.init(
+                    kind: .unloadCompleted,
+                    backend: backend,
+                    at: Date()
+                ))
+                if let release {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        release.evidence.peakMemoryBytes
+                    )
+                    manifest.modelEvents.append(.init(
+                        kind: .memoryReleaseChecked,
+                        backend: backend,
+                        at: Date(),
+                        message: releaseMessage(release)
+                    ))
+                }
+            } catch {
+                await candidate.unloadASR()
+                let evidence = HighQualityAdaptiveASRErrorEvidence(
+                    route: .infrastructure,
+                    stage: "\(stage)-unload",
+                    segmentID: nil,
+                    message: error.localizedDescription
+                )
+                for segment in segments where results[segment.id] == nil {
+                    errors[segment.id] = evidence
+                }
+                fatalError = error
+            }
+            let worker = await candidate.asrWorkerEvidence()
+            if let worker {
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    worker.lifecycle.peakPhysicalFootprintBytes
+                )
+            }
+            return (results, errors, fatalError, worker)
+        }
+
+        func recordAdaptiveAudit(
+            decisions: [HighQualityAdaptiveASRDecision],
+            workers: [HighQualityASRWorkerEvidence]
+        ) {
+            adaptiveASR = .init(
+                schemaVersion: HighQualityAdaptiveASRAudit.currentSchemaVersion,
+                calibration: request.adaptiveCalibration,
+                decisions: decisions,
+                workers: workers,
+                qwenDuration: decisions.reduce(0) { $0 + $1.qwenDuration },
+                parakeetDuration: decisions.compactMap(\.parakeetDuration).reduce(0, +),
+                whisperKitDuration: decisions.compactMap(\.whisperKitDuration).reduce(0, +),
+                peakMemoryBytes: manifest.peakMemoryBytes,
+                errors: decisions.flatMap {
+                    [$0.error, $0.whisperKitError].compactMap { $0 }
+                }
+            )
         }
 
         func recordASRWorkerEvidence() async {
@@ -3476,8 +3780,38 @@ struct HighQualityJob: Sendable {
             try Task.checkCancellation()
 
             begin(.transcribing, fraction: 0.5, message: "Transcribing Japanese…")
-            let asrExchange: HighQualityASRExchange
-            if needsAlignment {
+            var adaptiveQwenResults: [(
+                segment: HighQualityAdaptiveASRSegment,
+                exchange: HighQualityASRExchange,
+                duration: TimeInterval
+            )] = []
+            var asrExchange: HighQualityASRExchange
+            if request.asrMode == .adaptiveQwenParakeet {
+                for segment in HighQualityAdaptiveASR.plan(samples: samples) {
+                    let result = try await transcribeAdaptiveSegment(
+                        segment,
+                        samples: samples,
+                        using: services,
+                        lease: asrLease
+                    )
+                    adaptiveQwenResults.append((
+                        segment,
+                        result.exchange,
+                        result.duration
+                    ))
+                }
+                asrExchange = HighQualityAdaptiveASR.compose(adaptiveQwenResults.map {
+                    HighQualityAdaptiveASR.decide(
+                        segment: $0.segment,
+                        qwen: $0.exchange,
+                        qwenDuration: $0.duration,
+                        parakeet: nil,
+                        parakeetDuration: nil,
+                        scopedTerms: request.adaptiveScopedTerms,
+                        calibration: request.adaptiveCalibration
+                    )
+                })
+            } else if needsAlignment {
                 asrExchange = try await withMemoryGuard(asrLease) {
                     try await services.transcribeJapaneseAnchored(samples)
                 }
@@ -3487,17 +3821,14 @@ struct HighQualityJob: Sendable {
                 }
                 asrExchange = .init(rawTranscript: transcript, chunks: [])
             }
-            let rawTranscript = asrExchange.rawTranscript
-            rawASR = rawTranscript
-            let transcript = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !transcript.isEmpty else { throw LocalPrototypeError.invalidResponse }
+            rawASR = asrExchange.rawTranscript
+            if request.asrMode != .adaptiveQwenParakeet {
+                guard !asrExchange.rawTranscript.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                ).isEmpty else { throw LocalPrototypeError.invalidResponse }
+            }
             try Task.checkCancellation()
 
-            memorySampler?.cancel()
-            if let memorySampler {
-                manifest.peakMemoryBytes = await memorySampler.value
-            }
-            memorySampler = nil
             asrUnloaded = true
             let asrRelease = try await releaseModel(asrLease, unload: services.unloadASR)
             asrLease = nil
@@ -3519,6 +3850,103 @@ struct HighQualityJob: Sendable {
                     message: releaseMessage(asrRelease)
                 ))
             }
+            if request.asrMode == .adaptiveQwenParakeet {
+                var workers = manifest.asrWorker.map { [$0] } ?? []
+                let suspects = adaptiveQwenResults.filter {
+                    HighQualityAdaptiveASR.assess(
+                        exchange: $0.exchange,
+                        segment: $0.segment,
+                        scopedTerms: request.adaptiveScopedTerms
+                    ).isSuspect
+                }
+                let parakeetPass = await runAdaptivePass(
+                    backend: .parakeetJA,
+                    segments: suspects.map(\.segment),
+                    samples: samples,
+                    prepareFraction: 0.53,
+                    transcribeFraction: 0.56
+                )
+                if let worker = parakeetPass.worker { workers.append(worker) }
+                let provisionalDecisions = adaptiveQwenResults.map { qwen in
+                    let alternate = parakeetPass.results[qwen.segment.id]
+                    return HighQualityAdaptiveASR.decide(
+                        segment: qwen.segment,
+                        qwen: qwen.exchange,
+                        qwenDuration: qwen.duration,
+                        parakeet: alternate?.0,
+                        parakeetDuration: alternate?.1,
+                        scopedTerms: request.adaptiveScopedTerms,
+                        calibration: request.adaptiveCalibration,
+                        alternateError: parakeetPass.errors[qwen.segment.id]
+                    )
+                }
+                if let fatalError = parakeetPass.fatalError {
+                    recordAdaptiveAudit(decisions: provisionalDecisions, workers: workers)
+                    throw fatalError
+                }
+                let whisperKitIDs = Set(provisionalDecisions.compactMap { decision in
+                    decision.whisperKitLaunch?.shouldLaunch == true
+                        ? decision.segment.id : nil
+                })
+                let whisperKitSegments = adaptiveQwenResults.compactMap {
+                    whisperKitIDs.contains($0.segment.id) ? $0.segment : nil
+                }
+                let whisperKitPass: (
+                    results: [String: (HighQualityASRExchange, TimeInterval)],
+                    errors: [String: HighQualityAdaptiveASRErrorEvidence],
+                    fatalError: (any Error)?,
+                    worker: HighQualityASRWorkerEvidence?
+                ) = await runAdaptivePass(
+                    backend: .whisperKit,
+                    segments: whisperKitSegments,
+                    samples: samples,
+                    prepareFraction: 0.58,
+                    transcribeFraction: 0.61
+                )
+                if let worker = whisperKitPass.worker { workers.append(worker) }
+                let decisions = adaptiveQwenResults.map { qwen in
+                    let alternate = parakeetPass.results[qwen.segment.id]
+                    let whisperKit = whisperKitPass.results[qwen.segment.id]
+                    return HighQualityAdaptiveASR.decide(
+                        segment: qwen.segment,
+                        qwen: qwen.exchange,
+                        qwenDuration: qwen.duration,
+                        parakeet: alternate?.0,
+                        parakeetDuration: alternate?.1,
+                        whisperKit: whisperKit?.0,
+                        whisperKitDuration: whisperKit?.1,
+                        scopedTerms: request.adaptiveScopedTerms,
+                        calibration: request.adaptiveCalibration,
+                        alternateError: parakeetPass.errors[qwen.segment.id],
+                        whisperKitError: whisperKitPass.errors[qwen.segment.id]
+                    )
+                }
+                recordAdaptiveAudit(decisions: decisions, workers: workers)
+                if let fatalError = whisperKitPass.fatalError { throw fatalError }
+                asrExchange = HighQualityAdaptiveASR.compose(decisions)
+                memorySampler?.cancel()
+                if let memorySampler {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        await memorySampler.value
+                    )
+                }
+                memorySampler = nil
+            } else {
+                memorySampler?.cancel()
+                if let memorySampler {
+                    manifest.peakMemoryBytes = max(
+                        manifest.peakMemoryBytes,
+                        await memorySampler.value
+                    )
+                }
+                memorySampler = nil
+            }
+            let rawTranscript = asrExchange.rawTranscript
+            rawASR = rawTranscript
+            let transcript = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !transcript.isEmpty else { throw LocalPrototypeError.invalidResponse }
+            try Task.checkCancellation()
             let baseTurns = Self.translationTurns(
                 from: transcript,
                 asrChunks: asrExchange.chunks,
@@ -4153,6 +4581,7 @@ struct HighQualityJob: Sendable {
             manifest.finishedAt = Date()
             let evidence = try Self.writeEvidenceAndManifest(
                 rawASR: rawTranscript,
+                adaptiveASR: adaptiveASR,
                 glossary: glossary,
                 alignment: alignmentEvidence,
                 diarization: diarizationEvidence,
@@ -4194,7 +4623,10 @@ struct HighQualityJob: Sendable {
             }
             memorySampler?.cancel()
             if let memorySampler {
-                manifest.peakMemoryBytes = await memorySampler.value
+                manifest.peakMemoryBytes = max(
+                    manifest.peakMemoryBytes,
+                    await memorySampler.value
+                )
             } else {
                 manifest.peakMemoryBytes = max(
                     manifest.peakMemoryBytes,
@@ -4288,6 +4720,7 @@ struct HighQualityJob: Sendable {
                 )
                 _ = try Self.writeEvidenceAndManifest(
                     rawASR: rawASR,
+                    adaptiveASR: adaptiveASR,
                     glossary: glossary,
                     alignment: alignmentEvidence,
                     diarization: diarizationEvidence,
@@ -5397,6 +5830,69 @@ struct HighQualityJob: Sendable {
         )
     }
 
+    static func projectVoiceCentroids(
+        in result: HighQualityJobResult
+    ) -> [String: [HighQualitySpeakerCentroidEvidence]]? {
+        guard let centroids = result.compatibleSpeakerCentroids,
+              (try? speakerEditState(result.manifest.speakerEdits ?? [], for: result)) != nil else {
+            return nil
+        }
+        let initial: [String: String] = Dictionary(uniqueKeysWithValues: centroids.map {
+            ($0.speakerLabel, $0.speakerLabel)
+        })
+        var activeLabelByRawLabel = initial
+        for edit in result.manifest.speakerEdits ?? [] {
+            switch edit.kind {
+            case .merge:
+                guard let source = edit.speakerLabel,
+                      let target = edit.targetSpeakerLabel else { return nil }
+                activeLabelByRawLabel = activeLabelByRawLabel.mapValues {
+                    $0 == source ? target : $0
+                }
+            case .reset:
+                activeLabelByRawLabel = initial
+            case .rename, .reassign:
+                break
+            }
+        }
+        return Dictionary(grouping: centroids) {
+            activeLabelByRawLabel[$0.speakerLabel] ?? $0.speakerLabel
+        }
+    }
+
+    static func persistedResultMatchingVoiceProvenance(
+        _ result: HighQualityJobResult
+    ) -> HighQualityJobResult? {
+        guard let manifest = try? readManifest(in: result.directory),
+              let evidenceData = try? Data(
+                contentsOf: result.directory.appendingPathComponent("raw-asr.json")
+              ),
+              let suppliedEvidenceData = try? encoder.encode(result.evidence) else {
+            return nil
+        }
+        let manifestMatches = manifest.jobID == result.manifest.jobID
+            && manifest.projectID == result.manifest.projectID
+            && manifest.schemaVersion == result.manifest.schemaVersion
+            && manifest.status == result.manifest.status
+            && manifest.rawEvidenceSHA256 == result.manifest.rawEvidenceSHA256
+            && manifest.selectedBackend == result.manifest.selectedBackend
+            && manifest.speakerLabels == result.manifest.speakerLabels
+            && manifest.speakerConfiguration == result.manifest.speakerConfiguration
+            && manifest.speakerCountPolicy == result.manifest.speakerCountPolicy
+            && manifest.speakerEdits == result.manifest.speakerEdits
+            && manifest.dependencies == result.manifest.dependencies
+            && manifest.generatedFiles == result.manifest.generatedFiles
+        let matches = manifestMatches
+            && manifest.rawEvidenceSHA256 == sha256(evidenceData)
+            && manifest.rawEvidenceSHA256 == sha256(suppliedEvidenceData)
+        guard matches else { return nil }
+        return try? reopen(HighQualitySavedResult(
+            directory: result.directory,
+            manifest: manifest,
+            relocatedSourcePath: nil
+        ))
+    }
+
     static func duplicateSpeakerSuggestions(
         from centroids: [HighQualitySpeakerCentroidEvidence]
     ) -> [HighQualityDuplicateSpeakerSuggestion] {
@@ -5454,11 +5950,7 @@ struct HighQualityJob: Sendable {
               centroids.allSatisfy(isValidSpeakerCentroid) else { return false }
         return centroids.dropFirst().allSatisfy {
             $0.sourceJobID == first.sourceJobID
-                && $0.modelID == first.modelID
-                && $0.modelRevision == first.modelRevision
-                && $0.runtimeRevision == first.runtimeRevision
-                && $0.embeddingVariant == first.embeddingVariant
-                && $0.vectorDimension == first.vectorDimension
+                && $0.compatibilitySignature == first.compatibilitySignature
         }
     }
 
@@ -6204,6 +6696,7 @@ struct HighQualityJob: Sendable {
 
     private static func evidence(
         rawASR: String?,
+        adaptiveASR: HighQualityAdaptiveASRAudit?,
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
         diarization: HighQualityDiarizationEvidence?,
@@ -6222,6 +6715,7 @@ struct HighQualityJob: Sendable {
             source: manifest.source,
             model: manifest.model,
             asrWorker: manifest.asrWorker,
+            adaptiveASR: adaptiveASR,
             speakerConfiguration: manifest.speakerConfiguration,
             speakerCountPolicy: manifest.speakerCountPolicy,
             rawASR: rawASR,
@@ -6250,6 +6744,7 @@ struct HighQualityJob: Sendable {
     @discardableResult
     private static func writeEvidenceAndManifest(
         rawASR: String?,
+        adaptiveASR: HighQualityAdaptiveASRAudit?,
         glossary: HighQualityGlossarySelection,
         alignment: HighQualityAlignmentEvidence?,
         diarization: HighQualityDiarizationEvidence?,
@@ -6267,6 +6762,7 @@ struct HighQualityJob: Sendable {
     ) throws -> HighQualityRawEvidence {
         let evidence = evidence(
             rawASR: rawASR,
+            adaptiveASR: adaptiveASR,
             glossary: glossary,
             alignment: alignment,
             diarization: diarization,

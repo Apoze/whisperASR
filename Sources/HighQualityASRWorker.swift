@@ -27,9 +27,16 @@ struct HighQualityASRWorkerEvidence: Codable, Equatable, Sendable {
     }
 }
 
+enum HighQualityASRCandidateEvidenceFailureReason: String, Codable, Equatable, Sendable {
+    case invalidTimestamps = "invalid-timestamps"
+    case unusableTimingMapping = "unusable-timing-mapping"
+    case invalidHypothesis = "invalid-hypothesis"
+}
+
 enum HighQualityASRWorkerError: LocalizedError, Equatable, Sendable {
     case criticalMemoryPressure
     case backendFailure(String)
+    case invalidCandidateEvidence(HighQualityASRCandidateEvidenceFailureReason)
     case protocolFailure(String)
 
     var errorDescription: String? {
@@ -38,6 +45,8 @@ enum HighQualityASRWorkerError: LocalizedError, Equatable, Sendable {
             "Japanese ASR stopped because macOS memory pressure became critical. Close other applications and retry; this failure is recoverable."
         case .backendFailure(let message):
             "Japanese ASR failed: \(message)"
+        case .invalidCandidateEvidence(let reason):
+            "Japanese ASR candidate evidence is unusable: \(reason.rawValue)"
         case .protocolFailure(let message):
             "Japanese ASR worker failed: \(message)"
         }
@@ -232,9 +241,15 @@ actor HighQualityASRWorkerClient {
         if let error = response.error {
             throw HighQualityASRWorkerError.backendFailure(error)
         }
-        guard let exchange = response.exchange,
-              Self.isValid(exchange, sampleCount: samples.count, anchored: anchored) else {
-            throw HighQualityASRWorkerError.protocolFailure("invalid transcription response")
+        guard let exchange = response.exchange else {
+            throw HighQualityASRWorkerError.protocolFailure("missing transcription exchange")
+        }
+        if let failure = Self.validationFailure(
+            exchange,
+            sampleCount: samples.count,
+            anchored: anchored
+        ) {
+            throw failure
         }
         return record(exchange)
     }
@@ -257,78 +272,95 @@ actor HighQualityASRWorkerClient {
         sampleCount: Int,
         anchored: Bool
     ) -> Bool {
+        validationFailure(exchange, sampleCount: sampleCount, anchored: anchored) == nil
+    }
+
+    static func validationFailure(
+        _ exchange: HighQualityASRExchange,
+        sampleCount: Int,
+        anchored: Bool
+    ) -> HighQualityASRWorkerError? {
         let duration = Double(sampleCount) / 16_000
         let probabilityValid: (Double?) -> Bool = {
             $0.map { $0.isFinite && (0...1).contains($0) } ?? true
         }
-        let timingValid: (HighQualityASRTimingEvidence) -> Bool = {
-            $0.sourceStart.isFinite
-                && $0.sourceEnd.isFinite
-                && $0.sourceStart >= 0
-                && $0.sourceEnd >= $0.sourceStart
-                && $0.sourceEnd <= duration
-                && $0.tokenIDs.allSatisfy { $0 >= 0 }
-                && probabilityValid($0.confidence)
-        }
-        let timingsValid: ([HighQualityASRTimingEvidence]?) -> Bool = { timings in
+        let timingMetadataValid: ([HighQualityASRTimingEvidence]?) -> Bool = { timings in
             timings.map {
-                $0.allSatisfy(timingValid)
-                    && zip($0, $0.dropFirst()).allSatisfy {
-                        $0.sourceStart <= $1.sourceStart
-                    }
+                $0.allSatisfy {
+                    $0.tokenIDs.allSatisfy { $0 >= 0 }
+                        && probabilityValid($0.confidence)
+                }
             } ?? true
         }
         let segmentsValid = exchange.segments.map { segments in
             segments.allSatisfy {
                 $0.index >= 0
-                    && $0.sourceStart.isFinite
-                    && $0.sourceEnd.isFinite
-                    && $0.sourceStart >= 0
-                    && $0.sourceEnd >= $0.sourceStart
-                    && $0.sourceEnd <= duration
                     && $0.tokenIDs.allSatisfy { $0 >= 0 }
                     && ($0.averageLogProbability?.isFinite ?? true)
                     && probabilityValid($0.noSpeechProbability)
                     && ($0.compressionRatio.map { $0.isFinite && $0 >= 0 } ?? true)
             }
-                && zip(segments, segments.dropFirst()).allSatisfy {
-                    $0.sourceStart <= $1.sourceStart
-                }
         } ?? true
+        let timingBoundsValid: ([HighQualityASRTimingEvidence]?) -> Bool = { timings in
+            timings.map {
+                let ranges = $0.map { ($0.sourceStart, $0.sourceEnd) }
+                return Self.boundsAreValid(ranges, duration: duration)
+                    && Self.startsAreMonotonic(ranges)
+            } ?? true
+        }
+        let allTimingBoundsValid = timingBoundsValid(exchange.tokenTimings)
+            && timingBoundsValid(exchange.wordTimings)
+            && exchange.segments.map { segments in
+                let ranges = segments.map { ($0.sourceStart, $0.sourceEnd) }
+                return Self.boundsAreValid(ranges, duration: duration)
+                    && Self.startsAreMonotonic(ranges)
+            } ?? true
+        guard allTimingBoundsValid else {
+            return .invalidCandidateEvidence(.invalidTimestamps)
+        }
         guard segmentsValid,
-              timingsValid(exchange.tokenTimings),
-              timingsValid(exchange.wordTimings),
+              timingMetadataValid(exchange.tokenTimings),
+              timingMetadataValid(exchange.wordTimings),
               probabilityValid(exchange.confidence),
               exchange.averageLogProbability?.isFinite ?? true else {
-            return false
+            return .protocolFailure("malformed transcription evidence")
         }
         if let emptyOutput = exchange.diagnostics?.emptyOutput,
            emptyOutput != exchange.rawTranscript.trimmingCharacters(
                in: .whitespacesAndNewlines
            ).isEmpty {
-            return false
+            return .protocolFailure("inconsistent empty-output diagnostic")
+        }
+        if !anchored, exchange.windows != nil {
+            return .protocolFailure("unexpected windows in unanchored response")
+        }
+        let windowTimestampsValid = exchange.windows.map { windows in
+            let ranges = windows.map { ($0.sourceStart, $0.sourceEnd) }
+            return Self.boundsAreValid(ranges, duration: duration)
+                && Self.startsAreMonotonic(ranges)
+        } ?? true
+        guard windowTimestampsValid else {
+            return .invalidCandidateEvidence(.invalidTimestamps)
+        }
+        if anchored, let windows = exchange.windows {
+            for window in windows {
+                if let failure = Self.validationFailure(
+                    window.result,
+                    sampleCount: Int(
+                        ((window.sourceEnd - window.sourceStart) * 16_000).rounded()
+                    ),
+                    anchored: false
+                ) {
+                    return failure
+                }
+            }
         }
         let windowsValid = exchange.windows.map { windows in
             anchored
                 && !windows.isEmpty
                 && windows.allSatisfy { window in
-                    window.sourceStart.isFinite
-                        && window.sourceEnd.isFinite
-                        && window.sourceStart >= 0
-                        && window.sourceEnd >= window.sourceStart
-                        && window.sourceEnd <= duration
-                        && window.result.model == nil
+                    window.result.model == nil
                         && window.result.windows == nil
-                        && Self.isValid(
-                            window.result,
-                            sampleCount: Int(
-                                ((window.sourceEnd - window.sourceStart) * 16_000).rounded()
-                            ),
-                            anchored: false
-                        )
-                }
-                && zip(windows, windows.dropFirst()).allSatisfy {
-                    $0.sourceStart <= $1.sourceStart
                 }
                 && exchange.segments == nil
                 && exchange.tokenTimings == nil
@@ -337,7 +369,7 @@ actor HighQualityASRWorkerClient {
                 && exchange.averageLogProbability == nil
                 && exchange.diagnostics == nil
         } ?? true
-        guard windowsValid else { return false }
+        guard windowsValid else { return .protocolFailure("malformed window evidence") }
         let expectedCharacterText = anchored
             ? exchange.chunks.map(\.transcript).joined()
             : exchange.rawTranscript
@@ -346,31 +378,63 @@ actor HighQualityASRWorkerClient {
                 && characters.allSatisfy {
                     $0.text.count == 1
                         && $0.chunkIndex >= 0
-                        && $0.sourceStart >= 0
-                        && $0.sourceEnd >= $0.sourceStart
-                        && $0.sourceEnd <= duration
                 }
                 && zip(characters, characters.dropFirst()).allSatisfy {
-                    $0.sourceStart <= $1.sourceStart && $0.chunkIndex <= $1.chunkIndex
+                    $0.chunkIndex <= $1.chunkIndex
                 }
         } ?? true
-        guard charactersValid else { return false }
-        guard anchored else { return exchange.chunks.isEmpty }
+        let characterTimestampsValid = exchange.characters.map { characters in
+            let ranges = characters.map { ($0.sourceStart, $0.sourceEnd) }
+            return Self.boundsAreValid(ranges, duration: duration)
+                && Self.startsAreMonotonic(ranges)
+        } ?? true
+        guard characterTimestampsValid else {
+            return .invalidCandidateEvidence(.invalidTimestamps)
+        }
+        guard charactersValid else {
+            return .invalidCandidateEvidence(.unusableTimingMapping)
+        }
+        guard anchored else {
+            return exchange.chunks.isEmpty
+                ? nil : .protocolFailure("unexpected chunks in unanchored response")
+        }
         guard exchange.rawTranscript == exchange.chunks.map(\.transcript).joined(separator: "\n")
-        else { return false }
+        else { return .invalidCandidateEvidence(.unusableTimingMapping) }
+        let chunkTimestampsValid = Self.boundsAreValid(
+            exchange.chunks.map { ($0.sourceStart, $0.sourceEnd) },
+            duration: duration
+        )
+        guard chunkTimestampsValid else {
+            return .invalidCandidateEvidence(.invalidTimestamps)
+        }
         let chunksValid = exchange.chunks.enumerated().allSatisfy { offset, chunk in
             chunk.index == offset
-                && chunk.sourceStart >= 0
-                && chunk.sourceEnd >= chunk.sourceStart
-                && chunk.sourceEnd <= duration
                 && !chunk.transcript.isEmpty
         }
-        guard chunksValid else { return false }
-        return exchange.characters?.allSatisfy { character in
+        guard chunksValid else { return .protocolFailure("malformed chunk evidence") }
+        let characterMappingValid = exchange.characters?.allSatisfy { character in
             exchange.chunks.indices.contains(character.chunkIndex)
                 && character.sourceStart >= exchange.chunks[character.chunkIndex].sourceStart
                 && character.sourceEnd <= exchange.chunks[character.chunkIndex].sourceEnd
         } ?? true
+        return characterMappingValid
+            ? nil : .invalidCandidateEvidence(.unusableTimingMapping)
+    }
+
+    private static func boundsAreValid(
+        _ ranges: [(start: Double, end: Double)],
+        duration: Double
+    ) -> Bool {
+        ranges.allSatisfy {
+            $0.start.isFinite && $0.end.isFinite
+                && $0.start >= 0 && $0.end >= $0.start && $0.end <= duration
+        }
+    }
+
+    private static func startsAreMonotonic(
+        _ ranges: [(start: Double, end: Double)]
+    ) -> Bool {
+        zip(ranges, ranges.dropFirst()).allSatisfy { $0.start <= $1.start }
     }
 
     private static func mapped(_ error: Error) -> Error {
