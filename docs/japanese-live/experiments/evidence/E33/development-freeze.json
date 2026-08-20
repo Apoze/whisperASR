@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 3,
+  "ticket": 119,
+  "split": "development",
+  "corpus": "qudu2fx3ncc",
+  "baselineRawEvidence": {
+    "path": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+    "sha256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
+    "contentSHA256": "95b5089cf630f717cabf4c4c545673c46fa6bd62d74d2722e7930f084b6d48c5"
+  },
+  "reference": {
+    "path": "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json",
+    "sha256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b"
+  },
+  "replay": {
+    "path": "docs/japanese-live/experiments/evidence/E33/development-raw-replay.json",
+    "sha256": "357d0fe6f1abb1195e6fe234759f0e972d8da346a9bda7dd9fac577509385a49",
+    "expectedTurnCount": 307
+  },
+  "policy": {
+    "version": "ja-closed-v1",
+    "minimumScore": 0.75,
+    "ambiguityMargin": 0.08,
+    "minimumFormCharacters": 4,
+    "maximumEditDistance": 1,
+    "maximumScoringOperationsPerCue": 512
+  },
+  "closedScope": {
+    "projectMetadataTermIDs": [
+      "akuma",
+      "amayui-moka",
+      "burnout",
+      "demon-raid",
+      "drive-impact",
+      "modern-controls",
+      "street-fighter-6",
+      "tachikawa"
+    ],
+    "sourceMetadataTermIDs": [],
+    "cueLocalSelectedTermIDsByCueID": {
+      "unit-0001": ["amayui-moka", "tachikawa"],
+      "unit-0004": ["tachikawa"],
+      "unit-0009": ["tachikawa"],
+      "unit-0018": ["modern-controls", "tachikawa"],
+      "unit-0020": ["modern-controls"],
+      "unit-0027": ["tachikawa"],
+      "unit-0028": ["tachikawa"],
+      "unit-0031": ["tachikawa"],
+      "unit-0098": ["tachikawa"],
+      "unit-0127": ["modern-controls"],
+      "unit-0128": ["modern-controls"],
+      "unit-0141": ["modern-controls"],
+      "unit-0167": ["burnout"],
+      "unit-0168": ["burnout"],
+      "unit-0169": ["burnout"],
+      "unit-0170": ["burnout"],
+      "unit-0172": ["burnout"],
+      "unit-0185": ["otsukaresama"],
+      "unit-0216": ["tachikawa"],
+      "unit-0289": ["yoroshiku-onegaishimasu"]
+    }
+  },
+  "globalProvenance": {
+    "baseCommit": "fd68b1a785abe8e0c6262d135910aea893b5f551",
+    "implementationSourcesSHA256": {
+      "Sources/HighQualityGlossary.swift": "23f7506a98c21ced2667ab5d7af21a54c6bb7166d5da1e05b996ee08e107ada1",
+      "Sources/HighQualityLexicalCorrection.swift": "1dba580ae6d8dc0bf405b5610fea708bcbc63408ca32dcb1483fb75da9b33d59",
+      "Tests/HighQualityLexicalCorrectionTests.swift": "34bd4a1909052c9cedb751fcf439ee7746b5f95131653f192be52ff8b92b8892",
+      "Scripts/report_lexical_correction_experiment.py": "9731ce5dc1b3f14cc49ac92d6123248fd9f877b3a61d8db0b839bd013c0e8f52"
+    },
+    "e31Producer": {
+      "producerCommit": "a5c240bebf026e57f77394c53ae257f0d2b981a1",
+      "runMetadata": {
+        "path": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/run-meta.json",
+        "sha256": "b9760268ece2f0daac2d2b340b4116431148536d7fafe2426261ca859a978f29"
+      },
+      "replayReuse": {
+        "path": "docs/japanese-live/experiments/evidence/E31/resume-video1-reuse.json",
+        "sha256": "61b2f7d8fbfe60f7375dfbe8bc471851c7a548dd96373c9dbec33213384a18cd"
+      },
+      "modelProvenance": {
+        "path": "docs/japanese-live/experiments/evidence/E31/model-provenance.json",
+        "sha256": "d199240ef0dbfcacc23c198de334f8eba58ae5d4db13f49aacdc0f9899bd5020"
+      },
+      "rawReplay": {
+        "path": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+        "gzipSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
+        "contentSHA256": "95b5089cf630f717cabf4c4c545673c46fa6bd62d74d2722e7930f084b6d48c5"
+      }
+    },
+    "execution": {
+      "asr": {
+        "status": "reused",
+        "backend": "qwen-ja",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+        "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+        "weightSHA256": {
+          "model.safetensors": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+        }
+      },
+      "translation": {
+        "status": "notRun",
+        "modelID": "notApplicable",
+        "revision": "notApplicable",
+        "weightSHA256": "notApplicable",
+        "latency": "notApplicable"
+      },
+      "notApplicable": {
+        "newPCMDecode": "notApplicable",
+        "alignmentRun": "notApplicable",
+        "diarizationRun": "notApplicable",
+        "subtitleReflow": "notApplicable",
+        "liveMode": "notApplicable",
+        "holdout": "notApplicable"
+      }
+    },
+    "coverage": {
+      "pcm": {
+        "status": "reused",
+        "sampleCount": 15315325,
+        "sampleRate": 16000,
+        "durationSeconds": 957.2078125
+      },
+      "turns": {
+        "status": "reused",
+        "count": 307,
+        "idsSHA256": "baa872fcba5a11726a4327bb4d35c1e32e58f6c8673d4a588c4fe95cfd04d824",
+        "firstSourceStartSeconds": 0.8,
+        "lastSourceEndSeconds": 950.7,
+        "coveredDurationSeconds": 772.707,
+        "pcmCoverageRatio": 0.807251038
+      }
+    },
+    "lexicalPassLatency": {
+      "path": "docs/japanese-live/experiments/evidence/E33/development-latency.json",
+      "sha256": "9ab707306ad0df178e587508c6bccc2716d8689971a512f3fb6f7c2873bd8d76",
+      "schemaVersion": 1,
+      "ticket": 119,
+      "corpus": "qudu2fx3ncc",
+      "status": "measured",
+      "operation": "HighQualityLexicalCorrection.apply",
+      "method": "ContinuousClock wall time around apply only; one warm-up then five serial measured iterations",
+      "buildConfiguration": "debug",
+      "warmupIterations": 1,
+      "measuredIterations": 5,
+      "turnCount": 307,
+      "unionTermCount": 10,
+      "changeCounts": [3, 3, 3, 3, 3],
+      "samplesMilliseconds": [955.496916, 960.282292, 960.616291, 966.121125, 1149.282708],
+      "medianMilliseconds": 960.616291,
+      "p95Milliseconds": 1149.282708
+    },
+    "runtime": {
+      "architecture": "arm64",
+      "modelIdentifier": "Mac17,9",
+      "chip": "Apple M5 Pro",
+      "logicalCoreCount": 15,
+      "memoryBytes": 25769803776,
+      "macOSVersion": "26.5.2",
+      "xcodeVersion": "Xcode 26.6 / Build version 17F113",
+      "swiftVersion": "Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)",
+      "pythonVersion": "3.14.6"
+    }
+  },
+  "gates": {
+    "usefulMustExceedWrong": true,
+    "maximumNumberLosses": 0,
+    "criticalTermIntegrityRequiresIndependentScorableAnnotations": true,
+    "openHoldoutOnlyAfterDevelopmentPass": true,
+    "runDownstreamEnglishOnlyAfterJapanesePass": true
+  }
+}

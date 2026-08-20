@@ -1,0 +1,3386 @@
+{
+  "corpus": "qudu2fx3ncc",
+  "decision": "NO-GO-stop-before-translation-and-holdout",
+  "details": [
+    {
+      "canonicalJapanese": "甘結もか",
+      "canonicalTermID": "amayui-moka",
+      "correctedText": "ケアしてますね甘結もかは近づいたらすぐ取るからそれ",
+      "criticalTermsStatus": "notScored",
+      "cueID": "unit-0050",
+      "lostCriticalTerms": null,
+      "matchedForm": "甘えもか",
+      "numberPreserved": true,
+      "originalText": "ケアしてますね甘えもかは近づいたらすぐ取るからそれ",
+      "reason": "unique-close-phonetic-match",
+      "referenceEnglish": "",
+      "referenceJapanese": "",
+      "referenceTurnIDs": [],
+      "score": 0.75,
+      "sourceEnd": 159.66,
+      "sourceStart": 157.26000000000002,
+      "verdict": "unscorable-no-reference-overlap"
+    },
+    {
+      "canonicalJapanese": "甘結もか",
+      "canonicalTermID": "amayui-moka",
+      "correctedText": "甘結もかの技を突き出します。",
+      "criticalTermsStatus": "notScored",
+      "cueID": "unit-0090",
+      "lostCriticalTerms": null,
+      "matchedForm": "甘い向か",
+      "numberPreserved": true,
+      "originalText": "甘い向かの技を突き出します。",
+      "reason": "unique-close-phonetic-match",
+      "referenceEnglish": "Her OD Hyakki Shu is being answered consistently, so instead she takes it into a direct striking battle. This is so fun. [laughs] By the way, Akuma has less health than the other characters.",
+      "referenceJapanese": "OD百鬼襲を打つとかなり対応されているので、そうではなく打撃戦に持ち込んで。おもろい（笑）。ちなみに豪鬼は、他のキャラよりもHPが少ない。",
+      "referenceTurnIDs": [
+        50,
+        51,
+        52
+      ],
+      "score": 0.75,
+      "sourceEnd": 293.16,
+      "sourceStart": 290.44,
+      "verdict": "wrong"
+    },
+    {
+      "canonicalJapanese": "甘結もか",
+      "canonicalTermID": "amayui-moka",
+      "correctedText": "さあドライブは甘結もかが熱戦。",
+      "criticalTermsStatus": "notScored",
+      "cueID": "unit-0199",
+      "lostCriticalTerms": null,
+      "matchedForm": "赤いモカ",
+      "numberPreserved": true,
+      "originalText": "さあドライブは赤いモカが熱戦。",
+      "reason": "unique-close-phonetic-match",
+      "referenceEnglish": "And she commits to the attack. The Drive Gauge is… but she recovers it well by using parry.",
+      "referenceJapanese": "そして打っていく。さあ、ドライブは……。ただ、パリィをうまく使って回復しましたね。",
+      "referenceTurnIDs": [
+        119
+      ],
+      "score": 0.75,
+      "sourceEnd": 605.24,
+      "sourceStart": 603,
+      "verdict": "wrong"
+    }
+  ],
+  "frozenPolicy": {
+    "ambiguityMargin": 0.08,
+    "maximumEditDistance": 1,
+    "maximumScoringOperationsPerCue": 512,
+    "minimumFormCharacters": 4,
+    "minimumScore": 0.75,
+    "version": "ja-closed-v1"
+  },
+  "frozenScope": {
+    "cueLocalSelectedTermIDsByCueID": {
+      "unit-0001": [
+        "amayui-moka",
+        "tachikawa"
+      ],
+      "unit-0004": [
+        "tachikawa"
+      ],
+      "unit-0009": [
+        "tachikawa"
+      ],
+      "unit-0018": [
+        "modern-controls",
+        "tachikawa"
+      ],
+      "unit-0020": [
+        "modern-controls"
+      ],
+      "unit-0027": [
+        "tachikawa"
+      ],
+      "unit-0028": [
+        "tachikawa"
+      ],
+      "unit-0031": [
+        "tachikawa"
+      ],
+      "unit-0098": [
+        "tachikawa"
+      ],
+      "unit-0127": [
+        "modern-controls"
+      ],
+      "unit-0128": [
+        "modern-controls"
+      ],
+      "unit-0141": [
+        "modern-controls"
+      ],
+      "unit-0167": [
+        "burnout"
+      ],
+      "unit-0168": [
+        "burnout"
+      ],
+      "unit-0169": [
+        "burnout"
+      ],
+      "unit-0170": [
+        "burnout"
+      ],
+      "unit-0172": [
+        "burnout"
+      ],
+      "unit-0185": [
+        "otsukaresama"
+      ],
+      "unit-0216": [
+        "tachikawa"
+      ],
+      "unit-0289": [
+        "yoroshiku-onegaishimasu"
+      ]
+    },
+    "projectMetadataTermIDs": [
+      "akuma",
+      "amayui-moka",
+      "burnout",
+      "demon-raid",
+      "drive-impact",
+      "modern-controls",
+      "street-fighter-6",
+      "tachikawa"
+    ],
+    "sourceMetadataTermIDs": [],
+    "unionTermIDs": [
+      "akuma",
+      "amayui-moka",
+      "burnout",
+      "demon-raid",
+      "drive-impact",
+      "modern-controls",
+      "otsukaresama",
+      "street-fighter-6",
+      "tachikawa",
+      "yoroshiku-onegaishimasu"
+    ],
+    "unionTermIDsByCueID": {
+      "unit-0001": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0002": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0003": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0004": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0005": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0006": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0007": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0008": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0009": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0010": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0011": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0012": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0013": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0014": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0015": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0016": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0017": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0018": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0019": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0020": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0021": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0022": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0023": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0024": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0025": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0026": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0027": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0028": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0029": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0030": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0031": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0032": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0033": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0034": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0035": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0036": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0037": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0038": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0039": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0040": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0041": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0042": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0043": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0044": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0045": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0046": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0047": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0048": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0049": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0050": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0051": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0052": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0053": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0054": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0055": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0056": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0057": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0058": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0059": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0060": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0061": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0062": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0063": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0064": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0065": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0066": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0067": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0068": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0069": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0070": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0071": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0072": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0073": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0074": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0075": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0076": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0077": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0078": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0079": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0080": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0081": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0082": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0083": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0084": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0085": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0086": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0087": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0088": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0089": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0090": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0091": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0092": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0093": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0094": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0095": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0096": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0097": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0098": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0099": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0100": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0101": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0102": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0103": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0104": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0105": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0106": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0107": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0108": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0109": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0110": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0111": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0112": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0113": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0114": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0115": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0116": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0117": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0118": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0119": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0120": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0121": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0122": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0123": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0124": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0125": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0126": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0127": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0128": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0129": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0130": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0131": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0132": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0133": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0134": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0135": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0136": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0137": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0138": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0139": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0140": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0141": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0142": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0143": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0144": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0145": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0146": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0147": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0148": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0149": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0150": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0151": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0152": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0153": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0154": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0155": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0156": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0157": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0158": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0159": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0160": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0161": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0162": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0163": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0164": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0165": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0166": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0167": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0168": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0169": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0170": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0171": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0172": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0173": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0174": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0175": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0176": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0177": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0178": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0179": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0180": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0181": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0182": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0183": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0184": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0185": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "otsukaresama",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0186": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0187": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0188": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0189": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0190": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0191": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0192": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0193": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0194": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0195": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0196": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0197": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0198": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0199": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0200": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0201": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0202": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0203": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0204": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0205": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0206": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0207": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0208": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0209": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0210": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0211": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0212": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0213": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0214": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0215": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0216": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0217": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0218": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0219": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0220": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0221": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0222": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0223": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0224": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0225": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0226": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0227": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0228": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0229": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0230": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0231": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0232": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0233": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0234": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0235": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0236": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0237": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0238": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0239": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0240": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0241": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0242": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0243": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0244": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0245": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0246": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0247": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0248": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0249": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0250": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0251": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0252": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0253": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0254": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0255": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0256": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0257": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0258": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0259": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0260": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0261": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0262": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0263": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0264": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0265": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0266": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0267": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0268": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0269": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0270": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0271": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0272": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0273": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0274": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0275": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0276": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0277": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0278": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0279": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0280": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0281": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0282": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0283": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0284": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0285": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0286": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0287": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0288": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0289": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa",
+        "yoroshiku-onegaishimasu"
+      ],
+      "unit-0290": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0291": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0292": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0293": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0294": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0295": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0296": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0297": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0298": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0299": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0300": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0301": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0302": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0303": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0304": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0305": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0306": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ],
+      "unit-0307": [
+        "akuma",
+        "amayui-moka",
+        "burnout",
+        "demon-raid",
+        "drive-impact",
+        "modern-controls",
+        "street-fighter-6",
+        "tachikawa"
+      ]
+    }
+  },
+  "gates": {
+    "criticalTermIntegrity": "notScored",
+    "developmentPassed": false,
+    "downstreamEnglishRun": false,
+    "holdoutOpened": false,
+    "usefulExceedsWrong": false,
+    "zeroNumberLoss": true
+  },
+  "globalProvenance": {
+    "baseCommit": "fd68b1a785abe8e0c6262d135910aea893b5f551",
+    "coverage": {
+      "pcm": {
+        "durationSeconds": 957.2078125,
+        "sampleCount": 15315325,
+        "sampleRate": 16000,
+        "status": "reused"
+      },
+      "turns": {
+        "count": 307,
+        "coveredDurationSeconds": 772.707,
+        "firstSourceStartSeconds": 0.8,
+        "idsSHA256": "baa872fcba5a11726a4327bb4d35c1e32e58f6c8673d4a588c4fe95cfd04d824",
+        "lastSourceEndSeconds": 950.7,
+        "pcmCoverageRatio": 0.807251038,
+        "status": "reused"
+      }
+    },
+    "e31Producer": {
+      "modelProvenance": {
+        "path": "docs/japanese-live/experiments/evidence/E31/model-provenance.json",
+        "sha256": "d199240ef0dbfcacc23c198de334f8eba58ae5d4db13f49aacdc0f9899bd5020"
+      },
+      "producerCommit": "a5c240bebf026e57f77394c53ae257f0d2b981a1",
+      "rawReplay": {
+        "contentSHA256": "95b5089cf630f717cabf4c4c545673c46fa6bd62d74d2722e7930f084b6d48c5",
+        "gzipSHA256": "bd0c6dcac367851d5ff13057b424fdff3bdde3b27077117fa2b4c7e6b1ec9a1a",
+        "path": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz"
+      },
+      "replayReuse": {
+        "path": "docs/japanese-live/experiments/evidence/E31/resume-video1-reuse.json",
+        "sha256": "61b2f7d8fbfe60f7375dfbe8bc471851c7a548dd96373c9dbec33213384a18cd"
+      },
+      "runMetadata": {
+        "path": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/run-meta.json",
+        "sha256": "b9760268ece2f0daac2d2b340b4116431148536d7fafe2426261ca859a978f29"
+      }
+    },
+    "execution": {
+      "asr": {
+        "backend": "qwen-ja",
+        "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+        "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+        "status": "reused",
+        "weightSHA256": {
+          "model.safetensors": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954"
+        }
+      },
+      "notApplicable": {
+        "alignmentRun": "notApplicable",
+        "diarizationRun": "notApplicable",
+        "holdout": "notApplicable",
+        "liveMode": "notApplicable",
+        "newPCMDecode": "notApplicable",
+        "subtitleReflow": "notApplicable"
+      },
+      "translation": {
+        "latency": "notApplicable",
+        "modelID": "notApplicable",
+        "revision": "notApplicable",
+        "status": "notRun",
+        "weightSHA256": "notApplicable"
+      }
+    },
+    "implementationSourcesSHA256": {
+      "Scripts/report_lexical_correction_experiment.py": "9731ce5dc1b3f14cc49ac92d6123248fd9f877b3a61d8db0b839bd013c0e8f52",
+      "Sources/HighQualityGlossary.swift": "23f7506a98c21ced2667ab5d7af21a54c6bb7166d5da1e05b996ee08e107ada1",
+      "Sources/HighQualityLexicalCorrection.swift": "1dba580ae6d8dc0bf405b5610fea708bcbc63408ca32dcb1483fb75da9b33d59",
+      "Tests/HighQualityLexicalCorrectionTests.swift": "34bd4a1909052c9cedb751fcf439ee7746b5f95131653f192be52ff8b92b8892"
+    },
+    "lexicalPassLatency": {
+      "buildConfiguration": "debug",
+      "changeCounts": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "corpus": "qudu2fx3ncc",
+      "measuredIterations": 5,
+      "medianMilliseconds": 960.616291,
+      "method": "ContinuousClock wall time around apply only; one warm-up then five serial measured iterations",
+      "operation": "HighQualityLexicalCorrection.apply",
+      "p95Milliseconds": 1149.282708,
+      "samplesMilliseconds": [
+        955.496916,
+        960.282292,
+        960.616291,
+        966.121125,
+        1149.282708
+      ],
+      "schemaVersion": 1,
+      "status": "measured",
+      "ticket": 119,
+      "turnCount": 307,
+      "unionTermCount": 10,
+      "warmupIterations": 1
+    },
+    "runtime": {
+      "architecture": "arm64",
+      "chip": "Apple M5 Pro",
+      "logicalCoreCount": 15,
+      "macOSVersion": "26.5.2",
+      "memoryBytes": 25769803776,
+      "modelIdentifier": "Mac17,9",
+      "pythonVersion": "3.14.6",
+      "swiftVersion": "Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)",
+      "xcodeVersion": "Xcode 26.6 / Build version 17F113"
+    }
+  },
+  "inputs": {
+    "baselineRawEvidence": "docs/japanese-live/experiments/evidence/E31/translategemma-12b-it-4bit-qudu2fx3ncc/raw-asr.json.gz",
+    "freeze": "docs/japanese-live/experiments/evidence/E33/development-freeze.json",
+    "freezeSHA256": "3b2d9d848f0cc2c1827ae7a0da33d3825f6756efb0820b7d6f0804ae47e1881d",
+    "reference": "docs/japanese-live/corpora/qudu2fx3ncc/manifest.json",
+    "referenceSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+    "replay": "docs/japanese-live/experiments/evidence/E33/development-raw-replay.json",
+    "replaySHA256": "357d0fe6f1abb1195e6fe234759f0e972d8da346a9bda7dd9fac577509385a49"
+  },
+  "metrics": {
+    "changedCues": 3,
+    "changes": 3,
+    "confirmedUseful": 0,
+    "criticalTermIntegrity": {
+      "losses": null,
+      "scorableChanges": 0,
+      "status": "notScored",
+      "totalChanges": 3
+    },
+    "numberLosses": 0,
+    "unscorable": 1,
+    "wrong": 2
+  },
+  "schemaVersion": 3,
+  "split": "development",
+  "ticket": 119
+}
