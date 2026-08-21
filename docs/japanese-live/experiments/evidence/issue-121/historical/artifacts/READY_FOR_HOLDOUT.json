@@ -1,0 +1,48 @@
+{
+  "DEVRerun": false,
+  "DEVReused": true,
+  "baseCommit": "25cb84034d0cdaf2879659ae09f0dcf3f249cfa8",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer BENCHMARK_SLOT_GRANTED=121 bash Scripts/run_final_offline_validation.sh resume-holdout",
+  "estimate": {
+    "additionalDisk": "under 500 MiB",
+    "peakProcessTree": "5-7 GiB",
+    "wallTime": "6-12 minutes plus final tests"
+  },
+  "gates": {
+    "DEVFreezeImmutable": true,
+    "allPreviousWorkerPIDsExited": true,
+    "candidateFailuresSeparated": true,
+    "criticalOrRunawayStops": true,
+    "oneHeavyWorkerAtATime": true,
+    "warningAloneStops": false
+  },
+  "heavyModelsLoaded": false,
+  "implementationSHA256": {
+    "Scripts/report_final_offline_validation.py": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+    "Scripts/run_final_offline_validation.sh": "de8ab57270401cecfd2f88f38f4f0dd4946d0cfc5f564ffc3b873b057a349ac5",
+    "Sources/HighQualityForcedAlignerRuntime.swift": "51b9debe733d3c8615c0fdf9effddc1f2e86ac646246576eacf9978ac36e02fa",
+    "Sources/HighQualityJob.swift": "dbef0346199efdb76f12fc735fe34a11294d1a910947839ebf9b8c4339717d78",
+    "Sources/HighQualityJobView.swift": "ddc9bce3f59b7aff58b1c5c1d068b5f8a2140d8482bb75eeb6990db51439afed",
+    "Sources/HighQualityProject.swift": "dc26d0ea1e9ec0f28482336aafd50fba3ed843050c79061c3f617f4aae5caa2e",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "107be2a1e80c61957fd6251c06992317a0e18ec46755d415a619762f996b64a0",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+    "Tests/HighQualityAcceptanceTests.swift": "dfd4ab7782c3ea618bd5f4879e08624df53493d509a29c227aaa7e7f7c1ba8fd"
+  },
+  "order": [
+    "verify immutable DEV freeze and recovered hashes",
+    "holdout saved Project job: Qwen+aligner+4B+Readable",
+    "report, full tests, Live tests, app launch"
+  ],
+  "provenanceSHA256": {
+    "developmentFreeze": "9eef506b41183a5fa43d2cfaa55e134a6ca0bbaf0c1c5da7940f0bf7fea9f53b",
+    "harnessRecovery": "aa4a293671c5eac4acbc6b0c4b19f804255b950027ce9ab644396bdc07ef09fd",
+    "inputs": "d6acfba80a88914a1e646ba8513db9bcd1a0028f723b01be08f5190e9084d70b",
+    "matrix": "869ab7f1b116a0bfdb2b4c81fb6514e6a82d78dd2bb50400fc78c020eafaffc7",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+    "models": "4e322ed71e2a76966999e5e37687ec9d7f4236d7d4e45e94f4fa75b47b52a03d",
+    "worker": "6e4cad573de6176ea621c2c53667f5fb25a7579f2c37debe77bc8b96edf951ff"
+  },
+  "status": "READY_FOR_HOLDOUT",
+  "ticket": 121
+}

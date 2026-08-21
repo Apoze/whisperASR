@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "ticket": 121,
+  "decisions": {
+    "adaptiveASR117": {
+      "decision": "RETAIN_HIDDEN_DEV_NO_GO",
+      "defaultEnabled": false,
+      "holdoutOpened": false,
+      "document": {
+        "path": "docs/japanese-live/experiments/E32-adaptive-qwen-parakeet-117.md",
+        "sha256": "f0c64253a7f63a3c2229164a73475b522827d655c64fc4976ba5cc2d7dff3699"
+      },
+      "evidence": {
+        "path": "docs/japanese-live/experiments/evidence/issue-117-adaptive-asr.json",
+        "sha256": "966ee58fac75782e1ec870febb03468ae48b48447f7fed86cec2c99ad0663498"
+      }
+    },
+    "targetedWhisperKit118": {
+      "decision": "RETAIN_HIDDEN_DEV_NO_GO",
+      "defaultEnabled": false,
+      "holdoutOpened": false,
+      "document": {
+        "path": "docs/japanese-live/experiments/E33-targeted-whisperkit-118.md",
+        "sha256": "bd0e2244e0686a6f8394d76e53625a71379ce9991f031a8f1ded1019ac6e78fc"
+      },
+      "evidence": {
+        "path": "docs/japanese-live/experiments/evidence/issue-118-targeted-whisperkit.json",
+        "sha256": "ac563d6ee64d41a233e7e679936c26046caec6a24207f1b115c8eae7c71a84d8"
+      }
+    },
+    "closedLexicalCorrection119": {
+      "decision": "DEV_NO_GO",
+      "defaultEnabled": false,
+      "holdoutOpened": false,
+      "document": {
+        "path": "docs/japanese-live/experiments/E33-closed-lexical-correction.md",
+        "sha256": "fa3326a37e49e4a8797f67d5213c561c4a0df84ffeb4432c38477092fe0fdaf9"
+      },
+      "freeze": {
+        "path": "docs/japanese-live/experiments/evidence/E33/development-freeze.json",
+        "sha256": "3b2d9d848f0cc2c1827ae7a0da33d3825f6756efb0820b7d6f0804ae47e1881d"
+      },
+      "evidence": {
+        "path": "docs/japanese-live/experiments/evidence/E33/development-report.json",
+        "sha256": "f3f5592052a25431fca940f6454f96a52e528c6193de8f04a4e53e07fa2a6594"
+      }
+    },
+    "voiceMemory115": {
+      "decision": "GO_BETA_OPT_IN",
+      "defaultEnabled": false,
+      "evidence": {
+        "path": "docs/japanese-live/experiments/evidence/issue-115/decision.json",
+        "sha256": "38c9cabde18744f5aea88e751ca06ab0820d9e38918d763580c1d02946500cd3"
+      }
+    },
+    "readableSubtitles": {
+      "decision": "GO-beta",
+      "defaultEnabled": false,
+      "evidence": {
+        "path": "docs/japanese-live/experiments/evidence/E32-readable-cues/report.json",
+        "sha256": "6bc85f4f51cac52b6ee4271deaef5a69fb574e6225688f40f336ea9b45a19b9d"
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "baseCommit": "25cb84034d0cdaf2879659ae09f0dcf3f249cfa8",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer BENCHMARK_SLOT_GRANTED=121 bash Scripts/run_final_offline_validation.sh full",
+  "estimate": {
+    "additionalDisk": "under 1 GiB; all model weights already cached",
+    "peakProcessTree": "10-14 GiB for 12B; 5-7 GiB for 4B",
+    "peakSystemMemory": "approximately 17-20 GiB on this 24 GiB Mac",
+    "wallTime": "25-40 minutes"
+  },
+  "gates": {
+    "candidateBuildRunnerInputReferenceFailuresSeparated": true,
+    "holdoutRequiresImmutableDEVFreeze": true,
+    "nativeCriticalStops": true,
+    "oneHeavyWorkerAtATime": true,
+    "unloadAndExitBeforeNext": true,
+    "warningAloneStops": false
+  },
+  "heavyModelsLoaded": false,
+  "implementationSHA256": {
+    "Scripts/report_final_offline_validation.py": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+    "Scripts/run_final_offline_validation.sh": "48f44c2efd13d27f6611b44f85661e5ffb2cdde001593fedfe7e43dbd40e574e",
+    "Sources/HighQualityForcedAlignerRuntime.swift": "51b9debe733d3c8615c0fdf9effddc1f2e86ac646246576eacf9978ac36e02fa",
+    "Sources/HighQualityJob.swift": "3d9c949a280d81f9ebe5c10f00e47e43f75297da27df0e3718e83fb9c0c6987c",
+    "Sources/HighQualityJobView.swift": "ddc9bce3f59b7aff58b1c5c1d068b5f8a2140d8482bb75eeb6990db51439afed",
+    "Sources/HighQualityProject.swift": "dc26d0ea1e9ec0f28482336aafd50fba3ed843050c79061c3f617f4aae5caa2e",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "107be2a1e80c61957fd6251c06992317a0e18ec46755d415a619762f996b64a0",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+    "Tests/HighQualityAcceptanceTests.swift": "ef494f29362d6d6243f17ae8314efc8157d175718327d40da1be3e65d9446f77"
+  },
+  "order": [
+    "DEV saved Project job: Qwen+aligner+SpeakerKit+12B",
+    "speaker-only reanalysis/editor/Voice memory",
+    "freeze DEV",
+    "prove every worker exited and pressure is not critical",
+    "holdout saved Project job: Qwen+aligner+4B+Readable",
+    "report, full tests, Live tests, app launch"
+  ],
+  "provenanceSHA256": {
+    "inputs": "d6acfba80a88914a1e646ba8513db9bcd1a0028f723b01be08f5190e9084d70b",
+    "matrix": "869ab7f1b116a0bfdb2b4c81fb6514e6a82d78dd2bb50400fc78c020eafaffc7",
+    "mlxMetallib": "0d29caeba83e59e98a04cf822fdd684f5ef4b93210847a385124faf4d9353ab3",
+    "models": "4e322ed71e2a76966999e5e37687ec9d7f4236d7d4e45e94f4fa75b47b52a03d",
+    "uncommittedPatch": "a8a77ddf623f8f7cb7910093448eb08ab18574946f90d1d4311ca74a4791692a",
+    "worker": "4ee13e7d9be3f34d40e148e3fa9811561c0d52b49b154403ab8c8ad16b48627d"
+  },
+  "status": "READY_FOR_HEAVY_BENCHMARK",
+  "ticket": 121
+}

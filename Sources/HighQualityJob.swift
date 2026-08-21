@@ -5867,7 +5867,10 @@ struct HighQualityJob: Sendable {
               let evidenceData = try? Data(
                 contentsOf: result.directory.appendingPathComponent("raw-asr.json")
               ),
-              let suppliedEvidenceData = try? encoder.encode(result.evidence) else {
+              let persistedEvidence = try? decoder.decode(
+                HighQualityRawEvidence.self,
+                from: evidenceData
+              ) else {
             return nil
         }
         let manifestMatches = manifest.jobID == result.manifest.jobID
@@ -5882,9 +5885,13 @@ struct HighQualityJob: Sendable {
             && manifest.speakerEdits == result.manifest.speakerEdits
             && manifest.dependencies == result.manifest.dependencies
             && manifest.generatedFiles == result.manifest.generatedFiles
+        let suppliedEvidenceMatches = persistedEvidence == result.evidence
+            || (try? encoder.encode(result.evidence)).map {
+                manifest.rawEvidenceSHA256 == sha256($0)
+            } == true
         let matches = manifestMatches
             && manifest.rawEvidenceSHA256 == sha256(evidenceData)
-            && manifest.rawEvidenceSHA256 == sha256(suppliedEvidenceData)
+            && suppliedEvidenceMatches
         guard matches else { return nil }
         return try? reopen(HighQualitySavedResult(
             directory: result.directory,

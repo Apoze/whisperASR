@@ -1,0 +1,29 @@
+{
+  "configuration": {
+    "adaptiveASRSelected": false,
+    "readableSubtitles": false,
+    "speakerLabels": true,
+    "translator": "translategemma-12b-it-4bit"
+  },
+  "developmentArtifactsSHA256": {
+    "manifest": "25d68f6f6c9142bc9d61d531301894e761036f2e6a4c7aec7a5fe12a35fff884",
+    "rawEvidence": "df2d9d1a3eb884f05dd9e702bf58991bdec3cd40d036571e29dbf0db8f9909d6",
+    "rowReport": "6f9fd2f7d1bc746e6dd3f24c04578085a728c4a9004e4db103b57824867ea3af"
+  },
+  "frozenAt": "2026-08-20T21:10:15Z",
+  "immutableGates": {
+    "completedSavedProjectJob": true,
+    "editorExportsAndAuditConsistent": true,
+    "rejectedCandidatesRemainUnselected": true,
+    "speakerOnlyUpstreamUnchanged": true,
+    "strictlySequentialWorkers": true,
+    "structuredCueIDsExact": true,
+    "voiceMemoryCrossProjectSuggestions": 0
+  },
+  "matrixSHA256": "869ab7f1b116a0bfdb2b4c81fb6514e6a82d78dd2bb50400fc78c020eafaffc7",
+  "productDefaultPromotionAuthorized": false,
+  "qualityMetricsAreReportingOnly": true,
+  "readySHA256": "e7e84d7cf2e9e081d7c94f68f9d8e7460a0d3cbab31e362b2824e9c9bad0b159",
+  "schemaVersion": 1,
+  "ticket": 121
+}

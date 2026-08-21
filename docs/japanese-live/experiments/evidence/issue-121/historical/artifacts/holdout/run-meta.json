@@ -1,0 +1,32 @@
+{
+  "corpusID": "md62mmdz0m",
+  "implementationSHA256": {
+    "Scripts/report_final_offline_validation.py": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+    "Scripts/run_final_offline_validation.sh": "de8ab57270401cecfd2f88f38f4f0dd4946d0cfc5f564ffc3b873b057a349ac5",
+    "Sources/HighQualityForcedAlignerRuntime.swift": "51b9debe733d3c8615c0fdf9effddc1f2e86ac646246576eacf9978ac36e02fa",
+    "Sources/HighQualityJob.swift": "dbef0346199efdb76f12fc735fe34a11294d1a910947839ebf9b8c4339717d78",
+    "Sources/HighQualityJobView.swift": "ddc9bce3f59b7aff58b1c5c1d068b5f8a2140d8482bb75eeb6990db51439afed",
+    "Sources/HighQualityProject.swift": "dc26d0ea1e9ec0f28482336aafd50fba3ed843050c79061c3f617f4aae5caa2e",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "107be2a1e80c61957fd6251c06992317a0e18ec46755d415a619762f996b64a0",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+    "Tests/HighQualityAcceptanceTests.swift": "dfd4ab7782c3ea618bd5f4879e08624df53493d509a29c227aaa7e7f7c1ba8fd"
+  },
+  "jobDirectory": "<LOCAL_ARTIFACT_ROOT>/projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B",
+  "lane": "holdout",
+  "rawArtifactSHA256": {
+    "manifest": "8140110b6d8ef1b34a44957a1feb62f75451215dd93016fe6fb73722adea9fde",
+    "rawEvidence": "e77c6774c91a88de51102095bbde5cfe53058fcdd64afac52621373b3b17252a",
+    "rowReport": "f9a84fae8e32822015e8d202863912dbf270a15cbbf78b96323b0bf5accd8037",
+    "safety": "34e028bb9fe2dc7e7f6066796f92f498897285ef3ba2dd73b6cc04c0cccaa00e"
+  },
+  "referenceArchive": {
+    "path": "<HOME>/Documents/videos/jap/2/Video2_final_readable_transcript_pack.zip",
+    "sha256": "a95e73422dd0b8628f6d8a5cb064e41deb4a64b5a0024e1e1a5a62450e5aff86"
+  },
+  "source": {
+    "path": "<HOME>/Documents/videos/jap/2/Video2.webm",
+    "sha256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d"
+  },
+  "ticket": 121
+}

@@ -1,0 +1,1559 @@
+{
+  "failureAttribution": {
+    "build": {
+      "failures": []
+    },
+    "candidate": {
+      "failures": [],
+      "verdictAssignedToRunnerOrHarnessIncidents": false
+    },
+    "input": {
+      "failures": [],
+      "preflightSHA256": "d6acfba80a88914a1e646ba8513db9bcd1a0028f723b01be08f5190e9084d70b"
+    },
+    "reference": {
+      "failures": [],
+      "preflightSHA256": "d6acfba80a88914a1e646ba8513db9bcd1a0028f723b01be08f5190e9084d70b"
+    },
+    "runner": {
+      "incidents": [
+        {
+          "candidateVerdictAssigned": false,
+          "classification": "runner",
+          "detail": "Safety gate stopped development: post-warning-memory-growth",
+          "evidenceSHA256": {
+            "failure": "14ce5789bbdef3ce0be13580b0d161f6846fc310a8c2ed778c63ae67d5c60e75",
+            "safety": "4198722fada8eec24737bc700aa1384be1d458116bdb8fb699edd7b2978fd0af"
+          },
+          "resolution": "Warning pressure is telemetry; critical and independent runaway guards remain vetoes."
+        },
+        {
+          "candidateVerdictAssigned": false,
+          "classification": "harness-integration-recovery",
+          "detail": "The product job and Speaker-only run completed; validation then used an over-strict alignment equality and a stale in-memory result for Voice provenance.",
+          "evidenceSHA256": "aa4a293671c5eac4acbc6b0c4b19f804255b950027ce9ab644396bdc07ef09fd",
+          "processExitStatus": 1,
+          "productJobCompleted": true,
+          "resolution": "Compare immutable alignment chunks/worker rather than speaker attachments; accept semantically identical decoded persisted evidence while retaining disk hash and stale-result rejection.",
+          "strictFailClosedDevelopment": false
+        }
+      ]
+    },
+    "test": {
+      "failures": []
+    }
+  },
+  "finalDecisions": {
+    "overall": "NO_DEFAULT_CHANGE; historical DEV freeze and critical-term reference coverage are insufficient for promotion",
+    "speakerEditor": "GO_SUPPORTED_RESULT_ACTION; rename/reassign/merge/reset audit and regenerated export hashes verified",
+    "speakerOnlyReanalysis": "GO_SUPPORTED_RESULT_ACTION; reuses ASR/alignment/translation and completed in 17.756 seconds on DEV",
+    "translateGemma4B": "KEEP_BETA_SELECTABLE; off by default; no superiority claim across different holdout videos"
+  },
+  "freeze": {
+    "freezeSHA256": "9eef506b41183a5fa43d2cfaa55e134a6ca0bbaf0c1c5da7940f0bf7fea9f53b",
+    "historicalRecoveryOnly": true,
+    "insufficiencies": [
+      "historical freeze does not prove computed gates before holdout",
+      "historical DEV XCTest exit was 1, not zero",
+      "historical freeze lacks a complete passing computed gate set"
+    ],
+    "strictFailClosed": false
+  },
+  "functionalAcceptancePassed": false,
+  "gates": {
+    "12BThen4BProcessIsolated": true,
+    "allWorkerLifecyclesExitedAndUnloaded": true,
+    "bothRealSavedProjectJobsCompleted": true,
+    "corpusAndPCMProvenanceVerified": true,
+    "criticalASRTermsScored": false,
+    "developmentFreezeStrictlyFailClosed": false,
+    "executionCommitAndDiffProvenanceRecorded": true,
+    "executionPatchProvenanceComplete": false,
+    "fullSwiftTestsPassed": true,
+    "liveTestsPassed": true,
+    "modelWeightHashesVerified": true,
+    "noAdaptiveSelection": true,
+    "noLexicalCorrectionSelection": true,
+    "qwenFallbackPreserved": true,
+    "retainedNoGoAndBetaDecisionsVerified": true,
+    "safeOptionsCombinedTestPassed": true,
+    "speakerEditorExportsMatchPersistedFiles": true,
+    "speakerReanalysisDoesNotRerunUpstream": true,
+    "structuredTranslationIntegrity": true,
+    "subtitleTextTimingAndExportsIntegrity": true,
+    "voiceMemoryProjectIsolated": true
+  },
+  "matrix": {
+    "amendment": {
+      "historicalExecutionMatrixSHA256": "869ab7f1b116a0bfdb2b4c81fb6514e6a82d78dd2bb50400fc78c020eafaffc7",
+      "reason": "Adds only the current model-free combination of already-supported safe options; no historical heavy-run claim."
+    },
+    "coverage": {
+      "dependencies": [
+        "Qwen JA",
+        "Forced Aligner",
+        "SpeakerKit",
+        "TranslateGemma",
+        "export"
+      ],
+      "readableSubtitles": [
+        false,
+        true
+      ],
+      "savedProjectJob": [
+        true
+      ],
+      "speakerLabels": [
+        true,
+        false
+      ],
+      "translatorChoice": [
+        "12B",
+        "4B"
+      ]
+    },
+    "rationale": "Two full jobs cover the supported translator/speaker/readability interactions; exact retained decisions cover rejected candidates without reopening holdout.",
+    "retainedWithoutRerun": {
+      "adaptiveASR": "RETAIN-HIDDEN / NO-GO DEV",
+      "lexicalCorrection": "NO-GO DEV",
+      "targetedWhisperKit": "RETAIN-HIDDEN / NO-GO DEV"
+    },
+    "rows": [
+      {
+        "ASR": "qwen-ja",
+        "corpusID": "qudu2fx3ncc",
+        "lane": "development",
+        "order": 1,
+        "postActions": [
+          "speaker-only reanalysis",
+          "speaker editor",
+          "Project-local Voice memory isolation"
+        ],
+        "projectWorkflow": true,
+        "readableSubtitles": false,
+        "speakerLabels": true,
+        "translator": "translategemma-12b-it-4bit"
+      },
+      {
+        "ASR": "qwen-ja",
+        "corpusID": "md62mmdz0m",
+        "lane": "untouched-holdout",
+        "order": 2,
+        "postActions": [],
+        "projectWorkflow": true,
+        "readableSubtitles": true,
+        "speakerLabels": false,
+        "translator": "translategemma-4b-it-4bit"
+      },
+      {
+        "fixtureOnly": true,
+        "historicalHeavyExecution": false,
+        "lane": "model-free-safe-options-combined",
+        "order": "post-run-lightweight-amendment",
+        "readableSubtitles": true,
+        "speakerLabels": true,
+        "test": "HighQualityJobTests/testSpeakerLabelsAndReadableSubtitlesRemainIndependentWhenCombined"
+      }
+    ],
+    "schemaVersion": 1,
+    "strategy": "minimal risk-based pairwise",
+    "ticket": 121
+  },
+  "productDefaultPromotionAuthorized": false,
+  "provenance": {
+    "execution": {
+      "allExecutedCommitsRecorded": true,
+      "allExecutionDiffManifestsComplete": true,
+      "allExecutionPatchesVerified": false,
+      "historicalInsufficiency": "READY_FOR_HOLDOUT did not pin the amended worktree patch; exact implementation hashes remain recorded.",
+      "lanes": [
+        {
+          "diffManifest": [
+            {
+              "baseSHA256": null,
+              "executedSHA256": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+              "path": "Scripts/report_final_offline_validation.py"
+            },
+            {
+              "baseSHA256": null,
+              "executedSHA256": "48f44c2efd13d27f6611b44f85661e5ffb2cdde001593fedfe7e43dbd40e574e",
+              "path": "Scripts/run_final_offline_validation.sh"
+            },
+            {
+              "baseSHA256": "36c5dae5120d3207942b61f3bb1a18347bbf78a2db295ddd68df8f37a13b1fe5",
+              "executedSHA256": "ef494f29362d6d6243f17ae8314efc8157d175718327d40da1be3e65d9446f77",
+              "path": "Tests/HighQualityAcceptanceTests.swift"
+            }
+          ],
+          "diffManifestComplete": true,
+          "diffManifestSHA256": "1913d8e3a4ad62b3192b3890556037b741c6b84c60640e4a60db4b3d205967ec",
+          "executedCommit": "25cb84034d0cdaf2879659ae09f0dcf3f249cfa8",
+          "implementationSetSHA256": "201922bfed0d46bcb6b619a9a9597e811955a5adcfabca35a9784ebf0e77cb04",
+          "lane": "development",
+          "patchArtifactSHA256": "a8a77ddf623f8f7cb7910093448eb08ab18574946f90d1d4311ca74a4791692a",
+          "patchSHA256": "a8a77ddf623f8f7cb7910093448eb08ab18574946f90d1d4311ca74a4791692a",
+          "patchVerified": true
+        },
+        {
+          "diffManifest": [
+            {
+              "baseSHA256": null,
+              "executedSHA256": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+              "path": "Scripts/report_final_offline_validation.py"
+            },
+            {
+              "baseSHA256": null,
+              "executedSHA256": "de8ab57270401cecfd2f88f38f4f0dd4946d0cfc5f564ffc3b873b057a349ac5",
+              "path": "Scripts/run_final_offline_validation.sh"
+            },
+            {
+              "baseSHA256": "3d9c949a280d81f9ebe5c10f00e47e43f75297da27df0e3718e83fb9c0c6987c",
+              "executedSHA256": "dbef0346199efdb76f12fc735fe34a11294d1a910947839ebf9b8c4339717d78",
+              "path": "Sources/HighQualityJob.swift"
+            },
+            {
+              "baseSHA256": "36c5dae5120d3207942b61f3bb1a18347bbf78a2db295ddd68df8f37a13b1fe5",
+              "executedSHA256": "dfd4ab7782c3ea618bd5f4879e08624df53493d509a29c227aaa7e7f7c1ba8fd",
+              "path": "Tests/HighQualityAcceptanceTests.swift"
+            }
+          ],
+          "diffManifestComplete": true,
+          "diffManifestSHA256": "3cf6247f7bc1128e846d3f7e63fb90fe5fede50b2a5da755890259a0d82d15cc",
+          "executedCommit": "25cb84034d0cdaf2879659ae09f0dcf3f249cfa8",
+          "implementationSetSHA256": "a08424e586b4cc11d05acf1f0c6829ac28129a7e65acb6aea8a13290876f593a",
+          "lane": "holdout",
+          "patchArtifactSHA256": null,
+          "patchSHA256": null,
+          "patchVerified": false
+        }
+      ]
+    },
+    "holdoutCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer BENCHMARK_SLOT_GRANTED=121 bash Scripts/run_final_offline_validation.sh resume-holdout",
+    "initialCommand": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer BENCHMARK_SLOT_GRANTED=121 bash Scripts/run_final_offline_validation.sh full",
+    "modelRevisionsSHA256": "4e322ed71e2a76966999e5e37687ec9d7f4236d7d4e45e94f4fa75b47b52a03d",
+    "models": {
+      "modelProvenanceSHA256": "4e322ed71e2a76966999e5e37687ec9d7f4236d7d4e45e94f4fa75b47b52a03d",
+      "pinnedByBothREADYArtifacts": true,
+      "status": "verified",
+      "weights": [
+        {
+          "file": "model.safetensors",
+          "modelID": "ph0ryn/Qwen3-ASR-1.7B-JA-MLX-8bit",
+          "revision": "7c70d18cb650655d32eafb952a74a49c6a3caad0",
+          "sha256": "bdef075a5044d0befcf18541e97c8d3dadc273bf00857bbf4d1601bd11480954",
+          "sizeBytes": 2463307541
+        },
+        {
+          "file": "model.safetensors",
+          "modelID": "mlx-community/Qwen3-ForcedAligner-0.6B-4bit",
+          "revision": "2f652af86ae0c73fe189b9429225c908ce4bf020",
+          "sha256": "630bcfbaccf2635940bbe94ad5475fd60ee4f47259b62d36deff806d60bcf24c",
+          "sizeBytes": 76
+        },
+        {
+          "file": "segmenter/W8A16/weight.bin",
+          "modelID": "argmaxinc/speakerkit-coreml",
+          "revision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+          "sha256": "75ff1725ef4e58dacf9176466ec274a8a13a6132c296d6b571fb78ddad5455c4",
+          "sizeBytes": 1520986
+        },
+        {
+          "file": "embedder/W8A16/weight.bin",
+          "modelID": "argmaxinc/speakerkit-coreml",
+          "revision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+          "sha256": "a02861969f47cf3a67e3b0d276e54b3c8bc3a6e43d40d77d1cccbd57da0e5795",
+          "sizeBytes": 6661888
+        },
+        {
+          "file": "embedder-preprocessor/W8A16/weight.bin",
+          "modelID": "argmaxinc/speakerkit-coreml",
+          "revision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+          "sha256": "5f2c284bd22f1f7ab76901c1c6e57f82d4ebbf057fa0b924aad057f124f77a89",
+          "sizeBytes": 2181696
+        },
+        {
+          "file": "clusterer/W32A32/weight.bin",
+          "modelID": "argmaxinc/speakerkit-coreml",
+          "revision": "86ec9c929b52208b6656eb6a6361ed0d822a1f78",
+          "sha256": "a1dbbb651a0a67fcfe5334672f459df090fa960917a6ee3a5423245a7ab92ced",
+          "sizeBytes": 199040
+        },
+        {
+          "file": "model-00001-of-00002.safetensors",
+          "modelID": "mlx-community/translategemma-12b-it-4bit",
+          "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+          "sha256": "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+          "sizeBytes": 76
+        },
+        {
+          "file": "model-00002-of-00002.safetensors",
+          "modelID": "mlx-community/translategemma-12b-it-4bit",
+          "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+          "sha256": "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89",
+          "sizeBytes": 76
+        },
+        {
+          "file": "model.safetensors",
+          "modelID": "mlx-community/translategemma-4b-it-4bit",
+          "revision": "5788ec08c047f3f2e17808101b8d9566ac930d58",
+          "sha256": "113acb0c29997a3015af84bec2c8f967cb7b15f8959d1c26b9628b921e324c40",
+          "sizeBytes": 76
+        }
+      ]
+    },
+    "reporterSHA256": "cb11dbad1b197bb3085918583d1f97f6ac19f47713dd046fbcc74f449f2210e7"
+  },
+  "retainedDecisionDiagnostics": {
+    "gates": {
+      "adaptiveASRRetainedHidden": true,
+      "decisionEvidenceHashesMatch": true,
+      "lexicalCorrectionRemainsNoGo": true,
+      "readableSubtitlesRemainBetaOffByDefault": true,
+      "rejectedCandidatesRemainAbsentFromHighQualityUI": true,
+      "targetedWhisperKitRetainedHidden": true,
+      "voiceMemoryRemainsBetaOffByDefault": true
+    },
+    "ledgerSHA256": "500749fb14a1a57e018b101461e6aa0b3c4293e667e8a9c84ab423e6515e4793"
+  },
+  "rows": [
+    {
+      "ASR": {
+        "adaptiveAbstentions": 0,
+        "adaptiveOverrides": 0,
+        "adaptiveSelected": false,
+        "backend": "qwen-ja",
+        "criticalTerms": {
+          "lost": null,
+          "opportunities": 0,
+          "reason": "reference contains zero annotated critical-term opportunities",
+          "recovered": null,
+          "status": "notScored"
+        },
+        "examples": [
+          {
+            "editDistance": 45,
+            "endSeconds": 375.0,
+            "hypothesisJapanese": "さっきのさっきの。うまい。タローは画面端から出して。うまい。画面端からもやり返せ。うわー。画面端生かしたい。",
+            "referenceCharacterCount": 3,
+            "referenceJapanese": "うまっ。",
+            "startSeconds": 370.0,
+            "status": "scored",
+            "turnID": 67
+          },
+          {
+            "editDistance": 42,
+            "endSeconds": 125.88,
+            "hypothesisJapanese": "落ち着いて両足を取っておきます。オーマー。オーディカ長戦から前に詰めてくるところに残空解け。",
+            "referenceCharacterCount": 3,
+            "referenceJapanese": "うまい。",
+            "startSeconds": 124.12,
+            "status": "scored",
+            "turnID": 23
+          },
+          {
+            "editDistance": 12,
+            "endSeconds": 570.0,
+            "hypothesisJapanese": "いや、これはVサイいないわ。",
+            "referenceCharacterCount": 1,
+            "referenceJapanese": "ま!?",
+            "startSeconds": 568.0,
+            "status": "scored",
+            "turnID": 108
+          }
+        ],
+        "extraCandidateCharacters": 2202,
+        "lexicalCorrectionSelected": false,
+        "lostReferenceCharacters": 872,
+        "numbers": {
+          "exactMatchedOccurrences": 18,
+          "extraOccurrences": 13,
+          "lostOccurrences": 9,
+          "referenceOccurrences": 27
+        },
+        "overallCER": {
+          "editDistance": 2437,
+          "hypothesisCharacterCount": 4396,
+          "ratePercent": 79.48467058056099,
+          "referenceCharacterCount": 3066
+        },
+        "referenceCharactersMatched": 2194
+      },
+      "configuration": {
+        "readableSubtitles": false,
+        "speakerLabels": true,
+        "translator": "translategemma-12b-it-4bit"
+      },
+      "corpusID": "qudu2fx3ncc",
+      "corpusProvenance": {
+        "canonicalPCMSHA256": "494577ab9ba0b9af05f1a872bf03afcfeda118c76ab299d40071893cb37e38f2",
+        "corpusSHA256": "b61eaa577baf8d6b1d9406997ab79e7587fc97eff61b40e90fcd0c5bf5d696e1",
+        "inputPreflightPinnedByBothREADYArtifacts": true,
+        "inputPreflightSHA256": "d6acfba80a88914a1e646ba8513db9bcd1a0028f723b01be08f5190e9084d70b",
+        "manifestSHA256": "a13a80fed1c02ee9c79ff58d6d7c2bf7050a16733ced48c33121dc4d414b5c0b",
+        "pcmCoverage": {
+          "complete": true,
+          "expectedSampleCount": 15315325,
+          "expectedSeconds": 957.2078125,
+          "processedSampleCount": 15315325,
+          "processedSeconds": 957.2078125,
+          "ratio": 1.0,
+          "sampleRate": 16000
+        },
+        "referenceHashesMatchPinnedPreflight": true,
+        "status": "verified"
+      },
+      "failures": [],
+      "jobDirectory": "<LOCAL_ARTIFACT_ROOT>/projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9",
+      "lane": "development",
+      "rawArtifactSHA256": {
+        "english-subtitles.srt": "f0949fa7ce187ce2f0ffec27c4c7566457eb64ca5d7373a330c3b9a2cc00718e",
+        "english-subtitles.vtt": "4bffccd6be3ace971e62fc9fad45a2287644bafc6161e579ab2ebe2ddc7f0240",
+        "english-translation-transcript.txt": "a89b299cd9dc7f3dc214dcc1a166dd8835f10e6af19202e5de87c687cc17f59e",
+        "japanese-transcript.txt": "e400095171eda8b11e1d27efc0b79171f3e89595d052295eb1647f025b2dff4b",
+        "manifest.json": "25d68f6f6c9142bc9d61d531301894e761036f2e6a4c7aec7a5fe12a35fff884",
+        "raw-asr.json": "df2d9d1a3eb884f05dd9e702bf58991bdec3cd40d036571e29dbf0db8f9909d6"
+      },
+      "runtime": {
+        "lifecycle": {
+          "allExitedAndUnloadedCleanly": true,
+          "workers": {
+            "ASR": {
+              "elapsedSeconds": 136.83238399028778,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T20:39:44.311Z",
+              "forcedTermination": false,
+              "memorySampleCount": 1349,
+              "minimumAvailableMemoryBytes": 2488139776,
+              "peakPhysicalFootprintBytes": 8169640640,
+              "processIdentifier": 41305,
+              "startedAt": "2026-08-20T20:37:27.479Z",
+              "swapUsedAfterBytes": 4555669504,
+              "swapUsedBeforeBytes": 3257794560,
+              "terminationReason": "exit"
+            },
+            "alignment": {
+              "elapsedSeconds": 47.45085108280182,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T20:40:44.456Z",
+              "forcedTermination": false,
+              "memorySampleCount": 471,
+              "minimumAvailableMemoryBytes": 5663817728,
+              "peakPhysicalFootprintBytes": 3442936328,
+              "processIdentifier": 79296,
+              "startedAt": "2026-08-20T20:39:57.006Z",
+              "swapUsedAfterBytes": 4555669504,
+              "swapUsedBeforeBytes": 4555669504,
+              "terminationReason": "exit"
+            },
+            "diarizationBeforeReanalysis1": {
+              "elapsedSeconds": 21.198460936546326,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T20:41:05.660Z",
+              "forcedTermination": false,
+              "memorySampleCount": 210,
+              "minimumAvailableMemoryBytes": 7743111168,
+              "peakPhysicalFootprintBytes": 733464016,
+              "processIdentifier": 92495,
+              "startedAt": "2026-08-20T20:40:44.462Z",
+              "swapUsedAfterBytes": 4555669504,
+              "swapUsedBeforeBytes": 4555669504,
+              "terminationReason": "exit"
+            },
+            "diarizationCurrent": {
+              "elapsedSeconds": 14.6770259141922,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T21:00:55.564Z",
+              "forcedTermination": false,
+              "memorySampleCount": 146,
+              "minimumAvailableMemoryBytes": 10523230208,
+              "peakPhysicalFootprintBytes": 771769784,
+              "processIdentifier": 33915,
+              "startedAt": "2026-08-20T21:00:40.887Z",
+              "swapUsedAfterBytes": 4913037312,
+              "swapUsedBeforeBytes": 4913037312,
+              "terminationReason": "exit"
+            },
+            "translation": {
+              "elapsedSeconds": 1172.0411390066147,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T21:00:37.998Z",
+              "forcedTermination": false,
+              "memorySampleCount": 11588,
+              "minimumAvailableMemoryBytes": 2260664320,
+              "peakPhysicalFootprintBytes": 8114132896,
+              "processIdentifier": 98851,
+              "startedAt": "2026-08-20T20:41:05.957Z",
+              "swapUsedAfterBytes": 4913037312,
+              "swapUsedBeforeBytes": 4555669504,
+              "terminationReason": "exit"
+            }
+          }
+        },
+        "peakMemoryBytes": 8169640640,
+        "stageDurations": [
+          "preparing-alignment",
+          14.434368968009949,
+          "preparing-asr",
+          5.38818097114563,
+          "aligning",
+          45.70840609073639,
+          "preparing-diarization",
+          7.66737687587738,
+          "translating",
+          1172.0505570173264,
+          "normalizing-source",
+          4.050801038742065,
+          "exporting",
+          1.0764080286026,
+          "diarizing",
+          28.505455017089844,
+          "transcribing",
+          131.54814398288727
+        ],
+        "wallSeconds": 1392.674,
+        "workerPIDs": [
+          41305,
+          79296,
+          92495,
+          98851,
+          33915
+        ],
+        "workersStrictlySequential": true
+      },
+      "speakerEditor": {
+        "auditKinds": [
+          "rename",
+          "reassign",
+          "merge",
+          "reset",
+          "reset",
+          "rename",
+          "reassign",
+          "merge"
+        ],
+        "cueCount": 307,
+        "exportHashesMatch": true,
+        "exportSHA256": {
+          "english-subtitles.srt": "f0949fa7ce187ce2f0ffec27c4c7566457eb64ca5d7373a330c3b9a2cc00718e",
+          "english-subtitles.vtt": "4bffccd6be3ace971e62fc9fad45a2287644bafc6161e579ab2ebe2ddc7f0240",
+          "english-translation-transcript.txt": "a89b299cd9dc7f3dc214dcc1a166dd8835f10e6af19202e5de87c687cc17f59e",
+          "japanese-transcript.txt": "e400095171eda8b11e1d27efc0b79171f3e89595d052295eb1647f025b2dff4b"
+        },
+        "initialSpeakerCount": 6,
+        "turnCount": 307
+      },
+      "speakerOnlyReanalysis": {
+        "alignmentUnchanged": true,
+        "asrUnchanged": true,
+        "count": 1,
+        "peakMemoryBytes": 771769784,
+        "translationUnchanged": true,
+        "wallTimeSeconds": 17.75600004196167
+      },
+      "speakers": {
+        "DERPercent": 105.47006619449013,
+        "JERPercent": 85.92011371084696,
+        "candidateSpeakerCount": 6,
+        "duplicationCount": 0,
+        "examples": {
+          "correct": [
+            {
+              "attributionCorrect": true,
+              "candidateLabels": [
+                "SPEAKER_01",
+                "SPEAKER_03"
+              ],
+              "endSeconds": 4.0,
+              "englishReference": "Next up is the anchor match: Amayui Moka versus Tachikawa.",
+              "japanese": "続いての大将戦ですが、甘結もか、そして立川。",
+              "mappedReferenceSpeakers": [
+                "SPEAKER_01",
+                "SPEAKER_04"
+              ],
+              "referenceSpeaker": "SPEAKER_01",
+              "startSeconds": 0.0,
+              "turnID": 1
+            },
+            {
+              "attributionCorrect": true,
+              "candidateLabels": [
+                "SPEAKER_01",
+                "SPEAKER_00",
+                "SPEAKER_03"
+              ],
+              "endSeconds": 13.0,
+              "englishReference": "Tachikawa says he will show his pride as a pro.",
+              "japanese": "立川も、プロとしての意地を見せます。",
+              "mappedReferenceSpeakers": [
+                "SPEAKER_01",
+                "SPEAKER_05",
+                "SPEAKER_04"
+              ],
+              "referenceSpeaker": "SPEAKER_01",
+              "startSeconds": 9.0,
+              "turnID": 3
+            },
+            {
+              "attributionCorrect": true,
+              "candidateLabels": [
+                "SPEAKER_00",
+                "SPEAKER_02"
+              ],
+              "endSeconds": 41.3,
+              "englishReference": "I saw a clip of Tachikawa, and it was from ages ago—like five years ago, maybe?",
+              "japanese": "なんか立川さんの切り抜きで上がってたの見たんだけどさ。なんか立川さんがめっちゃ前、5年前とかだっけ？",
+              "mappedReferenceSpeakers": [
+                "SPEAKER_05",
+                "SPEAKER_08"
+              ],
+              "referenceSpeaker": "SPEAKER_05",
+              "startSeconds": 32.4,
+              "turnID": 7
+            }
+          ],
+          "incorrect": [
+            {
+              "attributionCorrect": false,
+              "candidateLabels": [
+                "SPEAKER_03",
+                "SPEAKER_01"
+              ],
+              "endSeconds": 9.0,
+              "englishReference": "Moka, you've got this! Go! Go!",
+              "japanese": "もかさん、頑張れ！ 頑張れ！",
+              "mappedReferenceSpeakers": [
+                "SPEAKER_04",
+                "SPEAKER_01"
+              ],
+              "referenceSpeaker": "SPEAKER_08",
+              "startSeconds": 4.0,
+              "turnID": 2
+            },
+            {
+              "attributionCorrect": false,
+              "candidateLabels": [
+                "SPEAKER_00",
+                "SPEAKER_01"
+              ],
+              "endSeconds": 18.0,
+              "englishReference": "He peeked at people's underwear in VCR GTA—beat him to a pulp for us.",
+              "japanese": "VCR GTAで人のパンツ覗いてきた人のことなんか、ボコボコにしてくれ。",
+              "mappedReferenceSpeakers": [
+                "SPEAKER_05",
+                "SPEAKER_01"
+              ],
+              "referenceSpeaker": "SPEAKER_03",
+              "startSeconds": 13.0,
+              "turnID": 4
+            },
+            {
+              "attributionCorrect": false,
+              "candidateLabels": [
+                "SPEAKER_00",
+                "SPEAKER_04"
+              ],
+              "endSeconds": 20.0,
+              "englishReference": "What? He did? That's the worst.",
+              "japanese": "え？ そうなの？ 最低だな。",
+              "mappedReferenceSpeakers": [
+                "SPEAKER_05",
+                "SPEAKER_09"
+              ],
+              "referenceSpeaker": "SPEAKER_04",
+              "startSeconds": 18.0,
+              "turnID": 5
+            }
+          ]
+        },
+        "overlap": {
+          "candidateSeconds": 161.52812600135803,
+          "f1Percent": 8.602965855625195,
+          "inventedSeconds": 153.48314309120178,
+          "missedSeconds": 17.45501708984375,
+          "precisionPercent": 4.9805461806005304,
+          "recallPercent": 31.54895258884804,
+          "referenceSeconds": 25.5
+        },
+        "referenceSpeakerCount": 13,
+        "speakerAttributedJapaneseError": {
+          "editDistance": 3286,
+          "ratePercent": 109.93643358982938,
+          "referenceCharacterCount": 2989,
+          "unattributedCharacterCount": 1554
+        },
+        "speakerCountAbsoluteError": 7
+      },
+      "subtitles": {
+        "SRT": {
+          "cueCount": 307,
+          "emptyCueIDs": [],
+          "invalidDurationCueIDs": [],
+          "malformedBlockCount": 0,
+          "maximumCharactersPerSecond": 274.9999999999896,
+          "over20CharactersPerSecondCueIDs": [
+            "1",
+            "2",
+            "5",
+            "6",
+            "7",
+            "8",
+            "10",
+            "11",
+            "12",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "24",
+            "25",
+            "27",
+            "28",
+            "29",
+            "30",
+            "31",
+            "32",
+            "34",
+            "35",
+            "36",
+            "37",
+            "38",
+            "39",
+            "40",
+            "41",
+            "42",
+            "43",
+            "44",
+            "46",
+            "47",
+            "49",
+            "50",
+            "51",
+            "52",
+            "54",
+            "55",
+            "56",
+            "57",
+            "58",
+            "59",
+            "60",
+            "61",
+            "62",
+            "63",
+            "64",
+            "65",
+            "66",
+            "67",
+            "68",
+            "69",
+            "70",
+            "72",
+            "73",
+            "74",
+            "76",
+            "77",
+            "79",
+            "81",
+            "82",
+            "83",
+            "84",
+            "86",
+            "87",
+            "88",
+            "89",
+            "90",
+            "91",
+            "92",
+            "95",
+            "99",
+            "100",
+            "101",
+            "103",
+            "105",
+            "106",
+            "107",
+            "108",
+            "110",
+            "111",
+            "112",
+            "113",
+            "114",
+            "115",
+            "116",
+            "117",
+            "118",
+            "119",
+            "121",
+            "123",
+            "124",
+            "126",
+            "127",
+            "128",
+            "129",
+            "131",
+            "132",
+            "133",
+            "134",
+            "135",
+            "137",
+            "139",
+            "140",
+            "141",
+            "142",
+            "143",
+            "144",
+            "145",
+            "146",
+            "148",
+            "149",
+            "150",
+            "151",
+            "153",
+            "154",
+            "155",
+            "156",
+            "157",
+            "159",
+            "160",
+            "161",
+            "162",
+            "163",
+            "165",
+            "166",
+            "167",
+            "168",
+            "169",
+            "170",
+            "172",
+            "173",
+            "174",
+            "175",
+            "176",
+            "177",
+            "178",
+            "179",
+            "182",
+            "185",
+            "190",
+            "191",
+            "192",
+            "193",
+            "194",
+            "195",
+            "197",
+            "198",
+            "199",
+            "200",
+            "201",
+            "202",
+            "203",
+            "204",
+            "205",
+            "206",
+            "207",
+            "210",
+            "211",
+            "212",
+            "215",
+            "216",
+            "217",
+            "218",
+            "221",
+            "222",
+            "223",
+            "225",
+            "226",
+            "227",
+            "229",
+            "230",
+            "231",
+            "232",
+            "233",
+            "235",
+            "237",
+            "238",
+            "240",
+            "241",
+            "242",
+            "243",
+            "245",
+            "246",
+            "247",
+            "249",
+            "250",
+            "252",
+            "253",
+            "254",
+            "255",
+            "257",
+            "258",
+            "259",
+            "260",
+            "261",
+            "262",
+            "263",
+            "266",
+            "269",
+            "270",
+            "271",
+            "273",
+            "274",
+            "275",
+            "276",
+            "277",
+            "278",
+            "280",
+            "282",
+            "283",
+            "284",
+            "285",
+            "286",
+            "287",
+            "288",
+            "289",
+            "291",
+            "292",
+            "296",
+            "297",
+            "298",
+            "299",
+            "300",
+            "301",
+            "302",
+            "303",
+            "304",
+            "305",
+            "306",
+            "307"
+          ],
+          "over84CharacterCueIDs": [
+            "1",
+            "5",
+            "7",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "20",
+            "27",
+            "31",
+            "40",
+            "42",
+            "49",
+            "50",
+            "55",
+            "59",
+            "60",
+            "61",
+            "62",
+            "64",
+            "71",
+            "82",
+            "83",
+            "88",
+            "97",
+            "98",
+            "102",
+            "107",
+            "108",
+            "124",
+            "127",
+            "128",
+            "129",
+            "132",
+            "135",
+            "136",
+            "137",
+            "140",
+            "141",
+            "148",
+            "165",
+            "176",
+            "211",
+            "213",
+            "214",
+            "216",
+            "235",
+            "246",
+            "257",
+            "259",
+            "261",
+            "262",
+            "264",
+            "272",
+            "273",
+            "275",
+            "276",
+            "287",
+            "291",
+            "297",
+            "301"
+          ],
+          "status": "published"
+        },
+        "afterExport": {
+          "cueCount": 307,
+          "invalidDuration": 0,
+          "maximumCPS": 191.6666666666594,
+          "over20CPS": 156,
+          "over7Seconds": 11,
+          "over84Characters": 37,
+          "readableCueCount": 119,
+          "under1Second": 74
+        },
+        "beforeReadableReflow": {
+          "cueCount": 307,
+          "invalidDuration": 0,
+          "maximumCPS": 191.6666666666594,
+          "over20CPS": 156,
+          "over7Seconds": 11,
+          "over84Characters": 37,
+          "readableCueCount": 119,
+          "under1Second": 74
+        },
+        "exportConsistency": {
+          "consistent": true,
+          "mismatches": [],
+          "srtCueCount": 307,
+          "vttCueCount": 307
+        },
+        "integrity": {
+          "exactNormalizedWordSequence": true,
+          "exactTimingCoverage": true,
+          "nonOverlappingMonotonicCues": true,
+          "srtVttMatchPersistedCues": true
+        },
+        "intervals": {
+          "accidentalOverlapCount": 0,
+          "allCueIntervalsValid": true,
+          "coverageIntervalsMatch": true,
+          "invalidCueIDs": [],
+          "inventedCoverageSeconds": 0.0,
+          "lostCoverageSeconds": 0.0
+        }
+      },
+      "translation": {
+        "chrFPlusPlus": 46.4359351521226,
+        "cueIntegrity": {
+          "duplicateCueIDs": [],
+          "emptyNativeOutputCueIDs": [],
+          "missingCueIDs": [],
+          "reordered": false,
+          "unknownCueIDs": []
+        },
+        "examples": [
+          {
+            "hypothesis": "The monkey… it’s definitely the final round with the lethal team. It feels like this will decide it, just those four of them. We need to make sure this doesn't happen again. And Moca, Lisa's... that troublesome Muka, Lisa's gauge is about this much. “It’s about this length, isn't it? Make sure you don't cut it past this line. Yes, yes, yes. This is the line you need to be careful with.”",
+            "id": "33",
+            "reference": "Oh, Moka said something like, “When the gauge is about this long, it's lethal.”",
+            "source": "あ、もかちゃんが「リーサルのゲージはこのぐらいの長さ」みたいなこと言ってた。"
+          },
+          {
+            "hypothesis": "“It’s about this length, isn't it? Make sure you don't cut it past this line. Yes, yes, yes. This is the line you need to be careful with.” “You can get them, so your positioning on the front line will become stronger. Yes, it’s really noticeable. It’s stopping.”",
+            "id": "35",
+            "reference": "Like, “She's got this.”",
+            "source": "「これはやったな」みたいな。"
+          },
+          {
+            "hypothesis": "When you use it, it feels so powerful. When you land a combo, it feels amazing – it hits really well and deals a lot of damage. As you get to this level, it probably won't be easy to do. By the way, who speaks during Tachikawa-san's \"Twema\" events?",
+            "id": "62",
+            "reference": "Yeah, his health melts.",
+            "source": "うん、めっちゃゴリゴリ削れる。"
+          }
+        ],
+        "glossary": {
+          "accuracyPercent": 75.0,
+          "hits": 6,
+          "misses": [
+            {
+              "critical": false,
+              "cueID": "unit-0185",
+              "termID": "otsukaresama"
+            },
+            {
+              "critical": false,
+              "cueID": "unit-0289",
+              "termID": "yoroshiku-onegaishimasu"
+            }
+          ],
+          "opportunities": 8
+        },
+        "suspectedHallucinatedCueIDs": [
+          "33",
+          "35",
+          "61",
+          "62",
+          "67",
+          "83",
+          "177",
+          "178"
+        ],
+        "untranslatedCueIDs": []
+      },
+      "voiceMemory": {
+        "beta": true,
+        "crossProjectSuggestionCount": 0,
+        "isolatedProjectProfileCount": 0,
+        "localProjectProfileCount": 1,
+        "offByDefault": true
+      }
+    },
+    {
+      "ASR": {
+        "adaptiveAbstentions": 0,
+        "adaptiveOverrides": 0,
+        "adaptiveSelected": false,
+        "backend": "qwen-ja",
+        "criticalTerms": {
+          "lost": null,
+          "opportunities": 0,
+          "reason": "reference contains zero annotated critical-term opportunities",
+          "recovered": null,
+          "status": "notScored"
+        },
+        "examples": [
+          {
+            "editDistance": 46,
+            "endSeconds": 223.13,
+            "hypothesisJapanese": "しちゃったでも私もよく落とすけど画面までは割れないなマジあのフィルターは割れるけどあそうそうフィ",
+            "referenceCharacterCount": 2,
+            "referenceJapanese": "マジ？",
+            "startSeconds": 222.65,
+            "status": "scored",
+            "turnID": 72
+          },
+          {
+            "editDistance": 34,
+            "endSeconds": 779.42,
+            "hypothesisJapanese": "たわえ一途そのもう絶対にその人だけみたいなねマジで一途私一途だよふんふん",
+            "referenceCharacterCount": 3,
+            "referenceJapanese": "ふーん。",
+            "startSeconds": 778.9,
+            "status": "scored",
+            "turnID": 251
+          },
+          {
+            "editDistance": 42,
+            "endSeconds": 721.17,
+            "hypothesisJapanese": "で、あ、ちゃんそんな赤ちゃんじゃなくてなんだっけ隠れ赤ちゃんみたいな私ボス猫と相性いいらしいえな",
+            "referenceCharacterCount": 4,
+            "referenceJapanese": "赤ちゃん？",
+            "startSeconds": 720.53,
+            "status": "scored",
+            "turnID": 235
+          }
+        ],
+        "extraCandidateCharacters": 679,
+        "lexicalCorrectionSelected": false,
+        "lostReferenceCharacters": 719,
+        "numbers": {
+          "exactMatchedOccurrences": 28,
+          "extraOccurrences": 9,
+          "lostOccurrences": 4,
+          "referenceOccurrences": 32
+        },
+        "overallCER": {
+          "editDistance": 980,
+          "hypothesisCharacterCount": 3742,
+          "ratePercent": 25.912215758857748,
+          "referenceCharacterCount": 3782
+        },
+        "referenceCharactersMatched": 3063
+      },
+      "configuration": {
+        "readableSubtitles": true,
+        "speakerLabels": false,
+        "translator": "translategemma-4b-it-4bit"
+      },
+      "corpusID": "md62mmdz0m",
+      "corpusProvenance": {
+        "canonicalPCMSHA256": "bde49d4cc67020d01ae042f2945baa61364cc34959e2211a964943e5c2064830",
+        "corpusSHA256": "a0f913830f4a9994ce366414f4f9abc6cf0e25f64ac15f4d9037c1673e68798d",
+        "inputPreflightPinnedByBothREADYArtifacts": true,
+        "inputPreflightSHA256": "d6acfba80a88914a1e646ba8513db9bcd1a0028f723b01be08f5190e9084d70b",
+        "manifestSHA256": "9e2c828804457100b5f517ae84e1709a7b502837e36154ec4e7c7b5dc635e3bc",
+        "pcmCoverage": {
+          "complete": true,
+          "expectedSampleCount": 14177919,
+          "expectedSeconds": 886.1199375,
+          "processedSampleCount": 14177919,
+          "processedSeconds": 886.1199375,
+          "ratio": 1.0,
+          "sampleRate": 16000
+        },
+        "referenceHashesMatchPinnedPreflight": true,
+        "status": "verified"
+      },
+      "failures": [],
+      "jobDirectory": "<LOCAL_ARTIFACT_ROOT>/projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B",
+      "lane": "holdout",
+      "rawArtifactSHA256": {
+        "english-subtitles.srt": "321dfed934e1c1ba2c464285062e72163244b0d69c4af27fa25100cf3d9e1cc2",
+        "english-subtitles.vtt": "59a437f41a125f412e4d8c6bf1388ae4cfb2bbdbdf75ddbaf820ad2288853747",
+        "english-translation-transcript.txt": "0c78b8527e60f2a01db9ec663c169afa3d02c4b285fe6ea98569a53af01f4d60",
+        "japanese-transcript.txt": "f2b9fd99fbde1579600b9734b149b91bcf19b03467b433f95c405c696005e388",
+        "manifest.json": "8140110b6d8ef1b34a44957a1feb62f75451215dd93016fe6fb73722adea9fde",
+        "raw-asr.json": "e77c6774c91a88de51102095bbde5cfe53058fcdd64afac52621373b3b17252a"
+      },
+      "runtime": {
+        "lifecycle": {
+          "allExitedAndUnloadedCleanly": true,
+          "workers": {
+            "ASR": {
+              "elapsedSeconds": 124.19836401939392,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T21:13:37.475Z",
+              "forcedTermination": false,
+              "memorySampleCount": 1224,
+              "minimumAvailableMemoryBytes": 2401140736,
+              "peakPhysicalFootprintBytes": 7827198920,
+              "processIdentifier": 11272,
+              "startedAt": "2026-08-20T21:11:33.277Z",
+              "swapUsedAfterBytes": 6083051520,
+              "swapUsedBeforeBytes": 4887871488,
+              "terminationReason": "exit"
+            },
+            "alignment": {
+              "elapsedSeconds": 30.893967986106873,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T21:14:08.376Z",
+              "forcedTermination": false,
+              "memorySampleCount": 307,
+              "minimumAvailableMemoryBytes": 3820027904,
+              "peakPhysicalFootprintBytes": 3280407000,
+              "processIdentifier": 41670,
+              "startedAt": "2026-08-20T21:13:37.482Z",
+              "swapUsedAfterBytes": 6083051520,
+              "swapUsedBeforeBytes": 6083051520,
+              "terminationReason": "exit"
+            },
+            "translation": {
+              "elapsedSeconds": 646.4892560243607,
+              "exitStatus": 0,
+              "exitedAt": "2026-08-20T21:24:54.927Z",
+              "forcedTermination": false,
+              "memorySampleCount": 6399,
+              "minimumAvailableMemoryBytes": 5859360768,
+              "peakPhysicalFootprintBytes": 3223276304,
+              "processIdentifier": 49998,
+              "startedAt": "2026-08-20T21:14:08.437Z",
+              "swapUsedAfterBytes": 5973999616,
+              "swapUsedBeforeBytes": 6083051520,
+              "terminationReason": "exit"
+            }
+          }
+        },
+        "peakMemoryBytes": 7827198920,
+        "stageDurations": [
+          "exporting",
+          0.010471940040588379,
+          "preparing-asr",
+          7.776247024536133,
+          "preparing-alignment",
+          1.751878023147583,
+          "normalizing-source",
+          1.8906669616699219,
+          "transcribing",
+          116.54674994945526,
+          "translating",
+          647.0843000411987,
+          "aligning",
+          29.20178198814392
+        ],
+        "wallSeconds": 804.263,
+        "workerPIDs": [
+          11272,
+          41670,
+          49998
+        ],
+        "workersStrictlySequential": true
+      },
+      "speakers": {
+        "candidateSpeakerCount": null,
+        "referenceSpeakerCount": 3,
+        "status": "disabled by pairwise row"
+      },
+      "subtitles": {
+        "SRT": {
+          "cueCount": 283,
+          "emptyCueIDs": [],
+          "invalidDurationCueIDs": [],
+          "malformedBlockCount": 0,
+          "maximumCharactersPerSecond": 183.33333333332638,
+          "over20CharactersPerSecondCueIDs": [
+            "2",
+            "5",
+            "6",
+            "9",
+            "11",
+            "13",
+            "15",
+            "18",
+            "19",
+            "20",
+            "21",
+            "23",
+            "25",
+            "27",
+            "28",
+            "29",
+            "31",
+            "32",
+            "34",
+            "39",
+            "40",
+            "50",
+            "52",
+            "54",
+            "55",
+            "58",
+            "63",
+            "65",
+            "71",
+            "74",
+            "76",
+            "77",
+            "82",
+            "85",
+            "86",
+            "96",
+            "97",
+            "98",
+            "100",
+            "101",
+            "103",
+            "109",
+            "110",
+            "111",
+            "113",
+            "118",
+            "119",
+            "122",
+            "123",
+            "124",
+            "125",
+            "127",
+            "128",
+            "133",
+            "134",
+            "139",
+            "141",
+            "143",
+            "145",
+            "146",
+            "148",
+            "150",
+            "153",
+            "155",
+            "162",
+            "164",
+            "170",
+            "172",
+            "174",
+            "175",
+            "176",
+            "178",
+            "179",
+            "180",
+            "181",
+            "183",
+            "187",
+            "188",
+            "189",
+            "190",
+            "191",
+            "192",
+            "193",
+            "195",
+            "197",
+            "199",
+            "200",
+            "204",
+            "209",
+            "211",
+            "220",
+            "223",
+            "224",
+            "228",
+            "230",
+            "232",
+            "239",
+            "240",
+            "245",
+            "246",
+            "248",
+            "249",
+            "250",
+            "253",
+            "254",
+            "255",
+            "257",
+            "258",
+            "260",
+            "261",
+            "262",
+            "263",
+            "264",
+            "269",
+            "270",
+            "271",
+            "272",
+            "273",
+            "279",
+            "280",
+            "281"
+          ],
+          "over84CharacterCueIDs": [
+            "2",
+            "28",
+            "33",
+            "54",
+            "63",
+            "65",
+            "98",
+            "118",
+            "133",
+            "134",
+            "164",
+            "223",
+            "239",
+            "250",
+            "264",
+            "270",
+            "271",
+            "280",
+            "281"
+          ],
+          "status": "published"
+        },
+        "afterExport": {
+          "cueCount": 283,
+          "invalidDuration": 0,
+          "maximumCPS": 183.33333333332638,
+          "over20CPS": 121,
+          "over7Seconds": 2,
+          "over84Characters": 19,
+          "readableCueCount": 148,
+          "under1Second": 65
+        },
+        "beforeReadableReflow": {
+          "cueCount": 260,
+          "invalidDuration": 0,
+          "maximumCPS": 183.33333333332638,
+          "over20CPS": 121,
+          "over7Seconds": 17,
+          "over84Characters": 38,
+          "readableCueCount": 104,
+          "under1Second": 65
+        },
+        "exportConsistency": {
+          "consistent": true,
+          "mismatches": [],
+          "srtCueCount": 283,
+          "vttCueCount": 283
+        },
+        "integrity": {
+          "exactNormalizedWordSequence": true,
+          "exactTimingCoverage": true,
+          "nonOverlappingMonotonicCues": true,
+          "srtVttMatchPersistedCues": true
+        },
+        "intervals": {
+          "accidentalOverlapCount": 0,
+          "allCueIntervalsValid": true,
+          "coverageIntervalsMatch": true,
+          "invalidCueIDs": [],
+          "inventedCoverageSeconds": 0.0,
+          "lostCoverageSeconds": 0.0
+        }
+      },
+      "translation": {
+        "chrFPlusPlus": 43.57497746001499,
+        "cueIntegrity": {
+          "duplicateCueIDs": [],
+          "emptyNativeOutputCueIDs": [],
+          "missingCueIDs": [],
+          "reordered": false,
+          "unknownCueIDs": []
+        },
+        "examples": [
+          {
+            "hypothesis": "“Ultimately, it’s just too much cleaning fluid. I’m just not sure – is this rainwater, or are we actually using a lot of cleaning fluid while rinsing? No, not really…” “It’s just dripping while I’m chewing… you know? It’s leaking so much – is it rainwater, or just a huge amount of leaking fluid?”",
+            "id": "137",
+            "reference": "Stop. Just blow your nose every so often.",
+            "source": "やめて。適度にかみながらでええやん、それは。"
+          },
+          {
+            "hypothesis": "“I guess I’m the type of person who’s comfortable with someone who’s really intense/difficult, like a dominant male cat.” “I wonder what type of person my last boyfriend was… like, what was his personality like? He was really intense/serious.”",
+            "id": "241",
+            "reference": "Maybe I'm the type who supports a man and lets him shine.",
+            "source": "まあ、私は男を立てるタイプなのかもしれん。"
+          },
+          {
+            "hypothesis": "“I think… I remember that. Everyone… ah, a cute rabbit.” “I think I’ve seen something like this somewhere… like, a baby-like creature, somehow.” “So, uh, it seems like this… it’s not really a baby, but it’s compatible with my cat, who’s like a ‘hidden baby’ type.”",
+            "id": "234",
+            "reference": "I think Reid got some kind of baby-type result. I saw it somewhere—in a highlight clip.",
+            "source": "なんか、レイドさん、なんとか赤ちゃんみたいなやつになったみたいな。どっかで見た、切り抜きで。"
+          }
+        ],
+        "glossary": {
+          "accuracyPercent": null,
+          "hits": 0,
+          "misses": [],
+          "opportunities": 0
+        },
+        "suspectedHallucinatedCueIDs": [
+          "99",
+          "100",
+          "101",
+          "125",
+          "137",
+          "241"
+        ],
+        "untranslatedCueIDs": []
+      }
+    }
+  ],
+  "schemaVersion": 2,
+  "scopeLimit": "Two supplied videos validate integration behavior, not broad model superiority.",
+  "supportedFeatureEvidencePassed": true,
+  "ticket": 121,
+  "verification": {
+    "full": {
+      "buildStatus": "passed",
+      "executed": 616,
+      "failures": 0,
+      "logPresent": true,
+      "logSHA256": "96f51aece5647af571fddf87a099df1ccc922f675991268d89df364ed7ec9ea8",
+      "skipped": 71,
+      "status": "passed",
+      "suite": "All tests"
+    },
+    "live": {
+      "buildStatus": "notObserved",
+      "executed": 47,
+      "failures": 0,
+      "logPresent": true,
+      "logSHA256": "c3e80d1366d231a4ffefffed4783f6fc97040dc75d4fbf3aed792870848987a0",
+      "skipped": 0,
+      "status": "passed",
+      "suite": "Selected tests"
+    },
+    "safeCombinedOptions": {
+      "buildStatus": "notObserved",
+      "executed": 1,
+      "failures": 0,
+      "logPresent": true,
+      "logSHA256": "283f7eeda4395b12870e0ffb1effd5e47278c9eb1c4bae150dd5ef1e9ed4b38c",
+      "skipped": 0,
+      "status": "passed",
+      "suite": "Selected tests"
+    }
+  }
+}

@@ -4285,6 +4285,35 @@ final class HighQualityJobTests: XCTestCase {
         )
     }
 
+    func testVoiceProfileAcceptsTheSemanticallyIdenticalReopenedEvidence() async throws {
+        let fixture = try makeVoiceProfileProject()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        var project = try fixture.project.settingVoiceMemory(enabled: true)
+        let completed = try await runVoiceProfileJob(
+            project: project,
+            sourceName: "reopened.wav",
+            jobID: UUID(),
+            vector: [0.12345679, 0.9876543]
+        )
+        project = completed.project
+        let named = try HighQualityJob.editSpeakers(
+            in: completed.result,
+            edit: .rename("SPEAKER_00", to: "Alice")
+        )
+        let reopened = try HighQualityJob.reopen(HighQualitySavedResult(
+            directory: named.directory,
+            manifest: named.manifest
+        ))
+
+        project = try project.confirmVoiceProfile(
+            from: reopened,
+            speakerLabel: "SPEAKER_00"
+        )
+
+        XCTAssertEqual(project.scope.voiceProfiles.first?.displayName, "Alice")
+        XCTAssertEqual(project.scope.voiceProfiles.first?.centroids.count, 1)
+    }
+
     func testProjectVoiceMemoryEndToEndUsesOnlyPublicProjectResultSeams() async throws {
         let fixtureA = try makeVoiceProfileProject(named: "VTuber")
         let fixtureB = try makeVoiceProfileProject(named: "Anime")
@@ -6262,6 +6291,34 @@ final class HighQualityJobTests: XCTestCase {
         let reopened = try HighQualityJob.reopen(saved)
         XCTAssertEqual(reopened.subtitleCues, result.subtitleCues)
         XCTAssertEqual(reopened.evidence.readableSubtitles, audit)
+    }
+
+    func testSpeakerLabelsAndReadableSubtitlesRemainIndependentWhenCombined() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let result = try await speakerSubtitleFixtureJob().run(.init(
+            sourceURL: URL(fileURLWithPath: "/tmp/source.wav"),
+            deliverables: Set(HighQualityDeliverable.allCases),
+            backend: .qwenJA,
+            speakerLabels: true,
+            readableSubtitles: true,
+            outputRoot: root
+        ))
+
+        XCTAssertEqual(result.manifest.speakerLabels, true)
+        XCTAssertEqual(result.manifest.readableSubtitles, true)
+        XCTAssertNotNil(result.evidence.diarization)
+        XCTAssertEqual(result.evidence.readableSubtitles?.integrityPassed, true)
+        XCTAssertEqual(result.turns.count, result.subtitleCues.count)
+        XCTAssertTrue(result.turns.allSatisfy { $0.speakerLabel == "SPEAKER_00" })
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: result.directory.appendingPathComponent("english-subtitles.srt").path
+        ))
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: result.directory.appendingPathComponent("english-subtitles.vtt").path
+        ))
     }
 
     func testReadableSubtitleCancellationBeforeExportKeepsPreviousCompletedResult() async throws {
