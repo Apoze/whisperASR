@@ -1,0 +1,61 @@
+{
+  "catastrophicGuard": {
+    "limitBytes": 23192823398,
+    "limitPercent": 90,
+    "physicalMemoryBytes": 25769803776
+  },
+  "elapsedSeconds": 822,
+  "exitStatus": 0,
+  "exitedAt": "2026-08-20T21:25:01Z",
+  "forcedTermination": false,
+  "minimumFreeMemoryPercent": 19,
+  "nativePressureLevels": [
+    "normal",
+    "warning"
+  ],
+  "pageoutRunawayGuard": {
+    "fromProcessStart": true,
+    "requiresConcurrentFootprintGrowthBytes": 25769803776,
+    "windowSamples": 30
+  },
+  "peakPhysicalFootprintBytes": 7764726728,
+  "peakResidentBytes": 5407506432,
+  "peakSwapDeltaBytes": 1195177411,
+  "postLoadRunawayGuard": {
+    "growthPercent": 25,
+    "modelLoadedObserved": true,
+    "windowSamples": 30
+  },
+  "rawSamples": {
+    "path": "<LOCAL_ARTIFACT_ROOT>/holdout/safety.samples.jsonl",
+    "sha256": "52cf06fe85ac12c5162f8eca3587a9005f6690b44bed1682cc8cecc66abbec52"
+  },
+  "reportedPeakPhysicalFootprintBytes": 7827198920,
+  "schemaVersion": 2,
+  "startedAt": "2026-08-20T21:11:19Z",
+  "stopReason": "completed",
+  "swapGrowthGuard": {
+    "limitBytes": 6442450944,
+    "limitPercentOfPhysicalMemory": 25
+  },
+  "systemAfter": {
+    "freeMemoryPercent": 74,
+    "pageoutDelta": 2218,
+    "pageouts": 2399383,
+    "recoveredFreeMemoryPercentagePoints": 55,
+    "swapDeltaBytes": 1086125507,
+    "swapUsedBytes": 5973999616
+  },
+  "systemBefore": {
+    "freeMemoryPercent": 53,
+    "pageouts": 2397165,
+    "swapUsedBytes": 4887874109
+  },
+  "timeoutSeconds": 2400,
+  "warningRecoveryGuard": {
+    "cleanupOwner": "product",
+    "externalCleanupSignals": 0,
+    "growthLimitBytes": 25769803776,
+    "warningObservations": 57
+  }
+}

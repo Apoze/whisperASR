@@ -1,0 +1,474 @@
+[
+  {
+    "path": "Package.resolved",
+    "sha256": "71d9161262d1962dd6775c3f9aacf0a9a677d8dfc042e2dfa8c49669e885e41f"
+  },
+  {
+    "path": "Package.swift",
+    "sha256": "ab6236f33ff99c10d6caaa51da856735cd3a6f93d7b3e9fa28d939edf0719c36"
+  },
+  {
+    "path": "Scripts/report_final_offline_validation.py",
+    "sha256": "cb11dbad1b197bb3085918583d1f97f6ac19f47713dd046fbcc74f449f2210e7"
+  },
+  {
+    "path": "Scripts/report_high_quality_acceptance.py",
+    "sha256": "4e69530ab643533d8bf84d8b3996f89779b8eb5db08dcf39a5e656e4b721a8cd"
+  },
+  {
+    "path": "Scripts/report_japanese_l7d.py",
+    "sha256": "34c7edbe939c3038c1272dc16b010505bf923373ffe698d20f7a9c0e64e9611f"
+  },
+  {
+    "path": "Scripts/report_local_translator_bakeoff.py",
+    "sha256": "6c0ae36a4ddfdbe178e367fe9e4c9129e768a779c3ef914af39ef9e7d0eeadf5"
+  },
+  {
+    "path": "Scripts/run_final_offline_validation.sh",
+    "sha256": "08fd5f96e5cb255c7576925c06adbd59b0376d85b685ce63f58043e3d0fdad1e"
+  },
+  {
+    "path": "Scripts/run_mossformer2_oracle_experiment.sh",
+    "sha256": "75939b0df1020e1069d1ece8d183ae2d4e1b94766d44d5767f846888ebe1646e"
+  },
+  {
+    "path": "Sources/APIServer.swift",
+    "sha256": "16b6ea257d16e955553d6c80bdcfaf1d2fa82982d99cd054590ce25e4ac50741"
+  },
+  {
+    "path": "Sources/AppIconGenerator.swift",
+    "sha256": "cd4ac171244df31fccd8c9b093398077579fa9c1c0ba2934dfaa2fd9fbf0373e"
+  },
+  {
+    "path": "Sources/AppPickerView.swift",
+    "sha256": "5021ea52cf24e702773217fbd83629e85b753584a7c6c1c6c792f6c2fc5a969b"
+  },
+  {
+    "path": "Sources/AppState.swift",
+    "sha256": "999533f83e3a6667f990698ffd7eb888eb65269e366bc2813152ccc35376e311"
+  },
+  {
+    "path": "Sources/AppStoragePaths.swift",
+    "sha256": "6c5b8856485b8d91100e8ece6b3e65f3350711a07443d040924eb30c70195fe4"
+  },
+  {
+    "path": "Sources/AppleLiveServices.swift",
+    "sha256": "6bface7bd253752bd5ab7b0606fbfcfc7efe989c81d358e8e0208138830e4cc6"
+  },
+  {
+    "path": "Sources/AsyncDeadline.swift",
+    "sha256": "761c4001a002300dd4456c42568034cf58a1d558a949f60ee52f5338f3890d27"
+  },
+  {
+    "path": "Sources/AtomicDirectory.swift",
+    "sha256": "a99d097856d8a5c10b98153ad7ccd8b74f825a2598805373e8b401db2683b7b5"
+  },
+  {
+    "path": "Sources/AudioLoader.swift",
+    "sha256": "7aeb534deedd80e84bb9b1f5863a35006124f32f287ef09fde9a5e420a5cf44f"
+  },
+  {
+    "path": "Sources/AudioPlayerManager.swift",
+    "sha256": "e53f52b30d27fa060439278f68e8960c30b8b9a5405e837328c8075844cc7a85"
+  },
+  {
+    "path": "Sources/AudioRecorder.swift",
+    "sha256": "5f6ec5ebe6c9b0eae7c5f7890849bb019679be03e71cae5bc2160e1d3f0e18d5"
+  },
+  {
+    "path": "Sources/BackupService.swift",
+    "sha256": "57b107a61b37fde7dc8494d5eeaa9da93bf8db4bf722c0c6948f2fad09724966"
+  },
+  {
+    "path": "Sources/ContentView.swift",
+    "sha256": "24717e66e299d8d1cfe0a90590e57ca61ff03da138d63cf91f2cd013ee03de46"
+  },
+  {
+    "path": "Sources/DetailView.swift",
+    "sha256": "89d2d9d619d80b37dc42488a02f674eaa057d2df56038f96efd98511e7d3cd5b"
+  },
+  {
+    "path": "Sources/ExecutableLocator.swift",
+    "sha256": "70b580d0e96a5fe091acf57f6ee939f8b59ff510ad7dbfb7eecb607c0bb9eff1"
+  },
+  {
+    "path": "Sources/HeavyweightModelGate.swift",
+    "sha256": "0214c8835edf2cc5a4134525e48684a8e57b83705df7467fec791cb2a884b61a"
+  },
+  {
+    "path": "Sources/HighQualityASRWorker.swift",
+    "sha256": "a08f70cbb9f01a709043115cabe4d37a65f8f58062cb62ace28dbc4e8f53c6be"
+  },
+  {
+    "path": "Sources/HighQualityAdaptiveASR.swift",
+    "sha256": "32dd2a224de7f46bfe386796dafb2dbbf0c833215ab2923179d7b521911c3799"
+  },
+  {
+    "path": "Sources/HighQualityAlignmentSpeakerWorker.swift",
+    "sha256": "386e4fec4cc1dabd26da02bd38d25616586cc359b55746a45da8e11ad0e49d15"
+  },
+  {
+    "path": "Sources/HighQualityConversationContext.swift",
+    "sha256": "df1b14e1a34b9c4fa79d617b0b9274e9a491f32158ab4dc3d2e8555d738ecd2a"
+  },
+  {
+    "path": "Sources/HighQualityFluidAudioRuntime.swift",
+    "sha256": "d5e013d180aee09a0ec9fff585bdf15c3248e4c3c50b2eddf29cd58f3a6b0b13"
+  },
+  {
+    "path": "Sources/HighQualityForcedAlignerRuntime.swift",
+    "sha256": "51b9debe733d3c8615c0fdf9effddc1f2e86ac646246576eacf9978ac36e02fa"
+  },
+  {
+    "path": "Sources/HighQualityGlossary.swift",
+    "sha256": "23f7506a98c21ced2667ab5d7af21a54c6bb7166d5da1e05b996ee08e107ada1"
+  },
+  {
+    "path": "Sources/HighQualityJob.swift",
+    "sha256": "dbef0346199efdb76f12fc735fe34a11294d1a910947839ebf9b8c4339717d78"
+  },
+  {
+    "path": "Sources/HighQualityJobView.swift",
+    "sha256": "ddc9bce3f59b7aff58b1c5c1d068b5f8a2140d8482bb75eeb6990db51439afed"
+  },
+  {
+    "path": "Sources/HighQualityLexicalCorrection.swift",
+    "sha256": "1dba580ae6d8dc0bf405b5610fea708bcbc63408ca32dcb1483fb75da9b33d59"
+  },
+  {
+    "path": "Sources/HighQualityProject.swift",
+    "sha256": "dc26d0ea1e9ec0f28482336aafd50fba3ed843050c79061c3f617f4aae5caa2e"
+  },
+  {
+    "path": "Sources/HighQualityRuntimeMemorySampler.swift",
+    "sha256": "a696adbb49f34a36a588dc65defaa7fa1f0576b633488303e7fe339c5827a410"
+  },
+  {
+    "path": "Sources/HighQualitySpeakerKitRuntime.swift",
+    "sha256": "107be2a1e80c61957fd6251c06992317a0e18ec46755d415a619762f996b64a0"
+  },
+  {
+    "path": "Sources/HighQualityTranslationIntegrity.swift",
+    "sha256": "af4295c0bd3b25378dc1e6a208d1fca256cbb7f73f6f590a9f9da05411b9dc5f"
+  },
+  {
+    "path": "Sources/HighQualityTranslationWorker.swift",
+    "sha256": "b0a3201311108e95277dd0ac752ca6ecbef8d710ef5c7a9b8459eedad21c364f"
+  },
+  {
+    "path": "Sources/HighQualityWorkerProcess.swift",
+    "sha256": "678d7693719b0f07618b952e84a5748af78af086215b34e62b010846ac842066"
+  },
+  {
+    "path": "Sources/JapaneseGlossary.swift",
+    "sha256": "fac26d9fe8c9960179f8bf3e9cdf88b178c507072387d6b7490ebace64ed87eb"
+  },
+  {
+    "path": "Sources/LiveRecoveryStore.swift",
+    "sha256": "8d968ffa8d97953a6130412efebdc642f71fbb0ed14f2d4d59a2a1f87597be94"
+  },
+  {
+    "path": "Sources/LocalCaptionPipeline.swift",
+    "sha256": "77029cf5d723e1c6d2ea87fa8b7dc3654c5646f9447aef89e0664377e8942634"
+  },
+  {
+    "path": "Sources/LocalDiarizationShadow.swift",
+    "sha256": "757cd7f4064779b60546c11801f8571f689240d30299277ef2d6a9efb59f6631"
+  },
+  {
+    "path": "Sources/LocalEnglishModels.swift",
+    "sha256": "06c8eb7819ec542f94c72e729243e7ba03c8f2fcdcee4b9ee8e9f9186c2c8567"
+  },
+  {
+    "path": "Sources/LocalMLXTranslator.swift",
+    "sha256": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166"
+  },
+  {
+    "path": "Sources/MacMemoryPressureMonitor.swift",
+    "sha256": "0513add52a57ab366bd05eed86eb3fc732880cd7a19eaaa70394ddba5e9e55b6"
+  },
+  {
+    "path": "Sources/ModelCatalog.swift",
+    "sha256": "193b265db9d6c3d7df6ba6bb1288a9ceda28e2637e39991481468fc9f730c0ae"
+  },
+  {
+    "path": "Sources/ModelDownloadView.swift",
+    "sha256": "d4770b7fc9dadb5e4c99730ca37e9fcac01139b09255c59835daf4dd563b0cea"
+  },
+  {
+    "path": "Sources/ModelDownloader.swift",
+    "sha256": "db35c84750764a463fd4d09ebda24082792fcd7977caaa84a7986f7c0b67a883"
+  },
+  {
+    "path": "Sources/Models.swift",
+    "sha256": "c473d0db5353b1d0210d7f26ca2b4599852116337e03c752c3975d22b5b6d446"
+  },
+  {
+    "path": "Sources/ParakeetRuntime.swift",
+    "sha256": "2ddc32bc19a9fd047b39391e65d70753c1c7f30a0408fae23b41f86eec75c39b"
+  },
+  {
+    "path": "Sources/PlayerView.swift",
+    "sha256": "74012b40a62824e5ab87db97727744ebe555598a1afa2afa0e3e3b431b382ef6"
+  },
+  {
+    "path": "Sources/QwenPseudoLiveCoordinator.swift",
+    "sha256": "516dcedccb22b5376c2f9ac84752da7632a8ee657089bc07815218b2e8a71202"
+  },
+  {
+    "path": "Sources/ReadableSubtitleReflow.swift",
+    "sha256": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e"
+  },
+  {
+    "path": "Sources/RecordingView.swift",
+    "sha256": "b530ff863f010bd38b2ea0863dc34d79263c495ddb9249d926147b73104a0c1f"
+  },
+  {
+    "path": "Sources/RecoverablePCMSpool.swift",
+    "sha256": "5e791e11d880cfb487352076f59582141036a3fdbc8449f2f915f51bc06ab550"
+  },
+  {
+    "path": "Sources/SettingsView.swift",
+    "sha256": "1a6d0a8827f66a3425aeb4ebbb764e8ed4aa7496c11abe4e06e97cb09bb79a33"
+  },
+  {
+    "path": "Sources/SidebarView.swift",
+    "sha256": "a3881de166f2809dbe0db1125d98c9951bc71f33bb90ff21fa9eaee5f1aef47a"
+  },
+  {
+    "path": "Sources/SingleInstanceGuard.swift",
+    "sha256": "78b5352a64e3ad645514f5fc49ed7cbfad4df8588cc55bdd507e46b2b41dfa43"
+  },
+  {
+    "path": "Sources/SubtitleTimecode.swift",
+    "sha256": "dbc2a2e4e77081b9a16e4d18774c410bce36fc45c25bb20bbfe8763c9f800e29"
+  },
+  {
+    "path": "Sources/ToastView.swift",
+    "sha256": "c8b7ef280337bde6882b8860809c19c51f7c1e11d0d9bf53c7df368b2d3e9a2e"
+  },
+  {
+    "path": "Sources/TranscriptionService.swift",
+    "sha256": "b859801de748c5ad794324efb7fadfd0197939cfd2d7b3d1778aea089c84a6f7"
+  },
+  {
+    "path": "Sources/TranscriptionStore.swift",
+    "sha256": "66a9f44ee9ceb9a6d67b9ffb819dfe9255696544ade38b4755c7863e1c1706a4"
+  },
+  {
+    "path": "Sources/TranslationService.swift",
+    "sha256": "92bfa347489c4f6ec2a1c7018f6486e4f8d6b615da88a097c9d4126410e7eb26"
+  },
+  {
+    "path": "Sources/VoxtralClausePlanner.swift",
+    "sha256": "13d07fa18e6344d2368ed7786879e8b60ffef2a20242f7d57b5eea2d7013a2a1"
+  },
+  {
+    "path": "Sources/VoxtralHelperRuntime.swift",
+    "sha256": "f9ad8bb385e405c90855581ffa6abcc8c18dd5ed8cab898cf7e69f82a1533fba"
+  },
+  {
+    "path": "Sources/VoxtralMarkerCalibrationProof.swift",
+    "sha256": "c3d0ff9d25a48f1e779c1ff1e413761a42a030660dc29d823be929a7dc674080"
+  },
+  {
+    "path": "Sources/WhisperASRApp.swift",
+    "sha256": "7bfe07839dbbf7d8b1f3bf585ac7d461ab9e6fa3fa4fd19b6644c21c27fa5e57"
+  },
+  {
+    "path": "Sources/WhisperKitRuntime.swift",
+    "sha256": "8a022ebc508f8e712327847c92c7d9615c7b454973b04f8eef29533eb97c3dc7"
+  },
+  {
+    "path": "Sources/YouTubeAcquirer.swift",
+    "sha256": "5f455efb9e6c8f8a3a80e8889ae3111405c47748c5ec5bcc78c371e3a4d8d26b"
+  },
+  {
+    "path": "Tests/AdaptiveASR117BenchmarkTests.swift",
+    "sha256": "be04bfc74fb8026fb7c265bf5081c213fd761db9deb930a0f3d06a0386f51044"
+  },
+  {
+    "path": "Tests/AdaptiveASRExperimentTests.swift",
+    "sha256": "13e7a7ee9039936f3b1c1fce2e014500ee40d9195d68f5ee2c6e656af2085eca"
+  },
+  {
+    "path": "Tests/AppleTranslationSessionRecoveryTests.swift",
+    "sha256": "69a2be302182b9e82dd29f2ac8000b01452867422ae42173df4d38045d9de983"
+  },
+  {
+    "path": "Tests/AudioRecorderReliabilityTests.swift",
+    "sha256": "3b28c96b861041e5f2975c480eaa8055aa72165a0fdd6e9e36db4addf209fb44"
+  },
+  {
+    "path": "Tests/DiarizationBakeoffTests.swift",
+    "sha256": "593d6e39e723dad0dd8aa500e9192a92218c27e601cff041548293b15f991e77"
+  },
+  {
+    "path": "Tests/HeavyweightModelGateTests.swift",
+    "sha256": "6344c2debac7879b93aaebaca1d29df31b6c917b3bc1cc6c8f506315a58afe60"
+  },
+  {
+    "path": "Tests/HighQualityASRWorkerTests.swift",
+    "sha256": "c727b48ae2d709e653103207dc49f18f5f60540542dfab5759291e5a4c3bf3cb"
+  },
+  {
+    "path": "Tests/HighQualityAcceptanceTests.swift",
+    "sha256": "ed190a83fc9909bb98e928b9f7a94eea37c323a8193f07dbec284fe8b9e13656"
+  },
+  {
+    "path": "Tests/HighQualityAdaptiveASRTests.swift",
+    "sha256": "6adbb7871cedfb8e51f43c619c490717936610a4e773b9e76abfda02dc0eac12"
+  },
+  {
+    "path": "Tests/HighQualityAlignmentSpeakerWorkerTests.swift",
+    "sha256": "19a6867c302207ecd9a6cbf5ad426b687d1b05ab1f216b73442a57707f953f7e"
+  },
+  {
+    "path": "Tests/HighQualityConversationContextTests.swift",
+    "sha256": "f3f833ec99b6deed776aa27fcbcbed504bb89922429e3510ba1a65de3ca0271f"
+  },
+  {
+    "path": "Tests/HighQualityGlossaryTests.swift",
+    "sha256": "02dcbb77c0347d765a9378f872a949f8b8cf055db4dc0aafb9f8486a90bb71a6"
+  },
+  {
+    "path": "Tests/HighQualityJobTests.swift",
+    "sha256": "01cf56ce5bc9ac1e87e93afa644f4d0be6963eec3891c166a3e2019eb2ff25df"
+  },
+  {
+    "path": "Tests/HighQualityLexicalCorrectionTests.swift",
+    "sha256": "34bd4a1909052c9cedb751fcf439ee7746b5f95131653f192be52ff8b92b8892"
+  },
+  {
+    "path": "Tests/HighQualityLocalTranslationTests.swift",
+    "sha256": "beb97b35654f06bb211d91d16dba6c132d7426033c2514efa7489f1d0ce49b27"
+  },
+  {
+    "path": "Tests/HighQualityTranslationIntegrityTests.swift",
+    "sha256": "2ba4eed2117d714351dc343461df8a717edcb97ffc47b224073c6294077f9c7c"
+  },
+  {
+    "path": "Tests/HighQualityTranslationWorkerTests.swift",
+    "sha256": "e6575ca578da855effea46dc679373faf71d3772fda46ea00d992cb6e75ba44e"
+  },
+  {
+    "path": "Tests/JapaneseBenchmarkSupport.swift",
+    "sha256": "28ccbd61d507f8b7eb2b9fa9d9566bfcb3d04f572dfdfa6a13d0543b9ba3400e"
+  },
+  {
+    "path": "Tests/JapaneseDirectModelSmokeTests.swift",
+    "sha256": "1dbabe2a5790d1ab1742cb59a88e95978c1251e12f5eec6f36581694ee11c0d4"
+  },
+  {
+    "path": "Tests/JapaneseEnglishFullBakeoffTests.swift",
+    "sha256": "366c00cd96fd62e3bf85cfa61fa85af6d3d3f54f3f1b5be0111198064bab7ae7"
+  },
+  {
+    "path": "Tests/JapaneseGlossaryTests.swift",
+    "sha256": "f5957c6b5a253df0f28a892d7c056844cb5ddd0d1624519ac0fe3cd6a78509da"
+  },
+  {
+    "path": "Tests/JapaneseLiveBenchmarkSupport.swift",
+    "sha256": "75f3f9327a182fd2dcfdc795570a464a8d1e549828bbb020d717535bc3c84cd1"
+  },
+  {
+    "path": "Tests/JapaneseLiveBenchmarkSupportTests.swift",
+    "sha256": "cd61ad5b22eeb7de6752442637a0c6c5256c1f5bffa7f1d1a0b19388ec35a3bf"
+  },
+  {
+    "path": "Tests/JapaneseLiveReplayTests.swift",
+    "sha256": "f7866e22498063cd1d9c8323d3088d2ea9a323a81ca67012834a59edef4c9de8"
+  },
+  {
+    "path": "Tests/JapaneseModelBakeoffTests.swift",
+    "sha256": "619ef4d33ed5e1a9cc5d3047013b906eebf2f5519c516cae044c0651432f9a4a"
+  },
+  {
+    "path": "Tests/JapaneseModelRecipeTests.swift",
+    "sha256": "cf30db108d3493bb9f34edad6df4bf888a2d5de0ef41599d8edd88f95255bd32"
+  },
+  {
+    "path": "Tests/JapaneseOfflineEvaluationTests.swift",
+    "sha256": "07db834699cf4ae2bc73aa4d75d2d3b8d9fdef8adfcae3b783de4e9cf5feeb67"
+  },
+  {
+    "path": "Tests/JapaneseTranslationControlTests.swift",
+    "sha256": "56dfda06a9f6e18dcf81c1de6da477ca12edae08dd2ad86150f7c75990b0ab99"
+  },
+  {
+    "path": "Tests/LiveCaptionTests.swift",
+    "sha256": "52e94c807ebcb1afd3af3ac0e19936e43f6ff43029128766c205cd7c7819162e"
+  },
+  {
+    "path": "Tests/LocalBenchmarkTelemetryTests.swift",
+    "sha256": "6e8802a4d18c60211f624efb47234ca0ae92645255e2fef726b464c20c4d3879"
+  },
+  {
+    "path": "Tests/LocalDiarizationShadowTests.swift",
+    "sha256": "d48176243fd7b9f367f1f8468c8628886938a5109fc9cecd7d8c1f6096930911"
+  },
+  {
+    "path": "Tests/LocalFinalTranslationRetryTests.swift",
+    "sha256": "baaed2fa09c1b83c41ea1c7e25f15341ec87b87479556324fdabded08cc84ab0"
+  },
+  {
+    "path": "Tests/LocalPrototypeBenchmarkTests.swift",
+    "sha256": "395cf8dd7d1c1c851ad4285dd417b318f0359c02edd033dc0e030097fc1f4d00"
+  },
+  {
+    "path": "Tests/LocalTranslatorBakeoffTests.swift",
+    "sha256": "a6bd1c1a7abfc3bd8892e1424f9b5ba1bb25e452eb1b7932302788a4648118fc"
+  },
+  {
+    "path": "Tests/QwenDecoderLoopGuardTests.swift",
+    "sha256": "1382661cdb3c444020a49986bcf0ba1218a7fb88931faed4e4530c906fd4cfa4"
+  },
+  {
+    "path": "Tests/QwenPseudoLiveCoordinatorTests.swift",
+    "sha256": "2105d8bb573215d7a119f16e4d5177d13eec32174668674462899a48f7683d3c"
+  },
+  {
+    "path": "Tests/ReadableSubtitleEvidenceContractTests.swift",
+    "sha256": "947c33d40feaa2c76b3be364ff325df3d85bf8a8b6ae83731249bfe5b95a69fd"
+  },
+  {
+    "path": "Tests/ReadableSubtitleReflowTests.swift",
+    "sha256": "ceded1d9816a2d5b50790f76b0ba8da81199995faffa584c7cef4e88762c0c2f"
+  },
+  {
+    "path": "Tests/ReadableSubtitleReplaySupport.swift",
+    "sha256": "60b30150e368c6a8c04d997c95b2beecdbf74585431fe2952fd253225314cfab"
+  },
+  {
+    "path": "Tests/RecoverablePCMSpoolTests.swift",
+    "sha256": "94c93c19862c75c2ef53c11a4e397611db475499c0ed3b5cd43285ded703f990"
+  },
+  {
+    "path": "Tests/SingleInstanceGuardTests.swift",
+    "sha256": "33b2625b07bc3cbbe9b97de7210c11cdead4a81d55a89905ca09fd896a8a8ecc"
+  },
+  {
+    "path": "Tests/StereoChannelBakeoffTests.swift",
+    "sha256": "ac3f32e8abbe75bc5b7ebaa051f4c0a5081b0d27bf10fb115c6663925e578af8"
+  },
+  {
+    "path": "Tests/TranscriptionPersistenceStoreTests.swift",
+    "sha256": "493d57ae2068854080f804c99b0e0539adeb955a56f0dd2ef84a7050c172fbf2"
+  },
+  {
+    "path": "Tests/VoxtralClausePlannerTests.swift",
+    "sha256": "20caf7760778413c3efda091d5e1ed522de8d1fd793fa0fa619e5d1b5fc3479f"
+  },
+  {
+    "path": "Tests/VoxtralConfigurationComparisonTests.swift",
+    "sha256": "4a657902e298005cae5b3b6df530f281e33ec39e1d1d02e3b3ce0c58336720ee"
+  },
+  {
+    "path": "Tests/VoxtralHelperRuntimeTests.swift",
+    "sha256": "4267f3c23f20349c38836031b55136abafd373805673eceb083392b24cac5612"
+  },
+  {
+    "path": "Tests/VoxtralMarkerCalibrationProofTests.swift",
+    "sha256": "ac7a990be6f081a04c4a307a2362da5ffac5331ad43642498b4c5daac33cecb0"
+  }
+]

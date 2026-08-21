@@ -1,0 +1,404 @@
+[
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "READY_FOR_HEAVY_BENCHMARK.json",
+    "sha256": "e7e84d7cf2e9e081d7c94f68f9d8e7460a0d3cbab31e362b2824e9c9bad0b159",
+    "sizeBytes": 2829
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "READY_FOR_HOLDOUT.json",
+    "sha256": "02aa53debaa4a82fa29fdaa06a42f181272ffb2afd3b346cc9538aed4e787468",
+    "sizeBytes": 2687
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "app-launch.json",
+    "sha256": "e4e1de39fd9945eb8aa4917a59592bb105cc8a493343a45d008ac7bc593454ab",
+    "sizeBytes": 71
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "app-launch.log",
+    "sha256": "34468c5c09f58050f21ec8744a54d65e26593523fd8fd2ac32ce95f83498e1e7",
+    "sizeBytes": 787
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "build.log",
+    "sha256": "ad52f875ece809891f7a4766791394320317067edc717b19066bc44e3b193f81",
+    "sizeBytes": 773
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "development/process-started",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sizeBytes": 0
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "development/row-report.json",
+    "sha256": "6f9fd2f7d1bc746e6dd3f24c04578085a728c4a9004e4db103b57824867ea3af",
+    "sizeBytes": 1769
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "development/run.log",
+    "sha256": "469daa92b7ab75e0ee9cbde591ad62b8ef045921e885b9bf2d4809ec55ac622d",
+    "sizeBytes": 2879106
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "development/safety.json",
+    "sha256": "d219c7fce59c847b97652cc2a7f9f36c6de9ae7a3494d25b1ab4478585609016",
+    "sizeBytes": 1706
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "development/safety.samples.jsonl",
+    "sha256": "be29441b3d6bf5475d440e980f68b8f702d4ad45a7ae3728268e9130759d48d5",
+    "sizeBytes": 469978
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "development/translation-loaded",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sizeBytes": 0
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "development-freeze.json",
+    "sha256": "9eef506b41183a5fa43d2cfaa55e134a6ca0bbaf0c1c5da7940f0bf7fea9f53b",
+    "sizeBytes": 1117
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "full-swift-test.log",
+    "sha256": "2cde4f4ed1205af0a6cee8009d6f93926d60e5e270ef438d6a8505e5896779ed",
+    "sizeBytes": 193013
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "harness-recovery.json",
+    "sha256": "aa4a293671c5eac4acbc6b0c4b19f804255b950027ce9ab644396bdc07ef09fd",
+    "sizeBytes": 3457
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout/process-started",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sizeBytes": 0
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout/row-report.json",
+    "sha256": "f9a84fae8e32822015e8d202863912dbf270a15cbbf78b96323b0bf5accd8037",
+    "sizeBytes": 642
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout/run-meta.json",
+    "sha256": "ddbd1d056dedbba3b7f17bd2b910d16f8d53120d64776c02f23195e8b4637d20",
+    "sizeBytes": 2151
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout/run.log",
+    "sha256": "80205227093f8e14ad8413670dec19122f0632fee58b08f0cd11dbe9877bf6e9",
+    "sizeBytes": 2542
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout/safety.json",
+    "sha256": "34e028bb9fe2dc7e7f6066796f92f498897285ef3ba2dd73b6cc04c0cccaa00e",
+    "sizeBytes": 1700
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout/safety.samples.jsonl",
+    "sha256": "52cf06fe85ac12c5162f8eca3587a9005f6690b44bed1682cc8cecc66abbec52",
+    "sizeBytes": 281332
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout/translation-loaded",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sizeBytes": 0
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout-build.log",
+    "sha256": "b66c35bfb76763f7499d75696559f59e343832db97acc48d0b48311b5606fe54",
+    "sizeBytes": 773
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "holdout-light-tests.log",
+    "sha256": "20dae387960c9d3502b054cdcab2acae02e4c34bdc23a39af287aab60ef4c69c",
+    "sizeBytes": 2385
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "input-preflight.tsv",
+    "sha256": "d6acfba80a88914a1e646ba8513db9bcd1a0028f723b01be08f5190e9084d70b",
+    "sizeBytes": 1606
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "light-tests.log",
+    "sha256": "dd748eeb369a5a1142cd933c6358b18564e013067fb5f9d6c55fd0a37b267404",
+    "sizeBytes": 3123
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "live-tests.log",
+    "sha256": "f229cfe6d38fd2d512e56c38c2a47c900e6c6d3814bc44207e7a6e5a308bcd07",
+    "sizeBytes": 11796
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "matrix.json",
+    "sha256": "869ab7f1b116a0bfdb2b4c81fb6514e6a82d78dd2bb50400fc78c020eafaffc7",
+    "sizeBytes": 1501
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "metallib.log",
+    "sha256": "2bd27f0caaa4ff6059471b270b7aea51b87a83d480e6dd446b802ac45667c495",
+    "sizeBytes": 800
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "model-provenance.json",
+    "sha256": "4e322ed71e2a76966999e5e37687ec9d7f4236d7d4e45e94f4fa75b47b52a03d",
+    "sizeBytes": 4136
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/.storage-root",
+    "sha256": "6fc1ad7100cc38fdb8fdcac72200ae70f7209de70d1b3450aa7f752a6638f976",
+    "sizeBytes": 94
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/.9576E8A9-D871-4C19-BBE0-56B65587C3B9.update.lock",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sizeBytes": 0
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/english-subtitles.srt",
+    "sha256": "f0949fa7ce187ce2f0ffec27c4c7566457eb64ca5d7373a330c3b9a2cc00718e",
+    "sizeBytes": 29893
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/english-subtitles.vtt",
+    "sha256": "4bffccd6be3ace971e62fc9fad45a2287644bafc6161e579ab2ebe2ddc7f0240",
+    "sizeBytes": 32155
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/english-translation-transcript.txt",
+    "sha256": "a89b299cd9dc7f3dc214dcc1a166dd8835f10e6af19202e5de87c687cc17f59e",
+    "sizeBytes": 18952
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/japanese-transcript.txt",
+    "sha256": "e400095171eda8b11e1d27efc0b79171f3e89595d052295eb1647f025b2dff4b",
+    "sizeBytes": 19429
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/manifest.json",
+    "sha256": "25d68f6f6c9142bc9d61d531301894e761036f2e6a4c7aec7a5fe12a35fff884",
+    "sizeBytes": 228796
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/raw-asr.json",
+    "sha256": "df2d9d1a3eb884f05dd9e702bf58991bdec3cd40d036571e29dbf0db8f9909d6",
+    "sizeBytes": 8539101
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/speaker-reanalysis-journal.json",
+    "sha256": "d7b8359114b24f8276194821421661b7fc62e60fbf0634073685ebadae497a11",
+    "sizeBytes": 419
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9/transformations.json",
+    "sha256": "877e25e09e16d280330edfa06002a2915f8b4d8fe2ea90dba07601c295abdbc5",
+    "sizeBytes": 1174
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B/english-subtitles.srt",
+    "sha256": "321dfed934e1c1ba2c464285062e72163244b0d69c4af27fa25100cf3d9e1cc2",
+    "sizeBytes": 23852
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B/english-subtitles.vtt",
+    "sha256": "59a437f41a125f412e4d8c6bf1388ae4cfb2bbdbdf75ddbaf820ad2288853747",
+    "sizeBytes": 26194
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B/english-translation-transcript.txt",
+    "sha256": "0c78b8527e60f2a01db9ec663c169afa3d02c4b285fe6ea98569a53af01f4d60",
+    "sizeBytes": 14055
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B/japanese-transcript.txt",
+    "sha256": "f2b9fd99fbde1579600b9734b149b91bcf19b03467b433f95c405c696005e388",
+    "sizeBytes": 12106
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B/manifest.json",
+    "sha256": "8140110b6d8ef1b34a44957a1feb62f75451215dd93016fe6fb73722adea9fde",
+    "sizeBytes": 203281
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B/raw-asr.json",
+    "sha256": "e77c6774c91a88de51102095bbde5cfe53058fcdd64afac52621373b3b17252a",
+    "sizeBytes": 3952561
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/project.json",
+    "sha256": "4822063addf703dfd324baa2acf11381b104fde2dc5bb67db54bebf1f1f92aab",
+    "sizeBytes": 16520
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "projects/E61FEF05-0D70-498A-9966-2C5844FF2836/project.json",
+    "sha256": "75df3e4454700896816c956fa6cabbd261b5a38242f9c969baecefdc1affd354",
+    "sizeBytes": 453
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "report.json",
+    "sha256": "c106aef753e25c8a12110ea394013af50a4ab3d640f69c8d9494d830a6129608",
+    "sizeBytes": 32681
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "report.md",
+    "sha256": "f258d577e1d22863d6247af146f63757c2402e9777bdafc3c6c1eaf751de480a",
+    "sizeBytes": 2992
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview/app-launch.json",
+    "sha256": "c7688009b7f81216bd5a856fe420cd751386ff00bb5874ed5447b5b5df23c404",
+    "sizeBytes": 71
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview/app-launch.log",
+    "sha256": "e92f2b9abbb1577446b7838caa46648cad14d82d6a97d9b3871eb20df427f0e7",
+    "sizeBytes": 681
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview/full-swift-test.log",
+    "sha256": "a21b7102c9a5a4f1faf22f53161dd9f5398fe768c559545b0cbf10a2225f9068",
+    "sizeBytes": 193282
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview/live-tests.log",
+    "sha256": "1de25696de71953c25478d280b995d808773f27654a6984393d0f3a5fde48290",
+    "sizeBytes": 11796
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview/report.json",
+    "sha256": "a7377e758f466ec06baeb4222e2e5e78581cf23c9725eb21d1fa19b9eab84721",
+    "sizeBytes": 43931
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview/report.md",
+    "sha256": "26e6e0983fcc4070e717a4274e5d00ef772a84e3b63eb5a506eb1911c76c1d42",
+    "sizeBytes": 6416
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview/safe-options-combined.log",
+    "sha256": "cfbedb52b1bb9dba1b3387d31654a28dcbb8e785d0d56a6de13ffbe2d975336e",
+    "sizeBytes": 1081
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/app-launch.json",
+    "sha256": "a633215ed8f97ef33d1146055709454f29562b498cc64227b9432908e90ecd00",
+    "sizeBytes": 71
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/app-launch.log",
+    "sha256": "2cd727c445b896051f36edf5614f29e45f21234c2bbbb9c34fba70a099465864",
+    "sizeBytes": 60
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/app-launcher.pid",
+    "sha256": "c3c73c4c947dc3735bc0210ea376bfe977a1ed7209e1a69ea8ac5a528b0e966c",
+    "sizeBytes": 6
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/full-swift-test.log",
+    "sha256": "96f51aece5647af571fddf87a099df1ccc922f675991268d89df364ed7ec9ea8",
+    "sizeBytes": 193089
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/live-tests.log",
+    "sha256": "c3e80d1366d231a4ffefffed4783f6fc97040dc75d4fbf3aed792870848987a0",
+    "sizeBytes": 11796
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/report.json",
+    "sha256": "b93064a46a021110426f5ecf14ed6211a2c61136413977583afd026526f505d4",
+    "sizeBytes": 52067
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/report.md",
+    "sha256": "93ddd7db4bae6e5e5340f0829380871fba18146ed44650d2cb4a390eda9cab22",
+    "sizeBytes": 8837
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/safe-options-combined.log",
+    "sha256": "283f7eeda4395b12870e0ffb1effd5e47278c9eb1c4bae150dd5ef1e9ed4b38c",
+    "sizeBytes": 1081
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "rereview-standards-2/targeted-tests.log",
+    "sha256": "a40b49a93360ecc07d21e4dce18007d621302406dcb104635d3d264ee42201c5",
+    "sizeBytes": 2138
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "sha256.tsv",
+    "sha256": "dc8e63eae57339c0f66ee1c2f7c1cd54f7e9a72f8580a770deaae5740571397f",
+    "sizeBytes": 5851
+  },
+  {
+    "availability": "historical local artifact; content not duplicated in Git unless snapshotted",
+    "path": "worktree.patch",
+    "sha256": "a8a77ddf623f8f7cb7910093448eb08ab18574946f90d1d4311ca74a4791692a",
+    "sizeBytes": 15503
+  }
+]

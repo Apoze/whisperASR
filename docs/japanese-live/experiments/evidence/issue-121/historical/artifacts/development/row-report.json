@@ -1,0 +1,57 @@
+{
+  "adaptiveASRSelected": false,
+  "corpusID": "qudu2fx3ncc",
+  "jobDirectory": "<LOCAL_ARTIFACT_ROOT>/projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/9576E8A9-D871-4C19-BBE0-56B65587C3B9",
+  "jobID": "9576E8A9-D871-4C19-BBE0-56B65587C3B9",
+  "lane": "development",
+  "projectID": "A5B1A3C9-1155-4B8A-8E58-682F65395301",
+  "readableSubtitles": false,
+  "schemaVersion": 1,
+  "speakerEditor": {
+    "auditKinds": [
+      "rename",
+      "reassign",
+      "merge",
+      "reset",
+      "reset",
+      "rename",
+      "reassign",
+      "merge"
+    ],
+    "cueCount": 307,
+    "exportSHA256": {
+      "english-subtitles.srt": "f0949fa7ce187ce2f0ffec27c4c7566457eb64ca5d7373a330c3b9a2cc00718e",
+      "english-subtitles.vtt": "4bffccd6be3ace971e62fc9fad45a2287644bafc6161e579ab2ebe2ddc7f0240",
+      "english-translation-transcript.txt": "a89b299cd9dc7f3dc214dcc1a166dd8835f10e6af19202e5de87c687cc17f59e",
+      "japanese-transcript.txt": "e400095171eda8b11e1d27efc0b79171f3e89595d052295eb1647f025b2dff4b"
+    },
+    "initialSpeakerCount": 6,
+    "turnCount": 307
+  },
+  "speakerLabels": true,
+  "speakerOnlyReanalysis": {
+    "alignmentUnchanged": true,
+    "asrUnchanged": true,
+    "count": 1,
+    "peakMemoryBytes": 771769784,
+    "translationUnchanged": true,
+    "wallTimeSeconds": 17.75600004196167
+  },
+  "strictlySequential": true,
+  "ticket": 121,
+  "translator": "translategemma-12b-it-4bit",
+  "voiceMemory": {
+    "beta": true,
+    "crossProjectSuggestionCount": 0,
+    "isolatedProjectProfileCount": 0,
+    "localProjectProfileCount": 1,
+    "offByDefault": true
+  },
+  "workerPIDs": [
+    41305,
+    79296,
+    92495,
+    98851,
+    33915
+  ]
+}

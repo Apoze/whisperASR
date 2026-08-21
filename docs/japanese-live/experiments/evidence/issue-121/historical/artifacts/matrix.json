@@ -1,0 +1,63 @@
+{
+  "coverage": {
+    "dependencies": [
+      "Qwen JA",
+      "Forced Aligner",
+      "SpeakerKit",
+      "TranslateGemma",
+      "export"
+    ],
+    "readableSubtitles": [
+      false,
+      true
+    ],
+    "savedProjectJob": [
+      true
+    ],
+    "speakerLabels": [
+      true,
+      false
+    ],
+    "translatorChoice": [
+      "12B",
+      "4B"
+    ]
+  },
+  "rationale": "Two full jobs cover the supported translator/speaker/readability interactions; exact retained decisions cover rejected candidates without reopening holdout.",
+  "retainedWithoutRerun": {
+    "adaptiveASR": "RETAIN-HIDDEN / NO-GO DEV",
+    "lexicalCorrection": "NO-GO DEV",
+    "targetedWhisperKit": "RETAIN-HIDDEN / NO-GO DEV"
+  },
+  "rows": [
+    {
+      "ASR": "qwen-ja",
+      "corpusID": "qudu2fx3ncc",
+      "lane": "development",
+      "order": 1,
+      "postActions": [
+        "speaker-only reanalysis",
+        "speaker editor",
+        "Project-local Voice memory isolation"
+      ],
+      "projectWorkflow": true,
+      "readableSubtitles": false,
+      "speakerLabels": true,
+      "translator": "translategemma-12b-it-4bit"
+    },
+    {
+      "ASR": "qwen-ja",
+      "corpusID": "md62mmdz0m",
+      "lane": "untouched-holdout",
+      "order": 2,
+      "postActions": [],
+      "projectWorkflow": true,
+      "readableSubtitles": true,
+      "speakerLabels": false,
+      "translator": "translategemma-4b-it-4bit"
+    }
+  ],
+  "schemaVersion": 1,
+  "strategy": "minimal risk-based pairwise",
+  "ticket": 121
+}

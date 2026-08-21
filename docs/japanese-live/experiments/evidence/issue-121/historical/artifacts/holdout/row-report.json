@@ -1,0 +1,19 @@
+{
+  "adaptiveASRSelected": false,
+  "corpusID": "md62mmdz0m",
+  "jobDirectory": "<LOCAL_ARTIFACT_ROOT>/projects/A5B1A3C9-1155-4B8A-8E58-682F65395301/Jobs/E9846213-F6A9-42FA-8C8E-7317B84B9B9B",
+  "jobID": "E9846213-F6A9-42FA-8C8E-7317B84B9B9B",
+  "lane": "untouched-holdout",
+  "projectID": "A5B1A3C9-1155-4B8A-8E58-682F65395301",
+  "readableSubtitles": true,
+  "schemaVersion": 1,
+  "speakerLabels": false,
+  "strictlySequential": true,
+  "ticket": 121,
+  "translator": "translategemma-4b-it-4bit",
+  "workerPIDs": [
+    11272,
+    41670,
+    49998
+  ]
+}

@@ -1313,6 +1313,311 @@ final class HighQualityAcceptanceTests: XCTestCase {
         )
     }
 
+    func testFinalValidationWorkerSummaryIncludesPostTranslationSpeakerReanalysis() {
+        let start = Date(timeIntervalSince1970: 100)
+        let primary = Self.finalWorker(pid: 1, start: start, end: start.addingTimeInterval(1))
+        let reanalysis = Self.finalWorker(
+            pid: 2,
+            start: start.addingTimeInterval(2),
+            end: start.addingTimeInterval(3)
+        )
+
+        let summary = Self.finalValidationWorkerSummary(
+            primary: [primary],
+            speakerReanalysis: reanalysis
+        )
+
+        XCTAssertEqual(summary.processIdentifiers, [1, 2])
+        XCTAssertTrue(summary.strictlySequential)
+    }
+
+    func testRealFinalProjectWorkflowWhenOptedIn() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["WHISPERASR_RUN_FINAL_PROJECT_VALIDATION"] == "1" else {
+            throw XCTSkip("Run Scripts/run_final_offline_validation.sh for ticket #121.")
+        }
+        guard environment["BENCHMARK_SLOT_GRANTED"] == "121" else {
+            throw XCTSkip("The serialized heavyweight slot for ticket #121 is required.")
+        }
+        let input = try Self.input(from: environment)
+        guard let projectsPath = environment["WHISPERASR_FINAL_PROJECTS_ROOT"],
+              let folderPath = environment["WHISPERASR_FINAL_PROJECT_FOLDER"],
+              let lane = environment["WHISPERASR_FINAL_LANE"],
+              ["development", "untouched-holdout"].contains(lane),
+              let translator = HighQualityTranslator(
+                rawValue: environment["WHISPERASR_FINAL_TRANSLATOR"] ?? ""
+              ),
+              let speakerLabels = Self.strictBool(
+                environment["WHISPERASR_FINAL_SPEAKERS"]
+              ),
+              let readableSubtitles = Self.strictBool(
+                environment["WHISPERASR_FINAL_READABLE"]
+              ),
+              let summaryPath = environment["WHISPERASR_FINAL_ROW_REPORT"] else {
+            throw XCTSkip("Final Project lane configuration is incomplete.")
+        }
+        if lane == "untouched-holdout" {
+            guard input.corpusID == "md62mmdz0m",
+                  environment["WHISPERASR_ACCEPTANCE_ALLOW_HOLDOUT"] == "1" else {
+                throw XCTSkip("The final holdout requires its explicit frozen authorization.")
+            }
+        } else {
+            XCTAssertEqual(input.corpusID, "qudu2fx3ncc")
+        }
+
+        let projectsRoot = URL(fileURLWithPath: projectsPath, isDirectory: true)
+        let standaloneRoot = projectsRoot.deletingLastPathComponent()
+            .appendingPathComponent("Standalone", isDirectory: true)
+        let projectFolder = URL(fileURLWithPath: folderPath, isDirectory: true)
+        let projectName = "Issue 121 Final Validation"
+        var workspace = HighQualityProjectWorkspace(
+            projectsRoot: projectsRoot,
+            standaloneJobsRoot: standaloneRoot
+        )
+        let project: HighQualityProject
+        if lane == "development" {
+            XCTAssertTrue(workspace.projects.isEmpty, "DEV must start from a clean Project root.")
+            project = try workspace.createProject(named: projectName, folder: projectFolder)
+        } else {
+            project = try XCTUnwrap(workspace.projects.first { $0.name == projectName })
+            workspace.selectProject(project.id)
+        }
+        if lane == "development" {
+            XCTAssertFalse(project.scope.voiceMemoryEnabled, "Voice memory must be off by default.")
+        }
+        workspace.selectLocalSource(input.sourceURL)
+
+        let result = try await workspace.runSelectedJob(
+            deliverables: Set(HighQualityDeliverable.allCases),
+            asrMode: .backend(.qwenJA),
+            translator: translator,
+            speakerLabels: speakerLabels,
+            readableSubtitles: readableSubtitles,
+            speakerConfiguration: .standard,
+            translationContextPolicy: .productDefault
+        ) { progress in
+            print("[final-121][\(lane)][\(input.corpusID)] "
+                + "\(progress.stage.rawValue): \(progress.message)")
+        }
+
+        XCTAssertEqual(result.manifest.status, .completed)
+        XCTAssertEqual(result.manifest.projectID, project.id)
+        XCTAssertEqual(result.evidence.projectID, project.id)
+        XCTAssertEqual(result.manifest.selectedASRMode, .backend(.qwenJA))
+        XCTAssertNil(result.evidence.adaptiveASR, "Adaptive ASR remains hidden and unselected.")
+        XCTAssertEqual(result.manifest.translationModel, translator.model)
+        XCTAssertEqual(result.manifest.speakerLabels, speakerLabels)
+        XCTAssertEqual(result.manifest.readableSubtitles == true, readableSubtitles)
+        XCTAssertEqual(result.evidence.readableSubtitles != nil, readableSubtitles)
+        XCTAssertEqual(result.evidence.sampleCount, input.manifest.fixture.sampleCount)
+        XCTAssertFalse(result.japaneseTranscript.isEmpty)
+        XCTAssertFalse(result.englishTranscript?.isEmpty ?? true)
+        XCTAssertFalse(result.subtitleCues.isEmpty)
+        XCTAssertTrue(result.subtitleCues.allSatisfy { $0.end > $0.start })
+        XCTAssertFalse(result.evidence.rawASR?.isEmpty ?? true)
+
+        let alignment = try XCTUnwrap(result.evidence.alignment)
+        XCTAssertEqual(alignment.modelID, HighQualityForcedAlignerRuntime.modelID)
+        XCTAssertEqual(alignment.revision, HighQualityForcedAlignerRuntime.revision)
+        XCTAssertTrue(alignment.validationDiagnostics.isEmpty)
+        XCTAssertFalse(alignment.mergedCues.isEmpty)
+        XCTAssertEqual(result.evidence.diarization != nil, speakerLabels)
+        if let diarization = result.evidence.diarization {
+            XCTAssertEqual(diarization.modelID, HighQualitySpeakerKitRuntime.modelID)
+            XCTAssertEqual(diarization.revision, HighQualitySpeakerKitRuntime.revision)
+            XCTAssertTrue(diarization.validationDiagnostics.isEmpty)
+            XCTAssertFalse(diarization.rawSpans.isEmpty)
+        }
+        let translation = try XCTUnwrap(result.evidence.translation)
+        XCTAssertEqual(translation.model, translator.model.modelID)
+        XCTAssertEqual(translation.revision, translator.model.revision)
+        XCTAssertTrue(translation.validationFailures.isEmpty)
+        XCTAssertFalse(translation.batches.isEmpty)
+
+        var workers = [
+            try XCTUnwrap(result.evidence.asrWorker?.lifecycle),
+            try XCTUnwrap(alignment.worker),
+        ]
+        if let speakerWorker = result.evidence.diarization?.worker {
+            workers.append(speakerWorker)
+        }
+        workers.append(try XCTUnwrap(translation.worker))
+        XCTAssertEqual(Set(workers.map(\.processIdentifier)).count, workers.count)
+        XCTAssertTrue(workers.allSatisfy {
+            $0.exitStatus == 0 && !$0.forcedTermination && !$0.availableMemorySamples.isEmpty
+        })
+        XCTAssertTrue(zip(workers, workers.dropFirst()).allSatisfy {
+            $0.exitedAt <= $1.startedAt
+        })
+        XCTAssertFalse(result.manifest.modelEvents.contains { $0.kind == .guardFailed })
+        let modelIDs = [
+            HighQualityASRBackend.qwenJA.model.modelID,
+            HighQualityForcedAlignerRuntime.modelID,
+            speakerLabels ? HighQualitySpeakerKitRuntime.modelID : nil,
+            translator.model.modelID,
+        ].compactMap { $0 }
+        for modelID in modelIDs {
+            let events = result.manifest.modelEvents.filter { $0.modelID == modelID }.map(\.kind)
+            XCTAssertTrue(events.contains(.loadCompleted), "Missing load for \(modelID)")
+            XCTAssertTrue(events.contains(.unloadCompleted), "Missing unload for \(modelID)")
+            XCTAssertTrue(events.contains(.memoryReleaseChecked), "Missing release for \(modelID)")
+        }
+
+        var rowReport: [String: Any] = [
+            "schemaVersion": 1,
+            "ticket": 121,
+            "lane": lane,
+            "corpusID": input.corpusID,
+            "projectID": project.id.uuidString,
+            "jobID": result.manifest.jobID.uuidString,
+            "jobDirectory": result.directory.path,
+            "translator": translator.rawValue,
+            "speakerLabels": speakerLabels,
+            "readableSubtitles": readableSubtitles,
+            "adaptiveASRSelected": result.evidence.adaptiveASR != nil,
+        ]
+        var speakerReanalysisWorker: HighQualityWorkerEvidence?
+
+        if environment["WHISPERASR_FINAL_POST_SPEAKER_ACTIONS"] == "1" {
+            XCTAssertTrue(speakerLabels)
+            let baselineRawASR = result.evidence.rawASR
+            let baselineAlignment = result.evidence.alignment
+            let baselineTranslation = result.evidence.translation
+            let baselineASRWorker = result.evidence.asrWorker
+            let saved = HighQualitySavedResult(
+                directory: result.directory,
+                manifest: result.manifest
+            )
+            let reanalyzed = try await HighQualityJob().rerunSpeakers(
+                saved,
+                configuration: .standard
+            ) { progress in
+                print("[final-121][speaker-only] \(progress.stage.rawValue): \(progress.message)")
+            }
+            XCTAssertEqual(reanalyzed.evidence.rawASR, baselineRawASR)
+            XCTAssertEqual(reanalyzed.evidence.alignment?.modelID, baselineAlignment?.modelID)
+            XCTAssertEqual(reanalyzed.evidence.alignment?.revision, baselineAlignment?.revision)
+            XCTAssertEqual(reanalyzed.evidence.alignment?.chunks, baselineAlignment?.chunks)
+            XCTAssertEqual(reanalyzed.evidence.alignment?.worker, baselineAlignment?.worker)
+            XCTAssertEqual(reanalyzed.evidence.translation, baselineTranslation)
+            XCTAssertEqual(reanalyzed.evidence.asrWorker, baselineASRWorker)
+            XCTAssertEqual(reanalyzed.manifest.speakerReanalysisCount, 1)
+            speakerReanalysisWorker = try XCTUnwrap(
+                reanalyzed.evidence.speakerReanalyses?.last?.diarization.worker
+            )
+
+            let labels = Set(reanalyzed.turns.compactMap(\.speakerLabel)).sorted()
+            XCTAssertGreaterThanOrEqual(labels.count, 2, "Editor coverage needs two real Speakers.")
+            let target = labels[0]
+            let merged = labels[1]
+            let reassignedTurn = try XCTUnwrap(
+                reanalyzed.turns.first { $0.speakerLabel == merged }
+            )
+            let baselineJapanese = reanalyzed.turns.map(\.japanese)
+            let baselineEnglish = reanalyzed.turns.map(\.english)
+            let baselineStarts = reanalyzed.turns.map(\.start)
+            let baselineEnds = reanalyzed.turns.map(\.end)
+            var edited = try HighQualityJob.editSpeakers(
+                in: reanalyzed,
+                edit: .rename(target, to: "VALIDATED_SPEAKER")
+            )
+            edited = try HighQualityJob.editSpeakers(
+                in: edited,
+                edit: .reassign(turnID: reassignedTurn.id, to: target)
+            )
+            edited = try HighQualityJob.editSpeakers(
+                in: edited,
+                edit: .merge(merged, into: target)
+            )
+            edited = try HighQualityJob.editSpeakers(in: edited, edit: .reset())
+            edited = try HighQualityJob.undoLastSpeakerEdit(in: edited)
+            XCTAssertEqual(edited.turns.map(\.japanese), baselineJapanese)
+            XCTAssertEqual(edited.turns.map(\.english), baselineEnglish)
+            XCTAssertEqual(edited.turns.map(\.start), baselineStarts)
+            XCTAssertEqual(edited.turns.map(\.end), baselineEnds)
+            XCTAssertEqual(edited.editableSpeakerNames[target], "VALIDATED_SPEAKER")
+            XCTAssertTrue(edited.manifest.speakerEdits?.map(\.kind).contains(.rename) == true)
+            XCTAssertTrue(edited.manifest.speakerEdits?.map(\.kind).contains(.reassign) == true)
+            XCTAssertTrue(edited.manifest.speakerEdits?.map(\.kind).contains(.merge) == true)
+            XCTAssertTrue(edited.manifest.speakerEdits?.map(\.kind).contains(.reset) == true)
+
+            workspace.refresh()
+            var voiceProject = try XCTUnwrap(workspace.selectedProject)
+            XCTAssertFalse(voiceProject.scope.voiceMemoryEnabled)
+            voiceProject = try voiceProject.settingVoiceMemory(enabled: true)
+            let committedEdited = try HighQualityJob.reopen(HighQualitySavedResult(
+                directory: edited.directory,
+                manifest: edited.manifest
+            ))
+            voiceProject = try voiceProject.confirmVoiceProfile(
+                from: committedEdited,
+                speakerLabel: target
+            )
+            XCTAssertEqual(voiceProject.scope.voiceProfiles.count, 1)
+            XCTAssertFalse(voiceProject.scope.voiceProfiles[0].centroids.isEmpty)
+            let isolated = try HighQualityProject.create(
+                named: "Issue 121 Isolation Control",
+                folder: projectFolder,
+                in: projectsRoot
+            ).settingVoiceMemory(enabled: true)
+            XCTAssertTrue(isolated.scope.voiceProfiles.isEmpty)
+            XCTAssertTrue(
+                isolated.recurringVoiceEvaluation(for: committedEdited).suggestions.isEmpty
+            )
+
+            let deliverableNames = [
+                "japanese-transcript.txt", "english-translation-transcript.txt",
+                "english-subtitles.vtt", "english-subtitles.srt",
+            ]
+            rowReport["speakerOnlyReanalysis"] = [
+                "asrUnchanged": reanalyzed.evidence.rawASR == baselineRawASR,
+                "alignmentUnchanged": reanalyzed.evidence.alignment == baselineAlignment,
+                "translationUnchanged": reanalyzed.evidence.translation == baselineTranslation,
+                "count": reanalyzed.manifest.speakerReanalysisCount ?? 0,
+                "wallTimeSeconds": reanalyzed.speakerReanalysisCompletion?.wallTime
+                    ?? reanalyzed.evidence.speakerReanalyses?.last?.preCommitWallTime ?? 0,
+                "peakMemoryBytes": reanalyzed.evidence.speakerReanalyses?.last?.peakMemoryBytes ?? 0,
+            ]
+            rowReport["speakerEditor"] = [
+                "initialSpeakerCount": labels.count,
+                "auditKinds": edited.manifest.speakerEdits?.map(\.kind.rawValue) ?? [],
+                "turnCount": edited.turns.count,
+                "cueCount": edited.subtitleCues.count,
+                "exportSHA256": try Dictionary(uniqueKeysWithValues: deliverableNames.map {
+                    ($0, try JapaneseBenchmarkSupport.sha256(
+                        at: edited.directory.appendingPathComponent($0)
+                    ))
+                }),
+            ]
+            rowReport["voiceMemory"] = [
+                "beta": true,
+                "offByDefault": true,
+                "localProjectProfileCount": voiceProject.scope.voiceProfiles.count,
+                "isolatedProjectProfileCount": isolated.scope.voiceProfiles.count,
+                "crossProjectSuggestionCount": isolated.recurringVoiceEvaluation(
+                    for: committedEdited
+                ).suggestions.count,
+            ]
+        }
+
+        let workerSummary = Self.finalValidationWorkerSummary(
+            primary: workers,
+            speakerReanalysis: speakerReanalysisWorker
+        )
+        rowReport["workerPIDs"] = workerSummary.processIdentifiers
+        rowReport["strictlySequential"] = workerSummary.strictlySequential
+
+        let summaryURL = URL(fileURLWithPath: summaryPath)
+        try FileManager.default.createDirectory(
+            at: summaryURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try JSONSerialization.data(
+            withJSONObject: rowReport,
+            options: [.prettyPrinted, .sortedKeys]
+        ).write(to: summaryURL, options: .atomic)
+    }
+
     func testRealSavedSpeakerReanalysisWhenOptedIn() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["WHISPERASR_RUN_SPEAKER_REANALYSIS"] == "1",
@@ -2102,6 +2407,43 @@ final class HighQualityAcceptanceTests: XCTestCase {
         }
     }
 
+    private static func finalValidationWorkerSummary(
+        primary: [HighQualityWorkerEvidence],
+        speakerReanalysis: HighQualityWorkerEvidence?
+    ) -> (processIdentifiers: [Int], strictlySequential: Bool) {
+        let workers = primary + [speakerReanalysis].compactMap { $0 }
+        return (
+            workers.map { Int($0.processIdentifier) },
+            zip(workers, workers.dropFirst()).allSatisfy {
+                $0.exitedAt <= $1.startedAt
+            }
+        )
+    }
+
+    private static func finalWorker(
+        pid: Int32,
+        start: Date,
+        end: Date
+    ) -> HighQualityWorkerEvidence {
+        HighQualityWorkerEvidence(
+            command: [],
+            processIdentifier: pid,
+            startedAt: start,
+            exitedAt: end,
+            elapsedSeconds: end.timeIntervalSince(start),
+            exitStatus: 0,
+            terminationReason: "exit",
+            forcedTermination: false,
+            peakPhysicalFootprintBytes: 0,
+            pressureTransitions: [],
+            availableMemorySamples: [],
+            swapUsedBeforeBytes: nil,
+            swapUsedAfterBytes: nil,
+            rawLogPath: "",
+            rawLog: ""
+        )
+    }
+
     private struct Input {
         let corpusID: String
         let sourceURL: URL
@@ -2205,6 +2547,14 @@ final class HighQualityAcceptanceTests: XCTestCase {
             XCTAssertEqual(try JapaneseBenchmarkSupport.sha256(at: url), reference.sha256)
         }
         return Input(corpusID: corpusID, sourceURL: sourceURL, manifest: manifest)
+    }
+
+    private static func strictBool(_ value: String?) -> Bool? {
+        switch value {
+        case "0": false
+        case "1": true
+        default: nil
+        }
     }
 
     private static func assertHash(

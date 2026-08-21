@@ -1,0 +1,43 @@
+{
+  "at": "2026-08-20T21:10:15Z",
+  "classification": "harness-integration-recovery",
+  "fix": "Compare immutable alignment chunks/worker rather than speaker attachments; accept semantically identical decoded persisted evidence while retaining disk hash and stale-result rejection.",
+  "heavyDEVRerun": false,
+  "heavyDEVReused": true,
+  "holdoutOpened": false,
+  "originalReadySHA256": "e7e84d7cf2e9e081d7c94f68f9d8e7460a0d3cbab31e362b2824e9c9bad0b159",
+  "producerImplementationSHA256": {
+    "Scripts/report_final_offline_validation.py": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+    "Scripts/run_final_offline_validation.sh": "48f44c2efd13d27f6611b44f85661e5ffb2cdde001593fedfe7e43dbd40e574e",
+    "Sources/HighQualityForcedAlignerRuntime.swift": "51b9debe733d3c8615c0fdf9effddc1f2e86ac646246576eacf9978ac36e02fa",
+    "Sources/HighQualityJob.swift": "3d9c949a280d81f9ebe5c10f00e47e43f75297da27df0e3718e83fb9c0c6987c",
+    "Sources/HighQualityJobView.swift": "ddc9bce3f59b7aff58b1c5c1d068b5f8a2140d8482bb75eeb6990db51439afed",
+    "Sources/HighQualityProject.swift": "dc26d0ea1e9ec0f28482336aafd50fba3ed843050c79061c3f617f4aae5caa2e",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "107be2a1e80c61957fd6251c06992317a0e18ec46755d415a619762f996b64a0",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+    "Tests/HighQualityAcceptanceTests.swift": "ef494f29362d6d6243f17ae8314efc8157d175718327d40da1be3e65d9446f77"
+  },
+  "reason": "The product job and Speaker-only run completed; validation then used an over-strict alignment equality and a stale in-memory result for Voice provenance.",
+  "resumedImplementationSHA256": {
+    "Scripts/report_final_offline_validation.py": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+    "Scripts/run_final_offline_validation.sh": "de8ab57270401cecfd2f88f38f4f0dd4946d0cfc5f564ffc3b873b057a349ac5",
+    "Sources/HighQualityForcedAlignerRuntime.swift": "51b9debe733d3c8615c0fdf9effddc1f2e86ac646246576eacf9978ac36e02fa",
+    "Sources/HighQualityJob.swift": "dbef0346199efdb76f12fc735fe34a11294d1a910947839ebf9b8c4339717d78",
+    "Sources/HighQualityJobView.swift": "ddc9bce3f59b7aff58b1c5c1d068b5f8a2140d8482bb75eeb6990db51439afed",
+    "Sources/HighQualityProject.swift": "dc26d0ea1e9ec0f28482336aafd50fba3ed843050c79061c3f617f4aae5caa2e",
+    "Sources/HighQualitySpeakerKitRuntime.swift": "107be2a1e80c61957fd6251c06992317a0e18ec46755d415a619762f996b64a0",
+    "Sources/LocalMLXTranslator.swift": "f19132f0a25fd223f24ba0a0ad55b2275ebeb10bd62b8bdce6ccd7c4954e4166",
+    "Sources/ReadableSubtitleReflow.swift": "8347724055f4f5af880f895dc1881efa6cb07ffa47eeb557c2cf051dee6bdd0e",
+    "Tests/HighQualityAcceptanceTests.swift": "dfd4ab7782c3ea618bd5f4879e08624df53493d509a29c227aaa7e7f7c1ba8fd"
+  },
+  "retainedArtifactsSHA256": {
+    "manifest": "25d68f6f6c9142bc9d61d531301894e761036f2e6a4c7aec7a5fe12a35fff884",
+    "rawEvidence": "df2d9d1a3eb884f05dd9e702bf58991bdec3cd40d036571e29dbf0db8f9909d6",
+    "rowReport": "6f9fd2f7d1bc746e6dd3f24c04578085a728c4a9004e4db103b57824867ea3af",
+    "safety": "d219c7fce59c847b97652cc2a7f9f36c6de9ae7a3494d25b1ab4478585609016",
+    "safetySamples": "be29441b3d6bf5475d440e980f68b8f702d4ad45a7ae3728268e9130759d48d5"
+  },
+  "schemaVersion": 1,
+  "ticket": 121
+}

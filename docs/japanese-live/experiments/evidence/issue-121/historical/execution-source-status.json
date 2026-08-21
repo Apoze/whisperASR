@@ -1,0 +1,25 @@
+{
+  "executionReporter": {
+    "contentSHA256": "672b23b939aeac3d3369cc6300abb1710c890a0749aa423b4139aaeff16d8968",
+    "derivedFrom": "READY_FOR_HEAVY_BENCHMARK.json implementationSHA256",
+    "exactContentAvailable": false
+  },
+  "holdoutRunner": {
+    "derivedFrom": "READY_FOR_HOLDOUT.json implementationSHA256",
+    "exactContentAvailable": true,
+    "path": "historical/holdout-runner.sh",
+    "sha256": "de8ab57270401cecfd2f88f38f4f0dd4946d0cfc5f564ffc3b873b057a349ac5"
+  },
+  "initialDevelopmentRunner": {
+    "contentSHA256": "48f44c2efd13d27f6611b44f85661e5ffb2cdde001593fedfe7e43dbd40e574e",
+    "derivedFrom": "READY_FOR_HEAVY_BENCHMARK.json implementationSHA256",
+    "exactContentAvailable": false
+  },
+  "interpretation": "Historical DEV recovery is preserved but is not claimed as strictly fail-closed.",
+  "postRunReporterAmendment": {
+    "derivedFrom": "exact retained post-run source snapshot",
+    "exactContentAvailable": true,
+    "path": "historical/post-run-reporter-amendment.py",
+    "sha256": "91598f9c16e677f9909d2001313fcde72e7762421b9c0bf70b38cfc112d7b0d1"
+  }
+}
